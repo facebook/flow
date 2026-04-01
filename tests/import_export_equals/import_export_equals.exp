@@ -15,5 +15,21 @@ References:
                ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- import_equals_qualified.js:2:1
 
-Found 1 error
+`import ... = <QualifiedName>` syntax is not enabled. [unsupported-syntax]
+
+   2| export import Bar = Foo.x; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- import_equals_qualified.js:3:18
+
+Cannot resolve name `Bar`. [cannot-resolve-name]
+
+   3| declare const y: Bar; // ERROR: `Bar` cannot be resolved because the qualified name import above is unsupported
+                       ^^^
+
+
+
+Found 3 errors

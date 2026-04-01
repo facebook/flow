@@ -4595,6 +4595,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~import_kind
           specifier
 
+      (* The Identifier form of import_equals_declaration (import X = A.B.C) is
+         not supported. The hoister does not create a binding for it, and name_def
+         does not create a definition for it. We must skip calling
+         pattern_identifier/binding_type_identifier here to avoid creating write
+         entries for a location that has no corresponding name_def entry, which
+         would cause NameDefOrderingFailure. *)
+      method! import_equals_declaration loc decl =
+        let open Ast.Statement.ImportEqualsDeclaration in
+        match decl.module_reference with
+        | ExternalModuleReference _ -> super#import_equals_declaration loc decl
+        | Identifier _ -> decl
+
       (* don't rename the `bar` in `export {foo as bar}` *)
       method! export_named_declaration_specifier
           (spec : (ALoc.t, ALoc.t) Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
@@ -6985,6 +6997,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (this :> ALoc.t Flow_ast_mapper.mapper)
           ~import_kind
           specifier
+
+      (* Skip the Identifier form of import_equals_declaration (import X = A.B.C)
+         to avoid creating write entries without corresponding name_def entries. *)
+      method! import_equals_declaration loc decl =
+        let open Ast.Statement.ImportEqualsDeclaration in
+        match decl.module_reference with
+        | ExternalModuleReference _ -> super#import_equals_declaration loc decl
+        | Identifier _ -> decl
 
       method! export_named_declaration_specifier
           (spec : (ALoc.t, ALoc.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =

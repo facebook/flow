@@ -395,17 +395,22 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
 
     method! import_equals_declaration _loc decl =
       let open Ast.Statement.ImportEqualsDeclaration in
-      let { id; import_kind; _ } = decl in
-      let open Ast.Statement.ImportDeclaration in
-      begin
-        match import_kind with
+      let { id; module_reference; import_kind; _ } = decl in
+      (* Only create bindings for ExternalModuleReference (require) form.
+         The Identifier form (import X = A.B.C) is not supported and has no
+         corresponding name_def entry, so creating a binding for it would
+         cause a NameDefOrderingFailure. *)
+      (match module_reference with
+      | ExternalModuleReference _ ->
+        let open Ast.Statement.ImportDeclaration in
+        (match import_kind with
         | ImportValue -> this#add_const_binding ~kind:Bindings.Import id
         | ImportType
         | ImportTypeof
           when with_types ->
           this#add_type_binding ~imported:true id
-        | _ -> ()
-      end;
+        | _ -> ())
+      | Identifier _ -> ());
       decl
 
     method! import_named_specifier

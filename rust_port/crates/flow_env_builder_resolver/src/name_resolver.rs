@@ -9354,6 +9354,26 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         scope_builder::import_named_specifier(self, true, import_kind, specifier)
     }
 
+    // The Identifier form of import_equals_declaration (import X = A.B.C) is
+    // not supported. The hoister does not create a binding for it, and name_def
+    // does not create a definition for it. We must skip calling
+    // pattern_identifier/binding_type_identifier here to avoid creating write
+    // entries for a location that has no corresponding name_def entry, which
+    // would cause NameDefOrderingFailure.
+    fn import_equals_declaration(
+        &mut self,
+        loc: &ALoc,
+        decl: &flow_parser::ast::statement::ImportEqualsDeclaration<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        use flow_parser::ast::statement::import_equals_declaration::ModuleReference;
+        match &decl.module_reference {
+            ModuleReference::ExternalModuleReference(..) => {
+                flow_parser::ast_visitor::import_equals_declaration_default(self, loc, decl)
+            }
+            ModuleReference::Identifier(..) => Ok(()),
+        }
+    }
+
     // don't rename the `bar` in `export {foo as bar}`
     fn export_named_declaration_specifier(
         &mut self,
@@ -10626,6 +10646,22 @@ impl<'ast, 'a, Cx: Context> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for Dead
         specifier: &flow_parser::ast::statement::import_declaration::NamedSpecifier<ALoc, ALoc>,
     ) -> Result<(), !> {
         scope_builder::import_named_specifier(self, true, import_kind, specifier)
+    }
+
+    // Skip the Identifier form of import_equals_declaration (import X = A.B.C)
+    // to avoid creating write entries without corresponding name_def entries.
+    fn import_equals_declaration(
+        &mut self,
+        loc: &ALoc,
+        decl: &flow_parser::ast::statement::ImportEqualsDeclaration<ALoc, ALoc>,
+    ) -> Result<(), !> {
+        use flow_parser::ast::statement::import_equals_declaration::ModuleReference;
+        match &decl.module_reference {
+            ModuleReference::ExternalModuleReference(..) => {
+                flow_parser::ast_visitor::import_equals_declaration_default(self, loc, decl)
+            }
+            ModuleReference::Identifier(..) => Ok(()),
+        }
     }
 
     fn export_named_declaration_specifier(

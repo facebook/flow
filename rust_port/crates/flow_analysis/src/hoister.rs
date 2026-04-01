@@ -542,17 +542,26 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
         decl: &ast::statement::ImportEqualsDeclaration<Loc, Loc>,
     ) -> Result<(), !> {
         if !self.lexical_only {
-            match decl.import_kind {
-                ast::statement::ImportKind::ImportValue => {
-                    self.add_const_binding(Some(Kind::Import), &decl.id);
-                }
-                ast::statement::ImportKind::ImportType
-                | ast::statement::ImportKind::ImportTypeof
-                    if self.with_types =>
-                {
-                    self.add_type_binding(true, &decl.id);
-                }
-                _ => {}
+            // Only create bindings for ExternalModuleReference (require) form.
+            // The Identifier form (import X = A.B.C) is not supported and has no
+            // corresponding name_def entry, so creating a binding for it would
+            // cause a NameDefOrderingFailure.
+            match &decl.module_reference {
+                ast::statement::import_equals_declaration::ModuleReference::ExternalModuleReference(
+                    ..,
+                ) => match decl.import_kind {
+                    ast::statement::ImportKind::ImportValue => {
+                        self.add_const_binding(Some(Kind::Import), &decl.id);
+                    }
+                    ast::statement::ImportKind::ImportType
+                    | ast::statement::ImportKind::ImportTypeof
+                        if self.with_types =>
+                    {
+                        self.add_type_binding(true, &decl.id);
+                    }
+                    _ => {}
+                },
+                ast::statement::import_equals_declaration::ModuleReference::Identifier(..) => {}
             }
         }
         Ok(())
