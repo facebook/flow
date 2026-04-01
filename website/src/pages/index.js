@@ -40,7 +40,7 @@ export default component Home() {
           </Link>
           <Link
             className={styles.featureButton}
-            to={useBaseUrl('en/docs/install')}>
+            to={useBaseUrl('en/docs/getting-started#toc-installation')}>
             Install Flow
           </Link>
           <iframe
@@ -230,7 +230,7 @@ export default component Home() {
               </Link>
               <Link
                 className={styles.featureButton}
-                to={useBaseUrl('en/docs/install')}>
+                to={useBaseUrl('en/docs/getting-started#toc-installation')}>
                 Install Flow
               </Link>
             </div>

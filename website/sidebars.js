@@ -17,9 +17,9 @@
 module.exports = {
   docsSidebar: [
     {
-      type: 'category',
-      label: 'Introduction',
-      items: ['getting-started', 'install', 'usage'],
+      type: 'doc',
+      id: 'getting-started',
+      label: 'Get Started',
     },
     {
       type: 'doc',

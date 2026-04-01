@@ -22,7 +22,7 @@ follow [this guide](../tools/babel/).
 ## Check Out Component Syntax
 Flow supports a dedicated syntax for writing React components and hooks that we recommend instead of using regular
 function/class components. Ensure you are set up using our [most up-to-date instructions to
-configure your toolchain](../install) and then take a look at the [Component Syntax](./component-syntax)
+configure your toolchain](../getting-started#toc-installation) and then take a look at the [Component Syntax](./component-syntax)
 and [Hook Syntax](./hook-syntax) docs.
 
 ## React Runtimes
