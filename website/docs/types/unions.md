@@ -210,7 +210,7 @@ function handleResponse(response:  Success | Failed) {
 ```
 
 This is because in Flow it is okay to pass an object value with more properties
-than the inexact object type expects (because of [width subtyping](../../lang/width-subtyping/)).
+than the inexact object type expects (because of [width subtyping](../../lang/object-subtyping/#toc-width-subtyping)).
 
 ```js flow-check
 type Success = {success: true, value: boolean, ...};

@@ -255,7 +255,7 @@ function method(obj: {foo: string, ...}) { /* ... */ }
 method({foo: "test", bar: 42}); // Works!
 ```
 
-> **Note:** This is because of ["width subtyping"](../../lang/width-subtyping).
+> **Note:** This is because of ["width subtyping"](../../lang/object-subtyping/#toc-width-subtyping).
 
 But exact object types do not:
 

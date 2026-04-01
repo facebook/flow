@@ -71,7 +71,6 @@ module.exports = {
         'lang/variance',
         'lang/nominal-structural',
         'lang/depth-subtyping',
-        'lang/width-subtyping',
         'lang/refinements',
         'lang/annotation-requirement',
       ],
