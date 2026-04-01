@@ -88,7 +88,15 @@ let string_of_progress { finished; total } =
   match total with
   | None -> spf "%d" finished
   | Some total ->
-    spf "%d/%d (%02.1f%%)" finished total (100.0 *. float finished /. float (max 1 total))
+    let pct = 100.0 *. float finished /. float (max 1 total) in
+    (* Don't round to 100% unless we've actually finished everything *)
+    let pct =
+      if finished < total && pct >= 99.95 then
+        99.9
+      else
+        pct
+    in
+    spf "%d/%d (%02.1f%%)" finished total pct
 
 type emoji =
   | Closed_book
