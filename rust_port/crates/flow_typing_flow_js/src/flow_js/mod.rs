@@ -1043,7 +1043,29 @@ pub fn mk_type_destructor<'cx>(
     d: &Destructor,
     id: eval::Id,
 ) -> Result<Type, FlowJsException> {
-    FlowJs::mk_type_destructor(cx, DepthTrace::dummy_trace(), use_op, reason, t, d, id)
+    match FlowJs::mk_type_destructor(
+        cx,
+        DepthTrace::dummy_trace(),
+        use_op,
+        reason,
+        t,
+        d,
+        id.dupe(),
+    ) {
+        Ok(result) => Ok(result),
+        Err(FlowJsException::LimitExceeded) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::ERecursionLimit(reason.dupe(), reason.dupe()),
+            )?;
+            let result = any_t::why(AnySource::AnyError(None), reason.dupe());
+            let mut evaluated = cx.evaluated();
+            evaluated.insert(id, result.dupe());
+            cx.set_evaluated(evaluated);
+            Ok(result)
+        }
+        Err(e) => Err(e),
+    }
 }
 
 // exporting this for convenience

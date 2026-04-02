@@ -6382,6 +6382,12 @@ struct
       )
 
   and evaluate_type_destructor cx ~trace use_op reason t d tvar =
+    try evaluate_type_destructor_ cx ~trace use_op reason t d tvar with
+    | RecursionCheck.LimitExceeded ->
+      add_output cx (Error_message.ERecursionLimit (reason, reason));
+      rec_flow_t cx trace ~use_op:unknown_use (AnyT.why (AnyError None) reason, OpenT tvar)
+
+  and evaluate_type_destructor_ cx ~trace use_op reason t d tvar =
     (* As an optimization, unwrap resolved tvars so that they are only evaluated
      * once to an annotation instead of a tvar that gets a bound on both sides. *)
     let t = drop_resolved cx t in
@@ -9695,6 +9701,11 @@ let mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value c t
   mk_typeapp_instance_annot cx ~use_op ~reason_op ~reason_tapp ~from_value c ts
 
 let mk_type_destructor cx use_op reason t d id =
-  mk_type_destructor cx ~trace:DepthTrace.dummy_trace use_op reason t d id
+  try mk_type_destructor cx ~trace:DepthTrace.dummy_trace use_op reason t d id with
+  | RecursionCheck.LimitExceeded ->
+    add_output cx (Error_message.ERecursionLimit (reason, reason));
+    let result = AnyT.why (AnyError None) reason in
+    Context.set_evaluated cx (Eval.Map.add id result (Context.evaluated cx));
+    result
 
 let add_output cx msg = add_output cx msg

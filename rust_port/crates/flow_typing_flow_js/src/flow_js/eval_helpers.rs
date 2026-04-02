@@ -156,6 +156,36 @@ pub(super) fn evaluate_type_destructor<'cx>(
     d: &Destructor,
     tvar: &Tvar,
 ) -> Result<(), FlowJsException> {
+    match evaluate_type_destructor_(cx, trace, use_op.dupe(), reason, t, d, tvar) {
+        Ok(()) => Ok(()),
+        Err(FlowJsException::LimitExceeded) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::ERecursionLimit(reason.dupe(), reason.dupe()),
+            )?;
+            rec_flow_t(
+                cx,
+                trace,
+                unknown_use(),
+                (
+                    &any_t::why(AnySource::AnyError(None), reason.dupe()),
+                    &Type::new(TypeInner::OpenT(tvar.dupe())),
+                ),
+            )
+        }
+        Err(e) => Err(e),
+    }
+}
+
+fn evaluate_type_destructor_<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    tvar: &Tvar,
+) -> Result<(), FlowJsException> {
     // As an optimization, unwrap resolved tvars so that they are only evaluated
     // once to an annotation instead of a tvar that gets a bound on both sides.
     let t = drop_resolved(cx, t);
