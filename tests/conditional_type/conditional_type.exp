@@ -1038,89 +1038,97 @@ and tuple types you can use `Readonly<T>`. [ts-syntax]
                                                  ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:13:2
+Error -------------------------------------------------------------------------------------------- type_sig_defs.js:9:60
+
+Template literal type is not enabled. [unsupported-syntax]
+
+   9| export type InferInTemplateLiteralAndTuple<T> = T extends [`${infer U}`, ...infer V] ? [U, V] : T; // ERROR: Template literals are unsupported for now - testing InternalError
+                                                                 ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:14:2
 
 Cannot cast `1` to `BasicConditionalType` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   type_sig_uses.js:13:2
-   13| (1: BasicConditionalType); // error: number ~> string
+   type_sig_uses.js:14:2
+   14| (1: BasicConditionalType); // error: number ~> string
         ^ [1]
 
 References:
-   type_sig_uses.js:13:5
-   13| (1: BasicConditionalType); // error: number ~> string
+   type_sig_uses.js:14:5
+   14| (1: BasicConditionalType); // error: number ~> string
            ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:15:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:16:2
 
 Cannot cast empty string to `InferTypeOverlap` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   type_sig_uses.js:15:2
-   15| ("": InferTypeOverlap); // error: string ~> number
+   type_sig_uses.js:16:2
+   16| ("": InferTypeOverlap); // error: string ~> number
         ^^ [1]
 
 References:
-   type_sig_uses.js:15:6
-   15| ("": InferTypeOverlap); // error: string ~> number
+   type_sig_uses.js:16:6
+   16| ("": InferTypeOverlap); // error: string ~> number
             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:17:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:18:2
 
 Cannot cast empty string to `InferTypeOverlapGenerics` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   type_sig_uses.js:17:2
-   17| ("": InferTypeOverlapGenerics<string>); // error: string ~> number
+   type_sig_uses.js:18:2
+   18| ("": InferTypeOverlapGenerics<string>); // error: string ~> number
         ^^ [1]
 
 References:
-   type_sig_uses.js:17:6
-   17| ("": InferTypeOverlapGenerics<string>); // error: string ~> number
+   type_sig_uses.js:18:6
+   18| ("": InferTypeOverlapGenerics<string>); // error: string ~> number
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:26:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:27:2
 
 Cannot cast `new B()` to `A_or_C` because: [incompatible-type]
  - Either `B` [1] is incompatible with `A` [2].
  - Or `B` [1] is incompatible with `C` [3].
 
-   type_sig_uses.js:26:2
-   26| (new B(): A_or_C); // error: B ~> A|C
+   type_sig_uses.js:27:2
+   27| (new B(): A_or_C); // error: B ~> A|C
         ^^^^^^^ [1]
 
 References:
-   type_sig_uses.js:24:23
-   24| type A_or_C = Exclude<A|B|C, B>;
+   type_sig_uses.js:25:23
+   25| type A_or_C = Exclude<A|B|C, B>;
                              ^ [2]
-   type_sig_uses.js:24:27
-   24| type A_or_C = Exclude<A|B|C, B>;
+   type_sig_uses.js:25:27
+   25| type A_or_C = Exclude<A|B|C, B>;
                                  ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:28:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:29:2
 
 Cannot cast `new D()` to `A_or_C` because: [incompatible-type]
  - Either `D` [1] is incompatible with `A` [2].
  - Or `D` [1] is incompatible with `C` [3].
 
-   type_sig_uses.js:28:2
-   28| (new D(): A_or_C); // error: D ~> A|C
+   type_sig_uses.js:29:2
+   29| (new D(): A_or_C); // error: D ~> A|C
         ^^^^^^^ [1]
 
 References:
-   type_sig_uses.js:24:23
-   24| type A_or_C = Exclude<A|B|C, B>;
+   type_sig_uses.js:25:23
+   25| type A_or_C = Exclude<A|B|C, B>;
                              ^ [2]
-   type_sig_uses.js:24:27
-   24| type A_or_C = Exclude<A|B|C, B>;
+   type_sig_uses.js:25:27
+   25| type A_or_C = Exclude<A|B|C, B>;
                                  ^ [3]
 
 
 
-Found 74 errors
+Found 75 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

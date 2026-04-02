@@ -3777,7 +3777,12 @@ fn annot_with_loc<'arena, 'ast>(
             }
             _ => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
         },
-        TypeInner::TemplateLiteral { .. } => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+        TypeInner::TemplateLiteral { inner, .. } => {
+            for t in inner.types.iter() {
+                annot(opts, scope, scopes, tbls, xs, t);
+            }
+            Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+        }
         TypeInner::ConstructorType { .. } => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
         TypeInner::Exists { .. } => Parsed::Annot(Box::new(ParsedAnnot::Exists(loc))),
     };

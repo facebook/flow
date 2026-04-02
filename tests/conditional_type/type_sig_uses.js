@@ -7,6 +7,7 @@ import type {
   InferInTemplateLiteral,
   InferInConstructorType,
   InferInReadOnly,
+  InferInTemplateLiteralAndTuple,
 } from './type_sig_defs';
 
 ("": BasicConditionalType); // ok
@@ -30,3 +31,4 @@ type A_or_C = Exclude<A|B|C, B>;
 "foo" as InferInTemplateLiteral<"bar">; // OK: no crash
 "foo" as InferInConstructorType<string>; // OK: no crash
 "foo" as InferInReadOnly<{x: string}>; // OK: no crash
+["foo", ["baz"]] as InferInTemplateLiteralAndTuple<["bar", "baz"]>; // OK: no crash (previously "out of order" in compact_table)
