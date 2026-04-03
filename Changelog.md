@@ -1,3 +1,11 @@
+### 0.308.0
+
+Parser:
+* The 5 enum body ESTree node types (`EnumBooleanBody`, `EnumNumberBody`, `EnumStringBody`, `EnumSymbolBody`, `EnumBigIntBody`) have been replaced with a single `EnumBody` node. Its `members` property is a flat array of per-type member nodes (`EnumBooleanMember`, `EnumNumberMember`, `EnumStringMember`, `EnumBigIntMember`, `EnumDefaultedMember`). The `explicitType` property is now a string (`"boolean"`, `"number"`, `"string"`, `"symbol"`, `"bigint"`) or `null` (previously a boolean). `hasUnknownMembers` remains a boolean. Several enum validation errors are no longer reported by the parser and are instead reported by the type checker.
+
+Library Definitions:
+* Add type definition for `RegExp.escape()`
+
 ### 0.307.1
 
 * Misc: Store exports index in saved state
