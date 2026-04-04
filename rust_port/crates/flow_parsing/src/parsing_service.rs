@@ -344,11 +344,22 @@ fn content_hash_matches_file_hash(
 }
 
 fn content_hash_matches_old_file_hash(
-    _shared_mem: &SharedMem,
-    _file: &FileKey,
-    _content_hash: u64,
+    shared_mem: &SharedMem,
+    file: &FileKey,
+    content_hash: u64,
 ) -> bool {
-    false
+    // Compare against the latest (most recently committed) file hash.
+    // This detects whether the file has actually changed since the last recheck.
+    //
+    // Note: we use get_file_hash (latest) rather than get_file_hash_committed (old)
+    // because our Entity's "old" slot tracks the value from before the most recent
+    // set() call, not the most recently committed transaction value. Using latest
+    // correctly detects changes like A -> B -> A (revert), where the committed
+    // value after the first recheck is B, not A.
+    shared_mem
+        .get_file_hash(file)
+        .map(|old_hash| old_hash == content_hash)
+        .unwrap_or(false)
 }
 
 pub fn does_content_match_file_hash(shared_mem: &SharedMem, file: &FileKey, content: &str) -> bool {
@@ -378,11 +389,14 @@ fn reducer(
     options: &Options,
     skip_changed: bool,
     skip_unchanged: bool,
+    is_init: bool,
     locs_to_dirtify: &[Loc],
     acc: &mut ParseResults,
     file_key: FileKey,
 ) {
-    if shared_mem.get_parse(&file_key).is_some() {
+    // Only skip already-parsed files during init (to handle duplicate file walks).
+    // During recheck, we must re-parse files even if they have an existing parse result.
+    if is_init && shared_mem.get_parse(&file_key).is_some() {
         return;
     }
 
@@ -393,7 +407,7 @@ fn reducer(
         Err(_) => {
             let haste_module_info =
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
-            let dirty_modules = shared_mem.add_unparsed(file_key.dupe(), 0, haste_module_info);
+            let dirty_modules = shared_mem.clear_file(file_key.dupe(), haste_module_info);
             acc.not_found.insert(file_key);
             acc.dirty_modules.extend(dirty_modules);
             return;
@@ -562,6 +576,7 @@ fn parse(
     options: &Arc<Options>,
     skip_changed: bool,
     skip_unchanged: bool,
+    is_init: bool,
     locs_to_dirtify: &[Loc],
     mut next: Next,
 ) -> ParseResults {
@@ -585,6 +600,7 @@ fn parse(
                         &options,
                         skip_changed,
                         skip_unchanged,
+                        is_init,
                         &locs,
                         acc,
                         file_key.clone(),
@@ -612,6 +628,7 @@ pub fn parse_with_defaults(
         options,
         false, // skip_changed
         false, // skip_unchanged
+        true,  // is_init
         locs_to_dirtify,
         next,
     )
@@ -631,6 +648,7 @@ pub fn reparse_with_defaults(
         options,
         false, // skip_changed
         skip_unchanged,
+        false, // is_init (reparse = not init)
         locs_to_dirtify,
         next,
     )
@@ -689,7 +707,7 @@ pub fn ensure_parsed(
         })
     };
 
-    let results = parse(pool, shared_mem, options, true, false, &[], next);
+    let results = parse(pool, shared_mem, options, true, false, false, &[], next);
     results
         .changed
         .into_inner()

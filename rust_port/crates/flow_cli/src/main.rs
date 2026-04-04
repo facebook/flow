@@ -37,12 +37,18 @@ use flow_utils_concurrency::thread_pool::ThreadPool;
 
 mod ast_command;
 mod check_commands;
+mod command_connect;
 mod command_spec;
 mod command_utils;
 mod config_command;
 mod env_builder_debug_command;
+mod flow_server;
 mod flowconfig;
+mod force_recheck_command;
 mod ls_command;
+mod server_command;
+mod start_command;
+mod status_command;
 mod version_command;
 
 fn semver_satisfies(range: &str, version: &str) -> bool {
@@ -316,6 +322,10 @@ enum RootSubcommand {
     DumpImplDeps,
     ParseDir,
     EnvBuilderDebug,
+    Server,
+    Start,
+    Status,
+    ForceRecheck,
 }
 
 fn root_command() -> command_spec::Command {
@@ -340,6 +350,10 @@ fn root_command() -> command_spec::Command {
                 ("dump-impl-deps", RootSubcommand::DumpImplDeps),
                 ("parse-dir", RootSubcommand::ParseDir),
                 ("env-builder-debug", RootSubcommand::EnvBuilderDebug),
+                ("server", RootSubcommand::Server),
+                ("start", RootSubcommand::Start),
+                ("status", RootSubcommand::Status),
+                ("force-recheck", RootSubcommand::ForceRecheck),
             ]),
         ),
     );
@@ -361,6 +375,10 @@ fn root_command() -> command_spec::Command {
                     ("dump-impl-deps", RootSubcommand::DumpImplDeps),
                     ("parse-dir", RootSubcommand::ParseDir),
                     ("env-builder-debug", RootSubcommand::EnvBuilderDebug),
+                    ("server", RootSubcommand::Server),
+                    ("start", RootSubcommand::Start),
+                    ("status", RootSubcommand::Status),
+                    ("force-recheck", RootSubcommand::ForceRecheck),
                 ]),
             ),
         )
@@ -370,6 +388,23 @@ fn root_command() -> command_spec::Command {
                 command_utils::run_command(&version_command::command(), &argv)
             }
             RootSubcommand::Stop => {
+                // Try to connect to the server and send a shutdown request
+                let root = if let Some(dir) = argv.first() {
+                    command_utils::guess_root(".flowconfig", Some(dir))
+                } else {
+                    command_utils::guess_root(".flowconfig", None)
+                };
+                let tmp_dir =
+                    std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned());
+                let request = command_connect::ServerRequest::Shutdown;
+                match command_connect::connect_and_make_request(
+                    ".flowconfig",
+                    &tmp_dir,
+                    &root,
+                    request,
+                ) {
+                    Ok(_) | Err(_) => {}
+                }
                 flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError)
             }
             RootSubcommand::Config => command_utils::run_command(&config_command::command(), &argv),
@@ -407,6 +442,12 @@ fn root_command() -> command_spec::Command {
                 }
                 env_builder_debug_command::main(&argv[0]);
             }
+            RootSubcommand::Server => command_utils::run_command(&server_command::command(), &argv),
+            RootSubcommand::Start => command_utils::run_command(&start_command::command(), &argv),
+            RootSubcommand::Status => command_utils::run_command(&status_command::command(), &argv),
+            RootSubcommand::ForceRecheck => {
+                command_utils::run_command(&force_recheck_command::command(), &argv)
+            }
         }
     })
 }
@@ -425,6 +466,10 @@ fn is_root_command(name: &str) -> bool {
             | "dump-impl-deps"
             | "parse-dir"
             | "env-builder-debug"
+            | "server"
+            | "start"
+            | "status"
+            | "force-recheck"
     )
 }
 

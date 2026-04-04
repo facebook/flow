@@ -110,8 +110,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] checkCommands.ml → `flow_cli/src/check_commands.rs`
     - [ ] checkContentsCommand.ml
     - [ ] codemodCommand.ml
-    - [ ] commandConnect.ml
-    - [ ] commandConnectSimple.ml
+    - [~] commandConnect.ml → `flow_cli/src/command_connect.rs` (partial: no retry/autostart/handshake/version mismatch)
+    - [~] commandConnectSimple.ml → `flow_cli/src/command_connect.rs` (partial: simplified direct connection)
     - [ ] commandInfo.ml
     - [ ] commandMeanKill.ml
     - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
@@ -124,7 +124,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
     - [ ] findModuleCommand.ml
     - [ ] fixCommand.ml
-    - [ ] forceRecheckCommand.ml
+    - [~] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs` (partial: simplified, no --json/--pretty)
     - [ ] getDefCommand.ml
     - [ ] graphCommand.ml
     - [ ] initCommand.ml
@@ -132,10 +132,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
     - [ ] lspCommand.ml
     - [ ] saveStateCommand.ml
-    - [ ] serverCommand.ml
+    - [~] serverCommand.ml → `flow_cli/src/server_command.rs` (partial: no monitor process, no shm config)
     - [ ] shellCompleteCommand.ml
-    - [ ] startCommand.ml
-    - [ ] statusCommands.ml
+    - [~] startCommand.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize, no monitor, no --json)
+    - [~] statusCommands.ml → `flow_cli/src/status_command.rs` (partial: explicit status only, no --json/--pretty)
     - [x] stopCommand.ml → `flow_cli/src/main.rs` (no-op in Rust, handled inline)
     - [ ] typeAtPosCommand.ml
     - [ ] typeOfNameCommand.ml
@@ -956,8 +956,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] utils/
       - [ ] exitSignal.ml
     - [ ] fileWatcher.ml
-    - [ ] flowServerMonitor.ml
-    - [ ] flowServerMonitorDaemon.ml
+    - [~] flowServerMonitor.ml → `flow_cli/src/flow_server.rs` (partial: simplified server without monitor process, uses Unix sockets + JSON IPC instead of Marshal + SocketHandshake)
+    - [~] flowServerMonitorDaemon.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize in start_command)
     - [ ] flowServerMonitorOptions.ml
     - [ ] flowServerMonitorServer.ml
     - [ ] persistentConnectionMap.ml
@@ -1351,6 +1351,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] parsing_service_js.ml → `flow_parsing/src/parsing_service.rs`
         - [x] `do_parse`
         - [x] `does_content_match_file_hash`
+        - [x] `content_hash_matches_old_file_hash`
         - [x] `ensure_parsed`
         - [x] `parse_file_sig`
         - [x] `parse_package_json_file`
@@ -1700,6 +1701,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `merge`
           - [x] `merge_runner`
           - [x] `sig_hash`
+          - [x] `acyclic_dep`
           - [x] `check_contents_cache`
           - [x] `check_contents_context`
           - [x] `compute_env_of_contents`

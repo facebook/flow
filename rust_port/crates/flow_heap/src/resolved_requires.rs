@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -99,5 +100,25 @@ impl ResolvedRequires {
 
     pub fn get_phantom_dependencies(&self) -> &[Dependency] {
         &self.inner.phantom_dependencies
+    }
+
+    /// Combine successfully resolved modules and phantom modules into a sorted list
+    pub fn all_dependencies(&self) -> HashSet<Dependency> {
+        let mut deps = HashSet::new();
+        for module in &self.inner.resolved_modules {
+            match module {
+                ResolvedModule::HasteModule(m) => {
+                    deps.insert(Dependency::HasteModule(m.clone()));
+                }
+                ResolvedModule::File(f) => {
+                    deps.insert(Dependency::File(f.dupe()));
+                }
+                ResolvedModule::String(_) | ResolvedModule::Null => {}
+            }
+        }
+        for dep in &self.inner.phantom_dependencies {
+            deps.insert(dep.clone());
+        }
+        deps
     }
 }

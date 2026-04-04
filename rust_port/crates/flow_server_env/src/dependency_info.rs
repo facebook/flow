@@ -53,6 +53,13 @@ impl PartialDependencyGraph {
 }
 
 impl DependencyInfo {
+    pub fn empty() -> Self {
+        Self {
+            sig_dependency_graph: Graph::new(),
+            implementation_dependency_graph: Graph::new(),
+        }
+    }
+
     pub fn of_map(pool: &ThreadPool, map: PartialDependencyGraph) -> Self {
         let mut sig_dependency_map = BTreeMap::new();
         let mut implementation_dependency_map = BTreeMap::new();

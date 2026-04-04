@@ -369,7 +369,7 @@ pub mod response {
     use crate::server_prot::Patch;
     use crate::server_prot::PrintableError;
 
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     pub struct LazyStats {
         pub lazy_mode: bool,
         pub checked_files: i32,

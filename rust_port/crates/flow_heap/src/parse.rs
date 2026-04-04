@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -12,6 +13,7 @@ use flow_aloc::PackedALocTable;
 use flow_common::docblock::Docblock;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::HasteModuleInfo;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::ast::Program;
@@ -90,7 +92,6 @@ impl FileEntry {
         self.haste_info.advance(info);
     }
 
-    #[expect(dead_code)]
     pub(crate) fn add_dependent(&self, dependent: FileKey) {
         if let Some(deps) = self.dependents.write().as_mut() {
             if !deps.contains(&dependent) {
@@ -99,7 +100,6 @@ impl FileEntry {
         }
     }
 
-    #[expect(dead_code)]
     pub(crate) fn remove_dependent(&self, dependent: &FileKey) {
         if let Some(deps) = self.dependents.write().as_mut() {
             deps.retain(|f| f != dependent);
@@ -119,6 +119,25 @@ impl FileEntry {
     }
 }
 
+/// Per-element hashes computed by cycle_hash during merge.
+/// In OCaml, these are stored in the mutable binary type_sig buffer.
+/// In Rust, we store them separately since our type_sig is immutable.
+/// These hashes incorporate transitive dependency information and are
+/// read by acyclic_dep when a subsequent component depends on this file.
+#[derive(Debug, Clone)]
+pub enum MergeHashes {
+    CJS {
+        type_export_hashes: Vec<(FlowSmolStr, u64)>,
+        exports_hash: Option<u64>,
+        ns_hash: u64,
+    },
+    ES {
+        type_export_hashes: Vec<(FlowSmolStr, u64)>,
+        export_hashes: Vec<(FlowSmolStr, u64)>,
+        ns_hash: u64,
+    },
+}
+
 #[derive(Debug, Clone, Dupe)]
 pub struct TypedParse {
     pub(crate) file_hash: u64,
@@ -133,6 +152,7 @@ pub struct TypedParse {
     pub(crate) imports: CompressedBytes,
     pub(crate) leader: Arc<Entity<FileKey>>,
     pub(crate) sig_hash: Arc<Entity<u64>>,
+    pub(crate) merge_hashes: Arc<RwLock<Option<MergeHashes>>>,
 }
 
 impl TypedParse {
@@ -169,6 +189,7 @@ impl TypedParse {
             imports: Arc::from(flow_heap_serialization::serialize_imports(&imports)),
             leader,
             sig_hash,
+            merge_hashes: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -244,6 +265,16 @@ impl TypedParse {
     /// Deserialize imports from compressed bytes
     pub fn imports_unsafe(&self) -> Arc<Imports> {
         flow_heap_serialization::deserialize_imports(&self.imports)
+    }
+
+    /// Store per-element hashes computed by cycle_hash during merge.
+    pub fn set_merge_hashes(&self, hashes: MergeHashes) {
+        *self.merge_hashes.write() = Some(hashes);
+    }
+
+    /// Read per-element merge hashes. Returns None if merge hasn't run yet.
+    pub fn get_merge_hashes(&self) -> Option<MergeHashes> {
+        self.merge_hashes.read().clone()
     }
 }
 

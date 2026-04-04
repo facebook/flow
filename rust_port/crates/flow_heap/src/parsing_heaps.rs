@@ -125,7 +125,11 @@ impl SharedMem {
                             return Some(alternate);
                         }
                     }
-                    Some(file_key.dupe())
+                    if self.get_parse(file_key).is_some() {
+                        Some(file_key.dupe())
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
@@ -631,34 +635,73 @@ impl SharedMem {
         requires: Arc<[FlowImportSpecifier]>,
         imports: Arc<Imports>,
     ) -> BTreeSet<Modulename> {
-        let typed_parse = TypedParse::new(
-            file_hash,
-            ast,
-            docblock,
-            aloc_table,
-            type_sig,
-            file_sig,
-            exports,
-            requires,
-            Arc::new(crate::entity::Entity::new(
-                crate::entity::ResolvedRequires::new(vec![], vec![]),
-            )),
-            imports,
-            Arc::new(crate::entity::Entity::new(file.dupe())),
-            Arc::new(crate::entity::Entity::new(0u64)),
-        );
-
         let has_dependents = !file.as_str().ends_with(".flow");
 
-        // Check if file already exists - if so, update parse entity
+        // Check if file already exists - if so, reuse existing entities
+        // (resolved_requires, leader, sig_hash) from the existing typed parse,
+        // matching OCaml's behavior in prepare_add_parsed which preserves these
+        // entities across reparses to maintain transaction semantics.
         let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
+            // Try to get existing entities from the current typed parse
+            let existing_typed = existing_entry.parse_latest().and_then(|p| match p {
+                Parse::Typed(t) => Some(t),
+                _ => None,
+            });
+
+            let (resolved_requires, leader, sig_hash) = match existing_typed {
+                Some(ref existing) => (
+                    existing.resolved_requires.clone(),
+                    existing.leader.clone(),
+                    existing.sig_hash.clone(),
+                ),
+                None => (
+                    Arc::new(crate::entity::Entity::new(
+                        crate::entity::ResolvedRequires::new(vec![], vec![]),
+                    )),
+                    Arc::new(crate::entity::Entity::new(file.dupe())),
+                    Arc::new(crate::entity::Entity::new(0u64)),
+                ),
+            };
+
+            let typed_parse = TypedParse::new(
+                file_hash,
+                ast,
+                docblock,
+                aloc_table,
+                type_sig,
+                file_sig,
+                exports,
+                requires,
+                resolved_requires,
+                imports,
+                leader,
+                sig_hash,
+            );
+
             existing_entry.parse().set(Parse::Typed(typed_parse));
             if let Some(info) = haste_module_info {
                 existing_entry.haste_info_entity().set(info);
             }
             self.calc_dirty_modules(&file, existing_entry)
         } else {
-            // Create new entry
+            // Create new entry with fresh entities
+            let typed_parse = TypedParse::new(
+                file_hash,
+                ast,
+                docblock,
+                aloc_table,
+                type_sig,
+                file_sig,
+                exports,
+                requires,
+                Arc::new(crate::entity::Entity::new(
+                    crate::entity::ResolvedRequires::new(vec![], vec![]),
+                )),
+                imports,
+                Arc::new(crate::entity::Entity::new(file.dupe())),
+                Arc::new(crate::entity::Entity::new(0u64)),
+            );
+
             let file_entry = FileEntry::new(
                 Parse::Typed(typed_parse),
                 haste_module_info.clone(),
@@ -683,6 +726,18 @@ impl SharedMem {
 
         // Check if file already exists - if so, update parse entity
         let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
+            // (* the file was deleted or became untyped. to undo that, we have to restore
+            //    the revdeps ... *)
+            // When transitioning from Typed to Untyped/deleted, clear the reverse
+            // dependency edges (remove this file from all its dependencies' dependents lists).
+            if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
+                if let Some(old_rr) = old_typed.resolved_requires.read_latest_clone() {
+                    let old_deps = old_rr.all_dependencies();
+                    for dep in &old_deps {
+                        self.remove_dependent_from(&file, dep);
+                    }
+                }
+            }
             existing_entry
                 .parse()
                 .set(Parse::Untyped(UntypedParse::new(file_hash)));
@@ -702,6 +757,45 @@ impl SharedMem {
 
         dirty_modules.extend(self.handle_flow_ext(&file));
         dirty_modules
+    }
+
+    /// If this file used to exist, but no longer does, then it was deleted. Record
+    /// the deletion by clearing parse information. Deletion might also require
+    /// re-picking module providers, so we return dirty modules.  
+    pub fn clear_file(
+        &self,
+        file_key: FileKey,
+        haste_module_info: Option<HasteModuleInfo>,
+    ) -> BTreeSet<Modulename> {
+        if let Some(existing_entry) = self.file_heap.get(&file_key) {
+            if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
+                if let Some(old_rr) = old_typed.resolved_requires.read_latest_clone() {
+                    let old_deps = old_rr.all_dependencies();
+                    for dep in &old_deps {
+                        self.remove_dependent_from(&file_key, dep);
+                    }
+                }
+            }
+            existing_entry.parse().advance(None);
+            let mut dirty_modules = BTreeSet::new();
+            dirty_modules.insert(Modulename::Filename(file_key.dupe()));
+            if let Some(haste_info) = existing_entry.haste_info_entity().read_latest_clone() {
+                existing_entry.haste_info_entity().advance(None);
+                let _m = self.get_or_create_haste_module(haste_info.clone());
+                dirty_modules.insert(Modulename::Haste(haste_info));
+            }
+            dirty_modules
+        } else {
+            match haste_module_info {
+                None => BTreeSet::new(),
+                Some(haste_module_info) => {
+                    let _m = self.get_or_create_haste_module(haste_module_info.clone());
+                    let mut dirty_modules = BTreeSet::new();
+                    dirty_modules.insert(Modulename::Haste(haste_module_info));
+                    dirty_modules
+                }
+            }
+        }
     }
 
     pub fn add_package(
@@ -734,6 +828,8 @@ impl SharedMem {
         }
     }
 
+    /// Given a file, it's old resolved requires, and new resolved requires, compute
+    /// the changes necessary to update the reverse dependency graph.  
     pub fn set_resolved_requires(
         &self,
         file: &FileKey,
@@ -741,7 +837,64 @@ impl SharedMem {
     ) {
         if let Some(entry) = self.file_heap.get(file) {
             if let Some(Parse::Typed(typed)) = entry.parse_latest() {
+                let old_deps = typed
+                    .resolved_requires
+                    .read_latest_clone()
+                    .map(|rr| rr.all_dependencies())
+                    .unwrap_or_default();
+
+                let new_deps = resolved_requires.all_dependencies();
+
+                // Update the entity
                 typed.resolved_requires.set(resolved_requires);
+
+                // Remove `file` from the dependents of `m`
+                for dep in &old_deps {
+                    if !new_deps.contains(dep) {
+                        self.remove_dependent_from(file, dep);
+                    }
+                }
+
+                // add_new_dependent: Add `file` to the dependents of `m`
+                for dep in &new_deps {
+                    if !old_deps.contains(dep) {
+                        self.add_dependent_to(file, dep);
+                    }
+                }
+            }
+        }
+    }
+
+    // Remove `file` from the dependents of `m`.
+    fn remove_dependent_from(&self, file: &FileKey, dep: &Dependency) {
+        match dep {
+            Dependency::HasteModule(Modulename::Haste(haste_info)) => {
+                if let Some(module) = self.get_haste_module(haste_info) {
+                    module.remove_dependent(file);
+                }
+            }
+            Dependency::HasteModule(Modulename::Filename(dep_file))
+            | Dependency::File(dep_file) => {
+                if let Some(dep_entry) = self.file_heap.get(dep_file) {
+                    dep_entry.remove_dependent(file);
+                }
+            }
+        }
+    }
+
+    // Add `file` to the dependents of `m`.
+    fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) {
+        match dep {
+            Dependency::HasteModule(Modulename::Haste(haste_info)) => {
+                if let Some(module) = self.get_haste_module(haste_info) {
+                    module.add_dependent(file.dupe());
+                }
+            }
+            Dependency::HasteModule(Modulename::Filename(dep_file))
+            | Dependency::File(dep_file) => {
+                if let Some(dep_entry) = self.file_heap.get(dep_file) {
+                    dep_entry.add_dependent(file.dupe());
+                }
             }
         }
     }
@@ -751,6 +904,18 @@ impl SharedMem {
         // This would require interior mutability on TypedParse.ast
         // For now, this is a no-op until we add that capability
         let _ = file;
+    }
+
+    /// Commit sig_hash entity values in the heap, promoting latest values to committed.
+    /// This should be called at the end of a transaction (init or recheck) so that
+    /// `read_committed()` on sig_hash returns the current value in subsequent transactions,
+    /// enabling the merge skip optimization.
+    pub fn commit_entities(&self) {
+        for entry in self.file_heap.values() {
+            if let Some(Parse::Typed(typed)) = entry.parse_latest() {
+                typed.sig_hash.commit();
+            }
+        }
     }
 }
 
@@ -772,10 +937,10 @@ pub mod merge_context_mutator {
     }
 
     fn add_sig_hash(for_find_all_refs: bool, parse: &TypedParse, sig_hash: u64) -> bool {
-        let old_sig_hash = parse.sig_hash.read_committed();
+        let prev_sig_hash = parse.sig_hash.read_committed();
 
-        match old_sig_hash {
-            Some(old_hash) if old_hash == sig_hash => false,
+        match prev_sig_hash {
+            Some(prev_hash) if prev_hash == sig_hash => false,
             _ => {
                 if !for_find_all_refs {
                     parse.sig_hash.advance(Some(sig_hash));

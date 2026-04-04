@@ -77,6 +77,18 @@ impl<T> Entity<T> {
         self.old.read().dupe()
     }
 
+    /// Promote the latest value to the committed value.
+    /// This should be called at the end of a transaction to make
+    /// `read_committed()` return the current value in subsequent transactions.
+    /// Equivalent to the effect of OCaml's `hh_commit_transaction` on entities.
+    pub fn commit(&self)
+    where
+        T: Dupe,
+    {
+        let new_val = self.new.read().as_ref().map(|v| v.dupe());
+        *self.old.write() = new_val;
+    }
+
     pub fn has_changed(&self) -> bool
     where
         T: PartialEq,

@@ -2006,6 +2006,10 @@ pub(crate) fn recheck_impl(
             )
         })?;
 
+    // Commit entity values so read_committed() returns the current values
+    // in subsequent transactions. Matches OCaml's hh_commit_transaction.
+    shared_mem.commit_entities();
+
     let recheck::RecheckResult {
         modified_count,
         deleted_count,
@@ -2213,7 +2217,11 @@ pub fn init_from_scratch(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     root: &Path,
-) -> (Env, bool /* libs_ok */) {
+) -> (
+    Env,
+    bool,                                                      /* libs_ok */
+    Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>, /* node_modules_containers */
+) {
     with_transaction("init", |_transaction| {
         let (ordered_libs, all_unordered_libs) =
             files::ordered_and_unordered_lib_paths(&options.file_options);
@@ -2423,7 +2431,11 @@ pub fn init_from_scratch(
         eprintln!("Resolve requires:   {:6.2}s", resolve_time.as_secs_f64());
         eprintln!("Calc dependencies:  {:6.2}s", dep_time.as_secs_f64());
 
-        (env, libs_ok)
+        // Commit entity values so read_committed() returns the current values
+        // in subsequent transactions. Matches OCaml's hh_commit_transaction.
+        shared_mem.commit_entities();
+
+        (env, libs_ok, node_modules_containers)
     })
 }
 
@@ -2753,6 +2765,10 @@ pub fn check_files_for_init(
             master_cx,
         };
 
+        // Commit entity values so read_committed() returns the current values
+        // in subsequent transactions. Matches OCaml's hh_commit_transaction.
+        shared_mem.commit_entities();
+
         Ok((env, check_internal_error))
     })
 }
@@ -2812,7 +2828,8 @@ pub fn check_once(
 ) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
     let total_start = Instant::now();
 
-    let (env, libs_ok) = init_from_scratch(&options, pool, shared_mem, root);
+    let (env, libs_ok, _node_modules_containers) =
+        init_from_scratch(&options, pool, shared_mem, root);
     let env = if libs_ok {
         let (env, _first_internal_error) =
             full_check_for_init(&options, pool, shared_mem, focus_targets, env)

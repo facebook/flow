@@ -33,6 +33,7 @@ use flow_common_xx::content_hash_of;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::entity::ResolvedModule;
+use flow_heap::parse::MergeHashes;
 use flow_heap::parse::TypedParse;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_heap::parsing_heaps::merge_context_mutator;
@@ -112,73 +113,130 @@ pub fn sig_hash(
     // hashes are stored in shared memory. We can create a checked_dep record
     // containing accessors to those hashes.
     //
+    // In OCaml, cycle_hash writes computed hashes back into the mutable binary
+    // type_sig buffer. acyclic_dep then reads those stored hashes. In Rust,
+    // we store them in MergeHashes on TypedParse and read them here.
+    //
     // It might be useful to cache this for re-use across files in a component or
     // components in a merge batch, but this performs well enough without caching
     // for now.
     let acyclic_dep = |dep_key: &FileKey, dep_parse: &TypedParse| -> CheckedDep<ReadHash> {
-        fn read_hash<T: std::hash::Hash>(item: &T) -> ReadHash {
-            let hash = content_hash_of(item);
-            Box::new(move || hash)
-        }
-        let cjs_module =
-            |file_key: &FileKey,
-             type_exports: &[type_sig_pack::TypeExport<compact_table::Index<Loc>>],
-             exports: &Option<type_sig_pack::Packed<compact_table::Index<Loc>>>,
-             info: &type_sig_pack::CJSModuleInfo<compact_table::Index<Loc>>| {
-                let filename = read_hash(file_key);
-                let type_exports = info
-                    .type_export_keys
-                    .iter()
-                    .enumerate()
-                    .map(|(i, key)| (key.dupe(), read_hash(&type_exports[i])))
+        let filename_hash = hash_file_key(dep_key);
+        let filename: ReadHash = Box::new(move || filename_hash);
+
+        // Read the stored merge hashes computed by cycle_hash during the
+        // dependency's merge. These incorporate transitive dependency info.
+        match dep_parse.get_merge_hashes() {
+            Some(MergeHashes::CJS {
+                type_export_hashes,
+                exports_hash,
+                ns_hash,
+            }) => {
+                let type_exports = type_export_hashes
+                    .into_iter()
+                    .map(|(k, h)| {
+                        let rh: ReadHash = Box::new(move || h);
+                        (k, rh)
+                    })
                     .collect();
-                let exports = exports.as_ref().map(|exp| read_hash(exp));
-                let ns = read_hash(info);
+                let exports = exports_hash.map(|h| {
+                    let rh: ReadHash = Box::new(move || h);
+                    rh
+                });
+                let ns_h = ns_hash;
+                let ns: ReadHash = Box::new(move || ns_h);
                 CheckedDep::CJS {
                     filename,
                     type_exports,
                     exports,
                     ns,
                 }
-            };
-        let es_module =
-            |file_key: &FileKey,
-             type_exports: &[type_sig_pack::TypeExport<compact_table::Index<Loc>>],
-             exports: &[type_sig_pack::Export<compact_table::Index<Loc>>],
-             info: &type_sig_pack::ESModuleInfo<compact_table::Index<Loc>>| {
-                let filename = read_hash(file_key);
-                let type_exports = info
-                    .type_export_keys
-                    .iter()
-                    .enumerate()
-                    .map(|(i, key)| (key.dupe(), read_hash(&type_exports[i])))
+            }
+            Some(MergeHashes::ES {
+                type_export_hashes,
+                export_hashes,
+                ns_hash,
+            }) => {
+                let type_exports = type_export_hashes
+                    .into_iter()
+                    .map(|(k, h)| {
+                        let rh: ReadHash = Box::new(move || h);
+                        (k, rh)
+                    })
                     .collect();
-                let exports = info
-                    .export_keys
-                    .iter()
-                    .enumerate()
-                    .map(|(i, key)| (key.dupe(), read_hash(&exports[i])))
+                let exports = export_hashes
+                    .into_iter()
+                    .map(|(k, h)| {
+                        let rh: ReadHash = Box::new(move || h);
+                        (k, rh)
+                    })
                     .collect();
-                let ns = read_hash(info);
+                let ns_h = ns_hash;
+                let ns: ReadHash = Box::new(move || ns_h);
                 CheckedDep::ES {
                     filename,
                     type_exports,
                     exports,
                     ns,
                 }
-            };
-        let module = dep_parse.type_sig_unsafe(dep_key);
-        match &module.module_kind {
-            ModuleKind::CJSModule {
-                type_exports,
-                exports,
-                info,
-            } => cjs_module(dep_key, type_exports, exports, info),
-            ModuleKind::ESModule {
-                type_exports,
-                exports,
-                info,
-            } => es_module(dep_key, type_exports, exports, info),
+            }
+            None => {
+                // Fallback: no merge hashes stored yet (shouldn't happen for
+                // acyclic deps since they're merged before their dependents,
+                // but handle gracefully). Use structural hashes.
+                fn structural_hash<T: std::hash::Hash>(item: &T) -> ReadHash {
+                    let hash = content_hash_of(item);
+                    Box::new(move || hash)
+                }
+                let module = dep_parse.type_sig_unsafe(dep_key);
+                match &module.module_kind {
+                    ModuleKind::CJSModule {
+                        type_exports,
+                        exports,
+                        info,
+                    } => {
+                        let te = info
+                            .type_export_keys
+                            .iter()
+                            .enumerate()
+                            .map(|(i, key)| (key.dupe(), structural_hash(&type_exports[i])))
+                            .collect();
+                        let exp = exports.as_ref().map(|exp| structural_hash(exp));
+                        let ns = structural_hash(info);
+                        CheckedDep::CJS {
+                            filename,
+                            type_exports: te,
+                            exports: exp,
+                            ns,
+                        }
+                    }
+                    ModuleKind::ESModule {
+                        type_exports,
+                        exports,
+                        info,
+                    } => {
+                        let te = info
+                            .type_export_keys
+                            .iter()
+                            .enumerate()
+                            .map(|(i, key)| (key.dupe(), structural_hash(&type_exports[i])))
+                            .collect();
+                        let exp = info
+                            .export_keys
+                            .iter()
+                            .enumerate()
+                            .map(|(i, key)| (key.dupe(), structural_hash(&exports[i])))
+                            .collect();
+                        let ns = structural_hash(info);
+                        CheckedDep::ES {
+                            filename,
+                            type_exports: te,
+                            exports: exp,
+                            ns,
+                        }
+                    }
+                }
+            }
         }
     };
 
@@ -567,6 +625,47 @@ pub fn sig_hash(
                 component_hash ^= file_hash;
             }
         }
+    }
+
+    // After cycle_hash has run, extract per-element hashes and store them in
+    // SharedMem so that acyclic_dep can read them for subsequent components.
+    // This mirrors OCaml's approach where cycle_hash writes hashes back into
+    // the mutable binary buffer that acyclic_dep later reads from.
+    for (i, checked_dep) in component_rec.get().unwrap().iter().enumerate() {
+        let (file_key, parse) = &component_vec[i];
+        let merge_hashes = match checked_dep.as_ref() {
+            CheckedDep::CJS {
+                type_exports,
+                exports,
+                ns,
+                ..
+            } => MergeHashes::CJS {
+                type_export_hashes: type_exports
+                    .iter()
+                    .map(|(k, node)| (k.dupe(), cycle_hash::read_hash(node)))
+                    .collect(),
+                exports_hash: exports.as_ref().map(|node| cycle_hash::read_hash(node)),
+                ns_hash: cycle_hash::read_hash(ns),
+            },
+            CheckedDep::ES {
+                type_exports,
+                exports,
+                ns,
+                ..
+            } => MergeHashes::ES {
+                type_export_hashes: type_exports
+                    .iter()
+                    .map(|(k, node)| (k.dupe(), cycle_hash::read_hash(node)))
+                    .collect(),
+                export_hashes: exports
+                    .iter()
+                    .map(|(k, node)| (k.dupe(), cycle_hash::read_hash(node)))
+                    .collect(),
+                ns_hash: cycle_hash::read_hash(ns),
+            },
+        };
+        parse.set_merge_hashes(merge_hashes);
+        let _ = file_key;
     }
 
     component_hash
