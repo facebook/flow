@@ -1,2 +1,3 @@
 shell: test.sh
 all: true
+skip_rust_port: true

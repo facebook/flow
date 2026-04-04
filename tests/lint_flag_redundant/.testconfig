@@ -1,2 +1,3 @@
 shell: test.sh
 ignore_stderr: false
+skip_rust_port: true

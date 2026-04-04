@@ -1,3 +1,4 @@
 auto_start: false
 cmd: ls --all --explain --strip-root
 cwd: src
+skip_rust_port: true

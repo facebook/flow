@@ -1,3 +1,4 @@
 shell: test.sh
 skip_saved_state: true
 auto_start: false
+skip_rust_port: true

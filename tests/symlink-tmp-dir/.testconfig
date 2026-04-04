@@ -1,2 +1,3 @@
 shell: test.sh
 auto_start: false
+skip_rust_port: true

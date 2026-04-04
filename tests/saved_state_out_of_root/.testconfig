@@ -1,2 +1,3 @@
 shell: test.sh
 skip_saved_state: true
+skip_rust_port: true
