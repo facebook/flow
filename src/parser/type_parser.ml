@@ -1403,7 +1403,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           { Type.Function.params; return; tparams; comments = None; effect_ = Function.Arbitrary })
         env
     in
-    let method_property env start_loc static abstract key ~optional ~ts_accessibility ~leading =
+    let method_property env start_loc static ~abstract key ~optional ~ts_accessibility ~leading =
       let key = object_key_remove_trailing env key in
       let tparams =
         type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTypeTP (type_params env)
@@ -1731,12 +1731,20 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       | None -> ()
     in
     let computed_key_property
-        env start_loc static variance ~ts_accessibility ~is_class computed_loc key =
+        env start_loc static ~abstract variance ~ts_accessibility ~is_class computed_loc key =
       match Peek.token env with
       | T_LESS_THAN
       | T_LPAREN ->
         error_unexpected_variance env variance;
-        method_property env start_loc static false key ~optional:false ~ts_accessibility ~leading:[]
+        method_property
+          env
+          start_loc
+          static
+          ~abstract
+          key
+          ~optional:false
+          ~ts_accessibility
+          ~leading:[]
       | T_PLING
         when match Peek.ith_token ~i:1 env with
              | T_LPAREN
@@ -1745,7 +1753,15 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
              | _ -> false ->
         Eat.token env;
         error_unexpected_variance env variance;
-        method_property env start_loc static false key ~optional:true ~ts_accessibility ~leading:[]
+        method_property
+          env
+          start_loc
+          static
+          ~abstract
+          key
+          ~optional:true
+          ~ts_accessibility
+          ~leading:[]
       | _ ->
         init_property
           env
@@ -1754,12 +1770,13 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~variance
           ~static
           ~proto:None
-          ~abstract:false
+          ~abstract
           ~ts_accessibility
           ~leading:[]
           (computed_loc, key)
     in
-    let computed_property env start_loc static variance ~ts_accessibility ~is_class ~leading =
+    let computed_property
+        env start_loc static ~abstract variance ~ts_accessibility ~is_class ~leading =
       Eat.push_lex_mode env Lex_mode.NORMAL;
       let expr = Parse.assignment env in
       Eat.pop_lex_mode env;
@@ -1775,6 +1792,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         env
         start_loc
         static
+        ~abstract
         variance
         ~ts_accessibility
         ~is_class
@@ -1801,7 +1819,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       | _ -> ()
     in
     let well_known_symbol_property
-        env start_loc static variance ~ts_accessibility ~is_class ~leading =
+        env start_loc static ~abstract variance ~ts_accessibility ~is_class ~leading =
       (* We've already consumed '['. Now consume 'Symbol', '.', and the property name. *)
       let sym_loc = Peek.loc env in
       Eat.token env;
@@ -1843,6 +1861,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         env
         start_loc
         static
+        ~abstract
         variance
         ~ts_accessibility
         ~is_class
@@ -1850,7 +1869,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         key
     in
     let bracket_property
-        env start_loc static variance ~variance_op ~ts_accessibility ~is_class ~leading =
+        env ~abstract start_loc static variance ~variance_op ~ts_accessibility ~is_class ~leading =
       let leading = leading @ Peek.comments env in
       Expect.token env T_LBRACKET;
       match (Peek.token env, Peek.ith_token ~i:1 env) with
@@ -1865,6 +1884,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           env
           start_loc
           static
+          ~abstract
           variance
           ~ts_accessibility
           ~is_class
@@ -1872,7 +1892,15 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       | _ ->
         if Option.is_some variance_op then error_unexpected_variance env variance;
         if is_d_ts env then
-          computed_property env start_loc static variance ~ts_accessibility ~is_class ~leading
+          computed_property
+            env
+            start_loc
+            static
+            ~abstract
+            variance
+            ~ts_accessibility
+            ~is_class
+            ~leading
         else
           indexer_property env start_loc static variance ~leading
     in
@@ -2051,8 +2079,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~ts_accessibility
           ~leading
           start_loc
-      | T_IDENTIFIER { raw = "abstract"; _ } when allow_abstract && Peek.ith_is_identifier ~i:1 env
-        ->
+      | T_IDENTIFIER { raw = "abstract"; _ }
+        when allow_abstract && ith_is_object_key ~i:1 ~is_class env ->
         if static <> None then error env Parse_error.StaticAbstractMethod;
         let leading = leading @ Peek.comments env in
         Eat.token env;
@@ -2073,11 +2101,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           start_loc
       | T_IDENTIFIER { raw = ("private" | "protected" | "public") as raw; _ }
         when allow_accessibility
-             && (Peek.ith_is_identifier ~i:1 env
-                || Peek.ith_token ~i:1 env = T_READONLY
-                || Peek.ith_token ~i:1 env = T_STATIC
-                || Peek.ith_token ~i:1 env = T_LBRACKET
-                ) ->
+             && (ith_is_object_key ~i:1 ~is_class env || Peek.ith_token ~i:1 env = T_STATIC) ->
         let kind =
           match raw with
           | "private" -> Ast.Class.TSAccessibility.Private
@@ -2155,6 +2179,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         | _ ->
           bracket_property
             env
+            ~abstract
             start_loc
             static
             variance
@@ -2241,7 +2266,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 env
                 start_loc
                 static
-                abstract
+                ~abstract
                 key
                 ~optional:false
                 ~ts_accessibility
@@ -2259,7 +2284,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 env
                 start_loc
                 static
-                abstract
+                ~abstract
                 key
                 ~optional:true
                 ~ts_accessibility
@@ -2297,7 +2322,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 env
                 start_loc
                 static
-                abstract
+                ~abstract
                 key
                 ~optional:false
                 ~ts_accessibility
@@ -2315,7 +2340,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 env
                 start_loc
                 static
-                abstract
+                ~abstract
                 key
                 ~optional:true
                 ~ts_accessibility

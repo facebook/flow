@@ -32,5 +32,16 @@ Flow does not support `abstract` classes. [unsupported-syntax]
        ^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Found 3 errors
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+       v-------------------------------------------------
+   13| declare abstract class AbstractComputed { // ERROR
+   14|   abstract [Symbol.iterator](): Iterator<any>;
+   15| }
+       ^
+
+
+
+Found 4 errors

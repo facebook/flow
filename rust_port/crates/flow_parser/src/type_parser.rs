@@ -2489,6 +2489,7 @@ fn object_type(
         env: &mut ParserEnv,
         start_loc: Loc,
         static_: Option<Loc>,
+        abstract_: bool,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
@@ -2545,6 +2546,7 @@ fn object_type(
             env,
             start_loc,
             static_,
+            abstract_,
             variance,
             ts_accessibility,
             computed_loc,
@@ -2555,6 +2557,7 @@ fn object_type(
 
     fn bracket_property(
         env: &mut ParserEnv,
+        abstract_: bool,
         start_loc: Loc,
         static_: Option<Loc>,
         variance: Option<Variance<Loc>>,
@@ -2584,6 +2587,7 @@ fn object_type(
                     env,
                     start_loc,
                     static_,
+                    abstract_,
                     variance,
                     ts_accessibility,
                     leading,
@@ -2599,6 +2603,7 @@ fn object_type(
                         env,
                         start_loc,
                         static_,
+                        abstract_,
                         variance,
                         ts_accessibility,
                         leading,
@@ -2709,6 +2714,7 @@ fn object_type(
         env: &mut ParserEnv,
         start_loc: Loc,
         static_: Option<Loc>,
+        abstract_: bool,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         computed_loc: Loc,
@@ -2722,7 +2728,7 @@ fn object_type(
                     env,
                     start_loc,
                     static_,
-                    false,
+                    abstract_,
                     key,
                     false,
                     ts_accessibility,
@@ -2737,7 +2743,7 @@ fn object_type(
                         env,
                         start_loc,
                         static_,
-                        false,
+                        abstract_,
                         key,
                         true,
                         ts_accessibility,
@@ -2750,7 +2756,7 @@ fn object_type(
                     variance,
                     static_,
                     None,
-                    false,
+                    abstract_,
                     ts_accessibility,
                     Vec::new(),
                     computed_loc,
@@ -2764,7 +2770,7 @@ fn object_type(
                 variance,
                 static_,
                 None,
-                false,
+                abstract_,
                 ts_accessibility,
                 Vec::new(),
                 computed_loc,
@@ -2778,6 +2784,7 @@ fn object_type(
         env: &mut ParserEnv,
         start_loc: Loc,
         static_: Option<Loc>,
+        abstract_: bool,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
@@ -2797,6 +2804,7 @@ fn object_type(
             env,
             start_loc,
             static_,
+            abstract_,
             variance,
             ts_accessibility,
             computed_loc,
@@ -2990,7 +2998,7 @@ fn object_type(
                     allow_accessibility = false;
                 }
                 TokenKind::TIdentifier { raw, .. } if raw == "abstract" && allow_abstract => {
-                    if peek::ith_is_identifier(env, 1) {
+                    if ith_is_object_key(env, 1, is_class) {
                         if static_.is_some() {
                             env.error(ParseError::StaticAbstractMethod)?;
                         }
@@ -3015,10 +3023,8 @@ fn object_type(
                         "public" => class::ts_accessibility::Kind::Public,
                         _ => unreachable!("Must be one of the above"),
                     };
-                    if peek::ith_is_identifier(env, 1)
-                        || peek::ith_token(env, 1) == &TokenKind::TReadonly
+                    if ith_is_object_key(env, 1, is_class)
                         || peek::ith_token(env, 1) == &TokenKind::TStatic
-                        || peek::ith_token(env, 1) == &TokenKind::TLbracket
                     {
                         let acc_loc = peek::loc(env).dupe();
                         leading = [leading, peek::comments(env)].concat();
@@ -3099,6 +3105,7 @@ fn object_type(
                         }
                         _ => bracket_property(
                             env,
+                            abstract_,
                             start_loc,
                             static_,
                             variance,

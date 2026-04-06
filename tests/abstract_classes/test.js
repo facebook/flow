@@ -9,3 +9,7 @@ declare abstract class Bar { // ERROR
 
   meth(): void;
 }
+
+declare abstract class AbstractComputed { // ERROR
+  abstract [Symbol.iterator](): Iterator<any>;
+}

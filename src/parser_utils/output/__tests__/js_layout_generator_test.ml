@@ -3474,4 +3474,16 @@ let tests =
              ~pretty:true
              "declare class Foo extends Bar.Baz(Base.Baz) {}"
          );
+         ( "abstract_computed_property" >:: fun ctxt ->
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  abstract [\n    Symbol.iterator\n  ](): Iterator<any>,\n}"
+         );
+         ( "type_keyword_class_member_names" >:: fun ctxt ->
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  private string: string,\n}"
+         );
        ]

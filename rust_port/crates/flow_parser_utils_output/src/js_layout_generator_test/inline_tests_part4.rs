@@ -1549,3 +1549,21 @@ fn declare_mixin_class_extends() {
     assert_statement_string(true, None, "declare class Foo extends Bar(Baz(Base)) {}");
     assert_statement_string(true, None, "declare class Foo extends Bar.Baz(Base.Baz) {}");
 }
+
+#[test]
+fn abstract_computed_property() {
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  abstract [\n    Symbol.iterator\n  ](): Iterator<any>,\n}",
+    );
+}
+
+#[test]
+fn type_keyword_class_member_names() {
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  private string: string,\n}",
+    );
+}
