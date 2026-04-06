@@ -5488,7 +5488,16 @@ and declare_namespace
       fuse
         (match id with
         | Ast.Statement.DeclareNamespace.Global id ->
-          [Atom "declare"; space; identifier id; pretty_space; block ~opts body]
+          [
+            ( if implicit_declare then
+              Empty
+            else
+              fuse [Atom "declare"; space]
+            );
+            identifier id;
+            pretty_space;
+            block ~opts body;
+          ]
         | Ast.Statement.DeclareNamespace.Local id ->
           [
             ( if implicit_declare then

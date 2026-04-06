@@ -1573,10 +1573,15 @@ module Statement
         if not global then Expect.identifier env "namespace";
         with_loc ~start_loc (declare_namespace_ ~global ~implicit_declare ~leading) env
       end else begin
-        (* implicit declare: namespace keyword already peeked, just consume it *)
-        Expect.identifier env "namespace";
-        let leading = leading @ Peek.comments env in
-        with_loc ~start_loc (declare_namespace_ ~global:false ~implicit_declare ~leading) env
+        if not global then begin
+          (* implicit declare: namespace keyword already peeked, just consume it *)
+          Expect.identifier env "namespace";
+          let leading = leading @ Peek.comments env in
+          with_loc ~start_loc (declare_namespace_ ~global:false ~implicit_declare ~leading) env
+        end else begin
+          let leading = leading @ Peek.comments env in
+          with_loc ~start_loc (declare_namespace_ ~global ~implicit_declare ~leading) env
+        end
       end
 
   and declare_module_exports ~leading env =

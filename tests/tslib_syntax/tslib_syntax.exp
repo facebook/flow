@@ -1,3 +1,20 @@
+Error ------------------------------------------------------------------------------------- global_augmentation.d.ts:2:3
+
+`declare global` statement is not supported yet. [unsupported-syntax]
+
+   2|   global {
+        ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- global_augmentation.d.ts:2:3
+
+You are using an undocumented feature. It might be removed in the future, and the behavior might change at any time
+without warning. [undocumented-feature]
+
+   2|   global {
+        ^^^^^^
+
+
 Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:6:1
 
 Cannot cast `f(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
@@ -1446,4 +1463,4 @@ References:
 
 
 
-Found 96 errors
+Found 98 errors

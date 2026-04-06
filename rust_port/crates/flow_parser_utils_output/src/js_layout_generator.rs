@@ -3730,8 +3730,11 @@ fn declare_namespace(
         ns.comments.as_ref(),
         fuse(match &ns.id {
             ast::statement::declare_namespace::Id::Global(id) => vec![
-                atom("declare"),
-                space(),
+                if ns.implicit_declare {
+                    LayoutNode::empty()
+                } else {
+                    fuse(vec![atom("declare"), space()])
+                },
                 identifier(id),
                 pretty_space(),
                 block(opts, &ns.body.0, &ns.body.1),

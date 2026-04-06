@@ -2274,22 +2274,39 @@ fn declare_namespace(
             },
         ))
     } else {
-        // implicit declare: namespace keyword already peeked, just consume it
-        expect::identifier(env, "namespace")?;
-        let leading = {
-            let mut l = leading;
-            l.extend(peek::comments(env));
-            l
-        };
-        let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
-            declare_namespace_helper(env, leading, false, implicit_declare)
-        })?;
-        Ok(statement::Statement::new(
-            StatementInner::DeclareNamespace {
-                loc,
-                inner: Arc::new(namespace),
-            },
-        ))
+        if !global {
+            // implicit declare: namespace keyword already peeked, just consume it
+            expect::identifier(env, "namespace")?;
+            let leading = {
+                let mut l = leading;
+                l.extend(peek::comments(env));
+                l
+            };
+            let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
+                declare_namespace_helper(env, leading, false, implicit_declare)
+            })?;
+            Ok(statement::Statement::new(
+                StatementInner::DeclareNamespace {
+                    loc,
+                    inner: Arc::new(namespace),
+                },
+            ))
+        } else {
+            let leading = {
+                let mut l = leading;
+                l.extend(peek::comments(env));
+                l
+            };
+            let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
+                declare_namespace_helper(env, leading, global, implicit_declare)
+            })?;
+            Ok(statement::Statement::new(
+                StatementInner::DeclareNamespace {
+                    loc,
+                    inner: Arc::new(namespace),
+                },
+            ))
+        }
     }
 }
 
@@ -4653,6 +4670,7 @@ fn parse_statement_list_item(
 
     let parse_enums = env.parse_options().enums;
     let in_ambient_context = env.in_ambient_context();
+    let next_is_lcurly = peek::ith_token(env, 1) == &TokenKind::TLcurly;
     match peek::token(env) {
         // Remember kids, these look like statements but they're not
         // statements... (see section 13)
@@ -4674,6 +4692,11 @@ fn parse_statement_list_item(
         }
         TokenKind::TIdentifier { raw, .. } if raw == "namespace" && in_ambient_context => {
             declare_namespace(env, false, true)
+        }
+        TokenKind::TIdentifier { raw, .. }
+            if raw == "global" && in_ambient_context && next_is_lcurly =>
+        {
+            declare_namespace(env, true, true)
         }
         _ => {
             if peek::is_function(env) || peek::is_hook(env) {

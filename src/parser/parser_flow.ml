@@ -366,6 +366,9 @@ module rec Parse : PARSER = struct
     | T_INTERFACE -> interface env
     | T_IDENTIFIER { raw = "namespace"; _ } when in_ambient_context env ->
       Statement.declare_namespace ~global:false ~implicit_declare:true env
+    | T_IDENTIFIER { raw = "global"; _ }
+      when in_ambient_context env && Peek.ith_token ~i:1 env = T_LCURLY ->
+      Statement.declare_namespace ~global:true ~implicit_declare:true env
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env

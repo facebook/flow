@@ -3486,4 +3486,7 @@ let tests =
              ~pretty:true
              "declare class Foo {\n  private string: string,\n}"
          );
+         ( "global_augmentation" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "declare module \"foo\" {\n  global {}\n}"
+         );
        ]

@@ -1567,3 +1567,8 @@ fn type_keyword_class_member_names() {
         "declare class Foo {\n  private string: string,\n}",
     );
 }
+
+#[test]
+fn global_augmentation() {
+    assert_statement_string(true, None, "declare module \"foo\" {\n  global {}\n}");
+}

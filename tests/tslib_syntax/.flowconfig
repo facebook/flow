@@ -1,3 +1,6 @@
+[libs]
+global_augmentation.d.ts
+
 [options]
 all=true
 no_flowlib=false
