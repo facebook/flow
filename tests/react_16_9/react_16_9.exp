@@ -9,8 +9,8 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
 
 References:
    <BUILTINS>/react.js:179:16
-   179| declare module react {
-                       ^^^^^ [1]
+   179| declare module "react" {
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13

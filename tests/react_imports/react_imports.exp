@@ -159,8 +159,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
 
 References:
    <BUILTINS>/react.js:179:16
-   179| declare module react {
-                       ^^^^^ [1]
+   179| declare module "react" {
+                       ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- use_type_without_import.js:2:2

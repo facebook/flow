@@ -197,8 +197,8 @@ Cannot get `React.MISSING` because property `MISSING` is missing in module `reac
 
 References:
    <BUILTINS>/react.js:179:16
-   179| declare module react {
-                       ^^^^^ [1]
+   179| declare module "react" {
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:18:29
@@ -211,8 +211,8 @@ Cannot get `React.MISSING` because property `MISSING` is missing in module `reac
 
 References:
    <BUILTINS>/react.js:179:16
-   179| declare module react {
-                       ^^^^^ [1]
+   179| declare module "react" {
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:21:11
@@ -225,8 +225,8 @@ Cannot get `React.MISSING` because property `MISSING` is missing in module `reac
 
 References:
    <BUILTINS>/react.js:179:16
-   179| declare module react {
-                       ^^^^^ [1]
+   179| declare module "react" {
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:22:14
@@ -239,8 +239,8 @@ Cannot get `React.MISSING` because property `MISSING` is missing in module `reac
 
 References:
    <BUILTINS>/react.js:179:16
-   179| declare module react {
-                       ^^^^^ [1]
+   179| declare module "react" {
+                       ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------- under_constrained_speculation.js:1:2
