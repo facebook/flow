@@ -1730,6 +1730,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             })?;
 
             // Helper to build method function type
+            let is_d_ts = env.is_d_ts();
             let make_method_func_type = |type_params: types::function::Params<Loc, Loc>| {
                 let return_annot = match &return_annot {
                     function::ReturnAnnot::Available(annot) => {
@@ -1739,7 +1740,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         types::function::ReturnAnnotation::TypeGuard(tg.guard.clone())
                     }
                     function::ReturnAnnot::Missing(loc) => {
-                        if kind == class::MethodKind::Constructor {
+                        if kind == class::MethodKind::Constructor && is_d_ts {
                             types::function::ReturnAnnotation::Missing(loc.dupe())
                         } else {
                             types::function::ReturnAnnotation::Available(types::Annotation {
@@ -1772,7 +1773,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 || (env.in_ambient_context() && peek::is_implicit_semicolon(env)))
                 && !async_
                 && !generator
-                && (kind != class::MethodKind::Constructor || env.in_ambient_context());
+                && (kind != class::MethodKind::Constructor || env.is_d_ts());
 
             // Wrap function type as Type.annotation for DeclareMethod
             let make_method_value =
@@ -1853,7 +1854,9 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 && kind != class::MethodKind::Set
                 && decorators.is_empty()
                 && match &return_annot {
-                    function::ReturnAnnot::Missing(_) => kind == class::MethodKind::Constructor,
+                    function::ReturnAnnot::Missing(_) => {
+                        kind == class::MethodKind::Constructor && env.is_d_ts()
+                    }
                     _ => true,
                 }
             {

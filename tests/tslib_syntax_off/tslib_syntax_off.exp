@@ -47,275 +47,267 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
                                
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:20:3
-
-Declare methods in classes are not supported. [unsupported-syntax]
-
-   20|   constructor(x: number); // ERROR
-         ^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ test.js.flow:24:1
+Error ------------------------------------------------------------------------------------------------ test.js.flow:19:1
 
 Declaration without `declare` is not enabled. [unsupported-syntax]
 
        v------------------------------
-   24| namespace ImplicitNS { // ERROR
-   25|   const x: number;
-   26| }
+   19| namespace ImplicitNS { // ERROR
+   20|   const x: number;
+   21| }
        ^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:25:9
+Error ------------------------------------------------------------------------------------------------ test.js.flow:20:9
 
 Declaration without `declare` is not enabled. [unsupported-syntax]
 
-   25|   const x: number;
+   20|   const x: number;
                ^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:29:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:24:16
 
 `declare export namespace` is not enabled. [unsupported-syntax]
 
                       v------------------------------
-   29| declare export namespace ExportedNS { // ERROR
-   30|   declare const y: string;
-   31| }
+   24| declare export namespace ExportedNS { // ERROR
+   25|   declare const y: string;
+   26| }
        ^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:29:1
+
+`export =` syntax is not enabled. [unsupported-syntax]
+
+   29| export = foo; // ERROR
+       ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:32:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   32| import A = require("./exports"); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:33:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   33| import type B = require("./exports"); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------ test.js.flow:34:1
 
-`export =` syntax is not enabled. [unsupported-syntax]
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
 
-   34| export = foo; // ERROR
-       ^^^^^^^^^^^^^
+   34| import C = Foo.Bar; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------ test.js.flow:37:1
 
-`import ... = ...` syntax is not enabled. [unsupported-syntax]
-
-   37| import A = require("./exports"); // ERROR
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ test.js.flow:38:1
-
-`import ... = ...` syntax is not enabled. [unsupported-syntax]
-
-   38| import type B = require("./exports"); // ERROR
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ test.js.flow:39:1
-
-`import ... = ...` syntax is not enabled. [unsupported-syntax]
-
-   39| import C = Foo.Bar; // ERROR
-       ^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ test.js.flow:42:1
-
 Multiple `declare` variable declarators is not enabled. [unsupported-syntax]
 
-   42| declare const x: string, y: number; // ERROR
+   37| declare const x: string, y: number; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:45:19
+Error ----------------------------------------------------------------------------------------------- test.js.flow:40:19
 
 `declare` variable with literal initializer is not enabled. [unsupported-syntax]
 
-   45| declare const s = 'foo'; // ERROR
+   40| declare const s = 'foo'; // ERROR
                          ^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:49:1
+Error ------------------------------------------------------------------------------------------------ test.js.flow:44:1
 
 Inline `type` modifier on export specifier is not enabled. [unsupported-syntax]
 
-   49| export {type SomeType}; // ERROR
+   44| export {type SomeType}; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:52:12
+Error ----------------------------------------------------------------------------------------------- test.js.flow:47:12
 
 Template literal type is not enabled. [unsupported-syntax]
 
-   52| type TLT = `foo ${string}`; // ERROR
+   47| type TLT = `foo ${string}`; // ERROR
                   ^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:55:19
+Error ----------------------------------------------------------------------------------------------- test.js.flow:50:19
 
 `unique symbol` type is not enabled. [unsupported-syntax]
 
-   55| declare const us: unique symbol; // ERROR
+   50| declare const us: unique symbol; // ERROR
                          ^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:58:18
+Error ----------------------------------------------------------------------------------------------- test.js.flow:53:18
 
 `typeof import("module")` syntax is not enabled. [unsupported-syntax]
 
-   58| type TI = typeof import("foo"); // ERROR
+   53| type TI = typeof import("foo"); // ERROR
                         ^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:64:30
+Error ----------------------------------------------------------------------------------------------- test.js.flow:59:30
 
 `implements` with dotted path is not enabled. [unsupported-syntax]
 
-   64| declare class IDP implements ns.IFace {} // ERROR
+   59| declare class IDP implements ns.IFace {} // ERROR
                                     ^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:68:3
+Error ------------------------------------------------------------------------------------------------ test.js.flow:63:3
 
 Optional class property (`?:`) is not enabled. [unsupported-syntax]
 
-   68|   x?: number; // ERROR
+   63|   x?: number; // ERROR
          ^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:72:14
+Error ----------------------------------------------------------------------------------------------- test.js.flow:67:14
 
 Optional method signature is not enabled. [unsupported-syntax]
 
-   72| type OSM = { f?(): void }; // ERROR
+   67| type OSM = { f?(): void }; // ERROR
                     ^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:75:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:70:16
 
 Anonymous default export function declaration is not enabled. [unsupported-syntax]
 
-   75| export default function (): void; // ERROR
+   70| export default function (): void; // ERROR
                       ^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:78:15
+Error ----------------------------------------------------------------------------------------------- test.js.flow:73:15
 
 Key remapping (`as`) in mapped types is not enabled. [unsupported-syntax]
 
-   78| type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR
+   73| type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:81:11
+Error ----------------------------------------------------------------------------------------------- test.js.flow:76:11
 
 Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is not enabled. [unsupported-syntax]
 
-   81| type CT = new () => string; // ERROR
+   76| type CT = new () => string; // ERROR
                  ^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:82:12
+Error ----------------------------------------------------------------------------------------------- test.js.flow:77:12
 
 Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is not enabled. [unsupported-syntax]
 
-   82| type ACT = abstract new () => string; // ERROR
+   77| type ACT = abstract new () => string; // ERROR
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:85:22
+Error ----------------------------------------------------------------------------------------------- test.js.flow:80:22
 
 Optional unlabeled tuple element is not enabled. [unsupported-syntax]
 
-   85| type OTup = [string, string?]; // ERROR
+   80| type OTup = [string, string?]; // ERROR
                             ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:88:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:83:16
 
 Optional indexer (`?:`) is not enabled. [unsupported-syntax]
 
-   88| type OptIdx = {[string]?: number}; // ERROR
+   83| type OptIdx = {[string]?: number}; // ERROR
                       ^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:91:1
+Error ------------------------------------------------------------------------------------------------ test.js.flow:86:1
 
 `export as namespace` is not enabled. [unsupported-syntax]
 
-   91| export as namespace Foo; // ERROR
+   86| export as namespace Foo; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:94:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:89:16
 
 `+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
 
-   94| type MR<T> = { -readonly [P in keyof T]: T[P] }; // ERROR
+   89| type MR<T> = { -readonly [P in keyof T]: T[P] }; // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:95:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:90:16
 
 `+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
 
-   95| type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR
+   90| type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:99:3
+Error ------------------------------------------------------------------------------------------------ test.js.flow:94:3
 
 Private class field (`#private`) is not enabled. [unsupported-syntax]
 
-   99|   #private; // ERROR
+   94|   #private; // ERROR
          ^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:104:1
+Error ------------------------------------------------------------------------------------------------ test.js.flow:99:1
 
 Type arguments for tagged template expression is not enabled. [unsupported-syntax]
 
-   104| tag<string>`hello`; // ERROR
-        ^^^^^^^^^^^^^^^^^^
+   99| tag<string>`hello`; // ERROR
+       ^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- test.js.flow:107:18
+Error ---------------------------------------------------------------------------------------------- test.js.flow:102:18
 
 `typeof this` syntax is not enabled. [unsupported-syntax]
 
-   107| type TT = typeof this; // ERROR
+   102| type TT = typeof this; // ERROR
                          ^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- test.js.flow:108:19
+Error ---------------------------------------------------------------------------------------------- test.js.flow:103:19
 
 `typeof this` syntax is not enabled. [unsupported-syntax]
 
-   108| type TTP = typeof this.property; // ERROR
+   103| type TTP = typeof this.property; // ERROR
                           ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:107:3
+
+Property value initializer in declaration is not enabled. [unsupported-syntax]
+
+   107|   readonly x = 42; // ERROR
+          ^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------- test.js.flow:112:3
 
 Property value initializer in declaration is not enabled. [unsupported-syntax]
 
-   112|   readonly x = 42; // ERROR
-          ^^^^^^^^^^^^^^^
+   112|   private readonly x = 42; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------- test.js.flow:117:3
 
-Property value initializer in declaration is not enabled. [unsupported-syntax]
-
-   117|   private readonly x = 42; // ERROR
-          ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:122:3
-
 Index signatures in classes are not supported. [unsupported-syntax]
 
-   122|   [key: string]: any; // ERROR
+   117|   [key: string]: any; // ERROR
           ^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 39 errors
+Found 38 errors

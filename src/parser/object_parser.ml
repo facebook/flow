@@ -1242,7 +1242,7 @@ module Object
               Ast.Type.Function.Available (ret_loc, t)
             | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
             | Function.ReturnAnnot.Missing loc ->
-              if kind = Ast.Class.Method.Constructor then
+              if kind = Ast.Class.Method.Constructor && is_d_ts env then
                 Ast.Type.Function.Missing loc
               else
                 Ast.Type.Function.Available (Loc.none, Ast.Type.Any None)
@@ -1271,7 +1271,7 @@ module Object
           )
           && (not async)
           && (not generator)
-          && (kind <> Ast.Class.Method.Constructor || in_ambient_context env)
+          && (kind <> Ast.Class.Method.Constructor || is_d_ts env)
         in
         let make_method_value env =
           with_loc
@@ -1340,7 +1340,7 @@ module Object
             && List.length decorators = 0
             &&
             match return with
-            | Function.ReturnAnnot.Missing _ -> kind = Ast.Class.Method.Constructor
+            | Function.ReturnAnnot.Missing _ -> kind = Ast.Class.Method.Constructor && is_d_ts env
             | _ -> true
           then
           (* Implicit declare method *)
