@@ -3656,7 +3656,7 @@ fn annot_with_loc<'arena, 'ast>(
             infer_type(opts, scope, scopes, tbls, xs, loc, inner.as_ref())
         }
         TypeInner::Function { inner, .. } => {
-            let def = function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+            let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
             Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(loc, def)))
         }
         TypeInner::Component { inner, .. } => {
@@ -3967,7 +3967,6 @@ fn type_guard_opt<'arena, 'ast>(
 }
 
 fn return_annot<'arena, 'ast>(
-    is_constructor: bool,
     opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
@@ -3997,11 +3996,7 @@ fn return_annot<'arena, 'ast>(
         }
         ast::types::function::ReturnAnnotation::Missing(loc) => {
             let loc = tbls.push_loc(loc.dupe());
-            if is_constructor {
-                (Parsed::Annot(Box::new(ParsedAnnot::Void(loc))), None)
-            } else {
-                (Parsed::Annot(Box::new(ParsedAnnot::Any(loc))), None)
-            }
+            (Parsed::Annot(Box::new(ParsedAnnot::Void(loc))), None)
         }
     }
 }
@@ -4030,7 +4025,6 @@ fn convert_effect<Loc>(
 }
 
 fn function_type<'arena, 'ast>(
-    is_constructor: bool,
     opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
@@ -4043,8 +4037,7 @@ fn function_type<'arena, 'ast>(
     let this_param = function_type_this_param(opts, scope, scopes, tbls, xs, &f.params.this);
     let params = function_type_params(opts, scope, scopes, tbls, xs, &f.params.params);
     let rest_param = function_type_rest_param(opts, scope, scopes, tbls, xs, &f.params.rest);
-    let (return_, type_guard) =
-        return_annot(is_constructor, opts, scope, scopes, tbls, xs, &f.return_);
+    let (return_, type_guard) = return_annot(opts, scope, scopes, tbls, xs, &f.return_);
     let effect_ = convert_effect(opts, &f.effect, None, None);
     xs.pop_frame();
 
@@ -4215,7 +4208,7 @@ fn getter_type<'arena, 'ast>(
 ) -> Accessor<LocNode<'arena>, Parsed<'arena, 'ast>> {
     Accessor::Get(
         id_loc,
-        return_annot(false, opts, scope, scopes, tbls, xs, &f.return_).0,
+        return_annot(opts, scope, scopes, tbls, xs, &f.return_).0,
     )
 }
 
@@ -4287,7 +4280,7 @@ fn optional_method_as_field<'arena, 'ast>(
     // before id_loc.
     let fn_loc = tbls.push_loc(fn_loc.dupe());
     let id_loc = tbls.push_loc(id_loc.dupe());
-    let def = function_type(false, opts, scope, scopes, tbls, xs, func);
+    let def = function_type(opts, scope, scopes, tbls, xs, func);
     let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(Box::new(
         ParsedAnnot::FunAnnot(fn_loc, def),
     )))));
@@ -4317,7 +4310,7 @@ fn object_type<'arena, 'ast>(
         if let TypeInner::Function { loc, inner, .. } = t.deref() {
             let fn_loc = tbls.push_loc(loc.dupe());
             let id_loc = tbls.push_loc(id_loc.dupe());
-            let def = function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+            let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
             acc.add_method(name.clone(), id_loc, fn_loc, def);
         } else {
             unreachable!("Unexpected method")
@@ -4357,8 +4350,7 @@ fn object_type<'arena, 'ast>(
                     } => {
                         let fn_loc = tbls.push_loc(fn_loc.dupe());
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
-                        let def =
-                            function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                        let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
                                 Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
@@ -4618,7 +4610,7 @@ fn object_type<'arena, 'ast>(
             }
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
-                let def = function_type(false, opts, scope, scopes, tbls, xs, &p.value.1);
+                let def = function_type(opts, scope, scopes, tbls, xs, &p.value.1);
                 let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(fn_loc, def)));
                 acc.add_call(t);
             }
@@ -4723,8 +4715,7 @@ fn interface_props<'arena, 'ast>(
                         } else {
                             let fn_loc = tbls.push_loc(p.loc.dupe());
                             let id_loc = tbls.push_loc(id_loc);
-                            let def =
-                                function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                            let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                             acc.append_method(name, id_loc, fn_loc, def);
                         }
                     }
@@ -4775,8 +4766,7 @@ fn interface_props<'arena, 'ast>(
                     {
                         let fn_loc = tbls.push_loc(fn_loc.dupe());
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
-                        let def =
-                            function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                        let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
                                 Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
@@ -4852,7 +4842,7 @@ fn interface_props<'arena, 'ast>(
             }
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
-                let def = function_type(false, opts, scope, scopes, tbls, xs, &p.value.1);
+                let def = function_type(opts, scope, scopes, tbls, xs, &p.value.1);
                 let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(fn_loc, def)));
                 acc.append_call(t);
             }
@@ -4994,15 +4984,7 @@ fn declare_class_props<'arena, 'ast>(
                         } else {
                             let fn_loc = tbls.push_loc(fn_loc.dupe());
                             let id_loc = tbls.push_loc(id_loc);
-                            let def = function_type(
-                                name.as_str() == "constructor",
-                                opts,
-                                scope,
-                                scopes,
-                                tbls,
-                                xs,
-                                inner.as_ref(),
-                            );
+                            let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                             acc.append_method(p.static_, name, id_loc, fn_loc, def);
                         }
                     }
@@ -5073,8 +5055,7 @@ fn declare_class_props<'arena, 'ast>(
                     {
                         let fn_loc = tbls.push_loc(fn_loc.dupe());
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
-                        let def =
-                            function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                        let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
                                 Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
@@ -5177,7 +5158,7 @@ fn declare_class_props<'arena, 'ast>(
             }
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
-                let def = function_type(false, opts, scope, scopes, tbls, xs, &p.value.1);
+                let def = function_type(opts, scope, scopes, tbls, xs, &p.value.1);
                 let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(fn_loc, def)));
                 acc.append_call(p.static_, t);
             }
@@ -7876,8 +7857,7 @@ fn class_def<'arena: 'ast, 'ast>(
                     if *optional {
                         let id_loc_node = tbls.push_loc(id.loc.dupe());
                         let fn_loc_node = tbls.push_loc(annot_loc.dupe());
-                        let def =
-                            function_type(false, opts, scope, scopes, tbls, &mut xs, f.as_ref());
+                        let def = function_type(opts, scope, scopes, tbls, &mut xs, f.as_ref());
                         let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
                             Box::new(ParsedAnnot::FunAnnot(fn_loc_node, def)),
                         ))));
@@ -7914,15 +7894,8 @@ fn class_def<'arena: 'ast, 'ast>(
                             class::MethodKind::Method | class::MethodKind::Constructor => {
                                 let id_loc_node = tbls.push_loc(id.loc.dupe());
                                 let fn_loc_node = tbls.push_loc(annot_loc.dupe());
-                                let def = function_type(
-                                    name.as_str() == "constructor",
-                                    opts,
-                                    scope,
-                                    scopes,
-                                    tbls,
-                                    &mut xs,
-                                    f.as_ref(),
-                                );
+                                let def =
+                                    function_type(opts, scope, scopes, tbls, &mut xs, f.as_ref());
                                 acc.add_method(
                                     *is_static,
                                     name,
@@ -9252,7 +9225,7 @@ fn declare_function_decl<'arena: 'ast, 'ast>(
                                 &params_inner.rest,
                             );
                             let (return_, type_guard) =
-                                return_annot(false, opts, scope, scopes, tbls, &mut xs, r);
+                                return_annot(opts, scope, scopes, tbls, &mut xs, r);
                             let effect_val = convert_effect(opts, effect, None, Some(name));
                             FunSig {
                                 tparams,

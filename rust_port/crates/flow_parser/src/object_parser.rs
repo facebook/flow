@@ -1125,7 +1125,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         types::function::ReturnAnnotation::TypeGuard(tg.guard.clone())
                     }
                     function::ReturnAnnot::Missing(loc) => {
-                        if kind == class::MethodKind::Constructor {
+                        if env.is_d_ts() {
                             types::function::ReturnAnnotation::Missing(loc.dupe())
                         } else {
                             types::function::ReturnAnnotation::Available(types::Annotation {
@@ -1740,7 +1740,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         types::function::ReturnAnnotation::TypeGuard(tg.guard.clone())
                     }
                     function::ReturnAnnot::Missing(loc) => {
-                        if kind == class::MethodKind::Constructor && is_d_ts {
+                        if is_d_ts {
                             types::function::ReturnAnnotation::Missing(loc.dupe())
                         } else {
                             types::function::ReturnAnnotation::Available(types::Annotation {
@@ -1854,9 +1854,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 && kind != class::MethodKind::Set
                 && decorators.is_empty()
                 && match &return_annot {
-                    function::ReturnAnnot::Missing(_) => {
-                        kind == class::MethodKind::Constructor && env.is_d_ts()
-                    }
+                    function::ReturnAnnot::Missing(_) => env.is_d_ts(),
                     _ => true,
                 }
             {
