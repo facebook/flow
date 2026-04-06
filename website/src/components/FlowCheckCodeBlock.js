@@ -227,6 +227,7 @@ export default component FlowCheckCodeBlock(
                       {hasError && (
                         <>
                           <span className={styles.inlineErrorSpacer} />
+                          {/* $FlowFixMe[incompatible-use] lineErrors may be undefined */}
                           {lineErrors.map(({error}, errorIdx) => {
                             // Show only the primary message (first line)
                             const primaryMessage =

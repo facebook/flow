@@ -44,7 +44,9 @@ component TryFlowConfigRows(
           <td className={styles.tryEditorConfigInputCell}>
             {item.type === 'enum' ? (
               <select
+                // $FlowFixMe[incompatible-type]
                 value={config[item.key]}
+                // $FlowFixMe[incompatible-type]
                 onChange={(event: SyntheticInputEvent<>) => {
                   setConfig({
                     ...config,
@@ -61,7 +63,9 @@ component TryFlowConfigRows(
               <input
                 type="checkbox"
                 id={item.key}
+                // $FlowFixMe[incompatible-type]
                 checked={config[item.key]}
+                // $FlowFixMe[incompatible-type]
                 onChange={(event: SyntheticInputEvent<>) => {
                   setConfig({
                     ...config,

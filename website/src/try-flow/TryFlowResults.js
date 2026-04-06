@@ -45,6 +45,7 @@ component ErrorMessage(msg: FlowJsErrorMessage) {
         <span className={styles.msgType}>{msg.descr}</span>
       </>
     );
+    // $FlowFixMe[invalid-compare]
   } else if (msg.type === 'Comment') {
     return `. ${msg.descr}\n`;
   } else {
@@ -151,6 +152,7 @@ export default component TryFlowResults(
           flowVersion !== flowVersions[1] ? (
             <span className={styles.versionWarning}>old version selected</span>
           ) : null}
+          {/* $FlowFixMe[incompatible-type] SyntheticInputEvent vs SyntheticEvent */}
           <select value={flowVersion} onChange={changeFlowVersion}>
             {flowVersions.map(version => (
               <option key={version} value={version}>

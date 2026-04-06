@@ -59,6 +59,7 @@ export default class FlowJsServices {
     let passedValidation = Object.entries(config).every(([key, value]) => {
       const item = schema.find(item => item.key === key);
       if (item == null) return false;
+      // $FlowFixMe[incompatible-type] value is mixed
       if (item.type === 'enum' && item.choices.includes(value)) {
         return true;
       } else if (item.type === 'bool' && typeof value === 'boolean') {
