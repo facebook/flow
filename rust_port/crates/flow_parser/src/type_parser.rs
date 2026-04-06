@@ -2687,7 +2687,7 @@ fn object_type(
             TokenKind::TRcurlybar if exact => {}
             TokenKind::TRcurly if !exact => {}
             _ => {
-                if !peek::is_implicit_semicolon(env) {
+                if !(env.is_d_ts() && peek::is_implicit_semicolon(env)) {
                     expect::error(env, &TokenKind::TComma)?
                 }
             }

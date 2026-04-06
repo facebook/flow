@@ -30,6 +30,10 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "message":"Unexpected end of input, expected the token `,`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
       "message":"Unexpected end of input, expected the token `}`"
     },
     {
@@ -105,7 +109,8 @@
                     "proto":false,
                     "abstract":false,
                     "variance":null,
-                    "kind":"init"
+                    "kind":"init",
+                    "init":null
                   },
                   {
                     "type":"ObjectTypeProperty",
@@ -130,7 +135,8 @@
                     "proto":false,
                     "abstract":false,
                     "variance":null,
-                    "kind":"init"
+                    "kind":"init",
+                    "init":null
                   },
                   {
                     "type":"ObjectTypeProperty",
@@ -155,7 +161,8 @@
                     "proto":false,
                     "abstract":false,
                     "variance":null,
-                    "kind":"init"
+                    "kind":"init",
+                    "init":null
                   }
                 ],
                 "indexers":[],
