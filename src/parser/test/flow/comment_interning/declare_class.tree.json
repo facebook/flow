@@ -142,14 +142,6 @@
       "typeParameters":null,
       "body":{
         "type":"ObjectTypeAnnotation",
-        "leadingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":5,"column":64},"end":{"line":5,"column":84}},
-            "range":[239,259],
-            "value":" 3.3 L obj type "
-          }
-        ],
         "loc":{"source":null,"start":{"line":5,"column":85},"end":{"line":5,"column":87}},
         "range":[260,262],
         "exact":false,
@@ -165,6 +157,14 @@
           "range":[233,238],
           "id":{
             "type":"Identifier",
+            "trailingComments":[
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":5,"column":64},"end":{"line":5,"column":84}},
+                "range":[239,259],
+                "value":" 3.3 L obj type "
+              }
+            ],
             "leadingComments":[
               {
                 "type":"Block",
@@ -543,14 +543,6 @@
       "typeParameters":null,
       "body":{
         "type":"ObjectTypeAnnotation",
-        "leadingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":25,"column":2},"end":{"line":25,"column":22}},
-            "range":[802,822],
-            "value":" 9.2 L obj type "
-          }
-        ],
         "loc":{"source":null,"start":{"line":25,"column":23},"end":{"line":25,"column":25}},
         "range":[823,825],
         "exact":false,
@@ -572,6 +564,12 @@
                 "loc":{"source":null,"start":{"line":24,"column":34},"end":{"line":24,"column":48}},
                 "range":[785,799],
                 "value":" 9.1 T id "
+              },
+              {
+                "type":"Block",
+                "loc":{"source":null,"start":{"line":25,"column":2},"end":{"line":25,"column":22}},
+                "range":[802,822],
+                "value":" 9.2 L obj type "
               }
             ],
             "loc":{"source":null,"start":{"line":24,"column":28},"end":{"line":24,"column":33}},

@@ -2624,11 +2624,30 @@ pub mod statement {
         serde::Serialize,
         serde::Deserialize
     )]
+    pub enum DeclareClassExtends<M: Dupe, T: Dupe> {
+        ExtendsIdent(super::types::Generic<M, T>),
+        ExtendsCall {
+            callee: (M, super::types::Generic<M, T>),
+            arg: Box<(M, DeclareClassExtends<M, T>)>,
+        },
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareClass<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
         pub body: (M, super::types::Object<M, T>),
-        pub extends: Option<(M, super::types::Generic<M, T>)>,
+        pub extends: Option<(M, DeclareClassExtends<M, T>)>,
         pub mixins: Arc<[(M, super::types::Generic<M, T>)]>,
         pub implements: Option<super::class::Implements<M, T>>,
         pub abstract_: bool,

@@ -618,7 +618,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             let (a, b) = body in
             (this#on_loc_annot a, this#object_type b)
           in
-          let extends' = Option.map ~f:(this#on_loc_annot * this#generic_type) extends in
+          let extends' =
+            Option.map
+              ~f:(fun (ext_loc, ext) -> (this#on_loc_annot ext_loc, this#declare_class_extends ext))
+              extends
+          in
           let mixins' = List.map ~f:(this#on_loc_annot * this#generic_type) mixins in
           let implements' = Option.map ~f:this#class_implements implements in
           let comments' = this#syntax_opt comments in
@@ -633,6 +637,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             comments = comments';
           }
       )
+
+    method declare_class_extends (ext : ('M, 'T) Ast.Statement.DeclareClass.extends)
+        : ('N, 'U) Ast.Statement.DeclareClass.extends =
+      let open Ast.Statement.DeclareClass in
+      match ext with
+      | ExtendsIdent generic -> ExtendsIdent (this#generic_type generic)
+      | ExtendsCall { callee = (callee_loc, callee); arg = (arg_loc, arg) } ->
+        ExtendsCall
+          {
+            callee = (this#on_loc_annot callee_loc, this#generic_type callee);
+            arg = (this#on_loc_annot arg_loc, this#declare_class_extends arg);
+          }
 
     method class_implements (implements : ('M, 'T) Ast.Class.Implements.t)
         : ('N, 'U) Ast.Class.Implements.t =

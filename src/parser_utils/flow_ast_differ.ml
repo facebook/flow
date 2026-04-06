@@ -3442,7 +3442,23 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
       let t_params_diff = diff_if_changed_opt type_params tparams1 tparams2 in
       let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
-      let extends_diff = diff_if_changed_opt generic_type_with_loc extends1 extends2 in
+      let extends_diff =
+        let rec declare_class_extends_with_loc
+            ((loc1, ext1) : Loc.t * (Loc.t, Loc.t) Ast.Statement.DeclareClass.extends)
+            ((_loc2, ext2) : Loc.t * (Loc.t, Loc.t) Ast.Statement.DeclareClass.extends) =
+          let open Ast.Statement.DeclareClass in
+          match (ext1, ext2) with
+          | (ExtendsIdent gt1, ExtendsIdent gt2) -> generic_type loc1 gt1 gt2
+          | ( ExtendsCall { callee = callee1; arg = arg1 },
+              ExtendsCall { callee = callee2; arg = arg2 }
+            ) ->
+            let callee_diff = diff_if_changed_ret_opt generic_type_with_loc callee1 callee2 in
+            let arg_diff = diff_if_changed_ret_opt declare_class_extends_with_loc arg1 arg2 in
+            join_diff_list [callee_diff; arg_diff]
+          | _ -> None
+        in
+        diff_if_changed_opt declare_class_extends_with_loc extends1 extends2
+      in
       let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
       let comments_diff = syntax_opt loc comments1 comments2 in
       if mixins1 != mixins2 then

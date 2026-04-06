@@ -1374,11 +1374,29 @@ where
         comments: _,
     } = decl;
     visitor.class_identifier(id)?;
-    let extends_targs = if let Some((_, generic)) = extends.as_ref() {
-        visitor.generic_identifier_type(&generic.id)?;
-        generic.targs.as_ref()
-    } else {
-        None
+    let extends_targs = {
+        fn extends_targs_of<'a, Loc: Dupe + Eq + Hash + Default, E, V>(
+            visitor: &mut V,
+            ext: &'a ast::statement::DeclareClassExtends<Loc, Loc>,
+        ) -> Result<Option<&'a ast::types::TypeArgs<Loc, Loc>>, E>
+        where
+            V: for<'b> AstVisitor<'b, Loc, Loc, &'b Loc, E> + WithBindings<Loc, E>,
+        {
+            match ext {
+                ast::statement::DeclareClassExtends::ExtendsIdent(generic) => {
+                    visitor.generic_identifier_type(&generic.id)?;
+                    Ok(generic.targs.as_ref())
+                }
+                ast::statement::DeclareClassExtends::ExtendsCall { callee: _, arg } => {
+                    extends_targs_of(visitor, &arg.1)
+                }
+            }
+        }
+        if let Some((_loc, ext)) = extends.as_ref() {
+            extends_targs_of(visitor, ext)?
+        } else {
+            None
+        }
     };
     let mut mixins_targs = Vec::new();
     for (_, generic) in mixins.iter() {

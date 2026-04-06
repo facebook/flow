@@ -184,6 +184,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method declare_class :
       ('M, 'T) Ast.Statement.DeclareClass.t -> ('N, 'U) Ast.Statement.DeclareClass.t
 
+    method declare_class_extends :
+      ('M, 'T) Ast.Statement.DeclareClass.extends -> ('N, 'U) Ast.Statement.DeclareClass.extends
+
     method declare_component :
       ('M, 'T) Ast.Statement.DeclareComponent.t -> ('N, 'U) Ast.Statement.DeclareComponent.t
 

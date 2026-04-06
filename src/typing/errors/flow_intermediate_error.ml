@@ -5359,6 +5359,7 @@ let to_printable_error :
         | GenericTaggedTemplate -> "Type arguments for tagged template expression"
         | TypeofThis -> "`typeof this` syntax"
         | PropertyValueInitializer -> "Property value initializer in declaration"
+        | ClassExtendsCall -> "Call expression in class `extends` clause"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

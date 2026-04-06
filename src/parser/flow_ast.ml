@@ -1193,11 +1193,19 @@ and Statement : sig
   end
 
   module DeclareClass : sig
+    type ('M, 'T) extends =
+      | ExtendsIdent of ('M, 'T) Type.Generic.t
+      | ExtendsCall of {
+          callee: 'M * ('M, 'T) Type.Generic.t;
+          arg: 'M * ('M, 'T) extends;
+        }
+    [@@deriving show]
+
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       body: 'M * ('M, 'T) Type.Object.t;
-      extends: ('M * ('M, 'T) Type.Generic.t) option;
+      extends: ('M * ('M, 'T) extends) option;
       mixins: ('M * ('M, 'T) Type.Generic.t) list;
       implements: ('M, 'T) Class.Implements.t option;
       abstract: bool;

@@ -1203,9 +1203,18 @@ with type t = Impl.t = struct
           }
         ) =
       (* TODO: extends shouldn't return an array *)
+      let rec declare_class_extends_to_estree (loc, ext) =
+        match ext with
+        | Statement.DeclareClass.ExtendsIdent generic -> interface_extends (loc, generic)
+        | Statement.DeclareClass.ExtendsCall { callee; arg } ->
+          node
+            "DeclareClassExtendsCall"
+            loc
+            [("callee", generic_type callee); ("argument", declare_class_extends_to_estree arg)]
+      in
       let extends =
         match extends with
-        | Some extends -> array [interface_extends extends]
+        | Some ext -> array [declare_class_extends_to_estree ext]
         | None -> array []
       in
       let implements =

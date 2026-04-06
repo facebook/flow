@@ -1193,6 +1193,17 @@ module Statement
       | _ -> List.rev acc
       (* This is identical to `interface`, except that mixins are allowed *)
     in
+    let rec parse_extends env =
+      let open Statement.DeclareClass in
+      let generic = Type.generic env in
+      match Peek.token env with
+      | T_LPAREN ->
+        Expect.token env T_LPAREN;
+        let arg = with_loc parse_extends env in
+        Expect.token env T_RPAREN;
+        ExtendsCall { callee = generic; arg }
+      | _ -> ExtendsIdent (snd generic)
+    in
     fun ~abstract ~leading env ->
       let env = env |> with_strict true in
       let leading = leading @ Peek.comments env in
@@ -1213,10 +1224,7 @@ module Statement
       in
       let extends =
         if Eat.maybe env T_EXTENDS then
-          let extends = Type.generic env in
-          match Peek.token env with
-          | T_LCURLY -> Some (generic_type_remove_trailing env extends)
-          | _ -> Some extends
+          Some (with_loc parse_extends env)
         else
           None
       in

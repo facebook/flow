@@ -7494,29 +7494,48 @@ pub fn mk_declare_class_sig<'a>(
         );
         let (this_tparam, this_t) = class_sig::mk_this(self_, cx, reason.dupe());
         let id = cx.make_aloc_id(id_loc);
-        let (extends, extends_ast) = match &decl.extends {
-            Some((generic_loc, generic)) => {
-                let (i, id_ast) = convert_qualification_with_lookup_mode(
-                    cx,
-                    Some(type_env::LookupMode::ForValue),
-                    "mixins",
-                    &generic.id,
-                );
-                let (t, targs_ast) =
-                    mk_super_inner(cx, &mut env, generic_loc.dupe(), i, generic.targs.as_ref());
-                (
-                    Some(t),
-                    Some((
-                        generic_loc.dupe(),
-                        ast::types::Generic {
-                            id: id_ast,
-                            targs: targs_ast,
-                            comments: generic.comments.dupe(),
-                        },
-                    )),
-                )
+        let (extends, extends_ast) = {
+            use ast::statement::DeclareClassExtends;
+            match &decl.extends {
+                Some((loc, DeclareClassExtends::ExtendsIdent(generic))) => {
+                    let (i, id_ast) = convert_qualification_with_lookup_mode(
+                        cx,
+                        Some(type_env::LookupMode::ForValue),
+                        "mixins",
+                        &generic.id,
+                    );
+                    let (t, targs_ast) =
+                        mk_super_inner(cx, &mut env, loc.dupe(), i, generic.targs.as_ref());
+                    (
+                        Some(t),
+                        Some((
+                            loc.dupe(),
+                            DeclareClassExtends::ExtendsIdent(ast::types::Generic {
+                                id: id_ast,
+                                targs: targs_ast,
+                                comments: generic.comments.dupe(),
+                            }),
+                        )),
+                    )
+                }
+                Some((loc, ext @ DeclareClassExtends::ExtendsCall { .. })) => {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EUnsupportedSyntax(
+                            loc.dupe(),
+                            intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                TsLibSyntaxKind::ClassExtendsCall,
+                            ),
+                        ),
+                    );
+                    let Ok(ext_ast) = polymorphic_ast_mapper::declare_class_extends(
+                        &mut typed_ast_utils::ErrorMapper,
+                        ext,
+                    );
+                    (None, Some((loc.dupe(), ext_ast)))
+                }
+                None => (None, None),
             }
-            None => (None, None),
         };
         let (mixins_list, mixins_ast_list): (Vec<_>, Vec<_>) = decl
             .mixins

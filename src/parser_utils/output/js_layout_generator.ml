@@ -5210,20 +5210,30 @@ and declare_class
         option (type_parameter ~opts ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
       ]
   in
+  let rec print_declare_class_extends (loc, ext) =
+    match ext with
+    | Ast.Statement.DeclareClass.ExtendsIdent generic ->
+      source_location_with_comments (loc, type_generic ~opts loc generic)
+    | Ast.Statement.DeclareClass.ExtendsCall { callee = (_callee_loc, callee); arg } ->
+      let { Ast.Type.Generic.id; targs; comments = _ } = callee in
+      source_location_with_comments
+        ( loc,
+          fuse
+            [
+              generic_identifier ~opts id;
+              option (type_args ~opts) targs;
+              Atom "(";
+              print_declare_class_extends arg;
+              Atom ")";
+            ]
+        )
+  in
   let extends_parts =
     let class_extends =
       [
         begin
           match extends with
-          | Some (loc, generic) ->
-            Some
-              (fuse
-                 [
-                   Atom "extends";
-                   space;
-                   source_location_with_comments (loc, type_generic ~opts loc generic);
-                 ]
-              )
+          | Some ext -> Some (fuse [Atom "extends"; space; print_declare_class_extends ext])
           | None -> None
         end;
         begin

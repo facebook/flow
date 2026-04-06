@@ -116,3 +116,9 @@ declare class PrivatePVI {
 class ClassIdx {
   [key: string]: any; // ERROR
 }
+
+// Mixin class extends
+declare function Mixin<T>(base: T): T;
+declare class Base {}
+class MixinTest extends Mixin(Base) {} // ERROR
+declare class DeclMixinTest extends Mixin(Base) {} // ERROR

@@ -841,9 +841,12 @@ class ['loc] mapper =
       in
       let extends' =
         map_opt
-          (fun ext ->
-            let (eloc, e) = ext in
-            id this#generic_type e ext (fun e' -> (eloc, e')))
+          (fun (ext_loc, ext) ->
+            let ext' = this#declare_class_extends ext in
+            if ext' == ext then
+              (ext_loc, ext)
+            else
+              (ext_loc, ext'))
           extends
       in
       let mixins' =
@@ -876,6 +879,18 @@ class ['loc] mapper =
           abstract;
           comments = comments';
         }
+
+    method declare_class_extends (ext : ('loc, 'loc) Ast.Statement.DeclareClass.extends) =
+      let open Ast.Statement.DeclareClass in
+      match ext with
+      | ExtendsIdent e -> id this#generic_type e ext (fun e' -> ExtendsIdent e')
+      | ExtendsCall { callee = (callee_loc, callee); arg = (arg_loc, arg) } ->
+        let callee' = id this#generic_type callee callee (fun c -> c) in
+        let arg' = this#declare_class_extends arg in
+        if callee' == callee && arg' == arg then
+          ext
+        else
+          ExtendsCall { callee = (callee_loc, callee'); arg = (arg_loc, arg') }
 
     method declare_component _loc (decl : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
       let open Ast.Statement.DeclareComponent in

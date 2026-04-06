@@ -3462,4 +3462,16 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.xxx ](): string };"
          );
          ("underscore_type" >:: fun ctxt -> assert_statement_string ~ctxt "type T=_;");
+         ( "mixin_class_extends" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "class Foo extends Bar(Baz) {}";
+           assert_statement_string ~ctxt ~pretty:true "class Foo extends Bar(Baz(Base)) {}"
+         );
+         ( "declare_mixin_class_extends" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "declare class Foo extends Bar(Baz) {}";
+           assert_statement_string ~ctxt ~pretty:true "declare class Foo extends Bar(Baz(Base)) {}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo extends Bar.Baz(Base.Baz) {}"
+         );
        ]

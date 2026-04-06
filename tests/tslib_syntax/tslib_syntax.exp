@@ -811,6 +811,22 @@ Cannot get `mfwo.foo` because property `foo` is not readable. [cannot-read]
             ^^^
 
 
+Error -------------------------------------------------------------------------------------- mixin_class_extends.js:4:25
+
+Cannot use `Mixin(...)` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
+
+   4| class MixinTest extends Mixin(Base) {} // ERROR
+                              ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- mixin_class_extends.js:5:37
+
+Call expression in class `extends` clause is not enabled. [unsupported-syntax]
+
+   5| declare class DeclMixinTest extends Mixin(Base) {} // ERROR
+                                          ^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
 
 Cannot cast `foo.a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
@@ -1430,4 +1446,4 @@ References:
 
 
 
-Found 94 errors
+Found 96 errors

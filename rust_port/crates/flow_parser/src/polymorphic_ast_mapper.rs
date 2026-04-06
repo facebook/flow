@@ -3461,7 +3461,12 @@ pub fn declare_class<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     };
     let extends_ = extends
         .as_ref()
-        .map(|(a, gt)| Ok((mapper.on_loc_annot(a)?, generic_type(mapper, gt)?)))
+        .map(|(ext_loc, ext)| {
+            Ok((
+                mapper.on_loc_annot(ext_loc)?,
+                declare_class_extends(mapper, ext)?,
+            ))
+        })
         .transpose()?;
     let mixins_ = mixins
         .iter()
@@ -3483,6 +3488,30 @@ pub fn declare_class<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         abstract_: *abstract_,
         comments: comments_,
     })
+}
+
+pub fn declare_class_extends<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
+    mapper: &mut impl LocMapper<M, T, N, U, E>,
+    ext: &ast::statement::DeclareClassExtends<M, T>,
+) -> Result<ast::statement::DeclareClassExtends<N, U>, E> {
+    match ext {
+        ast::statement::DeclareClassExtends::ExtendsIdent(generic) => Ok(
+            ast::statement::DeclareClassExtends::ExtendsIdent(generic_type(mapper, generic)?),
+        ),
+        ast::statement::DeclareClassExtends::ExtendsCall {
+            callee: (callee_loc, callee),
+            arg,
+        } => Ok(ast::statement::DeclareClassExtends::ExtendsCall {
+            callee: (
+                mapper.on_loc_annot(callee_loc)?,
+                generic_type(mapper, callee)?,
+            ),
+            arg: Box::new((
+                mapper.on_loc_annot(&arg.0)?,
+                declare_class_extends(mapper, &arg.1)?,
+            )),
+        }),
+    }
 }
 
 pub fn declare_component<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(

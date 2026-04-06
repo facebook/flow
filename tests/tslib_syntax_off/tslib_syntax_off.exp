@@ -309,5 +309,21 @@ Index signatures in classes are not supported. [unsupported-syntax]
           ^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- test.js.flow:123:25
 
-Found 38 errors
+Cannot use `Mixin(...)` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
+
+   123| class MixinTest extends Mixin(Base) {} // ERROR
+                                ^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- test.js.flow:124:37
+
+Call expression in class `extends` clause is not enabled. [unsupported-syntax]
+
+   124| declare class DeclMixinTest extends Mixin(Base) {} // ERROR
+                                            ^^^^^^^^^^^
+
+
+
+Found 40 errors

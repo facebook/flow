@@ -207,6 +207,7 @@ pub enum TsLibSyntaxKind {
     GenericTaggedTemplate,
     TypeofThis,
     PropertyValueInitializer,
+    ClassExtendsCall,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

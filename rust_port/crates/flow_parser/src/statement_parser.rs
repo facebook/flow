@@ -1687,6 +1687,24 @@ fn declare_class_helper(
         }
     }
 
+    fn parse_extends(
+        env: &mut ParserEnv,
+    ) -> Result<statement::DeclareClassExtends<Loc, Loc>, Rollback> {
+        let generic = type_parser::parse_generic(env)?;
+        match peek::token(env) {
+            TokenKind::TLparen => {
+                expect::token(env, TokenKind::TLparen)?;
+                let arg = with_loc(None, env, parse_extends)?;
+                expect::token(env, TokenKind::TRparen)?;
+                Ok(statement::DeclareClassExtends::ExtendsCall {
+                    callee: generic,
+                    arg: Box::new(arg),
+                })
+            }
+            _ => Ok(statement::DeclareClassExtends::ExtendsIdent(generic.1)),
+        }
+    }
+
     // This is identical to `interface`, except that mixins are allowed
     env.with_strict(true, |env| {
         let leading = {
@@ -1713,14 +1731,7 @@ fn declare_class_helper(
             tparams_opt
         };
         let extends = if eat::maybe(env, TokenKind::TExtends)? {
-            let extends = type_parser::parse_generic(env)?;
-            if peek::token(env) == &TokenKind::TLcurly {
-                let mut ext = extends;
-                comment_attachment::generic_type_remove_trailing(env, &mut ext.1);
-                Some(ext)
-            } else {
-                Some(extends)
-            }
+            Some(with_loc(None, env, parse_extends)?)
         } else {
             None
         };

@@ -8505,8 +8505,8 @@ pub fn declare_class_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     }
     let (_loc, obj_type) = body;
     visitor.object_type(obj_type)?;
-    if let Some((_loc, generic)) = extends {
-        visitor.generic_type(generic)?;
+    if let Some((_loc, ext)) = extends {
+        visit_declare_class_extends(visitor, ext)?;
     }
     for (_loc, generic) in mixins.iter() {
         visitor.generic_type(generic)?;
@@ -8516,6 +8516,49 @@ pub fn declare_class_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     }
     visitor.syntax_opt(comments.as_ref())?;
     Ok(())
+}
+
+fn visit_declare_class_extends<'ast, Loc: Dupe, Type: Dupe, C, E>(
+    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
+    ext: &'ast ast::statement::DeclareClassExtends<Loc, Type>,
+) -> Result<(), E> {
+    match ext {
+        ast::statement::DeclareClassExtends::ExtendsIdent(generic) => {
+            visitor.generic_type(generic)?;
+        }
+        ast::statement::DeclareClassExtends::ExtendsCall {
+            callee: (_callee_loc, callee),
+            arg,
+        } => {
+            visitor.generic_type(callee)?;
+            visit_declare_class_extends(visitor, &arg.1)?;
+        }
+    }
+    Ok(())
+}
+
+fn map_declare_class_extends<'ast, Loc: Dupe, Type: Dupe, C, E>(
+    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
+    ext_loc: &'ast Loc,
+    ext: &'ast ast::statement::DeclareClassExtends<Loc, Loc>,
+) -> ast::statement::DeclareClassExtends<Loc, Loc> {
+    match ext {
+        ast::statement::DeclareClassExtends::ExtendsIdent(generic) => {
+            let generic_ = visitor.map_generic_type(ext_loc, generic);
+            ast::statement::DeclareClassExtends::ExtendsIdent(generic_)
+        }
+        ast::statement::DeclareClassExtends::ExtendsCall {
+            callee: (callee_loc, callee),
+            arg,
+        } => {
+            let callee_ = visitor.map_generic_type(callee_loc, callee);
+            let arg_ = map_declare_class_extends(visitor, &arg.0, &arg.1);
+            ast::statement::DeclareClassExtends::ExtendsCall {
+                callee: (callee_loc.dupe(), callee_),
+                arg: Box::new((arg.0.dupe(), arg_)),
+            }
+        }
+    }
 }
 
 pub fn map_declare_class_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
@@ -8540,9 +8583,9 @@ pub fn map_declare_class_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let (body_loc, obj_type) = body;
     let obj_type_ = visitor.map_object_type(body_loc, obj_type);
     let body_ = (body_loc.dupe(), obj_type_);
-    let extends_ = extends.as_ref().map(|(loc, generic)| {
-        let generic_ = visitor.map_generic_type(loc, generic);
-        (loc.dupe(), generic_)
+    let extends_ = extends.as_ref().map(|(ext_loc, ext)| {
+        let ext_ = map_declare_class_extends(visitor, ext_loc, ext);
+        (ext_loc.dupe(), ext_)
     });
     let mixins_ = mixins
         .iter()

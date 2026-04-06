@@ -2535,8 +2535,45 @@ fn declare_class(
     declare: &ast::statement::DeclareClass<Loc, Loc>,
 ) -> Value {
     // TODO: extends shouldn't return an array
+    fn declare_class_extends_to_estree(
+        offset_table: &OffsetTable,
+        config: &Config,
+        loc: &Loc,
+        ext: &ast::statement::DeclareClassExtends<Loc, Loc>,
+    ) -> Value {
+        match ext {
+            ast::statement::DeclareClassExtends::ExtendsIdent(generic) => {
+                interface_extends(offset_table, config, loc, generic)
+            }
+            ast::statement::DeclareClassExtends::ExtendsCall { callee, arg } => {
+                let fields = vec![
+                    (
+                        "callee",
+                        generic_type(offset_table, config, &callee.0, &callee.1),
+                    ),
+                    (
+                        "argument",
+                        declare_class_extends_to_estree(offset_table, config, &arg.0, &arg.1),
+                    ),
+                ];
+                node(
+                    offset_table,
+                    config,
+                    "DeclareClassExtendsCall",
+                    loc,
+                    None,
+                    fields,
+                )
+            }
+        }
+    }
     let extends = match &declare.extends {
-        Some((loc, ext)) => Value::Array(vec![interface_extends(offset_table, config, loc, ext)]),
+        Some((loc, ext)) => Value::Array(vec![declare_class_extends_to_estree(
+            offset_table,
+            config,
+            loc,
+            ext,
+        )]),
         None => Value::Array(vec![]),
     };
 

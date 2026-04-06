@@ -4357,16 +4357,48 @@ fn declare_class_with_type(
         },
         class.tparams.as_ref(),
     ));
+    fn print_declare_class_extends(
+        opts: &Opts,
+        loc: &Loc,
+        ext: &ast::statement::DeclareClassExtends<Loc, Loc>,
+    ) -> LayoutNode {
+        match ext {
+            ast::statement::DeclareClassExtends::ExtendsIdent(generic) => {
+                source_location_with_comments(
+                    loc,
+                    None::<&ast::Syntax<Loc, ()>>,
+                    type_generic(opts, loc, generic),
+                )
+            }
+            ast::statement::DeclareClassExtends::ExtendsCall {
+                callee: (_callee_loc, callee),
+                arg,
+            } => {
+                let ast::types::Generic {
+                    id,
+                    targs,
+                    comments: _,
+                } = callee;
+                source_location_with_comments(
+                    loc,
+                    None::<&ast::Syntax<Loc, ()>>,
+                    fuse(vec![
+                        generic_identifier(opts, id),
+                        option_layout(|ta| type_args(opts, ta), targs.as_ref()),
+                        atom("("),
+                        print_declare_class_extends(opts, &arg.0, &arg.1),
+                        atom(")"),
+                    ]),
+                )
+            }
+        }
+    }
     let class_extends: Vec<Option<LayoutNode>> = vec![
-        class.extends.as_ref().map(|(ext_loc, generic)| {
+        class.extends.as_ref().map(|(ext_loc, ext)| {
             fuse(vec![
                 atom("extends"),
                 space(),
-                source_location_with_comments(
-                    ext_loc,
-                    None::<&ast::Syntax<Loc, ()>>,
-                    type_generic(opts, ext_loc, generic),
-                ),
+                print_declare_class_extends(opts, ext_loc, ext),
             ])
         }),
         if class.mixins.is_empty() {

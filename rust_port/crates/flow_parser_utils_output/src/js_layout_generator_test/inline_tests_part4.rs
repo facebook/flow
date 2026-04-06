@@ -1536,3 +1536,16 @@ fn records() {
     assert_expression_string(true, None, None, "R<> {}");
     assert_expression_string(true, None, None, "R<T, S> {}");
 }
+
+#[test]
+fn mixin_class_extends() {
+    assert_statement_string(true, None, "class Foo extends Bar(Baz) {}");
+    assert_statement_string(true, None, "class Foo extends Bar(Baz(Base)) {}");
+}
+
+#[test]
+fn declare_mixin_class_extends() {
+    assert_statement_string(true, None, "declare class Foo extends Bar(Baz) {}");
+    assert_statement_string(true, None, "declare class Foo extends Bar(Baz(Base)) {}");
+    assert_statement_string(true, None, "declare class Foo extends Bar.Baz(Base.Baz) {}");
+}

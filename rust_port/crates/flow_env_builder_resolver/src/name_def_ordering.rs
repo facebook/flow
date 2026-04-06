@@ -1995,8 +1995,34 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     let Ok(()) = visitor.type_params(&TypeParamsContext::DeclareClass, tparams);
                 }
                 let Ok(()) = visitor.object_type(&decl.body.1);
-                if let Some(extends) = &decl.extends {
-                    let Ok(()) = visitor.generic_type(&extends.1);
+                if let Some((_loc, ext)) = &decl.extends {
+                    fn visit_extends<V>(
+                        visitor: &mut V,
+                        ext: &ast::statement::DeclareClassExtends<ALoc, ALoc>,
+                    ) where
+                        V: ?Sized
+                            + for<'a> flow_parser::ast_visitor::AstVisitor<
+                                'a,
+                                ALoc,
+                                ALoc,
+                                &'a ALoc,
+                                !,
+                            >,
+                    {
+                        match ext {
+                            ast::statement::DeclareClassExtends::ExtendsIdent(g) => {
+                                let Ok(()) = visitor.generic_type(g);
+                            }
+                            ast::statement::DeclareClassExtends::ExtendsCall {
+                                callee: (_callee_loc, callee),
+                                arg,
+                            } => {
+                                let Ok(()) = visitor.generic_type(callee);
+                                visit_extends(visitor, &arg.1);
+                            }
+                        }
+                    }
+                    visit_extends(visitor, ext);
                 }
                 for mixin in decl.mixins.iter() {
                     let Ok(()) = visitor.generic_type(&mixin.1);

@@ -1072,7 +1072,17 @@ struct
           (fun visitor ->
             run_opt (visitor#type_params ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
             ignore @@ visitor#object_type (snd body);
-            Base.Option.iter ~f:(fun ext -> ignore @@ visitor#generic_type (snd ext)) extends;
+            Base.Option.iter
+              ~f:(fun (_loc, ext) ->
+                let rec visit_extends = function
+                  | Ast.Statement.DeclareClass.ExtendsIdent g -> ignore @@ visitor#generic_type g
+                  | Ast.Statement.DeclareClass.ExtendsCall
+                      { callee = (_callee_loc, callee); arg = (_arg_loc, arg) } ->
+                    ignore @@ visitor#generic_type callee;
+                    visit_extends arg
+                in
+                visit_extends ext)
+              extends;
             Base.List.iter ~f:(fun m -> ignore @@ visitor#generic_type (snd m)) mixins;
             run_opt visitor#class_implements implements;
             ())

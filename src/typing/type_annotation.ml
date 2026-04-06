@@ -4037,12 +4037,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
         let (extends, extends_ast) =
+          let open Ast.Statement.DeclareClass in
           match extends with
-          | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
+          | Some (loc, ExtendsIdent { Ast.Type.Generic.id; targs; comments }) ->
             let lookup_mode = Type_env.LookupMode.ForValue in
             let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
             let (t, targs) = mk_super env loc i targs in
-            (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
+            (Some t, Some (loc, ExtendsIdent { Ast.Type.Generic.id; targs; comments }))
+          | Some (loc, (ExtendsCall _ as ext)) ->
+            Flow.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.(TSLibSyntax ClassExtendsCall))
+              );
+            (None, Some (loc, Tast_utils.error_mapper#declare_class_extends ext))
           | None -> (None, None)
         in
         let (mixins, mixins_ast) = mixins |> Base.List.map ~f:(mk_mixins env) |> List.split in

@@ -4719,7 +4719,9 @@ let declare_class_def =
         ObjectPrototypeExtendsNull
       else
         ClassImplicitExtends
-    | Some (loc, { Ast.Type.Generic.id; targs; comments = _ }) ->
+    | Some
+        (loc, Ast.Statement.DeclareClass.ExtendsIdent { Ast.Type.Generic.id; targs; comments = _ })
+      ->
       let loc = push_loc tbls loc in
       let t = member_expr_of_generic_id scope tbls [] id in
       (match targs with
@@ -4727,6 +4729,7 @@ let declare_class_def =
       | Some (_, { Ast.Type.TypeArgs.arguments = targs; comments = _ }) ->
         let targs = List.map (annot opts scope tbls xs) targs in
         ClassExplicitExtendsApp { loc; t; targs })
+    | Some (_, Ast.Statement.DeclareClass.ExtendsCall _) -> ClassImplicitExtends
   in
   let rec mk_mixins opts scope tbls xs acc = function
     | [] -> List.rev acc

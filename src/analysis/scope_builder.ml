@@ -540,13 +540,14 @@ let declare_class ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_bin
   let { id; tparams; body; extends; mixins; implements; abstract = _; comments = _ } = decl in
   ignore @@ visitor#class_identifier id;
   let extends_targs =
-    Base.Option.value_map
-      extends
-      ~default:None
-      ~f:(fun (_ext_loc, { Ast.Type.Generic.id; targs; comments = _ }) ->
+    let rec extends_targs_of = function
+      | Ast.Statement.DeclareClass.ExtendsIdent { Ast.Type.Generic.id; targs; comments = _ } ->
         ignore @@ visitor#generic_identifier_type id;
         targs
-    )
+      | Ast.Statement.DeclareClass.ExtendsCall { callee = _; arg = (_arg_loc, arg) } ->
+        extends_targs_of arg
+    in
+    Base.Option.bind extends ~f:(fun (_loc, ext) -> extends_targs_of ext)
   in
   let mixins_targs =
     Base.List.filter_map mixins ~f:(fun (_, { Ast.Type.Generic.id; targs; comments = _ }) ->

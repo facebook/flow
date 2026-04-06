@@ -5445,7 +5445,41 @@ fn declare_class(
     let (ref body_loc, ref body1) = dc1.body;
     let (_, ref body2) = dc2.body;
     let body_diff = diff_if_changed_ret_opt(|b1, b2| object_type(body_loc, b1, b2), body1, body2);
-    let extends_diff = diff_if_changed_opt(generic_type_with_loc, &dc1.extends, &dc2.extends);
+    let extends_diff = {
+        fn declare_class_extends_with_loc(
+            (loc1, ext1): &(Loc, ast::statement::DeclareClassExtends<Loc, Loc>),
+            (_loc2, ext2): &(Loc, ast::statement::DeclareClassExtends<Loc, Loc>),
+        ) -> Option<Vec<NodeChange>> {
+            use ast::statement::DeclareClassExtends;
+            match (ext1, ext2) {
+                (
+                    DeclareClassExtends::ExtendsIdent(gt1),
+                    DeclareClassExtends::ExtendsIdent(gt2),
+                ) => generic_type(loc1, gt1, gt2),
+                (
+                    DeclareClassExtends::ExtendsCall {
+                        callee: callee1,
+                        arg: arg1,
+                    },
+                    DeclareClassExtends::ExtendsCall {
+                        callee: callee2,
+                        arg: arg2,
+                    },
+                ) => {
+                    let callee_diff =
+                        diff_if_changed_ret_opt(generic_type_with_loc, callee1, callee2);
+                    let arg_diff = diff_if_changed_ret_opt(
+                        declare_class_extends_with_loc,
+                        arg1.as_ref(),
+                        arg2.as_ref(),
+                    );
+                    join_diff_list(vec![callee_diff, arg_diff])
+                }
+                _ => None,
+            }
+        }
+        diff_if_changed_opt(declare_class_extends_with_loc, &dc1.extends, &dc2.extends)
+    };
     let implements_diff = diff_if_changed_opt(class_implements, &dc1.implements, &dc2.implements);
     let comments_diff = syntax_opt(loc, &dc1.comments, &dc2.comments);
     if dc1.mixins != dc2.mixins {

@@ -8335,7 +8335,7 @@ fn declare_class_def<'arena, 'ast>(
                 ClassExtends::ClassImplicitExtends
             }
         }
-        Some((loc, generic)) => {
+        Some((loc, ast::statement::DeclareClassExtends::ExtendsIdent(generic))) => {
             let loc = tbls.push_loc(loc.dupe());
             let t = member_expr_of_generic_id(scope, tbls, Vec::new(), &generic.id);
             match &generic.targs {
@@ -8349,6 +8349,9 @@ fn declare_class_def<'arena, 'ast>(
                     ClassExtends::ClassExplicitExtendsApp { loc, t, targs }
                 }
             }
+        }
+        Some((_, ast::statement::DeclareClassExtends::ExtendsCall { .. })) => {
+            ClassExtends::ClassImplicitExtends
         }
     };
 
