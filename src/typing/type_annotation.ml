@@ -2212,6 +2212,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   proto = false;
                   _method;
                   abstract;
+                  override = false;
                   variance;
                   ts_accessibility = None;
                   init = None;
@@ -3077,6 +3078,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       optional;
                       _method;
                       abstract;
+                      override;
                       variance;
                       ts_accessibility;
                       init = init_;
@@ -3084,6 +3086,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     } as prop
                   )
                 ) ->
+              if override then
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                  );
               let is_ts_private =
                 match ts_accessibility with
                 | Some (acc_loc, { Ast.Class.TSAccessibility.kind; comments = _ }) ->

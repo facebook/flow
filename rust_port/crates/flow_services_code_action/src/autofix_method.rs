@@ -181,6 +181,7 @@ impl AstVisitor<'_, Loc> for Mapper {
                         key: key.clone(),
                         value: prop_value,
                         static_,
+                        override_: false,
                         optional: false,
                         variance: None,
                         ts_accessibility: None,

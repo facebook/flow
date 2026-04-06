@@ -2302,6 +2302,7 @@ and object_type =
       proto = _;
       _method;
       abstract = _;
+      override = _;
       variance;
       ts_accessibility = _;
       init = _;
@@ -2552,6 +2553,7 @@ and interface_props =
       proto = _;
       _method;
       abstract = _;
+      override = _;
       variance;
       ts_accessibility = _;
       init = _;
@@ -2682,6 +2684,7 @@ and declare_class_props =
       proto;
       _method;
       abstract = _;
+      override = _;
       variance;
       ts_accessibility;
       init;
@@ -4320,6 +4323,7 @@ and class_def =
                 value = (_, fn);
                 kind;
                 static;
+                override = _;
                 ts_accessibility = _;
                 decorators = _;
                 comments = _;
@@ -4357,6 +4361,7 @@ and class_def =
                 annot = t;
                 value;
                 static;
+                override = _;
                 optional;
                 variance;
                 ts_accessibility = _;
@@ -4412,6 +4417,7 @@ and class_def =
                 value = (_, fn);
                 kind;
                 static;
+                override = _;
                 ts_accessibility = _;
                 decorators = _;
                 comments = _;
@@ -4440,6 +4446,7 @@ and class_def =
                 key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
                 annot = (_, (fn_loc, T.Function f));
                 static;
+                override = _;
                 optional;
                 comments = _;
               }

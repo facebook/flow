@@ -85,6 +85,7 @@ pub fn empty_method_of_property_type(
         key: key.clone(),
         value: (Loc::default(), func),
         static_,
+        override_: false,
         ts_accessibility: None,
         decorators: [].into(),
         comments: None,

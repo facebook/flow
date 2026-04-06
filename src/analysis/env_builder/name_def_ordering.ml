@@ -723,6 +723,7 @@ struct
             key;
             value = (_, value);
             static = _;
+            override = _;
             ts_accessibility = _;
             decorators;
             comments = _;
@@ -752,6 +753,7 @@ struct
             value;
             annot;
             static = _;
+            override = _;
             optional = _;
             variance = _;
             ts_accessibility = _;
@@ -774,6 +776,7 @@ struct
             value;
             annot;
             static = _;
+            override = _;
             optional = _;
             variance = _;
             ts_accessibility = _;

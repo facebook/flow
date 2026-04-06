@@ -1038,6 +1038,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         params: &function::Params<Loc, Loc>,
         return_annot: &function::ReturnAnnot<Loc, Loc>,
         static_: bool,
+        override_: bool,
         leading: &[Comment<Loc>],
     ) -> Result<Option<class::BodyElement<Loc, Loc>>, Rollback> {
         match declaration_parser::convert_function_params_to_type_params(params) {
@@ -1092,6 +1093,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         key: key.clone(),
                         annot,
                         static_,
+                        override_,
                         optional: false,
                         comments: ast_utils::mk_comments_opt(Some(leading.to_vec().into()), None),
                     },
@@ -1112,6 +1114,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         params: &function::Params<Loc, Loc>,
         return_annot: &function::ReturnAnnot<Loc, Loc>,
         static_: bool,
+        override_: bool,
         optional: bool,
         leading: &[Comment<Loc>],
     ) -> Result<Option<class::BodyElement<Loc, Loc>>, Rollback> {
@@ -1164,6 +1167,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         key: key.clone(),
                         annot,
                         static_,
+                        override_,
                         optional,
                         comments: ast_utils::mk_comments_opt(Some(leading.to_vec().into()), None),
                     },
@@ -1179,6 +1183,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         start_loc: Loc,
         decorators: Vec<class::Decorator<Loc, Loc>>,
         static_: bool,
+        override_: bool,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
         is_getter: bool,
@@ -1297,6 +1302,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         key: obj_key.clone(),
                         value,
                         static_,
+                        override_,
                         ts_accessibility: ts_accessibility.clone(),
                         decorators: decorators.clone().into(),
                         comments: ast_utils::mk_comments_opt(Some(leading.clone().into()), None),
@@ -1315,6 +1321,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     &params,
                     &return_annot,
                     static_,
+                    override_,
                     &leading,
                 )? {
                     Some(decl) => Ok(decl),
@@ -1356,6 +1363,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 key,
                 value,
                 static_,
+                override_,
                 ts_accessibility,
                 decorators: decorators.into(),
                 comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
@@ -1458,6 +1466,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         abstract_: bool,
+        override_: bool,
         optional: bool,
         leading: Vec<Comment<Loc>>,
     ) -> Result<class::BodyElement<Loc, Loc>, Rollback> {
@@ -1497,6 +1506,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         value,
                         annot,
                         static_,
+                        override_,
                         optional,
                         variance,
                         ts_accessibility,
@@ -1509,6 +1519,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         loc,
                         key,
                         annot,
+                        override_,
                         ts_accessibility,
                         variance,
                         comments,
@@ -1524,6 +1535,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         value,
                         annot,
                         static_,
+                        override_,
                         optional,
                         variance,
                         ts_accessibility,
@@ -1537,6 +1549,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     value,
                     annot,
                     static_,
+                    override_,
                     optional,
                     variance,
                     ts_accessibility,
@@ -1573,6 +1586,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         generator: bool,
         static_: bool,
         abstract_: bool,
+        override_: bool,
         declare: Option<Loc>,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
@@ -1597,6 +1611,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 variance,
                 ts_accessibility,
                 abstract_,
+                override_,
                 false,
                 leading,
             );
@@ -1638,6 +1653,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 &params,
                 &return_annot,
                 static_,
+                override_,
                 true,
                 &leading,
             )? {
@@ -1651,6 +1667,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         value: class::property::Value::Declared,
                         annot: types::AnnotationOrHint::Missing(peek::loc(env).dupe()),
                         static_,
+                        override_,
                         optional: true,
                         variance: None,
                         ts_accessibility,
@@ -1672,6 +1689,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 variance,
                 ts_accessibility,
                 abstract_,
+                override_,
                 true,
                 leading,
             );
@@ -1688,6 +1706,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 variance,
                 ts_accessibility,
                 abstract_,
+                override_,
                 false,
                 leading,
             );
@@ -1821,6 +1840,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         key: key.clone(),
                         value,
                         static_,
+                        override_,
                         ts_accessibility: ts_accessibility.clone(),
                         decorators: decorators.clone().into(),
                         comments: ast_utils::mk_comments_opt(Some(leading.clone().into()), None),
@@ -1838,6 +1858,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                             loc,
                             key,
                             annot: (annot_loc, func),
+                            override_,
                             ts_accessibility,
                             comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
                         }))
@@ -1869,6 +1890,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     &params,
                     &return_annot,
                     static_,
+                    override_,
                     false,
                     &leading,
                 )? {
@@ -1999,6 +2021,19 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         Vec::new()
     };
 
+    // Parse override modifier -- after static, before abstract
+    let override_ = matches!(
+        peek::token(env),
+        TokenKind::TIdentifier { raw, .. } if raw == "override"
+    ) && peek::ith_is_object_key(env, 1, true);
+    let leading_override = if override_ {
+        let leading = peek::comments(env);
+        eat::token(env)?;
+        leading
+    } else {
+        Vec::new()
+    };
+
     // Parse abstract modifier
     let abstract_ = matches!(
         peek::token(env),
@@ -2071,6 +2106,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         leading_accessibility,
         leading_static,
         leading_abstract,
+        leading_override,
         leading_async,
         leading_generator,
     ]
@@ -2092,6 +2128,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     generator,
                     static_,
                     abstract_,
+                    override_,
                     declare,
                     variance,
                     ts_accessibility,
@@ -2108,6 +2145,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     start_loc,
                     decorators,
                     static_,
+                    override_,
                     ts_accessibility,
                     [leading, leading_get].concat(),
                     true,
@@ -2128,6 +2166,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     generator,
                     static_,
                     abstract_,
+                    override_,
                     declare,
                     variance,
                     ts_accessibility,
@@ -2144,6 +2183,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     start_loc,
                     decorators,
                     static_,
+                    override_,
                     ts_accessibility,
                     [leading, leading_set].concat(),
                     false,
@@ -2229,6 +2269,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     generator,
                     static_,
                     abstract_,
+                    override_,
                     declare,
                     variance,
                     ts_accessibility,
@@ -2247,6 +2288,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 generator,
                 static_,
                 abstract_,
+                override_,
                 declare,
                 variance,
                 ts_accessibility,
@@ -2723,6 +2765,7 @@ fn record_body(
                                     value,
                                     kind: class::MethodKind::Method,
                                     static_,
+                                    override_: false,
                                     ts_accessibility: None,
                                     decorators: Vec::new().into(),
                                     comments,

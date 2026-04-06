@@ -2187,6 +2187,7 @@ fn object_type(
         start_loc: Loc,
         static_: Option<Loc>,
         abstract_: bool,
+        override_: bool,
         mut key: expression::object::Key<Loc, Loc>,
         optional: bool,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
@@ -2214,6 +2215,8 @@ fn object_type(
                 method: true,
                 // abstract;
                 abstract_,
+                // override;
+                override_,
                 variance: None,
                 ts_accessibility,
                 init: None,
@@ -2251,6 +2254,7 @@ fn object_type(
         static_: Option<Loc>,
         proto: Option<Loc>,
         abstract_: bool,
+        override_: bool,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
         key_loc: Loc,
@@ -2295,6 +2299,7 @@ fn object_type(
                 proto: proto.is_some(),
                 method: false,
                 abstract_,
+                override_,
                 variance,
                 ts_accessibility,
                 init,
@@ -2310,6 +2315,7 @@ fn object_type(
         env: &mut ParserEnv,
         is_getter: bool,
         leading: Vec<Comment<Loc>>,
+        override_: bool,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         start_loc: Loc,
         static_: Option<Loc>,
@@ -2363,6 +2369,7 @@ fn object_type(
                 proto: false,
                 method: false,
                 abstract_: false,
+                override_,
                 variance: None,
                 ts_accessibility,
                 init: None,
@@ -2490,6 +2497,7 @@ fn object_type(
         start_loc: Loc,
         static_: Option<Loc>,
         abstract_: bool,
+        override_: bool,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
@@ -2547,6 +2555,7 @@ fn object_type(
             start_loc,
             static_,
             abstract_,
+            override_,
             variance,
             ts_accessibility,
             computed_loc,
@@ -2558,6 +2567,7 @@ fn object_type(
     fn bracket_property(
         env: &mut ParserEnv,
         abstract_: bool,
+        override_: bool,
         start_loc: Loc,
         static_: Option<Loc>,
         variance: Option<Variance<Loc>>,
@@ -2588,6 +2598,7 @@ fn object_type(
                     start_loc,
                     static_,
                     abstract_,
+                    override_,
                     variance,
                     ts_accessibility,
                     leading,
@@ -2604,6 +2615,7 @@ fn object_type(
                         start_loc,
                         static_,
                         abstract_,
+                        override_,
                         variance,
                         ts_accessibility,
                         leading,
@@ -2715,6 +2727,7 @@ fn object_type(
         start_loc: Loc,
         static_: Option<Loc>,
         abstract_: bool,
+        override_: bool,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         computed_loc: Loc,
@@ -2729,6 +2742,7 @@ fn object_type(
                     start_loc,
                     static_,
                     abstract_,
+                    override_,
                     key,
                     false,
                     ts_accessibility,
@@ -2744,6 +2758,7 @@ fn object_type(
                         start_loc,
                         static_,
                         abstract_,
+                        override_,
                         key,
                         true,
                         ts_accessibility,
@@ -2757,6 +2772,7 @@ fn object_type(
                     static_,
                     None,
                     abstract_,
+                    override_,
                     ts_accessibility,
                     Vec::new(),
                     computed_loc,
@@ -2771,6 +2787,7 @@ fn object_type(
                 static_,
                 None,
                 abstract_,
+                override_,
                 ts_accessibility,
                 Vec::new(),
                 computed_loc,
@@ -2785,6 +2802,7 @@ fn object_type(
         start_loc: Loc,
         static_: Option<Loc>,
         abstract_: bool,
+        override_: bool,
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
@@ -2805,6 +2823,7 @@ fn object_type(
             start_loc,
             static_,
             abstract_,
+            override_,
             variance,
             ts_accessibility,
             computed_loc,
@@ -2943,6 +2962,7 @@ fn object_type(
                         None,
                         None,
                         false,
+                        false,
                         None,
                         Vec::new(),
                     )?;
@@ -2967,6 +2987,7 @@ fn object_type(
         mut static_: Option<Loc>,
         mut proto: Option<Loc>,
         mut abstract_: bool,
+        mut override_: bool,
         mut ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         mut leading: Vec<Comment<Loc>>,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
@@ -2996,6 +3017,20 @@ fn object_type(
                     allow_static = false;
                     allow_proto = false;
                     allow_accessibility = false;
+                }
+                TokenKind::TIdentifier { raw, .. }
+                    if raw == "override" && is_class && !override_ =>
+                {
+                    if ith_is_object_key(env, 1, is_class) {
+                        leading = [leading, peek::comments(env)].concat();
+                        eat::token(env)?;
+                        allow_static = false;
+                        allow_proto = false;
+                        allow_accessibility = false;
+                        override_ = true;
+                    } else {
+                        break;
+                    }
                 }
                 TokenKind::TIdentifier { raw, .. } if raw == "abstract" && allow_abstract => {
                     if ith_is_object_key(env, 1, is_class) {
@@ -3072,6 +3107,7 @@ fn object_type(
                             static_,
                             proto,
                             abstract_,
+                            override_,
                             ts_accessibility,
                             leading,
                         );
@@ -3106,6 +3142,7 @@ fn object_type(
                         _ => bracket_property(
                             env,
                             abstract_,
+                            override_,
                             start_loc,
                             static_,
                             variance,
@@ -3148,6 +3185,7 @@ fn object_type(
                 None,
                 proto,
                 false,
+                false,
                 None,
                 Vec::new(),
                 static_loc.dupe(),
@@ -3173,6 +3211,7 @@ fn object_type(
                 variance,
                 static_,
                 None,
+                false,
                 false,
                 None,
                 Vec::new(),
@@ -3206,6 +3245,7 @@ fn object_type(
                                 start_loc,
                                 static_,
                                 abstract_,
+                                override_,
                                 key,
                                 false,
                                 ts_accessibility,
@@ -3226,6 +3266,7 @@ fn object_type(
                                 start_loc,
                                 static_,
                                 abstract_,
+                                override_,
                                 key,
                                 true,
                                 ts_accessibility,
@@ -3240,6 +3281,7 @@ fn object_type(
                                 static_,
                                 proto,
                                 abstract_,
+                                override_,
                                 ts_accessibility,
                                 leading,
                                 key_loc,
@@ -3258,6 +3300,7 @@ fn object_type(
                                 env,
                                 is_getter,
                                 leading,
+                                override_,
                                 ts_accessibility,
                                 start_loc,
                                 static_,
@@ -3275,6 +3318,7 @@ fn object_type(
                             start_loc,
                             static_,
                             abstract_,
+                            override_,
                             key,
                             false,
                             ts_accessibility,
@@ -3295,6 +3339,7 @@ fn object_type(
                             start_loc,
                             static_,
                             abstract_,
+                            override_,
                             key,
                             true,
                             ts_accessibility,
@@ -3310,6 +3355,7 @@ fn object_type(
                             static_,
                             proto,
                             abstract_,
+                            override_,
                             ts_accessibility,
                             leading,
                             key_loc,

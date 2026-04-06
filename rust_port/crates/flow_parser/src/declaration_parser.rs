@@ -358,6 +358,7 @@ pub(super) fn parse_function_params(
             value,
             annot,
             static_: false,
+            override_: false,
             optional: false,
             variance,
             ts_accessibility,

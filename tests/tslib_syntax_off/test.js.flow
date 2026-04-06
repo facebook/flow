@@ -122,3 +122,15 @@ declare function Mixin<T>(base: T): T;
 declare class Base {}
 class MixinTest extends Mixin(Base) {} // ERROR
 declare class DeclMixinTest extends Mixin(Base) {} // ERROR
+
+// Override modifier
+class OverrideTest extends Base {
+  override foo() {} // ERROR
+  override bar: string; // ERROR
+}
+
+// Override modifier in declare class
+declare class DeclareOverrideTest extends Base {
+  override foo(): void; // ERROR
+  override bar: string; // ERROR
+}

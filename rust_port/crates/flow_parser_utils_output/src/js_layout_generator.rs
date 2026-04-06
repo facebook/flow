@@ -4853,6 +4853,7 @@ fn class_property_helper(
     key: LayoutNode,
     value: &ast::class::property::Value<Loc, Loc>,
     static_: bool,
+    override_: bool,
     annot: &ast::types::AnnotationOrHint<Loc, Loc>,
     variance_: Option<&ast::Variance<Loc>>,
     ts_accessibility: Option<&ast::class::ts_accessibility::TSAccessibility<Loc>>,
@@ -4879,6 +4880,11 @@ fn class_property_helper(
             ts_acc,
             if static_ {
                 fuse(vec![atom("static"), space()])
+            } else {
+                LayoutNode::empty()
+            },
+            if override_ {
+                fuse(vec![atom("override"), space()])
             } else {
                 LayoutNode::empty()
             },
@@ -4927,6 +4933,7 @@ fn function_param(
             object_property_key(opts, &property.key),
             &property.value,
             property.static_,
+            false,
             &property.annot,
             property.variance.as_ref(),
             property.ts_accessibility.as_ref(),
@@ -6498,6 +6505,11 @@ fn type_object_property(
             } else {
                 LayoutNode::empty()
             };
+            let s_override = if prop.override_ {
+                fuse(vec![atom("override"), space()])
+            } else {
+                LayoutNode::empty()
+            };
             let s_accessibility = ts_accessibility_layout(prop.ts_accessibility.as_ref());
             let init_ = &prop.init;
             let s_init = match init_ {
@@ -6529,8 +6541,9 @@ fn type_object_property(
                             None::<&ast::Syntax<Loc, ()>>,
                             fuse(vec![
                                 s_accessibility,
-                                s_abstract,
                                 s_static,
+                                s_override,
+                                s_abstract,
                                 object_property_key(opts, &prop.key),
                                 type_function(opts, atom(":"), init_t.loc(), func),
                             ]),
@@ -6552,8 +6565,9 @@ fn type_object_property(
                             None::<&ast::Syntax<Loc, ()>>,
                             fuse(vec![
                                 s_accessibility,
-                                s_abstract,
                                 s_static,
+                                s_override,
+                                s_abstract,
                                 object_property_key(opts, &prop.key),
                                 atom("?"),
                                 type_function(opts, atom(":"), init_t.loc(), func),
@@ -6570,8 +6584,9 @@ fn type_object_property(
                     {
                         fuse(vec![
                             s_accessibility,
-                            s_abstract,
                             s_static,
+                            s_override,
+                            s_abstract,
                             s_proto,
                             option_layout(variance, prop.variance.as_ref()),
                             object_property_key(opts, &prop.key),
@@ -6580,8 +6595,9 @@ fn type_object_property(
                     // Property with init but no type annotation
                     (ast::types::object::PropertyValue::Init(None), _, _, _) => fuse(vec![
                         s_accessibility,
-                        s_abstract,
                         s_static,
+                        s_override,
+                        s_abstract,
                         s_proto,
                         option_layout(variance, prop.variance.as_ref()),
                         object_property_key(opts, &prop.key),
@@ -6595,8 +6611,9 @@ fn type_object_property(
                     // Normal properties
                     (ast::types::object::PropertyValue::Init(Some(t)), _, _, _) => fuse(vec![
                         s_accessibility,
-                        s_abstract,
                         s_static,
+                        s_override,
+                        s_abstract,
                         s_proto,
                         option_layout(variance, prop.variance.as_ref()),
                         object_property_key(opts, &prop.key),
@@ -6616,6 +6633,7 @@ fn type_object_property(
                             get_loc,
                             None::<&ast::Syntax<Loc, ()>>,
                             fuse(vec![
+                                s_override,
                                 atom("get"),
                                 space(),
                                 object_property_key(opts, &prop.key),
@@ -6628,6 +6646,7 @@ fn type_object_property(
                             set_loc,
                             None::<&ast::Syntax<Loc, ()>>,
                             fuse(vec![
+                                s_override,
                                 atom("set"),
                                 space(),
                                 object_property_key(opts, &prop.key),
@@ -7218,6 +7237,11 @@ pub(crate) fn class_method(opts: &Opts, method: &ast::class::Method<Loc, Loc>) -
             } else {
                 LayoutNode::empty()
             },
+            if method.override_ {
+                fuse(vec![atom("override"), space()])
+            } else {
+                LayoutNode::empty()
+            },
             source_location_with_comments(
                 func_loc,
                 None::<&ast::Syntax<Loc, ()>>,
@@ -7258,6 +7282,11 @@ fn class_declare_method(
     } else {
         LayoutNode::empty()
     };
+    let s_override = if decl_meth.override_ {
+        fuse(vec![atom("override"), space()])
+    } else {
+        LayoutNode::empty()
+    };
     let s_annot = match decl_meth.kind {
         ast::class::MethodKind::Get | ast::class::MethodKind::Set => {
             match decl_meth.annot.annotation.deref() {
@@ -7283,7 +7312,9 @@ fn class_declare_method(
     source_location_with_comments(
         &decl_meth.loc,
         decl_meth.comments.as_ref(),
-        with_semicolon(fuse(vec![s_static, s_kind, s_key, s_optional, s_annot])),
+        with_semicolon(fuse(vec![
+            s_static, s_override, s_kind, s_key, s_optional, s_annot,
+        ])),
     )
 }
 
@@ -7309,6 +7340,11 @@ fn class_abstract_method(
         abs_meth.comments.as_ref(),
         with_semicolon(fuse(vec![
             ts_accessibility,
+            if abs_meth.override_ {
+                fuse(vec![atom("override"), space()])
+            } else {
+                LayoutNode::empty()
+            },
             atom("abstract"),
             space(),
             s_key,
@@ -7339,6 +7375,11 @@ fn class_abstract_property(
         abs_prop.comments.as_ref(),
         with_semicolon(fuse(vec![
             ts_accessibility,
+            if abs_prop.override_ {
+                fuse(vec![atom("override"), space()])
+            } else {
+                LayoutNode::empty()
+            },
             atom("abstract"),
             space(),
             option_layout(variance, abs_prop.variance.as_ref()),
@@ -7395,6 +7436,7 @@ pub(crate) fn class_property(opts: &Opts, prop: &ast::class::Property<Loc, Loc>)
         object_property_key(opts, &prop.key),
         &prop.value,
         prop.static_,
+        prop.override_,
         &prop.annot,
         prop.variance.as_ref(),
         prop.ts_accessibility.as_ref(),
@@ -7423,6 +7465,7 @@ pub(crate) fn class_private_field(
         key,
         &field.value,
         field.static_,
+        field.override_,
         &field.annot,
         field.variance.as_ref(),
         field.ts_accessibility.as_ref(),

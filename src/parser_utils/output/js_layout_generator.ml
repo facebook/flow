@@ -2089,6 +2089,7 @@ and function_param ~ctxt ~opts (loc, param) : Layout.layout_node =
         value;
         annot;
         static;
+        override = _;
         optional;
         variance;
         ts_accessibility;
@@ -2101,6 +2102,7 @@ and function_param ~ctxt ~opts (loc, param) : Layout.layout_node =
       (object_property_key ~opts key)
       value
       static
+      ~override:false
       annot
       variance
       ts_accessibility
@@ -2400,6 +2402,7 @@ and class_method
         key;
         value = (func_loc, func);
         static;
+        override;
         ts_accessibility;
         decorators;
         comments;
@@ -2466,6 +2469,11 @@ and class_method
           else
             Empty
           );
+          ( if override then
+            fuse [Atom "override"; space]
+          else
+            Empty
+          );
           source_location_with_comments
             ( func_loc,
               function_base
@@ -2483,7 +2491,8 @@ and class_method
     )
 
 and class_declare_method
-    ~opts (loc, { Ast.Class.DeclareMethod.kind; key; annot; static; optional; comments }) =
+    ~opts (loc, { Ast.Class.DeclareMethod.kind; key; annot; static; override; optional; comments })
+    =
   let s_key =
     match key with
     | Ast.Expression.Object.Property.PrivateName
@@ -2497,6 +2506,12 @@ and class_declare_method
   let s_static =
     if static then
       fuse [Atom "static"; space]
+    else
+      Empty
+  in
+  let s_override =
+    if override then
+      fuse [Atom "override"; space]
     else
       Empty
   in
@@ -2524,41 +2539,18 @@ and class_declare_method
   in
   source_location_with_comments
     ?comments
-    (loc, with_semicolon (fuse [s_static; s_kind; s_key; s_optional; s_annot]))
+    (loc, with_semicolon (fuse [s_static; s_override; s_kind; s_key; s_optional; s_annot]))
 
 and class_abstract_method
     ~opts
-    (loc, { Ast.Class.AbstractMethod.key; annot = (annot_loc, func); ts_accessibility; comments }) =
-  let s_key =
-    match key with
-    | Ast.Expression.Object.Property.PrivateName
-        (ident_loc, { Ast.PrivateName.name; comments = key_comments }) ->
-      layout_node_with_comments_opt
-        ident_loc
-        key_comments
-        (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
-    | _ -> object_property_key ~opts key
-  in
-  let ts_accessibility = ts_accessibility_layout ts_accessibility in
-  source_location_with_comments
-    ?comments
     ( loc,
-      with_semicolon
-        (fuse
-           [
-             ts_accessibility;
-             Atom "abstract";
-             space;
-             s_key;
-             type_function ~opts ~sep:(Atom ":") annot_loc func;
-           ]
-        )
-    )
-
-and class_abstract_property
-    ~opts
-    ( loc,
-      { Ast.Class.AbstractProperty.key; annot; ts_accessibility; variance = variance_; comments }
+      {
+        Ast.Class.AbstractMethod.key;
+        annot = (annot_loc, func);
+        override;
+        ts_accessibility;
+        comments;
+      }
     ) =
   let s_key =
     match key with
@@ -2578,6 +2570,54 @@ and class_abstract_property
         (fuse
            [
              ts_accessibility;
+             ( if override then
+               fuse [Atom "override"; space]
+             else
+               Empty
+             );
+             Atom "abstract";
+             space;
+             s_key;
+             type_function ~opts ~sep:(Atom ":") annot_loc func;
+           ]
+        )
+    )
+
+and class_abstract_property
+    ~opts
+    ( loc,
+      {
+        Ast.Class.AbstractProperty.key;
+        annot;
+        override;
+        ts_accessibility;
+        variance = variance_;
+        comments;
+      }
+    ) =
+  let s_key =
+    match key with
+    | Ast.Expression.Object.Property.PrivateName
+        (ident_loc, { Ast.PrivateName.name; comments = key_comments }) ->
+      layout_node_with_comments_opt
+        ident_loc
+        key_comments
+        (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
+    | _ -> object_property_key ~opts key
+  in
+  let ts_accessibility = ts_accessibility_layout ts_accessibility in
+  source_location_with_comments
+    ?comments
+    ( loc,
+      with_semicolon
+        (fuse
+           [
+             ts_accessibility;
+             ( if override then
+               fuse [Atom "override"; space]
+             else
+               Empty
+             );
              Atom "abstract";
              space;
              option variance variance_;
@@ -2621,7 +2661,18 @@ and class_index_signature ~opts (loc, indexer) =
     (loc, with_semicolon (indexer_property_layout ~opts indexer))
 
 and class_property_helper
-    ~opts loc key value static annot variance_ ts_accessibility decorators comments ~optional =
+    ~opts
+    loc
+    key
+    value
+    static
+    ~override
+    annot
+    variance_
+    ts_accessibility
+    decorators
+    comments
+    ~optional =
   let (declare, value) =
     match value with
     | Ast.Class.Property.Declared -> (true, None)
@@ -2643,6 +2694,11 @@ and class_property_helper
           ts_accessibility;
           ( if static then
             fuse [Atom "static"; space]
+          else
+            Empty
+          );
+          ( if override then
+            fuse [Atom "override"; space]
           else
             Empty
           );
@@ -2676,6 +2732,7 @@ and class_property
         Ast.Class.Property.key;
         value;
         static;
+        override;
         optional;
         annot;
         variance;
@@ -2691,6 +2748,7 @@ and class_property
        (object_property_key ~opts key)
        value
        static
+       ~override
        annot
        variance
        ts_accessibility
@@ -2706,6 +2764,7 @@ and class_private_field
         Ast.Class.PrivateField.key = (ident_loc, { Ast.PrivateName.name; comments = key_comments });
         value;
         static;
+        override;
         optional;
         annot;
         variance;
@@ -2727,6 +2786,7 @@ and class_private_field
        key
        value
        static
+       ~override
        annot
        variance
        ts_accessibility
@@ -4556,6 +4616,7 @@ and type_object_property ~opts =
           variance = variance_;
           _method;
           abstract;
+          override;
           ts_accessibility;
           init = init_;
           comments;
@@ -4579,6 +4640,12 @@ and type_object_property ~opts =
       else
         Empty
     in
+    let s_override =
+      if override then
+        fuse [Atom "override"; space]
+      else
+        Empty
+    in
     let s_accessibility = ts_accessibility_layout ts_accessibility in
     let s_init =
       match init_ with
@@ -4596,8 +4663,9 @@ and type_object_property ~opts =
               fuse
                 [
                   s_accessibility;
-                  s_abstract;
                   s_static;
+                  s_override;
+                  s_abstract;
                   object_property_key ~opts key;
                   type_function ~opts ~sep:(Atom ":") loc func;
                 ]
@@ -4609,8 +4677,9 @@ and type_object_property ~opts =
               fuse
                 [
                   s_accessibility;
-                  s_abstract;
                   s_static;
+                  s_override;
+                  s_abstract;
                   object_property_key ~opts key;
                   Atom "?";
                   type_function ~opts ~sep:(Atom ":") loc func;
@@ -4622,8 +4691,9 @@ and type_object_property ~opts =
           fuse
             [
               s_accessibility;
-              s_abstract;
               s_static;
+              s_override;
+              s_abstract;
               s_proto;
               option variance variance_;
               object_property_key ~opts key;
@@ -4633,8 +4703,9 @@ and type_object_property ~opts =
           fuse
             [
               s_accessibility;
-              s_abstract;
               s_static;
+              s_override;
+              s_abstract;
               s_proto;
               option variance variance_;
               object_property_key ~opts key;
@@ -4649,8 +4720,9 @@ and type_object_property ~opts =
           fuse
             [
               s_accessibility;
-              s_abstract;
               s_static;
+              s_override;
+              s_abstract;
               s_proto;
               option variance variance_;
               object_property_key ~opts key;
@@ -4670,6 +4742,7 @@ and type_object_property ~opts =
             ( loc,
               fuse
                 [
+                  s_override;
                   Atom "get";
                   space;
                   object_property_key ~opts key;
@@ -4681,6 +4754,7 @@ and type_object_property ~opts =
             ( loc,
               fuse
                 [
+                  s_override;
                   Atom "set";
                   space;
                   object_property_key ~opts key;

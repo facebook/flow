@@ -233,6 +233,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
         value;
         annot;
         static = false;
+        override = false;
         optional = false;
         variance;
         ts_accessibility;

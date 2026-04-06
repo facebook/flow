@@ -5360,6 +5360,7 @@ let to_printable_error :
         | TypeofThis -> "`typeof this` syntax"
         | PropertyValueInitializer -> "Property value initializer in declaration"
         | ClassExtendsCall -> "Call expression in class `extends` clause"
+        | OverrideModifier -> "`override` modifier on class members"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

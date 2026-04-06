@@ -233,6 +233,74 @@ fn abstract_classes_with_accessibility() {
 }
 
 #[test]
+fn class_override() {
+    // override methods
+    assert_statement_string(false, None, "class a extends b{override a(){}}");
+    assert_statement_string(true, None, "class a\n  extends b {\n  override a() {}\n}");
+    assert_statement_string(false, None, "class a extends b{static override a(){}}");
+    assert_statement_string(
+        true,
+        None,
+        "class a\n  extends b {\n  static override a() {}\n}",
+    );
+    // override properties
+    assert_statement_string(false, None, "class a extends b{override a:string;}");
+    assert_statement_string(
+        true,
+        None,
+        "class a\n  extends b {\n  override a: string;\n}",
+    );
+    // override getters/setters
+    assert_statement_string(false, None, "class a extends b{override get a(){return 1}}");
+    assert_statement_string(false, None, "class a extends b{override set a(v){}}");
+    // override with abstract
+    assert_statement_string(
+        false,
+        None,
+        "abstract class a extends b{override abstract a():void;}",
+    );
+    assert_statement_string(
+        false,
+        None,
+        "abstract class a extends b{override abstract a:string;}",
+    );
+}
+
+#[test]
+fn declare_class_override() {
+    // override methods
+    assert_statement_string(false, None, "declare class a extends b{override a():void}");
+    assert_statement_string(
+        true,
+        None,
+        "declare class a\n  extends b {\n  override a(): void,\n}",
+    );
+    assert_statement_string(
+        false,
+        None,
+        "declare class a extends b{static override a():void}",
+    );
+    // override properties
+    assert_statement_string(false, None, "declare class a extends b{override a:string}");
+    assert_statement_string(
+        true,
+        None,
+        "declare class a\n  extends b {\n  override a: string,\n}",
+    );
+    // override getters/setters
+    assert_statement_string(
+        false,
+        None,
+        "declare class a extends b{override get a():number}",
+    );
+    assert_statement_string(
+        true,
+        None,
+        "declare class a\n  extends b {\n  override get a(): number,\n}",
+    );
+}
+
+#[test]
 fn declare_abstract_classes() {
     assert_statement_string(false, None, "declare abstract class C{}");
     assert_statement_string(false, None, "declare abstract class C{a():void}");

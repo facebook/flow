@@ -15071,6 +15071,7 @@ pub fn mk_class_sig<'a>(
                     kind: ast::class::MethodKind,
                     private_: bool,
                     static_: bool,
+                    override_: bool,
                     ts_accessibility: Option<ast::class::ts_accessibility::TSAccessibility<ALoc>>,
                     decorators: &std::sync::Arc<[ast::class::Decorator<ALoc, ALoc>]>,
                     comments: Option<ast::Syntax<ALoc, ()>>,
@@ -15145,6 +15146,7 @@ pub fn mk_class_sig<'a>(
                     let id_loc_c = id_loc.dupe();
                     let kind_c = kind;
                     let static_c = static_;
+                    let override_c = override_;
                     let ts_accessibility_c = ts_accessibility.clone();
                     let decorators_ast_c = decorators_ast.clone();
                     let comments_c = comments.clone();
@@ -15181,6 +15183,7 @@ pub fn mk_class_sig<'a>(
                             value: (func_loc_c, typed_func),
                             kind: kind_c,
                             static_: static_c,
+                            override_: override_c,
                             ts_accessibility: ts_accessibility_c,
                             decorators: decorators_ast_c.into(),
                             comments: comments_c,
@@ -15295,11 +15298,23 @@ pub fn mk_class_sig<'a>(
                                     let (func_loc, func) = &method.value;
                                     let kind = method.kind;
                                     let static_ = method.static_;
+                                    let override_ = method.override_;
                                     let ts_accessibility = &method.ts_accessibility;
                                     let decorators = &method.decorators;
                                     let method_comments = &method.comments;
 
                                     check_ts_accessibility(cx, ts_accessibility);
+                                    if override_ {
+                                        flow_js::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedSyntax(
+                                                method_loc.dupe(),
+                                                UnsupportedSyntax::TSLibSyntax(
+                                                    TsLibSyntaxKind::OverrideModifier,
+                                                ),
+                                            ),
+                                        );
+                                    }
                                     let id_loc_c = id_loc.dupe();
                                     let pn_c = private_name.clone();
                                     add_method_sig_and_element(
@@ -15317,6 +15332,7 @@ pub fn mk_class_sig<'a>(
                                         kind,
                                         true,
                                         static_,
+                                        override_,
                                         ts_accessibility.clone(),
                                         decorators,
                                         method_comments.clone(),
@@ -15336,11 +15352,23 @@ pub fn mk_class_sig<'a>(
                                     let (func_loc, func) = &method.value;
                                     let kind = method.kind;
                                     let static_ = method.static_;
+                                    let override_ = method.override_;
                                     let ts_accessibility = &method.ts_accessibility;
                                     let decorators = &method.decorators;
                                     let method_comments = &method.comments;
 
                                     check_ts_accessibility(cx, ts_accessibility);
+                                    if override_ {
+                                        flow_js::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedSyntax(
+                                                method_loc.dupe(),
+                                                UnsupportedSyntax::TSLibSyntax(
+                                                    TsLibSyntaxKind::OverrideModifier,
+                                                ),
+                                            ),
+                                        );
+                                    }
 
                                     let id_loc_c = id_loc.dupe();
                                     let id_pair_c = id_pair.clone();
@@ -15359,6 +15387,7 @@ pub fn mk_class_sig<'a>(
                                         kind,
                                         false,
                                         static_,
+                                        override_,
                                         ts_accessibility.clone(),
                                         decorators,
                                         method_comments.clone(),
@@ -15404,6 +15433,7 @@ pub fn mk_class_sig<'a>(
                                         let (func_loc, func) = &method.value;
                                         let kind = method.kind;
                                         let static_ = method.static_;
+                                        let override_ = method.override_;
                                         let ts_accessibility = &method.ts_accessibility;
                                         let decorators = &method.decorators;
                                         let method_comments = &method.comments;
@@ -15411,6 +15441,17 @@ pub fn mk_class_sig<'a>(
                                         let computed_comments = &computed_key.comments;
 
                                         check_ts_accessibility(cx, ts_accessibility);
+                                        if override_ {
+                                            flow_js::add_output_non_speculating(
+                                                cx,
+                                                ErrorMessage::EUnsupportedSyntax(
+                                                    method_loc.dupe(),
+                                                    UnsupportedSyntax::TSLibSyntax(
+                                                        TsLibSyntaxKind::OverrideModifier,
+                                                    ),
+                                                ),
+                                            );
+                                        }
 
                                         let computed_loc_c = computed_loc.dupe();
                                         let computed_expr_c = computed_key.expression.clone();
@@ -15430,6 +15471,7 @@ pub fn mk_class_sig<'a>(
                                             kind,
                                             false,
                                             static_,
+                                            override_,
                                             ts_accessibility.clone(),
                                             decorators,
                                             method_comments.clone(),
@@ -15484,6 +15526,7 @@ pub fn mk_class_sig<'a>(
                                 let annot = &prop.annot;
                                 let value = &prop.value;
                                 let static_ = prop.static_;
+                                let override_ = prop.override_;
                                 let optional = prop.optional;
                                 let variance = &prop.variance;
                                 let ts_accessibility = &prop.ts_accessibility;
@@ -15491,6 +15534,17 @@ pub fn mk_class_sig<'a>(
                                 let prop_comments = &prop.comments;
 
                                 check_ts_accessibility(cx, ts_accessibility);
+                                if override_ {
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(
+                                            loc.dupe(),
+                                            UnsupportedSyntax::TSLibSyntax(
+                                                TsLibSyntaxKind::OverrideModifier,
+                                            ),
+                                        ),
+                                    );
+                                }
                                 if optional && !cx.tslib_syntax() {
                                     flow_js::add_output_non_speculating(
                                         cx,
@@ -15529,6 +15583,7 @@ pub fn mk_class_sig<'a>(
                                 let id_loc_c = id_loc.dupe();
                                 let id_pair_c = id_pair.clone();
                                 let static_c = static_;
+                                let override_c = override_;
                                 let variance_c = variance.clone();
                                 let ts_accessibility_c = ts_accessibility.clone();
                                 let prop_comments_c = prop_comments.clone();
@@ -15552,6 +15607,7 @@ pub fn mk_class_sig<'a>(
                                                     annot: annot_ast,
                                                     value: get_value(),
                                                     static_: static_c,
+                                                    override_: override_c,
                                                     optional,
                                                     variance: variance_c,
                                                     ts_accessibility: ts_accessibility_c,
@@ -15626,6 +15682,7 @@ pub fn mk_class_sig<'a>(
                             let annot = &pf.annot;
                             let value = &pf.value;
                             let static_ = pf.static_;
+                            let override_ = pf.override_;
                             let optional = pf.optional;
                             let variance = &pf.variance;
                             let ts_accessibility = &pf.ts_accessibility;
@@ -15633,6 +15690,17 @@ pub fn mk_class_sig<'a>(
                             let field_comments = &pf.comments;
 
                             check_ts_accessibility(cx, ts_accessibility);
+                            if override_ {
+                                flow_js::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedSyntax(
+                                        loc.dupe(),
+                                        UnsupportedSyntax::TSLibSyntax(
+                                            TsLibSyntaxKind::OverrideModifier,
+                                        ),
+                                    ),
+                                );
+                            }
                             if optional && !cx.tslib_syntax() {
                                 flow_js::add_output_non_speculating(
                                     cx,
@@ -15665,6 +15733,7 @@ pub fn mk_class_sig<'a>(
                             let annot_t_c = annot_t.dupe();
                             let key_c = pf.key.clone();
                             let static_c = static_;
+                            let override_c = override_;
                             let variance_c = variance.clone();
                             let ts_accessibility_c = ts_accessibility.clone();
                             let field_comments_c = field_comments.clone();
@@ -15676,6 +15745,7 @@ pub fn mk_class_sig<'a>(
                                         annot: annot_ast,
                                         value: get_value(),
                                         static_: static_c,
+                                        override_: override_c,
                                         optional,
                                         variance: variance_c,
                                         ts_accessibility: ts_accessibility_c,
@@ -16567,6 +16637,7 @@ pub fn mk_record_sig<'a>(
                                             value: (func_loc_c, typed_func),
                                             kind: kind_c,
                                             static_: static_c,
+                                            override_: false,
                                             ts_accessibility: None,
                                             decorators: vec![].into(),
                                             comments: method_comments_c,

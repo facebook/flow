@@ -701,6 +701,7 @@ end = struct
             proto = _;
             _method = _;
             abstract = _;
+            override = _;
             variance = _;
             ts_accessibility = _;
             init = _;

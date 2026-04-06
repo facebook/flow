@@ -3892,6 +3892,7 @@ fn convert_object<'a>(
                             proto: prop.proto,
                             method,
                             abstract_: prop.abstract_,
+                            override_: prop.override_,
                             variance: prop.variance.clone(),
                             ts_accessibility: prop.ts_accessibility.as_ref().map(|tsa| {
                                 ast::class::ts_accessibility::TSAccessibility {
@@ -4103,6 +4104,7 @@ fn convert_object<'a>(
                                     proto: false,
                                     method,
                                     abstract_,
+                                    override_: prop.override_,
                                     variance: prop.variance.clone(),
                                     ts_accessibility: None,
                                     init: None,
@@ -4177,6 +4179,7 @@ fn convert_object<'a>(
                         proto: prop.proto,
                         method: prop.method,
                         abstract_: prop.abstract_,
+                        override_: prop.override_,
                         variance: prop.variance.clone(),
                         ts_accessibility: prop.ts_accessibility.as_ref().map(|tsa| {
                             ast::class::ts_accessibility::TSAccessibility {
@@ -4255,6 +4258,7 @@ fn convert_object<'a>(
                         proto: prop.proto,
                         method: prop.method,
                         abstract_: prop.abstract_,
+                        override_: prop.override_,
                         variance: prop.variance.clone(),
                         ts_accessibility: prop.ts_accessibility.as_ref().map(|tsa| {
                             ast::class::ts_accessibility::TSAccessibility {
@@ -5742,6 +5746,17 @@ fn add_interface_properties<'a>(
                 prop_asts.push(error_prop);
             }
             Property::NormalProperty(np) => {
+                if np.override_ {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EUnsupportedSyntax(
+                            np.loc.dupe(),
+                            intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                TsLibSyntaxKind::OverrideModifier,
+                            ),
+                        ),
+                    );
+                }
                 let init_ = &np.init;
                 let is_ts_private = match &np.ts_accessibility {
                     Some(acc) => {
@@ -5934,6 +5949,7 @@ fn add_interface_properties<'a>(
                                             proto: np.proto,
                                             method: np.method,
                                             abstract_: np.abstract_,
+                                            override_: np.override_,
                                             variance: np.variance.clone(),
                                             ts_accessibility: np.ts_accessibility.clone(),
                                             init: Some(init_ast),
@@ -6043,6 +6059,7 @@ fn add_interface_properties<'a>(
                                                         proto: np.proto,
                                                         method: np.method,
                                                         abstract_: np.abstract_,
+                                                        override_: np.override_,
                                                         variance: np.variance.clone(),
                                                         ts_accessibility: np.ts_accessibility.clone(),
                                                         init: None,
@@ -6129,6 +6146,7 @@ fn add_interface_properties<'a>(
                                                         proto: np.proto,
                                                         method: np.method,
                                                         abstract_: np.abstract_,
+                                                        override_: np.override_,
                                                         variance: np.variance.clone(),
                                                         ts_accessibility: np
                                                             .ts_accessibility
@@ -6280,6 +6298,7 @@ fn add_interface_properties<'a>(
                                                 proto: np.proto,
                                                 method: np.method,
                                                 abstract_: np.abstract_,
+                                                override_: np.override_,
                                                 variance: np.variance.clone(),
                                                 ts_accessibility: np.ts_accessibility.clone(),
                                                 init: None,
@@ -6380,6 +6399,7 @@ fn add_interface_properties<'a>(
                                         proto: np.proto,
                                         method: np.method,
                                         abstract_: np.abstract_,
+                                        override_: np.override_,
                                         variance: np.variance.clone(),
                                         ts_accessibility: np.ts_accessibility.clone(),
                                         init: init_ast,
@@ -6455,6 +6475,7 @@ fn add_interface_properties<'a>(
                                         proto: np.proto,
                                         method: np.method,
                                         abstract_: np.abstract_,
+                                        override_: np.override_,
                                         variance: np.variance.clone(),
                                         ts_accessibility: np.ts_accessibility.clone(),
                                         init: None,
@@ -6524,6 +6545,7 @@ fn add_interface_properties<'a>(
                                         proto: np.proto,
                                         method: np.method,
                                         abstract_: np.abstract_,
+                                        override_: np.override_,
                                         variance: np.variance.clone(),
                                         ts_accessibility: np.ts_accessibility.clone(),
                                         init: None,

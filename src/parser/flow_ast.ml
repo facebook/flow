@@ -327,6 +327,7 @@ and Type : sig
         proto: bool;
         _method: bool;
         abstract: bool;
+        override: bool;
         variance: 'M Variance.t option;
         ts_accessibility: 'M Class.TSAccessibility.t option;
         init: ('M, 'T) Expression.t option;
@@ -2468,6 +2469,7 @@ and Class : sig
       key: ('M, 'T) Expression.Object.Property.key;
       value: 'M * ('M, 'T) Function.t;
       static: bool;
+      override: bool;
       ts_accessibility: 'M TSAccessibility.t option;
       decorators: ('M, 'T) Class.Decorator.t list;
       comments: ('M, unit) Syntax.t option;
@@ -2483,6 +2485,7 @@ and Class : sig
       key: ('M, 'T) Expression.Object.Property.key;
       annot: ('M, 'T) Type.annotation;
       static: bool;
+      override: bool;
       optional: bool;
       comments: ('M, unit) Syntax.t option;
     }
@@ -2495,6 +2498,7 @@ and Class : sig
     and ('M, 'T) t' = {
       key: ('M, 'T) Expression.Object.Property.key;
       annot: 'M * ('M, 'T) Type.Function.t;
+      override: bool;
       ts_accessibility: 'M TSAccessibility.t option;
       comments: ('M, unit) Syntax.t option;
     }
@@ -2507,6 +2511,7 @@ and Class : sig
     and ('M, 'T) t' = {
       key: ('M, 'T) Expression.Object.Property.key;
       annot: ('M, 'T) Type.annotation_or_hint;
+      override: bool;
       ts_accessibility: 'M TSAccessibility.t option;
       variance: 'M Variance.t option;
       comments: ('M, unit) Syntax.t option;
@@ -2522,6 +2527,7 @@ and Class : sig
       value: ('M, 'T) value;
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
+      override: bool;
       optional: bool;
       variance: 'M Variance.t option;
       ts_accessibility: 'M TSAccessibility.t option;
@@ -2544,6 +2550,7 @@ and Class : sig
       value: ('M, 'T) Class.Property.value;
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
+      override: bool;
       optional: bool;
       variance: 'M Variance.t option;
       ts_accessibility: 'M TSAccessibility.t option;

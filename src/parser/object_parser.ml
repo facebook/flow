@@ -635,7 +635,7 @@ module Object
       | _ -> Ast.Class.Method.Method
     in
     let make_bodyless_declare_accessor
-        env ~start_loc ~sig_loc ~kind ~key ~tparams ~params ~return ~static ~leading =
+        env ~start_loc ~sig_loc ~kind ~key ~tparams ~params ~return ~static ~override ~leading =
       match Declaration.convert_function_params_to_type_params params with
       | Ok type_params ->
         let return_annot =
@@ -676,6 +676,7 @@ module Object
                  key;
                  annot;
                  static;
+                 override;
                  optional = false;
                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
                }
@@ -684,7 +685,18 @@ module Object
       | Error _ -> None
     in
     let make_bodyless_declare_method
-        env ~start_loc ~sig_loc ~kind ~key ~tparams ~params ~return ~static ~optional ~leading =
+        env
+        ~start_loc
+        ~sig_loc
+        ~kind
+        ~key
+        ~tparams
+        ~params
+        ~return
+        ~static
+        ~override
+        ~optional
+        ~leading =
       match Declaration.convert_function_params_to_type_params params with
       | Ok type_params ->
         let return_annot =
@@ -723,6 +735,7 @@ module Object
                  key;
                  annot;
                  static;
+                 override;
                  optional;
                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
                }
@@ -730,7 +743,7 @@ module Object
           )
       | Error _ -> None
     in
-    let accessor env start_loc decorators static ts_accessibility leading ~is_getter =
+    let accessor env start_loc decorators static ~override ts_accessibility leading ~is_getter =
       if in_ambient_context env then (
         (* In ambient context, parse key + signature, then check for bodyless *)
         let async = false in
@@ -830,6 +843,7 @@ module Object
                 value;
                 kind;
                 static;
+                override;
                 ts_accessibility;
                 decorators;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
@@ -849,6 +863,7 @@ module Object
               ~params
               ~return
               ~static
+              ~override
               ~leading
           with
           | Some decl -> decl
@@ -884,6 +899,7 @@ module Object
                   Method.Set
                 );
               static;
+              override;
               ts_accessibility;
               decorators;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
@@ -959,6 +975,7 @@ module Object
         variance
         ts_accessibility
         ~abstract
+        ~override
         ~optional
         leading =
       let (loc, (key, annot, value, comments)) =
@@ -1002,6 +1019,7 @@ module Object
                 value;
                 annot;
                 static;
+                override;
                 optional;
                 variance;
                 ts_accessibility;
@@ -1011,7 +1029,7 @@ module Object
             )
         | _ ->
           Body.AbstractProperty
-            (loc, { AbstractProperty.key; annot; ts_accessibility; variance; comments })
+            (loc, { AbstractProperty.key; annot; override; ts_accessibility; variance; comments })
       end else begin
         let open Ast.Class in
         match key with
@@ -1023,6 +1041,7 @@ module Object
                 value;
                 annot;
                 static;
+                override;
                 optional;
                 variance;
                 ts_accessibility;
@@ -1038,6 +1057,7 @@ module Object
                 value;
                 annot;
                 static;
+                override;
                 optional;
                 variance;
                 ts_accessibility;
@@ -1072,6 +1092,7 @@ module Object
         ~generator
         ~static
         ~abstract
+        ~override
         ~declare
         variance
         ts_accessibility
@@ -1092,6 +1113,7 @@ module Object
           variance
           ts_accessibility
           ~abstract
+          ~override
           ~optional:false
           leading
       | T_PLING when (not async) && (not generator) && is_optional_method_in_ambient env ->
@@ -1138,6 +1160,7 @@ module Object
               ~params
               ~return
               ~static
+              ~override
               ~optional:true
               ~leading
           with
@@ -1154,6 +1177,7 @@ module Object
                   value = Class.Property.Declared;
                   annot = Ast.Type.Missing (Peek.loc env);
                   static;
+                  override;
                   optional = true;
                   variance = None;
                   ts_accessibility;
@@ -1174,6 +1198,7 @@ module Object
           variance
           ts_accessibility
           ~abstract
+          ~override
           ~optional:true
           leading
       | _ when is_asi env ->
@@ -1188,6 +1213,7 @@ module Object
           variance
           ts_accessibility
           ~abstract
+          ~override
           ~optional:false
           leading
       | _ ->
@@ -1306,6 +1332,7 @@ module Object
                 value;
                 kind;
                 static;
+                override;
                 ts_accessibility;
                 decorators;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
@@ -1322,6 +1349,7 @@ module Object
                 {
                   Class.AbstractMethod.key;
                   annot = make_method_func_type type_params;
+                  override;
                   ts_accessibility;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
                 }
@@ -1355,6 +1383,7 @@ module Object
               ~params
               ~return
               ~static
+              ~override
               ~optional:false
               ~leading
           with
@@ -1436,6 +1465,22 @@ module Object
         ) else
           []
       in
+      (* Parse override modifier — after static, before abstract *)
+      let override =
+        match Peek.token env with
+        | T_IDENTIFIER { raw = "override"; _ } when Peek.ith_is_object_key ~i:1 ~is_class:true env
+          ->
+          true
+        | _ -> false
+      in
+      let leading_override =
+        if override then (
+          let leading = Peek.comments env in
+          Eat.token env;
+          leading
+        ) else
+          []
+      in
       (* Parse abstract modifier *)
       let abstract =
         match Peek.token env with
@@ -1507,6 +1552,7 @@ module Object
               leading_accessibility;
               leading_static;
               leading_abstract;
+              leading_override;
               leading_async;
               leading_generator;
             ]
@@ -1525,6 +1571,7 @@ module Object
               ~generator
               ~static
               ~abstract
+              ~override
               ~declare
               variance
               ts_accessibility
@@ -1538,6 +1585,7 @@ module Object
               start_loc
               decorators
               static
+              ~override
               ts_accessibility
               (leading @ leading_get)
               ~is_getter:true
@@ -1555,6 +1603,7 @@ module Object
               ~generator
               ~static
               ~abstract
+              ~override
               ~declare
               variance
               ts_accessibility
@@ -1568,6 +1617,7 @@ module Object
               start_loc
               decorators
               static
+              ~override
               ts_accessibility
               (leading @ leading_set)
               ~is_getter:false
@@ -1649,6 +1699,7 @@ module Object
               ~generator
               ~static
               ~abstract
+              ~override
               ~declare
               variance
               ts_accessibility
@@ -1665,6 +1716,7 @@ module Object
             ~generator
             ~static
             ~abstract
+            ~override
             ~declare
             variance
             ts_accessibility
@@ -2005,6 +2057,7 @@ module Object
                   value;
                   kind = Class.Method.Method;
                   static;
+                  override = false;
                   ts_accessibility = None;
                   decorators = [];
                   comments;

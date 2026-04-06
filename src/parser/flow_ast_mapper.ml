@@ -561,7 +561,18 @@ class ['loc] mapper =
 
     method class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
-      let { kind = _; key; value; static = _; ts_accessibility = _; decorators; comments } = meth in
+      let {
+        kind = _;
+        key;
+        value;
+        static = _;
+        override = _;
+        ts_accessibility = _;
+        decorators;
+        comments;
+      } =
+        meth
+      in
       let key' = this#object_key key in
       let value' = map_loc this#function_expression_or_method value in
       let decorators' = map_list this#class_decorator decorators in
@@ -573,7 +584,7 @@ class ['loc] mapper =
 
     method class_declare_method _loc (decl_meth : ('loc, 'loc) Ast.Class.DeclareMethod.t') =
       let open Ast.Class.DeclareMethod in
-      let { kind = _; key; annot; static = _; optional = _; comments } = decl_meth in
+      let { kind = _; key; annot; static = _; override = _; optional = _; comments } = decl_meth in
       let key' = this#object_key key in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
@@ -584,7 +595,9 @@ class ['loc] mapper =
 
     method class_abstract_method _loc (abs_meth : ('loc, 'loc) Ast.Class.AbstractMethod.t') =
       let open Ast.Class.AbstractMethod in
-      let { key; annot = (annot_loc, func); ts_accessibility = _; comments } = abs_meth in
+      let { key; annot = (annot_loc, func); override = _; ts_accessibility = _; comments } =
+        abs_meth
+      in
       let key' = this#object_key key in
       let func' = this#function_type func in
       let comments' = this#syntax_opt comments in
@@ -595,7 +608,7 @@ class ['loc] mapper =
 
     method class_abstract_property _loc (abs_prop : ('loc, 'loc) Ast.Class.AbstractProperty.t') =
       let open Ast.Class.AbstractProperty in
-      let { key; annot; ts_accessibility = _; variance; comments } = abs_prop in
+      let { key; annot; override = _; ts_accessibility = _; variance; comments } = abs_prop in
       let key' = this#object_key key in
       let annot' = this#type_annotation_hint annot in
       let variance' = this#variance_opt variance in
@@ -612,6 +625,7 @@ class ['loc] mapper =
         value;
         annot;
         static = _;
+        override = _;
         optional = _;
         variance;
         ts_accessibility = _;
@@ -665,6 +679,7 @@ class ['loc] mapper =
         value;
         annot;
         static = _;
+        override = _;
         optional = _;
         variance;
         ts_accessibility = _;
@@ -1613,6 +1628,7 @@ class ['loc] mapper =
               proto;
               _method;
               abstract;
+              override;
               variance;
               ts_accessibility;
               init;
@@ -1644,6 +1660,7 @@ class ['loc] mapper =
             proto;
             _method;
             abstract;
+            override;
             variance = variance';
             ts_accessibility;
             init = init';

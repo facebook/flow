@@ -8514,6 +8514,7 @@ module Make
                   ~kind
                   ~private_
                   ~static
+                  ~override
                   ~ts_accessibility
                   ~decorators
                   ~comments
@@ -8574,6 +8575,7 @@ module Make
                         value = (func_loc, func);
                         kind;
                         static;
+                        override;
                         ts_accessibility;
                         decorators;
                         comments;
@@ -8651,12 +8653,19 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      override;
                       ts_accessibility;
                       decorators;
                       comments;
                     }
                   ) ->
                 check_ts_accessibility ts_accessibility;
+                if override then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (method_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                    );
                 add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -8666,6 +8675,7 @@ module Make
                   ~kind
                   ~private_:true
                   ~static
+                  ~override
                   ~ts_accessibility
                   ~decorators
                   ~comments
@@ -8681,12 +8691,19 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      override;
                       ts_accessibility;
                       decorators;
                       comments;
                     }
                   ) ->
                 check_ts_accessibility ts_accessibility;
+                if override then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (method_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                    );
                 add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -8696,6 +8713,7 @@ module Make
                   ~kind
                   ~private_:false
                   ~static
+                  ~override
                   ~ts_accessibility
                   ~decorators
                   ~comments
@@ -8710,6 +8728,7 @@ module Make
                       annot;
                       value;
                       static;
+                      override;
                       optional;
                       variance;
                       ts_accessibility;
@@ -8718,6 +8737,12 @@ module Make
                     }
                   ) ->
                 check_ts_accessibility ts_accessibility;
+                if override then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                    );
                 if optional && not (Context.tslib_syntax cx) then
                   Flow.add_output
                     cx
@@ -8740,6 +8765,7 @@ module Make
                         annot = annot_ast;
                         value = get_value ();
                         static;
+                        override;
                         optional;
                         variance;
                         ts_accessibility;
@@ -8770,6 +8796,7 @@ module Make
                       annot;
                       value;
                       static;
+                      override;
                       optional;
                       variance;
                       ts_accessibility;
@@ -8778,6 +8805,12 @@ module Make
                     }
                   ) ->
                 check_ts_accessibility ts_accessibility;
+                if override then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                    );
                 if optional && not (Context.tslib_syntax cx) then
                   Flow.add_output
                     cx
@@ -8801,6 +8834,7 @@ module Make
                         annot;
                         value = get_value ();
                         static;
+                        override;
                         optional;
                         variance;
                         ts_accessibility;
@@ -8862,6 +8896,7 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      override;
                       ts_accessibility;
                       decorators;
                       comments;
@@ -8869,6 +8904,12 @@ module Make
                   )
                 when Flow_ast_utils.well_known_symbol_name expr <> None ->
                 check_ts_accessibility ts_accessibility;
+                if override then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (method_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                    );
                 let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
                 let id_loc = fst expr in
                 add_method_sig_and_element
@@ -8880,6 +8921,7 @@ module Make
                   ~kind
                   ~private_:false
                   ~static
+                  ~override
                   ~ts_accessibility
                   ~decorators
                   ~comments
@@ -9301,6 +9343,7 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      override = _;
                       ts_accessibility = _;
                       decorators = _;
                       comments = method_comments;
@@ -9350,6 +9393,7 @@ module Make
                         value = (func_loc, func);
                         kind;
                         static;
+                        override = false;
                         ts_accessibility = None;
                         decorators = [];
                         comments = method_comments;

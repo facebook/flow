@@ -51,6 +51,7 @@ module Types = struct
           proto;
           _method;
           abstract;
+          override = false;
           variance;
           ts_accessibility;
           init;
@@ -356,6 +357,7 @@ module Classes = struct
           key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
           value = (Loc.none, function_);
           static;
+          override = false;
           ts_accessibility = None;
           decorators;
           comments;
@@ -402,6 +404,7 @@ module Classes = struct
           value = Ast.Class.Property.Initialized value;
           annot;
           static;
+          override = false;
           optional = false;
           variance;
           ts_accessibility = None;

@@ -154,6 +154,7 @@ and ts_lib_syntax_kind =
   | TypeofThis
   | PropertyValueInitializer
   | ClassExtendsCall
+  | OverrideModifier
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

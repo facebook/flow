@@ -1504,7 +1504,18 @@ with type t = Impl.t = struct
         | IndexSignature i -> object_type_indexer i
       )
     and class_method
-        (loc, { Class.Method.key; value; kind; static; ts_accessibility; decorators; comments }) =
+        ( loc,
+          {
+            Class.Method.key;
+            value;
+            kind;
+            static;
+            override;
+            ts_accessibility;
+            decorators;
+            comments;
+          }
+        ) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
@@ -1540,13 +1551,18 @@ with type t = Impl.t = struct
            ("computed", bool computed);
            ("decorators", array_of_list class_decorator decorators);
          ]
+        @ ( if override then
+            [("override", bool override)]
+          else
+            []
+          )
         @
         match ts_accessibility_to_string ts_accessibility with
         | Some v -> [("tsAccessibility", string v)]
         | None -> []
         )
     and class_declare_method
-        (loc, { Class.DeclareMethod.kind; key; annot; static; optional; comments }) =
+        (loc, { Class.DeclareMethod.kind; key; annot; static; override; optional; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
@@ -1581,16 +1597,26 @@ with type t = Impl.t = struct
            ("optional", bool optional);
            ("computed", bool computed);
          ]
+        @ ( if override then
+            [("override", bool override)]
+          else
+            []
+          )
         @ kind_prop
         )
-    and class_abstract_method (loc, { Class.AbstractMethod.key; annot; ts_accessibility; comments })
-        =
+    and class_abstract_method
+        (loc, { Class.AbstractMethod.key; annot; override; ts_accessibility; comments }) =
       let (key, computed, comments) = property_key ~comments key in
       node
         ?comments
         "AbstractMethodDefinition"
         loc
         ([("key", key); ("value", function_type annot); ("computed", bool computed)]
+        @ ( if override then
+            [("override", bool override)]
+          else
+            []
+          )
         @
         match ts_accessibility_to_string ts_accessibility with
         | Some v -> [("tsAccessibility", string v)]
@@ -1598,7 +1624,14 @@ with type t = Impl.t = struct
         )
     and class_abstract_property
         ( loc,
-          { Class.AbstractProperty.key; annot; ts_accessibility; variance = variance_; comments }
+          {
+            Class.AbstractProperty.key;
+            annot;
+            override;
+            ts_accessibility;
+            variance = variance_;
+            comments;
+          }
         ) =
       let (key, computed, comments) = property_key ~comments key in
       node
@@ -1611,6 +1644,11 @@ with type t = Impl.t = struct
            ("computed", bool computed);
            ("variance", option variance variance_);
          ]
+        @ ( if override then
+            [("override", bool override)]
+          else
+            []
+          )
         @
         match ts_accessibility_to_string ts_accessibility with
         | Some v -> [("tsAccessibility", string v)]
@@ -1623,6 +1661,7 @@ with type t = Impl.t = struct
             value;
             annot;
             static;
+            override;
             optional;
             variance = variance_;
             ts_accessibility;
@@ -1646,6 +1685,11 @@ with type t = Impl.t = struct
           ("optional", bool optional);
           ("variance", option variance variance_);
         ]
+        @ ( if override then
+            [("override", bool override)]
+          else
+            []
+          )
         @ (match ts_accessibility_to_string ts_accessibility with
           | Some v -> [("tsAccessibility", string v)]
           | None -> [])
@@ -1679,6 +1723,7 @@ with type t = Impl.t = struct
           value;
           annot;
           static;
+          override;
           optional;
           variance = variance_;
           ts_accessibility;
@@ -1702,6 +1747,11 @@ with type t = Impl.t = struct
           ("optional", bool optional);
           ("variance", option variance variance_);
         ]
+        @ ( if override then
+            [("override", bool override)]
+          else
+            []
+          )
         @ (match ts_accessibility_to_string ts_accessibility with
           | Some v -> [("tsAccessibility", string v)]
           | None -> [])
@@ -2325,6 +2375,7 @@ with type t = Impl.t = struct
             variance = variance_;
             _method;
             abstract;
+            override;
             ts_accessibility;
             init = init_;
             comments;
@@ -2356,6 +2407,11 @@ with type t = Impl.t = struct
          ]
         @ ( if computed then
             [("computed", bool computed)]
+          else
+            []
+          )
+        @ ( if override then
+            [("override", bool override)]
           else
             []
           )

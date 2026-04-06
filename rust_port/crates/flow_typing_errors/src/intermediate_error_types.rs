@@ -208,6 +208,7 @@ pub enum TsLibSyntaxKind {
     TypeofThis,
     PropertyValueInitializer,
     ClassExtendsCall,
+    OverrideModifier,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

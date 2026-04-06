@@ -8676,6 +8676,7 @@ where
                             TypeofThis => "`typeof this` syntax",
                             PropertyValueInitializer => "Property value initializer in declaration",
                             ClassExtendsCall => "Call expression in class `extends` clause",
+                            OverrideModifier => "`override` modifier on class members",
                         };
                         friendly::Message(vec![text(kind_str), text(" is not enabled.")])
                     }

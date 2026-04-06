@@ -1116,6 +1116,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         value = val1;
         annot = annot1;
         static = s1;
+        override = _;
         optional = opt1;
         variance = var1;
         ts_accessibility = acc1;
@@ -1129,6 +1130,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         value = val2;
         annot = annot2;
         static = s2;
+        override = _;
         optional = opt2;
         variance = var2;
         ts_accessibility = acc2;
@@ -1457,6 +1459,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val1;
             annot = annot1;
             static = s1;
+            override = _;
             optional = opt1;
             variance = var1;
             ts_accessibility = acc1;
@@ -1472,6 +1475,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val2;
             annot = annot2;
             static = s2;
+            override = _;
             optional = opt2;
             variance = var2;
             ts_accessibility = acc2;
@@ -1500,6 +1504,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val1;
             annot = annot1;
             static = s1;
+            override = _;
             optional = opt1;
             variance = var1;
             ts_accessibility = acc1;
@@ -1515,6 +1520,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val2;
             annot = annot2;
             static = s2;
+            override = _;
             optional = opt2;
             variance = var2;
             ts_accessibility = acc2;
@@ -1552,6 +1558,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       key = key1;
       value = (value_loc, value1);
       static = static1;
+      override = _;
       ts_accessibility = acc1;
       decorators = decorators1;
       comments = comments1;
@@ -1563,6 +1570,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       key = key2;
       value = (_loc, value2);
       static = static2;
+      override = _;
       ts_accessibility = acc2;
       decorators = decorators2;
       comments = comments2;
@@ -1592,6 +1600,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       key = key1;
       annot = annot1;
       static = static1;
+      override = _;
       optional = optional1;
       comments = comments1;
     } =
@@ -1602,6 +1611,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       key = key2;
       annot = annot2;
       static = static2;
+      override = _;
       optional = optional2;
       comments = comments2;
     } =
@@ -2943,6 +2953,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             proto = proto1;
             _method = method1;
             abstract = abstract1;
+            override = _;
             variance = var1;
             ts_accessibility = ts_accessibility1;
             init = init1;
@@ -2960,6 +2971,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             proto = proto2;
             _method = method2;
             abstract = abstract2;
+            override = _;
             variance = var2;
             ts_accessibility = ts_accessibility2;
             init = init2;

@@ -2047,6 +2047,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         value;
         annot;
         static = _;
+        override = _;
         optional = _;
         variance;
         ts_accessibility = _;
@@ -2075,6 +2076,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         value;
         annot;
         static = _;
+        override = _;
         optional = _;
         variance;
         ts_accessibility = _;
@@ -2110,6 +2112,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         key;
         value = (_, value);
         static = _;
+        override = _;
         ts_accessibility = _;
         decorators;
         comments = _;

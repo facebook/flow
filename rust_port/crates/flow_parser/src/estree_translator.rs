@@ -3238,32 +3238,36 @@ fn class_method(
         MethodKind::Set => "set",
     };
 
+    let mut props = vec![
+        ("key", key),
+        (
+            "value",
+            function_expression(offset_table, config, &method.value.0, &method.value.1),
+        ),
+        ("kind", string(kind)),
+        ("static", bool_value(method.static_)),
+        ("computed", bool_value(computed)),
+        (
+            "decorators",
+            array_of_list(&method.decorators, |d| {
+                class_decorator(offset_table, config, d)
+            }),
+        ),
+    ];
+    if method.override_ {
+        props.push(("override", bool_value(true)));
+    }
+    props.push((
+        "tsAccessibility",
+        option(&method.ts_accessibility, ts_accessibility),
+    ));
     node(
         offset_table,
         config,
         "MethodDefinition",
         &method.loc,
         comments.as_ref(),
-        vec![
-            ("key", key),
-            (
-                "value",
-                function_expression(offset_table, config, &method.value.0, &method.value.1),
-            ),
-            ("kind", string(kind)),
-            ("static", bool_value(method.static_)),
-            ("computed", bool_value(computed)),
-            (
-                "decorators",
-                array_of_list(&method.decorators, |d| {
-                    class_decorator(offset_table, config, d)
-                }),
-            ),
-            (
-                "tsAccessibility",
-                option(&method.ts_accessibility, ts_accessibility),
-            ),
-        ],
+        props,
     )
 }
 
@@ -3326,6 +3330,9 @@ fn class_declare_method(
         ast::class::MethodKind::Set => props.push(("kind", Value::String("set".into()))),
         ast::class::MethodKind::Method | ast::class::MethodKind::Constructor => {}
     }
+    if decl_meth.override_ {
+        props.push(("override", bool_value(true)));
+    }
     node(
         offset_table,
         config,
@@ -3355,6 +3362,9 @@ fn class_abstract_method(
         ),
         ("computed", bool_value(computed)),
     ];
+    if abs_meth.override_ {
+        fields.push(("override", bool_value(true)));
+    }
     if let Some(tsa) = &abs_meth.ts_accessibility {
         fields.push(("tsAccessibility", ts_accessibility(tsa)));
     }
@@ -3391,6 +3401,9 @@ fn class_abstract_property(
             option(&abs_prop.variance, |v| variance(offset_table, config, v)),
         ),
     ];
+    if abs_prop.override_ {
+        fields.push(("override", bool_value(true)));
+    }
     if let Some(tsa) = &abs_prop.ts_accessibility {
         fields.push(("tsAccessibility", ts_accessibility(tsa)));
     }
@@ -3439,6 +3452,10 @@ fn class_private_field(
             option(&field.ts_accessibility, ts_accessibility),
         ),
     ];
+
+    if field.override_ {
+        props.push(("override", bool_value(true)));
+    }
 
     if !field.decorators.is_empty() {
         props.push((
@@ -3564,6 +3581,10 @@ fn class_property_helper(
             option(&property.ts_accessibility, ts_accessibility),
         ),
     ];
+
+    if property.override_ {
+        props.push(("override", bool_value(true)));
+    }
 
     if !property.decorators.is_empty() {
         props.push((
@@ -5263,6 +5284,9 @@ fn object_type_property(
     ];
     if computed {
         fields.push(("computed", bool_value(computed)));
+    }
+    if prop.override_ {
+        fields.push(("override", bool_value(true)));
     }
     if let Some(tsa) = &prop.ts_accessibility {
         fields.push(("tsAccessibility", ts_accessibility(tsa)));

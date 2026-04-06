@@ -82,6 +82,7 @@ class mapper target =
                 Property.key;
                 value;
                 static;
+                override = false;
                 optional = false;
                 variance = None;
                 ts_accessibility = None;

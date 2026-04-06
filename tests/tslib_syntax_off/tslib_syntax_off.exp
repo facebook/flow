@@ -325,5 +325,37 @@ Call expression in class `extends` clause is not enabled. [unsupported-syntax]
                                             ^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:128:3
 
-Found 40 errors
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   128|   override foo() {} // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:129:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   129|   override bar: string; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:134:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   134|   override foo(): void; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:135:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   135|   override bar: string; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 44 errors
