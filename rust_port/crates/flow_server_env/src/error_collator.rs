@@ -116,6 +116,7 @@ pub fn update_local_collated_errors<F, G>(
     get_ast: &G,
     root: &Path,
     file_options: &flow_common::files::FileOptions,
+    node_modules_errors: bool,
     unsuppressable_error_codes: &BTreeSet<FlowSmolStr>,
     suppressions: &ErrorSuppressions,
     errors: &BTreeMap<FileKey, ErrorSet>,
@@ -132,6 +133,7 @@ pub fn update_local_collated_errors<F, G>(
         let (file_errs, _file_suppressed) = suppressions.filter_suppressed_errors(
             root,
             file_options,
+            node_modules_errors,
             unsuppressable_error_codes,
             loc_of_aloc,
             get_ast,
@@ -163,6 +165,7 @@ pub fn update_collated_errors<F, G>(
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
 {
     let root = &*options.root;
+    let node_modules_errors = options.node_modules_errors;
     let unsuppressable_error_codes: BTreeSet<FlowSmolStr> =
         options.unsuppressable_error_codes.iter().cloned().collect();
     let Errors {
@@ -183,6 +186,7 @@ pub fn update_collated_errors<F, G>(
             let (file_errs, file_suppressed) = all_suppressions.filter_suppressed_errors(
                 root,
                 file_options,
+                node_modules_errors,
                 &unsuppressable_error_codes,
                 loc_of_aloc,
                 get_ast,

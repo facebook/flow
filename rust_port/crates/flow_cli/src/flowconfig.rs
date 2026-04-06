@@ -140,6 +140,7 @@ pub(super) mod opts {
         pub(crate) munge_underscores: bool,
         pub(crate) no_flowlib: bool,
         pub(crate) no_unchecked_indexed_access: bool,
+        pub(crate) node_modules_errors: bool,
         pub(crate) node_main_fields: Vec<String>,
         pub(crate) node_package_export_conditions: Vec<String>,
         pub(crate) node_resolver_allow_root_relative: bool,
@@ -285,6 +286,7 @@ pub(super) mod opts {
             munge_underscores: false,
             no_flowlib: false,
             no_unchecked_indexed_access: false,
+            node_modules_errors: false,
             node_main_fields: vec!["main".to_owned()],
             node_package_export_conditions: vec![],
             node_resolver_allow_root_relative: false,
@@ -2432,6 +2434,14 @@ pub(super) mod opts {
                 "no_unchecked_indexed_access" => Some(parse_boolean(
                     |opts, v| {
                         opts.no_unchecked_indexed_access = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "node_modules_errors" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.node_modules_errors = v;
                         Ok(())
                     },
                     values,

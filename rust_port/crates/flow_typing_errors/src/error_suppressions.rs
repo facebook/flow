@@ -329,6 +329,7 @@ impl ErrorSuppressions {
     fn check<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         root: &Path,
         file_options: Option<&FileOptions>,
+        node_modules_errors: bool,
         unsuppressable_error_codes: &BTreeSet<FlowSmolStr>,
         err: &IntermediateError<L>,
         suppressions: &Self,
@@ -345,10 +346,11 @@ impl ErrorSuppressions {
             CodeMap::singleton(string_code, loc.dupe(), kind)
         });
 
-        // Ignore lint errors from node modules, and all errors from declarations directories.
+        // Ignore lint errors from node modules (unless node_modules_errors is enabled),
+        // and all errors from declarations directories.
         let ignore = match err.kind {
             ErrorKind::LintError(_) => {
-                Self::in_node_modules(root, file_options, loc)
+                (!node_modules_errors && Self::in_node_modules(root, file_options, loc))
                     || Self::in_declarations(file_options, loc)
             }
             _ => Self::in_declarations(file_options, loc),
@@ -385,6 +387,7 @@ impl ErrorSuppressions {
         &self,
         root: &Path,
         file_options: Option<&flow_common::files::FileOptions>,
+        node_modules_errors: bool,
         unsuppressable_codes: &BTreeSet<FlowSmolStr>,
         loc_of_aloc: F,
         get_ast: G,
@@ -407,6 +410,7 @@ impl ErrorSuppressions {
                 match Self::check(
                     root,
                     file_options,
+                    node_modules_errors,
                     unsuppressable_codes,
                     &intermediate_error,
                     self,

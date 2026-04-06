@@ -180,6 +180,7 @@ fn errors_of_file_artifacts(
         suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
     let root = &*options.root;
     let file_options = Some(&*options.file_options);
+    let node_modules_errors = options.node_modules_errors;
     let unsuppressable_error_codes: BTreeSet<FlowSmolStr> =
         options.unsuppressable_error_codes.iter().cloned().collect();
     // Filter out suppressed errors
@@ -187,6 +188,7 @@ fn errors_of_file_artifacts(
     let (errors, _) = suppressions.filter_suppressed_errors(
         root,
         file_options,
+        node_modules_errors,
         &unsuppressable_error_codes,
         &loc_of_aloc,
         &get_ast,
@@ -198,6 +200,7 @@ fn errors_of_file_artifacts(
     let (warnings, _) = suppressions.filter_suppressed_errors(
         root,
         file_options,
+        node_modules_errors,
         &unsuppressable_error_codes,
         &loc_of_aloc,
         &get_ast,

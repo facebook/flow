@@ -1026,6 +1026,9 @@ pub(crate) fn focused_files_to_infer(
 }
 
 fn filter_out_node_modules(options: &Options, files: &FlowOrdSet<FileKey>) -> FlowOrdSet<FileKey> {
+    if options.node_modules_errors {
+        return files.dupe();
+    }
     let root = &options.root;
     let file_options = &options.file_options;
 
@@ -1040,10 +1043,11 @@ fn filter_out_node_modules(options: &Options, files: &FlowOrdSet<FileKey>) -> Fl
 }
 
 /// Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
-/// the repo. In both cases, we never want node_modules to appear in the focused sets.
+/// the repo. In both cases, we never want node_modules to appear in the focused sets,
+/// unless node_modules_errors is enabled.
 ///
 /// There are no expected invariants for the input sets. The returned set has the following invariants
-/// 1. Node modules will only appear in the dependency set.
+/// 1. Node modules will only appear in the dependency set (unless node_modules_errors is enabled).
 /// 2. Dependent files are empty.
 pub(crate) fn unfocused_files_to_infer(
     options: &Options,
@@ -1288,6 +1292,7 @@ pub(crate) mod recheck {
                 &get_ast,
                 &options.root,
                 &options.file_options,
+                options.node_modules_errors,
                 &unsuppressable_error_codes,
                 &suppressions,
                 &new_local_errors,
@@ -2390,6 +2395,7 @@ pub fn init_from_scratch(
                 &get_ast,
                 &options.root,
                 &options.file_options,
+                options.node_modules_errors,
                 &unsuppressable_error_codes,
                 &suppressions,
                 &local_errors,

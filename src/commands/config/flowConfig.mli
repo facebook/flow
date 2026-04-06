@@ -227,6 +227,8 @@ val no_flowlib : config -> bool
 
 val no_unchecked_indexed_access : config -> bool
 
+val node_modules_errors : config -> bool
+
 val node_main_fields : config -> string list
 
 val node_package_export_conditions : config -> string list

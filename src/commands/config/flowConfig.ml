@@ -123,6 +123,7 @@ module Opts = struct
     munge_underscores: bool;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
+    node_modules_errors: bool;
     node_main_fields: string list;
     node_package_export_conditions: string list;
     node_resolver_allow_root_relative: bool;
@@ -285,6 +286,7 @@ module Opts = struct
       munge_underscores = false;
       no_flowlib = false;
       no_unchecked_indexed_access = false;
+      node_modules_errors = false;
       node_main_fields = ["main"];
       node_package_export_conditions = [];
       node_resolver_allow_root_relative = false;
@@ -1268,6 +1270,7 @@ module Opts = struct
       ( "no_unchecked_indexed_access",
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
       );
+      ("node_modules_errors", boolean (fun opts v -> Ok { opts with node_modules_errors = v }));
       ( "react.custom_jsx_typing",
         boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
       );
@@ -2102,6 +2105,8 @@ let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
 
 let no_unchecked_indexed_access c = c.options.Opts.no_unchecked_indexed_access
+
+let node_modules_errors c = c.options.Opts.node_modules_errors
 
 let node_main_fields c = c.options.Opts.node_main_fields
 

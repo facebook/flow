@@ -1595,6 +1595,7 @@ let make_options
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
+    opt_node_modules_errors = FlowConfig.node_modules_errors flowconfig;
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
     opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;

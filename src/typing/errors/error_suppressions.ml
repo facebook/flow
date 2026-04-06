@@ -217,6 +217,7 @@ let in_declarations ~file_options loc =
 let check
     ~root
     ~file_options
+    ~node_modules_errors
     ~unsuppressable_error_codes
     (err : 'loc Flow_intermediate_error_types.intermediate_error)
     (suppressions : t)
@@ -238,7 +239,8 @@ let check
   let ignore =
     match err.Flow_intermediate_error_types.kind with
     | Flow_errors_utils.LintError _ ->
-      in_node_modules ~root ~file_options loc || in_declarations ~file_options loc
+      ((not node_modules_errors) && in_node_modules ~root ~file_options loc)
+      || in_declarations ~file_options loc
     | _ -> in_declarations ~file_options loc
   in
   match (ignore, code_opt) with
@@ -265,6 +267,7 @@ let all_unused_locs map =
 let filter_suppressed_errors
     ~root
     ~file_options
+    ~node_modules_errors
     ~unsuppressable_error_codes
     ~loc_of_aloc
     ~get_ast
@@ -275,7 +278,16 @@ let filter_suppressed_errors
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
       let error = Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error in
-      match check ~root ~file_options ~unsuppressable_error_codes error suppressions unused with
+      match
+        check
+          ~root
+          ~file_options
+          ~node_modules_errors
+          ~unsuppressable_error_codes
+          error
+          suppressions
+          unused
+      with
       | None -> acc
       | Some (severity, used, unused) ->
         (match severity with

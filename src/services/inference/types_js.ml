@@ -331,6 +331,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
   let get_ast = Parsing_heaps.Mutator_reader.get_ast ~reader in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
+  let node_modules_errors = Options.node_modules_errors options in
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   (* We will keep track of seen errors/warnings to avoid sending the same thing twice. *)
   let seen_errors = ref ConcreteLocPrintableErrorSet.empty in
@@ -341,6 +342,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
+        ~node_modules_errors
         ~unsuppressable_error_codes
         ~loc_of_aloc
         ~get_ast
@@ -352,6 +354,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options:None
+        ~node_modules_errors
         ~unsuppressable_error_codes
         ~loc_of_aloc
         ~get_ast
@@ -682,19 +685,23 @@ let focused_files_to_infer ~implementation_dependency_graph ~sig_dependency_grap
   CheckedSet.add ~focused ~dependents CheckedSet.empty
 
 let filter_out_node_modules ~options =
-  let root = Options.root options in
-  let options = Options.file_options options in
-  let is_within_node_modules = Files.is_within_node_modules ~root ~options in
-  FilenameSet.filter (fun fn ->
-      let filename_str = File_key.to_string fn in
-      not (is_within_node_modules filename_str)
-  )
+  if Options.node_modules_errors options then
+    Fun.id
+  else
+    let root = Options.root options in
+    let file_options = Options.file_options options in
+    let is_within_node_modules = Files.is_within_node_modules ~root ~options:file_options in
+    FilenameSet.filter (fun fn ->
+        let filename_str = File_key.to_string fn in
+        not (is_within_node_modules filename_str)
+    )
 
 (* Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
- * the repo. In both cases, we never want node_modules to appear in the focused sets.
+ * the repo. In both cases, we never want node_modules to appear in the focused sets,
+ * unless node_modules_errors is enabled.
  *
  * There are no expected invariants for the input sets. The returned set has the following invariants
- * 1. Node modules will only appear in the dependency set.
+ * 1. Node modules will only appear in the dependency set (unless node_modules_errors is enabled).
  * 2. Dependent files are empty.
  *)
 let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =

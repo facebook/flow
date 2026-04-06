@@ -74,6 +74,7 @@ let collate_duplicate_providers ~update root =
 
 let update_local_collated_errors ~reader ~options suppressions errors acc =
   let root = Options.root options in
+  let node_modules_errors = Options.node_modules_errors options in
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let get_ast = Parsing_heaps.Reader_dispatcher.get_ast ~reader in
@@ -87,6 +88,7 @@ let update_local_collated_errors ~reader ~options suppressions errors acc =
           Error_suppressions.filter_suppressed_errors
             ~root
             ~file_options
+            ~node_modules_errors
             ~unsuppressable_error_codes
             ~loc_of_aloc
             ~get_ast
@@ -102,6 +104,7 @@ let update_local_collated_errors ~reader ~options suppressions errors acc =
 
 let update_collated_errors ~reader ~options ~checked_files ~all_suppressions errors acc =
   let root = Options.root options in
+  let node_modules_errors = Options.node_modules_errors options in
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = errors in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
@@ -112,6 +115,7 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
+        ~node_modules_errors
         ~unsuppressable_error_codes
         ~loc_of_aloc
         ~get_ast

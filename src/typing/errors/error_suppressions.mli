@@ -31,6 +31,7 @@ val all_unused_locs : t -> Loc_collections.LocSet.t
 val filter_suppressed_errors :
   root:File_path.t ->
   file_options:Files.options option ->
+  node_modules_errors:bool ->
   unsuppressable_error_codes:SSet.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->

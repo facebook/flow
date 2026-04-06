@@ -166,6 +166,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_no_unchecked_indexed_access: bool;
+  opt_node_modules_errors: bool;
   opt_node_main_fields: string list;
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
@@ -362,6 +363,8 @@ let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
+
+let node_modules_errors opts = opts.opt_node_modules_errors
 
 let node_main_fields opts = opts.opt_node_main_fields
 

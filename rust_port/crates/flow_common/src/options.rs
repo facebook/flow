@@ -208,6 +208,7 @@ pub struct Options {
     pub modules_are_use_strict: bool,
     pub munge_underscores: bool,
     pub no_unchecked_indexed_access: bool,
+    pub node_modules_errors: bool,
     pub node_main_fields: Arc<[String]>,
     pub node_package_export_conditions: Arc<[String]>,
     pub node_resolver_allow_root_relative: bool,
