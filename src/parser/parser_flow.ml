@@ -42,15 +42,24 @@ let filter_duplicate_errors =
 
 let check_for_duplicate_exports =
   let open Ast in
-  let record_export env seen (loc, { Identifier.name = export_name; comments = _ }) =
+  let record_export
+      env (type_seen, value_seen) kind (loc, { Identifier.name = export_name; comments = _ }) =
     if export_name = "" then
       (* empty identifiers signify an error, don't export it *)
-      seen
-    else if SSet.mem export_name seen then (
-      error_at env (loc, Parse_error.DuplicateExport export_name);
-      seen
-    ) else
-      SSet.add export_name seen
+      (type_seen, value_seen)
+    else
+      let relevant_seen =
+        match kind with
+        | Statement.ExportType -> type_seen
+        | Statement.ExportValue -> value_seen
+      in
+      if SSet.mem export_name relevant_seen then (
+        error_at env (loc, Parse_error.DuplicateExport export_name);
+        (type_seen, value_seen)
+      ) else
+        match kind with
+        | Statement.ExportType -> (SSet.add export_name type_seen, value_seen)
+        | Statement.ExportValue -> (type_seen, SSet.add export_name value_seen)
   in
   let extract_pattern_binding_names =
     let rec fold acc =
@@ -83,10 +92,16 @@ let check_for_duplicate_exports =
   let record_export_of_statement env seen decl =
     match decl with
     | (_, Statement.ExportDefaultDeclaration { Statement.ExportDefaultDeclaration.default; _ }) ->
-      record_export env seen (Flow_ast_utils.ident_of_source (default, "default"))
+      let id = Flow_ast_utils.ident_of_source (default, "default") in
+      record_export env seen Statement.ExportValue id
     | ( _,
         Statement.ExportNamedDeclaration
-          { Statement.ExportNamedDeclaration.specifiers = Some specifiers; declaration = None; _ }
+          {
+            Statement.ExportNamedDeclaration.specifiers = Some specifiers;
+            declaration = None;
+            export_kind = statement_export_kind;
+            _;
+          }
       ) ->
       let open Statement.ExportNamedDeclaration in
       (match specifiers with
@@ -97,14 +112,17 @@ let check_for_duplicate_exports =
                  {
                    Statement.ExportNamedDeclaration.ExportSpecifier.local;
                    exported;
-                   export_kind = _;
+                   export_kind = spec_export_kind;
                    from_remote = _;
                    imported_name_def_loc = _;
                  }
                ) ->
+            let kind =
+              Flow_ast_utils.effective_export_kind ~statement_export_kind spec_export_kind
+            in
             match exported with
-            | Some exported -> record_export env seen exported
-            | None -> record_export env seen local)
+            | Some exported -> record_export env seen kind exported
+            | None -> record_export env seen kind local)
           seen
           specifiers
       | ExportBatchSpecifier _ ->
@@ -112,7 +130,12 @@ let check_for_duplicate_exports =
         seen)
     | ( _,
         Statement.ExportNamedDeclaration
-          { Statement.ExportNamedDeclaration.specifiers = None; declaration = Some declaration; _ }
+          {
+            Statement.ExportNamedDeclaration.specifiers = None;
+            declaration = Some declaration;
+            export_kind;
+            _;
+          }
       ) ->
       (match declaration with
       | ( loc,
@@ -128,6 +151,7 @@ let check_for_duplicate_exports =
         record_export
           env
           seen
+          export_kind
           (Flow_ast_utils.ident_of_source (loc, Flow_ast_utils.name_of_ident id))
       | (_, Statement.VariableDeclaration { Statement.VariableDeclaration.declarations; _ }) ->
         declarations
@@ -135,7 +159,7 @@ let check_for_duplicate_exports =
              (fun names (_, { Statement.VariableDeclaration.Declarator.id; _ }) ->
                extract_pattern_binding_names names [id])
              []
-        |> List.fold_left (record_export env) seen
+        |> List.fold_left (fun seen id -> record_export env seen export_kind id) seen
       | ( _,
           Statement.(
             ( Block _ | Break _
@@ -176,7 +200,8 @@ let check_for_duplicate_exports =
       ) ->
       seen
   in
-  (fun env stmts -> ignore (List.fold_left (record_export_of_statement env) SSet.empty stmts))
+  fun env stmts ->
+    ignore (List.fold_left (record_export_of_statement env) (SSet.empty, SSet.empty) stmts)
 
 module rec Parse : PARSER = struct
   module Type = Type_parser.Type (Parse)

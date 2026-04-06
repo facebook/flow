@@ -1061,6 +1061,7 @@ fn error_for_assignment_kind(
             | BK::Let
             | BK::Class
             | BK::Record
+            | BK::Enum
             | BK::Function
             | BK::Component
             | BK::Import,
@@ -7719,6 +7720,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     | BindingsKind::Const
                     | BindingsKind::Let
                     | BindingsKind::Class
+                    | BindingsKind::Enum
                     | BindingsKind::Record
                     | BindingsKind::Function
                     | BindingsKind::Component

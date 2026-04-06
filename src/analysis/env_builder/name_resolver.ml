@@ -763,7 +763,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
-      | ( Bindings.(Const | Let | Class | Record | Function | Component | Import | Type _),
+      | ( Bindings.(Const | Let | Class | Record | Enum | Function | Component | Import | Type _),
           ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
           | ComponentBinding )
         )
@@ -1930,6 +1930,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               | Bindings.Const
               | Bindings.Let
               | Bindings.Class
+              | Bindings.Enum
               | Bindings.Record
               | Bindings.Function
               | Bindings.Component

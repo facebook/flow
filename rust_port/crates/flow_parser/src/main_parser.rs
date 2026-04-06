@@ -237,11 +237,13 @@ fn filter_duplicate_errors(errors: Vec<(Loc, ParseError)>) -> Vec<(Loc, ParseErr
 }
 
 fn check_for_duplicate_exports(env: &mut ParserEnv, stmts: &[ast::statement::Statement<Loc, Loc>]) {
+    use ast::statement::ExportKind;
     use ast::statement::StatementInner;
 
     fn record_export(
         env: &mut ParserEnv,
-        seen: &mut HashSet<String>,
+        seen: &mut (HashSet<String>, HashSet<String>),
+        kind: ExportKind,
         loc: &Loc,
         export_name: &str,
     ) {
@@ -249,13 +251,21 @@ fn check_for_duplicate_exports(env: &mut ParserEnv, stmts: &[ast::statement::Sta
             // empty identifiers signify an error, don't export it
             return;
         }
-        if seen.contains(export_name) {
-            let _ = env.error_at(
+        let relevant_seen = match kind {
+            ExportKind::ExportType => &seen.0,
+            ExportKind::ExportValue => &seen.1,
+        };
+        if relevant_seen.contains(export_name) {
+            env.error_at(
                 loc.dupe(),
                 ParseError::DuplicateExport(export_name.to_owned()),
-            );
+            )
+            .ok();
         } else {
-            seen.insert(export_name.to_owned());
+            match kind {
+                ExportKind::ExportType => seen.0.insert(export_name.to_owned()),
+                ExportKind::ExportValue => seen.1.insert(export_name.to_owned()),
+            };
         }
     }
 
@@ -309,60 +319,83 @@ fn check_for_duplicate_exports(env: &mut ParserEnv, stmts: &[ast::statement::Sta
         result
     }
 
-    let mut seen = HashSet::new();
+    let mut seen = (HashSet::new(), HashSet::new());
 
     for stmt in stmts {
         match stmt.deref() {
             StatementInner::ExportDefaultDeclaration { inner, .. } => {
-                record_export(env, &mut seen, &inner.default, "default");
+                record_export(
+                    env,
+                    &mut seen,
+                    ExportKind::ExportValue,
+                    &inner.default,
+                    "default",
+                );
             }
             StatementInner::ExportNamedDeclaration { inner, .. } => {
-                if let Some(
-                    ast::statement::export_named_declaration::Specifier::ExportSpecifiers(specs),
-                ) = &inner.specifiers
-                {
-                    // Batch specifiers doen't export specific names, so we only check named ones.
-                    for spec in specs {
-                        let exported = spec.exported.as_ref().unwrap_or(&spec.local);
-                        record_export(env, &mut seen, &exported.loc, &exported.name);
+                if inner.declaration.is_none() {
+                    if let Some(
+                        ast::statement::export_named_declaration::Specifier::ExportSpecifiers(
+                            specs,
+                        ),
+                    ) = &inner.specifiers
+                    {
+                        let statement_export_kind = inner.export_kind;
+                        for spec in specs {
+                            let kind = ast_utils::effective_export_kind(
+                                statement_export_kind,
+                                spec.export_kind,
+                            );
+                            let exported = spec.exported.as_ref().unwrap_or(&spec.local);
+                            record_export(env, &mut seen, kind, &exported.loc, &exported.name);
+                        }
                     }
                 }
 
                 if let Some(decl) = &inner.declaration {
+                    let export_kind = inner.export_kind;
                     match decl.deref() {
                         StatementInner::TypeAlias { loc, inner } => {
-                            record_export(env, &mut seen, loc, &inner.id.name);
+                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
                         StatementInner::OpaqueType { loc, inner } => {
-                            record_export(env, &mut seen, loc, &inner.id.name);
+                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
                         StatementInner::InterfaceDeclaration { loc, inner } => {
-                            record_export(env, &mut seen, loc, &inner.id.name);
+                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
                         StatementInner::ClassDeclaration { loc, inner } => {
                             if let Some(ref id) = inner.id {
-                                record_export(env, &mut seen, loc, &id.name);
+                                record_export(env, &mut seen, export_kind, loc, &id.name);
                             }
                         }
                         StatementInner::FunctionDeclaration { loc, inner } => {
                             if let Some(ref id) = inner.id {
-                                record_export(env, &mut seen, loc, &id.name);
+                                record_export(env, &mut seen, export_kind, loc, &id.name);
                             }
                         }
                         StatementInner::EnumDeclaration { loc, inner } => {
-                            record_export(env, &mut seen, loc, &inner.id.name);
+                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
                         StatementInner::ComponentDeclaration { loc, inner } => {
-                            record_export(env, &mut seen, loc, &inner.id.name);
+                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
                         StatementInner::RecordDeclaration { loc, inner } => {
-                            record_export(env, &mut seen, loc, &inner.id.name);
+                            record_export(env, &mut seen, export_kind, loc, &inner.id.name);
                         }
-                        StatementInner::VariableDeclaration { inner, .. } => {
-                            for declarator in inner.declarations.iter() {
+                        StatementInner::VariableDeclaration {
+                            inner: var_inner, ..
+                        } => {
+                            for declarator in var_inner.declarations.iter() {
                                 let names = extract_pattern_binding_names(&declarator.id);
                                 for name in names {
-                                    record_export(env, &mut seen, &name.loc, &name.name);
+                                    record_export(
+                                        env,
+                                        &mut seen,
+                                        export_kind,
+                                        &name.loc,
+                                        &name.name,
+                                    );
                                 }
                             }
                         }

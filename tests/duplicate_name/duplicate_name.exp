@@ -1,3 +1,143 @@
+Error ----------------------------------------------------------------------------- exported_class_and_interface.js:4:18
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   exported_class_and_interface.js:4:18
+   4| export interface A {} // ERROR
+                       ^
+
+References:
+   exported_class_and_interface.js:3:14
+   3| export class A {}
+                   ^ [1]
+
+
+Error ----------------------------------------------------------------------------- exported_class_and_interface.js:7:14
+
+Cannot declare `B` [1] because the name is already bound. [name-already-bound]
+
+   exported_class_and_interface.js:7:14
+   7| export class B {} // ERROR
+                   ^
+
+References:
+   exported_class_and_interface.js:6:18
+   6| export interface B {}
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------- exported_class_and_type.js:4:13
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   exported_class_and_type.js:4:13
+   4| export type A = number; // ERROR
+                  ^
+
+References:
+   exported_class_and_type.js:3:14
+   3| export class A {}
+                   ^ [1]
+
+
+Error ---------------------------------------------------------------------------------- exported_class_and_type.js:7:14
+
+Cannot declare `B` [1] because the name is already bound. [name-already-bound]
+
+   exported_class_and_type.js:7:14
+   7| export class B {} // ERROR
+                   ^
+
+References:
+   exported_class_and_type.js:6:13
+   6| export type B = number;
+                  ^ [1]
+
+
+Error ------------------------------------------------------------------------------ exported_enum_and_interface.js:4:18
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   exported_enum_and_interface.js:4:18
+   4| export interface A {} // ERROR
+                       ^
+
+References:
+   exported_enum_and_interface.js:3:13
+   3| export enum A { X = 'x' }
+                  ^ [1]
+
+
+Error ------------------------------------------------------------------------------ exported_enum_and_interface.js:7:13
+
+Cannot declare `B` [1] because the name is already bound. [name-already-bound]
+
+   exported_enum_and_interface.js:7:13
+   7| export enum B { X = 'x' } // ERROR
+                  ^
+
+References:
+   exported_enum_and_interface.js:6:18
+   6| export interface B {}
+                       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------- exported_enum_and_type.js:4:13
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   exported_enum_and_type.js:4:13
+   4| export type A = number; // ERROR
+                  ^
+
+References:
+   exported_enum_and_type.js:3:13
+   3| export enum A { X = 'x' }
+                  ^ [1]
+
+
+Error ----------------------------------------------------------------------------------- exported_enum_and_type.js:7:13
+
+Cannot declare `B` [1] because the name is already bound. [name-already-bound]
+
+   exported_enum_and_type.js:7:13
+   7| export enum B { X = 'x' } // ERROR
+                  ^
+
+References:
+   exported_enum_and_type.js:6:13
+   6| export type B = number;
+                  ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ exported_type_and_var.js:2:12
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   exported_type_and_var.js:2:12
+   2| export let A: string; // ERROR: we haven't yet implemented type-checking support
+                 ^
+
+References:
+   exported_type_and_var.js:1:18
+   1| export interface A {}
+                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ exported_type_and_var.js:5:13
+
+Cannot declare `B` [1] because the name is already bound. [name-already-bound]
+
+   exported_type_and_var.js:5:13
+   5| export type B = number; // ERROR: we haven't yet implemented type-checking support
+                  ^
+
+References:
+   exported_type_and_var.js:4:12
+   4| export let B: string;
+                 ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- type_then_var.js:3:5
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -55,4 +195,4 @@ References:
 
 
 
-Found 4 errors
+Found 14 errors
