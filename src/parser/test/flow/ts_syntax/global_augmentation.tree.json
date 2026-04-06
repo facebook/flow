@@ -95,7 +95,8 @@
                 }
               ]
             },
-            "implicitDeclare":true
+            "implicitDeclare":true,
+            "keyword":"namespace"
           },
           {
             "type":"ExportNamedDeclaration",

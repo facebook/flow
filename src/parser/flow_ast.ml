@@ -1268,6 +1268,11 @@ and Statement : sig
   end
 
   module DeclareNamespace : sig
+    type keyword =
+      | Namespace
+      | Module
+    [@@deriving show]
+
     type ('M, 'T) id =
       | Global of ('M, 'M) Identifier.t
       | Local of ('M, 'T) Identifier.t
@@ -1278,6 +1283,7 @@ and Statement : sig
       body: 'M * ('M, 'T) Block.t;
       comments: ('M, unit) Syntax.t option;
       implicit_declare: bool;
+      keyword: keyword;
     }
     [@@deriving show]
   end

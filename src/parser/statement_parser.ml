@@ -1549,10 +1549,27 @@ module Statement
       if Peek.token env = T_PERIOD then
         with_loc ~start_loc (declare_module_exports ~leading) env
       else
-        with_loc ~start_loc (declare_module_ ~leading) env
+        match Peek.token env with
+        | T_STRING _ -> with_loc ~start_loc (declare_module_ ~leading) env
+        | _ when is_d_ts env ->
+          (* identifier-named: `declare module Foo {}` → treat as namespace synonym in .d.ts *)
+          let id = id_remove_trailing env (Parse.identifier env) in
+          let id = Statement.DeclareNamespace.Local id in
+          let body = declare_module_or_namespace_body env in
+          let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+          with_loc
+            ~start_loc
+            (fun _env ->
+              Statement.(
+                DeclareNamespace
+                  DeclareNamespace.
+                    { id; body; comments; implicit_declare = false; keyword = Module }
+              ))
+            env
+        | _ -> with_loc ~start_loc (declare_module_ ~leading) env
 
   and declare_namespace =
-    let declare_namespace_ ~leading ~global ~implicit_declare env =
+    let declare_namespace_ ~leading ~global ~implicit_declare ~keyword env =
       let id = id_remove_trailing env (Parse.identifier env) in
       let id =
         if global then
@@ -1562,7 +1579,7 @@ module Statement
       in
       let body = declare_module_or_namespace_body env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      Statement.(DeclareNamespace DeclareNamespace.{ id; body; comments; implicit_declare })
+      Statement.(DeclareNamespace DeclareNamespace.{ id; body; comments; implicit_declare; keyword })
     in
     fun env ~global ~implicit_declare ->
       let start_loc = Peek.loc env in
@@ -1570,17 +1587,55 @@ module Statement
       if not implicit_declare then begin
         Expect.token env T_DECLARE;
         let leading = leading @ Peek.comments env in
-        if not global then Expect.identifier env "namespace";
-        with_loc ~start_loc (declare_namespace_ ~global ~implicit_declare ~leading) env
-      end else begin
         if not global then begin
-          (* implicit declare: namespace keyword already peeked, just consume it *)
-          Expect.identifier env "namespace";
+          let keyword =
+            match Peek.token env with
+            | T_IDENTIFIER { raw = "module"; _ } when is_d_ts env ->
+              Expect.identifier env "module";
+              Statement.DeclareNamespace.Module
+            | _ ->
+              Expect.identifier env "namespace";
+              Statement.DeclareNamespace.Namespace
+          in
+          with_loc ~start_loc (declare_namespace_ ~global ~implicit_declare ~keyword ~leading) env
+        end else
+          with_loc
+            ~start_loc
+            (declare_namespace_
+               ~global
+               ~implicit_declare
+               ~keyword:Statement.DeclareNamespace.Namespace
+               ~leading
+            )
+            env
+      end else begin
+        (* implicit declare: namespace/module keyword already peeked, just consume it *)
+        if not global then begin
+          let keyword =
+            match Peek.token env with
+            | T_IDENTIFIER { raw = "module"; _ } when is_d_ts env ->
+              Expect.identifier env "module";
+              Statement.DeclareNamespace.Module
+            | _ ->
+              Expect.identifier env "namespace";
+              Statement.DeclareNamespace.Namespace
+          in
           let leading = leading @ Peek.comments env in
-          with_loc ~start_loc (declare_namespace_ ~global:false ~implicit_declare ~leading) env
+          with_loc
+            ~start_loc
+            (declare_namespace_ ~global:false ~implicit_declare ~keyword ~leading)
+            env
         end else begin
           let leading = leading @ Peek.comments env in
-          with_loc ~start_loc (declare_namespace_ ~global ~implicit_declare ~leading) env
+          with_loc
+            ~start_loc
+            (declare_namespace_
+               ~global
+               ~implicit_declare
+               ~keyword:Statement.DeclareNamespace.Namespace
+               ~leading
+            )
+            env
         end
       end
 
@@ -2220,7 +2275,44 @@ module Statement
                 let id = id_remove_trailing env (Parse.identifier env) in
                 let id = Statement.DeclareNamespace.Local id in
                 let body = declare_module_or_namespace_body env in
-                { Statement.DeclareNamespace.id; body; comments = None; implicit_declare = true })
+                {
+                  Statement.DeclareNamespace.id;
+                  body;
+                  comments = None;
+                  implicit_declare = true;
+                  keyword = Statement.DeclareNamespace.Namespace;
+                })
+              env
+          in
+          let decl_comments = Flow_ast_utils.mk_comments_opt ~leading () in
+          Statement.DeclareExportDeclaration
+            {
+              Statement.DeclareExportDeclaration.default = None;
+              declaration = Some (Statement.DeclareExportDeclaration.Namespace namespace);
+              specifiers = None;
+              source = None;
+              comments = decl_comments;
+            })
+        env
+    | T_IDENTIFIER { raw = "module"; _ } when in_ambient_context env && is_d_ts env ->
+      (* export module X { ... } in ambient context (.d.ts only) - implicit declare *)
+      with_loc
+        ~start_loc
+        (fun env ->
+          let namespace =
+            with_loc
+              (fun env ->
+                Expect.identifier env "module";
+                let id = id_remove_trailing env (Parse.identifier env) in
+                let id = Statement.DeclareNamespace.Local id in
+                let body = declare_module_or_namespace_body env in
+                {
+                  Statement.DeclareNamespace.id;
+                  body;
+                  comments = None;
+                  implicit_declare = true;
+                  keyword = Statement.DeclareNamespace.Module;
+                })
               env
           in
           let decl_comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -2559,7 +2651,40 @@ module Statement
               let id = id_remove_trailing env (Parse.identifier env) in
               let id = Statement.DeclareNamespace.Local id in
               let body = declare_module_or_namespace_body env in
-              { Statement.DeclareNamespace.id; body; comments = None; implicit_declare = false })
+              {
+                Statement.DeclareNamespace.id;
+                body;
+                comments = None;
+                implicit_declare = false;
+                keyword = Statement.DeclareNamespace.Namespace;
+              })
+            env
+        in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Statement.DeclareExportDeclaration
+          {
+            default = None;
+            declaration = Some (Namespace namespace);
+            specifiers = None;
+            source = None;
+            comments;
+          }
+      | T_IDENTIFIER { raw = "module"; _ } when is_d_ts env ->
+        (* declare export module X { ... } (.d.ts only) *)
+        let namespace =
+          with_loc
+            (fun env ->
+              Expect.identifier env "module";
+              let id = id_remove_trailing env (Parse.identifier env) in
+              let id = Statement.DeclareNamespace.Local id in
+              let body = declare_module_or_namespace_body env in
+              {
+                Statement.DeclareNamespace.id;
+                body;
+                comments = None;
+                implicit_declare = false;
+                keyword = Statement.DeclareNamespace.Module;
+              })
             env
         in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in

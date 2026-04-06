@@ -1344,14 +1344,26 @@ with type t = Impl.t = struct
           ("body", object_type ~include_inexact:false body);
           ("extends", array_of_list interface_extends extends);
         ]
-    and declare_namespace (loc, { Statement.DeclareNamespace.id; body; comments; implicit_declare })
-        =
+    and declare_namespace
+        (loc, { Statement.DeclareNamespace.id; body; comments; implicit_declare; keyword }) =
       let (id, global) =
         match id with
         | Statement.DeclareNamespace.Local id -> (identifier id, false)
         | Statement.DeclareNamespace.Global id -> (identifier id, true)
       in
-      let props = [("id", id); ("body", block body); ("implicitDeclare", bool implicit_declare)] in
+      let keyword_str =
+        match keyword with
+        | Statement.DeclareNamespace.Namespace -> "namespace"
+        | Statement.DeclareNamespace.Module -> "module"
+      in
+      let props =
+        [
+          ("id", id);
+          ("body", block body);
+          ("implicitDeclare", bool implicit_declare);
+          ("keyword", string keyword_str);
+        ]
+      in
       let props =
         if global then
           ("global", bool global) :: props

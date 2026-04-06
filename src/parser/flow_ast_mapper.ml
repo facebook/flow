@@ -1107,7 +1107,7 @@ class ['loc] mapper =
 
     method declare_namespace _loc (m : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
       let open Ast.Statement.DeclareNamespace in
-      let { id; body; comments; implicit_declare } = m in
+      let { id; body; comments; implicit_declare; keyword } = m in
       let id' =
         match id with
         | Global g_id ->
@@ -1128,7 +1128,7 @@ class ['loc] mapper =
       if id' == id && body' == body && comments == comments' then
         m
       else
-        { id = id'; body = body'; comments = comments'; implicit_declare }
+        { id = id'; body = body'; comments = comments'; implicit_declare; keyword }
 
     method declare_type_alias loc (decl : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       this#type_alias loc decl

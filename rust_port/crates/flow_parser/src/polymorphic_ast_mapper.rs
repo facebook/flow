@@ -3737,6 +3737,7 @@ pub fn declare_namespace<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         id,
         body,
         implicit_declare,
+        keyword,
         comments,
     } = decl;
     let id_ = match id {
@@ -3753,6 +3754,7 @@ pub fn declare_namespace<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         id: id_,
         body: body_,
         implicit_declare: *implicit_declare,
+        keyword: *keyword,
         comments: comments_,
     })
 }

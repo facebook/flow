@@ -4681,6 +4681,7 @@ pub fn declare_namespace<'a>(
         body,
         comments,
         implicit_declare,
+        keyword,
     } = decl;
     let (body_loc, body_block) = body;
     if *implicit_declare && !cx.tslib_syntax() {
@@ -4772,6 +4773,7 @@ pub fn declare_namespace<'a>(
             body,
             comments: comments.clone(),
             implicit_declare: *implicit_declare,
+            keyword: *keyword,
         },
     )
 }

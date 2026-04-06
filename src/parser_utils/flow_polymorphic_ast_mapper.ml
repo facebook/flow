@@ -830,7 +830,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_namespace _annot (n : ('M, 'T) Ast.Statement.DeclareNamespace.t)
         : ('N, 'U) Ast.Statement.DeclareNamespace.t =
       let open Ast.Statement.DeclareNamespace in
-      let { id; body; comments; implicit_declare } = n in
+      let { id; body; comments; implicit_declare; keyword } = n in
       let id' =
         match id with
         | Global id -> Global (this#identifier id)
@@ -838,7 +838,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
-      { id = id'; body = body'; comments = comments'; implicit_declare }
+      { id = id'; body = body'; comments = comments'; implicit_declare; keyword }
 
     method declare_module_exports (exports : ('M, 'T) Ast.Statement.DeclareModuleExports.t)
         : ('N, 'U) Ast.Statement.DeclareModuleExports.t =

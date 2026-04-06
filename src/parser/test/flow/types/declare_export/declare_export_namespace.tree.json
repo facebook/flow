@@ -110,7 +110,8 @@
             }
           ]
         },
-        "implicitDeclare":false
+        "implicitDeclare":false,
+        "keyword":"namespace"
       },
       "specifiers":[],
       "source":null

@@ -2020,6 +2020,7 @@ impl<'ast, Loc: Dupe + Eq + Ord + Hash + Default> AstVisitor<'ast, Loc> for Scop
             id,
             body,
             implicit_declare: _,
+            keyword: _,
             comments: _,
         } = n;
         match id {

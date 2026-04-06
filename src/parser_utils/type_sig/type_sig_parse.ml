@@ -5157,6 +5157,7 @@ let namespace_decl
       body = (_, { Ast.Statement.Block.body = stmts; comments = _ });
       implicit_declare = _;
       comments = _;
+      keyword = _;
     } =
   match id with
   | Ast.Statement.DeclareNamespace.Global _ -> ()
@@ -5618,6 +5619,7 @@ let rec statement opts scope tbls (loc, stmt) =
           body = (_, { Ast.Statement.Block.body = stmts; comments = _ });
           implicit_declare = _;
           comments = _;
+          keyword = _;
         } =
           ns
         in

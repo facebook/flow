@@ -69,6 +69,7 @@
                     }
                   },
                   "static":false,
+                  "optional":false,
                   "computed":false,
                   "kind":"get"
                 },
@@ -124,6 +125,7 @@
                     }
                   },
                   "static":false,
+                  "optional":false,
                   "computed":false,
                   "kind":"set"
                 },
@@ -159,6 +161,7 @@
                     }
                   },
                   "static":false,
+                  "optional":false,
                   "computed":false,
                   "kind":"get"
                 },
@@ -194,6 +197,7 @@
                     }
                   },
                   "static":true,
+                  "optional":false,
                   "computed":false,
                   "kind":"get"
                 }
@@ -207,7 +211,8 @@
           }
         ]
       },
-      "implicitDeclare":false
+      "implicitDeclare":false,
+      "keyword":"namespace"
     }
   ],
   "comments":[]

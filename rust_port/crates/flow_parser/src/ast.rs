@@ -2769,6 +2769,23 @@ pub mod statement {
         #[derive(
             Debug,
             Clone,
+            Copy,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
+        pub enum Keyword {
+            Namespace,
+            Module,
+        }
+
+        #[derive(
+            Debug,
+            Clone,
             PartialEq,
             Eq,
             Hash,
@@ -2799,6 +2816,7 @@ pub mod statement {
         pub body: (M, Block<M, T>),
         pub implicit_declare: bool,
         pub comments: Option<Syntax<M, ()>>,
+        pub keyword: declare_namespace::Keyword,
     }
 
     pub mod export_named_declaration {

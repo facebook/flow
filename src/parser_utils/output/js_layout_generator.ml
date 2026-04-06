@@ -5555,7 +5555,12 @@ and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; comments } 
     )
 
 and declare_namespace
-    ~opts loc { Ast.Statement.DeclareNamespace.id; body; comments; implicit_declare } =
+    ~opts loc { Ast.Statement.DeclareNamespace.id; body; comments; implicit_declare; keyword } =
+  let keyword_atom =
+    match keyword with
+    | Ast.Statement.DeclareNamespace.Module -> Atom "module"
+    | Ast.Statement.DeclareNamespace.Namespace -> Atom "namespace"
+  in
   source_location_with_comments
     ?comments
     ( loc,
@@ -5579,7 +5584,7 @@ and declare_namespace
             else
               fuse [Atom "declare"; space]
             );
-            Atom "namespace";
+            keyword_atom;
             space;
             identifier id;
             pretty_space;
@@ -5650,7 +5655,14 @@ and declare_export_declaration
         (loc, fuse [Atom "declare"; space; s_export; enum_declaration ~def:(Atom "enum") loc enum])
     (* declare export namespace *)
     | Namespace (loc, ns) ->
-      let { Ast.Statement.DeclareNamespace.id; body; comments = _; implicit_declare } = ns in
+      let { Ast.Statement.DeclareNamespace.id; body; comments = _; implicit_declare; keyword } =
+        ns
+      in
+      let keyword_atom =
+        match keyword with
+        | Ast.Statement.DeclareNamespace.Module -> Atom "module"
+        | Ast.Statement.DeclareNamespace.Namespace -> Atom "namespace"
+      in
       source_location_with_comments
         ?comments
         ( loc,
@@ -5666,7 +5678,7 @@ and declare_export_declaration
                   fuse [Atom "declare"; space]
                 );
                 s_export;
-                Atom "namespace";
+                keyword_atom;
                 space;
                 identifier id;
                 pretty_space;

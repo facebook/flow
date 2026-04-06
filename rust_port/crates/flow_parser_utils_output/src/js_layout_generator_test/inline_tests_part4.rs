@@ -1572,3 +1572,9 @@ fn type_keyword_class_member_names() {
 fn global_augmentation() {
     assert_statement_string(true, None, "declare module \"foo\" {\n  global {}\n}");
 }
+
+#[test]
+fn module_as_namespace() {
+    assert_statement_string(true, None, "declare module Protocol {}");
+    assert_statement_string(true, None, "declare namespace Protocol {}");
+}

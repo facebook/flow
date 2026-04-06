@@ -3739,18 +3739,24 @@ fn declare_namespace(
                 pretty_space(),
                 block(opts, &ns.body.0, &ns.body.1),
             ],
-            ast::statement::declare_namespace::Id::Local(id) => vec![
-                if ns.implicit_declare {
-                    LayoutNode::empty()
-                } else {
-                    fuse(vec![atom("declare"), space()])
-                },
-                atom("namespace"),
-                space(),
-                identifier(id),
-                pretty_space(),
-                block(opts, &ns.body.0, &ns.body.1),
-            ],
+            ast::statement::declare_namespace::Id::Local(id) => {
+                let keyword_atom = match ns.keyword {
+                    ast::statement::declare_namespace::Keyword::Module => atom("module"),
+                    ast::statement::declare_namespace::Keyword::Namespace => atom("namespace"),
+                };
+                vec![
+                    if ns.implicit_declare {
+                        LayoutNode::empty()
+                    } else {
+                        fuse(vec![atom("declare"), space()])
+                    },
+                    keyword_atom,
+                    space(),
+                    identifier(id),
+                    pretty_space(),
+                    block(opts, &ns.body.0, &ns.body.1),
+                ]
+            }
         }),
     )
 }
@@ -3885,23 +3891,29 @@ fn declare_export_declaration(
                 ast::statement::declare_namespace::Id::Global(_) => {
                     panic!("Global namespace cannot be exported")
                 }
-                ast::statement::declare_namespace::Id::Local(id) => source_location_with_comments(
-                    loc,
-                    export.comments.as_ref(),
-                    fuse(vec![
-                        if ns.implicit_declare {
-                            LayoutNode::empty()
-                        } else {
-                            fuse(vec![atom("declare"), space()])
-                        },
-                        s_export,
-                        atom("namespace"),
-                        space(),
-                        identifier(id),
-                        pretty_space(),
-                        block(opts, &ns.body.0, &ns.body.1),
-                    ]),
-                ),
+                ast::statement::declare_namespace::Id::Local(id) => {
+                    let keyword_atom = match ns.keyword {
+                        ast::statement::declare_namespace::Keyword::Module => atom("module"),
+                        ast::statement::declare_namespace::Keyword::Namespace => atom("namespace"),
+                    };
+                    source_location_with_comments(
+                        loc,
+                        export.comments.as_ref(),
+                        fuse(vec![
+                            if ns.implicit_declare {
+                                LayoutNode::empty()
+                            } else {
+                                fuse(vec![atom("declare"), space()])
+                            },
+                            s_export,
+                            keyword_atom,
+                            space(),
+                            identifier(id),
+                            pretty_space(),
+                            block(opts, &ns.body.0, &ns.body.1),
+                        ]),
+                    )
+                }
             },
         },
         (None, Some(specifier)) => source_location_with_comments(

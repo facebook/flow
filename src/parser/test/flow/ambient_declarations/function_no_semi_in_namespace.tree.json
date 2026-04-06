@@ -147,7 +147,8 @@
           }
         ]
       },
-      "implicitDeclare":false
+      "implicitDeclare":false,
+      "keyword":"namespace"
     }
   ],
   "comments":[]

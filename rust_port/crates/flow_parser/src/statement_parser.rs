@@ -2214,13 +2214,50 @@ fn declare_module(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>,
         let module_exports = declare_module_exports(env, start_loc, leading)?;
         Ok(module_exports)
     } else {
-        let (loc, module) = with_loc(Some(start_loc), env, |env| {
-            declare_module_helper(env, leading)
-        })?;
-        Ok(statement::Statement::new(StatementInner::DeclareModule {
-            loc,
-            inner: Arc::new(module),
-        }))
+        let is_d_ts = env.is_d_ts();
+        match peek::token(env) {
+            TokenKind::TString { .. } => {
+                let (loc, module) = with_loc(Some(start_loc), env, |env| {
+                    declare_module_helper(env, leading)
+                })?;
+                Ok(statement::Statement::new(StatementInner::DeclareModule {
+                    loc,
+                    inner: Arc::new(module),
+                }))
+            }
+            _ if is_d_ts => {
+                // identifier-named: `declare module Foo {}` → treat as namespace synonym in .d.ts
+                let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
+                    let mut id = main_parser::parse_identifier(env, None)?;
+                    comment_attachment::id_remove_trailing(env, &mut id);
+                    let id = statement::declare_namespace::Id::Local(id);
+                    let body = declare_module_or_namespace_body(env)?;
+                    let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
+                    Ok(statement::DeclareNamespace {
+                        id,
+                        body,
+                        comments,
+                        implicit_declare: false,
+                        keyword: statement::declare_namespace::Keyword::Module,
+                    })
+                })?;
+                Ok(statement::Statement::new(
+                    StatementInner::DeclareNamespace {
+                        loc,
+                        inner: Arc::new(namespace),
+                    },
+                ))
+            }
+            _ => {
+                let (loc, module) = with_loc(Some(start_loc), env, |env| {
+                    declare_module_helper(env, leading)
+                })?;
+                Ok(statement::Statement::new(StatementInner::DeclareModule {
+                    loc,
+                    inner: Arc::new(module),
+                }))
+            }
+        }
     }
 }
 
@@ -2234,6 +2271,7 @@ fn declare_namespace(
         leading: Vec<Comment<Loc>>,
         global: bool,
         implicit_declare: bool,
+        keyword: statement::declare_namespace::Keyword,
     ) -> Result<statement::DeclareNamespace<Loc, Loc>, Rollback> {
         let mut id = main_parser::parse_identifier(env, None)?;
         comment_attachment::id_remove_trailing(env, &mut id);
@@ -2249,11 +2287,13 @@ fn declare_namespace(
             body,
             implicit_declare,
             comments,
+            keyword,
         })
     }
 
     let start_loc = peek::loc(env).dupe();
     let leading = peek::comments(env);
+    let is_d_ts = env.is_d_ts();
     if !implicit_declare {
         expect::token(env, TokenKind::TDeclare)?;
         let leading = {
@@ -2262,28 +2302,62 @@ fn declare_namespace(
             l
         };
         if !global {
-            expect::identifier(env, "namespace")?;
+            let keyword = match peek::token(env) {
+                TokenKind::TIdentifier { raw, .. } if raw == "module" && is_d_ts => {
+                    expect::identifier(env, "module")?;
+                    statement::declare_namespace::Keyword::Module
+                }
+                _ => {
+                    expect::identifier(env, "namespace")?;
+                    statement::declare_namespace::Keyword::Namespace
+                }
+            };
+            let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
+                declare_namespace_helper(env, leading, global, implicit_declare, keyword)
+            })?;
+            Ok(statement::Statement::new(
+                StatementInner::DeclareNamespace {
+                    loc,
+                    inner: Arc::new(namespace),
+                },
+            ))
+        } else {
+            let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
+                declare_namespace_helper(
+                    env,
+                    leading,
+                    global,
+                    implicit_declare,
+                    statement::declare_namespace::Keyword::Namespace,
+                )
+            })?;
+            Ok(statement::Statement::new(
+                StatementInner::DeclareNamespace {
+                    loc,
+                    inner: Arc::new(namespace),
+                },
+            ))
         }
-        let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
-            declare_namespace_helper(env, leading, global, implicit_declare)
-        })?;
-        Ok(statement::Statement::new(
-            StatementInner::DeclareNamespace {
-                loc,
-                inner: Arc::new(namespace),
-            },
-        ))
     } else {
+        // implicit declare: namespace/module keyword already peeked, just consume it
         if !global {
-            // implicit declare: namespace keyword already peeked, just consume it
-            expect::identifier(env, "namespace")?;
+            let keyword = match peek::token(env) {
+                TokenKind::TIdentifier { raw, .. } if raw == "module" && is_d_ts => {
+                    expect::identifier(env, "module")?;
+                    statement::declare_namespace::Keyword::Module
+                }
+                _ => {
+                    expect::identifier(env, "namespace")?;
+                    statement::declare_namespace::Keyword::Namespace
+                }
+            };
             let leading = {
                 let mut l = leading;
                 l.extend(peek::comments(env));
                 l
             };
             let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
-                declare_namespace_helper(env, leading, false, implicit_declare)
+                declare_namespace_helper(env, leading, false, implicit_declare, keyword)
             })?;
             Ok(statement::Statement::new(
                 StatementInner::DeclareNamespace {
@@ -2298,7 +2372,13 @@ fn declare_namespace(
                 l
             };
             let (loc, namespace) = with_loc(Some(start_loc), env, |env| {
-                declare_namespace_helper(env, leading, global, implicit_declare)
+                declare_namespace_helper(
+                    env,
+                    leading,
+                    global,
+                    implicit_declare,
+                    statement::declare_namespace::Keyword::Namespace,
+                )
             })?;
             Ok(statement::Statement::new(
                 StatementInner::DeclareNamespace {
@@ -2676,6 +2756,7 @@ fn export_declaration(
         expect::token(env, TokenKind::TExport)?;
         let parse_enum = env.parse_options().enums;
         let in_ambient_context = env.in_ambient_context();
+        let is_d_ts = env.is_d_ts();
         let is_import_equals =
             peek::token(env) == &TokenKind::TImport && peek::ith_is_identifier(env, 1);
         let is_export_as_namespace = matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "as")
@@ -3052,11 +3133,22 @@ fn export_declaration(
                 *inner.loc_mut() = loc;
                 Ok(statement::Statement::new(inner))
             }
-            TokenKind::TIdentifier { raw, .. } if raw == "namespace" && in_ambient_context => {
-                // export namespace X { ... } in ambient context - implicit declare
+            TokenKind::TIdentifier { raw, .. }
+                if (raw == "namespace" || (raw == "module" && is_d_ts)) && in_ambient_context =>
+            {
+                // export namespace/module X { ... } in ambient context - implicit declare
                 let (loc, mut s) = with_loc(Some(start_loc), env, |env| {
                     let (loc, declaration) = with_loc(None, env, |env| {
-                        expect::identifier(env, "namespace")?;
+                        let keyword = match peek::token(env) {
+                            TokenKind::TIdentifier { raw, .. } if raw == "module" => {
+                                expect::identifier(env, "module")?;
+                                statement::declare_namespace::Keyword::Module
+                            }
+                            _ => {
+                                expect::identifier(env, "namespace")?;
+                                statement::declare_namespace::Keyword::Namespace
+                            }
+                        };
                         let mut id = main_parser::parse_identifier(env, None)?;
                         comment_attachment::id_remove_trailing(env, &mut id);
                         let id = statement::declare_namespace::Id::Local(id);
@@ -3067,6 +3159,7 @@ fn export_declaration(
                             body,
                             comments,
                             implicit_declare: true,
+                            keyword,
                         })
                     })?;
                     let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
@@ -3398,6 +3491,7 @@ fn declare_export_declaration_body(
 ) -> Result<StatementInner<Loc, Loc>, Rollback> {
     let parse_components = env.parse_options().components;
     let parse_enums = env.parse_options().enums;
+    let is_d_ts = env.is_d_ts();
     match peek::token(env) {
         TokenKind::TDefault => {
             // declare export default ...
@@ -3934,10 +4028,21 @@ fn declare_export_declaration_body(
                 }),
             })
         }
-        TokenKind::TIdentifier { raw, .. } if raw == "namespace" => {
-            // declare export namespace X { ... }
+        TokenKind::TIdentifier { raw, .. }
+            if raw == "namespace" || (raw == "module" && is_d_ts) =>
+        {
+            // declare export namespace/module X { ... }
             let (loc, declaration) = with_loc(None, env, |env| {
-                expect::identifier(env, "namespace")?;
+                let keyword = match peek::token(env) {
+                    TokenKind::TIdentifier { raw, .. } if raw == "module" => {
+                        expect::identifier(env, "module")?;
+                        statement::declare_namespace::Keyword::Module
+                    }
+                    _ => {
+                        expect::identifier(env, "namespace")?;
+                        statement::declare_namespace::Keyword::Namespace
+                    }
+                };
                 let mut id = main_parser::parse_identifier(env, None)?;
                 comment_attachment::id_remove_trailing(env, &mut id);
                 let id = statement::declare_namespace::Id::Local(id);
@@ -3948,6 +4053,7 @@ fn declare_export_declaration_body(
                     body,
                     comments,
                     implicit_declare: false,
+                    keyword,
                 })
             })?;
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
@@ -4670,7 +4776,9 @@ fn parse_statement_list_item(
 
     let parse_enums = env.parse_options().enums;
     let in_ambient_context = env.in_ambient_context();
+    let is_d_ts = env.is_d_ts();
     let next_is_lcurly = peek::ith_token(env, 1) == &TokenKind::TLcurly;
+    let next_is_identifier = matches!(peek::ith_token(env, 1), TokenKind::TIdentifier { .. });
     match peek::token(env) {
         // Remember kids, these look like statements but they're not
         // statements... (see section 13)
@@ -4691,6 +4799,11 @@ fn parse_statement_list_item(
             declaration_parser::parse_enum_declaration(env, None, false)
         }
         TokenKind::TIdentifier { raw, .. } if raw == "namespace" && in_ambient_context => {
+            declare_namespace(env, false, true)
+        }
+        TokenKind::TIdentifier { raw, .. }
+            if raw == "module" && in_ambient_context && next_is_identifier && is_d_ts =>
+        {
             declare_namespace(env, false, true)
         }
         TokenKind::TIdentifier { raw, .. }

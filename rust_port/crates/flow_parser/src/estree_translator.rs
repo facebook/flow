@@ -642,6 +642,10 @@ fn statement(
                     (identifier(offset_table, config, id), true)
                 }
             };
+            let keyword_str = match namespace.keyword {
+                ast::statement::declare_namespace::Keyword::Namespace => "namespace",
+                ast::statement::declare_namespace::Keyword::Module => "module",
+            };
             let mut props = vec![
                 ("id", id),
                 (
@@ -649,6 +653,7 @@ fn statement(
                     block(offset_table, config, &namespace.body.0, &namespace.body.1),
                 ),
                 ("implicitDeclare", Value::Bool(namespace.implicit_declare)),
+                ("keyword", string(keyword_str)),
             ];
             if global {
                 props.insert(0, ("global", bool_value(global)));
@@ -2815,6 +2820,10 @@ fn declare_namespace(
             (identifier(offset_table, config, id), true)
         }
     };
+    let keyword_str = match namespace.keyword {
+        ast::statement::declare_namespace::Keyword::Namespace => "namespace",
+        ast::statement::declare_namespace::Keyword::Module => "module",
+    };
     let mut props = vec![
         ("id", id),
         (
@@ -2822,6 +2831,7 @@ fn declare_namespace(
             block(offset_table, config, &namespace.body.0, &namespace.body.1),
         ),
         ("implicitDeclare", bool_value(namespace.implicit_declare)),
+        ("keyword", string(keyword_str)),
     ];
     if global {
         props.insert(0, ("global", bool_value(global)));

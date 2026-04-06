@@ -2757,6 +2757,7 @@ module Make
         body = (body_loc, { Ast.Statement.Block.body; comments = body_comments });
         comments;
         implicit_declare;
+        keyword;
       } =
     if implicit_declare && not (Context.tslib_syntax cx) then
       Flow.add_output
@@ -2811,7 +2812,7 @@ module Make
             Ast.Statement.DeclareNamespace.Local ((name_loc, t), { Ast.Identifier.name; comments })
           )
       in
-      (t, { Ast.Statement.DeclareNamespace.id; body; comments; implicit_declare })
+      (t, { Ast.Statement.DeclareNamespace.id; body; comments; implicit_declare; keyword })
 
   and object_prop cx ~as_const ~frozen ~has_hint acc prop =
     let open Ast.Expression.Object in

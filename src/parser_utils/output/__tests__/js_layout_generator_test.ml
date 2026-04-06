@@ -3529,6 +3529,10 @@ let tests =
              ~pretty:true
              "declare class Foo {\n  private string: string,\n}"
          );
+         ( "module_as_namespace" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "declare module Protocol {}";
+           assert_statement_string ~ctxt ~pretty:true "declare namespace Protocol {}"
+         );
          ( "global_augmentation" >:: fun ctxt ->
            assert_statement_string ~ctxt ~pretty:true "declare module \"foo\" {\n  global {}\n}"
          );

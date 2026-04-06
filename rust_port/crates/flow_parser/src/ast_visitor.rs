@@ -9187,6 +9187,7 @@ pub fn declare_namespace_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id,
         body,
         implicit_declare: _,
+        keyword: _,
         comments,
     } = m;
     match id {
@@ -9212,6 +9213,7 @@ pub fn map_declare_namespace_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id,
         body,
         implicit_declare,
+        keyword,
         comments,
     } = ns;
     let id_ = match id {
@@ -9232,6 +9234,7 @@ pub fn map_declare_namespace_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id: id_,
         body: body_,
         implicit_declare: *implicit_declare,
+        keyword: *keyword,
         comments: comments_,
     }
 }
