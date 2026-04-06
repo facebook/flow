@@ -184,9 +184,8 @@ export default component FlowCheckCodeBlock(
                     line[0].content = '\n'; // eslint-disable-line no-param-reassign
                   }
 
-                  const lineProps = getLineProps({
+                  const {key: _lineKey, ...lineProps} = getLineProps({
                     line,
-                    key: i,
                   });
 
                   lineProps.className += ' ' + styles.codeBlockLine;
@@ -205,9 +204,11 @@ export default component FlowCheckCodeBlock(
                           </span>
                         </span>
                         <span className={styles.codeBlockLineContent}>
-                          {line.map((token, key) => (
-                            <span key={key} {...getTokenProps({token, key})} />
-                          ))}
+                          {line.map((token, tokenIdx) => {
+                            const {key: _tokenKey, ...tokenProps} =
+                              getTokenProps({token});
+                            return <span key={tokenIdx} {...tokenProps} />;
+                          })}
                           {getHighlightRangesOnLine(
                             flowErrors,
                             lineNum,
