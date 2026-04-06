@@ -487,15 +487,15 @@ fn add_record_constructor<'cx>(
 
 fn add_name_field(reason: Reason, props: &mut BTreeMap<Name, type_::Property>) {
     let name_key = Name::new(FlowSmolStr::new("name"));
-    if !props.contains_key(&name_key) {
+    props.entry(name_key).or_insert_with(|| {
         let prop = type_::Property::new(type_::PropertyInner::Field {
             preferred_def_locs: None,
             key_loc: None,
             type_: type_::str_module_t::why(reason),
             polarity: Polarity::Neutral,
         });
-        props.insert(name_key, prop);
-    }
+        prop
+    });
 }
 
 fn require<'cx>(
