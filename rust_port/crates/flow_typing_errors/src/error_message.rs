@@ -6722,7 +6722,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EIncorrectTypeWithReplacement { kind, .. } => {
                 match kind.error_type_of_kind() {
                     IncorrectTypeErrorType::DeprecatedUtility => Some(DeprecatedUtility),
-                    IncorrectTypeErrorType::TSType => Some(TSSyntax),
+                    IncorrectTypeErrorType::TSType => Some(UnsupportedSyntax),
                 }
             }
             ErrorMessage::EDocblockError(_, err) => match err {
@@ -7103,7 +7103,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
                 _ => None,
             },
-            ErrorMessage::ETSSyntax { .. } => Some(TSSyntax),
+            ErrorMessage::ETSSyntax { .. } => Some(UnsupportedSyntax),
             ErrorMessage::EInvalidTypeCastSyntax { .. } => Some(InvalidTypeCastSyntax),
             ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms { .. } => {
                 Some(MissingPlatformSupport)

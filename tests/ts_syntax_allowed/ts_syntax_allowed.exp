@@ -307,7 +307,7 @@ Cannot assign `'hello'` to `ro_obj2.b` because property `b` is not writable. [ca
 Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:3:20
 
 TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `ReadonlyArray<T>`. For object
-and tuple types you can use `Readonly<T>`. [ts-syntax]
+and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
    3| declare const baz: readonly {foo: string}; // error
                          ^^^^^^^^^^^^^^^^^^^^^^

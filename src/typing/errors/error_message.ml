@@ -4045,7 +4045,7 @@ let error_code_of_message err : error_code option =
   | EIncorrectTypeWithReplacement { kind; _ } ->
     (match IncorrectType.error_type_of_kind kind with
     | IncorrectType.DeprecatedUtility -> Some DeprecatedUtility
-    | IncorrectType.TSType -> Some TSSyntax)
+    | IncorrectType.TSType -> Some UnsupportedSyntax)
   | EDocblockError (_, err) -> begin
     match err with
     | MultipleFlowAttributes -> Some DuplicateFlowDecl
@@ -4306,7 +4306,7 @@ let error_code_of_message err : error_code option =
     | Flow_errors_utils.LintError kind -> Some (Error_codes.code_of_lint kind)
     | _ -> None
   end
-  | ETSSyntax _ -> Some TSSyntax
+  | ETSSyntax _ -> Some UnsupportedSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
   | EMissingPlatformSupportWithAvailablePlatforms _ -> Some MissingPlatformSupport
   | EMissingPlatformSupport _ -> Some MissingPlatformSupport

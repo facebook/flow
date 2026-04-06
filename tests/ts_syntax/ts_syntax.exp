@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------- accessibility.js:2:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    2|   private x: string; // ERROR
         ^^^^^^^
@@ -9,7 +9,7 @@ to `#foo`. [ts-syntax]
 
 Error --------------------------------------------------------------------------------------------- accessibility.js:3:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    3|   protected y: number; // ERROR
         ^^^^^^^^^
@@ -18,7 +18,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error --------------------------------------------------------------------------------------------- accessibility.js:4:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    4|   public z: boolean; // ERROR
         ^^^^^^
@@ -27,7 +27,7 @@ modifier. [ts-syntax]
 Error --------------------------------------------------------------------------------------------- accessibility.js:6:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    6|   private m1(): void {} // ERROR
         ^^^^^^^
@@ -35,7 +35,7 @@ to `#foo`. [ts-syntax]
 
 Error --------------------------------------------------------------------------------------------- accessibility.js:7:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    7|   protected m2(): void {} // ERROR
         ^^^^^^^^^
@@ -44,7 +44,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error --------------------------------------------------------------------------------------------- accessibility.js:8:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    8|   public m3(): void {} // ERROR
         ^^^^^^
@@ -53,7 +53,7 @@ modifier. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:10:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    10|   private static a: string; // ERROR
          ^^^^^^^
@@ -61,7 +61,7 @@ to `#foo`. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:11:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    11|   protected static b: number; // ERROR
          ^^^^^^^^^
@@ -70,7 +70,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error -------------------------------------------------------------------------------------------- accessibility.js:12:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    12|   public static c: boolean; // ERROR
          ^^^^^^
@@ -79,7 +79,7 @@ modifier. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:15:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    15|   private readonly d: string; // ERROR
          ^^^^^^^
@@ -88,7 +88,7 @@ to `#foo`. [ts-syntax]
 Error ------------------------------------------------------------------------------------------- accessibility.js:15:11
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    15|   private readonly d: string; // ERROR
                  ^^^^^^^^
@@ -96,7 +96,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:16:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    16|   protected readonly e: number; // ERROR
          ^^^^^^^^^
@@ -105,7 +105,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error ------------------------------------------------------------------------------------------- accessibility.js:16:13
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    16|   protected readonly e: number; // ERROR
                    ^^^^^^^^
@@ -114,7 +114,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:17:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    17|   public readonly f: boolean; // ERROR
          ^^^^^^
@@ -123,7 +123,7 @@ modifier. [ts-syntax]
 Error ------------------------------------------------------------------------------------------- accessibility.js:17:10
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    17|   public readonly f: boolean; // ERROR
                 ^^^^^^^^
@@ -132,7 +132,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:19:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    19|   private static readonly g: string; // ERROR
          ^^^^^^^
@@ -141,7 +141,7 @@ to `#foo`. [ts-syntax]
 Error ------------------------------------------------------------------------------------------- accessibility.js:19:18
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    19|   private static readonly g: string; // ERROR
                         ^^^^^^^^
@@ -149,7 +149,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:20:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    20|   protected static readonly h: number; // ERROR
          ^^^^^^^^^
@@ -158,7 +158,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error ------------------------------------------------------------------------------------------- accessibility.js:20:20
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    20|   protected static readonly h: number; // ERROR
                           ^^^^^^^^
@@ -167,7 +167,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:21:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    21|   public static readonly i: boolean; // ERROR
          ^^^^^^
@@ -176,7 +176,7 @@ modifier. [ts-syntax]
 Error ------------------------------------------------------------------------------------------- accessibility.js:21:17
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    21|   public static readonly i: boolean; // ERROR
                        ^^^^^^^^
@@ -185,7 +185,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:34:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    34|   private a; // ERROR
          ^^^^^^^
@@ -194,7 +194,7 @@ to `#foo`. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:35:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    35|   private b: number; // ERROR
          ^^^^^^^
@@ -203,7 +203,7 @@ to `#foo`. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:36:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    36|   private readonly c; // ERROR
          ^^^^^^^
@@ -212,7 +212,7 @@ to `#foo`. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:37:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    37|   private static d: string; // ERROR
          ^^^^^^^
@@ -220,7 +220,7 @@ to `#foo`. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:38:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    38|   protected e: number; // ERROR
          ^^^^^^^^^
@@ -229,7 +229,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error -------------------------------------------------------------------------------------------- accessibility.js:39:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    39|   public f: string; // ERROR
          ^^^^^^
@@ -238,7 +238,7 @@ modifier. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:40:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    40|   public readonly g: boolean; // ERROR
          ^^^^^^
@@ -247,7 +247,7 @@ modifier. [ts-syntax]
 Error ------------------------------------------------------------------------------------------- accessibility.js:40:10
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    40|   public readonly g: boolean; // ERROR
                 ^^^^^^^^
@@ -256,7 +256,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:41:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    41|   private h(): void; // ERROR
          ^^^^^^^
@@ -264,7 +264,7 @@ to `#foo`. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:42:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    42|   protected i(): number; // ERROR
          ^^^^^^^^^
@@ -273,7 +273,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error -------------------------------------------------------------------------------------------- accessibility.js:43:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    43|   public j(): string; // ERROR
          ^^^^^^
@@ -281,7 +281,7 @@ modifier. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:44:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    44|   protected static k: number; // ERROR
          ^^^^^^^^^
@@ -290,7 +290,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 Error -------------------------------------------------------------------------------------------- accessibility.js:45:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    45|   public static l: boolean; // ERROR
          ^^^^^^
@@ -299,7 +299,7 @@ modifier. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:46:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
-to `#foo`. [ts-syntax]
+to `#foo`. [unsupported-syntax]
 
    46|   private static readonly m: string; // ERROR
          ^^^^^^^
@@ -307,7 +307,7 @@ to `#foo`. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:51:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    51|   protected abstract n: number; // ERROR
          ^^^^^^^^^
@@ -315,7 +315,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:51:3
 
-Flow does not support `abstract` methods. [ts-syntax]
+Flow does not support `abstract` methods. [unsupported-syntax]
 
    51|   protected abstract n: number; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -324,7 +324,7 @@ Flow does not support `abstract` methods. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:52:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    52|   public abstract o: string; // ERROR
          ^^^^^^
@@ -332,7 +332,7 @@ modifier. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:52:3
 
-Flow does not support `abstract` methods. [ts-syntax]
+Flow does not support `abstract` methods. [unsupported-syntax]
 
    52|   public abstract o: string; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -340,7 +340,7 @@ Flow does not support `abstract` methods. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:53:3
 
-Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    53|   protected abstract p(): void; // ERROR
          ^^^^^^^^^
@@ -348,7 +348,7 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:53:3
 
-Flow does not support `abstract` methods. [ts-syntax]
+Flow does not support `abstract` methods. [unsupported-syntax]
 
    53|   protected abstract p(): void; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -357,7 +357,7 @@ Flow does not support `abstract` methods. [ts-syntax]
 Error -------------------------------------------------------------------------------------------- accessibility.js:54:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
-modifier. [ts-syntax]
+modifier. [unsupported-syntax]
 
    54|   public abstract q(): number; // ERROR
          ^^^^^^
@@ -365,7 +365,7 @@ modifier. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:54:3
 
-Flow does not support `abstract` methods. [ts-syntax]
+Flow does not support `abstract` methods. [unsupported-syntax]
 
    54|   public abstract q(): number; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -554,7 +554,8 @@ The utility type `$ReadOnlySet` is deprecated, use `ReadonlySet` instead. [depre
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:1:8
 
-Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`).
+[unsupported-syntax]
 
    1| type A<T: string> = [T]; // ERROR
              ^^^^^^^^^
@@ -562,7 +563,8 @@ Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., 
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:2:8
 
-Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`).
+[unsupported-syntax]
 
    2| type B<+T: string> = [T]; // ERROR
              ^^^^^^^^^^
@@ -585,7 +587,8 @@ References:
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:3:8
 
-Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`).
+[unsupported-syntax]
 
    3| type C<T: string = "hi"> = [T]; // ERROR
              ^^^^^^^^^^^^^^^^
@@ -593,7 +596,8 @@ Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., 
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:4:8
 
-Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`).
+[unsupported-syntax]
 
    4| type D<+T: string = "hi"> = [T]; // ERROR
              ^^^^^^^^^^^^^^^^^
@@ -678,7 +682,7 @@ The utility type `$Values` is deprecated, use `Values` instead. [deprecated-util
 
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
 
-The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [ts-syntax]
+The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [unsupported-syntax]
 
    1| declare function f<in A>(x: A): void; // ERROR
                          ^^
@@ -694,7 +698,7 @@ Variance modifiers cannot appear on a type parameter of a function type. [unsupp
 
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:2:20
 
-The equivalent of TypeScript's `out` variance annotation is `+` in Flow. [ts-syntax]
+The equivalent of TypeScript's `out` variance annotation is `+` in Flow. [unsupported-syntax]
 
    2| declare function f<out A>(): A; // ERROR
                          ^^^
@@ -711,7 +715,7 @@ Variance modifiers cannot appear on a type parameter of a function type. [unsupp
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:3:20
 
 The equivalent of TypeScript's `in out` variance annotation in Flow is to simply leave it out - it's the default if you
-don't have a variance annotation. [ts-syntax]
+don't have a variance annotation. [unsupported-syntax]
 
    3| declare function f<in out A>(x: A): A; // ERROR
                          ^^^^^^
@@ -727,7 +731,7 @@ Variance modifiers cannot appear on a type parameter of a function type. [unsupp
 
 Error ---------------------------------------------------------------------------------------------------- never.js:1:10
 
-The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-syntax]
+The closest equivalent of TypeScript's `never` type in Flow is `empty`. [unsupported-syntax]
 
    1| type T = never; // ERROR
                ^^^^^
@@ -736,7 +740,7 @@ The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-synt
 Error -------------------------------------------------------------------------------------- parameter_properties.js:3:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    3|     private name: string, // ERROR
           ^^^^^^^^^^^^^^^^^^^^
@@ -745,7 +749,7 @@ the constructor. [ts-syntax]
 Error -------------------------------------------------------------------------------------- parameter_properties.js:9:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    9|     private readonly x: number, // ERROR
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -754,7 +758,7 @@ the constructor. [ts-syntax]
 Error ------------------------------------------------------------------------------------- parameter_properties.js:15:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    15|     private a: string, // ERROR
            ^^^^^^^^^^^^^^^^^
@@ -763,7 +767,7 @@ the constructor. [ts-syntax]
 Error ------------------------------------------------------------------------------------- parameter_properties.js:16:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    16|     protected b: number, // ERROR
            ^^^^^^^^^^^^^^^^^^^
@@ -772,7 +776,7 @@ the constructor. [ts-syntax]
 Error ------------------------------------------------------------------------------------- parameter_properties.js:17:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    17|     public c: boolean, // ERROR
            ^^^^^^^^^^^^^^^^^
@@ -781,7 +785,7 @@ the constructor. [ts-syntax]
 Error ------------------------------------------------------------------------------------- parameter_properties.js:18:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    18|     protected readonly d: string, // ERROR
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -790,7 +794,7 @@ the constructor. [ts-syntax]
 Error ------------------------------------------------------------------------------------- parameter_properties.js:24:5
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
-the constructor. [ts-syntax]
+the constructor. [unsupported-syntax]
 
    24|     private name: string = "default", // ERROR
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -798,7 +802,8 @@ the constructor. [ts-syntax]
 
 Error -------------------------------------------------------------------------------------------- readonly_type.js:1:10
 
-The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `Readonly<[T, S]>`. [ts-syntax]
+The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `Readonly<[T, S]>`.
+[unsupported-syntax]
 
    1| type A = readonly [string, number]; // ERROR
                ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -806,7 +811,8 @@ The equivalent of TypeScript's `readonly` type operator applied to a tuple type 
 
 Error -------------------------------------------------------------------------------------------- readonly_type.js:2:10
 
-The equivalent of TypeScript's `readonly` type operator applied to an array type is `ReadonlyArray<T>`. [ts-syntax]
+The equivalent of TypeScript's `readonly` type operator applied to an array type is `ReadonlyArray<T>`.
+[unsupported-syntax]
 
    2| type B = readonly string[]; // ERROR
                ^^^^^^^^^^^^^^^^^
@@ -815,7 +821,7 @@ The equivalent of TypeScript's `readonly` type operator applied to an array type
 Error -------------------------------------------------------------------------------------------- readonly_type.js:3:10
 
 TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `ReadonlyArray<T>`. For object
-and tuple types you can use `Readonly<T>`. [ts-syntax]
+and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
    3| type C = readonly number; // ERROR
                ^^^^^^^^^^^^^^^
@@ -824,7 +830,7 @@ and tuple types you can use `Readonly<T>`. [ts-syntax]
 Error ----------------------------------------------------------------------------------------- readonly_variance.js:2:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    2|   readonly foo: string, // ERROR
         ^^^^^^^^
@@ -833,7 +839,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error ---------------------------------------------------------------------------------------- readonly_variance.js:11:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    11|   readonly [string]: mixed; // ERROR
          ^^^^^^^^
@@ -842,7 +848,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error ---------------------------------------------------------------------------------------- readonly_variance.js:15:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    15|   readonly prop: string; // ERROR
          ^^^^^^^^
@@ -851,7 +857,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error ---------------------------------------------------------------------------------------- readonly_variance.js:19:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    19|   readonly prop: string; // ERROR
          ^^^^^^^^
@@ -860,7 +866,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error --------------------------------------------------------------------------------------- readonly_variance.js:24:11
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    24| type T = [readonly foo: number]; // ERROR
                  ^^^^^^^^
@@ -869,7 +875,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error ---------------------------------------------------------------------------------------- readonly_variance.js:27:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    27|   readonly "foo": string, // ERROR
          ^^^^^^^^
@@ -878,7 +884,7 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
 Error ---------------------------------------------------------------------------------------- readonly_variance.js:30:3
 
 While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
 
    30|   readonly 0: string, // ERROR
          ^^^^^^^^
@@ -1231,7 +1237,7 @@ expression. [signature-verification-failure]
 Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
 
 The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a cast in the form `<expr> as <type>`.
-[ts-syntax]
+[unsupported-syntax]
 
    4| export const a = m satisfies T; // ERROR
                        ^^^^^^^^^^^^^
@@ -1300,7 +1306,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ undefined.js:1:10
 
 The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
-types. [ts-syntax]
+types. [unsupported-syntax]
 
    1| type T = undefined; // ERROR
                ^^^^^^^^^

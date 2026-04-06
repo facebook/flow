@@ -1032,7 +1032,7 @@ Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is no
 Error -------------------------------------------------------------------------------------------- type_sig_defs.js:8:44
 
 TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `ReadonlyArray<T>`. For object
-and tuple types you can use `Readonly<T>`. [ts-syntax]
+and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
    8| export type InferInReadOnly<T> = T extends readonly {x: infer U} ? U : T; // ERROR: readonly on non-tuple/non-array is unsupported - testing crash
                                                  ^^^^^^^^^^^^^^^^^^^^^
