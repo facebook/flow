@@ -5,9 +5,6 @@ displayed_sidebar: docsSidebar
 slug: /
 ---
 
-Guides and references for all you need to know about Flow.
+import DocsLandingPage from '../src/components/DocsLandingPage';
 
-import DocCardList from '@theme/DocCardList';
-import docsCategories from '../src/js/docs-categories';
-
-<DocCardList items={docsCategories} />
+<DocsLandingPage />
