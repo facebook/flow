@@ -1858,12 +1858,31 @@ CAMLprim value hh_entity_advance(value entity_val, value data_val) {
     // `slot` will no longer be reachable.
     write_barrier(Deref(Obj_field(entity, slot)));
     slot = 1 - slot;
-    Deref(entity_version_fld) = next_version | slot;
+
+    // Write data to the new slot BEFORE publishing the new version. The release
+    // store on the version field ensures that a concurrent reader (using an
+    // acquire load on the version) will observe the data written here.
+    Deref(Obj_field(entity, slot)) = data;
+    __atomic_store_n(
+        (uintnat*)Ptr_of_addr(entity_version_fld),
+        (uintnat)(next_version | slot),
+        __ATOMIC_RELEASE);
+  } else {
+    Deref(Obj_field(entity, slot)) = data;
   }
 
-  Deref(Obj_field(entity, slot)) = data;
-
   CAMLreturn(Val_unit);
+}
+
+// Read the version field of an entity with acquire semantics. Pairs with the
+// release store in hh_entity_advance to ensure the reader observes data written
+// before the version was published.
+CAMLprim value hh_entity_read_version(value entity_val) {
+  addr_t entity = Long_val(entity_val);
+  intnat entity_version_fld = Obj_field(entity, 2);
+  uintnat version = __atomic_load_n(
+      (uintnat*)Ptr_of_addr(entity_version_fld), __ATOMIC_ACQUIRE);
+  return Val_long(version);
 }
 
 CAMLprim value hh_load_acquire(value addr_val) {

@@ -1165,15 +1165,28 @@ module NewAPI = struct
     in
     (header_size + entity_size, write)
 
+  (* Non-atomic version read. Only safe when there are no concurrent writers
+   * (e.g., during rollback or in single-threaded contexts). *)
   let get_entity_version heap entity = Int64.to_int (buf_read_int64 heap (version_addr entity))
 
-  (* To write new data for an entity, we advance its version, then write the new
-   * data to the appropriate slot. To support concurrent readers, we do this
-   * somewhat carefully.
+  (* Atomic acquire load of the entity version. Pairs with the release store
+   * in hh_entity_advance to ensure that after observing the new version, all
+   * subsequent reads see the data written before the version was published. *)
+  external get_entity_version_acquire : _ entity addr -> int = "hh_entity_read_version" [@@noalloc]
+
+  (* To write new data for an entity, we advance its version, writing the new
+   * data to the appropriate slot BEFORE publishing the new version with a
+   * release store. To support concurrent readers, we pair this with acquire
+   * loads on the version field.
    *
-   * A concurrent reader might observe the entity version either before the we
-   * write a new version or after. In either case, the reader will compute the
-   * same slot value -- the committed data has not moved.
+   * A concurrent reader using entity_read_committed might observe the entity
+   * version either before we write a new version or after. In either case, the
+   * reader will compute the same slot value -- the committed data has not
+   * moved.
+   *
+   * A concurrent reader using entity_read_latest will see either the old or
+   * new version. If it sees the new version (via acquire load), the
+   * acquire-release pair guarantees it also sees the new data.
    *
    * Two concurrent writers are not supported, but could be if there is a need.
    * As is, nothing will go wrong, except that writers will race to write into
@@ -1191,7 +1204,7 @@ module NewAPI = struct
   let entity_read_committed entity =
     let heap = get_heap () in
     let next_version = get_next_version () in
-    let v = ref (get_entity_version heap entity) in
+    let v = ref (get_entity_version_acquire entity) in
     if !v >= next_version then v := lnot !v;
     let slot = !v land 1 in
     let data = addr_offset entity (header_size + slot) in
@@ -1199,7 +1212,7 @@ module NewAPI = struct
 
   let entity_read_latest entity =
     let heap = get_heap () in
-    let entity_version = get_entity_version heap entity in
+    let entity_version = get_entity_version_acquire entity in
     let slot = entity_version land 1 in
     let data = addr_offset entity (header_size + slot) in
     read_opt (read_addr heap data)
@@ -1228,7 +1241,7 @@ module NewAPI = struct
 
   let entity_changed entity =
     let version = get_next_version () in
-    let entity_version = get_entity_version (get_heap ()) entity in
+    let entity_version = get_entity_version_acquire entity in
     entity_version >= version
 
   let entity_reader_committed = { read = entity_read_committed }
