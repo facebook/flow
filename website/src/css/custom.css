@@ -112,6 +112,41 @@ code {
   opacity: 1;
 }
 
+/* ── Sidebar hierarchy improvements ── */
+
+/* Top-level items: separator between sections */
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-category,
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-link {
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+.theme-doc-sidebar-menu > :first-child {
+  border-top: none;
+}
+
+/* Make top-level category labels stand out — padding on the link for better hover/click */
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link,
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-link > .menu__link {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--flow-gray-darker);
+  padding-top: 0.70rem;
+  padding-bottom: 0.70rem;
+}
+
+/* Remove default margin between top-level list items */
+.theme-doc-sidebar-menu > .menu__list-item:not(:first-child) {
+  margin-top: 0;
+}
+
+/* Increase indentation for nested items */
+.menu__list .menu__list {
+  padding-left: 1rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.07);
+  margin-left: 0.5rem;
+}
+
 .rounded {
   border-radius: 0.25rem;
 }

@@ -141,12 +141,12 @@ module.exports = {
         'linting/flowlint-comments',
         'linting/rule-reference',
         'linting/strict-import-export-lints',
+        {
+          type: 'doc',
+          id: 'errors/index',
+          label: 'Error Suppressions',
+        },
       ],
-    },
-    {
-      type: 'doc',
-      id: 'errors/index',
-      label: 'Error Suppressions',
     },
     {
       type: 'category',
