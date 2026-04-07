@@ -20,6 +20,7 @@ use flow_parser::loc::Loc;
 use flow_typing_context::Context;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::Type as FlowType;
 use flow_typing_type::type_::TypeAppTData;
@@ -184,7 +185,9 @@ impl CoverageVisitor {
             | TypeInner::GenericT(box GenericTData { bound: t, .. })
             | TypeInner::ThisTypeAppT(box ThisTypeAppTData { this_t: t, .. }) => self.type_(cx, t),
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::PolyT { t_out: t, .. } | DefTInner::TypeT(_, t) => self.type_(cx, t),
+                DefTInner::PolyT(box PolyTData { t_out: t, .. }) | DefTInner::TypeT(_, t) => {
+                    self.type_(cx, t)
+                }
                 // Concrete covered
                 DefTInner::ArrT(_)
                 | DefTInner::BigIntGeneralT(_)
@@ -198,7 +201,7 @@ impl CoverageVisitor {
                 | DefTInner::SymbolT
                 | DefTInner::UniqueSymbolT(_)
                 | DefTInner::ObjT(_)
-                | DefTInner::ReactAbstractComponentT { .. }
+                | DefTInner::ReactAbstractComponentT(_)
                 | DefTInner::RendersT(_)
                 | DefTInner::NumericStrKeyT(_)
                 | DefTInner::SingletonNumT { .. }

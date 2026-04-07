@@ -44,9 +44,11 @@ use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::OptionalIndexedAccessIndex;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::Property;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedParam;
 use flow_typing_type::type_::Selector;
 use flow_typing_type::type_::Targ;
@@ -864,12 +866,12 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 DefT::new(DefTInner::TypeT(*kind, inner_t_prime))
             }
         }
-        DefTInner::PolyT {
+        DefTInner::PolyT(box PolyTData {
             tparams_loc,
             tparams,
             t_out,
             id: _,
-        } => {
+        }) => {
             let mut tparams_changed = false;
             let tparams_prime: Rc<[TypeParam]> = tparams
                 .iter()
@@ -885,19 +887,19 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if !tparams_changed && t_out.ptr_eq(&t_out_prime) {
                 t.dupe()
             } else {
-                DefT::new(DefTInner::PolyT {
+                DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                     tparams_loc: tparams_loc.clone(),
                     tparams: tparams_prime,
                     t_out: t_out_prime,
                     id: poly::Id::generate_id(),
-                })
+                })))
             }
         }
-        DefTInner::ReactAbstractComponentT {
+        DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
             config,
             renders,
             component_kind,
-        } => {
+        }) => {
             let config_prime = mapper.type_(cx, map_cx, config.dupe());
             let renders_prime = mapper.type_(cx, map_cx, renders.dupe());
             let mut component_kind_changed = false;
@@ -925,11 +927,13 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             {
                 t.dupe()
             } else {
-                DefT::new(DefTInner::ReactAbstractComponentT {
-                    config: config_prime,
-                    renders: renders_prime,
-                    component_kind: component_kind_prime,
-                })
+                DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
+                    ReactAbstractComponentTData {
+                        config: config_prime,
+                        renders: renders_prime,
+                        component_kind: component_kind_prime,
+                    },
+                )))
             }
         }
         DefTInner::RendersT(canonical_form) => {
@@ -1967,24 +1971,21 @@ pub fn prop_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 ) -> Property {
     use std::ops::Deref;
 
+    use flow_typing_type::type_::FieldData;
+    use flow_typing_type::type_::GetSetData;
     use flow_typing_type::type_::PropertyInner;
     match prop.deref() {
-        PropertyInner::Field {
-            preferred_def_locs,
-            key_loc,
-            type_,
-            polarity,
-        } => {
-            let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-            if type_.ptr_eq(&type_prime) {
+        PropertyInner::Field(fd) => {
+            let type_prime = mapper.type_(cx, map_cx, fd.type_.dupe());
+            if fd.type_.ptr_eq(&type_prime) {
                 prop
             } else {
-                Property::new(PropertyInner::Field {
-                    preferred_def_locs: preferred_def_locs.clone(),
-                    key_loc: key_loc.clone(),
+                Property::new(PropertyInner::Field(Box::new(FieldData {
+                    preferred_def_locs: fd.preferred_def_locs.clone(),
+                    key_loc: fd.key_loc.clone(),
                     type_: type_prime,
-                    polarity: *polarity,
-                })
+                    polarity: fd.polarity,
+                })))
             }
         }
         PropertyInner::Get { key_loc, type_ } => {
@@ -2009,23 +2010,18 @@ pub fn prop_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 })
             }
         }
-        PropertyInner::GetSet {
-            get_key_loc,
-            get_type,
-            set_key_loc,
-            set_type,
-        } => {
-            let get_type_prime = mapper.type_(cx, map_cx, get_type.dupe());
-            let set_type_prime = mapper.type_(cx, map_cx, set_type.dupe());
-            if get_type.ptr_eq(&get_type_prime) && set_type.ptr_eq(&set_type_prime) {
+        PropertyInner::GetSet(gs) => {
+            let get_type_prime = mapper.type_(cx, map_cx, gs.get_type.dupe());
+            let set_type_prime = mapper.type_(cx, map_cx, gs.set_type.dupe());
+            if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
                 prop
             } else {
-                Property::new(PropertyInner::GetSet {
-                    get_key_loc: get_key_loc.clone(),
+                Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                    get_key_loc: gs.get_key_loc.clone(),
                     get_type: get_type_prime,
-                    set_key_loc: set_key_loc.clone(),
+                    set_key_loc: gs.set_key_loc.clone(),
                     set_type: set_type_prime,
-                })
+                })))
             }
         }
         PropertyInner::Method { key_loc, type_ } => {

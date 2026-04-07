@@ -19,6 +19,13 @@ use flow_common::enclosing_context::EnclosingContext;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EComparisonData;
+use flow_typing_errors::error_message::EIllegalAssertOperatorData;
+use flow_typing_errors::error_message::EIncompatibleData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EPropNotReadableData;
+use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
+use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::MatchErrorKind;
@@ -39,6 +46,7 @@ use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::RootUseOp;
+use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -335,12 +343,12 @@ pub mod operators {
                         flow_error::ordered_reasons((reason_of_t(l).dupe(), reason_of_t(r).dupe()));
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EComparison {
+                        ErrorMessage::EComparison(Box::new(EComparisonData {
                             r1,
                             r2,
                             loc_opt: None,
                             strict_comparison_opt: None,
-                        },
+                        })),
                     )
                 }
             }
@@ -564,7 +572,9 @@ pub mod operators {
                         ));
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::ENonStrictEqualityComparison(reasons.0, reasons.1),
+                            ErrorMessage::ENonStrictEqualityComparison(Box::new((
+                                reasons.0, reasons.1,
+                            ))),
                         )?;
                         Ok(())
                     }
@@ -610,16 +620,18 @@ pub mod operators {
                         case_test_loc,
                         switch_discriminant_loc,
                     } => {
-                        let use_op = UseOp::Op(Arc::new(RootUseOp::SwitchRefinementCheck {
-                            test: case_test_loc.dupe(),
-                            discriminant: switch_discriminant_loc.dupe(),
-                        }));
-                        ErrorMessage::EIncompatibleWithUseOp {
+                        let use_op = UseOp::Op(Arc::new(RootUseOp::SwitchRefinementCheck(
+                            Box::new(SwitchRefinementCheckData {
+                                test: case_test_loc.dupe(),
+                                discriminant: switch_discriminant_loc.dupe(),
+                            }),
+                        )));
+                        ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                             reason_lower: reason_of_t(l).dupe(),
                             reason_upper: reason_of_t(r).dupe(),
                             use_op,
                             explanation: None,
-                        }
+                        }))
                     }
                     EnclosingContext::NoContext
                     | EnclosingContext::IndexContext
@@ -633,12 +645,12 @@ pub mod operators {
                             reason_of_t(l).dupe(),
                             reason_of_t(r).dupe(),
                         ));
-                        ErrorMessage::EComparison {
+                        ErrorMessage::EComparison(Box::new(EComparisonData {
                             r1,
                             r2,
                             loc_opt: None,
                             strict_comparison_opt: None,
-                        }
+                        }))
                     }
                 }
             };
@@ -1520,11 +1532,13 @@ pub mod special_cased_functions {
                             None => {
                                 flow_js_utils::add_output(
                                     cx,
-                                    ErrorMessage::EPropNotReadable {
-                                        reason_prop,
-                                        prop_name: Some(name.dupe()),
-                                        use_op: use_op.clone(),
-                                    },
+                                    ErrorMessage::EPropNotReadable(Box::new(
+                                        EPropNotReadableData {
+                                            reason_prop,
+                                            prop_name: Some(name.dupe()),
+                                            use_op: use_op.clone(),
+                                        },
+                                    )),
                                 )?;
                             }
                         }
@@ -1577,11 +1591,13 @@ pub mod special_cased_functions {
                             None => {
                                 flow_js_utils::add_output(
                                     cx,
-                                    ErrorMessage::EPropNotReadable {
-                                        reason_prop: lreason.dupe(),
-                                        prop_name: Some(name.dupe()),
-                                        use_op: use_op.clone(),
-                                    },
+                                    ErrorMessage::EPropNotReadable(Box::new(
+                                        EPropNotReadableData {
+                                            reason_prop: lreason.dupe(),
+                                            prop_name: Some(name.dupe()),
+                                            use_op: use_op.clone(),
+                                        },
+                                    )),
                                 )?;
                             }
                         }
@@ -1670,12 +1686,14 @@ pub mod special_cased_functions {
                                 if !Polarity::compat(elem.polarity, Polarity::Positive) {
                                     flow_js_utils::add_output(
                                         cx,
-                                        ErrorMessage::ETupleElementNotReadable {
-                                            use_op: use_op.clone(),
-                                            reason: reason_arr.dupe(),
-                                            index: n as i32,
-                                            name: elem.name.clone(),
-                                        },
+                                        ErrorMessage::ETupleElementNotReadable(Box::new(
+                                            ETupleElementNotReadableData {
+                                                use_op: use_op.clone(),
+                                                reason: reason_arr.dupe(),
+                                                index: n as i32,
+                                                name: elem.name.clone(),
+                                            },
+                                        )),
                                     )?;
                                 }
                                 let default_kind =
@@ -1749,11 +1767,11 @@ pub mod special_cased_functions {
                     };
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EIncompatible {
+                        ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                             lower: (reason_of_t(l).dupe(), None),
                             upper: (reason_op.dupe(), upper_kind),
                             use_op: Some(use_op.clone()),
-                        },
+                        })),
                     )?;
                     let any = flow_typing_type::type_::any_t::error(reason_op.dupe());
                     flow_typing_flow_js::flow_js::flow_t(cx, (&any, t))?;
@@ -2018,12 +2036,14 @@ pub mod type_assertions {
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EReactIntrinsicOverlap {
-                            use_loc: use_reason.dupe(),
-                            def: def_loc.dupe(),
-                            type_: reason_type.loc().dupe(),
-                            mixed: true,
-                        },
+                        ErrorMessage::EReactIntrinsicOverlap(Box::new(
+                            EReactIntrinsicOverlapData {
+                                use_loc: use_reason.dupe(),
+                                def: def_loc.dupe(),
+                                type_: reason_type.loc().dupe(),
+                                mixed: true,
+                            },
+                        )),
                     )
                 }
                 TypeInner::DefT(reason_type, def_t) => {
@@ -2031,18 +2051,20 @@ pub mod type_assertions {
                         DefTInner::ObjT(obj) => obj.call_t.is_some(),
                         DefTInner::FunT { .. } => true,
                         DefTInner::ClassT(_) => true,
-                        DefTInner::ReactAbstractComponentT { .. } => true,
+                        DefTInner::ReactAbstractComponentT(_) => true,
                         _ => false,
                     };
                     if matches {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::EReactIntrinsicOverlap {
-                                use_loc: use_reason.dupe(),
-                                def: def_loc.dupe(),
-                                type_: reason_type.loc().dupe(),
-                                mixed: false,
-                            },
+                            ErrorMessage::EReactIntrinsicOverlap(Box::new(
+                                EReactIntrinsicOverlapData {
+                                    use_loc: use_reason.dupe(),
+                                    def: def_loc.dupe(),
+                                    type_: reason_type.loc().dupe(),
+                                    mixed: false,
+                                },
+                            )),
                         )
                     } else {
                         Ok(())
@@ -2235,11 +2257,13 @@ pub mod type_assertions {
                     if cx.has_prop(obj_t.props_tmap.dupe(), prop_name) {
                         return flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::EIllegalAssertOperator {
-                                op: op_reason.dupe(),
-                                obj: obj_reason.dupe(),
-                                specialized: true,
-                            },
+                            ErrorMessage::EIllegalAssertOperator(Box::new(
+                                EIllegalAssertOperatorData {
+                                    op: op_reason.dupe(),
+                                    obj: obj_reason.dupe(),
+                                    specialized: true,
+                                },
+                            )),
                         );
                     }
                 }
@@ -2250,11 +2274,11 @@ pub mod type_assertions {
                 }
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EIllegalAssertOperator {
+                    ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op: op_reason.dupe(),
                         obj: obj_reason.dupe(),
                         specialized: true,
-                    },
+                    })),
                 )
             }
             (TypeInner::DefT(_, def_t), _) if matches!(def_t.deref(), DefTInner::ObjT(obj_t) if matches!(obj_t.flags.obj_kind, ObjKind::Indexed(_))) => {
@@ -2262,11 +2286,11 @@ pub mod type_assertions {
             }
             _ => flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIllegalAssertOperator {
+                ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op: op_reason.dupe(),
                     obj: obj_reason.dupe(),
                     specialized: true,
-                },
+                })),
             ),
         }
     }

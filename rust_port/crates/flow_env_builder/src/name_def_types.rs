@@ -132,50 +132,68 @@ pub struct Value {
 }
 
 #[derive(Clone)]
+pub struct AnnotationData {
+    pub tparams_map: TparamsMap,
+    pub optional: bool,
+    pub has_default_expression: bool,
+    pub react_deep_read_only: Option<DroAnnot>,
+    pub param_loc: Option<ALoc>,
+    pub annot: (ALoc, ast::types::Type<ALoc, ALoc>),
+    pub concrete: Option<Box<Root>>,
+}
+
+#[derive(Clone)]
+pub struct MatchCaseRootData {
+    pub case_match_root_loc: ALoc,
+    pub root_pattern_loc: ALoc,
+    pub prev_pattern_loc: Option<ALoc>,
+}
+
+#[derive(Clone)]
+pub struct FunctionValueData {
+    pub hints: AstHints,
+    pub synthesizable_from_annotation: FunctionSynthKind,
+    pub function_loc: ALoc,
+    pub function_: ast::function::Function<ALoc, ALoc>,
+    pub statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub arrow: bool,
+    pub tparams_map: TparamsMap,
+}
+
+#[derive(Clone)]
+pub struct ObjectValueData {
+    pub synthesizable: ObjectSynthKind,
+    pub obj_loc: ALoc,
+    pub obj: ast::expression::Object<ALoc, ALoc>,
+}
+
+#[derive(Clone)]
+pub struct EmptyArrayData {
+    pub array_providers: FlowOrdSet<ALoc>,
+    pub arr_loc: ALoc,
+}
+
+#[derive(Clone)]
+pub struct ContextualData {
+    pub reason: Reason,
+    pub hints: AstHints,
+    pub optional: bool,
+    pub default_expression: Option<(ALoc, ast::expression::Expression<ALoc, ALoc>)>,
+}
+
+#[derive(Clone)]
 pub enum Root {
-    Annotation {
-        tparams_map: TparamsMap,
-        optional: bool,
-        has_default_expression: bool,
-        react_deep_read_only: Option<DroAnnot>,
-        param_loc: Option<ALoc>,
-        annot: (ALoc, ast::types::Type<ALoc, ALoc>),
-        concrete: Option<Box<Root>>,
-    },
-    Value(Value),
-    MatchCaseRoot {
-        case_match_root_loc: ALoc,
-        root_pattern_loc: ALoc,
-        prev_pattern_loc: Option<ALoc>,
-    },
-    FunctionValue {
-        hints: AstHints,
-        synthesizable_from_annotation: FunctionSynthKind,
-        function_loc: ALoc,
-        function_: ast::function::Function<ALoc, ALoc>,
-        statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
-        arrow: bool,
-        tparams_map: TparamsMap,
-    },
-    ObjectValue {
-        synthesizable: ObjectSynthKind,
-        obj_loc: ALoc,
-        obj: ast::expression::Object<ALoc, ALoc>,
-    },
-    EmptyArray {
-        array_providers: FlowOrdSet<ALoc>,
-        arr_loc: ALoc,
-    },
-    Contextual {
-        reason: Reason,
-        hints: AstHints,
-        optional: bool,
-        default_expression: Option<(ALoc, ast::expression::Expression<ALoc, ALoc>)>,
-    },
+    Annotation(Box<AnnotationData>),
+    Value(Box<Value>),
+    MatchCaseRoot(Box<MatchCaseRootData>),
+    FunctionValue(Box<FunctionValueData>),
+    ObjectValue(Box<ObjectValueData>),
+    EmptyArray(Box<EmptyArrayData>),
+    Contextual(Box<ContextualData>),
     CatchUnannotated,
     DeclareVariableMissingAnnotationAndInit,
     UnannotatedParameter(Reason),
-    For(ForKind, (ALoc, ast::expression::Expression<ALoc, ALoc>)),
+    For(Box<(ForKind, (ALoc, ast::expression::Expression<ALoc, ALoc>))>),
 }
 
 pub fn mk_value(
@@ -184,12 +202,12 @@ pub fn mk_value(
     as_const: bool,
     expr: ast::expression::Expression<ALoc, ALoc>,
 ) -> Root {
-    Root::Value(Value {
+    Root::Value(Box::new(Value {
         hints: hints.unwrap_or_default(),
         expr,
         decl_kind,
         as_const,
-    })
+    }))
 }
 
 #[derive(Clone)]
@@ -237,82 +255,111 @@ pub enum ClassKind {
 }
 
 #[derive(Clone)]
+pub struct MatchCasePatternData {
+    pub case_match_root_loc: ALoc,
+    pub has_guard: bool,
+    pub pattern: (ALoc, ast::match_pattern::MatchPattern<ALoc, ALoc>),
+    pub prev_pattern_loc: Option<ALoc>,
+}
+
+#[derive(Clone)]
+pub struct MemberAssignData {
+    pub member_loc: ALoc,
+    pub member: ast::expression::Member<ALoc, ALoc>,
+    pub rhs: (ALoc, ast::expression::Expression<ALoc, ALoc>),
+}
+
+#[derive(Clone)]
+pub struct OpAssignData {
+    pub exp_loc: ALoc,
+    pub lhs: (ALoc, ast::pattern::Pattern<ALoc, ALoc>),
+    pub op: ast::expression::AssignmentOperator,
+    pub rhs: (ALoc, ast::expression::Expression<ALoc, ALoc>),
+    pub assertion: bool,
+}
+
+#[derive(Clone)]
+pub struct FunctionDefData {
+    pub hints: AstHints,
+    pub synthesizable_from_annotation: FunctionSynthKind,
+    pub arrow: bool,
+    pub has_this_def: bool,
+    pub function_loc: ALoc,
+    pub function_: ast::function::Function<ALoc, ALoc>,
+    pub statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub tparams_map: TparamsMap,
+}
+
+#[derive(Clone)]
+pub struct ComponentDefData {
+    pub tparams_map: TparamsMap,
+    pub component_loc: ALoc,
+    pub component: ast::statement::ComponentDeclaration<ALoc, ALoc>,
+}
+
+#[derive(Clone)]
+pub struct ClassDefData {
+    pub class_: ast::class::Class<ALoc, ALoc>,
+    pub class_loc: ALoc,
+    /// A set of this and super write locations that can be resolved by resolving the class.
+    pub this_super_write_locs: EnvSet<ALoc>,
+    pub kind: ClassKind,
+}
+
+#[derive(Clone)]
+pub struct RecordDefData {
+    pub record: ast::statement::RecordDeclaration<ALoc, ALoc>,
+    pub record_loc: ALoc,
+    /// A set of this and super write locations that can be resolved by resolving the record.
+    pub this_super_write_locs: EnvSet<ALoc>,
+    pub defaulted_props: BTreeSet<FlowSmolStr>,
+}
+
+#[derive(Clone)]
+pub struct TypeParamData {
+    pub tparams_map: TparamsMap,
+    pub kind: TypeParamsContext,
+    pub tparam: (ALoc, ast::types::TypeParam<ALoc, ALoc>),
+}
+
+#[derive(Clone)]
+pub struct ImportData {
+    pub import_kind: ast::statement::ImportKind,
+    pub import: Import,
+    pub source: FlowSmolStr,
+    pub source_loc: ALoc,
+}
+
+#[derive(Clone)]
 pub enum Def {
-    Binding(Binding),
-    MatchCasePattern {
-        case_match_root_loc: ALoc,
-        has_guard: bool,
-        pattern: (ALoc, ast::match_pattern::MatchPattern<ALoc, ALoc>),
-        prev_pattern_loc: Option<ALoc>,
-    },
-    ExpressionDef(ExpressionDef),
-    MemberAssign {
-        member_loc: ALoc,
-        member: ast::expression::Member<ALoc, ALoc>,
-        rhs: (ALoc, ast::expression::Expression<ALoc, ALoc>),
-    },
-    OpAssign {
-        exp_loc: ALoc,
-        lhs: (ALoc, ast::pattern::Pattern<ALoc, ALoc>),
-        op: ast::expression::AssignmentOperator,
-        rhs: (ALoc, ast::expression::Expression<ALoc, ALoc>),
-        assertion: bool,
-    },
+    Binding(Box<Binding>),
+    MatchCasePattern(Box<MatchCasePatternData>),
+    ExpressionDef(Box<ExpressionDef>),
+    MemberAssign(Box<MemberAssignData>),
+    OpAssign(Box<OpAssignData>),
     Update {
         exp_loc: ALoc,
         op: ast::expression::UpdateOperator,
     },
-    Function {
-        hints: AstHints,
-        synthesizable_from_annotation: FunctionSynthKind,
-        arrow: bool,
-        has_this_def: bool,
-        function_loc: ALoc,
-        function_: ast::function::Function<ALoc, ALoc>,
-        statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
-        tparams_map: TparamsMap,
-    },
-    Component {
-        tparams_map: TparamsMap,
-        component_loc: ALoc,
-        component: ast::statement::ComponentDeclaration<ALoc, ALoc>,
-    },
-    Class {
-        class_: ast::class::Class<ALoc, ALoc>,
-        class_loc: ALoc,
-        /// A set of this and super write locations that can be resolved by resolving the class.
-        this_super_write_locs: EnvSet<ALoc>,
-        kind: ClassKind,
-    },
-    Record {
-        record: ast::statement::RecordDeclaration<ALoc, ALoc>,
-        record_loc: ALoc,
-        /// A set of this and super write locations that can be resolved by resolving the record.
-        this_super_write_locs: EnvSet<ALoc>,
-        defaulted_props: BTreeSet<FlowSmolStr>,
-    },
+    Function(Box<FunctionDefData>),
+    Component(Box<ComponentDefData>),
+    Class(Box<ClassDefData>),
+    Record(Box<RecordDefData>),
     DeclaredClass(ALoc, ast::statement::DeclareClass<ALoc, ALoc>),
     DeclaredComponent(ALoc, ast::statement::DeclareComponent<ALoc, ALoc>),
     TypeAlias(ALoc, ast::statement::TypeAlias<ALoc, ALoc>),
     OpaqueType(ALoc, ast::statement::OpaqueType<ALoc, ALoc>),
-    TypeParam {
-        tparams_map: TparamsMap,
-        kind: TypeParamsContext,
-        tparam: (ALoc, ast::types::TypeParam<ALoc, ALoc>),
-    },
+    TypeParam(Box<TypeParamData>),
     Interface(ALoc, ast::statement::Interface<ALoc, ALoc>),
     Enum(
-        ALoc,
-        FlowSmolStr,
-        ast::statement::enum_declaration::Body<ALoc>,
+        Box<(
+            ALoc,
+            FlowSmolStr,
+            ast::statement::enum_declaration::Body<ALoc>,
+        )>,
     ),
-    Import {
-        import_kind: ast::statement::ImportKind,
-        import: Import,
-        source: FlowSmolStr,
-        source_loc: ALoc,
-    },
-    GeneratorNext(Option<GeneratorAnnot>),
+    Import(Box<ImportData>),
+    GeneratorNext(Box<Option<GeneratorAnnot>>),
     DeclaredNamespace(ALoc, ast::statement::DeclareNamespace<ALoc, ALoc>),
     MissingThisAnnot,
 }
@@ -327,36 +374,34 @@ pub mod print {
 
     pub fn string_of_root(root: &Root) -> String {
         match root {
-            Root::Contextual { .. } => "contextual".to_string(),
-            Root::EmptyArray { .. } => "[]".to_string(),
+            Root::Contextual(_) => "contextual".to_string(),
+            Root::EmptyArray(_) => "[]".to_string(),
             Root::CatchUnannotated => "unannotated catch param".to_string(),
             Root::DeclareVariableMissingAnnotationAndInit => {
                 "declare var missing annotation or init".to_string()
             }
             Root::UnannotatedParameter(r) => format!("{:?}", r),
-            Root::Annotation {
-                annot: (loc, _), ..
-            } => format!("annot {}", loc.debug_to_string(false)),
-            Root::Value(Value { expr, .. }) => {
-                format!("val {}", expr.loc().debug_to_string(false))
+            Root::Annotation(data) => {
+                let (loc, _) = &data.annot;
+                format!("annot {}", loc.debug_to_string(false))
             }
-            Root::MatchCaseRoot {
-                case_match_root_loc,
-                ..
-            } => {
+            Root::Value(val) => {
+                format!("val {}", val.expr.loc().debug_to_string(false))
+            }
+            Root::MatchCaseRoot(data) => {
                 format!(
                     "match root for case at {}",
-                    case_match_root_loc.debug_to_string(false)
+                    data.case_match_root_loc.debug_to_string(false)
                 )
             }
-            Root::FunctionValue { function_loc, .. } => {
-                format!("function val {}", function_loc.debug_to_string(false))
+            Root::FunctionValue(data) => {
+                format!("function val {}", data.function_loc.debug_to_string(false))
             }
-            Root::ObjectValue { .. } => "object".to_string(),
-            Root::For(ForKind::In, (loc, _)) => format!("for in {}", loc.debug_to_string(false)),
-            Root::For(ForKind::Of { .. }, (loc, _)) => {
-                format!("for of {}", loc.debug_to_string(false))
-            }
+            Root::ObjectValue(_) => "object".to_string(),
+            Root::For(data) => match &data.0 {
+                ForKind::In => format!("for in {}", data.1.0.debug_to_string(false)),
+                ForKind::Of { .. } => format!("for of {}", data.1.0.debug_to_string(false)),
+            },
         }
     }
 
@@ -454,33 +499,31 @@ pub mod print {
     pub fn string_of_source(def: &Def) -> String {
         match def {
             Def::Binding(b) => string_of_binding(b),
-            Def::MatchCasePattern {
-                pattern: (loc, _), ..
-            } => {
+            Def::MatchCasePattern(data) => {
+                let (loc, _) = &data.pattern;
                 format!("match pattern {}", loc.debug_to_string(false))
             }
-            Def::ExpressionDef(ExpressionDef { expr, hints, .. }) => {
+            Def::ExpressionDef(data) => {
                 format!(
                     "exp {} (hint = {})",
-                    expr.loc().debug_to_string(false),
-                    string_of_hints(hints)
+                    data.expr.loc().debug_to_string(false),
+                    string_of_hints(&data.hints)
                 )
             }
             Def::Update { .. } => "[in/de]crement".to_string(),
-            Def::MemberAssign { .. } => "member_assign".to_string(),
-            Def::OpAssign { .. } => "opassign".to_string(),
-            Def::Function {
-                function_: ast::function::Function { id, .. },
-                ..
-            } => {
-                let name = id
+            Def::MemberAssign(_) => "member_assign".to_string(),
+            Def::OpAssign(_) => "opassign".to_string(),
+            Def::Function(data) => {
+                let name = data
+                    .function_
+                    .id
                     .as_ref()
                     .map(|id| id.name.as_str())
                     .unwrap_or("<anonymous>");
                 format!("fun {}", name)
             }
-            Def::Component { component, .. } => {
-                format!("component {}", component.id.name)
+            Def::Component(data) => {
+                format!("component {}", data.component.id.name)
             }
             Def::DeclaredClass(_, decl) => {
                 format!("declared class {}", decl.id.name)
@@ -488,20 +531,21 @@ pub mod print {
             Def::DeclaredComponent(_, decl) => {
                 format!("declared component {}", decl.id.name)
             }
-            Def::Class { class_, kind, .. } => {
-                let kind_str = match kind {
+            Def::Class(data) => {
+                let kind_str = match &data.kind {
                     ClassKind::Class => "class",
                     ClassKind::Record { .. } => "record",
                 };
-                let name = class_
+                let name = data
+                    .class_
                     .id
                     .as_ref()
                     .map(|id| id.name.as_str())
                     .unwrap_or("<anonymous>");
                 format!("{} {}", kind_str, name)
             }
-            Def::Record { record, .. } => {
-                format!("record {}", record.id.name)
+            Def::Record(data) => {
+                format!("record {}", data.record.id.name)
             }
             Def::TypeAlias(_, alias) => {
                 format!("alias {}", alias.right.loc().debug_to_string(false))
@@ -509,12 +553,12 @@ pub mod print {
             Def::OpaqueType(_, opaque) => {
                 format!("opaque {}", opaque.id.loc.debug_to_string(false))
             }
-            Def::TypeParam {
-                tparam: (loc, _), ..
-            } => {
+            Def::TypeParam(data) => {
+                let (loc, _) = &data.tparam;
                 format!("tparam {}", loc.debug_to_string(false))
             }
-            Def::Enum(loc, name, _) => {
+            Def::Enum(data) => {
+                let (loc, name, _) = &**data;
                 format!("enum {} {}", name, loc.debug_to_string(false))
             }
             Def::Interface(_, _) => "interface".to_string(),
@@ -532,17 +576,12 @@ pub mod print {
                     Id::Global(_) => "declare global".to_string(),
                 }
             }
-            Def::Import {
-                import_kind,
-                source,
-                import,
-                ..
-            } => {
+            Def::Import(data) => {
                 format!(
                     "import {}{} from {}",
-                    string_of_import_kind(import_kind),
-                    string_of_import(import),
-                    source
+                    string_of_import_kind(&data.import_kind),
+                    string_of_import(&data.import),
+                    data.source
                 )
             }
             Def::MissingThisAnnot => "this (missing)".to_string(),

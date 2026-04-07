@@ -8,6 +8,11 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
+use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_errors::error_message::EPropPolarityMismatchData;
+use flow_typing_errors::error_message::ETupleArityMismatchData;
+use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
+use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::TypeAppTData;
 
 use super::constraint_helpers::*;
@@ -169,9 +174,10 @@ fn __unify_inner<'cx>(
         }
         (TypeInner::DefT(r1, def1), TypeInner::DefT(r2, def2)) => {
             match (def1.deref(), def2.deref()) {
-                (DefTInner::PolyT { id: id1, .. }, DefTInner::PolyT { id: id2, .. })
-                    if id1 == id2 =>
-                {
+                (
+                    DefTInner::PolyT(box PolyTData { id: id1, .. }),
+                    DefTInner::PolyT(box PolyTData { id: id2, .. }),
+                ) if id1 == id2 => {
                     return Ok(());
                 }
                 //   | ( DefT (_, ArrT (ArrayAT { elem_t = t1; tuple_view = tv1; react_dro = _ })),
@@ -229,16 +235,18 @@ fn __unify_inner<'cx>(
                             {
                                 add_output(
                                     cx,
-                                    ErrorMessage::ETupleArityMismatch {
-                                        use_op: use_op.dupe(),
-                                        lower_reason: r1.dupe(),
-                                        lower_arity: *lower_arity,
-                                        lower_inexact: *lower_inexact,
-                                        upper_reason: r2.dupe(),
-                                        upper_arity: *upper_arity,
-                                        upper_inexact: *upper_inexact,
-                                        unify: true,
-                                    },
+                                    ErrorMessage::ETupleArityMismatch(Box::new(
+                                        ETupleArityMismatchData {
+                                            use_op: use_op.dupe(),
+                                            lower_reason: r1.dupe(),
+                                            lower_arity: *lower_arity,
+                                            lower_inexact: *lower_inexact,
+                                            upper_reason: r2.dupe(),
+                                            upper_arity: *upper_arity,
+                                            upper_inexact: *upper_inexact,
+                                            unify: true,
+                                        },
+                                    )),
                                 )?;
                             }
                             let mut n: i32 = 0;
@@ -255,14 +263,18 @@ fn __unify_inner<'cx>(
                                             if !Polarity::equal(p1, p2) {
                                                 add_output(
                                                     cx,
-                                                    ErrorMessage::ETupleElementPolarityMismatch {
-                                                        index: n,
-                                                        reason_lower: r1.dupe(),
-                                                        polarity_lower: p1,
-                                                        reason_upper: r2.dupe(),
-                                                        polarity_upper: p2,
-                                                        use_op: use_op.dupe(),
-                                                    },
+                                                    ErrorMessage::ETupleElementPolarityMismatch(
+                                                        Box::new(
+                                                            ETupleElementPolarityMismatchData {
+                                                                index: n,
+                                                                reason_lower: r1.dupe(),
+                                                                polarity_lower: p1,
+                                                                reason_upper: r2.dupe(),
+                                                                polarity_upper: p2,
+                                                                use_op: use_op.dupe(),
+                                                            },
+                                                        ),
+                                                    ),
                                                 )?;
                                             }
                                             rec_unify(
@@ -345,11 +357,13 @@ fn __unify_inner<'cx>(
                                 cx,
                                 trace,
                                 UseOp::Frame(
-                                    Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                                        prop: None,
-                                        lower: lreason.dupe(),
-                                        upper: ureason.dupe(),
-                                    }),
+                                    Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                                        PropertyCompatibilityData {
+                                            prop: None,
+                                            lower: lreason.dupe(),
+                                            upper: ureason.dupe(),
+                                        },
+                                    ))),
                                     Arc::new(use_op.dupe()),
                                 ),
                                 UnifyCause::Uncategorized,
@@ -361,26 +375,30 @@ fn __unify_inner<'cx>(
                         (Some(_), None) => {
                             add_output(
                                 cx,
-                                ErrorMessage::EPropNotFoundInSubtyping {
-                                    prop_name: None,
-                                    reason_lower: ureason.dupe(),
-                                    reason_upper: lreason.dupe(),
-                                    use_op: use_op.dupe(),
-                                    suggestion: None,
-                                },
+                                ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                                    EPropNotFoundInSubtypingData {
+                                        prop_name: None,
+                                        reason_lower: ureason.dupe(),
+                                        reason_upper: lreason.dupe(),
+                                        use_op: use_op.dupe(),
+                                        suggestion: None,
+                                    },
+                                )),
                             )?;
                         }
                         (None, Some(_)) => {
                             let flipped_use_op = unify_flip(use_op.dupe());
                             add_output(
                                 cx,
-                                ErrorMessage::EPropNotFoundInSubtyping {
-                                    prop_name: None,
-                                    reason_lower: lreason.dupe(),
-                                    reason_upper: ureason.dupe(),
-                                    use_op: flipped_use_op,
-                                    suggestion: None,
-                                },
+                                ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                                    EPropNotFoundInSubtypingData {
+                                        prop_name: None,
+                                        reason_lower: lreason.dupe(),
+                                        reason_upper: ureason.dupe(),
+                                        use_op: flipped_use_op,
+                                        suggestion: None,
+                                    },
+                                )),
                             )?;
                         }
                         (None, None) => {}
@@ -607,27 +625,30 @@ pub(super) fn unify_props<'cx>(
     p2: &Property,
 ) -> Result<(), FlowJsException> {
     let use_op = UseOp::Frame(
-        Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-            prop: Some(x.dupe()),
-            lower: r1.dupe(),
-            upper: r2.dupe(),
-        }),
+        Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+            PropertyCompatibilityData {
+                prop: Some(x.dupe()),
+                lower: r1.dupe(),
+                upper: r2.dupe(),
+            },
+        ))),
         Arc::new(use_op),
     );
     // If both sides are neutral fields, we can just unify once
     match (p1.deref(), p2.deref()) {
-        (
-            PropertyInner::Field {
-                type_: t1,
-                polarity: Polarity::Neutral,
-                ..
-            },
-            PropertyInner::Field {
-                type_: t2,
-                polarity: Polarity::Neutral,
-                ..
-            },
-        ) => rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, t1, t2),
+        (PropertyInner::Field(fd1), PropertyInner::Field(fd2))
+            if fd1.polarity == Polarity::Neutral && fd2.polarity == Polarity::Neutral =>
+        {
+            rec_unify(
+                cx,
+                trace,
+                use_op,
+                UnifyCause::Uncategorized,
+                None,
+                &fd1.type_,
+                &fd2.type_,
+            )
+        }
         _ => {
             // Otherwise, unify read/write sides separately.
             match (property::read_t(p1), property::read_t(p2)) {
@@ -665,12 +686,12 @@ pub(super) fn unify_props<'cx>(
             if !Polarity::equal(polarity1, polarity2) {
                 add_output(
                     cx,
-                    ErrorMessage::EPropPolarityMismatch {
+                    ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
                         lreason: r1.dupe(),
                         ureason: r2.dupe(),
                         props: Vec1::new((Some(x.dupe()), (polarity1, polarity2))),
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -714,23 +735,23 @@ pub(super) fn unify_prop_with_dict<'cx>(
                     &UseT::new(UseTInner::UseT(indexer_use_op, dict_t.key.dupe())),
                 ),
             )?;
-            let p2 = Property::new(PropertyInner::Field {
+            let p2 = Property::new(PropertyInner::Field(Box::new(FieldData {
                 preferred_def_locs: None,
                 key_loc: None,
                 type_: dict_t.value.dupe(),
                 polarity: dict_t.dict_polarity,
-            });
+            })));
             unify_props(cx, trace, use_op, x, prop_obj_reason, dict_reason, p, &p2)
         }
         None => add_output(
             cx,
-            ErrorMessage::EPropNotFoundInSubtyping {
+            ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                 prop_name: Some(x.dupe()),
                 reason_lower: dict_reason.dupe(),
                 reason_upper: prop_obj_reason.dupe(),
                 use_op,
                 suggestion: None,
-            },
+            })),
         ),
     }
 }

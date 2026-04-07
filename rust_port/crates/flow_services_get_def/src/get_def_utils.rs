@@ -710,13 +710,14 @@ pub fn debug_string_of_def_loc(dl: &DefLoc) -> String {
 fn extract_instancet<'cx>(cx: &Context<'cx>, ty: &Type) -> Result<Type, String> {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::string_of_ctor;
 
     let resolved = members::resolve_type(cx, ty.dupe());
     if let TypeInner::DefT(_r, def) = resolved.deref() {
         let class_t = match def.deref() {
             DefTInner::ClassT(class_t) => Some(class_t),
-            DefTInner::PolyT { t_out, .. }
+            DefTInner::PolyT(box PolyTData { t_out, .. })
                 if let TypeInner::DefT(_, inner_def) = t_out.deref()
                     && let DefTInner::ClassT(class_t) = inner_def.deref() =>
             {

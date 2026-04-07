@@ -15,7 +15,6 @@ use flow_common::reason::Name;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty::BotKind;
 use flow_common_ty::ty::NamedProp;
-use flow_common_ty::ty::ObjT;
 use flow_common_ty::ty::Prop;
 use flow_common_ty::ty::PropSource;
 use flow_common_ty::ty::Ty;
@@ -452,7 +451,7 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
     }
 
     match ty {
-        Ty::Obj(ObjT { obj_props, .. }) => members_of_obj(obj_props),
+        Ty::Obj(obj) => members_of_obj(&obj.obj_props),
         Ty::Fun(fun) => members_of_ty(&fun.fun_static),
         Ty::Union(from_bounds, t1, t2, ts) => members_of_union(*from_bounds, t1, t2, ts),
         Ty::Inter(t1, t2, ts) => members_of_intersection(t1, t2, ts),
@@ -481,12 +480,12 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
         | Ty::Void
         | Ty::Null
         | Ty::InlineInterface(_)
-        | Ty::TypeOf(_, _)
+        | Ty::TypeOf(_)
         | Ty::Utility(_)
         | Ty::IndexedAccess { .. }
         | Ty::Conditional { .. }
         | Ty::Component { .. }
-        | Ty::Infer(_, _)
+        | Ty::Infer(_)
         | Ty::Renders(_, _) => (BTreeMap::new(), vec![]),
     }
 }

@@ -17,6 +17,7 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::GetPropTData;
+use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseT;
@@ -76,14 +77,14 @@ fn run_on_concretized<'cx>(
                         hint: data.hint.clone(),
                     })))
                 }
-                UseTInner::TestPropT {
+                UseTInner::TestPropT(box TestPropTData {
                     use_op,
                     reason: test_reason,
                     id: _,
                     propref,
                     tout,
                     hint,
-                } => UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                }) => UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                     use_op: use_op.dupe(),
                     reason: test_reason.dupe(),
                     id: None,

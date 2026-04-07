@@ -20,9 +20,30 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_context::type_app_expansion;
+use flow_typing_errors::error_message::EClassToObjectData;
+use flow_typing_errors::error_message::EExpectedBigIntLitData;
+use flow_typing_errors::error_message::EExpectedBooleanLitData;
+use flow_typing_errors::error_message::EExpectedNumberLitData;
+use flow_typing_errors::error_message::EExpectedStringLitData;
+use flow_typing_errors::error_message::EHookIncompatibleData;
+use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
+use flow_typing_errors::error_message::EIncompatibleData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
+use flow_typing_errors::error_message::EMethodUnbindingData;
+use flow_typing_errors::error_message::EPrimitiveAsInterfaceData;
+use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_errors::error_message::EPropPolarityMismatchData;
+use flow_typing_errors::error_message::EPropsExtraAgainstExactObjectData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
+use flow_typing_errors::error_message::EPropsNotFoundInSubtypingData;
+use flow_typing_errors::error_message::ETupleArityMismatchData;
+use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
+use flow_typing_errors::error_message::ETypeParamConstIncompatibilityData;
+use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
 use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::EnumIncompatibleData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::flow_error::ordered_reasons;
 use flow_typing_errors::intermediate_error_types;
@@ -43,8 +64,10 @@ use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::EnumInfoInner;
+use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::InstType;
 use flow_typing_type::type_::InstTypeInner;
 use flow_typing_type::type_::InstanceKind;
@@ -53,21 +76,29 @@ use flow_typing_type::type_::InstanceTInner;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
+use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
+use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::Property;
+use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::PropertyType;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
+use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ReposUseTData;
 use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TupleElement;
+use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -132,12 +163,12 @@ fn add_output_prop_polarity_mismatch<'cx>(
     if let Ok(props) = Vec1::try_from_vec(props) {
         flow_js_utils::add_output(
             cx,
-            ErrorMessage::EPropPolarityMismatch {
+            ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
                 lreason: lreason.dupe(),
                 ureason: ureason.dupe(),
                 props,
                 use_op,
-            },
+            })),
         )?;
     }
     Ok(())
@@ -393,11 +424,13 @@ fn flow_obj_to_obj<'cx>(
                 add_output_prop_polarity_mismatch(cx, use_op_k, lreason, ureason, errs)?;
             }
             let use_op_v = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                    prop: None,
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                    PropertyCompatibilityData {
+                        prop: None,
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                    },
+                ))),
                 Arc::new(use_op.dupe()),
             );
             if lit {
@@ -466,12 +499,14 @@ fn flow_obj_to_obj<'cx>(
         if let Ok(missing_props) = Vec1::try_from_vec(missing_props) {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EPropsExtraAgainstExactObject {
-                    prop_names: missing_props,
-                    reason_l_obj: lreason.dupe(),
-                    reason_r_obj: ureason.dupe(),
-                    use_op: use_op.dupe(),
-                },
+                ErrorMessage::EPropsExtraAgainstExactObject(Box::new(
+                    EPropsExtraAgainstExactObjectData {
+                        prop_names: missing_props,
+                        reason_l_obj: lreason.dupe(),
+                        reason_r_obj: ureason.dupe(),
+                        use_op: use_op.dupe(),
+                    },
+                )),
             )?;
         }
         if let Some(_lcall) = lcall {
@@ -479,13 +514,15 @@ fn flow_obj_to_obj<'cx>(
                 let prop = Some(Name::new("$call"));
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EPropNotFoundInSubtyping {
-                        prop_name: prop,
-                        reason_lower: ureason.dupe(),
-                        reason_upper: lreason.dupe(),
-                        use_op: use_op.dupe(),
-                        suggestion: None,
-                    },
+                    ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                        EPropNotFoundInSubtypingData {
+                            prop_name: prop,
+                            reason_lower: ureason.dupe(),
+                            reason_upper: lreason.dupe(),
+                            use_op: use_op.dupe(),
+                            suggestion: None,
+                        },
+                    )),
                 )?;
             }
         }
@@ -506,13 +543,15 @@ fn flow_obj_to_obj<'cx>(
                 None => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotFoundInSubtyping {
-                            reason_lower: lreason.dupe(),
-                            reason_upper: ureason.dupe(),
-                            prop_name,
-                            use_op: use_op.dupe(),
-                            suggestion: None,
-                        },
+                        ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                            EPropNotFoundInSubtypingData {
+                                reason_lower: lreason.dupe(),
+                                reason_upper: ureason.dupe(),
+                                prop_name,
+                                use_op: use_op.dupe(),
+                                suggestion: None,
+                            },
+                        )),
                     )?;
                 }
             }
@@ -545,11 +584,13 @@ fn flow_obj_to_obj<'cx>(
             // In the literal case where read_t returns None, this avoids wasted work.
             let mk_use_op = || {
                 VirtualUseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                        prop: Some(name.dupe()),
-                        lower: lreason.dupe(),
-                        upper: ureason.dupe(),
-                    }),
+                    Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                        PropertyCompatibilityData {
+                            prop: Some(name.dupe()),
+                            lower: lreason.dupe(),
+                            upper: ureason.dupe(),
+                        },
+                    ))),
                     Arc::new(use_op.dupe()),
                 )
             };
@@ -646,14 +687,12 @@ fn flow_obj_to_obj<'cx>(
                         polarity: *dict_polarity,
                     };
                     let up_for_idx = match up.deref() {
-                        PropertyInner::Field {
-                            type_: opt_t,
-                            polarity,
-                            ..
-                        } if let TypeInner::OptionalT { type_: ut, .. } = opt_t.deref() => {
+                        PropertyInner::Field(fd)
+                            if let TypeInner::OptionalT { type_: ut, .. } = fd.type_.deref() =>
+                        {
                             PropertyType::OrdinaryField {
                                 type_: ut.dupe(),
-                                polarity: *polarity,
+                                polarity: fd.polarity,
                             }
                         }
                         _ => property::type_(up),
@@ -701,13 +740,10 @@ fn flow_obj_to_obj<'cx>(
                         Ok(())
                     };
                     match up.deref() {
-                        PropertyInner::Field {
-                            type_: opt_t,
-                            polarity,
-                            ..
-                        } if matches!(opt_t.deref(), TypeInner::OptionalT { .. })
-                            && (lit || *polarity == Polarity::Positive)
-                            && !cx.in_implicit_instantiation() =>
+                        PropertyInner::Field(fd)
+                            if matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
+                                && (lit || fd.polarity == Polarity::Positive)
+                                && !cx.in_implicit_instantiation() =>
                         {
                             // If the upper property is optional and readonly (or this is a lit check)
                             // then we only need to check the lower indexer type against the upper
@@ -759,20 +795,18 @@ fn flow_obj_to_obj<'cx>(
                 _ => {
                     // property doesn't exist in inflowing type
                     match up.deref() {
-                        PropertyInner::Field { type_: opt_t, .. }
-                            if matches!(opt_t.deref(), TypeInner::OptionalT { .. }) && lit => {}
-                        PropertyInner::Field {
-                            type_: opt_t,
-                            polarity: Polarity::Positive,
-                            ..
-                        } if matches!(opt_t.deref(), TypeInner::OptionalT { .. })
-                            && obj_type::is_exact(&lflags.obj_kind) =>
+                        PropertyInner::Field(fd)
+                            if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) && lit => {}
+                        PropertyInner::Field(fd)
+                            if fd.polarity == Polarity::Positive
+                                && matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
+                                && obj_type::is_exact(&lflags.obj_kind) =>
                         {
                             FlowJs::rec_flow(
                                 cx,
                                 trace,
                                 lproto,
-                                &UseT::new(UseTInner::LookupT {
+                                &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                     reason: ureason.dupe(),
                                     lookup_kind: Box::new(LookupKind::NonstrictReturning(
                                         None, None,
@@ -782,7 +816,7 @@ fn flow_obj_to_obj<'cx>(
                                     lookup_action: Box::new(LookupAction::LookupPropForSubtyping {
                                         use_op: use_op.dupe(),
                                         prop: PropertyType::OrdinaryField {
-                                            type_: opt_t.dupe(),
+                                            type_: fd.type_.dupe(),
                                             polarity: Polarity::Positive,
                                         },
                                         prop_name: name.dupe(),
@@ -792,7 +826,7 @@ fn flow_obj_to_obj<'cx>(
                                     method_accessible: true,
                                     ids: None,
                                     ignore_dicts: false,
-                                }),
+                                }))),
                             )?;
                         }
                         _ => match (lproto.deref(), &ldict) {
@@ -815,7 +849,7 @@ fn flow_obj_to_obj<'cx>(
                                     cx,
                                     trace,
                                     lproto,
-                                    &UseT::new(UseTInner::LookupT {
+                                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                         reason: ureason.dupe(),
                                         lookup_kind: Box::new(lookup_kind),
                                         try_ts_on_failure: vec![].into(),
@@ -832,7 +866,7 @@ fn flow_obj_to_obj<'cx>(
                                         method_accessible: true,
                                         ids: None,
                                         ignore_dicts: false,
-                                    }),
+                                    }))),
                                 )?;
                             }
                         },
@@ -887,11 +921,13 @@ fn flow_obj_to_obj<'cx>(
                 },
             );
             let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                    prop: Some(name.dupe()),
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                    PropertyCompatibilityData {
+                        prop: Some(name.dupe()),
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                    },
+                ))),
                 Arc::new(use_op.dupe()),
             );
             flow_js_utils::add_output(
@@ -974,11 +1010,10 @@ fn flow_obj_to_obj<'cx>(
             ),
              (name, up)| {
                 match up.deref() {
-                    PropertyInner::Field {
-                        type_: opt_t,
-                        polarity: Polarity::Neutral,
-                        ..
-                    } if matches!(opt_t.deref(), TypeInner::OptionalT { .. }) => {
+                    PropertyInner::Field(fd)
+                        if fd.polarity == Polarity::Neutral
+                            && matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) =>
+                    {
                         rhs_neutral_optional.push(name);
                         ups_to_flow_any.push(up);
                     }
@@ -993,12 +1028,12 @@ fn flow_obj_to_obj<'cx>(
     if let Ok(props) = Vec1::try_from_vec(regular_missing) {
         flow_js_utils::add_output(
             cx,
-            ErrorMessage::EPropsNotFoundInSubtyping {
+            ErrorMessage::EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names: props,
                 reason_lower: lreason.dupe(),
                 reason_upper: ureason.dupe(),
                 use_op: use_op.dupe(),
-            },
+            })),
         )?;
     }
     if let Ok(props) = Vec1::try_from_vec(rhs_neutral_optional) {
@@ -1081,22 +1116,22 @@ fn flow_obj_to_obj<'cx>(
             let flow_prop_to_indexer =
                 |lp: &Property, name: &Name| -> Result<(), FlowJsException> {
                     let use_op = VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                            prop: Some(name.dupe()),
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                        }),
+                        Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                            PropertyCompatibilityData {
+                                prop: Some(name.dupe()),
+                                lower: lreason.dupe(),
+                                upper: ureason.dupe(),
+                            },
+                        ))),
                         Arc::new(use_op.dupe()),
                     );
                     let lp_type = match lp.deref() {
-                        PropertyInner::Field {
-                            type_: opt_t,
-                            polarity,
-                            ..
-                        } if let TypeInner::OptionalT { type_: lt, .. } = opt_t.deref() => {
+                        PropertyInner::Field(fd)
+                            if let TypeInner::OptionalT { type_: lt, .. } = fd.type_.deref() =>
+                        {
                             PropertyType::OrdinaryField {
                                 type_: lt.dupe(),
-                                polarity: *polarity,
+                                polarity: fd.polarity,
                             }
                         }
                         _ => property::type_(lp),
@@ -1164,15 +1199,17 @@ fn flow_obj_to_obj<'cx>(
                         } else {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EIndexerCheckFailed {
-                                    prop_name: name.dupe(),
-                                    // Lower and upper are reversed in this case since
-                                    // the lower object is the one requiring the prop.
-                                    reason_lower: ureason.dupe(),
-                                    reason_upper: lreason.dupe(),
-                                    reason_indexer: type_util::reason_of_t(key).dupe(),
-                                    use_op: use_op.dupe(),
-                                },
+                                ErrorMessage::EIndexerCheckFailed(Box::new(
+                                    EIndexerCheckFailedData {
+                                        prop_name: name.dupe(),
+                                        // Lower and upper are reversed in this case since
+                                        // the lower object is the one requiring the prop.
+                                        reason_lower: ureason.dupe(),
+                                        reason_upper: lreason.dupe(),
+                                        reason_indexer: type_util::reason_of_t(key).dupe(),
+                                        use_op: use_op.dupe(),
+                                    },
+                                )),
                             )?;
                         }
                     }
@@ -1231,11 +1268,13 @@ fn flow_obj_to_obj<'cx>(
                 (Some(lcall_id), None) => {
                     let name = Name::new("$call");
                     let use_op = VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                            prop: Some(name.dupe()),
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                        }),
+                        Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                            PropertyCompatibilityData {
+                                prop: Some(name.dupe()),
+                                lower: lreason.dupe(),
+                                upper: ureason.dupe(),
+                            },
+                        ))),
                         Arc::new(use_op.dupe()),
                     );
                     let call_t = cx.find_call(*lcall_id);
@@ -1306,7 +1345,12 @@ fn flow_obj_to_obj<'cx>(
         cx,
         trace,
         uproto,
-        &UseT::new(UseTInner::ReposUseT(ureason.dupe(), false, use_op, l_t)),
+        &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+            reason: ureason.dupe(),
+            use_desc: false,
+            use_op,
+            type_: l_t,
+        }))),
     )?;
     Ok(())
 }
@@ -1497,21 +1541,23 @@ pub fn union_to_union<'cx>(
                     .collect();
             let extra_number = std::cmp::max(0, diff.len() as i32 - 3);
             let explanation = Some(
-                intermediate_error_types::Explanation::ExplanationAdditionalUnionMembers {
-                    left: reason_lower.dupe(),
-                    right: reason_upper.dupe(),
-                    members,
-                    extra_number,
-                },
+                intermediate_error_types::Explanation::ExplanationAdditionalUnionMembers(Box::new(
+                    intermediate_error_types::ExplanationAdditionalUnionMembersData {
+                        left: reason_lower.dupe(),
+                        right: reason_upper.dupe(),
+                        members,
+                        extra_number,
+                    },
+                )),
             );
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower,
                     reason_upper,
                     use_op,
                     explanation,
-                },
+                })),
             )?;
         }
     }
@@ -1532,7 +1578,12 @@ pub fn rec_sub_t<'cx>(
             cx,
             trace,
             t,
-            &UseT::new(UseTInner::ReposUseT(r.dupe(), *use_desc, use_op, l.dupe())),
+            &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                reason: r.dupe(),
+                use_desc: *use_desc,
+                use_op,
+                type_: l.dupe(),
+            }))),
         ),
         (TypeInner::AnnotT(r, t, use_desc), _) => {
             let t = FlowJs::reposition_reason(cx, Some(trace), r, Some(*use_desc), t)?;
@@ -1807,12 +1858,12 @@ pub fn rec_sub_t<'cx>(
                     cx,
                     trace,
                     &t,
-                    &UseT::new(UseTInner::ReposUseT(
-                        reason_tapp.dupe(),
-                        *type_app_use_desc,
+                    &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                        reason: reason_tapp.dupe(),
+                        use_desc: *type_app_use_desc,
                         use_op,
-                        l.dupe(),
-                    )),
+                        type_: l.dupe(),
+                    }))),
                 )?;
                 instantiation_utils::type_app_expansion::pop(cx);
             }
@@ -1858,12 +1909,14 @@ pub fn rec_sub_t<'cx>(
                         Err(FlowJsException::SpeculationSingletonError) => {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EIncompatibleWithUseOp {
-                                    reason_lower: lreason.dupe(),
-                                    reason_upper: ureason.dupe(),
-                                    use_op,
-                                    explanation: None,
-                                },
+                                ErrorMessage::EIncompatibleWithUseOp(Box::new(
+                                    EIncompatibleWithUseOpData {
+                                        reason_lower: lreason.dupe(),
+                                        reason_upper: ureason.dupe(),
+                                        use_op,
+                                        explanation: None,
+                                    },
+                                )),
                             )?;
                         }
                         Err(other) => return Err(other),
@@ -2052,14 +2105,16 @@ pub fn rec_sub_t<'cx>(
         ) = (&unom.nominal_id, &unom.underlying_t) =>
         {
             let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility {
-                    lower: type_util::reason_of_t(l).dupe(),
-                    upper: ru.dupe(),
-                    lower_t: type_or_type_desc::TypeOrTypeDescT::Type(l.dupe()),
-                    upper_t: type_or_type_desc::TypeOrTypeDescT::Type(u.dupe()),
-                    name: name.dupe(),
-                    custom_error_loc: custom_error_loc.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
+                    Box::new(OpaqueTypeCustomErrorCompatibilityData {
+                        lower: type_util::reason_of_t(l).dupe(),
+                        upper: ru.dupe(),
+                        lower_t: type_or_type_desc::TypeOrTypeDescT::Type(l.dupe()),
+                        upper_t: type_or_type_desc::TypeOrTypeDescT::Type(u.dupe()),
+                        name: name.dupe(),
+                        custom_error_loc: custom_error_loc.dupe(),
+                    }),
+                )),
                 Arc::new(use_op),
             );
             FlowJs::rec_flow_t(cx, trace, use_op, l, t)
@@ -2089,11 +2144,11 @@ pub fn rec_sub_t<'cx>(
             if actual_lit.0 != expected_lit.0 {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EExpectedNumberLit {
+                    ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                         reason_lower: rl.dupe(),
                         reason_upper: ru.dupe(),
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -2109,11 +2164,11 @@ pub fn rec_sub_t<'cx>(
             if Name::new(actual_lit.1.dupe()) != *expected {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EExpectedStringLit {
+                    ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
                         reason_lower: rl.dupe(),
                         reason_upper: ru.dupe(),
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -2166,11 +2221,11 @@ pub fn rec_sub_t<'cx>(
                 let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EExpectedStringLit {
+                    ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
                         reason_lower: rl,
                         reason_upper: ru,
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -2183,11 +2238,11 @@ pub fn rec_sub_t<'cx>(
             let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EExpectedStringLit {
+                ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
                     reason_lower: rl,
                     reason_upper: ru,
                     use_op,
-                },
+                })),
             )?;
             Ok(())
         }
@@ -2206,11 +2261,11 @@ pub fn rec_sub_t<'cx>(
                 let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EExpectedNumberLit {
+                    ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                         reason_lower: rl,
                         reason_upper: ru,
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -2223,11 +2278,11 @@ pub fn rec_sub_t<'cx>(
             let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EExpectedNumberLit {
+                ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                     reason_lower: rl,
                     reason_upper: ru,
                     use_op,
-                },
+                })),
             )?;
             Ok(())
         }
@@ -2244,11 +2299,11 @@ pub fn rec_sub_t<'cx>(
                 let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EExpectedBooleanLit {
+                    ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
                         reason_lower: rl,
                         reason_upper: ru,
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -2261,11 +2316,11 @@ pub fn rec_sub_t<'cx>(
             let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EExpectedBooleanLit {
+                ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
                     reason_lower: rl,
                     reason_upper: ru,
                     use_op,
-                },
+                })),
             )
         }
         (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
@@ -2281,11 +2336,11 @@ pub fn rec_sub_t<'cx>(
                 let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EExpectedBigIntLit {
+                    ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
                         reason_lower: rl,
                         reason_upper: ru,
                         use_op,
-                    },
+                    })),
                 )?;
             }
             Ok(())
@@ -2298,11 +2353,11 @@ pub fn rec_sub_t<'cx>(
             let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EExpectedBigIntLit {
+                ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
                     reason_lower: rl,
                     reason_upper: ru,
                     use_op,
-                },
+                })),
             )
         }
 
@@ -2322,12 +2377,12 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower: rl.dupe(),
                     reason_upper: ru.dupe(),
                     use_op,
                     explanation: None,
-                },
+                })),
             )
         }
         // symbol ~> unique symbol: ERROR
@@ -2337,12 +2392,12 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower: rl.dupe(),
                     reason_upper: ru.dupe(),
                     use_op,
                     explanation: None,
-                },
+                })),
             )
         }
         // ****************************************************
@@ -2356,7 +2411,11 @@ pub fn rec_sub_t<'cx>(
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(x.dupe())));
             // check that o has key x
-            let u_use = UseT::new(UseTInner::HasOwnPropT(use_op.dupe(), reason_next, l.dupe()));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l.dupe(),
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2383,7 +2442,11 @@ pub fn rec_sub_t<'cx>(
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(x.dupe())));
             // check that o has key x
-            let u_use = UseT::new(UseTInner::HasOwnPropT(use_op.dupe(), reason_next, l.dupe()));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l.dupe(),
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2401,7 +2464,11 @@ pub fn rec_sub_t<'cx>(
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RUnknownString);
-            let u_use = UseT::new(UseTInner::HasOwnPropT(use_op.dupe(), reason_next, l.dupe()));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l.dupe(),
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2428,7 +2495,11 @@ pub fn rec_sub_t<'cx>(
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RUnknownString);
-            let u_use = UseT::new(UseTInner::HasOwnPropT(use_op.dupe(), reason_next, l.dupe()));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l.dupe(),
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2455,7 +2526,11 @@ pub fn rec_sub_t<'cx>(
                     from_annot: false,
                 }),
             ));
-            let u_use = UseT::new(UseTInner::HasOwnPropT(use_op.dupe(), reason_next, l_new));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l_new,
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2489,7 +2564,11 @@ pub fn rec_sub_t<'cx>(
                     from_annot: false,
                 }),
             ));
-            let u_use = UseT::new(UseTInner::HasOwnPropT(use_op.dupe(), reason_next, l_new));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l_new,
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2514,11 +2593,11 @@ pub fn rec_sub_t<'cx>(
                 op: op.dupe(),
                 remainder: remainder.dupe(),
             });
-            let u_use = UseT::new(UseTInner::HasOwnPropT(
-                use_op.dupe(),
-                reason_s.dupe(),
-                l_new,
-            ));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_s.dupe(),
+                type_: l_new,
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2543,11 +2622,11 @@ pub fn rec_sub_t<'cx>(
                 op: op.dupe(),
                 remainder: remainder.dupe(),
             });
-            let u_use = UseT::new(UseTInner::HasOwnPropT(
-                use_op.dupe(),
-                reason_s.dupe(),
-                l_new,
-            ));
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_s.dupe(),
+                type_: l_new,
+            })));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -2769,14 +2848,16 @@ pub fn rec_sub_t<'cx>(
                                                 if !enums.iter().all(|e| *e == elt) {
                                                     flow_js_utils::add_output(
                                                         cx,
-                                                        ErrorMessage::EIncompatibleWithUseOp {
-                                                            reason_lower: type_util::reason_of_t(l)
-                                                                .dupe(),
-                                                            reason_upper: type_util::reason_of_t(u)
-                                                                .dupe(),
-                                                            use_op: use_op.dupe(),
-                                                            explanation: None,
-                                                        },
+                                                        ErrorMessage::EIncompatibleWithUseOp(
+                                                            Box::new(EIncompatibleWithUseOpData {
+                                                                reason_lower:
+                                                                    type_util::reason_of_t(l).dupe(),
+                                                                reason_upper:
+                                                                    type_util::reason_of_t(u).dupe(),
+                                                                use_op: use_op.dupe(),
+                                                                explanation: None,
+                                                            }),
+                                                        ),
                                                     )?;
                                                 }
                                             } else {
@@ -2863,12 +2944,14 @@ pub fn rec_sub_t<'cx>(
                         if !enums.contains(&UnionEnum::Str(x.dupe())) {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EIncompatibleWithUseOp {
-                                    reason_lower: reason_l.dupe(),
-                                    reason_upper: reason_u.dupe(),
-                                    use_op: use_op.dupe(),
-                                    explanation: None,
-                                },
+                                ErrorMessage::EIncompatibleWithUseOp(Box::new(
+                                    EIncompatibleWithUseOpData {
+                                        reason_lower: reason_l.dupe(),
+                                        reason_upper: reason_u.dupe(),
+                                        use_op: use_op.dupe(),
+                                        explanation: None,
+                                    },
+                                )),
                             )?;
                         }
                         true
@@ -3250,10 +3333,12 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
             if matches!(
                 (ld.deref(), ud.deref()),
-                (DefTInner::PolyT { .. }, DefTInner::PolyT { .. })
+                (DefTInner::PolyT(_), DefTInner::PolyT(_))
             ) && {
-                if let (DefTInner::PolyT { id: id1, .. }, DefTInner::PolyT { id: id2, .. }) =
-                    (ld.deref(), ud.deref())
+                if let (
+                    DefTInner::PolyT(box PolyTData { id: id1, .. }),
+                    DefTInner::PolyT(box PolyTData { id: id2, .. }),
+                ) = (ld.deref(), ud.deref())
                 {
                     id1 == id2
                 } else {
@@ -3269,15 +3354,15 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
             if matches!(
                 (ld.deref(), ud.deref()),
-                (DefTInner::PolyT { .. }, DefTInner::PolyT { .. })
+                (DefTInner::PolyT(_), DefTInner::PolyT(_))
             ) && {
                 if let (
-                    DefTInner::PolyT {
+                    DefTInner::PolyT(box PolyTData {
                         tparams: params1, ..
-                    },
-                    DefTInner::PolyT {
+                    }),
+                    DefTInner::PolyT(box PolyTData {
                         tparams: params2, ..
-                    },
+                    }),
                 ) = (ld.deref(), ud.deref())
                 {
                     params1.len() == params2.len()
@@ -3287,16 +3372,16 @@ pub fn rec_sub_t<'cx>(
             } =>
         {
             if let (
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams: params1,
                     t_out: t1,
                     ..
-                },
-                DefTInner::PolyT {
+                }),
+                DefTInner::PolyT(box PolyTData {
                     tparams: params2,
                     t_out: t2,
                     ..
-                },
+                }),
             ) = (ld.deref(), ud.deref())
             {
                 // A description of this subtyping rule can be found in "Decidable Bounded
@@ -3340,11 +3425,13 @@ pub fn rec_sub_t<'cx>(
                     if param1.is_const != param2.is_const {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::ETypeParamConstIncompatibility {
-                                use_op: use_op.dupe(),
-                                lower: param1.reason.dupe(),
-                                upper: param2.reason.dupe(),
-                            },
+                            ErrorMessage::ETypeParamConstIncompatibility(Box::new(
+                                ETypeParamConstIncompatibilityData {
+                                    use_op: use_op.dupe(),
+                                    lower: param1.reason.dupe(),
+                                    upper: param2.reason.dupe(),
+                                },
+                            )),
                         )?;
                     }
                     let (gen_t, new_map1) = flow_js_utils::generic_bound(cx, map1, param1);
@@ -3377,7 +3464,9 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // general case
-        (_, TypeInner::DefT(_, ud)) if let DefTInner::PolyT { t_out: t, .. } = ud.deref() => {
+        (_, TypeInner::DefT(_, ud))
+            if let DefTInner::PolyT(box PolyTData { t_out: t, .. }) = ud.deref() =>
+        {
             FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, t.dupe())))
         }
         // TODO: ideally we'd do the same when lower bounds flow to a
@@ -3435,12 +3524,12 @@ pub fn rec_sub_t<'cx>(
         // extends clauses and at function call sites - without explicit type
         // arguments, since typically they're easily inferred from context.
         (TypeInner::DefT(reason_tapp, ld), _)
-            if let DefTInner::PolyT {
+            if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams: ids,
                 t_out: t,
                 ..
-            } = ld.deref() =>
+            }) = ld.deref() =>
         {
             let reason_op = type_util::reason_of_t(u);
             let ids = Vec1::try_from_vec(ids.to_vec()).unwrap();
@@ -3537,11 +3626,11 @@ pub fn rec_sub_t<'cx>(
         // Class component ~> AbstractComponent
         (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_, ud))
             if let DefTInner::ClassT(this) = ld.deref()
-                && let DefTInner::ReactAbstractComponentT {
+                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: ComponentKind::Structural,
-                } = ud.deref() =>
+                }) = ud.deref() =>
         {
             // Contravariant config check
             FlowJs::react_get_config(
@@ -3563,11 +3652,11 @@ pub fn rec_sub_t<'cx>(
         // Function Component ~> AbstractComponent
         (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_reasonu, ud))
             if let DefTInner::FunT(_, ft) = ld.deref()
-                && let DefTInner::ReactAbstractComponentT {
+                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: ComponentKind::Structural,
-                } = ud.deref() =>
+                }) = ud.deref() =>
         {
             // Function components will not always have an annotation, so the config may
             // never resolve. To determine config compatibility, we instead
@@ -3582,13 +3671,13 @@ pub fn rec_sub_t<'cx>(
                 cx,
                 trace,
                 l,
-                &UseT::new(UseTInner::ReactKitT(
-                    use_op.dupe(),
-                    reasonl.dupe(),
-                    Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
+                &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                    use_op: use_op.dupe(),
+                    reason: reasonl.dupe(),
+                    tool: Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
                         props: config.dupe(),
                     }),
-                )),
+                }))),
             )?;
             // check rendered elements are covariant
             FlowJs::rec_flow_t(cx, trace, use_op, &ft.return_t, renders)
@@ -3598,23 +3687,23 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(reasonl, ld), TypeInner::DefT(reasonu, ud))
             if let DefTInner::ObjT(obj) = ld.deref()
                 && let Some(call_t) = &obj.call_t
-                && let DefTInner::ReactAbstractComponentT {
+                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: ComponentKind::Structural,
-                } = ud.deref() =>
+                }) = ud.deref() =>
         {
             FlowJs::rec_flow(
                 cx,
                 trace,
                 l,
-                &UseT::new(UseTInner::ReactKitT(
-                    use_op.dupe(),
-                    reasonl.dupe(),
-                    Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
+                &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                    use_op: use_op.dupe(),
+                    reason: reasonl.dupe(),
+                    tool: Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
                         props: config.dupe(),
                     }),
-                )),
+                }))),
             )?;
             // Ensure the callable signature's return type is compatible with the rendered element (renders). We
             // do this by flowing it to (...empty): renders
@@ -3643,16 +3732,16 @@ pub fn rec_sub_t<'cx>(
         }
         // AbstractComponent ~> AbstractComponent
         (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_reasonu, ud))
-            if let DefTInner::ReactAbstractComponentT {
+            if let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config: configl,
                 renders: rendersl,
                 component_kind,
-            } = ld.deref()
-                && let DefTInner::ReactAbstractComponentT {
+            }) = ld.deref()
+                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config: configu,
                     renders: rendersu,
                     component_kind: ComponentKind::Structural,
-                } = ud.deref() =>
+                }) = ud.deref() =>
         {
             FlowJs::rec_flow_t(cx, trace, use_op.dupe(), configu, configl)?;
             let rendersl = match component_kind {
@@ -3686,18 +3775,18 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t(cx, trace, use_op, &rendersl, rendersu)
         }
         (TypeInner::DefT(_reasonl, ld), TypeInner::DefT(_reasonu, ud))
-            if let DefTInner::ReactAbstractComponentT {
+            if let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 component_kind: ComponentKind::Nominal(idl, name_l, _),
                 config: configl,
                 renders: rendersl,
                 ..
-            } = ld.deref()
-                && let DefTInner::ReactAbstractComponentT {
+            }) = ld.deref()
+                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind: ComponentKind::Nominal(idu, name_u, _),
                     config: configu,
                     renders: rendersu,
                     ..
-                } = ud.deref()
+                }) = ud.deref()
                 && (idl == idu
                     || type_util::nominal_id_have_same_logical_module(
                         &cx.file_options(),
@@ -3777,9 +3866,10 @@ pub fn rec_sub_t<'cx>(
                 (ld.deref(), ud.deref()) =>
         {
             let inner_use_op = if let VirtualUseOp::Frame(ref frame, ref inner) = use_op {
-                if let VirtualFrameUseOp::PropertyCompatibility {
-                    prop: Some(name), ..
-                } = frame.deref()
+                if let VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
+                    prop: Some(name),
+                    ..
+                }) = frame.deref()
                 {
                     // The $call PropertyCompatibility is redundant when we have a
                     // FunCompatibility use_op.
@@ -3804,12 +3894,12 @@ pub fn rec_sub_t<'cx>(
 
             {
                 let use_op = VirtualUseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::FunParam {
+                    Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
                         n: 0,
                         name: Some(FlowSmolStr::new_inline("this")),
                         lower: lreason.dupe(),
                         upper: ureason.dupe(),
-                    }),
+                    }))),
                     Arc::new(use_op.dupe()),
                 );
                 let (this_param1, this_status_1) = &ft1.this_t;
@@ -3831,11 +3921,11 @@ pub fn rec_sub_t<'cx>(
                         if !unbound {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EMethodUnbinding {
+                                ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
                                     use_op: use_op.dupe(),
                                     reason_op: lreason.dupe(),
                                     reason_prop: type_util::reason_of_t(this_param1).clone(),
-                                },
+                                })),
                             )?;
                         }
                         let sub_this1 = type_util::subtype_this_of_function(ft1);
@@ -3884,13 +3974,13 @@ pub fn rec_sub_t<'cx>(
                 ) => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EHookIncompatible {
+                        ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
                             use_op: use_op.dupe(),
                             lower: lreason.dupe(),
                             upper: ureason.dupe(),
                             lower_is_hook: true,
                             hook_is_annot: ft1.effect_ == ReactEffectType::HookAnnot,
-                        },
+                        })),
                     )?;
                 }
                 (
@@ -3899,13 +3989,13 @@ pub fn rec_sub_t<'cx>(
                 ) => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EHookIncompatible {
+                        ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
                             use_op: use_op.dupe(),
                             lower: lreason.dupe(),
                             upper: ureason.dupe(),
                             lower_is_hook: false,
                             hook_is_annot: ft2.effect_ == ReactEffectType::HookAnnot,
-                        },
+                        })),
                     )?;
                 }
                 (
@@ -3914,11 +4004,13 @@ pub fn rec_sub_t<'cx>(
                 ) => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EHookUniqueIncompatible {
-                            use_op: use_op.dupe(),
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                        },
+                        ErrorMessage::EHookUniqueIncompatible(Box::new(
+                            EHookUniqueIncompatibleData {
+                                use_op: use_op.dupe(),
+                                lower: lreason.dupe(),
+                                upper: ureason.dupe(),
+                            },
+                        )),
                     )?;
                 }
             }
@@ -4055,12 +4147,12 @@ pub fn rec_sub_t<'cx>(
             };
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EClassToObject {
+                ErrorMessage::EClassToObject(Box::new(EClassToObjectData {
                     reason_class: lreason.dupe(),
                     reason_obj: ureason.dupe(),
                     use_op: use_op.dupe(),
                     kind: error_kind,
-                },
+                })),
             )?;
             let own_props = cx.find_props(lown.dupe());
             let proto_props = cx.find_props(lproto.dupe());
@@ -4082,13 +4174,15 @@ pub fn rec_sub_t<'cx>(
                         )?;
                     }
                     None => {
-                        let error_message = ErrorMessage::EPropNotFoundInSubtyping {
-                            reason_lower: lreason.dupe(),
-                            reason_upper: ureason.dupe(),
-                            prop_name,
-                            use_op: use_op.dupe(),
-                            suggestion: None,
-                        };
+                        let error_message = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                            EPropNotFoundInSubtypingData {
+                                reason_lower: lreason.dupe(),
+                                reason_upper: ureason.dupe(),
+                                prop_name,
+                                use_op: use_op.dupe(),
+                                suggestion: None,
+                            },
+                        ));
                         flow_js_utils::add_output(cx, error_message)?;
                     }
                 }
@@ -4106,11 +4200,13 @@ pub fn rec_sub_t<'cx>(
                     match lflds_map.get(name) {
                         Some(lp) => {
                             let prop_use_op = VirtualUseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                                    prop: Some(name.dupe()),
-                                    lower: lreason.dupe(),
-                                    upper: ureason.dupe(),
-                                }),
+                                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                                    PropertyCompatibilityData {
+                                        prop: Some(name.dupe()),
+                                        lower: lreason.dupe(),
+                                        upper: ureason.dupe(),
+                                    },
+                                ))),
                                 Arc::new(use_op.dupe()),
                             );
                             let new_errs = rec_flow_p_inner(
@@ -4127,16 +4223,15 @@ pub fn rec_sub_t<'cx>(
                             acc.extend(new_errs);
                         }
                         None => {
-                            let lookup_kind =
-                                if let PropertyInner::Field { type_: opt_t, .. } = up.deref() {
-                                    if matches!(opt_t.deref(), TypeInner::OptionalT { .. }) {
-                                        LookupKind::NonstrictReturning(None, None)
-                                    } else {
-                                        LookupKind::Strict(lreason.dupe())
-                                    }
+                            let lookup_kind = if let PropertyInner::Field(fd) = up.deref() {
+                                if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) {
+                                    LookupKind::NonstrictReturning(None, None)
                                 } else {
                                     LookupKind::Strict(lreason.dupe())
-                                };
+                                }
+                            } else {
+                                LookupKind::Strict(lreason.dupe())
+                            };
                             FlowJs::rec_flow(
                                 cx,
                                 trace,
@@ -4144,26 +4239,28 @@ pub fn rec_sub_t<'cx>(
                                 &UseT::new(UseTInner::ReposLowerT {
                                     reason: lreason.dupe(),
                                     use_desc: false,
-                                    use_t: Box::new(UseT::new(UseTInner::LookupT {
-                                        reason: ureason.dupe(),
-                                        lookup_kind: Box::new(lookup_kind),
-                                        try_ts_on_failure: vec![].into(),
-                                        propref: Box::new(propref.clone()),
-                                        lookup_action: Box::new(
-                                            LookupAction::LookupPropForSubtyping {
-                                                use_op: use_op.dupe(),
-                                                prop: property::type_(up),
-                                                prop_name: name.dupe(),
-                                                reason_lower: lreason.dupe(),
-                                                reason_upper: ureason.dupe(),
-                                            },
-                                        ),
-                                        method_accessible: false,
-                                        ids: Some(
-                                            [lown.dupe(), lproto.dupe()].into_iter().collect(),
-                                        ),
-                                        ignore_dicts: false,
-                                    })),
+                                    use_t: Box::new(UseT::new(UseTInner::LookupT(Box::new(
+                                        LookupTData {
+                                            reason: ureason.dupe(),
+                                            lookup_kind: Box::new(lookup_kind),
+                                            try_ts_on_failure: vec![].into(),
+                                            propref: Box::new(propref.clone()),
+                                            lookup_action: Box::new(
+                                                LookupAction::LookupPropForSubtyping {
+                                                    use_op: use_op.dupe(),
+                                                    prop: property::type_(up),
+                                                    prop_name: name.dupe(),
+                                                    reason_lower: lreason.dupe(),
+                                                    reason_upper: ureason.dupe(),
+                                                },
+                                            ),
+                                            method_accessible: false,
+                                            ids: Some(
+                                                [lown.dupe(), lproto.dupe()].into_iter().collect(),
+                                            ),
+                                            ignore_dicts: false,
+                                        },
+                                    )))),
                                 }),
                             )?;
                         }
@@ -4197,7 +4294,7 @@ pub fn rec_sub_t<'cx>(
             ));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower,
                     reason_upper,
                     use_op,
@@ -4207,7 +4304,7 @@ pub fn rec_sub_t<'cx>(
                             obj_reason: lreason.dupe(),
                         },
                     ),
-                },
+                })),
             )
         }
 
@@ -4247,22 +4344,26 @@ pub fn rec_sub_t<'cx>(
                     cx.find_call(*call_t)
                 }
                 _ => {
-                    let error_message = ErrorMessage::EIncompatibleWithUseOp {
-                        reason_lower: reason.dupe(),
-                        reason_upper: reason_op.dupe(),
-                        use_op: use_op.dupe(),
-                        explanation: None,
-                    };
+                    let error_message = ErrorMessage::EIncompatibleWithUseOp(Box::new(
+                        EIncompatibleWithUseOpData {
+                            reason_lower: reason.dupe(),
+                            reason_upper: reason_op.dupe(),
+                            use_op: use_op.dupe(),
+                            explanation: None,
+                        },
+                    ));
                     flow_js_utils::add_output(cx, error_message)?;
                     any_t::error(reason_op.dupe())
                 }
             };
             let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                    prop: Some(Name::new("$call")),
-                    lower: reason.dupe(),
-                    upper: reason_op.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                    PropertyCompatibilityData {
+                        prop: Some(Name::new("$call")),
+                        lower: reason.dupe(),
+                        upper: reason_op.dupe(),
+                    },
+                ))),
                 Arc::new(use_op),
             );
             FlowJs::rec_flow_t(cx, trace, use_op, &fun_t, u)
@@ -4346,7 +4447,7 @@ pub fn rec_sub_t<'cx>(
             {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::ETupleArityMismatch {
+                    ErrorMessage::ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                         use_op: use_op.dupe(),
                         lower_reason: r1.dupe(),
                         lower_arity: *lower_arity,
@@ -4355,7 +4456,7 @@ pub fn rec_sub_t<'cx>(
                         upper_arity: *upper_arity,
                         upper_inexact: *upper_inexact,
                         unify: false,
-                    },
+                    })),
                 )?;
             } else {
                 let mut n: i32 = 0;
@@ -4370,24 +4471,28 @@ pub fn rec_sub_t<'cx>(
                     if !(fresh || Polarity::compat(p1, p2)) {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::ETupleElementPolarityMismatch {
-                                index: n,
-                                reason_lower: r1.dupe(),
-                                polarity_lower: p1,
-                                reason_upper: r2.dupe(),
-                                polarity_upper: p2,
-                                use_op: use_op.dupe(),
-                            },
+                            ErrorMessage::ETupleElementPolarityMismatch(Box::new(
+                                ETupleElementPolarityMismatchData {
+                                    index: n,
+                                    reason_lower: r1.dupe(),
+                                    polarity_lower: p1,
+                                    reason_upper: r2.dupe(),
+                                    polarity_upper: p2,
+                                    use_op: use_op.dupe(),
+                                },
+                            )),
                         )?;
                     }
                     let elem_use_op = VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::TupleElementCompatibility {
-                            n,
-                            lower: r1.dupe(),
-                            upper: r2.dupe(),
-                            lower_optional: optional1,
-                            upper_optional: optional2,
-                        }),
+                        Arc::new(VirtualFrameUseOp::TupleElementCompatibility(Box::new(
+                            TupleElementCompatibilityData {
+                                n,
+                                lower: r1.dupe(),
+                                upper: r2.dupe(),
+                                lower_optional: optional1,
+                                upper_optional: optional2,
+                            },
+                        ))),
                         Arc::new(use_op.dupe()),
                     );
                     // We don't want to allow `undefined` when an element is marked as optional:
@@ -4767,12 +4872,12 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EPrimitiveAsInterface {
+                ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
                     reason: reason.dupe(),
                     interface_reason: interface_reason.dupe(),
                     kind: intermediate_error_types::PrimitiveKind::Boolean,
-                },
+                })),
             )
         }
         (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
@@ -4783,12 +4888,12 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EPrimitiveAsInterface {
+                ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
                     reason: reason.dupe(),
                     interface_reason: interface_reason.dupe(),
                     kind: intermediate_error_types::PrimitiveKind::Number,
-                },
+                })),
             )
         }
         (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
@@ -4799,12 +4904,12 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EPrimitiveAsInterface {
+                ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
                     reason: reason.dupe(),
                     interface_reason: interface_reason.dupe(),
                     kind: intermediate_error_types::PrimitiveKind::String,
-                },
+                })),
             )
         }
 
@@ -5205,14 +5310,16 @@ pub fn rec_sub_t<'cx>(
             let casting_syntax = cx.casting_syntax();
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible {
-                    reason_lower: enum_reason.dupe(),
-                    reason_upper: type_util::reason_of_t(u).clone(),
-                    use_op,
-                    enum_kind,
-                    representation_type,
-                    casting_syntax,
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(Box::new(
+                    EnumIncompatibleData {
+                        reason_lower: enum_reason.dupe(),
+                        reason_upper: type_util::reason_of_t(u).clone(),
+                        use_op,
+                        enum_kind,
+                        representation_type,
+                        casting_syntax,
+                    },
+                ))),
             )
         }
 
@@ -5315,14 +5422,14 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatible {
+                ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                     lower: (lreason.dupe(), None),
                     upper: (
                         ureason.dupe(),
                         flow_typing_errors::error_message::UpperKind::IncompatibleMixedCallT,
                     ),
                     use_op: Some(use_op.dupe()),
-                },
+                })),
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
             FlowJs::rec_flow_t(cx, trace, use_op, &any, u)
@@ -5340,10 +5447,12 @@ pub fn rec_sub_t<'cx>(
         ) if lnom.nominal_id == nominal::Id::InternalEnforceUnionOptimized => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EUnionOptimizationOnNonUnion {
-                    loc: reason.loc().dupe(),
-                    arg: type_util::reason_of_t(u).dupe(),
-                },
+                ErrorMessage::EUnionOptimizationOnNonUnion(Box::new(
+                    EUnionOptimizationOnNonUnionData {
+                        loc: reason.loc().dupe(),
+                        arg: type_util::reason_of_t(u).dupe(),
+                    },
+                )),
             )
         }
 
@@ -5352,12 +5461,12 @@ pub fn rec_sub_t<'cx>(
             let reason_upper = type_util::generalized_reason_of_t(l, u);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower,
                     reason_upper,
                     use_op,
                     explanation: None,
-                },
+                })),
             )
         }
     }

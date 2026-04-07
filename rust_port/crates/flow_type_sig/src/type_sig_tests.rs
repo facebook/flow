@@ -237,9 +237,11 @@ Module {
                 default_loc: 0,
                 def: Value(
                     NumberLit(
-                        1,
-                        0.0,
-                        "0",
+                        (
+                            1,
+                            0.0,
+                            "0",
+                        ),
                     ),
                 ),
             },
@@ -293,11 +295,13 @@ Module {
                 default_loc: 0,
                 def: Value(
                     BigIntLit(
-                        1,
-                        Some(
-                            0,
+                        (
+                            1,
+                            Some(
+                                0,
+                            ),
+                            "0n",
                         ),
-                        "0n",
                     ),
                 ),
             },
@@ -354,11 +358,13 @@ Module {
                     1,
                     Value(
                         BigIntLit(
-                            2,
-                            Some(
-                                0,
+                            (
+                                2,
+                                Some(
+                                    0,
+                                ),
+                                "0n",
                             ),
-                            "0n",
                         ),
                     ),
                     Unary(
@@ -409,36 +415,38 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    FunExpr {
-                        loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            2,
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: Annot(
+                                            Number(
+                                                2,
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        3,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Number(
-                                    3,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -484,34 +492,36 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    FunExpr {
-                        loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
+                                        ),
+                                        t: Err(
+                                            2,
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        3,
                                     ),
-                                    t: Err(
-                                        2,
-                                    ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Number(
-                                    3,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -560,34 +570,36 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    FunExpr {
-                        loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            2,
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
-                                    ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Err(
-                                3,
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                        t: Annot(
+                                            Number(
+                                                2,
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Err(
+                                    3,
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -659,38 +671,40 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Number(
-                                2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
                             ),
+                            t: Annot(
+                                Number(
+                                    2,
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Number(
+                            3,
                         ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Number(
-                        3,
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -744,36 +758,38 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
+                            ),
+                            t: Err(
+                                2,
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Number(
+                            3,
                         ),
-                        t: Err(
-                            2,
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Number(
-                        3,
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -829,36 +845,38 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Number(
-                                2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
                             ),
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Err(
-                    3,
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                            t: Annot(
+                                Number(
+                                    2,
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Err(
+                        3,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -911,13 +929,89 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "b",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "b",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Poly(
+                        2,
+                        [
+                            TParam {
+                                name_loc: 3,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
+                            ),
+                            t: Annot(
+                                Bound(
+                                    AnnotBound {
+                                        ref_loc: 5,
+                                        name: "X",
+                                    },
+                                ),
+                            ),
+                        },
+                        FunParam {
+                            name: Some(
+                                "y",
+                            ),
+                            t: Annot(
+                                Typeof(
+                                    AnnotTypeof {
+                                        loc: 6,
+                                        qname: [
+                                            "x",
+                                        ],
+                                        t: Ref(
+                                            LocalRef {
+                                                ref_loc: 7,
+                                                index: 1,
+                                            },
+                                        ),
+                                        targs: None,
+                                    },
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            8,
+                        ),
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
+            },
+        ),
+        Parameter(
+            DefParameter {
+                id_loc: 4,
+                name: "x",
+                def: Annot(
+                    Bound(
+                        AnnotBound {
+                            ref_loc: 5,
+                            name: "X",
+                        },
+                    ),
+                ),
                 tparams: Poly(
                     2,
                     [
@@ -931,74 +1025,8 @@ Module {
                         },
                     ],
                 ),
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Bound {
-                                ref_loc: 5,
-                                name: "X",
-                            },
-                        ),
-                    },
-                    FunParam {
-                        name: Some(
-                            "y",
-                        ),
-                        t: Annot(
-                            Typeof {
-                                loc: 6,
-                                qname: [
-                                    "x",
-                                ],
-                                t: Ref(
-                                    LocalRef {
-                                        ref_loc: 7,
-                                        index: 1,
-                                    },
-                                ),
-                                targs: None,
-                            },
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        8,
-                    ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
             },
-            statics: {},
-        },
-        Parameter {
-            id_loc: 4,
-            name: "x",
-            def: Annot(
-                Bound {
-                    ref_loc: 5,
-                    name: "X",
-                },
-            ),
-            tparams: Poly(
-                2,
-                [
-                    TParam {
-                        name_loc: 3,
-                        name: "X",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                ],
-            ),
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -1046,68 +1074,74 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "a",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "b",
-                        ),
-                        t: Annot(
-                            String(
-                                3,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "a",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "b",
                             ),
-                        ),
-                    },
-                    FunParam {
-                        name: Some(
-                            "c",
-                        ),
-                        t: Annot(
-                            String(
-                                4,
+                            t: Annot(
+                                String(
+                                    3,
+                                ),
                             ),
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Typeof {
-                        loc: 5,
-                        qname: [
-                            "b",
-                        ],
-                        t: Ref(
-                            LocalRef {
-                                ref_loc: 6,
-                                index: 1,
+                        },
+                        FunParam {
+                            name: Some(
+                                "c",
+                            ),
+                            t: Annot(
+                                String(
+                                    4,
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Typeof(
+                            AnnotTypeof {
+                                loc: 5,
+                                qname: [
+                                    "b",
+                                ],
+                                t: Ref(
+                                    LocalRef {
+                                        ref_loc: 6,
+                                        index: 1,
+                                    },
+                                ),
+                                targs: None,
                             },
                         ),
-                        targs: None,
-                    },
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
-        Parameter {
-            id_loc: 2,
-            name: "b",
-            def: Annot(
-                String(
-                    3,
+        ),
+        Parameter(
+            DefParameter {
+                id_loc: 2,
+                name: "b",
+                def: Annot(
+                    String(
+                        3,
+                    ),
                 ),
-            ),
-            tparams: Mono,
-        },
+                tparams: Mono,
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -1156,13 +1190,79 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "b",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "b",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Poly(
+                        2,
+                        [
+                            TParam {
+                                name_loc: 3,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
+                            ),
+                            t: Annot(
+                                Bound(
+                                    AnnotBound {
+                                        ref_loc: 5,
+                                        name: "X",
+                                    },
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Typeof(
+                            AnnotTypeof {
+                                loc: 6,
+                                qname: [
+                                    "x",
+                                ],
+                                t: Ref(
+                                    LocalRef {
+                                        ref_loc: 7,
+                                        index: 1,
+                                    },
+                                ),
+                                targs: None,
+                            },
+                        ),
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
+            },
+        ),
+        Parameter(
+            DefParameter {
+                id_loc: 4,
+                name: "x",
+                def: Annot(
+                    Bound(
+                        AnnotBound {
+                            ref_loc: 5,
+                            name: "X",
+                        },
+                    ),
+                ),
                 tparams: Poly(
                     2,
                     [
@@ -1176,64 +1276,8 @@ Module {
                         },
                     ],
                 ),
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Bound {
-                                ref_loc: 5,
-                                name: "X",
-                            },
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Typeof {
-                        loc: 6,
-                        qname: [
-                            "x",
-                        ],
-                        t: Ref(
-                            LocalRef {
-                                ref_loc: 7,
-                                index: 1,
-                            },
-                        ),
-                        targs: None,
-                    },
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
             },
-            statics: {},
-        },
-        Parameter {
-            id_loc: 4,
-            name: "x",
-            def: Annot(
-                Bound {
-                    ref_loc: 5,
-                    name: "X",
-                },
-            ),
-            tparams: Poly(
-                2,
-                [
-                    TParam {
-                        name_loc: 3,
-                        name: "X",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                ],
-            ),
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -1264,40 +1308,42 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    FunExpr {
-                        loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "p",
-                                    ),
-                                    t: Annot(
-                                        Optional(
-                                            Annot(
-                                                String(
-                                                    2,
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "p",
+                                        ),
+                                        t: Annot(
+                                            Optional(
+                                                Annot(
+                                                    String(
+                                                        2,
+                                                    ),
                                                 ),
                                             ),
                                         ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Void(
+                                        3,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Void(
-                                    3,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -1342,40 +1388,42 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    FunExpr {
-                        loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "p",
-                                    ),
-                                    t: Annot(
-                                        Optional(
-                                            Annot(
-                                                String(
-                                                    2,
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "p",
+                                        ),
+                                        t: Annot(
+                                            Optional(
+                                                Annot(
+                                                    String(
+                                                        2,
+                                                    ),
                                                 ),
                                             ),
                                         ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Void(
+                                        3,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Void(
-                                    3,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -1421,38 +1469,40 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    FunExpr {
-                        loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "p",
-                                    ),
-                                    t: Annot(
-                                        Optional(
-                                            Err(
-                                                2,
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "p",
+                                        ),
+                                        t: Annot(
+                                            Optional(
+                                                Err(
+                                                    2,
+                                                ),
                                             ),
                                         ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Void(
+                                        3,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Void(
-                                    3,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -1512,98 +1562,108 @@ Module {
             ExportDefault {
                 default_loc: 2,
                 def: Value(
-                    FunExpr {
-                        loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "bar",
-                                    ),
-                                    t: Annot(
-                                        Typeof {
-                                            loc: 5,
-                                            qname: [
-                                                "bar",
-                                            ],
-                                            t: Ref(
-                                                LocalRef {
-                                                    ref_loc: 6,
-                                                    index: 0,
-                                                },
-                                            ),
-                                            targs: None,
-                                        },
-                                    ),
-                                },
-                                FunParam {
-                                    name: Some(
-                                        "baz",
-                                    ),
-                                    t: Annot(
-                                        Typeof {
-                                            loc: 8,
-                                            qname: [
-                                                "bar",
-                                            ],
-                                            t: Ref(
-                                                LocalRef {
-                                                    ref_loc: 9,
-                                                    index: 1,
-                                                },
-                                            ),
-                                            targs: None,
-                                        },
-                                    ),
-                                },
-                                FunParam {
-                                    name: None,
-                                    t: Annot(
-                                        ObjAnnot {
-                                            loc: 10,
-                                            obj_kind: InexactObj,
-                                            props: {
-                                                "boz": ObjAnnotField(
-                                                    11,
-                                                    Annot(
-                                                        Typeof {
-                                                            loc: 12,
-                                                            qname: [
-                                                                "baz",
-                                                            ],
-                                                            t: Ref(
-                                                                LocalRef {
-                                                                    ref_loc: 13,
-                                                                    index: 2,
-                                                                },
-                                                            ),
-                                                            targs: None,
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "bar",
+                                        ),
+                                        t: Annot(
+                                            Typeof(
+                                                AnnotTypeof {
+                                                    loc: 5,
+                                                    qname: [
+                                                        "bar",
+                                                    ],
+                                                    t: Ref(
+                                                        LocalRef {
+                                                            ref_loc: 6,
+                                                            index: 0,
                                                         },
                                                     ),
-                                                    Neutral,
-                                                ),
-                                            },
-                                            computed_props: [],
-                                            proto: ObjAnnotImplicitProto,
-                                        },
+                                                    targs: None,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                    FunParam {
+                                        name: Some(
+                                            "baz",
+                                        ),
+                                        t: Annot(
+                                            Typeof(
+                                                AnnotTypeof {
+                                                    loc: 8,
+                                                    qname: [
+                                                        "bar",
+                                                    ],
+                                                    t: Ref(
+                                                        LocalRef {
+                                                            ref_loc: 9,
+                                                            index: 1,
+                                                        },
+                                                    ),
+                                                    targs: None,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                    FunParam {
+                                        name: None,
+                                        t: Annot(
+                                            ObjAnnot(
+                                                AnnotObjAnnot {
+                                                    loc: 10,
+                                                    obj_kind: InexactObj,
+                                                    props: {
+                                                        "boz": ObjAnnotField(
+                                                            11,
+                                                            Annot(
+                                                                Typeof(
+                                                                    AnnotTypeof {
+                                                                        loc: 12,
+                                                                        qname: [
+                                                                            "baz",
+                                                                        ],
+                                                                        t: Ref(
+                                                                            LocalRef {
+                                                                                ref_loc: 13,
+                                                                                index: 2,
+                                                                            },
+                                                                        ),
+                                                                        targs: None,
+                                                                    },
+                                                                ),
+                                                            ),
+                                                            Neutral,
+                                                        ),
+                                                    },
+                                                    computed_props: [],
+                                                    proto: ObjAnnotImplicitProto,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Void(
+                                        14,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Void(
-                                    14,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {},
                         },
-                        statics: {},
-                    },
+                    ),
                 ),
             },
         ],
@@ -1620,55 +1680,65 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "bar",
-            def: Annot(
-                String(
-                    1,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "bar",
+                def: Annot(
+                    String(
+                        1,
+                    ),
                 ),
-            ),
-        },
-        Parameter {
-            id_loc: 4,
-            name: "bar",
-            def: Annot(
-                Typeof {
-                    loc: 5,
-                    qname: [
-                        "bar",
-                    ],
-                    t: Ref(
-                        LocalRef {
-                            ref_loc: 6,
-                            index: 0,
+            },
+        ),
+        Parameter(
+            DefParameter {
+                id_loc: 4,
+                name: "bar",
+                def: Annot(
+                    Typeof(
+                        AnnotTypeof {
+                            loc: 5,
+                            qname: [
+                                "bar",
+                            ],
+                            t: Ref(
+                                LocalRef {
+                                    ref_loc: 6,
+                                    index: 0,
+                                },
+                            ),
+                            targs: None,
                         },
                     ),
-                    targs: None,
-                },
-            ),
-            tparams: Mono,
-        },
-        Parameter {
-            id_loc: 7,
-            name: "baz",
-            def: Annot(
-                Typeof {
-                    loc: 8,
-                    qname: [
-                        "bar",
-                    ],
-                    t: Ref(
-                        LocalRef {
-                            ref_loc: 9,
-                            index: 1,
+                ),
+                tparams: Mono,
+            },
+        ),
+        Parameter(
+            DefParameter {
+                id_loc: 7,
+                name: "baz",
+                def: Annot(
+                    Typeof(
+                        AnnotTypeof {
+                            loc: 8,
+                            qname: [
+                                "bar",
+                            ],
+                            t: Ref(
+                                LocalRef {
+                                    ref_loc: 9,
+                                    index: 1,
+                                },
+                            ),
+                            targs: None,
                         },
                     ),
-                    targs: None,
-                },
-            ),
-            tparams: Mono,
-        },
+                ),
+                tparams: Mono,
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -1726,104 +1796,116 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "bar",
-            def: Annot(
-                String(
-                    1,
-                ),
-            ),
-        },
-        ComponentBinding {
-            id_loc: 3,
-            name: "C",
-            fn_loc: 2,
-            def: ComponentSig {
-                params_loc: 4,
-                tparams: Mono,
-                params: [
-                    ComponentParam {
-                        name: "bar",
-                        name_loc: 5,
-                        t: Annot(
-                            Typeof {
-                                loc: 6,
-                                qname: [
-                                    "bar",
-                                ],
-                                t: Ref(
-                                    LocalRef {
-                                        ref_loc: 7,
-                                        index: 0,
-                                    },
-                                ),
-                                targs: None,
-                            },
-                        ),
-                    },
-                    ComponentParam {
-                        name: "baz",
-                        name_loc: 8,
-                        t: Annot(
-                            Typeof {
-                                loc: 9,
-                                qname: [
-                                    "bar",
-                                ],
-                                t: Ref(
-                                    LocalRef {
-                                        ref_loc: 10,
-                                        index: 0,
-                                    },
-                                ),
-                                targs: None,
-                            },
-                        ),
-                    },
-                    ComponentParam {
-                        name: "booz",
-                        name_loc: 11,
-                        t: Annot(
-                            ObjAnnot {
-                                loc: 12,
-                                obj_kind: InexactObj,
-                                props: {
-                                    "boz": ObjAnnotField(
-                                        13,
-                                        Annot(
-                                            Typeof {
-                                                loc: 14,
-                                                qname: [
-                                                    "baz",
-                                                ],
-                                                t: Ref(
-                                                    BuiltinRef {
-                                                        ref_loc: 15,
-                                                        type_ref: false,
-                                                        name: "baz",
-                                                    },
-                                                ),
-                                                targs: None,
-                                            },
-                                        ),
-                                        Neutral,
-                                    ),
-                                },
-                                computed_props: [],
-                                proto: ObjAnnotImplicitProto,
-                            },
-                        ),
-                    },
-                ],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        16,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "bar",
+                def: Annot(
+                    String(
+                        1,
                     ),
                 ),
             },
-        },
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 3,
+                name: "C",
+                fn_loc: 2,
+                def: ComponentSig {
+                    params_loc: 4,
+                    tparams: Mono,
+                    params: [
+                        ComponentParam {
+                            name: "bar",
+                            name_loc: 5,
+                            t: Annot(
+                                Typeof(
+                                    AnnotTypeof {
+                                        loc: 6,
+                                        qname: [
+                                            "bar",
+                                        ],
+                                        t: Ref(
+                                            LocalRef {
+                                                ref_loc: 7,
+                                                index: 0,
+                                            },
+                                        ),
+                                        targs: None,
+                                    },
+                                ),
+                            ),
+                        },
+                        ComponentParam {
+                            name: "baz",
+                            name_loc: 8,
+                            t: Annot(
+                                Typeof(
+                                    AnnotTypeof {
+                                        loc: 9,
+                                        qname: [
+                                            "bar",
+                                        ],
+                                        t: Ref(
+                                            LocalRef {
+                                                ref_loc: 10,
+                                                index: 0,
+                                            },
+                                        ),
+                                        targs: None,
+                                    },
+                                ),
+                            ),
+                        },
+                        ComponentParam {
+                            name: "booz",
+                            name_loc: 11,
+                            t: Annot(
+                                ObjAnnot(
+                                    AnnotObjAnnot {
+                                        loc: 12,
+                                        obj_kind: InexactObj,
+                                        props: {
+                                            "boz": ObjAnnotField(
+                                                13,
+                                                Annot(
+                                                    Typeof(
+                                                        AnnotTypeof {
+                                                            loc: 14,
+                                                            qname: [
+                                                                "baz",
+                                                            ],
+                                                            t: Ref(
+                                                                BuiltinRef {
+                                                                    ref_loc: 15,
+                                                                    type_ref: false,
+                                                                    name: "baz",
+                                                                },
+                                                            ),
+                                                            targs: None,
+                                                        },
+                                                    ),
+                                                ),
+                                                Neutral,
+                                            ),
+                                        },
+                                        computed_props: [],
+                                        proto: ObjAnnotImplicitProto,
+                                    },
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            16,
+                        ),
+                    ),
+                },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -1854,24 +1936,28 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    ObjLit {
-                        loc: 1,
-                        frozen: false,
-                        proto: None,
-                        props: {
-                            "p": ObjValueField(
-                                2,
-                                Value(
-                                    NumberLit(
-                                        3,
-                                        0.0,
-                                        "0",
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 1,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueField(
+                                    2,
+                                    Value(
+                                        NumberLit(
+                                            (
+                                                3,
+                                                0.0,
+                                                "0",
+                                            ),
+                                        ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
-                            ),
+                            },
                         },
-                    },
+                    ),
                 ),
             },
         ],
@@ -1919,23 +2005,25 @@ Module {
             ExportDefault {
                 default_loc: 2,
                 def: Value(
-                    ObjLit {
-                        loc: 3,
-                        frozen: false,
-                        proto: None,
-                        props: {
-                            "p": ObjValueField(
-                                4,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 3,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueField(
+                                    4,
+                                    Ref(
+                                        LocalRef {
+                                            ref_loc: 5,
+                                            index: 0,
+                                        },
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
-                            ),
+                            },
                         },
-                    },
+                    ),
                 ),
             },
         ],
@@ -1952,15 +2040,17 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "x",
-            def: Annot(
-                Number(
-                    1,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "x",
+                def: Annot(
+                    Number(
+                        1,
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -1993,23 +2083,25 @@ Module {
             ExportDefault {
                 default_loc: 1,
                 def: Value(
-                    ObjLit {
-                        loc: 2,
-                        frozen: false,
-                        proto: None,
-                        props: {
-                            "p": ObjValueField(
-                                3,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 4,
-                                        index: 0,
-                                    },
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 2,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueField(
+                                    3,
+                                    Ref(
+                                        LocalRef {
+                                            ref_loc: 4,
+                                            index: 0,
+                                        },
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
-                            ),
+                            },
                         },
-                    },
+                    ),
                 ),
             },
         ],
@@ -2026,13 +2118,15 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "x",
-            def: Err(
-                0,
-            ),
-        },
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "x",
+                def: Err(
+                    0,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2063,12 +2157,14 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    ObjLit {
-                        loc: 1,
-                        frozen: false,
-                        proto: None,
-                        props: {},
-                    },
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 1,
+                            frozen: false,
+                            proto: None,
+                            props: {},
+                        },
+                    ),
                 ),
             },
         ],
@@ -2116,33 +2212,37 @@ Module {
             ExportDefault {
                 default_loc: 0,
                 def: Value(
-                    ObjLit {
-                        loc: 1,
-                        frozen: false,
-                        proto: None,
-                        props: {
-                            "1": ObjValueField(
-                                2,
-                                Value(
-                                    BooleanLit(
-                                        3,
-                                        true,
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 1,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "1": ObjValueField(
+                                    2,
+                                    Value(
+                                        BooleanLit(
+                                            3,
+                                            true,
+                                        ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
-                            ),
-                            "2": ObjValueField(
-                                4,
-                                Value(
-                                    StringLit(
-                                        5,
-                                        "hello",
+                                "2": ObjValueField(
+                                    4,
+                                    Value(
+                                        StringLit(
+                                            (
+                                                5,
+                                                "hello",
+                                            ),
+                                        ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
-                            ),
+                            },
                         },
-                    },
+                    ),
                 ),
             },
         ],
@@ -2216,60 +2316,62 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            5,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: Annot(
+                                            Number(
+                                                5,
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        6,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Number(
-                                    6,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Annot(
-                            Number(
-                                2,
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Annot(
+                                Number(
+                                    2,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2327,62 +2429,66 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            5,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: Annot(
+                                            Number(
+                                                5,
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        6,
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Number(
-                                    6,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Value(
-                            NumberLit(
-                                2,
-                                0.0,
-                                "0",
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Value(
+                                NumberLit(
+                                    (
+                                        2,
+                                        0.0,
+                                        "0",
+                                    ),
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2440,58 +2546,60 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
+                                        ),
+                                        t: Err(
+                                            5,
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        6,
                                     ),
-                                    t: Err(
-                                        5,
-                                    ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Number(
-                                    6,
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Annot(
-                            Number(
-                                2,
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Annot(
+                                Number(
+                                    2,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2552,58 +2660,60 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            5,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
-                                    ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Err(
-                                6,
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                        t: Annot(
+                                            Number(
+                                                5,
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Err(
+                                    6,
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Annot(
-                            Number(
-                                2,
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Annot(
+                                Number(
+                                    2,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2673,102 +2783,110 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T1",
-            tparams: Mono,
-            body: Annot(
-                Number(
-                    1,
-                ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 2,
-            custom_error_loc_opt: None,
-            name: "T2",
-            tparams: Mono,
-            body: Annot(
-                Number(
-                    3,
-                ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 4,
-            custom_error_loc_opt: None,
-            name: "T3",
-            tparams: Mono,
-            body: Annot(
-                Number(
-                    5,
-                ),
-            ),
-        },
-        ClassBinding {
-            id_loc: 6,
-            name: "C",
-            def: ClassSig {
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T1",
                 tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 10,
-                        fn_loc: 9,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 11,
-                                                index: 1,
-                                            },
+                body: Annot(
+                    Number(
+                        1,
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 2,
+                custom_error_loc_opt: None,
+                name: "T2",
+                tparams: Mono,
+                body: Annot(
+                    Number(
+                        3,
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 4,
+                custom_error_loc_opt: None,
+                name: "T3",
+                tparams: Mono,
+                body: Annot(
+                    Number(
+                        5,
+                    ),
+                ),
+            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 6,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 10,
+                            fn_loc: 9,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 11,
+                                                    index: 1,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 12,
+                                            index: 2,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            7,
+                            TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 12,
-                                        index: 2,
+                                        ref_loc: 8,
+                                        index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        7,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 8,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2830,92 +2948,96 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "D",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Annot(
-                            Number(
-                                2,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "D",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Annot(
+                                Number(
+                                    2,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
-        ClassBinding {
-            id_loc: 3,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 7,
-                        fn_loc: 6,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 8,
-                                                index: 0,
-                                            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 3,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 7,
+                            fn_loc: 6,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 8,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            4,
+                            TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 9,
+                                        ref_loc: 5,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        4,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -2977,94 +3099,100 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "D",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Value(
-                            NumberLit(
-                                2,
-                                0.0,
-                                "0",
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "D",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Value(
+                                NumberLit(
+                                    (
+                                        2,
+                                        0.0,
+                                        "0",
+                                    ),
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
-        ClassBinding {
-            id_loc: 3,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 7,
-                        fn_loc: 6,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 8,
-                                                index: 0,
-                                            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 3,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 7,
+                            fn_loc: 6,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 8,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            4,
+                            TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 9,
+                                        ref_loc: 5,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        4,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3128,92 +3256,96 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "D",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Annot(
-                            Number(
-                                2,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "D",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Annot(
+                                Number(
+                                    2,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
-        ClassBinding {
-            id_loc: 3,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 7,
-                        fn_loc: 6,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 8,
-                                                index: 0,
-                                            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 3,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 7,
+                            fn_loc: 6,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 8,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            4,
+                            TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 9,
+                                        ref_loc: 5,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        4,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3277,94 +3409,100 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "D",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Value(
-                            NumberLit(
-                                2,
-                                0.0,
-                                "0",
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "D",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Value(
+                                NumberLit(
+                                    (
+                                        2,
+                                        0.0,
+                                        "0",
+                                    ),
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
-        ClassBinding {
-            id_loc: 3,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 7,
-                        fn_loc: 6,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 8,
-                                                index: 0,
-                                            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 3,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 7,
+                            fn_loc: 6,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 8,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            4,
+                            TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 9,
+                                        ref_loc: 5,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        4,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3422,69 +3560,71 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 5,
-                                                index: 0,
-                                            },
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 5,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 6,
+                                            index: 0,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 6,
+                                        ref_loc: 2,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 2,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3542,64 +3682,66 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 5,
-                                                index: 0,
-                                            },
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
-                                    ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 6,
-                                        index: 0,
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 5,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
                                     },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 6,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Err(
-                            2,
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Err(
+                                2,
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3661,48 +3803,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "x",
-            def: Annot(
-                Number(
-                    1,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "x",
+                def: Annot(
+                    Number(
+                        1,
+                    ),
                 ),
-            ),
-        },
-        ClassBinding {
-            id_loc: 2,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "p": ObjValueField(
-                        3,
-                        Annot(
-                            Typeof {
-                                loc: 4,
-                                qname: [
-                                    "x",
-                                ],
-                                t: Ref(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
+            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 2,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "p": ObjValueField(
+                            3,
+                            Annot(
+                                Typeof(
+                                    AnnotTypeof {
+                                        loc: 4,
+                                        qname: [
+                                            "x",
+                                        ],
+                                        t: Ref(
+                                            LocalRef {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                        targs: None,
                                     },
                                 ),
-                                targs: None,
-                            },
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3761,46 +3909,52 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "x",
-            def: Err(
-                0,
-            ),
-        },
-        ClassBinding {
-            id_loc: 1,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "p": ObjValueField(
-                        2,
-                        Annot(
-                            Typeof {
-                                loc: 3,
-                                qname: [
-                                    "x",
-                                ],
-                                t: Ref(
-                                    LocalRef {
-                                        ref_loc: 4,
-                                        index: 0,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "x",
+                def: Err(
+                    0,
+                ),
+            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 1,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "p": ObjValueField(
+                            2,
+                            Annot(
+                                Typeof(
+                                    AnnotTypeof {
+                                        loc: 3,
+                                        qname: [
+                                            "x",
+                                        ],
+                                        t: Ref(
+                                            LocalRef {
+                                                ref_loc: 4,
+                                                index: 0,
+                                            },
+                                        ),
+                                        targs: None,
                                     },
                                 ),
-                                targs: None,
-                            },
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3835,23 +3989,25 @@ Module {
             ExportDefault {
                 default_loc: 2,
                 def: Value(
-                    ObjLit {
-                        loc: 3,
-                        frozen: false,
-                        proto: None,
-                        props: {
-                            "x": ObjValueField(
-                                4,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 4,
-                                        index: 0,
-                                    },
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 3,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "x": ObjValueField(
+                                    4,
+                                    Ref(
+                                        LocalRef {
+                                            ref_loc: 4,
+                                            index: 0,
+                                        },
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
-                            ),
+                            },
                         },
-                    },
+                    ),
                 ),
             },
         ],
@@ -3868,17 +4024,21 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "x",
-            def: Value(
-                NumberLit(
-                    1,
-                    0.0,
-                    "0",
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "x",
+                def: Value(
+                    NumberLit(
+                        (
+                            1,
+                            0.0,
+                            "0",
+                        ),
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -3962,21 +4122,23 @@ Module {
                 default_loc: 3,
                 def: Value(
                     ArrayLit(
-                        4,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 5,
-                                index: 0,
-                            },
-                        ),
-                        [
+                        (
+                            4,
                             Ref(
                                 LocalRef {
-                                    ref_loc: 6,
-                                    index: 1,
+                                    ref_loc: 5,
+                                    index: 0,
                                 },
                             ),
-                        ],
+                            [
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 6,
+                                        index: 1,
+                                    },
+                                ),
+                            ],
+                        ),
                     ),
                 ),
             },
@@ -3994,24 +4156,30 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "x",
-            def: Value(
-                NumberLit(
-                    1,
-                    0.0,
-                    "0",
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "x",
+                def: Value(
+                    NumberLit(
+                        (
+                            1,
+                            0.0,
+                            "0",
+                        ),
+                    ),
                 ),
-            ),
-        },
-        Variable {
-            id_loc: 2,
-            name: "y",
-            def: Err(
-                2,
-            ),
-        },
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 2,
+                name: "y",
+                def: Err(
+                    2,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -4066,27 +4234,29 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -4138,25 +4308,27 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: true,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Err(
-                    2,
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: true,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Err(
+                        2,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -4222,39 +4394,43 @@ Module {
         ),
     ],
     local_defs: [
-        ClassBinding {
-            id_loc: 1,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "p": ObjValueField(
-                        2,
-                        Annot(
-                            Typeof {
-                                loc: 3,
-                                qname: [
-                                    "x",
-                                ],
-                                t: Ref(
-                                    RemoteRef {
-                                        ref_loc: 4,
-                                        index: 0,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 1,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "p": ObjValueField(
+                            2,
+                            Annot(
+                                Typeof(
+                                    AnnotTypeof {
+                                        loc: 3,
+                                        qname: [
+                                            "x",
+                                        ],
+                                        t: Ref(
+                                            RemoteRef {
+                                                ref_loc: 4,
+                                                index: 0,
+                                            },
+                                        ),
+                                        targs: None,
                                     },
                                 ),
-                                targs: None,
-                            },
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [
@@ -4328,69 +4504,71 @@ Module {
         ),
     ],
     local_defs: [
-        ClassBinding {
-            id_loc: 3,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 7,
-                        fn_loc: 6,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Unqualified(
-                                            RemoteRef {
-                                                ref_loc: 8,
-                                                index: 1,
-                                            },
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 3,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 7,
+                            fn_loc: 6,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
                                         ),
+                                        t: TyRef(
+                                            Unqualified(
+                                                RemoteRef {
+                                                    ref_loc: 8,
+                                                    index: 1,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        RemoteRef {
+                                            ref_loc: 9,
+                                            index: 2,
+                                        },
                                     ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        },
+                    },
+                    own_props: {
+                        "f": ObjValueField(
+                            4,
+                            TyRef(
                                 Unqualified(
                                     RemoteRef {
-                                        ref_loc: 9,
-                                        index: 2,
+                                        ref_loc: 5,
+                                        index: 0,
                                     },
                                 ),
                             ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
-                        },
-                    },
-                },
-                own_props: {
-                    "f": ObjValueField(
-                        4,
-                        TyRef(
-                            Unqualified(
-                                RemoteRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
-                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [
@@ -4476,66 +4654,68 @@ Module {
         ),
     ],
     local_defs: [
-        ClassBinding {
-            id_loc: 2,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 4,
-                        fn_loc: 3,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [
-                                FunParam {
-                                    name: Some(
-                                        "x",
-                                    ),
-                                    t: TyRef(
-                                        Qualified {
-                                            loc: 5,
-                                            id_loc: 7,
-                                            name: "T",
-                                            qualification: Unqualified(
-                                                RemoteRef {
-                                                    ref_loc: 6,
-                                                    index: 0,
-                                                },
-                                            ),
-                                        },
-                                    ),
-                                },
-                            ],
-                            rest_param: None,
-                            this_param: None,
-                            return_: TyRef(
-                                Qualified {
-                                    loc: 8,
-                                    id_loc: 10,
-                                    name: "T",
-                                    qualification: Unqualified(
-                                        RemoteRef {
-                                            ref_loc: 9,
-                                            index: 1,
-                                        },
-                                    ),
-                                },
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 2,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 4,
+                            fn_loc: 3,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "x",
+                                        ),
+                                        t: TyRef(
+                                            Qualified {
+                                                loc: 5,
+                                                id_loc: 7,
+                                                name: "T",
+                                                qualification: Unqualified(
+                                                    RemoteRef {
+                                                        ref_loc: 6,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            },
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Qualified {
+                                        loc: 8,
+                                        id_loc: 10,
+                                        name: "T",
+                                        qualification: Unqualified(
+                                            RemoteRef {
+                                                ref_loc: 9,
+                                                index: 1,
+                                            },
+                                        ),
+                                    },
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
+                    own_props: {},
+                    dict: None,
                 },
-                own_props: {},
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [
@@ -4590,27 +4770,29 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Poly(
-                1,
-                [
-                    TParam {
-                        name_loc: 2,
-                        name: "U",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                ],
-            ),
-            body: Err(
-                3,
-            ),
-        },
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Poly(
+                    1,
+                    [
+                        TParam {
+                            name_loc: 2,
+                            name: "U",
+                            polarity: Neutral,
+                            bound: None,
+                            default: None,
+                            is_const: false,
+                        },
+                    ],
+                ),
+                body: Err(
+                    3,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -4675,61 +4857,67 @@ Module {
         ),
     ],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "M",
-            def: Require {
-                loc: 1,
-                index: 0,
-            },
-        },
-        Variable {
-            id_loc: 2,
-            name: "D",
-            def: Pattern(
-                1,
-            ),
-        },
-        ClassBinding {
-            id_loc: 4,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassExplicitExtends {
-                    loc: 5,
-                    t: Eval(
-                        5,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 6,
-                                index: 0,
-                            },
-                        ),
-                        GetProp(
-                            "D",
-                        ),
-                    ),
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "M",
+                def: Require {
+                    loc: 1,
+                    index: 0,
                 },
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        7,
-                        TyRef(
-                            Unqualified(
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 2,
+                name: "D",
+                def: Pattern(
+                    1,
+                ),
+            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 4,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassExplicitExtends {
+                        loc: 5,
+                        t: Eval(
+                            5,
+                            Ref(
                                 LocalRef {
-                                    ref_loc: 8,
-                                    index: 1,
+                                    ref_loc: 6,
+                                    index: 0,
                                 },
                             ),
+                            GetProp(
+                                "D",
+                            ),
                         ),
-                        Neutral,
-                    ),
+                    },
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            7,
+                            TyRef(
+                                Unqualified(
+                                    LocalRef {
+                                        ref_loc: 8,
+                                        index: 1,
+                                    },
+                                ),
+                            ),
+                            Neutral,
+                        ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -4807,61 +4995,67 @@ Module {
         ),
     ],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "M",
-            def: Require {
-                loc: 1,
-                index: 0,
-            },
-        },
-        Variable {
-            id_loc: 2,
-            name: "D",
-            def: Err(
-                2,
-            ),
-        },
-        ClassBinding {
-            id_loc: 3,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassExplicitExtends {
-                    loc: 4,
-                    t: Eval(
-                        4,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 5,
-                                index: 0,
-                            },
-                        ),
-                        GetProp(
-                            "D",
-                        ),
-                    ),
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "M",
+                def: Require {
+                    loc: 1,
+                    index: 0,
                 },
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        6,
-                        TyRef(
-                            Unqualified(
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 2,
+                name: "D",
+                def: Err(
+                    2,
+                ),
+            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 3,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassExplicitExtends {
+                        loc: 4,
+                        t: Eval(
+                            4,
+                            Ref(
                                 LocalRef {
-                                    ref_loc: 7,
-                                    index: 1,
+                                    ref_loc: 5,
+                                    index: 0,
                                 },
                             ),
+                            GetProp(
+                                "D",
+                            ),
                         ),
-                        Neutral,
-                    ),
+                    },
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            6,
+                            TyRef(
+                                Unqualified(
+                                    LocalRef {
+                                        ref_loc: 7,
+                                        index: 1,
+                                    },
+                                ),
+                            ),
+                            Neutral,
+                        ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5092,31 +5286,35 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
-        Variable {
-            id_loc: 1,
-            name: "x",
-            def: TyRef(
-                Unqualified(
-                    LocalRef {
-                        ref_loc: 2,
-                        index: 0,
-                    },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 1,
+                name: "x",
+                def: TyRef(
+                    Unqualified(
+                        LocalRef {
+                            ref_loc: 2,
+                            index: 0,
+                        },
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5157,34 +5355,36 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 3,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "x": ObjValueField(
-                            4,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 4,
-                                    index: 1,
-                                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 3,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "x": ObjValueField(
+                                4,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 4,
+                                        index: 1,
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
-                        "y": ObjValueField(
-                            5,
-                            Ref(
-                                BuiltinRef {
-                                    ref_loc: 5,
-                                    type_ref: false,
-                                    name: "y",
-                                },
+                            "y": ObjValueField(
+                                5,
+                                Ref(
+                                    BuiltinRef {
+                                        ref_loc: 5,
+                                        type_ref: false,
+                                        name: "y",
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -5196,31 +5396,35 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
-        Variable {
-            id_loc: 1,
-            name: "x",
-            def: TyRef(
-                Unqualified(
-                    LocalRef {
-                        ref_loc: 2,
-                        index: 0,
-                    },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 1,
+                name: "x",
+                def: TyRef(
+                    Unqualified(
+                        LocalRef {
+                            ref_loc: 2,
+                            index: 0,
+                        },
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5262,57 +5466,61 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 5,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "a": ObjValueField(
-                            6,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 7,
-                                    index: 0,
-                                },
-                            ),
-                            Neutral,
-                        ),
-                        "b": ObjValueField(
-                            8,
-                            Value(
-                                FunExpr {
-                                    loc: 9,
-                                    async_: false,
-                                    generator: false,
-                                    def: FunSig {
-                                        tparams: Mono,
-                                        params: [
-                                            FunParam {
-                                                name: Some(
-                                                    "x",
-                                                ),
-                                                t: Annot(
-                                                    String(
-                                                        10,
-                                                    ),
-                                                ),
-                                            },
-                                        ],
-                                        rest_param: None,
-                                        this_param: None,
-                                        return_: Err(
-                                            11,
-                                        ),
-                                        type_guard: None,
-                                        effect_: ArbitraryEffect,
+                ObjLit(
+                    ValueObjLit {
+                        loc: 5,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "a": ObjValueField(
+                                6,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 7,
+                                        index: 0,
                                     },
-                                    statics: {},
-                                },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                            "b": ObjValueField(
+                                8,
+                                Value(
+                                    FunExpr(
+                                        ValueFunExpr {
+                                            loc: 9,
+                                            async_: false,
+                                            generator: false,
+                                            def: FunSig {
+                                                tparams: Mono,
+                                                params: [
+                                                    FunParam {
+                                                        name: Some(
+                                                            "x",
+                                                        ),
+                                                        t: Annot(
+                                                            String(
+                                                                10,
+                                                            ),
+                                                        ),
+                                                    },
+                                                ],
+                                                rest_param: None,
+                                                this_param: None,
+                                                return_: Err(
+                                                    11,
+                                                ),
+                                                type_guard: None,
+                                                effect_: ArbitraryEffect,
+                                            },
+                                            statics: {},
+                                        },
+                                    ),
+                                ),
+                                Neutral,
+                            ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -5324,54 +5532,58 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "A",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "f": ObjValueField(
-                        1,
-                        Value(
-                            FunExpr {
-                                loc: 2,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "A",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "f": ObjValueField(
+                            1,
+                            Value(
+                                FunExpr(
+                                    ValueFunExpr {
+                                        loc: 2,
+                                        async_: false,
+                                        generator: false,
+                                        def: FunSig {
+                                            tparams: Mono,
+                                            params: [
+                                                FunParam {
+                                                    name: Some(
+                                                        "x",
+                                                    ),
+                                                    t: Annot(
+                                                        Number(
+                                                            3,
+                                                        ),
+                                                    ),
+                                                },
+                                            ],
+                                            rest_param: None,
+                                            this_param: None,
+                                            return_: Err(
+                                                4,
                                             ),
-                                            t: Annot(
-                                                Number(
-                                                    3,
-                                                ),
-                                            ),
+                                            type_guard: None,
+                                            effect_: ArbitraryEffect,
                                         },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Err(
-                                        4,
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
-                                },
-                                statics: {},
-                            },
+                                        statics: {},
+                                    },
+                                ),
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5426,19 +5638,21 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5500,37 +5714,39 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "_method": ObjValueMethod {
-                        id_loc: 2,
-                        fn_loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Err(
-                                3,
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "_method": ObjValueMethod {
+                            id_loc: 2,
+                            fn_loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Err(
+                                    3,
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
+                    own_props: {},
+                    dict: None,
                 },
-                own_props: {},
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5584,19 +5800,21 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5658,43 +5876,47 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "_method": ObjValueField(
-                        1,
-                        Value(
-                            FunExpr {
-                                loc: 2,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Err(
-                                        3,
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
-                                },
-                                statics: {},
-                            },
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "_method": ObjValueField(
+                            1,
+                            Value(
+                                FunExpr(
+                                    ValueFunExpr {
+                                        loc: 2,
+                                        async_: false,
+                                        generator: false,
+                                        def: FunSig {
+                                            tparams: Mono,
+                                            params: [],
+                                            rest_param: None,
+                                            this_param: None,
+                                            return_: Err(
+                                                3,
+                                            ),
+                                            type_guard: None,
+                                            effect_: ArbitraryEffect,
+                                        },
+                                        statics: {},
+                                    },
+                                ),
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5750,32 +5972,36 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {
-                    "propTypes": ObjValueField(
-                        1,
-                        Value(
-                            ObjLit {
-                                loc: 2,
-                                frozen: false,
-                                proto: None,
-                                props: {},
-                            },
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {
+                        "propTypes": ObjValueField(
+                            1,
+                            Value(
+                                ObjLit(
+                                    ValueObjLit {
+                                        loc: 2,
+                                        frozen: false,
+                                        proto: None,
+                                        props: {},
+                                    },
+                                ),
+                            ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
                 },
-                proto_props: {},
-                own_props: {},
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -5886,62 +6112,72 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjSpreadLit {
-                    loc: 0,
-                    frozen: false,
-                    proto: None,
-                    elems: [
-                        ObjValueSpreadSlice(
-                            {
-                                "x": ObjValueField(
-                                    1,
-                                    Value(
-                                        StringLit(
-                                            2,
-                                            "x",
-                                        ),
-                                    ),
-                                    Neutral,
-                                ),
-                            },
-                        ),
-                        ObjValueSpreadElem(
-                            Value(
-                                ObjLit {
-                                    loc: 3,
-                                    frozen: false,
-                                    proto: None,
-                                    props: {
-                                        "y": ObjValueField(
-                                            4,
-                                            Value(
-                                                StringLit(
-                                                    5,
-                                                    "y",
+                ObjSpreadLit(
+                    ValueObjSpreadLit {
+                        loc: 0,
+                        frozen: false,
+                        proto: None,
+                        elems: [
+                            ObjValueSpreadSlice(
+                                {
+                                    "x": ObjValueField(
+                                        1,
+                                        Value(
+                                            StringLit(
+                                                (
+                                                    2,
+                                                    "x",
                                                 ),
                                             ),
-                                            Neutral,
                                         ),
-                                    },
+                                        Neutral,
+                                    ),
                                 },
                             ),
-                        ),
-                        ObjValueSpreadSlice(
-                            {
-                                "z": ObjValueField(
-                                    6,
-                                    Value(
-                                        StringLit(
-                                            7,
-                                            "z",
-                                        ),
+                            ObjValueSpreadElem(
+                                Value(
+                                    ObjLit(
+                                        ValueObjLit {
+                                            loc: 3,
+                                            frozen: false,
+                                            proto: None,
+                                            props: {
+                                                "y": ObjValueField(
+                                                    4,
+                                                    Value(
+                                                        StringLit(
+                                                            (
+                                                                5,
+                                                                "y",
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    Neutral,
+                                                ),
+                                            },
+                                        },
                                     ),
-                                    Neutral,
                                 ),
-                            },
-                        ),
-                    ],
-                },
+                            ),
+                            ObjValueSpreadSlice(
+                                {
+                                    "z": ObjValueField(
+                                        6,
+                                        Value(
+                                            StringLit(
+                                                (
+                                                    7,
+                                                    "z",
+                                                ),
+                                            ),
+                                        ),
+                                        Neutral,
+                                    ),
+                                },
+                            ),
+                        ],
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -6074,9 +6310,11 @@ Module {
                 GetElem(
                     Value(
                         NumberLit(
-                            2,
-                            0.0,
-                            "0",
+                            (
+                                2,
+                                0.0,
+                                "0",
+                            ),
                         ),
                     ),
                 ),
@@ -6175,18 +6413,22 @@ Module {
                 0,
                 Value(
                     NumberLit(
-                        1,
-                        6.0,
-                        "6",
+                        (
+                            1,
+                            6.0,
+                            "6",
+                        ),
                     ),
                 ),
                 Arith(
                     Mult,
                     Value(
                         NumberLit(
-                            2,
-                            7.0,
-                            "7",
+                            (
+                                2,
+                                7.0,
+                                "7",
+                            ),
                         ),
                     ),
                 ),
@@ -6229,18 +6471,22 @@ Module {
                 0,
                 Value(
                     NumberLit(
-                        1,
-                        6.0,
-                        "6",
+                        (
+                            1,
+                            6.0,
+                            "6",
+                        ),
                     ),
                 ),
                 Arith(
                     Plus,
                     Value(
                         NumberLit(
-                            2,
-                            7.0,
-                            "7",
+                            (
+                                2,
+                                7.0,
+                                "7",
+                            ),
                         ),
                     ),
                 ),
@@ -6326,62 +6572,70 @@ Module {
         ),
     ],
     local_defs: [
-        Variable {
-            id_loc: 1,
-            name: "pre_incr",
-            def: Eval(
-                2,
-                Ref(
-                    RemoteRef {
-                        ref_loc: 3,
-                        index: 0,
-                    },
+        Variable(
+            DefVariable {
+                id_loc: 1,
+                name: "pre_incr",
+                def: Eval(
+                    2,
+                    Ref(
+                        RemoteRef {
+                            ref_loc: 3,
+                            index: 0,
+                        },
+                    ),
+                    Update,
                 ),
-                Update,
-            ),
-        },
-        Variable {
-            id_loc: 4,
-            name: "pre_decr",
-            def: Eval(
-                5,
-                Ref(
-                    RemoteRef {
-                        ref_loc: 6,
-                        index: 0,
-                    },
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 4,
+                name: "pre_decr",
+                def: Eval(
+                    5,
+                    Ref(
+                        RemoteRef {
+                            ref_loc: 6,
+                            index: 0,
+                        },
+                    ),
+                    Update,
                 ),
-                Update,
-            ),
-        },
-        Variable {
-            id_loc: 7,
-            name: "post_incr",
-            def: Eval(
-                8,
-                Ref(
-                    RemoteRef {
-                        ref_loc: 9,
-                        index: 0,
-                    },
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 7,
+                name: "post_incr",
+                def: Eval(
+                    8,
+                    Ref(
+                        RemoteRef {
+                            ref_loc: 9,
+                            index: 0,
+                        },
+                    ),
+                    Update,
                 ),
-                Update,
-            ),
-        },
-        Variable {
-            id_loc: 10,
-            name: "post_decr",
-            def: Eval(
-                11,
-                Ref(
-                    RemoteRef {
-                        ref_loc: 12,
-                        index: 0,
-                    },
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 10,
+                name: "post_decr",
+                def: Eval(
+                    11,
+                    Ref(
+                        RemoteRef {
+                            ref_loc: 12,
+                            index: 0,
+                        },
+                    ),
+                    Update,
                 ),
-                Update,
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [
@@ -6475,19 +6729,21 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -6530,27 +6786,29 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -6602,74 +6860,78 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Interface {
-            id_loc: 0,
-            name: "Foo",
-            tparams: Poly(
-                1,
-                [
-                    TParam {
-                        name_loc: 2,
-                        name: "X",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                ],
-            ),
-            def: InterfaceSig {
-                extends: [],
-                props: {},
-                computed_props: [],
-                calls: [],
-                dict: None,
-            },
-        },
-        DeclareClassBinding {
-            id_loc: 3,
-            nominal_id_loc: 3,
-            name: "C",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {
-                    "foo": InterfaceField(
-                        Some(
-                            4,
-                        ),
-                        TyRefApp {
-                            loc: 5,
-                            name: Unqualified(
-                                LocalRef {
-                                    ref_loc: 6,
-                                    index: 0,
-                                },
-                            ),
-                            targs: [
-                                Annot(
-                                    Any(
-                                        7,
-                                    ),
-                                ),
-                            ],
+        Interface(
+            DefInterface {
+                id_loc: 0,
+                name: "Foo",
+                tparams: Poly(
+                    1,
+                    [
+                        TParam {
+                            name_loc: 2,
+                            name: "X",
+                            polarity: Neutral,
+                            bound: None,
+                            default: None,
+                            is_const: false,
                         },
-                        Neutral,
-                    ),
+                    ],
+                ),
+                def: InterfaceSig {
+                    extends: [],
+                    props: {},
+                    computed_props: [],
+                    calls: [],
+                    dict: None,
                 },
-                proto_props: {},
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
             },
-        },
+        ),
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 3,
+                nominal_id_loc: 3,
+                name: "C",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {
+                        "foo": InterfaceField(
+                            Some(
+                                4,
+                            ),
+                            TyRefApp {
+                                loc: 5,
+                                name: Unqualified(
+                                    LocalRef {
+                                        ref_loc: 6,
+                                        index: 0,
+                                    },
+                                ),
+                                targs: [
+                                    Annot(
+                                        Any(
+                                            7,
+                                        ),
+                                    ),
+                                ],
+                            },
+                            Neutral,
+                        ),
+                    },
+                    proto_props: {},
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
+                },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -6717,72 +6979,80 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "Foo",
-            tparams: Mono,
-            body: Annot(
-                Number(
-                    1,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "Foo",
+                tparams: Mono,
+                body: Annot(
+                    Number(
+                        1,
+                    ),
                 ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 2,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                FunAnnot(
-                    3,
-                    FunSig {
-                        tparams: Poly(
-                            4,
-                            [
-                                TParam {
-                                    name_loc: 5,
-                                    name: "X",
-                                    polarity: Neutral,
-                                    bound: Some(
-                                        TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 6,
-                                                    index: 0,
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 2,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    FunAnnot(
+                        (
+                            3,
+                            FunSig {
+                                tparams: Poly(
+                                    4,
+                                    [
+                                        TParam {
+                                            name_loc: 5,
+                                            name: "X",
+                                            polarity: Neutral,
+                                            bound: Some(
+                                                TyRef(
+                                                    Unqualified(
+                                                        LocalRef {
+                                                            ref_loc: 6,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                            default: None,
+                                            is_const: false,
+                                        },
+                                    ],
+                                ),
+                                params: [
+                                    FunParam {
+                                        name: None,
+                                        t: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 7,
+                                                    name: "X",
                                                 },
                                             ),
                                         ),
-                                    ),
-                                    default: None,
-                                    is_const: false,
-                                },
-                            ],
-                        ),
-                        params: [
-                            FunParam {
-                                name: None,
-                                t: Annot(
-                                    Bound {
-                                        ref_loc: 7,
-                                        name: "X",
                                     },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Void(
+                                        8,
+                                    ),
                                 ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
                             },
-                        ],
-                        rest_param: None,
-                        this_param: None,
-                        return_: Annot(
-                            Void(
-                                8,
-                            ),
                         ),
-                        type_guard: None,
-                        effect_: ArbitraryEffect,
-                    },
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -6824,32 +7094,34 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "x": ObjValueField(
-                        1,
-                        TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 2,
-                                    index: 0,
-                                },
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "x": ObjValueField(
+                            1,
+                            TyRef(
+                                Unqualified(
+                                    LocalRef {
+                                        ref_loc: 2,
+                                        index: 0,
+                                    },
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -6891,19 +7163,21 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -6933,34 +7207,40 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 0,
-                    frozen: true,
-                    proto: None,
-                    props: {
-                        "bar": ObjValueField(
-                            3,
-                            Annot(
-                                SingletonString(
-                                    4,
-                                    "hello",
+                ObjLit(
+                    ValueObjLit {
+                        loc: 0,
+                        frozen: true,
+                        proto: None,
+                        props: {
+                            "bar": ObjValueField(
+                                3,
+                                Annot(
+                                    SingletonString(
+                                        (
+                                            4,
+                                            "hello",
+                                        ),
+                                    ),
                                 ),
+                                Positive,
                             ),
-                            Positive,
-                        ),
-                        "foo": ObjValueField(
-                            1,
-                            Annot(
-                                SingletonNumber(
-                                    2,
-                                    42.0,
-                                    "42",
+                            "foo": ObjValueField(
+                                1,
+                                Annot(
+                                    SingletonNumber(
+                                        (
+                                            2,
+                                            42.0,
+                                            "42",
+                                        ),
+                                    ),
                                 ),
+                                Positive,
                             ),
-                            Positive,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -6996,12 +7276,14 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 0,
-                    frozen: true,
-                    proto: None,
-                    props: {},
-                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 0,
+                        frozen: true,
+                        proto: None,
+                        props: {},
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -7191,33 +7473,39 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 0,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "a": ObjValueField(
-                            1,
-                            Annot(
-                                SingletonString(
-                                    1,
-                                    "a",
+                ObjLit(
+                    ValueObjLit {
+                        loc: 0,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "a": ObjValueField(
+                                1,
+                                Annot(
+                                    SingletonString(
+                                        (
+                                            1,
+                                            "a",
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
-                        "b": ObjValueField(
-                            2,
-                            Annot(
-                                SingletonString(
-                                    2,
-                                    "b",
+                            "b": ObjValueField(
+                                2,
+                                Annot(
+                                    SingletonString(
+                                        (
+                                            2,
+                                            "b",
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -7323,72 +7611,80 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "n",
-            def: Err(
-                0,
-            ),
-        },
-        FunBinding {
-            id_loc: 2,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Poly(
-                    3,
-                    [
-                        TParam {
-                            name_loc: 4,
-                            name: "X",
-                            polarity: Neutral,
-                            bound: Some(
-                                Annot(
-                                    Typeof {
-                                        loc: 5,
-                                        qname: [
-                                            "n",
-                                        ],
-                                        t: Ref(
-                                            LocalRef {
-                                                ref_loc: 6,
-                                                index: 0,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "n",
+                def: Err(
+                    0,
+                ),
+            },
+        ),
+        FunBinding(
+            DefFunBinding {
+                id_loc: 2,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Poly(
+                        3,
+                        [
+                            TParam {
+                                name_loc: 4,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: Some(
+                                    Annot(
+                                        Typeof(
+                                            AnnotTypeof {
+                                                loc: 5,
+                                                qname: [
+                                                    "n",
+                                                ],
+                                                t: Ref(
+                                                    LocalRef {
+                                                        ref_loc: 6,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                                targs: None,
                                             },
                                         ),
-                                        targs: None,
+                                    ),
+                                ),
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
+                            ),
+                            t: Annot(
+                                Bound(
+                                    AnnotBound {
+                                        ref_loc: 7,
+                                        name: "X",
                                     },
                                 ),
                             ),
-                            default: None,
-                            is_const: false,
                         },
                     ],
-                ),
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Bound {
-                                ref_loc: 7,
-                                name: "X",
-                            },
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Err(
-                    8,
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    rest_param: None,
+                    this_param: None,
+                    return_: Err(
+                        8,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7442,75 +7738,83 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "n",
-            def: Err(
-                0,
-            ),
-        },
-        FunBinding {
-            id_loc: 2,
-            name: "bar",
-            async_: false,
-            generator: false,
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            FunAnnot(
-                                3,
-                                FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: None,
-                                            t: Annot(
-                                                Typeof {
-                                                    loc: 4,
-                                                    qname: [
-                                                        "n",
-                                                    ],
-                                                    t: Ref(
-                                                        LocalRef {
-                                                            ref_loc: 5,
-                                                            index: 0,
-                                                        },
-                                                    ),
-                                                    targs: None,
-                                                },
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Void(
-                                            6,
-                                        ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
-                                },
-                            ),
-                        ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Err(
-                    7,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "n",
+                def: Err(
+                    0,
                 ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
             },
-            statics: {},
-        },
+        ),
+        FunBinding(
+            DefFunBinding {
+                id_loc: 2,
+                name: "bar",
+                async_: false,
+                generator: false,
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
+                            ),
+                            t: Annot(
+                                FunAnnot(
+                                    (
+                                        3,
+                                        FunSig {
+                                            tparams: Mono,
+                                            params: [
+                                                FunParam {
+                                                    name: None,
+                                                    t: Annot(
+                                                        Typeof(
+                                                            AnnotTypeof {
+                                                                loc: 4,
+                                                                qname: [
+                                                                    "n",
+                                                                ],
+                                                                t: Ref(
+                                                                    LocalRef {
+                                                                        ref_loc: 5,
+                                                                        index: 0,
+                                                                    },
+                                                                ),
+                                                                targs: None,
+                                                            },
+                                                        ),
+                                                    ),
+                                                },
+                                            ],
+                                            rest_param: None,
+                                            this_param: None,
+                                            return_: Annot(
+                                                Void(
+                                                    6,
+                                                ),
+                                            ),
+                                            type_guard: None,
+                                            effect_: ArbitraryEffect,
+                                        },
+                                    ),
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Err(
+                        7,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7563,48 +7867,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "bar",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "bar",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
+                        ),
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {
+                    "x": (
+                        5,
+                        Ref(
+                            LocalRef {
+                                ref_loc: 6,
+                                index: 1,
+                            },
+                        ),
+                    ),
+                },
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 3,
+                name: "x",
+                def: Value(
+                    NumberLit(
+                        (
+                            4,
+                            42.0,
+                            "42",
+                        ),
                     ),
                 ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
             },
-            statics: {
-                "x": (
-                    5,
-                    Ref(
-                        LocalRef {
-                            ref_loc: 6,
-                            index: 1,
-                        },
-                    ),
-                ),
-            },
-        },
-        Variable {
-            id_loc: 3,
-            name: "x",
-            def: Value(
-                NumberLit(
-                    4,
-                    42.0,
-                    "42",
-                ),
-            ),
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7652,27 +7962,29 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "bar",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "bar",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7720,38 +8032,40 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Mixed(
-                                2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
                             ),
+                            t: Annot(
+                                Mixed(
+                                    2,
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Boolean(
+                            3,
                         ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Boolean(
-                        3,
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7795,25 +8109,27 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: true,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: AsyncVoidReturn(
-                    2,
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: true,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: AsyncVoidReturn(
+                        2,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7857,25 +8173,27 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: true,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Err(
-                    2,
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: true,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Err(
+                        2,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -7905,23 +8223,25 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                FunExpr {
-                    loc: 0,
-                    async_: true,
-                    generator: false,
-                    def: FunSig {
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        this_param: None,
-                        return_: Err(
-                            1,
-                        ),
-                        type_guard: None,
-                        effect_: ArbitraryEffect,
+                FunExpr(
+                    ValueFunExpr {
+                        loc: 0,
+                        async_: true,
+                        generator: false,
+                        def: FunSig {
+                            tparams: Mono,
+                            params: [],
+                            rest_param: None,
+                            this_param: None,
+                            return_: Err(
+                                1,
+                            ),
+                            type_guard: None,
+                            effect_: ArbitraryEffect,
+                        },
+                        statics: {},
                     },
-                    statics: {},
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -7988,105 +8308,117 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "a": ObjAnnotField(
-                            2,
-                            Annot(
-                                String(
-                                    3,
-                                ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 4,
-            custom_error_loc_opt: None,
-            name: "B",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 5,
-                    obj_kind: InexactObj,
-                    props: {
-                        "b": ObjAnnotField(
-                            6,
-                            Annot(
-                                Number(
-                                    7,
-                                ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 8,
-            custom_error_loc_opt: None,
-            name: "C",
-            tparams: Mono,
-            body: Annot(
-                ObjSpreadAnnot {
-                    loc: 9,
-                    exact: false,
-                    elems: [
-                        ObjSpreadAnnotElem(
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 10,
-                                        index: 0,
-                                    },
-                                ),
-                            ),
-                        ),
-                        ObjSpreadAnnotElem(
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 11,
-                                        index: 1,
-                                    },
-                                ),
-                            ),
-                        ),
-                        ObjSpreadAnnotSlice {
-                            dict: None,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
                             props: {
-                                "c": ObjAnnotField(
-                                    12,
+                                "a": ObjAnnotField(
+                                    2,
                                     Annot(
-                                        Null(
-                                            13,
+                                        String(
+                                            3,
                                         ),
                                     ),
                                     Neutral,
                                 ),
                             },
                             computed_props: [],
+                            proto: ObjAnnotImplicitProto,
                         },
-                    ],
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 4,
+                custom_error_loc_opt: None,
+                name: "B",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 5,
+                            obj_kind: InexactObj,
+                            props: {
+                                "b": ObjAnnotField(
+                                    6,
+                                    Annot(
+                                        Number(
+                                            7,
+                                        ),
+                                    ),
+                                    Neutral,
+                                ),
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 8,
+                custom_error_loc_opt: None,
+                name: "C",
+                tparams: Mono,
+                body: Annot(
+                    ObjSpreadAnnot(
+                        AnnotObjSpreadAnnot {
+                            loc: 9,
+                            exact: false,
+                            elems: [
+                                ObjSpreadAnnotElem(
+                                    TyRef(
+                                        Unqualified(
+                                            LocalRef {
+                                                ref_loc: 10,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                ),
+                                ObjSpreadAnnotElem(
+                                    TyRef(
+                                        Unqualified(
+                                            LocalRef {
+                                                ref_loc: 11,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                ),
+                                ObjSpreadAnnotSlice {
+                                    dict: None,
+                                    props: {
+                                        "c": ObjAnnotField(
+                                            12,
+                                            Annot(
+                                                Null(
+                                                    13,
+                                                ),
+                                            ),
+                                            Neutral,
+                                        ),
+                                    },
+                                    computed_props: [],
+                                },
+                            ],
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8132,63 +8464,71 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                InlineInterface(
-                    1,
-                    InterfaceSig {
-                        extends: [],
-                        props: {},
-                        computed_props: [],
-                        calls: [],
-                        dict: None,
-                    },
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    InlineInterface(
+                        (
+                            1,
+                            InterfaceSig {
+                                extends: [],
+                                props: {},
+                                computed_props: [],
+                                calls: [],
+                                dict: None,
+                            },
+                        ),
+                    ),
                 ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 2,
-            custom_error_loc_opt: None,
-            name: "B",
-            tparams: Mono,
-            body: Annot(
-                InlineInterface(
-                    3,
-                    InterfaceSig {
-                        extends: [
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 4,
-                                        index: 0,
-                                    },
-                                ),
-                            ),
-                        ],
-                        props: {
-                            "p": InterfaceField(
-                                Some(
-                                    5,
-                                ),
-                                Annot(
-                                    String(
-                                        6,
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 2,
+                custom_error_loc_opt: None,
+                name: "B",
+                tparams: Mono,
+                body: Annot(
+                    InlineInterface(
+                        (
+                            3,
+                            InterfaceSig {
+                                extends: [
+                                    TyRef(
+                                        Unqualified(
+                                            LocalRef {
+                                                ref_loc: 4,
+                                                index: 0,
+                                            },
+                                        ),
                                     ),
-                                ),
-                                Neutral,
-                            ),
-                        },
-                        computed_props: [],
-                        calls: [],
-                        dict: None,
-                    },
+                                ],
+                                props: {
+                                    "p": InterfaceField(
+                                        Some(
+                                            5,
+                                        ),
+                                        Annot(
+                                            String(
+                                                6,
+                                            ),
+                                        ),
+                                        Neutral,
+                                    ),
+                                },
+                                computed_props: [],
+                                calls: [],
+                                dict: None,
+                            },
+                        ),
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8230,35 +8570,39 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "p": ObjAnnotField(
-                            2,
-                            Annot(
-                                Optional(
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "p": ObjAnnotField(
+                                    2,
                                     Annot(
-                                        String(
-                                            3,
+                                        Optional(
+                                            Annot(
+                                                String(
+                                                    3,
+                                                ),
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8299,34 +8643,36 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Interface {
-            id_loc: 0,
-            name: "I",
-            tparams: Mono,
-            def: InterfaceSig {
-                extends: [],
-                props: {
-                    "p": InterfaceField(
-                        Some(
-                            1,
-                        ),
-                        Annot(
-                            Optional(
-                                Annot(
-                                    String(
-                                        2,
+        Interface(
+            DefInterface {
+                id_loc: 0,
+                name: "I",
+                tparams: Mono,
+                def: InterfaceSig {
+                    extends: [],
+                    props: {
+                        "p": InterfaceField(
+                            Some(
+                                1,
+                            ),
+                            Annot(
+                                Optional(
+                                    Annot(
+                                        String(
+                                            2,
+                                        ),
                                     ),
                                 ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    computed_props: [],
+                    calls: [],
+                    dict: None,
                 },
-                computed_props: [],
-                calls: [],
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8369,40 +8715,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Interface {
-            id_loc: 0,
-            name: "I",
-            tparams: Mono,
-            def: InterfaceSig {
-                extends: [],
-                props: {
-                    "m": InterfaceMethod(
-                        [
-                            (
-                                2,
-                                1,
-                                FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Void(
-                                            3,
+        Interface(
+            DefInterface {
+                id_loc: 0,
+                name: "I",
+                tparams: Mono,
+                def: InterfaceSig {
+                    extends: [],
+                    props: {
+                        "m": InterfaceMethod(
+                            [
+                                (
+                                    2,
+                                    1,
+                                    FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Void(
+                                                3,
+                                            ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
-                                },
-                            ),
-                        ],
-                    ),
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
+                                ),
+                            ],
+                        ),
+                    },
+                    computed_props: [],
+                    calls: [],
+                    dict: None,
                 },
-                computed_props: [],
-                calls: [],
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8444,35 +8792,37 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Interface {
-            id_loc: 0,
-            name: "I",
-            tparams: Mono,
-            def: InterfaceSig {
-                extends: [],
-                props: {},
-                computed_props: [],
-                calls: [],
-                dict: Some(
-                    ObjAnnotDict {
-                        name: Some(
-                            "key",
-                        ),
-                        polarity: Neutral,
-                        key: Annot(
-                            String(
-                                1,
+        Interface(
+            DefInterface {
+                id_loc: 0,
+                name: "I",
+                tparams: Mono,
+                def: InterfaceSig {
+                    extends: [],
+                    props: {},
+                    computed_props: [],
+                    calls: [],
+                    dict: Some(
+                        ObjAnnotDict {
+                            name: Some(
+                                "key",
                             ),
-                        ),
-                        value: Annot(
-                            Number(
-                                2,
+                            polarity: Neutral,
+                            key: Annot(
+                                String(
+                                    1,
+                                ),
                             ),
-                        ),
-                    },
-                ),
+                            value: Annot(
+                                Number(
+                                    2,
+                                ),
+                            ),
+                        },
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8516,39 +8866,43 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "m": ObjAnnotMethod {
-                            id_loc: 3,
-                            fn_loc: 2,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Void(
-                                        4,
-                                    ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "m": ObjAnnotMethod {
+                                    id_loc: 3,
+                                    fn_loc: 2,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Void(
+                                                4,
+                                            ),
+                                        ),
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
+                                },
                             },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
                         },
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8593,71 +8947,77 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {},
-                    computed_props: [],
-                    proto: ObjAnnotCallable {
-                        ts: [
-                            Annot(
-                                FunAnnot(
-                                    2,
-                                    FunSig {
-                                        tparams: Poly(
-                                            3,
-                                            [
-                                                TParam {
-                                                    name_loc: 4,
-                                                    name: "T",
-                                                    polarity: Neutral,
-                                                    bound: None,
-                                                    default: None,
-                                                    is_const: false,
-                                                },
-                                            ],
-                                        ),
-                                        params: [
-                                            FunParam {
-                                                name: None,
-                                                t: TyRef(
-                                                    Unqualified(
-                                                        BuiltinRef {
-                                                            ref_loc: 5,
-                                                            type_ref: true,
-                                                            name: "X",
-                                                        },
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {},
+                            computed_props: [],
+                            proto: ObjAnnotCallable {
+                                ts: [
+                                    Annot(
+                                        FunAnnot(
+                                            (
+                                                2,
+                                                FunSig {
+                                                    tparams: Poly(
+                                                        3,
+                                                        [
+                                                            TParam {
+                                                                name_loc: 4,
+                                                                name: "T",
+                                                                polarity: Neutral,
+                                                                bound: None,
+                                                                default: None,
+                                                                is_const: false,
+                                                            },
+                                                        ],
                                                     ),
-                                                ),
-                                            },
-                                        ],
-                                        rest_param: None,
-                                        this_param: None,
-                                        return_: TyRef(
-                                            Unqualified(
-                                                BuiltinRef {
-                                                    ref_loc: 6,
-                                                    type_ref: true,
-                                                    name: "X",
+                                                    params: [
+                                                        FunParam {
+                                                            name: None,
+                                                            t: TyRef(
+                                                                Unqualified(
+                                                                    BuiltinRef {
+                                                                        ref_loc: 5,
+                                                                        type_ref: true,
+                                                                        name: "X",
+                                                                    },
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ],
+                                                    rest_param: None,
+                                                    this_param: None,
+                                                    return_: TyRef(
+                                                        Unqualified(
+                                                            BuiltinRef {
+                                                                ref_loc: 6,
+                                                                type_ref: true,
+                                                                name: "X",
+                                                            },
+                                                        ),
+                                                    ),
+                                                    type_guard: None,
+                                                    effect_: ArbitraryEffect,
                                                 },
                                             ),
                                         ),
-                                        type_guard: None,
-                                        effect_: ArbitraryEffect,
-                                    },
-                                ),
-                            ),
-                        ],
-                    },
-                },
-            ),
-        },
+                                    ),
+                                ],
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8701,60 +9061,68 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {},
-                    computed_props: [],
-                    proto: ObjAnnotCallable {
-                        ts: [
-                            Annot(
-                                FunAnnot(
-                                    2,
-                                    FunSig {
-                                        tparams: Mono,
-                                        params: [],
-                                        rest_param: None,
-                                        this_param: None,
-                                        return_: Annot(
-                                            Number(
-                                                3,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {},
+                            computed_props: [],
+                            proto: ObjAnnotCallable {
+                                ts: [
+                                    Annot(
+                                        FunAnnot(
+                                            (
+                                                2,
+                                                FunSig {
+                                                    tparams: Mono,
+                                                    params: [],
+                                                    rest_param: None,
+                                                    this_param: None,
+                                                    return_: Annot(
+                                                        Number(
+                                                            3,
+                                                        ),
+                                                    ),
+                                                    type_guard: None,
+                                                    effect_: ArbitraryEffect,
+                                                },
                                             ),
                                         ),
-                                        type_guard: None,
-                                        effect_: ArbitraryEffect,
-                                    },
-                                ),
-                            ),
-                            Annot(
-                                FunAnnot(
-                                    4,
-                                    FunSig {
-                                        tparams: Mono,
-                                        params: [],
-                                        rest_param: None,
-                                        this_param: None,
-                                        return_: Annot(
-                                            String(
-                                                5,
+                                    ),
+                                    Annot(
+                                        FunAnnot(
+                                            (
+                                                4,
+                                                FunSig {
+                                                    tparams: Mono,
+                                                    params: [],
+                                                    rest_param: None,
+                                                    this_param: None,
+                                                    return_: Annot(
+                                                        String(
+                                                            5,
+                                                        ),
+                                                    ),
+                                                    type_guard: None,
+                                                    effect_: ArbitraryEffect,
+                                                },
                                             ),
                                         ),
-                                        type_guard: None,
-                                        effect_: ArbitraryEffect,
-                                    },
-                                ),
-                            ),
-                        ],
-                    },
-                },
-            ),
-        },
+                                    ),
+                                ],
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8808,27 +9176,33 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Pattern(
-                1,
-            ),
-        },
-        Variable {
-            id_loc: 2,
-            name: "c",
-            def: Pattern(
-                3,
-            ),
-        },
-        Variable {
-            id_loc: 3,
-            name: "d",
-            def: Pattern(
-                4,
-            ),
-        },
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Pattern(
+                    1,
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 2,
+                name: "c",
+                def: Pattern(
+                    3,
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 3,
+                name: "d",
+                def: Pattern(
+                    4,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -8919,34 +9293,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Pattern(
-                1,
-            ),
-        },
-        Variable {
-            id_loc: 1,
-            name: "b",
-            def: Pattern(
-                2,
-            ),
-        },
-        Variable {
-            id_loc: 3,
-            name: "c",
-            def: Pattern(
-                4,
-            ),
-        },
-        Variable {
-            id_loc: 4,
-            name: "d",
-            def: Pattern(
-                5,
-            ),
-        },
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Pattern(
+                    1,
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 1,
+                name: "b",
+                def: Pattern(
+                    2,
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 3,
+                name: "c",
+                def: Pattern(
+                    4,
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 4,
+                name: "d",
+                def: Pattern(
+                    5,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9026,42 +9408,46 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 1,
-                    elems: [
-                        TupleElement {
-                            loc: 2,
-                            name: None,
-                            t: Annot(
-                                String(
-                                    2,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 1,
+                            elems: [
+                                TupleElement {
+                                    loc: 2,
+                                    name: None,
+                                    t: Annot(
+                                        String(
+                                            2,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                                TupleElement {
+                                    loc: 3,
+                                    name: None,
+                                    t: Annot(
+                                        Number(
+                                            3,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                            ],
+                            inexact: false,
                         },
-                        TupleElement {
-                            loc: 3,
-                            name: None,
-                            t: Annot(
-                                Number(
-                                    3,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
-                        },
-                    ],
-                    inexact: false,
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9106,46 +9492,50 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 1,
-                    elems: [
-                        TupleElement {
-                            loc: 2,
-                            name: Some(
-                                "foo",
-                            ),
-                            t: Annot(
-                                String(
-                                    3,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 1,
+                            elems: [
+                                TupleElement {
+                                    loc: 2,
+                                    name: Some(
+                                        "foo",
+                                    ),
+                                    t: Annot(
+                                        String(
+                                            3,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                                TupleElement {
+                                    loc: 4,
+                                    name: Some(
+                                        "bar",
+                                    ),
+                                    t: Annot(
+                                        Number(
+                                            5,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                            ],
+                            inexact: false,
                         },
-                        TupleElement {
-                            loc: 4,
-                            name: Some(
-                                "bar",
-                            ),
-                            t: Annot(
-                                Number(
-                                    5,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
-                        },
-                    ],
-                    inexact: false,
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9189,46 +9579,50 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 1,
-                    elems: [
-                        TupleElement {
-                            loc: 2,
-                            name: Some(
-                                "foo",
-                            ),
-                            t: Annot(
-                                String(
-                                    3,
-                                ),
-                            ),
-                            polarity: Positive,
-                            optional: false,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 1,
+                            elems: [
+                                TupleElement {
+                                    loc: 2,
+                                    name: Some(
+                                        "foo",
+                                    ),
+                                    t: Annot(
+                                        String(
+                                            3,
+                                        ),
+                                    ),
+                                    polarity: Positive,
+                                    optional: false,
+                                },
+                                TupleElement {
+                                    loc: 4,
+                                    name: Some(
+                                        "bar",
+                                    ),
+                                    t: Annot(
+                                        Number(
+                                            5,
+                                        ),
+                                    ),
+                                    polarity: Negative,
+                                    optional: false,
+                                },
+                            ],
+                            inexact: false,
                         },
-                        TupleElement {
-                            loc: 4,
-                            name: Some(
-                                "bar",
-                            ),
-                            t: Annot(
-                                Number(
-                                    5,
-                                ),
-                            ),
-                            polarity: Negative,
-                            optional: false,
-                        },
-                    ],
-                    inexact: false,
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9269,19 +9663,23 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 1,
-                    elems: [],
-                    inexact: true,
-                },
-            ),
-        },
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 1,
+                            elems: [],
+                            inexact: true,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9334,72 +9732,84 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "p": ObjAnnotField(
-                            2,
-                            Annot(
-                                Maybe(
-                                    3,
-                                    TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 4,
-                                                index: 1,
-                                            },
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "p": ObjAnnotField(
+                                    2,
+                                    Annot(
+                                        Maybe(
+                                            (
+                                                3,
+                                                TyRef(
+                                                    Unqualified(
+                                                        LocalRef {
+                                                            ref_loc: 4,
+                                                            index: 1,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 5,
-            custom_error_loc_opt: None,
-            name: "B",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 6,
-                    obj_kind: InexactObj,
-                    props: {
-                        "p": ObjAnnotField(
-                            7,
-                            Annot(
-                                Maybe(
-                                    8,
-                                    TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 9,
-                                                index: 0,
-                                            },
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 5,
+                custom_error_loc_opt: None,
+                name: "B",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 6,
+                            obj_kind: InexactObj,
+                            props: {
+                                "p": ObjAnnotField(
+                                    7,
+                                    Annot(
+                                        Maybe(
+                                            (
+                                                8,
+                                                TyRef(
+                                                    Unqualified(
+                                                        LocalRef {
+                                                            ref_loc: 9,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9445,40 +9855,44 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Annot(
-                Typeof {
-                    loc: 1,
-                    qname: [
-                        "o",
-                        "p",
-                        "q",
-                    ],
-                    t: Eval(
-                        4,
-                        Eval(
-                            3,
-                            Ref(
-                                BuiltinRef {
-                                    ref_loc: 2,
-                                    type_ref: false,
-                                    name: "o",
-                                },
-                            ),
-                            GetProp(
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Annot(
+                    Typeof(
+                        AnnotTypeof {
+                            loc: 1,
+                            qname: [
+                                "o",
                                 "p",
+                                "q",
+                            ],
+                            t: Eval(
+                                4,
+                                Eval(
+                                    3,
+                                    Ref(
+                                        BuiltinRef {
+                                            ref_loc: 2,
+                                            type_ref: false,
+                                            name: "o",
+                                        },
+                                    ),
+                                    GetProp(
+                                        "p",
+                                    ),
+                                ),
+                                GetProp(
+                                    "q",
+                                ),
                             ),
-                        ),
-                        GetProp(
-                            "q",
-                        ),
+                            targs: None,
+                        },
                     ),
-                    targs: None,
-                },
-            ),
-        },
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9526,41 +9940,43 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: TyRefApp {
-                loc: 1,
-                name: Qualified {
-                    loc: 2,
-                    id_loc: 6,
-                    name: "Q",
-                    qualification: Qualified {
-                        loc: 3,
-                        id_loc: 5,
-                        name: "P",
-                        qualification: Unqualified(
-                            BuiltinRef {
-                                ref_loc: 4,
-                                type_ref: true,
-                                name: "O",
-                            },
-                        ),
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: TyRefApp {
+                    loc: 1,
+                    name: Qualified {
+                        loc: 2,
+                        id_loc: 6,
+                        name: "Q",
+                        qualification: Qualified {
+                            loc: 3,
+                            id_loc: 5,
+                            name: "P",
+                            qualification: Unqualified(
+                                BuiltinRef {
+                                    ref_loc: 4,
+                                    type_ref: true,
+                                    name: "O",
+                                },
+                            ),
+                        },
                     },
-                },
-                targs: [
-                    TyRef(
-                        Unqualified(
-                            BuiltinRef {
-                                ref_loc: 7,
-                                type_ref: true,
-                                name: "T",
-                            },
+                    targs: [
+                        TyRef(
+                            Unqualified(
+                                BuiltinRef {
+                                    ref_loc: 7,
+                                    type_ref: true,
+                                    name: "T",
+                                },
+                            ),
                         ),
-                    ),
-                ],
+                    ],
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9607,15 +10023,17 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Annot(
-                String(
-                    1,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Annot(
+                    String(
+                        1,
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9661,32 +10079,36 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Annot(
-                Intersection {
-                    loc: 1,
-                    t0: Annot(
-                        String(
-                            2,
-                        ),
-                    ),
-                    t1: Annot(
-                        Number(
-                            3,
-                        ),
-                    ),
-                    ts: [
-                        Annot(
-                            Null(
-                                4,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Annot(
+                    Intersection(
+                        AnnotIntersection {
+                            loc: 1,
+                            t0: Annot(
+                                String(
+                                    2,
+                                ),
                             ),
-                        ),
-                    ],
-                },
-            ),
-        },
+                            t1: Annot(
+                                Number(
+                                    3,
+                                ),
+                            ),
+                            ts: [
+                                Annot(
+                                    Null(
+                                        4,
+                                    ),
+                                ),
+                            ],
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9758,162 +10180,176 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareClassBinding {
-            id_loc: 0,
-            nominal_id_loc: 0,
-            name: "C",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {},
-                proto_props: {},
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 0,
+                nominal_id_loc: 0,
+                name: "C",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {},
+                    proto_props: {},
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
+                },
             },
-        },
-        Variable {
-            id_loc: 1,
-            name: "M",
-            def: Value(
-                ObjLit {
-                    loc: 2,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "C": ObjValueField(
-                            3,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 3,
-                                    index: 0,
-                                },
-                            ),
-                            Neutral,
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 1,
+                name: "M",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 2,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "C": ObjValueField(
+                                    3,
+                                    Ref(
+                                        LocalRef {
+                                            ref_loc: 3,
+                                            index: 0,
+                                        },
+                                    ),
+                                    Neutral,
+                                ),
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 4,
+                name: "C1",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassExplicitExtends {
+                        loc: 5,
+                        t: Ref(
+                            LocalRef {
+                                ref_loc: 5,
+                                index: 0,
+                            },
                         ),
                     },
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
                 },
-            ),
-        },
-        ClassBinding {
-            id_loc: 4,
-            name: "C1",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassExplicitExtends {
-                    loc: 5,
-                    t: Ref(
-                        LocalRef {
-                            ref_loc: 5,
-                            index: 0,
-                        },
-                    ),
-                },
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
             },
-        },
-        ClassBinding {
-            id_loc: 6,
-            name: "C2",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassExplicitExtends {
-                    loc: 7,
-                    t: Eval(
-                        7,
-                        Ref(
+        ),
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 6,
+                name: "C2",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassExplicitExtends {
+                        loc: 7,
+                        t: Eval(
+                            7,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 8,
+                                    index: 1,
+                                },
+                            ),
+                            GetProp(
+                                "C",
+                            ),
+                        ),
+                    },
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
+            },
+        ),
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 9,
+                nominal_id_loc: 9,
+                name: "C3",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassExplicitExtends {
+                        loc: 10,
+                        t: Ref(
                             LocalRef {
-                                ref_loc: 8,
-                                index: 1,
+                                ref_loc: 10,
+                                index: 0,
                             },
                         ),
-                        GetProp(
-                            "C",
-                        ),
-                    ),
+                    },
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {},
+                    proto_props: {},
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
                 },
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
             },
-        },
-        DeclareClassBinding {
-            id_loc: 9,
-            nominal_id_loc: 9,
-            name: "C3",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassExplicitExtends {
-                    loc: 10,
-                    t: Ref(
-                        LocalRef {
-                            ref_loc: 10,
-                            index: 0,
-                        },
-                    ),
-                },
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {},
-                proto_props: {},
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
-            },
-        },
-        DeclareClassBinding {
-            id_loc: 11,
-            nominal_id_loc: 11,
-            name: "C4",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassExplicitExtends {
-                    loc: 12,
-                    t: Eval(
-                        12,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 13,
-                                index: 1,
-                            },
+        ),
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 11,
+                nominal_id_loc: 11,
+                name: "C4",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassExplicitExtends {
+                        loc: 12,
+                        t: Eval(
+                            12,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 13,
+                                    index: 1,
+                                },
+                            ),
+                            GetProp(
+                                "C",
+                            ),
                         ),
-                        GetProp(
-                            "C",
-                        ),
-                    ),
+                    },
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {},
+                    proto_props: {},
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
                 },
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {},
-                proto_props: {},
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -9959,40 +10395,44 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "m": ObjValueMethod {
-                        id_loc: 2,
-                        fn_loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [],
-                            rest_param: None,
-                            this_param: None,
-                            return_: Annot(
-                                Bound {
-                                    ref_loc: 3,
-                                    name: "this",
-                                },
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "m": ObjValueMethod {
+                            id_loc: 2,
+                            fn_loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Bound(
+                                        AnnotBound {
+                                            ref_loc: 3,
+                                            name: "this",
+                                        },
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
+                    own_props: {},
+                    dict: None,
                 },
-                own_props: {},
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10038,50 +10478,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareClassBinding {
-            id_loc: 0,
-            nominal_id_loc: 0,
-            name: "C",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {},
-                proto_props: {
-                    "m": InterfaceMethod(
-                        [
-                            (
-                                2,
-                                1,
-                                FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Bound {
-                                            ref_loc: 3,
-                                            name: "this",
-                                        },
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
-                                },
-                            ),
-                        ],
-                    ),
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 0,
+                nominal_id_loc: 0,
+                name: "C",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {},
+                    proto_props: {
+                        "m": InterfaceMethod(
+                            [
+                                (
+                                    2,
+                                    1,
+                                    FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 3,
+                                                    name: "this",
+                                                },
+                                            ),
+                                        ),
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
+                                ),
+                            ],
+                        ),
+                    },
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
                 },
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10150,41 +10594,43 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "C",
-            def: ClassSig {
-                tparams: Poly(
-                    1,
-                    [
-                        TParam {
-                            name_loc: 2,
-                            name: "T",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        },
-                    ],
-                ),
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {
-                    "p": ObjValueField(
-                        3,
-                        Annot(
-                            Exists(
-                                4,
-                            ),
-                        ),
-                        Neutral,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "C",
+                def: ClassSig {
+                    tparams: Poly(
+                        1,
+                        [
+                            TParam {
+                                name_loc: 2,
+                                name: "T",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
                     ),
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {
+                        "p": ObjValueField(
+                            3,
+                            Annot(
+                                Exists(
+                                    4,
+                                ),
+                            ),
+                            Neutral,
+                        ),
+                    },
+                    dict: None,
                 },
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10226,31 +10672,35 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: ExactObj,
-                    props: {
-                        "p": ObjAnnotField(
-                            2,
-                            Annot(
-                                String(
-                                    3,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: ExactObj,
+                            props: {
+                                "p": ObjAnnotField(
+                                    2,
+                                    Annot(
+                                        String(
+                                            3,
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10289,35 +10739,41 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 0,
-                    frozen: true,
-                    proto: None,
-                    props: {
-                        "bar": ObjValueField(
-                            3,
-                            Value(
-                                NumberLit(
-                                    4,
-                                    1.0,
-                                    "1",
+                ObjLit(
+                    ValueObjLit {
+                        loc: 0,
+                        frozen: true,
+                        proto: None,
+                        props: {
+                            "bar": ObjValueField(
+                                3,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            4,
+                                            1.0,
+                                            "1",
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
-                        "foo": ObjValueField(
-                            1,
-                            Value(
-                                NumberLit(
-                                    2,
-                                    0.0,
-                                    "0",
+                            "foo": ObjValueField(
+                                1,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            2,
+                                            0.0,
+                                            "0",
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -10450,24 +10906,28 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 0,
-                    frozen: true,
-                    proto: None,
-                    props: {
-                        "foo": ObjValueField(
-                            1,
-                            Value(
-                                NumberLit(
-                                    2,
-                                    0.0,
-                                    "0",
+                ObjLit(
+                    ValueObjLit {
+                        loc: 0,
+                        frozen: true,
+                        proto: None,
+                        props: {
+                            "foo": ObjValueField(
+                                1,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            2,
+                                            0.0,
+                                            "0",
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -10510,46 +10970,52 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                FunExpr {
-                    loc: 0,
-                    async_: false,
-                    generator: false,
-                    def: FunSig {
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        this_param: None,
-                        return_: Annot(
-                            Void(
-                                1,
-                            ),
-                        ),
-                        type_guard: None,
-                        effect_: ArbitraryEffect,
-                    },
-                    statics: {
-                        "bar": (
-                            4,
-                            Value(
-                                NumberLit(
-                                    5,
-                                    1.0,
-                                    "1",
+                FunExpr(
+                    ValueFunExpr {
+                        loc: 0,
+                        async_: false,
+                        generator: false,
+                        def: FunSig {
+                            tparams: Mono,
+                            params: [],
+                            rest_param: None,
+                            this_param: None,
+                            return_: Annot(
+                                Void(
+                                    1,
                                 ),
                             ),
-                        ),
-                        "foo": (
-                            2,
-                            Value(
-                                NumberLit(
-                                    3,
-                                    0.0,
-                                    "0",
+                            type_guard: None,
+                            effect_: ArbitraryEffect,
+                        },
+                        statics: {
+                            "bar": (
+                                4,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            5,
+                                            1.0,
+                                            "1",
+                                        ),
+                                    ),
                                 ),
                             ),
-                        ),
+                            "foo": (
+                                2,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            3,
+                                            0.0,
+                                            "0",
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -10608,48 +11074,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
-                    ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
-            },
-            statics: {
-                "bar": (
-                    5,
-                    Value(
-                        NumberLit(
-                            6,
-                            1.0,
-                            "1",
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
                         ),
                     ),
-                ),
-                "foo": (
-                    3,
-                    Value(
-                        NumberLit(
-                            4,
-                            0.0,
-                            "0",
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {
+                    "bar": (
+                        5,
+                        Value(
+                            NumberLit(
+                                (
+                                    6,
+                                    1.0,
+                                    "1",
+                                ),
+                            ),
                         ),
                     ),
-                ),
+                    "foo": (
+                        3,
+                        Value(
+                            NumberLit(
+                                (
+                                    4,
+                                    0.0,
+                                    "0",
+                                ),
+                            ),
+                        ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10695,38 +11167,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
-                    ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
-            },
-            statics: {
-                "bar": (
-                    3,
-                    Value(
-                        NumberLit(
-                            4,
-                            1.0,
-                            "1",
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
                         ),
                     ),
-                ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {
+                    "bar": (
+                        3,
+                        Value(
+                            NumberLit(
+                                (
+                                    4,
+                                    1.0,
+                                    "1",
+                                ),
+                            ),
+                        ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10774,38 +11250,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 2,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        3,
-                    ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
-            },
-            statics: {
-                "bar": (
-                    4,
-                    Value(
-                        NumberLit(
-                            5,
-                            1.0,
-                            "1",
+        FunBinding(
+            DefFunBinding {
+                id_loc: 2,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            3,
                         ),
                     ),
-                ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {
+                    "bar": (
+                        4,
+                        Value(
+                            NumberLit(
+                                (
+                                    5,
+                                    1.0,
+                                    "1",
+                                ),
+                            ),
+                        ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10852,38 +11332,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        2,
-                    ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
-            },
-            statics: {
-                "bar": (
-                    3,
-                    Value(
-                        NumberLit(
-                            4,
-                            0.0,
-                            "0",
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            2,
                         ),
                     ),
-                ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {
+                    "bar": (
+                        3,
+                        Value(
+                            NumberLit(
+                                (
+                                    4,
+                                    0.0,
+                                    "0",
+                                ),
+                            ),
+                        ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -10931,42 +11415,48 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "foo",
-            def: Value(
-                FunExpr {
-                    loc: 1,
-                    async_: false,
-                    generator: false,
-                    def: FunSig {
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        this_param: None,
-                        return_: Annot(
-                            Void(
-                                2,
-                            ),
-                        ),
-                        type_guard: None,
-                        effect_: ArbitraryEffect,
-                    },
-                    statics: {
-                        "bar": (
-                            3,
-                            Value(
-                                NumberLit(
-                                    4,
-                                    0.0,
-                                    "0",
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "foo",
+                def: Value(
+                    FunExpr(
+                        ValueFunExpr {
+                            loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Void(
+                                        2,
+                                    ),
                                 ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                            statics: {
+                                "bar": (
+                                    3,
+                                    Value(
+                                        NumberLit(
+                                            (
+                                                4,
+                                                0.0,
+                                                "0",
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11015,48 +11505,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 2,
-            name: "f",
-            async_: false,
-            generator: false,
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        3,
-                    ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
-            },
-            statics: {
-                "bar": (
-                    4,
-                    Value(
-                        NumberLit(
-                            5,
-                            0.0,
-                            "0",
+        FunBinding(
+            DefFunBinding {
+                id_loc: 2,
+                name: "f",
+                async_: false,
+                generator: false,
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            3,
                         ),
                     ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {
+                    "bar": (
+                        4,
+                        Value(
+                            NumberLit(
+                                (
+                                    5,
+                                    0.0,
+                                    "0",
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "foo",
+                def: Ref(
+                    LocalRef {
+                        ref_loc: 2,
+                        index: 0,
+                    },
                 ),
             },
-        },
-        Variable {
-            id_loc: 0,
-            name: "foo",
-            def: Ref(
-                LocalRef {
-                    ref_loc: 2,
-                    index: 0,
-                },
-            ),
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11100,26 +11596,30 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "o",
-            def: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {},
-                    computed_props: [],
-                    proto: ObjAnnotExplicitProto(
-                        2,
-                        Annot(
-                            Null(
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "o",
+                def: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {},
+                            computed_props: [],
+                            proto: ObjAnnotExplicitProto(
                                 2,
+                                Annot(
+                                    Null(
+                                        2,
+                                    ),
+                                ),
                             ),
-                        ),
+                        },
                     ),
-                },
-            ),
-        },
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11232,185 +11732,213 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Value(
-                ObjLit {
-                    loc: 1,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            Get(
-                                2,
-                                Annot(
-                                    Number(
-                                        3,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 1,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    Get(
+                                        2,
+                                        Annot(
+                                            Number(
+                                                3,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 4,
-            name: "b",
-            def: Value(
-                ObjLit {
-                    loc: 5,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            Set(
-                                6,
-                                Annot(
-                                    Number(
-                                        7,
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 4,
+                name: "b",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 5,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    Set(
+                                        6,
+                                        Annot(
+                                            Number(
+                                                7,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 8,
-            name: "c",
-            def: Value(
-                ObjLit {
-                    loc: 9,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            GetSet(
-                                10,
-                                Annot(
-                                    Number(
-                                        11,
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 8,
+                name: "c",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 9,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    GetSet(
+                                        10,
+                                        Annot(
+                                            Number(
+                                                11,
+                                            ),
+                                        ),
+                                        12,
+                                        Annot(
+                                            Number(
+                                                13,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                                12,
-                                Annot(
-                                    Number(
-                                        13,
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 14,
+                name: "d",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 15,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    Get(
+                                        16,
+                                        Annot(
+                                            String(
+                                                17,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 14,
-            name: "d",
-            def: Value(
-                ObjLit {
-                    loc: 15,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            Get(
-                                16,
-                                Annot(
-                                    String(
-                                        17,
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 18,
+                name: "e",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 19,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    Set(
+                                        20,
+                                        Annot(
+                                            String(
+                                                21,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 18,
-            name: "e",
-            def: Value(
-                ObjLit {
-                    loc: 19,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            Set(
-                                20,
-                                Annot(
-                                    String(
-                                        21,
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 22,
+                name: "f",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 23,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    GetSet(
+                                        26,
+                                        Annot(
+                                            String(
+                                                27,
+                                            ),
+                                        ),
+                                        24,
+                                        Annot(
+                                            Number(
+                                                25,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 22,
-            name: "f",
-            def: Value(
-                ObjLit {
-                    loc: 23,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            GetSet(
-                                26,
-                                Annot(
-                                    String(
-                                        27,
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 28,
+                name: "g",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 29,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "p": ObjValueAccess(
+                                    GetSet(
+                                        30,
+                                        Annot(
+                                            Number(
+                                                31,
+                                            ),
+                                        ),
+                                        32,
+                                        Annot(
+                                            String(
+                                                33,
+                                            ),
+                                        ),
                                     ),
                                 ),
-                                24,
-                                Annot(
-                                    Number(
-                                        25,
-                                    ),
-                                ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 28,
-            name: "g",
-            def: Value(
-                ObjLit {
-                    loc: 29,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "p": ObjValueAccess(
-                            GetSet(
-                                30,
-                                Annot(
-                                    Number(
-                                        31,
-                                    ),
-                                ),
-                                32,
-                                Annot(
-                                    String(
-                                        33,
-                                    ),
-                                ),
-                            ),
-                        ),
-                    },
-                },
-            ),
-        },
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11455,27 +11983,29 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 2,
-            name: "f",
-            async_: false,
-            generator: false,
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        3,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 2,
+                name: "f",
+                async_: false,
+                generator: false,
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            3,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11519,19 +12049,21 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 1,
-            name: "C",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {},
-                own_props: {},
-                dict: None,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 1,
+                name: "C",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {},
+                    own_props: {},
+                    dict: None,
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11577,25 +12109,27 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareFun {
-            id_loc: 1,
-            name: "f",
-            fn_loc: 2,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Void(
-                        3,
+        DeclareFun(
+            DefDeclareFun {
+                id_loc: 1,
+                name: "f",
+                fn_loc: 2,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Void(
+                            3,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                tail: [],
             },
-            tail: [],
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11638,27 +12172,29 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareClassBinding {
-            id_loc: 1,
-            nominal_id_loc: 1,
-            name: "C",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {},
-                proto_props: {},
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 1,
+                nominal_id_loc: 1,
+                name: "C",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {},
+                    proto_props: {},
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11753,20 +12289,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                StringRep {
-                    truthy: true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11811,20 +12349,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 1,
-            name: "E",
-            rep: Some(
-                StringRep {
-                    truthy: true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 1,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 2,
+                    "B": 3,
                 },
-            ),
-            members: {
-                "A": 2,
-                "B": 3,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11872,20 +12412,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                StringRep {
-                    truthy: true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11928,21 +12470,23 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                BoolRep(
-                    Some(
-                        true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    BoolRep(
+                        Some(
+                            true,
+                        ),
                     ),
                 ),
-            ),
-            members: {
-                "A": 1,
+                members: {
+                    "A": 1,
+                },
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -11986,20 +12530,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                BoolRep(
-                    None,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    BoolRep(
+                        None,
+                    ),
                 ),
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                members: {
+                    "A": 1,
+                    "B": 2,
+                },
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12043,20 +12589,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                NumberRep {
-                    truthy: true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    NumberRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12100,20 +12648,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                NumberRep {
-                    truthy: false,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    NumberRep {
+                        truthy: false,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12157,20 +12707,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                StringRep {
-                    truthy: false,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: false,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12214,18 +12766,20 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                SymbolRep,
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    SymbolRep,
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
+                },
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12269,20 +12823,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                StringRep {
-                    truthy: true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: true,
             },
-            has_unknown_members: true,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12326,20 +12882,22 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        EnumBinding {
-            id_loc: 0,
-            name: "E",
-            rep: Some(
-                StringRep {
-                    truthy: true,
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
                 },
-            ),
-            members: {
-                "A": 1,
-                "B": 2,
+                has_unknown_members: false,
             },
-            has_unknown_members: false,
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12381,10 +12939,12 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DisabledEnumBinding {
-            id_loc: 0,
-            name: "E",
-        },
+        DisabledEnumBinding(
+            DefDisabledEnumBinding {
+                id_loc: 0,
+                name: "E",
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12437,33 +12997,35 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: Some(
-                    Annot(
-                        Mixed(
-                            2,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: Some(
+                        Annot(
+                            Mixed(
+                                2,
+                            ),
                         ),
                     ),
-                ),
-                return_: Annot(
-                    Void(
-                        3,
+                    return_: Annot(
+                        Void(
+                            3,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12510,45 +13072,47 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ClassBinding {
-            id_loc: 0,
-            name: "A",
-            def: ClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                implements: [],
-                static_props: {},
-                proto_props: {
-                    "foo": ObjValueMethod {
-                        id_loc: 2,
-                        fn_loc: 1,
-                        async_: false,
-                        generator: false,
-                        def: FunSig {
-                            tparams: Mono,
-                            params: [],
-                            rest_param: None,
-                            this_param: Some(
-                                Annot(
-                                    Mixed(
-                                        3,
+        ClassBinding(
+            DefClassBinding {
+                id_loc: 0,
+                name: "A",
+                def: ClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    implements: [],
+                    static_props: {},
+                    proto_props: {
+                        "foo": ObjValueMethod {
+                            id_loc: 2,
+                            fn_loc: 1,
+                            async_: false,
+                            generator: false,
+                            def: FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: Some(
+                                    Annot(
+                                        Mixed(
+                                            3,
+                                        ),
                                     ),
                                 ),
-                            ),
-                            return_: Annot(
-                                Void(
-                                    4,
+                                return_: Annot(
+                                    Void(
+                                        4,
+                                    ),
                                 ),
-                            ),
-                            type_guard: None,
-                            effect_: ArbitraryEffect,
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         },
                     },
+                    own_props: {},
+                    dict: None,
                 },
-                own_props: {},
-                dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12591,31 +13155,33 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareFun {
-            id_loc: 0,
-            name: "foo",
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: Some(
-                    Annot(
-                        Mixed(
-                            2,
+        DeclareFun(
+            DefDeclareFun {
+                id_loc: 0,
+                name: "foo",
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: Some(
+                        Annot(
+                            Mixed(
+                                2,
+                            ),
                         ),
                     ),
-                ),
-                return_: Annot(
-                    Void(
-                        3,
+                    return_: Annot(
+                        Void(
+                            3,
+                        ),
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                tail: [],
             },
-            tail: [],
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12662,55 +13228,57 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareClassBinding {
-            id_loc: 0,
-            nominal_id_loc: 0,
-            name: "A",
-            def: DeclareClassSig {
-                tparams: Mono,
-                extends: ClassImplicitExtends,
-                mixins: [],
-                implements: [],
-                static_props: {},
-                own_props: {},
-                proto_props: {
-                    "foo": InterfaceMethod(
-                        [
-                            (
-                                2,
-                                1,
-                                FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: Some(
-                                        Annot(
-                                            Mixed(
-                                                3,
+        DeclareClassBinding(
+            DefDeclareClassBinding {
+                id_loc: 0,
+                nominal_id_loc: 0,
+                name: "A",
+                def: DeclareClassSig {
+                    tparams: Mono,
+                    extends: ClassImplicitExtends,
+                    mixins: [],
+                    implements: [],
+                    static_props: {},
+                    own_props: {},
+                    proto_props: {
+                        "foo": InterfaceMethod(
+                            [
+                                (
+                                    2,
+                                    1,
+                                    FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: Some(
+                                            Annot(
+                                                Mixed(
+                                                    3,
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    return_: Annot(
-                                        Void(
-                                            4,
+                                        return_: Annot(
+                                            Void(
+                                                4,
+                                            ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
-                                },
-                            ),
-                        ],
-                    ),
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
+                                ),
+                            ],
+                        ),
+                    },
+                    computed_own_props: [],
+                    computed_proto_props: [],
+                    computed_static_props: [],
+                    static_calls: [],
+                    calls: [],
+                    dict: None,
+                    static_dict: None,
                 },
-                computed_own_props: [],
-                computed_proto_props: [],
-                computed_static_props: [],
-                static_calls: [],
-                calls: [],
-                dict: None,
-                static_dict: None,
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12752,36 +13320,40 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "Foo",
-            tparams: Mono,
-            body: Annot(
-                FunAnnot(
-                    1,
-                    FunSig {
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        this_param: Some(
-                            Annot(
-                                Mixed(
-                                    2,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "Foo",
+                tparams: Mono,
+                body: Annot(
+                    FunAnnot(
+                        (
+                            1,
+                            FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: Some(
+                                    Annot(
+                                        Mixed(
+                                            2,
+                                        ),
+                                    ),
                                 ),
-                            ),
+                                return_: Annot(
+                                    Void(
+                                        3,
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
                         ),
-                        return_: Annot(
-                            Void(
-                                3,
-                            ),
-                        ),
-                        type_guard: None,
-                        effect_: ArbitraryEffect,
-                    },
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12828,59 +13400,65 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "O",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "a": ObjAnnotField(
-                            6,
-                            Annot(
-                                Number(
-                                    7,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "O",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "a": ObjAnnotField(
+                                    6,
+                                    Annot(
+                                        Number(
+                                            7,
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                        "f": ObjAnnotField(
-                            2,
-                            Annot(
-                                FunAnnot(
-                                    3,
-                                    FunSig {
-                                        tparams: Mono,
-                                        params: [],
-                                        rest_param: None,
-                                        this_param: Some(
-                                            Annot(
-                                                Mixed(
-                                                    4,
-                                                ),
+                                "f": ObjAnnotField(
+                                    2,
+                                    Annot(
+                                        FunAnnot(
+                                            (
+                                                3,
+                                                FunSig {
+                                                    tparams: Mono,
+                                                    params: [],
+                                                    rest_param: None,
+                                                    this_param: Some(
+                                                        Annot(
+                                                            Mixed(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    return_: Annot(
+                                                        Void(
+                                                            5,
+                                                        ),
+                                                    ),
+                                                    type_guard: None,
+                                                    effect_: ArbitraryEffect,
+                                                },
                                             ),
                                         ),
-                                        return_: Annot(
-                                            Void(
-                                                5,
-                                            ),
-                                        ),
-                                        type_guard: None,
-                                        effect_: ArbitraryEffect,
-                                    },
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -12924,49 +13502,61 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                OptionalIndexedAccessResultType {
-                    loc: 1,
-                    non_maybe_result: Annot(
-                        ElementType {
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    OptionalIndexedAccessResultType(
+                        AnnotOptionalIndexedAccessResultType {
                             loc: 1,
-                            obj: Annot(
-                                OptionalIndexedAccessNonMaybeType {
-                                    loc: 2,
-                                    obj: TyRef(
-                                        Unqualified(
-                                            BuiltinRef {
-                                                ref_loc: 3,
-                                                type_ref: true,
-                                                name: "Obj",
-                                            },
+                            non_maybe_result: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 1,
+                                        obj: Annot(
+                                            OptionalIndexedAccessNonMaybeType(
+                                                AnnotOptionalIndexedAccessNonMaybeType {
+                                                    loc: 2,
+                                                    obj: TyRef(
+                                                        Unqualified(
+                                                            BuiltinRef {
+                                                                ref_loc: 3,
+                                                                type_ref: true,
+                                                                name: "Obj",
+                                                            },
+                                                        ),
+                                                    ),
+                                                    index: Annot(
+                                                        SingletonString(
+                                                            (
+                                                                4,
+                                                                "a",
+                                                            ),
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
                                         ),
-                                    ),
-                                    index: Annot(
-                                        SingletonString(
-                                            4,
-                                            "a",
+                                        elem: Annot(
+                                            SingletonString(
+                                                (
+                                                    5,
+                                                    "b",
+                                                ),
+                                            ),
                                         ),
-                                    ),
-                                },
-                            ),
-                            elem: Annot(
-                                SingletonString(
-                                    5,
-                                    "b",
+                                    },
                                 ),
                             ),
+                            void_loc: 2,
                         },
                     ),
-                    void_loc: 2,
-                },
-            ),
-        },
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -13163,44 +13753,48 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "bar",
-            def: Pattern(
-                1,
-            ),
-        },
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "bar",
+                def: Pattern(
+                    1,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
     pattern_defs: [
         Annot(
-            ObjAnnot {
-                loc: 1,
-                obj_kind: InexactObj,
-                props: {
-                    "bar": ObjAnnotField(
-                        4,
-                        Annot(
-                            Number(
-                                5,
+            ObjAnnot(
+                AnnotObjAnnot {
+                    loc: 1,
+                    obj_kind: InexactObj,
+                    props: {
+                        "bar": ObjAnnotField(
+                            4,
+                            Annot(
+                                Number(
+                                    5,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
-                    "foo": ObjAnnotField(
-                        2,
-                        Annot(
-                            Number(
-                                3,
+                        "foo": ObjAnnotField(
+                            2,
+                            Annot(
+                                Number(
+                                    3,
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
+                    computed_props: [],
+                    proto: ObjAnnotImplicitProto,
                 },
-                computed_props: [],
-                proto: ObjAnnotImplicitProto,
-            },
+            ),
         ),
     ],
     dirty_pattern_defs: [],
@@ -13288,65 +13882,67 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DeclareFun {
-            id_loc: 0,
-            name: "f",
-            fn_loc: 1,
-            def: FunSig {
-                tparams: Mono,
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            String(
-                                2,
+        DeclareFun(
+            DefDeclareFun {
+                id_loc: 0,
+                name: "f",
+                fn_loc: 1,
+                def: FunSig {
+                    tparams: Mono,
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
                             ),
+                            t: Annot(
+                                String(
+                                    2,
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Number(
+                            3,
                         ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Number(
-                        3,
                     ),
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
-            },
-            tail: [
-                (
-                    4,
-                    5,
-                    FunSig {
-                        tparams: Mono,
-                        params: [
-                            FunParam {
-                                name: Some(
-                                    "x",
-                                ),
-                                t: Annot(
-                                    Number(
-                                        6,
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                tail: [
+                    (
+                        4,
+                        5,
+                        FunSig {
+                            tparams: Mono,
+                            params: [
+                                FunParam {
+                                    name: Some(
+                                        "x",
                                     ),
+                                    t: Annot(
+                                        Number(
+                                            6,
+                                        ),
+                                    ),
+                                },
+                            ],
+                            rest_param: None,
+                            this_param: None,
+                            return_: Annot(
+                                String(
+                                    7,
                                 ),
-                            },
-                        ],
-                        rest_param: None,
-                        this_param: None,
-                        return_: Annot(
-                            String(
-                                7,
                             ),
-                        ),
-                        type_guard: None,
-                        effect_: ArbitraryEffect,
-                    },
-                ),
-            ],
-        },
+                            type_guard: None,
+                            effect_: ArbitraryEffect,
+                        },
+                    ),
+                ],
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -13390,50 +13986,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 1,
-                    elems: [
-                        TupleElement {
-                            loc: 2,
-                            name: Some(
-                                "a",
-                            ),
-                            t: Annot(
-                                Number(
-                                    3,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
-                        },
-                        TupleElement {
-                            loc: 4,
-                            name: Some(
-                                "b",
-                            ),
-                            t: Annot(
-                                Optional(
-                                    Annot(
-                                        String(
-                                            5,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 1,
+                            elems: [
+                                TupleElement {
+                                    loc: 2,
+                                    name: Some(
+                                        "a",
+                                    ),
+                                    t: Annot(
+                                        Number(
+                                            3,
                                         ),
                                     ),
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: true,
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                                TupleElement {
+                                    loc: 4,
+                                    name: Some(
+                                        "b",
+                                    ),
+                                    t: Annot(
+                                        Optional(
+                                            Annot(
+                                                String(
+                                                    5,
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: true,
+                                },
+                            ],
+                            inexact: false,
                         },
-                    ],
-                    inexact: false,
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -13481,79 +14081,87 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "S",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 1,
-                    elems: [
-                        TupleElement {
-                            loc: 2,
-                            name: None,
-                            t: Annot(
-                                String(
-                                    2,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "S",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 1,
+                            elems: [
+                                TupleElement {
+                                    loc: 2,
+                                    name: None,
+                                    t: Annot(
+                                        String(
+                                            2,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                                TupleElement {
+                                    loc: 3,
+                                    name: None,
+                                    t: Annot(
+                                        Boolean(
+                                            3,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                            ],
+                            inexact: false,
                         },
-                        TupleElement {
-                            loc: 3,
-                            name: None,
-                            t: Annot(
-                                Boolean(
-                                    3,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 4,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    Tuple(
+                        AnnotTuple {
+                            loc: 5,
+                            elems: [
+                                TupleElement {
+                                    loc: 6,
+                                    name: None,
+                                    t: Annot(
+                                        Number(
+                                            6,
+                                        ),
+                                    ),
+                                    polarity: Neutral,
+                                    optional: false,
+                                },
+                                TupleSpread {
+                                    loc: 7,
+                                    name: None,
+                                    t: TyRef(
+                                        Unqualified(
+                                            LocalRef {
+                                                ref_loc: 8,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                },
+                            ],
+                            inexact: false,
                         },
-                    ],
-                    inexact: false,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 4,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                Tuple {
-                    loc: 5,
-                    elems: [
-                        TupleElement {
-                            loc: 6,
-                            name: None,
-                            t: Annot(
-                                Number(
-                                    6,
-                                ),
-                            ),
-                            polarity: Neutral,
-                            optional: false,
-                        },
-                        TupleSpread {
-                            loc: 7,
-                            name: None,
-                            t: TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 8,
-                                        index: 0,
-                                    },
-                                ),
-                            ),
-                        },
-                    ],
-                    inexact: false,
-                },
-            ),
-        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -13653,290 +14261,334 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "O",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "bar": ObjAnnotField(
-                            4,
-                            Annot(
-                                String(
-                                    5,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "O",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "bar": ObjAnnotField(
+                                    4,
+                                    Annot(
+                                        String(
+                                            5,
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                        "foo": ObjAnnotField(
-                            2,
-                            Annot(
-                                Number(
-                                    3,
+                                "foo": ObjAnnotField(
+                                    2,
+                                    Annot(
+                                        Number(
+                                            3,
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 6,
-            custom_error_loc_opt: None,
-            name: "T1",
-            tparams: Mono,
-            body: Annot(
-                MappedTypeAnnot {
-                    loc: 7,
-                    source_type: TyRef(
-                        Unqualified(
-                            LocalRef {
-                                ref_loc: 9,
-                                index: 0,
                             },
-                        ),
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
                     ),
-                    property_type: Annot(
-                        ElementType {
-                            loc: 10,
-                            obj: TyRef(
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 6,
+                custom_error_loc_opt: None,
+                name: "T1",
+                tparams: Mono,
+                body: Annot(
+                    MappedTypeAnnot(
+                        AnnotMappedTypeAnnot {
+                            loc: 7,
+                            source_type: TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 11,
+                                        ref_loc: 9,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            elem: Annot(
-                                Bound {
-                                    ref_loc: 12,
-                                    name: "key",
-                                },
+                            property_type: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 10,
+                                        obj: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 11,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        elem: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 12,
+                                                    name: "key",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
                             ),
+                            key_tparam: TParam {
+                                name_loc: 8,
+                                name: "key",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                            variance: Neutral,
+                            variance_op: None,
+                            optional: NoOptionalFlag,
+                            inline_keyof: true,
                         },
                     ),
-                    key_tparam: TParam {
-                        name_loc: 8,
-                        name: "key",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                    variance: Neutral,
-                    variance_op: None,
-                    optional: NoOptionalFlag,
-                    inline_keyof: true,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 13,
-            custom_error_loc_opt: None,
-            name: "T2",
-            tparams: Mono,
-            body: Annot(
-                MappedTypeAnnot {
-                    loc: 14,
-                    source_type: TyRef(
-                        Unqualified(
-                            LocalRef {
-                                ref_loc: 16,
-                                index: 0,
-                            },
-                        ),
-                    ),
-                    property_type: Annot(
-                        ElementType {
-                            loc: 17,
-                            obj: TyRef(
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 13,
+                custom_error_loc_opt: None,
+                name: "T2",
+                tparams: Mono,
+                body: Annot(
+                    MappedTypeAnnot(
+                        AnnotMappedTypeAnnot {
+                            loc: 14,
+                            source_type: TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 18,
+                                        ref_loc: 16,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            elem: Annot(
-                                Bound {
-                                    ref_loc: 19,
-                                    name: "key",
-                                },
+                            property_type: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 17,
+                                        obj: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 18,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        elem: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 19,
+                                                    name: "key",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
                             ),
+                            key_tparam: TParam {
+                                name_loc: 15,
+                                name: "key",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                            variance: Neutral,
+                            variance_op: None,
+                            optional: Optional,
+                            inline_keyof: true,
                         },
                     ),
-                    key_tparam: TParam {
-                        name_loc: 15,
-                        name: "key",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                    variance: Neutral,
-                    variance_op: None,
-                    optional: Optional,
-                    inline_keyof: true,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 20,
-            custom_error_loc_opt: None,
-            name: "T3",
-            tparams: Mono,
-            body: Annot(
-                MappedTypeAnnot {
-                    loc: 21,
-                    source_type: TyRef(
-                        Unqualified(
-                            LocalRef {
-                                ref_loc: 23,
-                                index: 0,
-                            },
-                        ),
-                    ),
-                    property_type: Annot(
-                        ElementType {
-                            loc: 24,
-                            obj: TyRef(
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 20,
+                custom_error_loc_opt: None,
+                name: "T3",
+                tparams: Mono,
+                body: Annot(
+                    MappedTypeAnnot(
+                        AnnotMappedTypeAnnot {
+                            loc: 21,
+                            source_type: TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 25,
+                                        ref_loc: 23,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            elem: Annot(
-                                Bound {
-                                    ref_loc: 26,
-                                    name: "key",
-                                },
+                            property_type: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 24,
+                                        obj: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 25,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        elem: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 26,
+                                                    name: "key",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
                             ),
+                            key_tparam: TParam {
+                                name_loc: 22,
+                                name: "key",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                            variance: Positive,
+                            variance_op: None,
+                            optional: NoOptionalFlag,
+                            inline_keyof: true,
                         },
                     ),
-                    key_tparam: TParam {
-                        name_loc: 22,
-                        name: "key",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                    variance: Positive,
-                    variance_op: None,
-                    optional: NoOptionalFlag,
-                    inline_keyof: true,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 27,
-            custom_error_loc_opt: None,
-            name: "T4",
-            tparams: Mono,
-            body: Annot(
-                MappedTypeAnnot {
-                    loc: 28,
-                    source_type: TyRef(
-                        Unqualified(
-                            LocalRef {
-                                ref_loc: 30,
-                                index: 0,
-                            },
-                        ),
-                    ),
-                    property_type: Annot(
-                        ElementType {
-                            loc: 31,
-                            obj: TyRef(
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 27,
+                custom_error_loc_opt: None,
+                name: "T4",
+                tparams: Mono,
+                body: Annot(
+                    MappedTypeAnnot(
+                        AnnotMappedTypeAnnot {
+                            loc: 28,
+                            source_type: TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 32,
+                                        ref_loc: 30,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            elem: Annot(
-                                Bound {
-                                    ref_loc: 33,
-                                    name: "key",
-                                },
+                            property_type: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 31,
+                                        obj: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 32,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        elem: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 33,
+                                                    name: "key",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
                             ),
+                            key_tparam: TParam {
+                                name_loc: 29,
+                                name: "key",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                            variance: Negative,
+                            variance_op: None,
+                            optional: Optional,
+                            inline_keyof: true,
                         },
                     ),
-                    key_tparam: TParam {
-                        name_loc: 29,
-                        name: "key",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                    variance: Negative,
-                    variance_op: None,
-                    optional: Optional,
-                    inline_keyof: true,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 34,
-            custom_error_loc_opt: None,
-            name: "T5",
-            tparams: Mono,
-            body: Annot(
-                MappedTypeAnnot {
-                    loc: 35,
-                    source_type: TyRef(
-                        Unqualified(
-                            LocalRef {
-                                ref_loc: 37,
-                                index: 0,
-                            },
-                        ),
-                    ),
-                    property_type: Annot(
-                        ElementType {
-                            loc: 38,
-                            obj: TyRef(
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 34,
+                custom_error_loc_opt: None,
+                name: "T5",
+                tparams: Mono,
+                body: Annot(
+                    MappedTypeAnnot(
+                        AnnotMappedTypeAnnot {
+                            loc: 35,
+                            source_type: TyRef(
                                 Unqualified(
                                     LocalRef {
-                                        ref_loc: 39,
+                                        ref_loc: 37,
                                         index: 0,
                                     },
                                 ),
                             ),
-                            elem: Annot(
-                                Bound {
-                                    ref_loc: 40,
-                                    name: "key",
-                                },
+                            property_type: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 38,
+                                        obj: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 39,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        elem: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 40,
+                                                    name: "key",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
                             ),
+                            key_tparam: TParam {
+                                name_loc: 36,
+                                name: "key",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                            variance: Neutral,
+                            variance_op: None,
+                            optional: NoOptionalFlag,
+                            inline_keyof: false,
                         },
                     ),
-                    key_tparam: TParam {
-                        name_loc: 36,
-                        name: "key",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                    variance: Neutral,
-                    variance_op: None,
-                    optional: NoOptionalFlag,
-                    inline_keyof: false,
-                },
-            ),
-        },
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -13984,32 +14636,38 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "T",
-            tparams: Mono,
-            body: Annot(
-                Any(
-                    1,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    Any(
+                        1,
+                    ),
                 ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 2,
-            custom_error_loc_opt: None,
-            name: "U",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 3,
-                    obj_kind: InexactObj,
-                    props: {},
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 2,
+                custom_error_loc_opt: None,
+                name: "U",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 3,
+                            obj_kind: InexactObj,
+                            props: {},
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14080,81 +14738,95 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "OOOOOO",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "bar": ObjAnnotField(
-                            4,
-                            Annot(
-                                String(
-                                    5,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "OOOOOO",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "bar": ObjAnnotField(
+                                    4,
+                                    Annot(
+                                        String(
+                                            5,
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                        "foo": ObjAnnotField(
-                            2,
-                            Annot(
-                                Number(
-                                    3,
+                                "foo": ObjAnnotField(
+                                    2,
+                                    Annot(
+                                        Number(
+                                            3,
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        Variable {
-            id_loc: 6,
-            name: "aaaaa",
-            def: Value(
-                ObjLit {
-                    loc: 7,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "bar": ObjValueField(
-                            10,
-                            Value(
-                                StringLit(
-                                    11,
-                                    "",
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 6,
+                name: "aaaaa",
+                def: Value(
+                    ObjLit(
+                        ValueObjLit {
+                            loc: 7,
+                            frozen: false,
+                            proto: None,
+                            props: {
+                                "bar": ObjValueField(
+                                    10,
+                                    Value(
+                                        StringLit(
+                                            (
+                                                11,
+                                                "",
+                                            ),
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                        "foo": ObjValueField(
-                            8,
-                            Value(
-                                NumberLit(
-                                    9,
-                                    3.0,
-                                    "3",
+                                "foo": ObjValueField(
+                                    8,
+                                    Value(
+                                        NumberLit(
+                                            (
+                                                9,
+                                                3.0,
+                                                "3",
+                                            ),
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                },
-            ),
-        },
-        Variable {
-            id_loc: 12,
-            name: "foo",
-            def: Pattern(
-                1,
-            ),
-        },
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 12,
+                name: "foo",
+                def: Pattern(
+                    1,
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [
         0,
@@ -14163,24 +14835,28 @@ Module {
     remote_refs: [],
     pattern_defs: [
         Value(
-            ObjLit {
-                loc: 13,
-                frozen: false,
-                proto: None,
-                props: {
-                    "foo": ObjValueField(
-                        14,
-                        Value(
-                            NumberLit(
-                                15,
-                                3.0,
-                                "3",
+            ObjLit(
+                ValueObjLit {
+                    loc: 13,
+                    frozen: false,
+                    proto: None,
+                    props: {
+                        "foo": ObjValueField(
+                            14,
+                            Value(
+                                NumberLit(
+                                    (
+                                        15,
+                                        3.0,
+                                        "3",
+                                    ),
+                                ),
                             ),
+                            Neutral,
                         ),
-                        Neutral,
-                    ),
+                    },
                 },
-            },
+            ),
         ),
     ],
     dirty_pattern_defs: [
@@ -14267,23 +14943,25 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 4,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "Baz": ObjValueField(
-                            5,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 4,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "Baz": ObjValueField(
+                                5,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 5,
+                                        index: 0,
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -14295,22 +14973,24 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ComponentBinding {
-            id_loc: 1,
-            name: "Baz",
-            fn_loc: 0,
-            def: ComponentSig {
-                params_loc: 2,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        3,
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 1,
+                name: "Baz",
+                fn_loc: 0,
+                def: ComponentSig {
+                    params_loc: 2,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            3,
+                        ),
                     ),
-                ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14349,23 +15029,25 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 11,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "Baz": ObjValueField(
-                            12,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 12,
-                                    index: 1,
-                                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 11,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "Baz": ObjValueField(
+                                12,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 12,
+                                        index: 1,
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -14377,68 +15059,74 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "Rest",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 1,
-                    obj_kind: InexactObj,
-                    props: {
-                        "x": ObjAnnotField(
-                            2,
-                            Annot(
-                                Number(
-                                    3,
-                                ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        ComponentBinding {
-            id_loc: 5,
-            name: "Baz",
-            fn_loc: 4,
-            def: ComponentSig {
-                params_loc: 6,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "Rest",
                 tparams: Mono,
-                params: [
-                    ComponentParam {
-                        name: "x",
-                        name_loc: 7,
-                        t: Annot(
-                            String(
-                                8,
-                            ),
-                        ),
-                    },
-                ],
-                rest_param: Some(
-                    ComponentRestParam {
-                        t: TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 9,
-                                    index: 0,
-                                },
-                            ),
-                        ),
-                    },
-                ),
-                renders: Annot(
-                    ComponentMissingRenders(
-                        10,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: InexactObj,
+                            props: {
+                                "x": ObjAnnotField(
+                                    2,
+                                    Annot(
+                                        Number(
+                                            3,
+                                        ),
+                                    ),
+                                    Neutral,
+                                ),
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
                     ),
                 ),
             },
-        },
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 5,
+                name: "Baz",
+                fn_loc: 4,
+                def: ComponentSig {
+                    params_loc: 6,
+                    tparams: Mono,
+                    params: [
+                        ComponentParam {
+                            name: "x",
+                            name_loc: 7,
+                            t: Annot(
+                                String(
+                                    8,
+                                ),
+                            ),
+                        },
+                    ],
+                    rest_param: Some(
+                        ComponentRestParam {
+                            t: TyRef(
+                                Unqualified(
+                                    LocalRef {
+                                        ref_loc: 9,
+                                        index: 0,
+                                    },
+                                ),
+                            ),
+                        },
+                    ),
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            10,
+                        ),
+                    ),
+                },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14479,23 +15167,25 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 12,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "Baz": ObjValueField(
-                            13,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 13,
-                                    index: 1,
-                                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 12,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "Baz": ObjValueField(
+                                13,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 13,
+                                        index: 1,
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -14507,69 +15197,75 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ComponentBinding {
-            id_loc: 1,
-            name: "RadComp",
-            fn_loc: 0,
-            def: ComponentSig {
-                params_loc: 2,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        3,
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 1,
+                name: "RadComp",
+                fn_loc: 0,
+                def: ComponentSig {
+                    params_loc: 2,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            3,
+                        ),
                     ),
-                ),
+                },
             },
-        },
-        ComponentBinding {
-            id_loc: 5,
-            name: "Baz",
-            fn_loc: 4,
-            def: ComponentSig {
-                params_loc: 6,
-                tparams: Mono,
-                params: [
-                    ComponentParam {
-                        name: "lets go",
-                        name_loc: 7,
-                        t: Annot(
-                            String(
-                                8,
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 5,
+                name: "Baz",
+                fn_loc: 4,
+                def: ComponentSig {
+                    params_loc: 6,
+                    tparams: Mono,
+                    params: [
+                        ComponentParam {
+                            name: "lets go",
+                            name_loc: 7,
+                            t: Annot(
+                                String(
+                                    8,
+                                ),
                             ),
-                        ),
-                    },
-                ],
-                rest_param: Some(
-                    ComponentRestParam {
-                        t: TyRef(
-                            Unqualified(
-                                BuiltinRef {
-                                    ref_loc: 9,
-                                    type_ref: true,
-                                    name: "Rest",
-                                },
+                        },
+                    ],
+                    rest_param: Some(
+                        ComponentRestParam {
+                            t: TyRef(
+                                Unqualified(
+                                    BuiltinRef {
+                                        ref_loc: 9,
+                                        type_ref: true,
+                                        name: "Rest",
+                                    },
+                                ),
                             ),
+                        },
+                    ),
+                    renders: Annot(
+                        Renders(
+                            AnnotRenders {
+                                loc: 10,
+                                arg: TyRef(
+                                    Unqualified(
+                                        LocalRef {
+                                            ref_loc: 11,
+                                            index: 0,
+                                        },
+                                    ),
+                                ),
+                                variant: Normal,
+                            },
                         ),
-                    },
-                ),
-                renders: Annot(
-                    Renders {
-                        loc: 10,
-                        arg: TyRef(
-                            Unqualified(
-                                LocalRef {
-                                    ref_loc: 11,
-                                    index: 0,
-                                },
-                            ),
-                        ),
-                        variant: Normal,
-                    },
-                ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14605,23 +15301,25 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 9,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "Baz": ObjValueField(
-                            10,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 10,
-                                    index: 0,
-                                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 9,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "Baz": ObjValueField(
+                                10,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 10,
+                                        index: 0,
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -14633,52 +15331,60 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ComponentBinding {
-            id_loc: 1,
-            name: "Baz",
-            fn_loc: 0,
-            def: ComponentSig {
-                params_loc: 4,
-                tparams: Poly(
-                    2,
-                    [
-                        TParam {
-                            name_loc: 3,
-                            name: "T",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 1,
+                name: "Baz",
+                fn_loc: 0,
+                def: ComponentSig {
+                    params_loc: 4,
+                    tparams: Poly(
+                        2,
+                        [
+                            TParam {
+                                name_loc: 3,
+                                name: "T",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
+                    params: [
+                        ComponentParam {
+                            name: "prop",
+                            name_loc: 5,
+                            t: Annot(
+                                Bound(
+                                    AnnotBound {
+                                        ref_loc: 6,
+                                        name: "T",
+                                    },
+                                ),
+                            ),
                         },
                     ],
-                ),
-                params: [
-                    ComponentParam {
-                        name: "prop",
-                        name_loc: 5,
-                        t: Annot(
-                            Bound {
-                                ref_loc: 6,
-                                name: "T",
+                    rest_param: None,
+                    renders: Annot(
+                        Renders(
+                            AnnotRenders {
+                                loc: 7,
+                                arg: Annot(
+                                    Bound(
+                                        AnnotBound {
+                                            ref_loc: 8,
+                                            name: "T",
+                                        },
+                                    ),
+                                ),
+                                variant: Normal,
                             },
                         ),
-                    },
-                ],
-                rest_param: None,
-                renders: Annot(
-                    Renders {
-                        loc: 7,
-                        arg: Annot(
-                            Bound {
-                                ref_loc: 8,
-                                name: "T",
-                            },
-                        ),
-                        variant: Normal,
-                    },
-                ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14732,38 +15438,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ComponentBinding {
-            id_loc: 1,
-            name: "Baz",
-            fn_loc: 0,
-            def: ComponentSig {
-                params_loc: 2,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        3,
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 1,
+                name: "Baz",
+                fn_loc: 0,
+                def: ComponentSig {
+                    params_loc: 2,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            3,
+                        ),
                     ),
-                ),
+                },
             },
-        },
-        ComponentBinding {
-            id_loc: 6,
-            name: "Bar",
-            fn_loc: 5,
-            def: ComponentSig {
-                params_loc: 7,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        8,
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 6,
+                name: "Bar",
+                fn_loc: 5,
+                def: ComponentSig {
+                    params_loc: 7,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            8,
+                        ),
                     ),
-                ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14791,23 +15501,25 @@ Module {
         type_exports: [],
         exports: Some(
             Value(
-                ObjLit {
-                    loc: 1,
-                    frozen: false,
-                    proto: None,
-                    props: {
-                        "Baz": ObjValueField(
-                            2,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 2,
-                                    index: 0,
-                                },
+                ObjLit(
+                    ValueObjLit {
+                        loc: 1,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "Baz": ObjValueField(
+                                2,
+                                Ref(
+                                    LocalRef {
+                                        ref_loc: 2,
+                                        index: 0,
+                                    },
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
-                        ),
+                        },
                     },
-                },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -14819,10 +15531,12 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DisabledComponentBinding {
-            id_loc: 0,
-            name: "Baz",
-        },
+        DisabledComponentBinding(
+            DefDisabledComponentBinding {
+                id_loc: 0,
+                name: "Baz",
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14880,14 +15594,18 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        DisabledComponentBinding {
-            id_loc: 0,
-            name: "Baz",
-        },
-        DisabledComponentBinding {
-            id_loc: 2,
-            name: "Bar",
-        },
+        DisabledComponentBinding(
+            DefDisabledComponentBinding {
+                id_loc: 0,
+                name: "Baz",
+            },
+        ),
+        DisabledComponentBinding(
+            DefDisabledComponentBinding {
+                id_loc: 2,
+                name: "Bar",
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -14951,38 +15669,42 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        ComponentBinding {
-            id_loc: 1,
-            name: "Baz",
-            fn_loc: 0,
-            def: ComponentSig {
-                params_loc: 2,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        3,
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 1,
+                name: "Baz",
+                fn_loc: 0,
+                def: ComponentSig {
+                    params_loc: 2,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            3,
+                        ),
                     ),
-                ),
+                },
             },
-        },
-        ComponentBinding {
-            id_loc: 6,
-            name: "Bar",
-            fn_loc: 5,
-            def: ComponentSig {
-                params_loc: 7,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    ComponentMissingRenders(
-                        8,
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 6,
+                name: "Bar",
+                fn_loc: 5,
+                def: ComponentSig {
+                    params_loc: 7,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        ComponentMissingRenders(
+                            8,
+                        ),
                     ),
-                ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15082,181 +15804,209 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "A",
-            tparams: Mono,
-            body: Annot(
-                Number(
-                    1,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    Number(
+                        1,
+                    ),
                 ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 2,
-            custom_error_loc_opt: None,
-            name: "B",
-            tparams: Mono,
-            body: Annot(
-                String(
-                    3,
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 2,
+                custom_error_loc_opt: None,
+                name: "B",
+                tparams: Mono,
+                body: Annot(
+                    String(
+                        3,
+                    ),
                 ),
-            ),
-        },
-        Variable {
-            id_loc: 4,
-            name: "Baz",
-            def: Annot(
-                ComponentAnnot(
-                    5,
-                    ComponentSig {
-                        params_loc: 6,
-                        tparams: Mono,
-                        params: [
-                            ComponentParam {
-                                name: "x",
-                                name_loc: 7,
-                                t: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 8,
-                                            index: 0,
-                                        },
-                                    ),
-                                ),
-                            },
-                        ],
-                        rest_param: None,
-                        renders: Annot(
-                            Renders {
-                                loc: 9,
-                                arg: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 10,
-                                            index: 1,
-                                        },
-                                    ),
-                                ),
-                                variant: Normal,
-                            },
-                        ),
-                    },
-                ),
-            ),
-        },
-        Variable {
-            id_loc: 11,
-            name: "Bar",
-            def: Annot(
-                ComponentAnnot(
-                    12,
-                    ComponentSig {
-                        params_loc: 13,
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        renders: Annot(
-                            ComponentMissingRenders(
-                                14,
-                            ),
-                        ),
-                    },
-                ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 15,
-            custom_error_loc_opt: None,
-            name: "Props",
-            tparams: Mono,
-            body: Annot(
-                ObjAnnot {
-                    loc: 16,
-                    obj_kind: InexactObj,
-                    props: {},
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 17,
-            custom_error_loc_opt: None,
-            name: "Mono",
-            tparams: Mono,
-            body: Annot(
-                ComponentAnnot(
-                    18,
-                    ComponentSig {
-                        params_loc: 19,
-                        tparams: Mono,
-                        params: [],
-                        rest_param: Some(
-                            ComponentRestParam {
-                                t: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 20,
-                                            index: 4,
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 4,
+                name: "Baz",
+                def: Annot(
+                    ComponentAnnot(
+                        (
+                            5,
+                            ComponentSig {
+                                params_loc: 6,
+                                tparams: Mono,
+                                params: [
+                                    ComponentParam {
+                                        name: "x",
+                                        name_loc: 7,
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 8,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                renders: Annot(
+                                    Renders(
+                                        AnnotRenders {
+                                            loc: 9,
+                                            arg: TyRef(
+                                                Unqualified(
+                                                    LocalRef {
+                                                        ref_loc: 10,
+                                                        index: 1,
+                                                    },
+                                                ),
+                                            ),
+                                            variant: Normal,
                                         },
                                     ),
                                 ),
                             },
                         ),
-                        renders: Annot(
-                            ComponentMissingRenders(
-                                21,
-                            ),
-                        ),
-                    },
+                    ),
                 ),
-            ),
-        },
-        TypeAlias {
-            id_loc: 22,
-            custom_error_loc_opt: None,
-            name: "Poly",
-            tparams: Poly(
-                23,
-                [
-                    TParam {
-                        name_loc: 24,
-                        name: "Props",
-                        polarity: Neutral,
-                        bound: None,
-                        default: None,
-                        is_const: false,
-                    },
-                ],
-            ),
-            body: Annot(
-                ComponentAnnot(
-                    25,
-                    ComponentSig {
-                        params_loc: 26,
-                        tparams: Mono,
-                        params: [],
-                        rest_param: Some(
-                            ComponentRestParam {
-                                t: Annot(
-                                    Bound {
-                                        ref_loc: 27,
-                                        name: "Props",
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 11,
+                name: "Bar",
+                def: Annot(
+                    ComponentAnnot(
+                        (
+                            12,
+                            ComponentSig {
+                                params_loc: 13,
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                renders: Annot(
+                                    ComponentMissingRenders(
+                                        14,
+                                    ),
+                                ),
+                            },
+                        ),
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 15,
+                custom_error_loc_opt: None,
+                name: "Props",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 16,
+                            obj_kind: InexactObj,
+                            props: {},
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 17,
+                custom_error_loc_opt: None,
+                name: "Mono",
+                tparams: Mono,
+                body: Annot(
+                    ComponentAnnot(
+                        (
+                            18,
+                            ComponentSig {
+                                params_loc: 19,
+                                tparams: Mono,
+                                params: [],
+                                rest_param: Some(
+                                    ComponentRestParam {
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef {
+                                                    ref_loc: 20,
+                                                    index: 4,
+                                                },
+                                            ),
+                                        ),
                                     },
                                 ),
+                                renders: Annot(
+                                    ComponentMissingRenders(
+                                        21,
+                                    ),
+                                ),
                             },
                         ),
-                        renders: Annot(
-                            ComponentMissingRenders(
-                                28,
-                            ),
-                        ),
-                    },
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 22,
+                custom_error_loc_opt: None,
+                name: "Poly",
+                tparams: Poly(
+                    23,
+                    [
+                        TParam {
+                            name_loc: 24,
+                            name: "Props",
+                            polarity: Neutral,
+                            bound: None,
+                            default: None,
+                            is_const: false,
+                        },
+                    ],
+                ),
+                body: Annot(
+                    ComponentAnnot(
+                        (
+                            25,
+                            ComponentSig {
+                                params_loc: 26,
+                                tparams: Mono,
+                                params: [],
+                                rest_param: Some(
+                                    ComponentRestParam {
+                                        t: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 27,
+                                                    name: "Props",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
+                                renders: Annot(
+                                    ComponentMissingRenders(
+                                        28,
+                                    ),
+                                ),
+                            },
+                        ),
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15320,46 +16070,54 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "Baz",
-            def: Annot(
-                ComponentAnnot(
-                    1,
-                    ComponentSig {
-                        params_loc: 2,
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        renders: Annot(
-                            ComponentMissingRenders(
-                                3,
-                            ),
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "Baz",
+                def: Annot(
+                    ComponentAnnot(
+                        (
+                            1,
+                            ComponentSig {
+                                params_loc: 2,
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                renders: Annot(
+                                    ComponentMissingRenders(
+                                        3,
+                                    ),
+                                ),
+                            },
                         ),
-                    },
+                    ),
                 ),
-            ),
-        },
-        Variable {
-            id_loc: 4,
-            name: "Bar",
-            def: Annot(
-                ComponentAnnot(
-                    5,
-                    ComponentSig {
-                        params_loc: 6,
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        renders: Annot(
-                            ComponentMissingRenders(
-                                7,
-                            ),
+            },
+        ),
+        Variable(
+            DefVariable {
+                id_loc: 4,
+                name: "Bar",
+                def: Annot(
+                    ComponentAnnot(
+                        (
+                            5,
+                            ComponentSig {
+                                params_loc: 6,
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                renders: Annot(
+                                    ComponentMissingRenders(
+                                        7,
+                                    ),
+                                ),
+                            },
                         ),
-                    },
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15405,52 +16163,58 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        FunBinding {
-            id_loc: 1,
-            name: "foo",
-            async_: false,
-            generator: false,
-            fn_loc: 0,
-            def: FunSig {
-                tparams: Poly(
-                    2,
-                    [
-                        TParam {
-                            name_loc: 3,
-                            name: "X",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: true,
+        FunBinding(
+            DefFunBinding {
+                id_loc: 1,
+                name: "foo",
+                async_: false,
+                generator: false,
+                fn_loc: 0,
+                def: FunSig {
+                    tparams: Poly(
+                        2,
+                        [
+                            TParam {
+                                name_loc: 3,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: true,
+                            },
+                        ],
+                    ),
+                    params: [
+                        FunParam {
+                            name: Some(
+                                "x",
+                            ),
+                            t: Annot(
+                                Bound(
+                                    AnnotBound {
+                                        ref_loc: 4,
+                                        name: "X",
+                                    },
+                                ),
+                            ),
                         },
                     ],
-                ),
-                params: [
-                    FunParam {
-                        name: Some(
-                            "x",
-                        ),
-                        t: Annot(
-                            Bound {
-                                ref_loc: 4,
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Bound(
+                            AnnotBound {
+                                ref_loc: 5,
                                 name: "X",
                             },
                         ),
-                    },
-                ],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Bound {
-                        ref_loc: 5,
-                        name: "X",
-                    },
-                ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+                statics: {},
             },
-            statics: {},
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15494,32 +16258,36 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        Variable {
-            id_loc: 0,
-            name: "a",
-            def: Annot(
-                Union {
-                    loc: 1,
-                    t0: Annot(
-                        String(
-                            2,
-                        ),
-                    ),
-                    t1: Annot(
-                        Number(
-                            3,
-                        ),
-                    ),
-                    ts: [
-                        Annot(
-                            Null(
-                                4,
+        Variable(
+            DefVariable {
+                id_loc: 0,
+                name: "a",
+                def: Annot(
+                    Union(
+                        AnnotUnion {
+                            loc: 1,
+                            t0: Annot(
+                                String(
+                                    2,
+                                ),
                             ),
-                        ),
-                    ],
-                },
-            ),
-        },
+                            t1: Annot(
+                                Number(
+                                    3,
+                                ),
+                            ),
+                            ts: [
+                                Annot(
+                                    Null(
+                                        4,
+                                    ),
+                                ),
+                            ],
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15580,79 +16348,95 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "X",
-            tparams: Mono,
-            body: Annot(
-                Renders {
-                    loc: 1,
-                    arg: Annot(
-                        Number(
-                            2,
-                        ),
-                    ),
-                    variant: Normal,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 3,
-            custom_error_loc_opt: None,
-            name: "Y",
-            tparams: Mono,
-            body: Annot(
-                Union {
-                    loc: 4,
-                    t0: Annot(
-                        Renders {
-                            loc: 5,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "X",
+                tparams: Mono,
+                body: Annot(
+                    Renders(
+                        AnnotRenders {
+                            loc: 1,
                             arg: Annot(
                                 Number(
-                                    6,
+                                    2,
                                 ),
                             ),
                             variant: Normal,
                         },
                     ),
-                    t1: Annot(
-                        String(
-                            7,
-                        ),
-                    ),
-                    ts: [],
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 8,
-            custom_error_loc_opt: None,
-            name: "Z",
-            tparams: Mono,
-            body: Annot(
-                Renders {
-                    loc: 9,
-                    arg: Annot(
-                        Union {
-                            loc: 10,
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 3,
+                custom_error_loc_opt: None,
+                name: "Y",
+                tparams: Mono,
+                body: Annot(
+                    Union(
+                        AnnotUnion {
+                            loc: 4,
                             t0: Annot(
-                                Number(
-                                    11,
+                                Renders(
+                                    AnnotRenders {
+                                        loc: 5,
+                                        arg: Annot(
+                                            Number(
+                                                6,
+                                            ),
+                                        ),
+                                        variant: Normal,
+                                    },
                                 ),
                             ),
                             t1: Annot(
                                 String(
-                                    12,
+                                    7,
                                 ),
                             ),
                             ts: [],
                         },
                     ),
-                    variant: Normal,
-                },
-            ),
-        },
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 8,
+                custom_error_loc_opt: None,
+                name: "Z",
+                tparams: Mono,
+                body: Annot(
+                    Renders(
+                        AnnotRenders {
+                            loc: 9,
+                            arg: Annot(
+                                Union(
+                                    AnnotUnion {
+                                        loc: 10,
+                                        t0: Annot(
+                                            Number(
+                                                11,
+                                            ),
+                                        ),
+                                        t1: Annot(
+                                            String(
+                                                12,
+                                            ),
+                                        ),
+                                        ts: [],
+                                    },
+                                ),
+                            ),
+                            variant: Normal,
+                        },
+                    ),
+                ),
+            },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15747,151 +16531,181 @@ Module {
     },
     module_refs: [],
     local_defs: [
-        TypeAlias {
-            id_loc: 0,
-            custom_error_loc_opt: None,
-            name: "X",
-            tparams: Mono,
-            body: Annot(
-                Renders {
-                    loc: 1,
-                    arg: Annot(
-                        Number(
-                            2,
-                        ),
-                    ),
-                    variant: Maybe,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 3,
-            custom_error_loc_opt: None,
-            name: "Y",
-            tparams: Mono,
-            body: Annot(
-                Union {
-                    loc: 4,
-                    t0: Annot(
-                        Renders {
-                            loc: 5,
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "X",
+                tparams: Mono,
+                body: Annot(
+                    Renders(
+                        AnnotRenders {
+                            loc: 1,
                             arg: Annot(
                                 Number(
-                                    6,
+                                    2,
                                 ),
                             ),
                             variant: Maybe,
                         },
                     ),
-                    t1: Annot(
-                        String(
-                            7,
-                        ),
-                    ),
-                    ts: [],
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 8,
-            custom_error_loc_opt: None,
-            name: "Z",
-            tparams: Mono,
-            body: Annot(
-                Renders {
-                    loc: 9,
-                    arg: Annot(
-                        Union {
-                            loc: 10,
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 3,
+                custom_error_loc_opt: None,
+                name: "Y",
+                tparams: Mono,
+                body: Annot(
+                    Union(
+                        AnnotUnion {
+                            loc: 4,
                             t0: Annot(
-                                Number(
-                                    11,
+                                Renders(
+                                    AnnotRenders {
+                                        loc: 5,
+                                        arg: Annot(
+                                            Number(
+                                                6,
+                                            ),
+                                        ),
+                                        variant: Maybe,
+                                    },
                                 ),
                             ),
                             t1: Annot(
                                 String(
-                                    12,
+                                    7,
                                 ),
                             ),
                             ts: [],
                         },
                     ),
-                    variant: Maybe,
-                },
-            ),
-        },
-        TypeAlias {
-            id_loc: 13,
-            custom_error_loc_opt: None,
-            name: "C",
-            tparams: Mono,
-            body: Annot(
-                ComponentAnnot(
-                    14,
-                    ComponentSig {
-                        params_loc: 15,
-                        tparams: Mono,
-                        params: [],
-                        rest_param: None,
-                        renders: Annot(
-                            Renders {
-                                loc: 16,
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 8,
+                custom_error_loc_opt: None,
+                name: "Z",
+                tparams: Mono,
+                body: Annot(
+                    Renders(
+                        AnnotRenders {
+                            loc: 9,
+                            arg: Annot(
+                                Union(
+                                    AnnotUnion {
+                                        loc: 10,
+                                        t0: Annot(
+                                            Number(
+                                                11,
+                                            ),
+                                        ),
+                                        t1: Annot(
+                                            String(
+                                                12,
+                                            ),
+                                        ),
+                                        ts: [],
+                                    },
+                                ),
+                            ),
+                            variant: Maybe,
+                        },
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 13,
+                custom_error_loc_opt: None,
+                name: "C",
+                tparams: Mono,
+                body: Annot(
+                    ComponentAnnot(
+                        (
+                            14,
+                            ComponentSig {
+                                params_loc: 15,
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                renders: Annot(
+                                    Renders(
+                                        AnnotRenders {
+                                            loc: 16,
+                                            arg: Annot(
+                                                Number(
+                                                    17,
+                                                ),
+                                            ),
+                                            variant: Maybe,
+                                        },
+                                    ),
+                                ),
+                            },
+                        ),
+                    ),
+                ),
+            },
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 19,
+                name: "Foo",
+                fn_loc: 18,
+                def: ComponentSig {
+                    params_loc: 20,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        Renders(
+                            AnnotRenders {
+                                loc: 21,
                                 arg: Annot(
                                     Number(
-                                        17,
+                                        22,
                                     ),
                                 ),
                                 variant: Maybe,
                             },
                         ),
-                    },
-                ),
-            ),
-        },
-        ComponentBinding {
-            id_loc: 19,
-            name: "Foo",
-            fn_loc: 18,
-            def: ComponentSig {
-                params_loc: 20,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    Renders {
-                        loc: 21,
-                        arg: Annot(
-                            Number(
-                                22,
-                            ),
-                        ),
-                        variant: Maybe,
-                    },
-                ),
+                    ),
+                },
             },
-        },
-        ComponentBinding {
-            id_loc: 24,
-            name: "Bar",
-            fn_loc: 23,
-            def: ComponentSig {
-                params_loc: 25,
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                renders: Annot(
-                    Renders {
-                        loc: 26,
-                        arg: Annot(
-                            Number(
-                                27,
-                            ),
+        ),
+        ComponentBinding(
+            DefComponentBinding {
+                id_loc: 24,
+                name: "Bar",
+                fn_loc: 23,
+                def: ComponentSig {
+                    params_loc: 25,
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    renders: Annot(
+                        Renders(
+                            AnnotRenders {
+                                loc: 26,
+                                arg: Annot(
+                                    Number(
+                                        27,
+                                    ),
+                                ),
+                                variant: Maybe,
+                            },
                         ),
-                        variant: Maybe,
-                    },
-                ),
+                    ),
+                },
             },
-        },
+        ),
     ],
     dirty_local_defs: [],
     remote_refs: [],
@@ -15917,64 +16731,70 @@ Locs:
 3. [2:9-15]
 4. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 0,
-    name: "x",
-    def: TyRef(
-        Unqualified(
-            LocalRef {
-                ref_loc: 1,
-                index: 1,
-            },
-        ),
-    ),
-}
-1. TypeAlias {
-    id_loc: 2,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        String(
-            3,
-        ),
-    ),
-}
-2. NamespaceBinding {
-    id_loc: 4,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            4,
-            Ref(
+0. Variable(
+    DefVariable {
+        id_loc: 0,
+        name: "x",
+        def: TyRef(
+            Unqualified(
                 LocalRef {
-                    ref_loc: 4,
-                    index: 2,
-                },
-            ),
-        ),
-        "x": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
-            ),
-        ),
-    },
-    types: {
-        "T": (
-            2,
-            Ref(
-                LocalRef {
-                    ref_loc: 2,
+                    ref_loc: 1,
                     index: 1,
                 },
             ),
         ),
     },
-}
+)
+1. TypeAlias(
+    DefTypeAlias {
+        id_loc: 2,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            String(
+                3,
+            ),
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef {
+                        ref_loc: 4,
+                        index: 2,
+                    },
+                ),
+            ),
+            "x": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "T": (
+                2,
+                Ref(
+                    LocalRef {
+                        ref_loc: 2,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+    },
+)
 Builtin global value globalThis
 Builtin global value x
 Builtin global type T
@@ -16007,146 +16827,168 @@ Locs:
 9. [4:5-14]
 10. [4:17-23]
 11. [0:0]
+
 Local defs:
-0. TypeAlias {
-    id_loc: 0,
-    custom_error_loc_opt: None,
-    name: "T1",
-    tparams: Mono,
-    body: Annot(
-        Array(
-            1,
-            Annot(
-                String(
-                    2,
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 0,
+        custom_error_loc_opt: None,
+        name: "T1",
+        tparams: Mono,
+        body: Annot(
+            Array(
+                (
+                    1,
+                    Annot(
+                        String(
+                            2,
+                        ),
+                    ),
                 ),
             ),
         ),
-    ),
-}
-1. TypeAlias {
-    id_loc: 3,
-    custom_error_loc_opt: None,
-    name: "T2",
-    tparams: Mono,
-    body: Annot(
-        ReadOnly(
-            4,
-            Annot(
-                ObjAnnot {
-                    loc: 5,
-                    obj_kind: InexactObj,
-                    props: {
-                        "foo": ObjAnnotField(
-                            6,
-                            TyRef(
-                                Unqualified(
-                                    BuiltinRef {
-                                        ref_loc: 7,
-                                        type_ref: true,
-                                        name: "bar",
-                                    },
-                                ),
-                            ),
-                            Neutral,
-                        ),
-                    },
-                    computed_props: [],
-                    proto: ObjAnnotImplicitProto,
-                },
-            ),
-        ),
-    ),
-}
-2. DeclareClassBinding {
-    id_loc: 8,
-    nominal_id_loc: 8,
-    name: "Array",
-    def: DeclareClassSig {
+    },
+)
+1. TypeAlias(
+    DefTypeAlias {
+        id_loc: 3,
+        custom_error_loc_opt: None,
+        name: "T2",
         tparams: Mono,
-        extends: ClassImplicitExtends,
-        mixins: [],
-        implements: [],
-        static_props: {},
-        own_props: {},
-        proto_props: {},
-        computed_own_props: [],
-        computed_proto_props: [],
-        computed_static_props: [],
-        static_calls: [],
-        calls: [],
-        dict: None,
-        static_dict: None,
-    },
-}
-3. TypeAlias {
-    id_loc: 9,
-    custom_error_loc_opt: None,
-    name: "$ReadOnly",
-    tparams: Mono,
-    body: Annot(
-        Number(
-            10,
-        ),
-    ),
-}
-4. NamespaceBinding {
-    id_loc: 11,
-    name: "globalThis",
-    values: {
-        "Array": (
-            8,
-            Ref(
-                LocalRef {
-                    ref_loc: 8,
-                    index: 2,
-                },
-            ),
-        ),
-        "globalThis": (
-            11,
-            Ref(
-                LocalRef {
-                    ref_loc: 11,
-                    index: 4,
-                },
+        body: Annot(
+            ReadOnly(
+                (
+                    4,
+                    Annot(
+                        ObjAnnot(
+                            AnnotObjAnnot {
+                                loc: 5,
+                                obj_kind: InexactObj,
+                                props: {
+                                    "foo": ObjAnnotField(
+                                        6,
+                                        TyRef(
+                                            Unqualified(
+                                                BuiltinRef {
+                                                    ref_loc: 7,
+                                                    type_ref: true,
+                                                    name: "bar",
+                                                },
+                                            ),
+                                        ),
+                                        Neutral,
+                                    ),
+                                },
+                                computed_props: [],
+                                proto: ObjAnnotImplicitProto,
+                            },
+                        ),
+                    ),
+                ),
             ),
         ),
     },
-    types: {
-        "$ReadOnly": (
-            9,
-            Ref(
-                LocalRef {
-                    ref_loc: 9,
-                    index: 3,
-                },
-            ),
-        ),
-        "T1": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
-            ),
-        ),
-        "T2": (
-            3,
-            Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 1,
-                },
+)
+2. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 8,
+        nominal_id_loc: 8,
+        name: "Array",
+        def: DeclareClassSig {
+            tparams: Mono,
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {},
+            proto_props: {},
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            dict: None,
+            static_dict: None,
+        },
+    },
+)
+3. TypeAlias(
+    DefTypeAlias {
+        id_loc: 9,
+        custom_error_loc_opt: None,
+        name: "$ReadOnly",
+        tparams: Mono,
+        body: Annot(
+            Number(
+                10,
             ),
         ),
     },
-}
+)
+4. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 11,
+        name: "globalThis",
+        values: {
+            "Array": (
+                8,
+                Ref(
+                    LocalRef {
+                        ref_loc: 8,
+                        index: 2,
+                    },
+                ),
+            ),
+            "globalThis": (
+                11,
+                Ref(
+                    LocalRef {
+                        ref_loc: 11,
+                        index: 4,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "$ReadOnly": (
+                9,
+                Ref(
+                    LocalRef {
+                        ref_loc: 9,
+                        index: 3,
+                    },
+                ),
+            ),
+            "T1": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+            "T2": (
+                3,
+                Ref(
+                    LocalRef {
+                        ref_loc: 3,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
 Builtin global value Array
+
 Builtin global value globalThis
+
 Builtin global type $ReadOnly
+
 Builtin global type T1
+
 Builtin global type T2
 "#;
     assert_eq!(
@@ -16171,43 +17013,47 @@ Locs:
 3. [3:26-27]
 4. [0:0]
 Local defs:
-0. TypeAlias {
-    id_loc: 0,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        String(
-            1,
-        ),
-    ),
-}
-1. NamespaceBinding {
-    id_loc: 4,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            4,
-            Ref(
-                LocalRef {
-                    ref_loc: 4,
-                    index: 1,
-                },
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 0,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            String(
+                1,
             ),
         ),
     },
-    types: {
-        "T": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef {
+                        ref_loc: 4,
+                        index: 1,
+                    },
+                ),
             ),
-        ),
+        },
+        types: {
+            "T": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
     },
-}
+)
 Builtin global value globalThis
 Builtin global type T
 Builtin module foo:
@@ -16258,43 +17104,47 @@ Locs:
 4. [5:15-18]
 5. [0:0]
 Local defs:
-0. TypeAlias {
-    id_loc: 0,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        String(
-            1,
-        ),
-    ),
-}
-1. NamespaceBinding {
-    id_loc: 5,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            5,
-            Ref(
-                LocalRef {
-                    ref_loc: 5,
-                    index: 1,
-                },
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 0,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            String(
+                1,
             ),
         ),
     },
-    types: {
-        "T": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                5,
+                Ref(
+                    LocalRef {
+                        ref_loc: 5,
+                        index: 1,
+                    },
+                ),
             ),
-        ),
+        },
+        types: {
+            "T": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
     },
-}
+)
 Builtin global value globalThis
 Builtin global type T
 Builtin module foo:
@@ -16343,44 +17193,50 @@ Locs:
 5. [4:26-32]
 6. [0:0]
 Local defs:
-0. TypeAlias {
-    id_loc: 1,
-    custom_error_loc_opt: None,
-    name: "T1",
-    tparams: Mono,
-    body: Annot(
-        Number(
-            2,
-        ),
-    ),
-}
-1. TypeAlias {
-    id_loc: 3,
-    custom_error_loc_opt: None,
-    name: "T2",
-    tparams: Mono,
-    body: Annot(
-        String(
-            4,
-        ),
-    ),
-}
-2. NamespaceBinding {
-    id_loc: 6,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            6,
-            Ref(
-                LocalRef {
-                    ref_loc: 6,
-                    index: 2,
-                },
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 1,
+        custom_error_loc_opt: None,
+        name: "T1",
+        tparams: Mono,
+        body: Annot(
+            Number(
+                2,
             ),
         ),
     },
-    types: {},
-}
+)
+1. TypeAlias(
+    DefTypeAlias {
+        id_loc: 3,
+        custom_error_loc_opt: None,
+        name: "T2",
+        tparams: Mono,
+        body: Annot(
+            String(
+                4,
+            ),
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 6,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                6,
+                Ref(
+                    LocalRef {
+                        ref_loc: 6,
+                        index: 2,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -16433,33 +17289,37 @@ Locs:
 3. [3:26-32]
 4. [0:0]
 Local defs:
-0. TypeAlias {
-    id_loc: 1,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        Number(
-            2,
-        ),
-    ),
-}
-1. NamespaceBinding {
-    id_loc: 4,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            4,
-            Ref(
-                LocalRef {
-                    ref_loc: 4,
-                    index: 1,
-                },
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 1,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            Number(
+                2,
             ),
         ),
     },
-    types: {},
-}
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef {
+                        ref_loc: 4,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -16508,33 +17368,37 @@ Locs:
 3. [3:26-27]
 4. [0:0]
 Local defs:
-0. TypeAlias {
-    id_loc: 1,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        Number(
-            2,
-        ),
-    ),
-}
-1. NamespaceBinding {
-    id_loc: 4,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            4,
-            Ref(
-                LocalRef {
-                    ref_loc: 4,
-                    index: 1,
-                },
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 1,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            Number(
+                2,
             ),
         ),
     },
-    types: {},
-}
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef {
+                        ref_loc: 4,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -16586,33 +17450,37 @@ Locs:
 3. [3:26-27]
 4. [0:0]
 Local defs:
-0. TypeAlias {
-    id_loc: 1,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        Number(
-            2,
-        ),
-    ),
-}
-1. NamespaceBinding {
-    id_loc: 4,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            4,
-            Ref(
-                LocalRef {
-                    ref_loc: 4,
-                    index: 1,
-                },
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 1,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            Number(
+                2,
             ),
         ),
     },
-    types: {},
-}
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef {
+                        ref_loc: 4,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -16691,140 +17559,160 @@ Locs:
 20. [12:26-32]
 21. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 1,
-    name: "x",
-    def: Annot(
-        String(
-            2,
-        ),
-    ),
-}
-1. Variable {
-    id_loc: 3,
-    name: "y",
-    def: Annot(
-        String(
-            4,
-        ),
-    ),
-}
-2. Variable {
-    id_loc: 5,
-    name: "z",
-    def: Annot(
-        String(
-            6,
-        ),
-    ),
-}
-3. DeclareFun {
-    id_loc: 7,
-    name: "f",
-    fn_loc: 8,
-    def: FunSig {
-        tparams: Mono,
-        params: [],
-        rest_param: None,
-        this_param: None,
-        return_: Annot(
-            Void(
-                9,
-            ),
-        ),
-        type_guard: None,
-        effect_: ArbitraryEffect,
-    },
-    tail: [],
-}
-4. DeclareClassBinding {
-    id_loc: 10,
-    nominal_id_loc: 10,
-    name: "Y",
-    def: DeclareClassSig {
-        tparams: Mono,
-        extends: ClassImplicitExtends,
-        mixins: [],
-        implements: [],
-        static_props: {},
-        own_props: {},
-        proto_props: {},
-        computed_own_props: [],
-        computed_proto_props: [],
-        computed_static_props: [],
-        static_calls: [],
-        calls: [],
-        dict: None,
-        static_dict: None,
-    },
-}
-5. ComponentBinding {
-    id_loc: 12,
-    name: "foo",
-    fn_loc: 11,
-    def: ComponentSig {
-        params_loc: 13,
-        tparams: Mono,
-        params: [],
-        rest_param: None,
-        renders: Annot(
-            ComponentMissingRenders(
-                14,
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "x",
+        def: Annot(
+            String(
+                2,
             ),
         ),
     },
-}
-6. EnumBinding {
-    id_loc: 15,
-    name: "A",
-    rep: Some(
-        StringRep {
-            truthy: true,
+)
+1. Variable(
+    DefVariable {
+        id_loc: 3,
+        name: "y",
+        def: Annot(
+            String(
+                4,
+            ),
+        ),
+    },
+)
+2. Variable(
+    DefVariable {
+        id_loc: 5,
+        name: "z",
+        def: Annot(
+            String(
+                6,
+            ),
+        ),
+    },
+)
+3. DeclareFun(
+    DefDeclareFun {
+        id_loc: 7,
+        name: "f",
+        fn_loc: 8,
+        def: FunSig {
+            tparams: Mono,
+            params: [],
+            rest_param: None,
+            this_param: None,
+            return_: Annot(
+                Void(
+                    9,
+                ),
+            ),
+            type_guard: None,
+            effect_: ArbitraryEffect,
         },
-    ),
-    members: {
-        "B": 16,
+        tail: [],
     },
-    has_unknown_members: false,
-}
-7. TypeAlias {
-    id_loc: 17,
-    custom_error_loc_opt: None,
-    name: "T",
-    tparams: Mono,
-    body: Annot(
-        Number(
-            18,
+)
+4. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 10,
+        nominal_id_loc: 10,
+        name: "Y",
+        def: DeclareClassSig {
+            tparams: Mono,
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {},
+            proto_props: {},
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            dict: None,
+            static_dict: None,
+        },
+    },
+)
+5. ComponentBinding(
+    DefComponentBinding {
+        id_loc: 12,
+        name: "foo",
+        fn_loc: 11,
+        def: ComponentSig {
+            params_loc: 13,
+            tparams: Mono,
+            params: [],
+            rest_param: None,
+            renders: Annot(
+                ComponentMissingRenders(
+                    14,
+                ),
+            ),
+        },
+    },
+)
+6. EnumBinding(
+    DefEnumBinding {
+        id_loc: 15,
+        name: "A",
+        rep: Some(
+            StringRep {
+                truthy: true,
+            },
         ),
-    ),
-}
-8. TypeAlias {
-    id_loc: 19,
-    custom_error_loc_opt: None,
-    name: "U",
-    tparams: Mono,
-    body: Annot(
-        String(
-            20,
-        ),
-    ),
-}
-9. NamespaceBinding {
-    id_loc: 21,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            21,
-            Ref(
-                LocalRef {
-                    ref_loc: 21,
-                    index: 9,
-                },
+        members: {
+            "B": 16,
+        },
+        has_unknown_members: false,
+    },
+)
+7. TypeAlias(
+    DefTypeAlias {
+        id_loc: 17,
+        custom_error_loc_opt: None,
+        name: "T",
+        tparams: Mono,
+        body: Annot(
+            Number(
+                18,
             ),
         ),
     },
-    types: {},
-}
+)
+8. TypeAlias(
+    DefTypeAlias {
+        id_loc: 19,
+        custom_error_loc_opt: None,
+        name: "U",
+        tparams: Mono,
+        body: Annot(
+            String(
+                20,
+            ),
+        ),
+    },
+)
+9. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 21,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                21,
+                Ref(
+                    LocalRef {
+                        ref_loc: 21,
+                        index: 9,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -16839,84 +17727,86 @@ CJSModule {
     ],
     exports: Some(
         Value(
-            DeclareModuleImplicitlyExportedObject {
-                loc: 0,
-                module_name: Userland(
-                    "foo",
-                ),
-                props: {
-                    "A": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 6,
-                            },
-                        ),
-                        Positive,
+            DeclareModuleImplicitlyExportedObject(
+                ValueDeclareModuleImplicitlyExportedObject {
+                    loc: 0,
+                    module_name: Userland(
+                        "foo",
                     ),
-                    "Y": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 4,
-                            },
+                    props: {
+                        "A": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 6,
+                                },
+                            ),
+                            Positive,
                         ),
-                        Positive,
-                    ),
-                    "f": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 3,
-                            },
+                        "Y": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 4,
+                                },
+                            ),
+                            Positive,
                         ),
-                        Positive,
-                    ),
-                    "foo": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 5,
-                            },
+                        "f": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 3,
+                                },
+                            ),
+                            Positive,
                         ),
-                        Positive,
-                    ),
-                    "x": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 0,
-                            },
+                        "foo": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 5,
+                                },
+                            ),
+                            Positive,
                         ),
-                        Positive,
-                    ),
-                    "y": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 1,
-                            },
+                        "x": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 0,
+                                },
+                            ),
+                            Positive,
                         ),
-                        Positive,
-                    ),
-                    "z": ObjValueField(
-                        0,
-                        Ref(
-                            LocalRef {
-                                ref_loc: 0,
-                                index: 2,
-                            },
+                        "y": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 1,
+                                },
+                            ),
+                            Positive,
                         ),
-                        Positive,
-                    ),
+                        "z": ObjValueField(
+                            0,
+                            Ref(
+                                LocalRef {
+                                    ref_loc: 0,
+                                    index: 2,
+                                },
+                            ),
+                            Positive,
+                        ),
+                    },
                 },
-            },
+            ),
         ),
     ),
     info: CJSModuleInfo {
@@ -16950,22 +17840,24 @@ Locs:
 2. [2:25-31]
 3. [0:0]
 Local defs:
-0. NamespaceBinding {
-    id_loc: 3,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            3,
-            Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+0. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 3,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                3,
+                Ref(
+                    LocalRef {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
-        ),
+        },
+        types: {},
     },
-    types: {},
-}
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -17023,43 +17915,49 @@ Locs:
 Module refs:
 0. Userland("foo")
 Local defs:
-0. Variable {
-    id_loc: 1,
-    name: "x",
-    def: Annot(
-        String(
-            2,
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "x",
+        def: Annot(
+            String(
+                2,
+            ),
         ),
-    ),
-}
-1. Variable {
-    id_loc: 5,
-    name: "y",
-    def: TyRef(
-        Unqualified(
-            RemoteRef {
-                ref_loc: 6,
-                index: 0,
-            },
-        ),
-    ),
-}
-2. NamespaceBinding {
-    id_loc: 7,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            7,
-            Ref(
-                LocalRef {
-                    ref_loc: 7,
-                    index: 2,
+    },
+)
+1. Variable(
+    DefVariable {
+        id_loc: 5,
+        name: "y",
+        def: TyRef(
+            Unqualified(
+                RemoteRef {
+                    ref_loc: 6,
+                    index: 0,
                 },
             ),
         ),
     },
-    types: {},
-}
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 7,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                7,
+                Ref(
+                    LocalRef {
+                        ref_loc: 7,
+                        index: 2,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Remote refs:
 0. ImportTypeof { id_loc: 4, name: "x", index: 0, remote: "x" }
 Builtin global value globalThis
@@ -17131,44 +18029,50 @@ Locs:
 5. [6:24-25]
 6. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 1,
-    name: "x",
-    def: Annot(
-        String(
-            2,
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "x",
+        def: Annot(
+            String(
+                2,
+            ),
         ),
-    ),
-}
-1. Variable {
-    id_loc: 4,
-    name: "y",
-    def: TyRef(
-        Unqualified(
-            BuiltinRef {
-                ref_loc: 5,
-                type_ref: true,
-                name: "x",
-            },
-        ),
-    ),
-}
-2. NamespaceBinding {
-    id_loc: 6,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            6,
-            Ref(
-                LocalRef {
-                    ref_loc: 6,
-                    index: 2,
+    },
+)
+1. Variable(
+    DefVariable {
+        id_loc: 4,
+        name: "y",
+        def: TyRef(
+            Unqualified(
+                BuiltinRef {
+                    ref_loc: 5,
+                    type_ref: true,
+                    name: "x",
                 },
             ),
         ),
     },
-    types: {},
-}
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 6,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                6,
+                Ref(
+                    LocalRef {
+                        ref_loc: 6,
+                        index: 2,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module bar:
 Loc: 3
@@ -17237,40 +18141,46 @@ Locs:
 6. [4:21-22]
 7. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 1,
-    name: "x",
-    def: Annot(
-        String(
-            2,
-        ),
-    ),
-}
-1. Variable {
-    id_loc: 3,
-    name: "y",
-    def: Annot(
-        String(
-            4,
-        ),
-    ),
-}
-2. NamespaceBinding {
-    id_loc: 7,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            7,
-            Ref(
-                LocalRef {
-                    ref_loc: 7,
-                    index: 2,
-                },
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "x",
+        def: Annot(
+            String(
+                2,
             ),
         ),
     },
-    types: {},
-}
+)
+1. Variable(
+    DefVariable {
+        id_loc: 3,
+        name: "y",
+        def: Annot(
+            String(
+                4,
+            ),
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 7,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                7,
+                Ref(
+                    LocalRef {
+                        ref_loc: 7,
+                        index: 2,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Builtin global value globalThis
 Builtin module foo:
 Loc: 0
@@ -17358,202 +18268,220 @@ Locs:
 19. [11:4-5]
 20. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 1,
-    name: "bar1",
-    def: Annot(
-        Number(
-            2,
-        ),
-    ),
-}
-1. Variable {
-    id_loc: 3,
-    name: "bar2",
-    def: Annot(
-        Boolean(
-            4,
-        ),
-    ),
-}
-2. Variable {
-    id_loc: 5,
-    name: "bar3",
-    def: Annot(
-        Boolean(
-            6,
-        ),
-    ),
-}
-3. DeclareFun {
-    id_loc: 7,
-    name: "f",
-    fn_loc: 8,
-    def: FunSig {
-        tparams: Mono,
-        params: [],
-        rest_param: None,
-        this_param: None,
-        return_: Annot(
-            String(
-                9,
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "bar1",
+        def: Annot(
+            Number(
+                2,
             ),
         ),
-        type_guard: None,
-        effect_: ArbitraryEffect,
     },
-    tail: [
-        (
-            10,
-            11,
-            FunSig {
-                tparams: Mono,
-                params: [],
-                rest_param: None,
-                this_param: None,
-                return_: Annot(
-                    Number(
-                        12,
-                    ),
+)
+1. Variable(
+    DefVariable {
+        id_loc: 3,
+        name: "bar2",
+        def: Annot(
+            Boolean(
+                4,
+            ),
+        ),
+    },
+)
+2. Variable(
+    DefVariable {
+        id_loc: 5,
+        name: "bar3",
+        def: Annot(
+            Boolean(
+                6,
+            ),
+        ),
+    },
+)
+3. DeclareFun(
+    DefDeclareFun {
+        id_loc: 7,
+        name: "f",
+        fn_loc: 8,
+        def: FunSig {
+            tparams: Mono,
+            params: [],
+            rest_param: None,
+            this_param: None,
+            return_: Annot(
+                String(
+                    9,
                 ),
-                type_guard: None,
-                effect_: ArbitraryEffect,
+            ),
+            type_guard: None,
+            effect_: ArbitraryEffect,
+        },
+        tail: [
+            (
+                10,
+                11,
+                FunSig {
+                    tparams: Mono,
+                    params: [],
+                    rest_param: None,
+                    this_param: None,
+                    return_: Annot(
+                        Number(
+                            12,
+                        ),
+                    ),
+                    type_guard: None,
+                    effect_: ArbitraryEffect,
+                },
+            ),
+        ],
+    },
+)
+4. TypeAlias(
+    DefTypeAlias {
+        id_loc: 13,
+        custom_error_loc_opt: None,
+        name: "Baz",
+        tparams: Mono,
+        body: Annot(
+            String(
+                14,
+            ),
+        ),
+    },
+)
+5. TypeAlias(
+    DefTypeAlias {
+        id_loc: 15,
+        custom_error_loc_opt: None,
+        name: "Boz",
+        tparams: Mono,
+        body: Annot(
+            String(
+                16,
+            ),
+        ),
+    },
+)
+6. EnumBinding(
+    DefEnumBinding {
+        id_loc: 17,
+        name: "B",
+        rep: Some(
+            StringRep {
+                truthy: true,
             },
         ),
-    ],
-}
-4. TypeAlias {
-    id_loc: 13,
-    custom_error_loc_opt: None,
-    name: "Baz",
-    tparams: Mono,
-    body: Annot(
-        String(
-            14,
-        ),
-    ),
-}
-5. TypeAlias {
-    id_loc: 15,
-    custom_error_loc_opt: None,
-    name: "Boz",
-    tparams: Mono,
-    body: Annot(
-        String(
-            16,
-        ),
-    ),
-}
-6. EnumBinding {
-    id_loc: 17,
-    name: "B",
-    rep: Some(
-        StringRep {
-            truthy: true,
+        members: {
+            "C": 18,
+            "D": 19,
         },
-    ),
-    members: {
-        "C": 18,
-        "D": 19,
+        has_unknown_members: false,
     },
-    has_unknown_members: false,
-}
-7. NamespaceBinding {
-    id_loc: 0,
-    name: "ns",
-    values: {
-        "B": (
-            17,
-            Ref(
-                LocalRef {
-                    ref_loc: 17,
-                    index: 6,
-                },
+)
+7. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 0,
+        name: "ns",
+        values: {
+            "B": (
+                17,
+                Ref(
+                    LocalRef {
+                        ref_loc: 17,
+                        index: 6,
+                    },
+                ),
             ),
-        ),
-        "bar1": (
-            1,
-            Ref(
-                LocalRef {
-                    ref_loc: 1,
-                    index: 0,
-                },
+            "bar1": (
+                1,
+                Ref(
+                    LocalRef {
+                        ref_loc: 1,
+                        index: 0,
+                    },
+                ),
             ),
-        ),
-        "bar2": (
-            3,
-            Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 1,
-                },
+            "bar2": (
+                3,
+                Ref(
+                    LocalRef {
+                        ref_loc: 3,
+                        index: 1,
+                    },
+                ),
             ),
-        ),
-        "bar3": (
-            5,
-            Ref(
-                LocalRef {
-                    ref_loc: 5,
-                    index: 2,
-                },
+            "bar3": (
+                5,
+                Ref(
+                    LocalRef {
+                        ref_loc: 5,
+                        index: 2,
+                    },
+                ),
             ),
-        ),
-        "f": (
-            7,
-            Ref(
-                LocalRef {
-                    ref_loc: 7,
-                    index: 3,
-                },
+            "f": (
+                7,
+                Ref(
+                    LocalRef {
+                        ref_loc: 7,
+                        index: 3,
+                    },
+                ),
             ),
-        ),
+        },
+        types: {
+            "Baz": (
+                13,
+                Ref(
+                    LocalRef {
+                        ref_loc: 13,
+                        index: 4,
+                    },
+                ),
+            ),
+            "Boz": (
+                15,
+                Ref(
+                    LocalRef {
+                        ref_loc: 15,
+                        index: 5,
+                    },
+                ),
+            ),
+        },
     },
-    types: {
-        "Baz": (
-            13,
-            Ref(
-                LocalRef {
-                    ref_loc: 13,
-                    index: 4,
-                },
+)
+8. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 20,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                20,
+                Ref(
+                    LocalRef {
+                        ref_loc: 20,
+                        index: 8,
+                    },
+                ),
             ),
-        ),
-        "Boz": (
-            15,
-            Ref(
-                LocalRef {
-                    ref_loc: 15,
-                    index: 5,
-                },
+            "ns": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 7,
+                    },
+                ),
             ),
-        ),
+        },
+        types: {},
     },
-}
-8. NamespaceBinding {
-    id_loc: 20,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            20,
-            Ref(
-                LocalRef {
-                    ref_loc: 20,
-                    index: 8,
-                },
-            ),
-        ),
-        "ns": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 7,
-                },
-            ),
-        ),
-    },
-    types: {},
-}
+)
 Builtin global value globalThis
 Builtin global value ns
 "#;
@@ -17635,279 +18563,309 @@ Locs:
 23. [26:19-25]
 24. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 1,
-    name: "a",
-    def: Annot(
-        String(
-            2,
-        ),
-    ),
-}
-1. NamespaceBinding {
-    id_loc: 0,
-    name: "ns_v",
-    values: {
-        "a": (
-            1,
-            Ref(
-                LocalRef {
-                    ref_loc: 1,
-                    index: 0,
-                },
-            ),
-        ),
-        "b": (
-            3,
-            Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 2,
-                },
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "a",
+        def: Annot(
+            String(
+                2,
             ),
         ),
     },
-    types: {},
-}
-2. Variable {
-    id_loc: 3,
-    name: "b",
-    def: Annot(
-        String(
-            4,
-        ),
-    ),
-}
-3. TypeAlias {
-    id_loc: 6,
-    custom_error_loc_opt: None,
-    name: "T1",
-    tparams: Mono,
-    body: Annot(
-        String(
-            7,
-        ),
-    ),
-}
-4. NamespaceBinding {
-    id_loc: 5,
-    name: "ns_t",
-    values: {},
-    types: {
-        "T1": (
-            6,
-            Ref(
-                LocalRef {
-                    ref_loc: 6,
-                    index: 3,
-                },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 0,
+        name: "ns_v",
+        values: {
+            "a": (
+                1,
+                Ref(
+                    LocalRef {
+                        ref_loc: 1,
+                        index: 0,
+                    },
+                ),
             ),
-        ),
-        "T2": (
-            8,
-            Ref(
-                LocalRef {
-                    ref_loc: 8,
-                    index: 5,
-                },
+            "b": (
+                3,
+                Ref(
+                    LocalRef {
+                        ref_loc: 3,
+                        index: 2,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+2. Variable(
+    DefVariable {
+        id_loc: 3,
+        name: "b",
+        def: Annot(
+            String(
+                4,
             ),
         ),
     },
-}
-5. TypeAlias {
-    id_loc: 8,
-    custom_error_loc_opt: None,
-    name: "T2",
-    tparams: Mono,
-    body: Annot(
-        String(
-            9,
-        ),
-    ),
-}
-6. Variable {
-    id_loc: 11,
-    name: "a",
-    def: Annot(
-        String(
-            12,
-        ),
-    ),
-}
-7. NamespaceBinding {
-    id_loc: 10,
-    name: "ns_v_and_then_t",
-    values: {
-        "a": (
-            11,
-            Ref(
-                LocalRef {
-                    ref_loc: 11,
-                    index: 6,
-                },
+)
+3. TypeAlias(
+    DefTypeAlias {
+        id_loc: 6,
+        custom_error_loc_opt: None,
+        name: "T1",
+        tparams: Mono,
+        body: Annot(
+            String(
+                7,
             ),
         ),
     },
-    types: {
-        "T1": (
-            16,
-            Ref(
-                LocalRef {
-                    ref_loc: 16,
-                    index: 10,
-                },
+)
+4. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "ns_t",
+        values: {},
+        types: {
+            "T1": (
+                6,
+                Ref(
+                    LocalRef {
+                        ref_loc: 6,
+                        index: 3,
+                    },
+                ),
+            ),
+            "T2": (
+                8,
+                Ref(
+                    LocalRef {
+                        ref_loc: 8,
+                        index: 5,
+                    },
+                ),
+            ),
+        },
+    },
+)
+5. TypeAlias(
+    DefTypeAlias {
+        id_loc: 8,
+        custom_error_loc_opt: None,
+        name: "T2",
+        tparams: Mono,
+        body: Annot(
+            String(
+                9,
             ),
         ),
     },
-}
-8. TypeAlias {
-    id_loc: 14,
-    custom_error_loc_opt: None,
-    name: "T1",
-    tparams: Mono,
-    body: Annot(
-        String(
-            15,
-        ),
-    ),
-}
-9. NamespaceBinding {
-    id_loc: 13,
-    name: "ns_t_and_then_v",
-    values: {
-        "a": (
-            18,
-            Ref(
-                LocalRef {
-                    ref_loc: 18,
-                    index: 11,
-                },
+)
+6. Variable(
+    DefVariable {
+        id_loc: 11,
+        name: "a",
+        def: Annot(
+            String(
+                12,
             ),
         ),
     },
-    types: {
-        "T1": (
-            14,
-            Ref(
-                LocalRef {
-                    ref_loc: 14,
-                    index: 8,
-                },
+)
+7. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 10,
+        name: "ns_v_and_then_t",
+        values: {
+            "a": (
+                11,
+                Ref(
+                    LocalRef {
+                        ref_loc: 11,
+                        index: 6,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "T1": (
+                16,
+                Ref(
+                    LocalRef {
+                        ref_loc: 16,
+                        index: 10,
+                    },
+                ),
+            ),
+        },
+    },
+)
+8. TypeAlias(
+    DefTypeAlias {
+        id_loc: 14,
+        custom_error_loc_opt: None,
+        name: "T1",
+        tparams: Mono,
+        body: Annot(
+            String(
+                15,
             ),
         ),
     },
-}
-10. TypeAlias {
-    id_loc: 16,
-    custom_error_loc_opt: None,
-    name: "T1",
-    tparams: Mono,
-    body: Annot(
-        String(
-            17,
-        ),
-    ),
-}
-11. Variable {
-    id_loc: 18,
-    name: "a",
-    def: Annot(
-        String(
-            19,
-        ),
-    ),
-}
-12. Variable {
-    id_loc: 20,
-    name: "non_ns_value",
-    def: Annot(
-        String(
-            21,
-        ),
-    ),
-}
-13. TypeAlias {
-    id_loc: 22,
-    custom_error_loc_opt: None,
-    name: "non_ns_type",
-    tparams: Mono,
-    body: Annot(
-        String(
-            23,
-        ),
-    ),
-}
-14. NamespaceBinding {
-    id_loc: 24,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            24,
-            Ref(
-                LocalRef {
-                    ref_loc: 24,
-                    index: 14,
-                },
+)
+9. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 13,
+        name: "ns_t_and_then_v",
+        values: {
+            "a": (
+                18,
+                Ref(
+                    LocalRef {
+                        ref_loc: 18,
+                        index: 11,
+                    },
+                ),
             ),
-        ),
-        "non_ns_value": (
-            20,
-            Ref(
-                LocalRef {
-                    ref_loc: 20,
-                    index: 12,
-                },
+        },
+        types: {
+            "T1": (
+                14,
+                Ref(
+                    LocalRef {
+                        ref_loc: 14,
+                        index: 8,
+                    },
+                ),
             ),
-        ),
-        "ns_t_and_then_v": (
-            13,
-            Ref(
-                LocalRef {
-                    ref_loc: 13,
-                    index: 9,
-                },
-            ),
-        ),
-        "ns_v": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 1,
-                },
-            ),
-        ),
-        "ns_v_and_then_t": (
-            10,
-            Ref(
-                LocalRef {
-                    ref_loc: 10,
-                    index: 7,
-                },
+        },
+    },
+)
+10. TypeAlias(
+    DefTypeAlias {
+        id_loc: 16,
+        custom_error_loc_opt: None,
+        name: "T1",
+        tparams: Mono,
+        body: Annot(
+            String(
+                17,
             ),
         ),
     },
-    types: {
-        "non_ns_type": (
-            22,
-            Ref(
-                LocalRef {
-                    ref_loc: 22,
-                    index: 13,
-                },
-            ),
-        ),
-        "ns_t": (
-            5,
-            Ref(
-                LocalRef {
-                    ref_loc: 5,
-                    index: 4,
-                },
+)
+11. Variable(
+    DefVariable {
+        id_loc: 18,
+        name: "a",
+        def: Annot(
+            String(
+                19,
             ),
         ),
     },
-}
+)
+12. Variable(
+    DefVariable {
+        id_loc: 20,
+        name: "non_ns_value",
+        def: Annot(
+            String(
+                21,
+            ),
+        ),
+    },
+)
+13. TypeAlias(
+    DefTypeAlias {
+        id_loc: 22,
+        custom_error_loc_opt: None,
+        name: "non_ns_type",
+        tparams: Mono,
+        body: Annot(
+            String(
+                23,
+            ),
+        ),
+    },
+)
+14. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 24,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                24,
+                Ref(
+                    LocalRef {
+                        ref_loc: 24,
+                        index: 14,
+                    },
+                ),
+            ),
+            "non_ns_value": (
+                20,
+                Ref(
+                    LocalRef {
+                        ref_loc: 20,
+                        index: 12,
+                    },
+                ),
+            ),
+            "ns_t_and_then_v": (
+                13,
+                Ref(
+                    LocalRef {
+                        ref_loc: 13,
+                        index: 9,
+                    },
+                ),
+            ),
+            "ns_v": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 1,
+                    },
+                ),
+            ),
+            "ns_v_and_then_t": (
+                10,
+                Ref(
+                    LocalRef {
+                        ref_loc: 10,
+                        index: 7,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "non_ns_type": (
+                22,
+                Ref(
+                    LocalRef {
+                        ref_loc: 22,
+                        index: 13,
+                    },
+                ),
+            ),
+            "ns_t": (
+                5,
+                Ref(
+                    LocalRef {
+                        ref_loc: 5,
+                        index: 4,
+                    },
+                ),
+            ),
+        },
+    },
+)
 Builtin global value globalThis
 Builtin global value non_ns_value
 Builtin global value ns_t_and_then_v
@@ -17939,71 +18897,81 @@ Locs:
 6. [2:12-13]
 7. [0:0]
 Local defs:
-0. Variable {
-    id_loc: 0,
-    name: "o",
-    def: Value(
-        ObjLit {
-            loc: 1,
-            frozen: false,
-            proto: None,
-            props: {
-                "p": ObjValueField(
-                    2,
-                    Value(
-                        NumberLit(
-                            3,
-                            0.0,
-                            "0",
+0. Variable(
+    DefVariable {
+        id_loc: 0,
+        name: "o",
+        def: Value(
+            ObjLit(
+                ValueObjLit {
+                    loc: 1,
+                    frozen: false,
+                    proto: None,
+                    props: {
+                        "p": ObjValueField(
+                            2,
+                            Value(
+                                NumberLit(
+                                    (
+                                        3,
+                                        0.0,
+                                        "0",
+                                    ),
+                                ),
+                            ),
+                            Neutral,
                         ),
-                    ),
-                    Neutral,
-                ),
-            },
-        },
-    ),
-}
-1. Variable {
-    id_loc: 5,
-    name: "p",
-    def: Pattern(
-        1,
-    ),
-}
-2. NamespaceBinding {
-    id_loc: 7,
-    name: "globalThis",
-    values: {
-        "globalThis": (
-            7,
-            Ref(
-                LocalRef {
-                    ref_loc: 7,
-                    index: 2,
-                },
-            ),
-        ),
-        "o": (
-            0,
-            Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
-            ),
-        ),
-        "p": (
-            5,
-            Ref(
-                LocalRef {
-                    ref_loc: 5,
-                    index: 1,
+                    },
                 },
             ),
         ),
     },
-    types: {},
-}
+)
+1. Variable(
+    DefVariable {
+        id_loc: 5,
+        name: "p",
+        def: Pattern(
+            1,
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 7,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                7,
+                Ref(
+                    LocalRef {
+                        ref_loc: 7,
+                        index: 2,
+                    },
+                ),
+            ),
+            "o": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+            "p": (
+                5,
+                Ref(
+                    LocalRef {
+                        ref_loc: 5,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {},
+    },
+)
 Pattern defs:
 0. Ref(LocalRef { ref_loc: 6, index: 0 })
 Patterns:

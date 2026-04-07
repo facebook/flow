@@ -359,11 +359,11 @@ pub(super) fn any_propagated<'cx>(
                     covariant_flow(use_op, class_t)?;
                     Ok(true)
                 }
-                DefTInner::ReactAbstractComponentT {
+                DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     config,
                     renders,
                     component_kind: _,
-                } => {
+                }) => {
                     contravariant_flow(use_op, config)?;
                     covariant_flow(use_op, renders)?;
                     Ok(true)
@@ -442,20 +442,20 @@ pub(super) fn any_propagated<'cx>(
         },
         UseTInner::ArrRestT(..)
         | UseTInner::BindT(..)
-        | UseTInner::CallT { .. }
+        | UseTInner::CallT(..)
         | UseTInner::CallElemT(..)
         | UseTInner::CondT(..)
         | UseTInner::ConstructorT(..)
-        | UseTInner::ElemT { .. }
-        | UseTInner::EnumExhaustiveCheckT { .. }
+        | UseTInner::ElemT(..)
+        | UseTInner::EnumExhaustiveCheckT(..)
         | UseTInner::ExtendsUseT(..)
-        | UseTInner::ConditionalT { .. }
-        | UseTInner::GetElemT { .. }
-        | UseTInner::GetEnumT { .. }
+        | UseTInner::ConditionalT(..)
+        | UseTInner::GetElemT(..)
+        | UseTInner::GetEnumT(..)
         | UseTInner::GetKeysT(..)
         | UseTInner::GetPrivatePropT(..)
         | UseTInner::GetPropT(..)
-        | UseTInner::GetTypeFromNamespaceT { .. }
+        | UseTInner::GetTypeFromNamespaceT(..)
         | UseTInner::GetProtoT(..)
         | UseTInner::GetStaticsT(..)
         | UseTInner::GetValuesT(..)
@@ -464,9 +464,9 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::FilterMaybeT(..)
         | UseTInner::DeepReadOnlyT(..)
         | UseTInner::HooklikeT(..)
-        | UseTInner::ConcretizeT { .. }
-        | UseTInner::ResolveUnionT { .. }
-        | UseTInner::LookupT { .. }
+        | UseTInner::ConcretizeT(..)
+        | UseTInner::ResolveUnionT(..)
+        | UseTInner::LookupT(..)
         | UseTInner::MapTypeT(..)
         | UseTInner::MethodT(..)
         | UseTInner::MixinT(..)
@@ -474,21 +474,21 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::ObjRestT(..)
         | UseTInner::ObjTestProtoT(..)
         | UseTInner::ObjTestT(..)
-        | UseTInner::OptionalIndexedAccessT { .. }
+        | UseTInner::OptionalIndexedAccessT(..)
         | UseTInner::PrivateMethodT(..)
         | UseTInner::ReactKitT(..)
         | UseTInner::ReposLowerT { .. }
         | UseTInner::ReposUseT(..)
         | UseTInner::ResolveSpreadT(..)
-        | UseTInner::SealGenericT { .. }
+        | UseTInner::SealGenericT(..)
         | UseTInner::SetElemT(..)
         | UseTInner::SetPropT(..)
         | UseTInner::SpecializeT(..)
-        | UseTInner::TestPropT { .. }
+        | UseTInner::TestPropT(..)
         | UseTInner::ThisSpecializeT(..)
         | UseTInner::ToStringT { .. }
         | UseTInner::ValueToTypeReferenceT(..)
-        | UseTInner::EvalTypeDestructorT { .. }
+        | UseTInner::EvalTypeDestructorT(..)
         | UseTInner::ConvertEmptyPropsToMixedT(..)
         | UseTInner::CheckUnusedPromiseT { .. } => Ok(false),
 
@@ -500,9 +500,9 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::SetProtoT(..)
         | UseTInner::SuperT(..)
         | UseTInner::TypeCastT(..)
-        | UseTInner::EnumCastT { .. }
+        | UseTInner::EnumCastT(..)
         | UseTInner::ConcretizeTypeAppsT(..)
-        | UseTInner::WriteComputedObjPropCheckT { .. } => Ok(true),
+        | UseTInner::WriteComputedObjPropCheckT(..) => Ok(true),
     }
 }
 
@@ -542,11 +542,11 @@ pub(super) fn any_propagated_use<'cx>(
                 covariant_flow(use_op, class_t)?;
                 Ok(true)
             }
-            DefTInner::ReactAbstractComponentT {
+            DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config,
                 renders,
                 component_kind: _,
-            } => {
+            }) => {
                 contravariant_flow(use_op, config)?;
                 covariant_flow(use_op, renders)?;
                 Ok(true)
@@ -579,7 +579,7 @@ pub(super) fn any_propagated_use<'cx>(
                 Ok(true)
             }
             // Handled already in __flow
-            DefTInner::PolyT { .. } => Ok(false),
+            DefTInner::PolyT(_) => Ok(false),
             // Should never occur as the lower bound of any
             _ => Ok(true),
         },

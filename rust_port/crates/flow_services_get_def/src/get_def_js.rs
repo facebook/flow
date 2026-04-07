@@ -136,11 +136,11 @@ fn process_request<'cx>(
             let reason = reason::mk_reason(RProperty(Some(Name::new(name.dupe()))), loc.dupe());
             let props_object = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
                 let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
-                let use_t = UseT::new(UseTInner::ReactKitT(
+                let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                     use_op,
-                    reason.dupe(),
-                    Box::new(react::Tool::GetConfig { tout: tvar.dupe() }),
-                ));
+                    reason: reason.dupe(),
+                    tool: Box::new(react::Tool::GetConfig { tout: tvar.dupe() }),
+                })));
                 flow_typing_flow_js::flow_js::flow_non_speculating(cx, (component_t, &use_t));
             });
             let req = GetDefRequest::Member(MemberInfo {

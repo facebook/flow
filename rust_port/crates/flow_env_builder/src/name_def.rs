@@ -556,42 +556,42 @@ mod match_pattern {
                 visit_non_binding_leaf(loc.dupe(), acc);
                 visit_expression(&Expression::new(ExprInner::NumberLiteral {
                     loc: loc.dupe(),
-                    inner: Arc::new(inner.clone()),
+                    inner: Arc::new((**inner).clone()),
                 }));
             }
             MatchPattern::BigIntPattern { loc, inner } => {
                 visit_non_binding_leaf(loc.dupe(), acc);
                 visit_expression(&Expression::new(ExprInner::BigIntLiteral {
                     loc: loc.dupe(),
-                    inner: Arc::new(inner.clone()),
+                    inner: Arc::new((**inner).clone()),
                 }));
             }
             MatchPattern::StringPattern { loc, inner } => {
                 visit_non_binding_leaf(loc.dupe(), acc);
                 visit_expression(&Expression::new(ExprInner::StringLiteral {
                     loc: loc.dupe(),
-                    inner: Arc::new(inner.clone()),
+                    inner: Arc::new((**inner).clone()),
                 }));
             }
             MatchPattern::BooleanPattern { loc, inner } => {
                 visit_non_binding_leaf(loc.dupe(), acc);
                 visit_expression(&Expression::new(ExprInner::BooleanLiteral {
                     loc: loc.dupe(),
-                    inner: Arc::new(inner.clone()),
+                    inner: Arc::new((**inner).clone()),
                 }));
             }
             MatchPattern::NullPattern { loc, inner } => {
                 visit_non_binding_leaf(loc.dupe(), acc);
                 visit_expression(&Expression::new(ExprInner::NullLiteral {
                     loc: loc.dupe(),
-                    inner: Arc::new(inner.clone()),
+                    inner: Arc::new((**inner).clone()),
                 }));
             }
             MatchPattern::IdentifierPattern { loc, inner } => {
                 visit_non_binding_leaf(loc.dupe(), acc);
                 visit_expression(&Expression::new(ExprInner::Identifier {
                     loc: loc.dupe(),
-                    inner: inner.dupe(),
+                    inner: (**inner).dupe(),
                 }));
             }
             MatchPattern::WildcardPattern { loc, .. } => {
@@ -1403,7 +1403,7 @@ fn def_of_function(
     arrow: bool,
     function_: ast::function::Function<ALoc, ALoc>,
 ) -> Def {
-    Def::Function {
+    Def::Function(Box::new(FunctionDefData {
         hints,
         synthesizable_from_annotation: func_is_synthesizable_from_annotation(&function_),
         arrow,
@@ -1412,7 +1412,7 @@ fn def_of_function(
         function_,
         tparams_map,
         statics,
-    }
+    }))
 }
 
 fn def_of_component(
@@ -1420,11 +1420,11 @@ fn def_of_component(
     component_loc: ALoc,
     component: ast::statement::ComponentDeclaration<ALoc, ALoc>,
 ) -> Def {
-    Def::Component {
+    Def::Component(Box::new(ComponentDefData {
         tparams_map,
         component_loc,
         component,
-    }
+    }))
 }
 
 fn func_scope_kind(
@@ -1557,7 +1557,7 @@ impl<'a> DefFinder<'a> {
         self.add_binding(
             EnvKey::new(DefLocType::PatternLoc, loc.dupe()),
             mk_reason(VirtualReasonDesc::RDestructuring, loc),
-            Def::Binding(binding),
+            Def::Binding(Box::new(binding)),
         );
     }
 
@@ -1605,7 +1605,7 @@ impl<'a> DefFinder<'a> {
                     self.add_ordinary_binding(
                         loc.dupe(),
                         mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name)), loc),
-                        Def::Binding(binding),
+                        Def::Binding(Box::new(binding)),
                     );
                 }
                 Action::Intermediate(loc, binding) => {
@@ -1684,7 +1684,7 @@ impl<'a> DefFinder<'a> {
                     );
                     self.visit_expression(EnclosingContext::NoContext, &vec![hint], default_expr);
                 }
-                Root::Annotation {
+                Root::Annotation(Box::new(AnnotationData {
                     tparams_map: self.tparams.clone(),
                     optional,
                     has_default_expression: default_expression.is_some(),
@@ -1696,7 +1696,7 @@ impl<'a> DefFinder<'a> {
                     param_loc: Some(param_loc.dupe()),
                     annot: (annot_val.loc.dupe(), annot_val.annotation.clone()),
                     concrete: None,
-                }
+                }))
             }
             None => {
                 if let Some(default_expr) = default_expression {
@@ -1713,14 +1713,14 @@ impl<'a> DefFinder<'a> {
                     _ => mk_reason(VirtualReasonDesc::RDestructuring, param_loc.dupe()),
                 };
                 self.record_hint(param_loc.dupe(), hints.clone());
-                Root::Contextual {
+                Root::Contextual(Box::new(ContextualData {
                     reason,
                     hints: hints.clone(),
                     optional,
                     default_expression: default_expression
                         .as_ref()
                         .map(|e| (e.loc().dupe(), e.dupe())),
-                }
+                }))
             }
         };
 
@@ -1762,7 +1762,7 @@ impl<'a> DefFinder<'a> {
                     VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                     id_loc,
                 ),
-                Def::Binding(binding),
+                Def::Binding(Box::new(binding)),
             );
         }
 
@@ -1778,7 +1778,7 @@ impl<'a> DefFinder<'a> {
             self.add_binding(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
                 mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
-                Def::Binding(Binding::Root(source)),
+                Def::Binding(Box::new(Binding::Root(source))),
             );
         }
 
@@ -1802,7 +1802,7 @@ impl<'a> DefFinder<'a> {
         let param_loc = argument.loc();
 
         let source = match destructure::type_of_pattern(argument) {
-            Some(annot) => Root::Annotation {
+            Some(annot) => Root::Annotation(Box::new(AnnotationData {
                 tparams_map: self.tparams.clone(),
                 optional: false,
                 has_default_expression: false,
@@ -1814,7 +1814,7 @@ impl<'a> DefFinder<'a> {
                 param_loc: Some(param_loc.dupe()),
                 annot: (annot.loc.dupe(), annot.annotation.clone()),
                 concrete: None,
-            },
+            })),
             None => {
                 let reason = match argument {
                     ast::pattern::Pattern::Identifier { inner, .. } => {
@@ -1831,12 +1831,12 @@ impl<'a> DefFinder<'a> {
                     }
                 };
                 self.record_hint(param_loc.dupe(), hints.clone());
-                Root::Contextual {
+                Root::Contextual(Box::new(ContextualData {
                     reason,
                     hints: hints.clone(),
                     optional: false,
                     default_expression: None,
-                }
+                }))
             }
         };
 
@@ -1945,7 +1945,7 @@ impl<'a> DefFinder<'a> {
                     );
                     self.visit_expression(EnclosingContext::NoContext, &vec![hint], default_expr);
                 }
-                Root::Annotation {
+                Root::Annotation(Box::new(AnnotationData {
                     tparams_map: self.tparams.clone(),
                     optional,
                     has_default_expression: default_expression.is_some(),
@@ -1953,7 +1953,7 @@ impl<'a> DefFinder<'a> {
                     param_loc: Some(param_loc.dupe()),
                     annot: (annot_val.loc.dupe(), annot_val.annotation.clone()),
                     concrete: None,
-                }
+                }))
             }
             None => {
                 if let Some(default_expr) = default_expression {
@@ -2011,7 +2011,7 @@ impl<'a> DefFinder<'a> {
                     VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                     id_loc,
                 ),
-                Def::Binding(binding),
+                Def::Binding(Box::new(binding)),
             );
         }
 
@@ -2027,7 +2027,7 @@ impl<'a> DefFinder<'a> {
             self.add_binding(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
                 mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
-                Def::Binding(Binding::Root(source)),
+                Def::Binding(Box::new(Binding::Root(source))),
             );
         }
         let Ok(()) = ast_visitor::component_param_default(
@@ -2058,7 +2058,7 @@ impl<'a> DefFinder<'a> {
         let annot = destructure::type_of_pattern(argument);
 
         let source = match &annot {
-            Some(annot_val) => Root::Annotation {
+            Some(annot_val) => Root::Annotation(Box::new(AnnotationData {
                 tparams_map: self.tparams.clone(),
                 optional,
                 has_default_expression: false,
@@ -2066,7 +2066,7 @@ impl<'a> DefFinder<'a> {
                 param_loc: Some(param_loc.dupe()),
                 annot: (annot_val.loc.dupe(), annot_val.annotation.clone()),
                 concrete: None,
-            },
+            })),
             None => {
                 let reason = match argument {
                     ast::pattern::Pattern::Identifier { inner, .. } => {
@@ -2120,7 +2120,7 @@ impl<'a> DefFinder<'a> {
                     VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                     id_loc,
                 ),
-                Def::Binding(binding),
+                Def::Binding(Box::new(binding)),
             );
         }
 
@@ -2136,7 +2136,7 @@ impl<'a> DefFinder<'a> {
             self.add_binding(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
                 mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
-                Def::Binding(Binding::Root(source)),
+                Def::Binding(Box::new(Binding::Root(source))),
             );
         }
         let Ok(()) = ast_visitor::component_rest_param_default(self, param);
@@ -2189,7 +2189,7 @@ impl<'a> DefFinder<'a> {
                 let name = &name_ident.name;
                 let name_loc = name_ident.loc.dupe();
 
-                let binding = Binding::Root(Root::FunctionValue {
+                let binding = Binding::Root(Root::FunctionValue(Box::new(FunctionValueData {
                     hints: func_hints_clone.clone(),
                     synthesizable_from_annotation: func_is_synthesizable_from_annotation(expr),
                     function_loc: function_loc.dupe(),
@@ -2197,7 +2197,7 @@ impl<'a> DefFinder<'a> {
                     statics: statics_clone.clone(),
                     arrow,
                     tparams_map: this.tparams.clone(),
-                });
+                })));
                 let binding = this.mk_hooklike_if_necessary(hooklike, binding);
                 this.add_ordinary_binding(
                     name_loc,
@@ -2205,7 +2205,7 @@ impl<'a> DefFinder<'a> {
                         VirtualReasonDesc::RIdentifier(Name::new(name.clone())),
                         name_ident.loc.dupe(),
                     ),
-                    Def::Binding(binding),
+                    Def::Binding(Box::new(binding)),
                 );
             }
 
@@ -2480,7 +2480,7 @@ impl<'a> DefFinder<'a> {
                 this.add_ordinary_binding(
                     loc,
                     mk_reason(VirtualReasonDesc::RNext, body_loc),
-                    Def::GeneratorNext(gen_val),
+                    Def::GeneratorNext(Box::new(gen_val)),
                 );
             }
 
@@ -2578,12 +2578,12 @@ impl<'a> DefFinder<'a> {
                     this.add_ordinary_binding(
                         id_ident.loc.dupe(),
                         reason,
-                        Def::Class {
+                        Def::Class(Box::new(ClassDefData {
                             class_loc: loc.dupe(),
                             class_: expr.clone(),
                             this_super_write_locs,
                             kind,
-                        },
+                        })),
                     );
                 }
                 None => {
@@ -2594,12 +2594,12 @@ impl<'a> DefFinder<'a> {
                     this.add_ordinary_binding(
                         loc.dupe(),
                         reason,
-                        Def::Class {
+                        Def::Class(Box::new(ClassDefData {
                             class_loc: loc.dupe(),
                             class_: expr.clone(),
                             this_super_write_locs,
                             kind,
-                        },
+                        })),
                     );
                 }
             }
@@ -2695,12 +2695,12 @@ impl<'a> DefFinder<'a> {
             this.add_ordinary_binding(
                 id_loc.dupe(),
                 reason,
-                Def::Record {
+                Def::Record(Box::new(RecordDefData {
                     record_loc: loc.dupe(),
                     record: record.clone(),
                     this_super_write_locs,
                     defaulted_props,
-                },
+                })),
             );
         });
     }
@@ -2941,11 +2941,11 @@ impl<'a> DefFinder<'a> {
                     self.add_ordinary_binding(
                         member_loc.dupe(),
                         mk_pattern_reason(&left_tuple.1),
-                        Def::MemberAssign {
+                        Def::MemberAssign(Box::new(MemberAssignData {
                             member_loc: member_loc.dupe(),
                             member: member.as_ref().clone(),
                             rhs: (right.loc().dupe(), right.clone()),
-                        },
+                        })),
                     );
                     let hints = expression_pattern_hints(inner.deref(), &self.class_stack);
                     let right_tuple = (right.loc().dupe(), right.clone());
@@ -2976,13 +2976,13 @@ impl<'a> DefFinder<'a> {
                         VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                         id_loc.dupe(),
                     ),
-                    Def::OpAssign {
+                    Def::OpAssign(Box::new(OpAssignData {
                         exp_loc: loc.dupe(),
                         lhs: left_tuple.clone(),
                         op: op.clone(),
                         rhs: (right.loc().dupe(), right.clone()),
                         assertion,
-                    },
+                    })),
                 );
                 let hints = other_pattern_hints(&left_tuple.1);
                 self.visit_expression(EnclosingContext::NoContext, &hints, right);
@@ -3001,13 +3001,13 @@ impl<'a> DefFinder<'a> {
                 self.add_ordinary_binding(
                     e.loc().dupe(),
                     mk_pattern_reason(&left_tuple.1),
-                    Def::OpAssign {
+                    Def::OpAssign(Box::new(OpAssignData {
                         exp_loc: loc.dupe(),
                         lhs: left_tuple.clone(),
                         op: op.clone(),
                         rhs: (right.loc().dupe(), right.clone()),
                         assertion,
-                    },
+                    })),
                 );
                 let hints = expression_pattern_hints(e, &self.class_stack);
                 self.visit_expression(EnclosingContext::NoContext, &hints, right);
@@ -3339,7 +3339,7 @@ impl<'a> DefFinder<'a> {
             self.add_ordinary_binding(
                 loc.dupe(),
                 reason.dupe(),
-                Def::ExpressionDef(ExpressionDef {
+                Def::ExpressionDef(Box::new(ExpressionDef {
                     cond_context: cond,
                     expr: Expression::new(ast::expression::ExpressionInner::Member {
                         loc: loc.dupe(),
@@ -3347,7 +3347,7 @@ impl<'a> DefFinder<'a> {
                     }),
                     hints: hints.clone(),
                     chain: true,
-                }),
+                })),
             );
         }
         let Ok(()) = ast_visitor::member_default(self, &loc, mem);
@@ -3366,7 +3366,7 @@ impl<'a> DefFinder<'a> {
             self.add_ordinary_binding(
                 loc.dupe(),
                 reason.dupe(),
-                Def::ExpressionDef(ExpressionDef {
+                Def::ExpressionDef(Box::new(ExpressionDef {
                     cond_context: cond,
                     expr: Expression::new(ast::expression::ExpressionInner::OptionalMember {
                         loc: loc.dupe(),
@@ -3374,7 +3374,7 @@ impl<'a> DefFinder<'a> {
                     }),
                     hints: hints.clone(),
                     chain: true,
-                }),
+                })),
             );
         }
         let Ok(()) = ast_visitor::member_default(self, &loc, &mem.member);
@@ -3487,12 +3487,12 @@ impl<'a> DefFinder<'a> {
                 self.add_binding(
                     key,
                     reason.clone(),
-                    Def::ExpressionDef(ExpressionDef {
+                    Def::ExpressionDef(Box::new(ExpressionDef {
                         cond_context: cond.clone(),
                         expr: expr.dupe(),
                         hints: vec![],
                         chain: false,
-                    }),
+                    })),
                 );
                 vec![]
             } else {
@@ -3513,12 +3513,12 @@ impl<'a> DefFinder<'a> {
                 self.add_binding(
                     key,
                     reason.clone(),
-                    Def::ExpressionDef(ExpressionDef {
+                    Def::ExpressionDef(Box::new(ExpressionDef {
                         cond_context: cond.clone(),
                         expr: expr.dupe(),
                         hints: hints.clone(),
                         chain: false,
-                    }),
+                    })),
                 );
             }
         }
@@ -4153,7 +4153,12 @@ impl<'a> DefFinder<'a> {
         self.add_ordinary_binding(
             match_keyword_loc.dupe(),
             mk_reason(RMatch, match_keyword_loc.dupe()),
-            Def::Binding(Binding::Root(mk_value(None, None, true, arg.clone()))),
+            Def::Binding(Box::new(Binding::Root(mk_value(
+                None,
+                None,
+                true,
+                arg.clone(),
+            )))),
         );
 
         let value_hints: BTreeMap<usize, _> = cases
@@ -4182,11 +4187,11 @@ impl<'a> DefFinder<'a> {
                 case_match_root_loc,
                 ..
             } = case;
-            let acc = Root::MatchCaseRoot {
+            let acc = Root::MatchCaseRoot(Box::new(MatchCaseRootData {
                 case_match_root_loc: case_match_root_loc.dupe(),
                 root_pattern_loc: pattern.loc().dupe(),
                 prev_pattern_loc: prev_pattern_loc.dupe(),
-            };
+            }));
             self.add_match_destructure_bindings(
                 case_match_root_loc.dupe(),
                 guard.is_some(),
@@ -4233,12 +4238,12 @@ impl<'a> DefFinder<'a> {
         self.add_binding(
             EnvKey::new(MatchCasePatternLoc, pattern_loc.dupe()),
             mk_reason(RMatchPattern, pattern_loc.dupe()),
-            Def::MatchCasePattern {
+            Def::MatchCasePattern(Box::new(MatchCasePatternData {
                 case_match_root_loc,
                 has_guard,
                 pattern: (pattern_loc.dupe(), pattern.clone()),
                 prev_pattern_loc,
-            },
+            })),
         );
 
         use std::cell::RefCell;
@@ -4285,7 +4290,7 @@ impl<'a> DefFinder<'a> {
                     self.add_ordinary_binding(
                         loc.dupe(),
                         mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name.dupe())), loc),
-                        Def::Binding(binding),
+                        Def::Binding(Box::new(binding)),
                     );
                 }
                 MatchPatternAction::NonBindingLeaf(loc, binding) => {
@@ -4455,12 +4460,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 self.add_ordinary_binding(
                                     member_loc.dupe(),
                                     mk_pattern_reason(left),
-                                    Def::ExpressionDef(ExpressionDef {
+                                    Def::ExpressionDef(Box::new(ExpressionDef {
                                         cond_context: EnclosingContext::NoContext,
                                         hints: vec![],
                                         chain: false,
                                         expr: init.clone(),
-                                    }),
+                                    })),
                                 );
                                 EnvKey::new(DefLocType::OrdinaryNameLoc, member_loc.dupe())
                             };
@@ -4797,10 +4802,10 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 .providers_of_def(name_loc)
                 .map(|def_providers| def_providers.array_providers.dupe())
                 .unwrap_or_else(FlowOrdSet::new);
-            Some(Root::EmptyArray {
+            Some(Root::EmptyArray(Box::new(EmptyArrayData {
                 array_providers,
                 arr_loc: arr_loc.dupe(),
-            })
+            })))
         } else if let Some(obj_expr) = init
             && let ExpressionInner::Object {
                 loc,
@@ -4819,11 +4824,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         inner: obj_inner.clone(),
                     }),
                 )),
-                synthesizable => Some(Root::ObjectValue {
+                synthesizable => Some(Root::ObjectValue(Box::new(ObjectValueData {
                     synthesizable,
                     obj_loc: loc.dupe(),
                     obj: obj_inner.as_ref().clone(),
-                }),
+                }))),
             }
         } else {
             init.as_ref()
@@ -4833,7 +4838,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             Some(annot) => {
                 let annot_tuple = (annot.loc.dupe(), annot.annotation.clone());
                 (
-                    Some(Root::Annotation {
+                    Some(Root::Annotation(Box::new(AnnotationData {
                         tparams_map: FlowOrdMap::new(),
                         optional: false,
                         has_default_expression: false,
@@ -4841,7 +4846,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         param_loc: None,
                         annot: annot_tuple.clone(),
                         concrete: concrete.map(Box::new),
-                    }),
+                    }))),
                     vec![Hint::HintT(
                         HintNode::AnnotationHint(FlowOrdMap::new(), annot.clone()),
                         HintKind::ExpectedTypeHint,
@@ -4876,7 +4881,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     (ast::types::AnnotationOrHint::Available(annot), _) => {
                         let binding = self.mk_hooklike_if_necessary(
                             hook_like,
-                            Binding::Root(Root::Annotation {
+                            Binding::Root(Root::Annotation(Box::new(AnnotationData {
                                 tparams_map: FlowOrdMap::new(),
                                 optional: false,
                                 has_default_expression: false,
@@ -4884,7 +4889,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 param_loc: None,
                                 annot: (annot.loc.dupe(), annot.annotation.clone()),
                                 concrete: None,
-                            }),
+                            }))),
                         );
 
                         let reason = mk_reason(
@@ -4892,7 +4897,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             id_loc.dupe(),
                         );
 
-                        self.add_ordinary_binding(id_loc, reason, Def::Binding(binding));
+                        self.add_ordinary_binding(id_loc, reason, Def::Binding(Box::new(binding)));
                     }
                     (ast::types::AnnotationOrHint::Missing(_), Some(init_expr)) => {
                         let binding = self.mk_hooklike_if_necessary(
@@ -4905,7 +4910,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             id_loc.dupe(),
                         );
 
-                        self.add_ordinary_binding(id_loc, reason, Def::Binding(binding));
+                        self.add_ordinary_binding(id_loc, reason, Def::Binding(Box::new(binding)));
                     }
                     (ast::types::AnnotationOrHint::Missing(_), None) => {
                         // Error case: no annotation and no init. Type checker will report the error.
@@ -4918,9 +4923,9 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         self.add_ordinary_binding(
                             id_loc,
                             reason,
-                            Def::Binding(Binding::Root(
+                            Def::Binding(Box::new(Binding::Root(
                                 Root::DeclareVariableMissingAnnotationAndInit,
-                            )),
+                            ))),
                         );
                     }
                 }
@@ -4980,15 +4985,17 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         self.add_ordinary_binding(
             loc.dupe(),
             mk_reason(VirtualReasonDesc::RThis, loc.dupe()),
-            Def::Binding(Binding::Root(Root::Annotation {
-                tparams_map: self.tparams.clone(),
-                optional: false,
-                has_default_expression: false,
-                react_deep_read_only: None,
-                param_loc: None,
-                annot: (annot.loc.dupe(), annot.annotation.clone()),
-                concrete: None,
-            })),
+            Def::Binding(Box::new(Binding::Root(Root::Annotation(Box::new(
+                AnnotationData {
+                    tparams_map: self.tparams.clone(),
+                    optional: false,
+                    has_default_expression: false,
+                    react_deep_read_only: None,
+                    param_loc: None,
+                    annot: (annot.loc.dupe(), annot.annotation.clone()),
+                    concrete: None,
+                },
+            ))))),
         );
         ast_visitor::function_this_param_default(self, this_param)?;
         Ok(())
@@ -5002,7 +5009,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     | ast::types::TypeInner::Mixed { .. }
                     | ast::types::TypeInner::Unknown { .. } => {
                         match destructure::type_of_pattern(pat) {
-                            Some(annot) => Root::Annotation {
+                            Some(annot) => Root::Annotation(Box::new(AnnotationData {
                                 tparams_map: FlowOrdMap::new(),
                                 optional: false,
                                 has_default_expression: false,
@@ -5010,7 +5017,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 param_loc: None,
                                 annot: (annot.loc.dupe(), annot.annotation.clone()),
                                 concrete: None,
-                            },
+                            })),
                             None => Root::CatchUnannotated,
                         }
                     }
@@ -5184,7 +5191,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
             let is_hooklike = flow_parser::ast_utils::hook_name(name);
 
-            let binding = Binding::Root(Root::Annotation {
+            let binding = Binding::Root(Root::Annotation(Box::new(AnnotationData {
                 tparams_map: FlowOrdMap::new(),
                 optional: false,
                 has_default_expression: false,
@@ -5192,14 +5199,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 param_loc: None,
                 annot: (annot.loc.dupe(), annot.annotation.clone()),
                 concrete: None,
-            });
+            })));
 
             let binding = self.mk_hooklike_if_necessary(is_hooklike, binding);
 
             self.add_ordinary_binding(
                 id_loc,
                 func_reason(false, false, loc.dupe()),
-                Def::Binding(binding),
+                Def::Binding(Box::new(binding)),
             );
         }
 
@@ -5315,9 +5322,9 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 let decl = &declarations[0];
                 let id = &decl.id;
                 let id_tuple = (id.loc().dupe(), id.clone());
-                let forof = Root::For(ForKind::Of { await_ }, right_tuple.clone());
+                let forof = Root::For(Box::new((ForKind::Of { await_ }, right_tuple.clone())));
                 let source = match destructure::type_of_pattern(id) {
-                    Some(annot) => Root::Annotation {
+                    Some(annot) => Root::Annotation(Box::new(AnnotationData {
                         tparams_map: TparamsMap::default(),
                         optional: false,
                         has_default_expression: false,
@@ -5325,7 +5332,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         param_loc: None,
                         annot: (annot.loc.dupe(), annot.annotation.clone()),
                         concrete: Some(Box::new(forof)),
-                    },
+                    })),
                     None => forof,
                 };
                 self.add_destructure_bindings(source, &id_tuple);
@@ -5339,7 +5346,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             ast::statement::for_of::Left::LeftPattern(pat) => {
                 let pat_tuple = (pat.loc().dupe(), pat.clone());
                 self.add_destructure_bindings(
-                    Root::For(ForKind::Of { await_ }, right_tuple),
+                    Root::For(Box::new((ForKind::Of { await_ }, right_tuple))),
                     &pat_tuple,
                 );
             }
@@ -5365,9 +5372,9 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 let decl = &declarations[0];
                 let id = &decl.id;
                 let id_tuple = (id.loc().dupe(), id.clone());
-                let forin = Root::For(ForKind::In, right_tuple.clone());
+                let forin = Root::For(Box::new((ForKind::In, right_tuple.clone())));
                 let source = match destructure::type_of_pattern(id) {
-                    Some(annot) => Root::Annotation {
+                    Some(annot) => Root::Annotation(Box::new(AnnotationData {
                         tparams_map: TparamsMap::default(),
                         optional: false,
                         has_default_expression: false,
@@ -5375,7 +5382,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         param_loc: None,
                         annot: (annot.loc.dupe(), annot.annotation.clone()),
                         concrete: Some(Box::new(forin)),
-                    },
+                    })),
                     None => forin,
                 };
                 self.add_destructure_bindings(source, &id_tuple);
@@ -5388,7 +5395,10 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             }
             ast::statement::for_in::Left::LeftPattern(pat) => {
                 let pat_tuple = (pat.loc().dupe(), pat.clone());
-                self.add_destructure_bindings(Root::For(ForKind::In, right_tuple), &pat_tuple);
+                self.add_destructure_bindings(
+                    Root::For(Box::new((ForKind::In, right_tuple))),
+                    &pat_tuple,
+                );
             }
         }
 
@@ -5508,11 +5518,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 VirtualReasonDesc::RType(Name::new(name.dupe())),
                 name_loc.dupe(),
             ),
-            Def::TypeParam {
+            Def::TypeParam(Box::new(TypeParamData {
                 tparams_map: self.tparams.clone(),
                 kind: *kind,
                 tparam: (tparam.loc.dupe(), tparam.clone()),
-            },
+            })),
         );
         self.add_tparam(name_loc, name.dupe());
 
@@ -5589,7 +5599,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 },
                 id_loc.dupe(),
             ),
-            Def::Enum(id_loc.dupe(), name.dupe(), body.clone()),
+            Def::Enum(Box::new((id_loc.dupe(), name.dupe(), body.clone()))),
         );
 
         ast_visitor::enum_declaration_default(self, loc, enum_decl)
@@ -5630,7 +5640,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             ),
                             rem_id_loc.dupe(),
                         ),
-                        Def::Import {
+                        Def::Import(Box::new(ImportData {
                             import_kind,
                             source: source.dupe(),
                             source_loc: source_loc.dupe(),
@@ -5639,7 +5649,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 remote: remote.dupe(),
                                 local: name.dupe(),
                             },
-                        },
+                        })),
                     );
                 }
             }
@@ -5665,12 +5675,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 self.add_ordinary_binding(
                     id_loc.dupe(),
                     mk_reason(import_reason_desc, id_loc.dupe()),
-                    Def::Import {
+                    Def::Import(Box::new(ImportData {
                         import_kind,
                         source: source.dupe(),
                         source_loc: source_loc.dupe(),
                         import: Import::Namespace(name.dupe()),
-                    },
+                    })),
                 );
             }
             None => {}
@@ -5686,12 +5696,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     VirtualReasonDesc::RDefaultImportedType(name.dupe(), source_userland.dupe()),
                     id_loc.dupe(),
                 ),
-                Def::Import {
+                Def::Import(Box::new(ImportData {
                     import_kind,
                     source: source.dupe(),
                     source_loc: source_loc.dupe(),
                     import: Import::Default(name.dupe()),
-                },
+                })),
             );
         }
 
@@ -5723,12 +5733,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 self.add_ordinary_binding(
                     id_loc.dupe(),
                     import_reason,
-                    Def::Import {
+                    Def::Import(Box::new(ImportData {
                         import_kind,
                         source: source.dupe(),
                         source_loc: source_loc.dupe(),
                         import: Import::Default(local_name.dupe()),
-                    },
+                    })),
                 );
             }
             // Foo = A.B.C: qualified name access is not resolved through
@@ -6144,7 +6154,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         self.add_ordinary_binding(
             match_keyword_loc.dupe(),
             mk_reason(RMatch, match_keyword_loc.dupe()),
-            Def::Binding(Binding::Root(mk_value(None, None, true, arg.clone()))),
+            Def::Binding(Box::new(Binding::Root(mk_value(
+                None,
+                None,
+                true,
+                arg.clone(),
+            )))),
         );
         let mut prev_pattern_loc: Option<ALoc> = None;
         for case in cases.iter() {
@@ -6157,11 +6172,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 comments: _,
                 invalid_syntax: _,
             } = case;
-            let acc = Root::MatchCaseRoot {
+            let acc = Root::MatchCaseRoot(Box::new(MatchCaseRootData {
                 case_match_root_loc: case_match_root_loc.dupe(),
                 root_pattern_loc: pattern.loc().dupe(),
                 prev_pattern_loc: prev_pattern_loc.dupe(),
-            };
+            }));
             self.add_match_destructure_bindings(
                 case_match_root_loc.dupe(),
                 guard.is_some(),

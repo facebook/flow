@@ -21,10 +21,13 @@ use flow_typing_context::Context;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::GetSetData;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::MappedTypeHomomorphicFlag;
 use flow_typing_type::type_::ObjType;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::Property;
@@ -86,11 +89,11 @@ impl TypeVisitor<FvAcc> for FreeVarVisitor {
                 flow_typing_visitors::type_visitor::type_default(self, cx, pole, acc, t)
             }
             TypeInner::DefT(_, def_t) => {
-                if let DefTInner::PolyT {
+                if let DefTInner::PolyT(box PolyTData {
                     tparams: xs,
                     t_out: inner,
                     ..
-                } = def_t.deref()
+                }) = def_t.deref()
                 {
                     let orig_bound = acc.bound.dupe();
                     for tp in xs.iter() {
@@ -433,22 +436,17 @@ pub fn props<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     let mut props_map_prime = None;
     for (name, prop) in props_map.iter() {
         let new_prop = match prop.deref() {
-            PropertyInner::Field {
-                preferred_def_locs,
-                key_loc,
-                type_,
-                polarity,
-            } => {
-                let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-                if type_.ptr_eq(&type_prime) {
+            PropertyInner::Field(fd) => {
+                let type_prime = mapper.type_(cx, map_cx, fd.type_.dupe());
+                if fd.type_.ptr_eq(&type_prime) {
                     prop.dupe()
                 } else {
-                    Property::new(PropertyInner::Field {
-                        preferred_def_locs: preferred_def_locs.clone(),
-                        key_loc: key_loc.dupe(),
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
                         type_: type_prime,
-                        polarity: *polarity,
-                    })
+                        polarity: fd.polarity,
+                    })))
                 }
             }
             PropertyInner::Get { key_loc, type_ } => {
@@ -473,23 +471,18 @@ pub fn props<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
                     })
                 }
             }
-            PropertyInner::GetSet {
-                get_key_loc,
-                get_type,
-                set_key_loc,
-                set_type,
-            } => {
-                let get_type_prime = mapper.type_(cx, map_cx, get_type.dupe());
-                let set_type_prime = mapper.type_(cx, map_cx, set_type.dupe());
-                if get_type.ptr_eq(&get_type_prime) && set_type.ptr_eq(&set_type_prime) {
+            PropertyInner::GetSet(gs) => {
+                let get_type_prime = mapper.type_(cx, map_cx, gs.get_type.dupe());
+                let set_type_prime = mapper.type_(cx, map_cx, gs.set_type.dupe());
+                if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
                     prop.dupe()
                 } else {
-                    Property::new(PropertyInner::GetSet {
-                        get_key_loc: get_key_loc.dupe(),
+                    Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                        get_key_loc: gs.get_key_loc.dupe(),
                         get_type: get_type_prime,
-                        set_key_loc: set_key_loc.dupe(),
+                        set_key_loc: gs.set_key_loc.dupe(),
                         set_type: set_type_prime,
-                    })
+                    })))
                 }
             }
             PropertyInner::Method { key_loc, type_ } => {
@@ -673,12 +666,12 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                 }
             }
             TypeInner::DefT(reason, def_t) => {
-                if let DefTInner::PolyT {
+                if let DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams: xs,
                     t_out: inner,
                     id: poly_id,
-                } = def_t.deref()
+                }) = def_t.deref()
                 {
                     let prev_change_id = self.change_id;
                     self.change_id = false;
@@ -754,12 +747,12 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                     if changed {
                         Type::new(TypeInner::DefT(
                             reason.dupe(),
-                            DefT::new(DefTInner::PolyT {
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: xs_new.into(),
                                 t_out: inner_prime,
                                 id: new_id,
-                            }),
+                            }))),
                         ))
                     } else {
                         t.dupe()

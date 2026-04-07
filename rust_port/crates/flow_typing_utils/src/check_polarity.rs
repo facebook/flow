@@ -14,6 +14,8 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::subst_name::SubstName;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EIncompatibleData;
+use flow_typing_errors::error_message::EPolarityMismatchData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_flow_common::flow_js_utils;
@@ -28,8 +30,10 @@ use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::InstTypeInner;
 use flow_typing_type::type_::NamespaceType;
 use flow_typing_type::type_::ObjKind;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
@@ -81,12 +85,12 @@ fn check_polarity_impl<'cx>(
                 if !Polarity::compat(tp.polarity, polarity) {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPolarityMismatch {
+                        ErrorMessage::EPolarityMismatch(Box::new(EPolarityMismatchData {
                             reason: reason.dupe(),
                             name: name.string_of_subst_name().dupe(),
                             expected_polarity: tp.polarity,
                             actual_polarity: polarity,
-                        },
+                        })),
                     )?;
                 }
             }
@@ -158,7 +162,8 @@ fn check_polarity_impl<'cx>(
                     match l.deref() {
                         TypeInner::AnyT(..) => return Ok(()),
                         TypeInner::DefT(_, d) => {
-                            if let DefTInner::PolyT { tparams: tps, .. } = d.deref() {
+                            if let DefTInner::PolyT(box PolyTData { tparams: tps, .. }) = d.deref()
+                            {
                                 return variance_check(cx, trace, tparams, polarity, tps, targs);
                             }
                         }
@@ -171,7 +176,7 @@ fn check_polarity_impl<'cx>(
                     }
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EIncompatible {
+                        ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                             lower: (
                                 reason_of_t(l).dupe(),
                                 flow_js_utils::error_message_kind_of_lower(t),
@@ -181,7 +186,7 @@ fn check_polarity_impl<'cx>(
                                 UpperKind::IncompatibleVarianceCheckT,
                             ),
                             use_op: None,
-                        },
+                        })),
                     )
                 },
                 type_,
@@ -424,11 +429,11 @@ fn check_polarity_impl<'cx>(
                     check_polarity_call(cx, trace, seen, tparams, polarity, *call_t)?;
                 }
             }
-            DefTInner::PolyT {
+            DefTInner::PolyT(box PolyTData {
                 tparams: tps,
                 t_out,
                 ..
-            } => {
+            }) => {
                 // We might encounter a polymorphic function type or method inside of an
                 // annotation. A newly introduced type parameter's bound or default might
                 // refer to one of the tparams we're looking for.
@@ -440,9 +445,11 @@ fn check_polarity_impl<'cx>(
                 //     check_polarity cx ?trace seen tparams polarity t
                 check_polarity_impl(cx, trace, seen, &tparams_acc, polarity, t_out)?;
             }
-            DefTInner::ReactAbstractComponentT {
-                config, renders, ..
-            } => {
+            DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                config,
+                renders,
+                ..
+            }) => {
                 check_polarity_impl(cx, trace, seen, tparams, Polarity::inv(polarity), config)?;
                 check_polarity_impl(cx, trace, seen, tparams, polarity, renders)?;
             }
@@ -510,15 +517,13 @@ fn check_polarity_prop<'cx>(
     prop: &Property,
 ) -> Result<(), FlowJsException> {
     match prop.deref() {
-        PropertyInner::Field {
-            type_, polarity: p, ..
-        } => check_polarity_impl(
+        PropertyInner::Field(fd) => check_polarity_impl(
             cx,
             trace,
             seen,
             tparams,
-            Polarity::mult(polarity, *p),
-            type_,
+            Polarity::mult(polarity, fd.polarity),
+            &fd.type_,
         ),
         PropertyInner::Get { type_, .. } => {
             check_polarity_impl(cx, trace, seen, tparams, polarity, type_)
@@ -526,11 +531,16 @@ fn check_polarity_prop<'cx>(
         PropertyInner::Set { type_, .. } => {
             check_polarity_impl(cx, trace, seen, tparams, Polarity::inv(polarity), type_)
         }
-        PropertyInner::GetSet {
-            get_type, set_type, ..
-        } => {
-            check_polarity_impl(cx, trace, seen, tparams, polarity, get_type)?;
-            check_polarity_impl(cx, trace, seen, tparams, Polarity::inv(polarity), set_type)
+        PropertyInner::GetSet(gs) => {
+            check_polarity_impl(cx, trace, seen, tparams, polarity, &gs.get_type)?;
+            check_polarity_impl(
+                cx,
+                trace,
+                seen,
+                tparams,
+                Polarity::inv(polarity),
+                &gs.set_type,
+            )
         }
         PropertyInner::Method { type_, .. } => {
             check_polarity_impl(cx, trace, seen, tparams, polarity, type_)

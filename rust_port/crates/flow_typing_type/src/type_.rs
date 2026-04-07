@@ -372,6 +372,21 @@ impl Type {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PolyTData {
+    pub tparams_loc: ALoc,
+    pub tparams: Rc<[TypeParam]>,
+    pub t_out: Type,
+    pub id: poly::Id,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReactAbstractComponentTData {
+    pub config: Type,
+    pub renders: Type,
+    pub component_kind: ComponentKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DefTInner {
     BoolGeneralT,
     EmptyT,
@@ -429,17 +444,8 @@ pub enum DefTInner {
     /// parameters generates a type. Universal type parameters may specify subtype
     /// constraints ("bounds"), which must be satisfied by any types they may be
     /// substituted by.
-    PolyT {
-        tparams_loc: ALoc,
-        tparams: Rc<[TypeParam]>,
-        t_out: Type,
-        id: poly::Id,
-    },
-    ReactAbstractComponentT {
-        config: Type,
-        renders: Type,
-        component_kind: ComponentKind,
-    },
+    PolyT(Box<PolyTData>),
+    ReactAbstractComponentT(Box<ReactAbstractComponentTData>),
     RendersT(Rc<CanonicalRendersForm>),
     EnumValueT(Rc<EnumInfo>),
     EnumObjectT {
@@ -704,6 +710,116 @@ impl EnumInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ClassOwnProtoCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub prop: Name,
+    pub own_loc: Option<L>,
+    pub proto_loc: Option<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ConformToCommonInterfaceData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub self_sig_loc: L,
+    pub self_module_loc: L,
+    pub originate_from_import: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub op: VirtualReason<L>,
+    pub fn_: VirtualReason<L>,
+    pub args: Arc<[VirtualReason<L>]>,
+    pub local: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunCallMethodData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub op: VirtualReason<L>,
+    pub fn_: VirtualReason<L>,
+    pub prop: VirtualReason<L>,
+    pub args: Arc<[VirtualReason<L>]>,
+    pub local: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReactCreateElementCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub op: VirtualReason<L>,
+    pub component: VirtualReason<L>,
+    pub children: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct RecordCreateData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub op: VirtualReason<L>,
+    pub constructor: VirtualReason<L>,
+    pub properties: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SwitchRefinementCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub test: L,
+    pub discriminant: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub reason: VirtualReason<L>,
+    pub return_reason: VirtualReason<L>,
+    pub param_reason: VirtualReason<L>,
+    pub guard_type_reason: VirtualReason<L>,
+    pub is_return_false_statement: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ConstrainedAssignmentData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub name: FlowSmolStr,
+    pub declaration: L,
+    pub providers: Arc<[L]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunParamData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub n: i32,
+    pub name: Option<FlowSmolStr>,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct OpaqueTypeCustomErrorCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
+    pub custom_error_loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PropertyCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub prop: Option<Name>,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TupleElementCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub n: i32,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub lower_optional: bool,
+    pub upper_optional: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeArgCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub name: SubstName,
+    pub targ: VirtualReason<L>,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub polarity: Polarity,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     UnknownUse,
     ObjectAddComputedProperty {
@@ -735,11 +851,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         name: VirtualReason<L>,
         implements: VirtualReason<L>,
     },
-    ClassOwnProtoCheck {
-        prop: Name,
-        own_loc: Option<L>,
-        proto_loc: Option<L>,
-    },
+    ClassOwnProtoCheck(Box<ClassOwnProtoCheckData<L>>),
     ClassMethodDefinition {
         def: VirtualReason<L>,
         name: VirtualReason<L>,
@@ -748,11 +860,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         from: VirtualReason<L>,
         target: VirtualReason<L>,
     },
-    ConformToCommonInterface {
-        self_sig_loc: L,
-        self_module_loc: L,
-        originate_from_import: bool,
-    },
+    ConformToCommonInterface(Box<ConformToCommonInterfaceData<L>>),
     DeclareComponentRef {
         op: VirtualReason<L>,
     },
@@ -763,19 +871,8 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     DeleteVar {
         var: VirtualReason<L>,
     },
-    FunCall {
-        op: VirtualReason<L>,
-        fn_: VirtualReason<L>,
-        args: Arc<[VirtualReason<L>]>,
-        local: bool,
-    },
-    FunCallMethod {
-        op: VirtualReason<L>,
-        fn_: VirtualReason<L>,
-        prop: VirtualReason<L>,
-        args: Arc<[VirtualReason<L>]>,
-        local: bool,
-    },
+    FunCall(Box<FunCallData<L>>),
+    FunCallMethod(Box<FunCallMethodData<L>>),
     FunReturnStatement {
         value: VirtualReason<L>,
     },
@@ -805,19 +902,11 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         op: VirtualReason<L>,
         component: VirtualReason<L>,
     },
-    ReactCreateElementCall {
-        op: VirtualReason<L>,
-        component: VirtualReason<L>,
-        children: L,
-    },
+    ReactCreateElementCall(Box<ReactCreateElementCallData<L>>),
     ReactGetIntrinsic {
         literal: VirtualReason<L>,
     },
-    RecordCreate {
-        op: VirtualReason<L>,
-        constructor: VirtualReason<L>,
-        properties: L,
-    },
+    RecordCreate(Box<RecordCreateData<L>>),
     Speculation(Arc<VirtualUseOp<L>>),
     TypeApplication {
         type_: VirtualReason<L>,
@@ -835,10 +924,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         test: VirtualReason<L>,
         discriminant: VirtualReason<L>,
     },
-    SwitchRefinementCheck {
-        test: L,
-        discriminant: L,
-    },
+    SwitchRefinementCheck(Box<SwitchRefinementCheckData<L>>),
     EvalMappedType {
         mapped_type: VirtualReason<L>,
     },
@@ -852,13 +938,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     ComponentRestParamCompatibility {
         rest_param: VirtualReason<L>,
     },
-    PositiveTypeGuardConsistency {
-        reason: VirtualReason<L>,
-        return_reason: VirtualReason<L>,
-        param_reason: VirtualReason<L>,
-        guard_type_reason: VirtualReason<L>,
-        is_return_false_statement: bool,
-    },
+    PositiveTypeGuardConsistency(Box<PositiveTypeGuardConsistencyData<L>>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -868,11 +948,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     TypeGuardCompatibility,
     RendersCompatibility,
     UnifyFlip,
-    ConstrainedAssignment {
-        name: FlowSmolStr,
-        declaration: L,
-        providers: Arc<[L]>,
-    },
+    ConstrainedAssignment(Box<ConstrainedAssignmentData<L>>),
     ReactDeepReadOnly(L, DroType),
     ArrayElementCompatibility {
         lower: VirtualReason<L>,
@@ -887,12 +963,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         op: VirtualReason<L>,
         def: VirtualReason<L>,
     },
-    FunParam {
-        n: i32,
-        name: Option<FlowSmolStr>,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    FunParam(Box<FunParamData<L>>),
     FunRestParam {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
@@ -913,43 +984,20 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
-    OpaqueTypeCustomErrorCompatibility {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
-        upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
-        custom_error_loc: L,
-        name: FlowSmolStr,
-    },
+    OpaqueTypeCustomErrorCompatibility(Box<OpaqueTypeCustomErrorCompatibilityData<L>>),
     MappedTypeKeyCompatibility {
         source_type: VirtualReason<L>,
         mapped_type: VirtualReason<L>,
     },
-    PropertyCompatibility {
-        prop: Option<Name>,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    PropertyCompatibility(Box<PropertyCompatibilityData<L>>),
     ReactGetConfig {
         polarity: Polarity,
     },
-    TupleElementCompatibility {
-        n: i32,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        lower_optional: bool,
-        upper_optional: bool,
-    },
+    TupleElementCompatibility(Box<TupleElementCompatibilityData<L>>),
     TupleAssignment {
         upper_optional: bool,
     },
-    TypeArgCompatibility {
-        name: SubstName,
-        targ: VirtualReason<L>,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        polarity: Polarity,
-    },
+    TypeArgCompatibility(Box<TypeArgCompatibilityData<L>>),
     TypeParamBound {
         name: SubstName,
     },
@@ -1326,29 +1374,762 @@ impl<CX> std::fmt::Debug for ConstructorTData<CX> {
     }
 }
 
+// Data structs for boxed UseTInner variants (no CX parameter - can derive)
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct BindTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub funcall_type: Box<FuncallType>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ConditionalTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub distributive_tparam_name: Option<SubstName>,
+    pub infer_tparams: Rc<[TypeParam]>,
+    pub extends_t: Type,
+    pub true_t: Type,
+    pub false_t: Type,
+    pub tout: Box<Tvar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SetElemTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub key_t: Type,
+    pub set_mode: SetMode,
+    pub tin: Type,
+    pub tout: Option<Type>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GetElemTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub id: Option<i32>,
+    pub from_annot: bool,
+    pub skip_optional: bool,
+    pub access_iterables: bool,
+    pub key_t: Type,
+    pub tout: Box<Tvar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GetTypeFromNamespaceTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub prop_ref: (Reason, Name),
+    pub tout: Box<Tvar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReposUseTData {
+    pub reason: Reason,
+    pub use_desc: bool,
+    pub use_op: UseOp,
+    pub type_: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SuperTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub derived_type: DerivedType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SpecializeTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub reason2: Reason,
+    pub targs: Option<Rc<[Type]>>,
+    pub tvar: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ValueToTypeReferenceTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub kind: TypeTKind,
+    pub tout: Box<Tvar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LookupTData {
+    pub reason: Reason,
+    pub lookup_kind: Box<LookupKind>,
+    pub try_ts_on_failure: Rc<[Type]>,
+    pub propref: Box<PropRef>,
+    pub lookup_action: Box<LookupAction>,
+    pub ids: Option<properties::Set>,
+    pub method_accessible: bool,
+    pub ignore_dicts: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ArrRestTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub index: i32,
+    pub tout: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct HasOwnPropTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub type_: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MapTypeTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub type_map: TypeMap,
+    pub tout: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ConcretizeTData {
+    pub reason: Reason,
+    pub kind: ConcretizationKind,
+    pub seen: concretize_seen::ConcretizeSeen,
+    pub collector: type_collector::TypeCollector,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ResolveSpreadTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub resolve_spread_type: Box<ResolveSpreadType>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CondTData {
+    pub reason: Reason,
+    pub opt_type: Option<Type>,
+    pub true_t: Type,
+    pub false_t: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExtendsUseTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub targs: Rc<[Type]>,
+    pub true_t: Type,
+    pub false_t: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumCastTData {
+    pub use_op: UseOp,
+    pub enum_: (Reason, EnumInfo),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumExhaustiveCheckTData {
+    pub reason: Reason,
+    pub check: Box<EnumPossibleExhaustiveCheckT>,
+    pub incomplete_out: Type,
+    pub discriminant_after_check: Option<Type>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GetEnumTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub orig_t: Option<Type>,
+    pub kind: GetEnumKind,
+    pub tout: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct OptionalIndexedAccessTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub index: OptionalIndexedAccessIndex,
+    pub tout_tvar: Box<Tvar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WriteComputedObjPropCheckTData {
+    pub reason: Reason,
+    pub reason_key: Option<Reason>,
+    pub value_t: Type,
+    pub err_on_str_key: Box<(UseOp, Reason)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EvalTypeDestructorTData {
+    pub destructor_use_op: UseOp,
+    pub reason: Reason,
+    pub repos: Option<(Reason, bool)>,
+    pub destructor: Box<Destructor>,
+    pub tout: Box<Tvar>,
+}
+
+// Data structs for boxed UseTInner variants (with CX parameter - manual impls)
+
+pub struct CallTData<CX = ()> {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub call_action: Box<CallAction>,
+    pub return_hint: LazyHintT<CX>,
+}
+
+impl<CX> Clone for CallTData<CX> {
+    fn clone(&self) -> Self {
+        CallTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            call_action: self.call_action.clone(),
+            return_hint: self.return_hint.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for CallTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.call_action == other.call_action
+            && self.return_hint == other.return_hint
+    }
+}
+
+impl<CX> Eq for CallTData<CX> {}
+
+impl<CX> std::hash::Hash for CallTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.call_action.hash(state);
+        self.return_hint.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for CallTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for CallTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.call_action.cmp(&other.call_action))
+            .then_with(|| self.return_hint.cmp(&other.return_hint))
+    }
+}
+
+impl<CX> std::fmt::Debug for CallTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CallTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("call_action", &self.call_action)
+            .field("return_hint", &self.return_hint)
+            .finish()
+    }
+}
+
+pub struct TestPropTData<CX = ()> {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub id: i32,
+    pub propref: Box<PropRef>,
+    pub tout: Box<Tvar>,
+    pub hint: LazyHintT<CX>,
+}
+
+impl<CX> Clone for TestPropTData<CX> {
+    fn clone(&self) -> Self {
+        TestPropTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            id: self.id,
+            propref: self.propref.clone(),
+            tout: self.tout.clone(),
+            hint: self.hint.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for TestPropTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.id == other.id
+            && self.propref == other.propref
+            && self.tout == other.tout
+            && self.hint == other.hint
+    }
+}
+
+impl<CX> Eq for TestPropTData<CX> {}
+
+impl<CX> std::hash::Hash for TestPropTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.id.hash(state);
+        self.propref.hash(state);
+        self.tout.hash(state);
+        self.hint.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for TestPropTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for TestPropTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.id.cmp(&other.id))
+            .then_with(|| self.propref.cmp(&other.propref))
+            .then_with(|| self.tout.cmp(&other.tout))
+            .then_with(|| self.hint.cmp(&other.hint))
+    }
+}
+
+impl<CX> std::fmt::Debug for TestPropTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TestPropTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("id", &self.id)
+            .field("propref", &self.propref)
+            .field("tout", &self.tout)
+            .field("hint", &self.hint)
+            .finish()
+    }
+}
+
+pub struct MethodTData<CX = ()> {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub prop_reason: Reason,
+    pub propref: Box<PropRef>,
+    pub method_action: Box<MethodAction<CX>>,
+}
+
+impl<CX> Clone for MethodTData<CX> {
+    fn clone(&self) -> Self {
+        MethodTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            prop_reason: self.prop_reason.clone(),
+            propref: self.propref.clone(),
+            method_action: self.method_action.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for MethodTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.prop_reason == other.prop_reason
+            && self.propref == other.propref
+            && self.method_action == other.method_action
+    }
+}
+
+impl<CX> Eq for MethodTData<CX> {}
+
+impl<CX> std::hash::Hash for MethodTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.prop_reason.hash(state);
+        self.propref.hash(state);
+        self.method_action.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for MethodTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for MethodTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.prop_reason.cmp(&other.prop_reason))
+            .then_with(|| self.propref.cmp(&other.propref))
+            .then_with(|| self.method_action.cmp(&other.method_action))
+    }
+}
+
+impl<CX> std::fmt::Debug for MethodTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MethodTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("prop_reason", &self.prop_reason)
+            .field("propref", &self.propref)
+            .field("method_action", &self.method_action)
+            .finish()
+    }
+}
+
+pub struct CallElemTData<CX = ()> {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub prop_reason: Reason,
+    pub key_t: Type,
+    pub method_action: Box<MethodAction<CX>>,
+}
+
+impl<CX> Clone for CallElemTData<CX> {
+    fn clone(&self) -> Self {
+        CallElemTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            prop_reason: self.prop_reason.clone(),
+            key_t: self.key_t.clone(),
+            method_action: self.method_action.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for CallElemTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.prop_reason == other.prop_reason
+            && self.key_t == other.key_t
+            && self.method_action == other.method_action
+    }
+}
+
+impl<CX> Eq for CallElemTData<CX> {}
+
+impl<CX> std::hash::Hash for CallElemTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.prop_reason.hash(state);
+        self.key_t.hash(state);
+        self.method_action.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for CallElemTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for CallElemTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.prop_reason.cmp(&other.prop_reason))
+            .then_with(|| self.key_t.cmp(&other.key_t))
+            .then_with(|| self.method_action.cmp(&other.method_action))
+    }
+}
+
+impl<CX> std::fmt::Debug for CallElemTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CallElemTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("prop_reason", &self.prop_reason)
+            .field("key_t", &self.key_t)
+            .field("method_action", &self.method_action)
+            .finish()
+    }
+}
+
+pub struct ElemTData<CX = ()> {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub obj: Type,
+    pub action: Box<ElemAction<CX>>,
+}
+
+impl<CX> Clone for ElemTData<CX> {
+    fn clone(&self) -> Self {
+        ElemTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            obj: self.obj.clone(),
+            action: self.action.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for ElemTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.obj == other.obj
+            && self.action == other.action
+    }
+}
+
+impl<CX> Eq for ElemTData<CX> {}
+
+impl<CX> std::hash::Hash for ElemTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.obj.hash(state);
+        self.action.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for ElemTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for ElemTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.obj.cmp(&other.obj))
+            .then_with(|| self.action.cmp(&other.action))
+    }
+}
+
+impl<CX> std::fmt::Debug for ElemTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ElemTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("obj", &self.obj)
+            .field("action", &self.action)
+            .finish()
+    }
+}
+
+pub struct ReactKitTData<CX = ()> {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub tool: Box<react::Tool<CX>>,
+}
+
+impl<CX> Clone for ReactKitTData<CX> {
+    fn clone(&self) -> Self {
+        ReactKitTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            tool: self.tool.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for ReactKitTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op && self.reason == other.reason && self.tool == other.tool
+    }
+}
+
+impl<CX> Eq for ReactKitTData<CX> {}
+
+impl<CX> std::hash::Hash for ReactKitTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.tool.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for ReactKitTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for ReactKitTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.tool.cmp(&other.tool))
+    }
+}
+
+impl<CX> std::fmt::Debug for ReactKitTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ReactKitTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("tool", &self.tool)
+            .finish()
+    }
+}
+
+pub struct SealGenericTData<CX = ()> {
+    pub reason: Reason,
+    pub id: flow_typing_generics::GenericId,
+    pub name: SubstName,
+    pub no_infer: bool,
+    pub cont: Cont<CX>,
+}
+
+impl<CX> Clone for SealGenericTData<CX> {
+    fn clone(&self) -> Self {
+        SealGenericTData {
+            reason: self.reason.clone(),
+            id: self.id.clone(),
+            name: self.name.clone(),
+            no_infer: self.no_infer,
+            cont: self.cont.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for SealGenericTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.reason == other.reason
+            && self.id == other.id
+            && self.name == other.name
+            && self.no_infer == other.no_infer
+            && self.cont == other.cont
+    }
+}
+
+impl<CX> Eq for SealGenericTData<CX> {}
+
+impl<CX> std::hash::Hash for SealGenericTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.reason.hash(state);
+        self.id.hash(state);
+        self.name.hash(state);
+        self.no_infer.hash(state);
+        self.cont.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for SealGenericTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for SealGenericTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.reason
+            .cmp(&other.reason)
+            .then_with(|| self.id.cmp(&other.id))
+            .then_with(|| self.name.cmp(&other.name))
+            .then_with(|| self.no_infer.cmp(&other.no_infer))
+            .then_with(|| self.cont.cmp(&other.cont))
+    }
+}
+
+impl<CX> std::fmt::Debug for SealGenericTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SealGenericTData")
+            .field("reason", &self.reason)
+            .field("id", &self.id)
+            .field("name", &self.name)
+            .field("no_infer", &self.no_infer)
+            .field("cont", &self.cont)
+            .finish()
+    }
+}
+
+pub struct ResolveUnionTData<CX = ()> {
+    pub reason: Reason,
+    pub unresolved: Rc<[Type]>,
+    pub resolved: Rc<[Type]>,
+    pub upper: Box<UseT<CX>>,
+    pub id: i32,
+}
+
+impl<CX> Clone for ResolveUnionTData<CX> {
+    fn clone(&self) -> Self {
+        ResolveUnionTData {
+            reason: self.reason.clone(),
+            unresolved: self.unresolved.clone(),
+            resolved: self.resolved.clone(),
+            upper: self.upper.clone(),
+            id: self.id,
+        }
+    }
+}
+
+impl<CX> PartialEq for ResolveUnionTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.reason == other.reason
+            && self.unresolved == other.unresolved
+            && self.resolved == other.resolved
+            && self.upper == other.upper
+            && self.id == other.id
+    }
+}
+
+impl<CX> Eq for ResolveUnionTData<CX> {}
+
+impl<CX> std::hash::Hash for ResolveUnionTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.reason.hash(state);
+        self.unresolved.hash(state);
+        self.resolved.hash(state);
+        self.upper.hash(state);
+        self.id.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for ResolveUnionTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for ResolveUnionTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.reason
+            .cmp(&other.reason)
+            .then_with(|| self.unresolved.cmp(&other.unresolved))
+            .then_with(|| self.resolved.cmp(&other.resolved))
+            .then_with(|| self.upper.cmp(&other.upper))
+            .then_with(|| self.id.cmp(&other.id))
+    }
+}
+
+impl<CX> std::fmt::Debug for ResolveUnionTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ResolveUnionTData")
+            .field("reason", &self.reason)
+            .field("unresolved", &self.unresolved)
+            .field("resolved", &self.resolved)
+            .field("upper", &self.upper)
+            .field("id", &self.id)
+            .finish()
+    }
+}
+
 pub enum UseTInner<CX = ()> {
     /// Use a definition type as an upper bound
     UseT(UseOp, Type),
 
     // Operations on runtime values
-    BindT(UseOp, Reason, Box<FuncallType>),
-    CallT {
-        use_op: UseOp,
-        reason: Reason,
-        call_action: Box<CallAction>,
-        return_hint: LazyHintT<CX>,
-    },
-    ConditionalT {
-        use_op: UseOp,
-        reason: Reason,
-        distributive_tparam_name: Option<SubstName>,
-        infer_tparams: Rc<[TypeParam]>,
-        extends_t: Type,
-        true_t: Type,
-        false_t: Type,
-        tout: Box<Tvar>,
-    },
-    MethodT(UseOp, Reason, Reason, Box<PropRef>, Box<MethodAction<CX>>),
+    BindT(Box<BindTData>),
+    CallT(Box<CallTData<CX>>),
+    ConditionalT(Box<ConditionalTData>),
+    MethodT(Box<MethodTData<CX>>),
     PrivateMethodT(Box<PrivateMethodTData<CX>>),
     SetPropT(
         UseOp,
@@ -1360,34 +2141,13 @@ pub enum UseTInner<CX = ()> {
         Option<Type>,
     ),
     SetPrivatePropT(Box<SetPrivatePropTData>),
-    GetTypeFromNamespaceT {
-        use_op: UseOp,
-        reason: Reason,
-        prop_ref: (Reason, Name),
-        tout: Box<Tvar>,
-    },
+    GetTypeFromNamespaceT(Box<GetTypeFromNamespaceTData>),
     GetPropT(Box<GetPropTData<CX>>),
     GetPrivatePropT(Box<GetPrivatePropTData>),
-    TestPropT {
-        use_op: UseOp,
-        reason: Reason,
-        id: i32,
-        propref: Box<PropRef>,
-        tout: Box<Tvar>,
-        hint: LazyHintT<CX>,
-    },
-    SetElemT(UseOp, Reason, Type, SetMode, Type, Option<Type>),
-    GetElemT {
-        use_op: UseOp,
-        reason: Reason,
-        id: Option<i32>,
-        from_annot: bool,
-        skip_optional: bool,
-        access_iterables: bool,
-        key_t: Type,
-        tout: Box<Tvar>,
-    },
-    CallElemT(UseOp, Reason, Reason, Type, Box<MethodAction<CX>>),
+    TestPropT(Box<TestPropTData<CX>>),
+    SetElemT(Box<SetElemTData>),
+    GetElemT(Box<GetElemTData>),
+    CallElemT(Box<CallElemTData<CX>>),
     GetStaticsT(Box<Tvar>),
     GetProtoT(Reason, Box<Tvar>),
     SetProtoT(Reason, Type),
@@ -1398,11 +2158,11 @@ pub enum UseTInner<CX = ()> {
         use_desc: bool,
         use_t: Box<UseT<CX>>,
     },
-    ReposUseT(Reason, bool, UseOp, Type),
+    ReposUseT(Box<ReposUseTData>),
 
     // Operations on runtime types
     ConstructorT(Box<ConstructorTData<CX>>),
-    SuperT(UseOp, Reason, DerivedType),
+    SuperT(Box<SuperTData>),
     ImplementsT(UseOp, Type),
     MixinT(Reason, Type),
     ToStringT {
@@ -1412,9 +2172,9 @@ pub enum UseTInner<CX = ()> {
     },
 
     // Operation on polymorphic types
-    SpecializeT(UseOp, Reason, Reason, Option<Rc<[Type]>>, Type),
+    SpecializeT(Box<SpecializeTData>),
     ThisSpecializeT(Reason, Type, Box<Cont<CX>>),
-    ValueToTypeReferenceT(UseOp, Reason, TypeTKind, Box<Tvar>),
+    ValueToTypeReferenceT(Box<ValueToTypeReferenceTData>),
     ConcretizeTypeAppsT(
         UseOp,
         Box<(Rc<[Type]>, bool, UseOp, Reason)>,
@@ -1423,33 +2183,19 @@ pub enum UseTInner<CX = ()> {
     ),
 
     // Operation on prototypes
-    LookupT {
-        reason: Reason,
-        lookup_kind: Box<LookupKind>,
-        try_ts_on_failure: Rc<[Type]>,
-        propref: Box<PropRef>,
-        lookup_action: Box<LookupAction>,
-        ids: Option<properties::Set>,
-        method_accessible: bool,
-        ignore_dicts: bool,
-    },
+    LookupT(Box<LookupTData>),
 
     // Operations on objects
     ObjRestT(Reason, Rc<[String]>, Type, i32),
     ObjTestProtoT(Reason, Type),
     ObjTestT(Reason, Type, Type),
-    ArrRestT(UseOp, Reason, i32, Type),
+    ArrRestT(Box<ArrRestTData>),
     GetKeysT(Reason, Box<UseT<CX>>),
-    HasOwnPropT(UseOp, Reason, Type),
+    HasOwnPropT(Box<HasOwnPropTData>),
     GetValuesT(Reason, Type),
     GetDictValuesT(Reason, Box<UseT<CX>>),
-    ElemT {
-        use_op: UseOp,
-        reason: Reason,
-        obj: Type,
-        action: Box<ElemAction<CX>>,
-    },
-    MapTypeT(UseOp, Reason, TypeMap, Type),
+    ElemT(Box<ElemTData<CX>>),
+    MapTypeT(Box<MapTypeTData>),
     ObjKitT(
         UseOp,
         Reason,
@@ -1457,122 +2203,45 @@ pub enum UseTInner<CX = ()> {
         Box<object::Tool>,
         Type,
     ),
-    ReactKitT(UseOp, Reason, Box<react::Tool<CX>>),
+    ReactKitT(Box<ReactKitTData<CX>>),
 
     // Tools for preprocessing types
-    ConcretizeT {
-        reason: Reason,
-        kind: ConcretizationKind,
-        seen: concretize_seen::ConcretizeSeen,
-        collector: type_collector::TypeCollector,
-    },
-    ResolveSpreadT(UseOp, Reason, Box<ResolveSpreadType>),
-    CondT(Reason, Option<Type>, Type, Type),
-    ExtendsUseT(UseOp, Reason, Rc<[Type]>, Type, Type),
-    ResolveUnionT {
-        reason: Reason,
-        unresolved: Rc<[Type]>,
-        resolved: Rc<[Type]>,
-        upper: Box<UseT<CX>>,
-        id: i32,
-    },
+    ConcretizeT(Box<ConcretizeTData>),
+    ResolveSpreadT(Box<ResolveSpreadTData>),
+    CondT(Box<CondTData>),
+    ExtendsUseT(Box<ExtendsUseTData>),
+    ResolveUnionT(Box<ResolveUnionTData<CX>>),
     TypeCastT(UseOp, Type),
-    EnumCastT {
-        use_op: UseOp,
-        enum_: (Reason, EnumInfo),
-    },
-    EnumExhaustiveCheckT {
-        reason: Reason,
-        check: Box<EnumPossibleExhaustiveCheckT>,
-        incomplete_out: Type,
-        discriminant_after_check: Option<Type>,
-    },
-    GetEnumT {
-        use_op: UseOp,
-        reason: Reason,
-        orig_t: Option<Type>,
-        kind: GetEnumKind,
-        tout: Type,
-    },
+    EnumCastT(Box<EnumCastTData>),
+    EnumExhaustiveCheckT(Box<EnumExhaustiveCheckTData>),
+    GetEnumT(Box<GetEnumTData>),
     FilterOptionalT(UseOp, Type),
     FilterMaybeT(UseOp, Type),
     DeepReadOnlyT(Box<Tvar>, ReactDro),
     HooklikeT(Box<Tvar>),
-    SealGenericT {
-        reason: Reason,
-        id: flow_typing_generics::GenericId,
-        name: SubstName,
-        no_infer: bool,
-        cont: Cont<CX>,
-    },
-    OptionalIndexedAccessT {
-        use_op: UseOp,
-        reason: Reason,
-        index: OptionalIndexedAccessIndex,
-        tout_tvar: Box<Tvar>,
-    },
+    SealGenericT(Box<SealGenericTData<CX>>),
+    OptionalIndexedAccessT(Box<OptionalIndexedAccessTData>),
     CheckUnusedPromiseT {
         reason: Reason,
         async_: bool,
     },
-    WriteComputedObjPropCheckT {
-        reason: Reason,
-        reason_key: Option<Reason>,
-        value_t: Type,
-        err_on_str_key: Box<(UseOp, Reason)>,
-    },
+    WriteComputedObjPropCheckT(Box<WriteComputedObjPropCheckTData>),
     ConvertEmptyPropsToMixedT(Reason, Type),
     ExitRendersT {
         renders_reason: Reason,
         u: Box<UseT<CX>>,
     },
-    EvalTypeDestructorT {
-        destructor_use_op: UseOp,
-        reason: Reason,
-        repos: Option<(Reason, bool)>,
-        destructor: Box<Destructor>,
-        tout: Box<Tvar>,
-    },
+    EvalTypeDestructorT(Box<EvalTypeDestructorTData>),
 }
 
 impl<CX> Clone for UseTInner<CX> {
     fn clone(&self) -> Self {
         match self {
             UseTInner::UseT(a, b) => UseTInner::UseT(a.clone(), b.clone()),
-            UseTInner::BindT(a, b, c) => UseTInner::BindT(a.clone(), b.clone(), c.clone()),
-            UseTInner::CallT {
-                use_op,
-                reason,
-                call_action,
-                return_hint,
-            } => UseTInner::CallT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                call_action: call_action.clone(),
-                return_hint: return_hint.clone(),
-            },
-            UseTInner::ConditionalT {
-                use_op,
-                reason,
-                distributive_tparam_name,
-                infer_tparams,
-                extends_t,
-                true_t,
-                false_t,
-                tout,
-            } => UseTInner::ConditionalT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                distributive_tparam_name: distributive_tparam_name.clone(),
-                infer_tparams: infer_tparams.clone(),
-                extends_t: extends_t.clone(),
-                true_t: true_t.clone(),
-                false_t: false_t.clone(),
-                tout: tout.clone(),
-            },
-            UseTInner::MethodT(a, b, c, d, e) => {
-                UseTInner::MethodT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
-            }
+            UseTInner::BindT(a) => UseTInner::BindT(a.clone()),
+            UseTInner::CallT(a) => UseTInner::CallT(a.clone()),
+            UseTInner::ConditionalT(a) => UseTInner::ConditionalT(a.clone()),
+            UseTInner::MethodT(a) => UseTInner::MethodT(a.clone()),
             UseTInner::PrivateMethodT(a) => UseTInner::PrivateMethodT(a.clone()),
             UseTInner::SetPropT(a, b, c, d, e, f, g) => UseTInner::SetPropT(
                 a.clone(),
@@ -1584,64 +2253,13 @@ impl<CX> Clone for UseTInner<CX> {
                 g.clone(),
             ),
             UseTInner::SetPrivatePropT(a) => UseTInner::SetPrivatePropT(a.clone()),
-            UseTInner::GetTypeFromNamespaceT {
-                use_op,
-                reason,
-                prop_ref,
-                tout,
-            } => UseTInner::GetTypeFromNamespaceT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                prop_ref: prop_ref.clone(),
-                tout: tout.clone(),
-            },
+            UseTInner::GetTypeFromNamespaceT(a) => UseTInner::GetTypeFromNamespaceT(a.clone()),
             UseTInner::GetPropT(a) => UseTInner::GetPropT(a.clone()),
             UseTInner::GetPrivatePropT(a) => UseTInner::GetPrivatePropT(a.clone()),
-            UseTInner::TestPropT {
-                use_op,
-                reason,
-                id,
-                propref,
-                tout,
-                hint,
-            } => UseTInner::TestPropT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                id: *id,
-                propref: propref.clone(),
-                tout: tout.clone(),
-                hint: hint.clone(),
-            },
-            UseTInner::SetElemT(a, b, c, d, e, f) => UseTInner::SetElemT(
-                a.clone(),
-                b.clone(),
-                c.clone(),
-                d.clone(),
-                e.clone(),
-                f.clone(),
-            ),
-            UseTInner::GetElemT {
-                use_op,
-                reason,
-                id,
-                from_annot,
-                skip_optional,
-                access_iterables,
-                key_t,
-                tout,
-            } => UseTInner::GetElemT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                id: *id,
-                from_annot: *from_annot,
-                skip_optional: *skip_optional,
-                access_iterables: *access_iterables,
-                key_t: key_t.clone(),
-                tout: tout.clone(),
-            },
-            UseTInner::CallElemT(a, b, c, d, e) => {
-                UseTInner::CallElemT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
-            }
+            UseTInner::TestPropT(a) => UseTInner::TestPropT(a.clone()),
+            UseTInner::SetElemT(a) => UseTInner::SetElemT(a.clone()),
+            UseTInner::GetElemT(a) => UseTInner::GetElemT(a.clone()),
+            UseTInner::CallElemT(a) => UseTInner::CallElemT(a.clone()),
             UseTInner::GetStaticsT(a) => UseTInner::GetStaticsT(a.clone()),
             UseTInner::GetProtoT(a, b) => UseTInner::GetProtoT(a.clone(), b.clone()),
             UseTInner::SetProtoT(a, b) => UseTInner::SetProtoT(a.clone(), b.clone()),
@@ -1654,11 +2272,9 @@ impl<CX> Clone for UseTInner<CX> {
                 use_desc: *use_desc,
                 use_t: use_t.clone(),
             },
-            UseTInner::ReposUseT(a, b, c, d) => {
-                UseTInner::ReposUseT(a.clone(), *b, c.clone(), d.clone())
-            }
+            UseTInner::ReposUseT(a) => UseTInner::ReposUseT(a.clone()),
             UseTInner::ConstructorT(a) => UseTInner::ConstructorT(a.clone()),
-            UseTInner::SuperT(a, b, c) => UseTInner::SuperT(a.clone(), b.clone(), c.clone()),
+            UseTInner::SuperT(a) => UseTInner::SuperT(a.clone()),
             UseTInner::ImplementsT(a, b) => UseTInner::ImplementsT(a.clone(), b.clone()),
             UseTInner::MixinT(a, b) => UseTInner::MixinT(a.clone(), b.clone()),
             UseTInner::ToStringT {
@@ -1670,174 +2286,53 @@ impl<CX> Clone for UseTInner<CX> {
                 reason: reason.clone(),
                 t_out: t_out.clone(),
             },
-            UseTInner::SpecializeT(a, b, c, d, e) => {
-                UseTInner::SpecializeT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
-            }
+            UseTInner::SpecializeT(a) => UseTInner::SpecializeT(a.clone()),
             UseTInner::ThisSpecializeT(a, b, c) => {
                 UseTInner::ThisSpecializeT(a.clone(), b.clone(), c.clone())
             }
-            UseTInner::ValueToTypeReferenceT(a, b, c, d) => {
-                UseTInner::ValueToTypeReferenceT(a.clone(), b.clone(), c.clone(), d.clone())
-            }
+            UseTInner::ValueToTypeReferenceT(a) => UseTInner::ValueToTypeReferenceT(a.clone()),
             UseTInner::ConcretizeTypeAppsT(a, b, c, d) => {
                 UseTInner::ConcretizeTypeAppsT(a.clone(), b.clone(), c.clone(), *d)
             }
-            UseTInner::LookupT {
-                reason,
-                lookup_kind,
-                try_ts_on_failure,
-                propref,
-                lookup_action,
-                ids,
-                method_accessible,
-                ignore_dicts,
-            } => UseTInner::LookupT {
-                reason: reason.clone(),
-                lookup_kind: lookup_kind.clone(),
-                try_ts_on_failure: try_ts_on_failure.clone(),
-                propref: propref.clone(),
-                lookup_action: lookup_action.clone(),
-                ids: ids.clone(),
-                method_accessible: *method_accessible,
-                ignore_dicts: *ignore_dicts,
-            },
+            UseTInner::LookupT(a) => UseTInner::LookupT(a.clone()),
             UseTInner::ObjRestT(a, b, c, d) => {
                 UseTInner::ObjRestT(a.clone(), b.clone(), c.clone(), *d)
             }
             UseTInner::ObjTestProtoT(a, b) => UseTInner::ObjTestProtoT(a.clone(), b.clone()),
             UseTInner::ObjTestT(a, b, c) => UseTInner::ObjTestT(a.clone(), b.clone(), c.clone()),
-            UseTInner::ArrRestT(a, b, c, d) => {
-                UseTInner::ArrRestT(a.clone(), b.clone(), *c, d.clone())
-            }
+            UseTInner::ArrRestT(a) => UseTInner::ArrRestT(a.clone()),
             UseTInner::GetKeysT(a, b) => UseTInner::GetKeysT(a.clone(), b.clone()),
-            UseTInner::HasOwnPropT(a, b, c) => {
-                UseTInner::HasOwnPropT(a.clone(), b.clone(), c.clone())
-            }
+            UseTInner::HasOwnPropT(a) => UseTInner::HasOwnPropT(a.clone()),
             UseTInner::GetValuesT(a, b) => UseTInner::GetValuesT(a.clone(), b.clone()),
             UseTInner::GetDictValuesT(a, b) => UseTInner::GetDictValuesT(a.clone(), b.clone()),
-            UseTInner::ElemT {
-                use_op,
-                reason,
-                obj,
-                action,
-            } => UseTInner::ElemT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                obj: obj.clone(),
-                action: action.clone(),
-            },
-            UseTInner::MapTypeT(a, b, c, d) => {
-                UseTInner::MapTypeT(a.clone(), b.clone(), c.clone(), d.clone())
-            }
+            UseTInner::ElemT(a) => UseTInner::ElemT(a.clone()),
+            UseTInner::MapTypeT(a) => UseTInner::MapTypeT(a.clone()),
             UseTInner::ObjKitT(a, b, c, d, e) => {
                 UseTInner::ObjKitT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
             }
-            UseTInner::ReactKitT(a, b, c) => UseTInner::ReactKitT(a.clone(), b.clone(), c.clone()),
-            UseTInner::ConcretizeT {
-                reason,
-                kind,
-                seen,
-                collector,
-            } => UseTInner::ConcretizeT {
-                reason: reason.clone(),
-                kind: kind.clone(),
-                seen: seen.clone(),
-                collector: collector.clone(),
-            },
-            UseTInner::ResolveSpreadT(a, b, c) => {
-                UseTInner::ResolveSpreadT(a.clone(), b.clone(), c.clone())
-            }
-            UseTInner::CondT(a, b, c, d) => {
-                UseTInner::CondT(a.clone(), b.clone(), c.clone(), d.clone())
-            }
-            UseTInner::ExtendsUseT(a, b, c, d, e) => {
-                UseTInner::ExtendsUseT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
-            }
-            UseTInner::ResolveUnionT {
-                reason,
-                unresolved,
-                resolved,
-                upper,
-                id,
-            } => UseTInner::ResolveUnionT {
-                reason: reason.clone(),
-                unresolved: unresolved.clone(),
-                resolved: resolved.clone(),
-                upper: upper.clone(),
-                id: *id,
-            },
+            UseTInner::ReactKitT(a) => UseTInner::ReactKitT(a.clone()),
+            UseTInner::ConcretizeT(a) => UseTInner::ConcretizeT(a.clone()),
+            UseTInner::ResolveSpreadT(a) => UseTInner::ResolveSpreadT(a.clone()),
+            UseTInner::CondT(a) => UseTInner::CondT(a.clone()),
+            UseTInner::ExtendsUseT(a) => UseTInner::ExtendsUseT(a.clone()),
+            UseTInner::ResolveUnionT(a) => UseTInner::ResolveUnionT(a.clone()),
             UseTInner::TypeCastT(a, b) => UseTInner::TypeCastT(a.clone(), b.clone()),
-            UseTInner::EnumCastT { use_op, enum_ } => UseTInner::EnumCastT {
-                use_op: use_op.clone(),
-                enum_: enum_.clone(),
-            },
-            UseTInner::EnumExhaustiveCheckT {
-                reason,
-                check,
-                incomplete_out,
-                discriminant_after_check,
-            } => UseTInner::EnumExhaustiveCheckT {
-                reason: reason.clone(),
-                check: check.clone(),
-                incomplete_out: incomplete_out.clone(),
-                discriminant_after_check: discriminant_after_check.clone(),
-            },
-            UseTInner::GetEnumT {
-                use_op,
-                reason,
-                orig_t,
-                kind,
-                tout,
-            } => UseTInner::GetEnumT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                orig_t: orig_t.clone(),
-                kind: kind.clone(),
-                tout: tout.clone(),
-            },
+            UseTInner::EnumCastT(a) => UseTInner::EnumCastT(a.clone()),
+            UseTInner::EnumExhaustiveCheckT(a) => UseTInner::EnumExhaustiveCheckT(a.clone()),
+            UseTInner::GetEnumT(a) => UseTInner::GetEnumT(a.clone()),
             UseTInner::FilterOptionalT(a, b) => UseTInner::FilterOptionalT(a.clone(), b.clone()),
             UseTInner::FilterMaybeT(a, b) => UseTInner::FilterMaybeT(a.clone(), b.clone()),
             UseTInner::DeepReadOnlyT(a, b) => UseTInner::DeepReadOnlyT(a.clone(), b.clone()),
             UseTInner::HooklikeT(a) => UseTInner::HooklikeT(a.clone()),
-            UseTInner::SealGenericT {
-                reason,
-                id,
-                name,
-                no_infer,
-                cont,
-            } => UseTInner::SealGenericT {
-                reason: reason.clone(),
-                id: id.clone(),
-                name: name.clone(),
-                no_infer: *no_infer,
-                cont: cont.clone(),
-            },
-            UseTInner::OptionalIndexedAccessT {
-                use_op,
-                reason,
-                index,
-                tout_tvar,
-            } => UseTInner::OptionalIndexedAccessT {
-                use_op: use_op.clone(),
-                reason: reason.clone(),
-                index: index.clone(),
-                tout_tvar: tout_tvar.clone(),
-            },
+            UseTInner::SealGenericT(a) => UseTInner::SealGenericT(a.clone()),
+            UseTInner::OptionalIndexedAccessT(a) => UseTInner::OptionalIndexedAccessT(a.clone()),
             UseTInner::CheckUnusedPromiseT { reason, async_ } => UseTInner::CheckUnusedPromiseT {
                 reason: reason.clone(),
                 async_: *async_,
             },
-            UseTInner::WriteComputedObjPropCheckT {
-                reason,
-                reason_key,
-                value_t,
-                err_on_str_key,
-            } => UseTInner::WriteComputedObjPropCheckT {
-                reason: reason.clone(),
-                reason_key: reason_key.clone(),
-                value_t: value_t.clone(),
-                err_on_str_key: err_on_str_key.clone(),
-            },
+            UseTInner::WriteComputedObjPropCheckT(a) => {
+                UseTInner::WriteComputedObjPropCheckT(a.clone())
+            }
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
                 UseTInner::ConvertEmptyPropsToMixedT(a.clone(), b.clone())
             }
@@ -1845,19 +2340,7 @@ impl<CX> Clone for UseTInner<CX> {
                 renders_reason: renders_reason.clone(),
                 u: u.clone(),
             },
-            UseTInner::EvalTypeDestructorT {
-                destructor_use_op,
-                reason,
-                repos,
-                destructor,
-                tout,
-            } => UseTInner::EvalTypeDestructorT {
-                destructor_use_op: destructor_use_op.clone(),
-                reason: reason.clone(),
-                repos: repos.clone(),
-                destructor: destructor.clone(),
-                tout: tout.clone(),
-            },
+            UseTInner::EvalTypeDestructorT(a) => UseTInner::EvalTypeDestructorT(a.clone()),
         }
     }
 }
@@ -1866,136 +2349,25 @@ impl<CX> PartialEq for UseTInner<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => a1 == a2 && b1 == b2,
-            (UseTInner::BindT(a1, b1, c1), UseTInner::BindT(a2, b2, c2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2
-            }
-            (
-                UseTInner::CallT {
-                    use_op: a1,
-                    reason: b1,
-                    call_action: c1,
-                    return_hint: d1,
-                },
-                UseTInner::CallT {
-                    use_op: a2,
-                    reason: b2,
-                    call_action: c2,
-                    return_hint: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
-            (
-                UseTInner::ConditionalT {
-                    use_op: a1,
-                    reason: b1,
-                    distributive_tparam_name: c1,
-                    infer_tparams: d1,
-                    extends_t: e1,
-                    true_t: f1,
-                    false_t: g1,
-                    tout: h1,
-                },
-                UseTInner::ConditionalT {
-                    use_op: a2,
-                    reason: b2,
-                    distributive_tparam_name: c2,
-                    infer_tparams: d2,
-                    extends_t: e2,
-                    true_t: f2,
-                    false_t: g2,
-                    tout: h2,
-                },
-            ) => {
-                a1 == a2
-                    && b1 == b2
-                    && c1 == c2
-                    && d1 == d2
-                    && e1 == e2
-                    && f1 == f2
-                    && g1 == g2
-                    && h1 == h2
-            }
-            (UseTInner::MethodT(a1, b1, c1, d1, e1), UseTInner::MethodT(a2, b2, c2, d2, e2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2
-            }
+            (UseTInner::BindT(a1), UseTInner::BindT(a2)) => a1 == a2,
+            (UseTInner::CallT(a1), UseTInner::CallT(a2)) => a1 == a2,
+            (UseTInner::ConditionalT(a1), UseTInner::ConditionalT(a2)) => a1 == a2,
+            (UseTInner::MethodT(a1), UseTInner::MethodT(a2)) => a1 == a2,
             (UseTInner::PrivateMethodT(a1), UseTInner::PrivateMethodT(a2)) => a1 == a2,
             (
                 UseTInner::SetPropT(a1, b1, c1, d1, e1, f1, g1),
                 UseTInner::SetPropT(a2, b2, c2, d2, e2, f2, g2),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2 && g1 == g2,
             (UseTInner::SetPrivatePropT(a1), UseTInner::SetPrivatePropT(a2)) => a1 == a2,
-            (
-                UseTInner::GetTypeFromNamespaceT {
-                    use_op: a1,
-                    reason: b1,
-                    prop_ref: c1,
-                    tout: d1,
-                },
-                UseTInner::GetTypeFromNamespaceT {
-                    use_op: a2,
-                    reason: b2,
-                    prop_ref: c2,
-                    tout: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (UseTInner::GetTypeFromNamespaceT(a1), UseTInner::GetTypeFromNamespaceT(a2)) => {
+                a1 == a2
+            }
             (UseTInner::GetPropT(a1), UseTInner::GetPropT(a2)) => a1 == a2,
             (UseTInner::GetPrivatePropT(a1), UseTInner::GetPrivatePropT(a2)) => a1 == a2,
-            (
-                UseTInner::TestPropT {
-                    use_op: a1,
-                    reason: b1,
-                    id: c1,
-                    propref: d1,
-                    tout: e1,
-                    hint: f1,
-                },
-                UseTInner::TestPropT {
-                    use_op: a2,
-                    reason: b2,
-                    id: c2,
-                    propref: d2,
-                    tout: e2,
-                    hint: f2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
-            (
-                UseTInner::SetElemT(a1, b1, c1, d1, e1, f1),
-                UseTInner::SetElemT(a2, b2, c2, d2, e2, f2),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
-            (
-                UseTInner::GetElemT {
-                    use_op: a1,
-                    reason: b1,
-                    id: c1,
-                    from_annot: d1,
-                    skip_optional: e1,
-                    access_iterables: f1,
-                    key_t: g1,
-                    tout: h1,
-                },
-                UseTInner::GetElemT {
-                    use_op: a2,
-                    reason: b2,
-                    id: c2,
-                    from_annot: d2,
-                    skip_optional: e2,
-                    access_iterables: f2,
-                    key_t: g2,
-                    tout: h2,
-                },
-            ) => {
-                a1 == a2
-                    && b1 == b2
-                    && c1 == c2
-                    && d1 == d2
-                    && e1 == e2
-                    && f1 == f2
-                    && g1 == g2
-                    && h1 == h2
-            }
-            (
-                UseTInner::CallElemT(a1, b1, c1, d1, e1),
-                UseTInner::CallElemT(a2, b2, c2, d2, e2),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::TestPropT(a1), UseTInner::TestPropT(a2)) => a1 == a2,
+            (UseTInner::SetElemT(a1), UseTInner::SetElemT(a2)) => a1 == a2,
+            (UseTInner::GetElemT(a1), UseTInner::GetElemT(a2)) => a1 == a2,
+            (UseTInner::CallElemT(a1), UseTInner::CallElemT(a2)) => a1 == a2,
             (UseTInner::GetStaticsT(a1), UseTInner::GetStaticsT(a2)) => a1 == a2,
             (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
             (UseTInner::SetProtoT(a1, b1), UseTInner::SetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
@@ -2011,13 +2383,9 @@ impl<CX> PartialEq for UseTInner<CX> {
                     use_t: c2,
                 },
             ) => a1 == a2 && b1 == b2 && c1 == c2,
-            (UseTInner::ReposUseT(a1, b1, c1, d1), UseTInner::ReposUseT(a2, b2, c2, d2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
-            }
+            (UseTInner::ReposUseT(a1), UseTInner::ReposUseT(a2)) => a1 == a2,
             (UseTInner::ConstructorT(a1), UseTInner::ConstructorT(a2)) => a1 == a2,
-            (UseTInner::SuperT(a1, b1, c1), UseTInner::SuperT(a2, b2, c2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2
-            }
+            (UseTInner::SuperT(a1), UseTInner::SuperT(a2)) => a1 == a2,
             (UseTInner::ImplementsT(a1, b1), UseTInner::ImplementsT(a2, b2)) => {
                 a1 == a2 && b1 == b2
             }
@@ -2034,52 +2402,18 @@ impl<CX> PartialEq for UseTInner<CX> {
                     t_out: c2,
                 },
             ) => a1 == a2 && b1 == b2 && c1 == c2,
-            (
-                UseTInner::SpecializeT(a1, b1, c1, d1, e1),
-                UseTInner::SpecializeT(a2, b2, c2, d2, e2),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::SpecializeT(a1), UseTInner::SpecializeT(a2)) => a1 == a2,
             (UseTInner::ThisSpecializeT(a1, b1, c1), UseTInner::ThisSpecializeT(a2, b2, c2)) => {
                 a1 == a2 && b1 == b2 && c1 == c2
             }
-            (
-                UseTInner::ValueToTypeReferenceT(a1, b1, c1, d1),
-                UseTInner::ValueToTypeReferenceT(a2, b2, c2, d2),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (UseTInner::ValueToTypeReferenceT(a1), UseTInner::ValueToTypeReferenceT(a2)) => {
+                a1 == a2
+            }
             (
                 UseTInner::ConcretizeTypeAppsT(a1, b1, c1, d1),
                 UseTInner::ConcretizeTypeAppsT(a2, b2, c2, d2),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
-            (
-                UseTInner::LookupT {
-                    reason: a1,
-                    lookup_kind: b1,
-                    try_ts_on_failure: c1,
-                    propref: d1,
-                    lookup_action: e1,
-                    ids: f1,
-                    method_accessible: g1,
-                    ignore_dicts: h1,
-                },
-                UseTInner::LookupT {
-                    reason: a2,
-                    lookup_kind: b2,
-                    try_ts_on_failure: c2,
-                    propref: d2,
-                    lookup_action: e2,
-                    ids: f2,
-                    method_accessible: g2,
-                    ignore_dicts: h2,
-                },
-            ) => {
-                a1 == a2
-                    && b1 == b2
-                    && c1 == c2
-                    && d1 == d2
-                    && e1 == e2
-                    && f1 == f2
-                    && g1 == g2
-                    && h1 == h2
-            }
+            (UseTInner::LookupT(a1), UseTInner::LookupT(a2)) => a1 == a2,
             (UseTInner::ObjRestT(a1, b1, c1, d1), UseTInner::ObjRestT(a2, b2, c2, d2)) => {
                 a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
             }
@@ -2089,121 +2423,28 @@ impl<CX> PartialEq for UseTInner<CX> {
             (UseTInner::ObjTestT(a1, b1, c1), UseTInner::ObjTestT(a2, b2, c2)) => {
                 a1 == a2 && b1 == b2 && c1 == c2
             }
-            (UseTInner::ArrRestT(a1, b1, c1, d1), UseTInner::ArrRestT(a2, b2, c2, d2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
-            }
+            (UseTInner::ArrRestT(a1), UseTInner::ArrRestT(a2)) => a1 == a2,
             (UseTInner::GetKeysT(a1, b1), UseTInner::GetKeysT(a2, b2)) => a1 == a2 && b1 == b2,
-            (UseTInner::HasOwnPropT(a1, b1, c1), UseTInner::HasOwnPropT(a2, b2, c2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2
-            }
+            (UseTInner::HasOwnPropT(a1), UseTInner::HasOwnPropT(a2)) => a1 == a2,
             (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => a1 == a2 && b1 == b2,
             (UseTInner::GetDictValuesT(a1, b1), UseTInner::GetDictValuesT(a2, b2)) => {
                 a1 == a2 && b1 == b2
             }
-            (
-                UseTInner::ElemT {
-                    use_op: a1,
-                    reason: b1,
-                    obj: c1,
-                    action: d1,
-                },
-                UseTInner::ElemT {
-                    use_op: a2,
-                    reason: b2,
-                    obj: c2,
-                    action: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
-            (UseTInner::MapTypeT(a1, b1, c1, d1), UseTInner::MapTypeT(a2, b2, c2, d2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
-            }
+            (UseTInner::ElemT(a1), UseTInner::ElemT(a2)) => a1 == a2,
+            (UseTInner::MapTypeT(a1), UseTInner::MapTypeT(a2)) => a1 == a2,
             (UseTInner::ObjKitT(a1, b1, c1, d1, e1), UseTInner::ObjKitT(a2, b2, c2, d2, e2)) => {
                 a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2
             }
-            (UseTInner::ReactKitT(a1, b1, c1), UseTInner::ReactKitT(a2, b2, c2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2
-            }
-            (
-                UseTInner::ConcretizeT {
-                    reason: a1,
-                    kind: b1,
-                    seen: c1,
-                    collector: d1,
-                },
-                UseTInner::ConcretizeT {
-                    reason: a2,
-                    kind: b2,
-                    seen: c2,
-                    collector: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
-            (UseTInner::ResolveSpreadT(a1, b1, c1), UseTInner::ResolveSpreadT(a2, b2, c2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2
-            }
-            (UseTInner::CondT(a1, b1, c1, d1), UseTInner::CondT(a2, b2, c2, d2)) => {
-                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
-            }
-            (
-                UseTInner::ExtendsUseT(a1, b1, c1, d1, e1),
-                UseTInner::ExtendsUseT(a2, b2, c2, d2, e2),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
-            (
-                UseTInner::ResolveUnionT {
-                    reason: a1,
-                    unresolved: b1,
-                    resolved: c1,
-                    upper: d1,
-                    id: e1,
-                },
-                UseTInner::ResolveUnionT {
-                    reason: a2,
-                    unresolved: b2,
-                    resolved: c2,
-                    upper: d2,
-                    id: e2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::ReactKitT(a1), UseTInner::ReactKitT(a2)) => a1 == a2,
+            (UseTInner::ConcretizeT(a1), UseTInner::ConcretizeT(a2)) => a1 == a2,
+            (UseTInner::ResolveSpreadT(a1), UseTInner::ResolveSpreadT(a2)) => a1 == a2,
+            (UseTInner::CondT(a1), UseTInner::CondT(a2)) => a1 == a2,
+            (UseTInner::ExtendsUseT(a1), UseTInner::ExtendsUseT(a2)) => a1 == a2,
+            (UseTInner::ResolveUnionT(a1), UseTInner::ResolveUnionT(a2)) => a1 == a2,
             (UseTInner::TypeCastT(a1, b1), UseTInner::TypeCastT(a2, b2)) => a1 == a2 && b1 == b2,
-            (
-                UseTInner::EnumCastT {
-                    use_op: a1,
-                    enum_: b1,
-                },
-                UseTInner::EnumCastT {
-                    use_op: a2,
-                    enum_: b2,
-                },
-            ) => a1 == a2 && b1 == b2,
-            (
-                UseTInner::EnumExhaustiveCheckT {
-                    reason: a1,
-                    check: b1,
-                    incomplete_out: c1,
-                    discriminant_after_check: d1,
-                },
-                UseTInner::EnumExhaustiveCheckT {
-                    reason: a2,
-                    check: b2,
-                    incomplete_out: c2,
-                    discriminant_after_check: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
-            (
-                UseTInner::GetEnumT {
-                    use_op: a1,
-                    reason: b1,
-                    orig_t: c1,
-                    kind: d1,
-                    tout: e1,
-                },
-                UseTInner::GetEnumT {
-                    use_op: a2,
-                    reason: b2,
-                    orig_t: c2,
-                    kind: d2,
-                    tout: e2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::EnumCastT(a1), UseTInner::EnumCastT(a2)) => a1 == a2,
+            (UseTInner::EnumExhaustiveCheckT(a1), UseTInner::EnumExhaustiveCheckT(a2)) => a1 == a2,
+            (UseTInner::GetEnumT(a1), UseTInner::GetEnumT(a2)) => a1 == a2,
             (UseTInner::FilterOptionalT(a1, b1), UseTInner::FilterOptionalT(a2, b2)) => {
                 a1 == a2 && b1 == b2
             }
@@ -2214,36 +2455,10 @@ impl<CX> PartialEq for UseTInner<CX> {
                 a1 == a2 && b1 == b2
             }
             (UseTInner::HooklikeT(a1), UseTInner::HooklikeT(a2)) => a1 == a2,
-            (
-                UseTInner::SealGenericT {
-                    reason: a1,
-                    id: b1,
-                    name: c1,
-                    no_infer: d1,
-                    cont: e1,
-                },
-                UseTInner::SealGenericT {
-                    reason: a2,
-                    id: b2,
-                    name: c2,
-                    no_infer: d2,
-                    cont: e2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
-            (
-                UseTInner::OptionalIndexedAccessT {
-                    use_op: a1,
-                    reason: b1,
-                    index: c1,
-                    tout_tvar: d1,
-                },
-                UseTInner::OptionalIndexedAccessT {
-                    use_op: a2,
-                    reason: b2,
-                    index: c2,
-                    tout_tvar: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (UseTInner::SealGenericT(a1), UseTInner::SealGenericT(a2)) => a1 == a2,
+            (UseTInner::OptionalIndexedAccessT(a1), UseTInner::OptionalIndexedAccessT(a2)) => {
+                a1 == a2
+            }
             (
                 UseTInner::CheckUnusedPromiseT {
                     reason: a1,
@@ -2255,19 +2470,9 @@ impl<CX> PartialEq for UseTInner<CX> {
                 },
             ) => a1 == a2 && b1 == b2,
             (
-                UseTInner::WriteComputedObjPropCheckT {
-                    reason: a1,
-                    reason_key: b1,
-                    value_t: c1,
-                    err_on_str_key: d1,
-                },
-                UseTInner::WriteComputedObjPropCheckT {
-                    reason: a2,
-                    reason_key: b2,
-                    value_t: c2,
-                    err_on_str_key: d2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+                UseTInner::WriteComputedObjPropCheckT(a1),
+                UseTInner::WriteComputedObjPropCheckT(a2),
+            ) => a1 == a2,
             (
                 UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
                 UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
@@ -2282,22 +2487,7 @@ impl<CX> PartialEq for UseTInner<CX> {
                     u: b2,
                 },
             ) => a1 == a2 && b1 == b2,
-            (
-                UseTInner::EvalTypeDestructorT {
-                    destructor_use_op: a1,
-                    reason: b1,
-                    repos: c1,
-                    destructor: d1,
-                    tout: e1,
-                },
-                UseTInner::EvalTypeDestructorT {
-                    destructor_use_op: a2,
-                    reason: b2,
-                    repos: c2,
-                    destructor: d2,
-                    tout: e2,
-                },
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::EvalTypeDestructorT(a1), UseTInner::EvalTypeDestructorT(a2)) => a1 == a2,
             _ => false,
         }
     }
@@ -2313,51 +2503,11 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::BindT(a, b, c) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-            }
-            UseTInner::CallT {
-                use_op,
-                reason,
-                call_action,
-                return_hint,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                call_action.hash(state);
-                return_hint.hash(state);
-            }
-            UseTInner::ConditionalT {
-                use_op,
-                reason,
-                distributive_tparam_name,
-                infer_tparams,
-                extends_t,
-                true_t,
-                false_t,
-                tout,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                distributive_tparam_name.hash(state);
-                infer_tparams.hash(state);
-                extends_t.hash(state);
-                true_t.hash(state);
-                false_t.hash(state);
-                tout.hash(state);
-            }
-            UseTInner::MethodT(a, b, c, d, e) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-                e.hash(state);
-            }
-            UseTInner::PrivateMethodT(a) => {
-                a.hash(state);
-            }
+            UseTInner::BindT(a) => a.hash(state),
+            UseTInner::CallT(a) => a.hash(state),
+            UseTInner::ConditionalT(a) => a.hash(state),
+            UseTInner::MethodT(a) => a.hash(state),
+            UseTInner::PrivateMethodT(a) => a.hash(state),
             UseTInner::SetPropT(a, b, c, d, e, f, g) => {
                 a.hash(state);
                 b.hash(state);
@@ -2367,78 +2517,15 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 f.hash(state);
                 g.hash(state);
             }
-            UseTInner::SetPrivatePropT(a) => {
-                a.hash(state);
-            }
-            UseTInner::GetTypeFromNamespaceT {
-                use_op,
-                reason,
-                prop_ref,
-                tout,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                prop_ref.hash(state);
-                tout.hash(state);
-            }
-            UseTInner::GetPropT(a) => {
-                a.hash(state);
-            }
-            UseTInner::GetPrivatePropT(a) => {
-                a.hash(state);
-            }
-            UseTInner::TestPropT {
-                use_op,
-                reason,
-                id,
-                propref,
-                tout,
-                hint,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                id.hash(state);
-                propref.hash(state);
-                tout.hash(state);
-                hint.hash(state);
-            }
-            UseTInner::SetElemT(a, b, c, d, e, f) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-                e.hash(state);
-                f.hash(state);
-            }
-            UseTInner::GetElemT {
-                use_op,
-                reason,
-                id,
-                from_annot,
-                skip_optional,
-                access_iterables,
-                key_t,
-                tout,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                id.hash(state);
-                from_annot.hash(state);
-                skip_optional.hash(state);
-                access_iterables.hash(state);
-                key_t.hash(state);
-                tout.hash(state);
-            }
-            UseTInner::CallElemT(a, b, c, d, e) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-                e.hash(state);
-            }
-            UseTInner::GetStaticsT(a) => {
-                a.hash(state);
-            }
+            UseTInner::SetPrivatePropT(a) => a.hash(state),
+            UseTInner::GetTypeFromNamespaceT(a) => a.hash(state),
+            UseTInner::GetPropT(a) => a.hash(state),
+            UseTInner::GetPrivatePropT(a) => a.hash(state),
+            UseTInner::TestPropT(a) => a.hash(state),
+            UseTInner::SetElemT(a) => a.hash(state),
+            UseTInner::GetElemT(a) => a.hash(state),
+            UseTInner::CallElemT(a) => a.hash(state),
+            UseTInner::GetStaticsT(a) => a.hash(state),
             UseTInner::GetProtoT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -2456,20 +2543,9 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 use_desc.hash(state);
                 use_t.hash(state);
             }
-            UseTInner::ReposUseT(a, b, c, d) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-            }
-            UseTInner::ConstructorT(a) => {
-                a.hash(state);
-            }
-            UseTInner::SuperT(a, b, c) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-            }
+            UseTInner::ReposUseT(a) => a.hash(state),
+            UseTInner::ConstructorT(a) => a.hash(state),
+            UseTInner::SuperT(a) => a.hash(state),
             UseTInner::ImplementsT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -2487,49 +2563,20 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 reason.hash(state);
                 t_out.hash(state);
             }
-            UseTInner::SpecializeT(a, b, c, d, e) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-                e.hash(state);
-            }
+            UseTInner::SpecializeT(a) => a.hash(state),
             UseTInner::ThisSpecializeT(a, b, c) => {
                 a.hash(state);
                 b.hash(state);
                 c.hash(state);
             }
-            UseTInner::ValueToTypeReferenceT(a, b, c, d) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-            }
+            UseTInner::ValueToTypeReferenceT(a) => a.hash(state),
             UseTInner::ConcretizeTypeAppsT(a, b, c, d) => {
                 a.hash(state);
                 b.hash(state);
                 c.hash(state);
                 d.hash(state);
             }
-            UseTInner::LookupT {
-                reason,
-                lookup_kind,
-                try_ts_on_failure,
-                propref,
-                lookup_action,
-                ids,
-                method_accessible,
-                ignore_dicts,
-            } => {
-                reason.hash(state);
-                lookup_kind.hash(state);
-                try_ts_on_failure.hash(state);
-                propref.hash(state);
-                lookup_action.hash(state);
-                ids.hash(state);
-                method_accessible.hash(state);
-                ignore_dicts.hash(state);
-            }
+            UseTInner::LookupT(a) => a.hash(state),
             UseTInner::ObjRestT(a, b, c, d) => {
                 a.hash(state);
                 b.hash(state);
@@ -2545,21 +2592,12 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 b.hash(state);
                 c.hash(state);
             }
-            UseTInner::ArrRestT(a, b, c, d) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-            }
+            UseTInner::ArrRestT(a) => a.hash(state),
             UseTInner::GetKeysT(a, b) => {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::HasOwnPropT(a, b, c) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-            }
+            UseTInner::HasOwnPropT(a) => a.hash(state),
             UseTInner::GetValuesT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -2568,23 +2606,8 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::ElemT {
-                use_op,
-                reason,
-                obj,
-                action,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                obj.hash(state);
-                action.hash(state);
-            }
-            UseTInner::MapTypeT(a, b, c, d) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-            }
+            UseTInner::ElemT(a) => a.hash(state),
+            UseTInner::MapTypeT(a) => a.hash(state),
             UseTInner::ObjKitT(a, b, c, d, e) => {
                 a.hash(state);
                 b.hash(state);
@@ -2592,85 +2615,19 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 d.hash(state);
                 e.hash(state);
             }
-            UseTInner::ReactKitT(a, b, c) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-            }
-            UseTInner::ConcretizeT {
-                reason,
-                kind,
-                seen,
-                collector,
-            } => {
-                reason.hash(state);
-                kind.hash(state);
-                seen.hash(state);
-                collector.hash(state);
-            }
-            UseTInner::ResolveSpreadT(a, b, c) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-            }
-            UseTInner::CondT(a, b, c, d) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-            }
-            UseTInner::ExtendsUseT(a, b, c, d, e) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-                e.hash(state);
-            }
-            UseTInner::ResolveUnionT {
-                reason,
-                unresolved,
-                resolved,
-                upper,
-                id,
-            } => {
-                reason.hash(state);
-                unresolved.hash(state);
-                resolved.hash(state);
-                upper.hash(state);
-                id.hash(state);
-            }
+            UseTInner::ReactKitT(a) => a.hash(state),
+            UseTInner::ConcretizeT(a) => a.hash(state),
+            UseTInner::ResolveSpreadT(a) => a.hash(state),
+            UseTInner::CondT(a) => a.hash(state),
+            UseTInner::ExtendsUseT(a) => a.hash(state),
+            UseTInner::ResolveUnionT(a) => a.hash(state),
             UseTInner::TypeCastT(a, b) => {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::EnumCastT { use_op, enum_ } => {
-                use_op.hash(state);
-                enum_.hash(state);
-            }
-            UseTInner::EnumExhaustiveCheckT {
-                reason,
-                check,
-                incomplete_out,
-                discriminant_after_check,
-            } => {
-                reason.hash(state);
-                check.hash(state);
-                incomplete_out.hash(state);
-                discriminant_after_check.hash(state);
-            }
-            UseTInner::GetEnumT {
-                use_op,
-                reason,
-                orig_t,
-                kind,
-                tout,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                orig_t.hash(state);
-                kind.hash(state);
-                tout.hash(state);
-            }
+            UseTInner::EnumCastT(a) => a.hash(state),
+            UseTInner::EnumExhaustiveCheckT(a) => a.hash(state),
+            UseTInner::GetEnumT(a) => a.hash(state),
             UseTInner::FilterOptionalT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -2683,48 +2640,14 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 a.hash(state);
                 b.hash(state);
             }
-            UseTInner::HooklikeT(a) => {
-                a.hash(state);
-            }
-            UseTInner::SealGenericT {
-                reason,
-                id,
-                name,
-                no_infer,
-                cont,
-            } => {
-                reason.hash(state);
-                id.hash(state);
-                name.hash(state);
-                no_infer.hash(state);
-                cont.hash(state);
-            }
-            UseTInner::OptionalIndexedAccessT {
-                use_op,
-                reason,
-                index,
-                tout_tvar,
-            } => {
-                use_op.hash(state);
-                reason.hash(state);
-                index.hash(state);
-                tout_tvar.hash(state);
-            }
+            UseTInner::HooklikeT(a) => a.hash(state),
+            UseTInner::SealGenericT(a) => a.hash(state),
+            UseTInner::OptionalIndexedAccessT(a) => a.hash(state),
             UseTInner::CheckUnusedPromiseT { reason, async_ } => {
                 reason.hash(state);
                 async_.hash(state);
             }
-            UseTInner::WriteComputedObjPropCheckT {
-                reason,
-                reason_key,
-                value_t,
-                err_on_str_key,
-            } => {
-                reason.hash(state);
-                reason_key.hash(state);
-                value_t.hash(state);
-                err_on_str_key.hash(state);
-            }
+            UseTInner::WriteComputedObjPropCheckT(a) => a.hash(state),
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -2733,19 +2656,7 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 renders_reason.hash(state);
                 u.hash(state);
             }
-            UseTInner::EvalTypeDestructorT {
-                destructor_use_op,
-                reason,
-                repos,
-                destructor,
-                tout,
-            } => {
-                destructor_use_op.hash(state);
-                reason.hash(state);
-                repos.hash(state);
-                destructor.hash(state);
-                tout.hash(state);
-            }
+            UseTInner::EvalTypeDestructorT(a) => a.hash(state),
         }
     }
 }
@@ -2759,22 +2670,21 @@ impl<CX> PartialOrd for UseTInner<CX> {
 impl<CX> Ord for UseTInner<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         fn variant_index<CX>(v: &UseTInner<CX>) -> u32 {
-            // Assign a unique index to each variant for ordering
             match v {
                 UseTInner::UseT(..) => 0,
                 UseTInner::BindT(..) => 1,
-                UseTInner::CallT { .. } => 2,
-                UseTInner::ConditionalT { .. } => 3,
+                UseTInner::CallT(..) => 2,
+                UseTInner::ConditionalT(..) => 3,
                 UseTInner::MethodT(..) => 4,
                 UseTInner::PrivateMethodT(..) => 5,
                 UseTInner::SetPropT(..) => 6,
                 UseTInner::SetPrivatePropT(..) => 7,
-                UseTInner::GetTypeFromNamespaceT { .. } => 8,
+                UseTInner::GetTypeFromNamespaceT(..) => 8,
                 UseTInner::GetPropT(..) => 9,
                 UseTInner::GetPrivatePropT(..) => 10,
-                UseTInner::TestPropT { .. } => 11,
+                UseTInner::TestPropT(..) => 11,
                 UseTInner::SetElemT(..) => 12,
-                UseTInner::GetElemT { .. } => 13,
+                UseTInner::GetElemT(..) => 13,
                 UseTInner::CallElemT(..) => 14,
                 UseTInner::GetStaticsT(..) => 15,
                 UseTInner::GetProtoT(..) => 16,
@@ -2790,7 +2700,7 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::ThisSpecializeT(..) => 26,
                 UseTInner::ValueToTypeReferenceT(..) => 27,
                 UseTInner::ConcretizeTypeAppsT(..) => 28,
-                UseTInner::LookupT { .. } => 29,
+                UseTInner::LookupT(..) => 29,
                 UseTInner::ObjRestT(..) => 30,
                 UseTInner::ObjTestProtoT(..) => 31,
                 UseTInner::ObjTestT(..) => 32,
@@ -2799,30 +2709,30 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::HasOwnPropT(..) => 35,
                 UseTInner::GetValuesT(..) => 36,
                 UseTInner::GetDictValuesT(..) => 37,
-                UseTInner::ElemT { .. } => 38,
+                UseTInner::ElemT(..) => 38,
                 UseTInner::MapTypeT(..) => 39,
                 UseTInner::ObjKitT(..) => 40,
                 UseTInner::ReactKitT(..) => 41,
-                UseTInner::ConcretizeT { .. } => 42,
+                UseTInner::ConcretizeT(..) => 42,
                 UseTInner::ResolveSpreadT(..) => 43,
                 UseTInner::CondT(..) => 44,
                 UseTInner::ExtendsUseT(..) => 45,
-                UseTInner::ResolveUnionT { .. } => 47,
+                UseTInner::ResolveUnionT(..) => 47,
                 UseTInner::TypeCastT(..) => 48,
-                UseTInner::EnumCastT { .. } => 49,
-                UseTInner::EnumExhaustiveCheckT { .. } => 50,
-                UseTInner::GetEnumT { .. } => 51,
+                UseTInner::EnumCastT(..) => 49,
+                UseTInner::EnumExhaustiveCheckT(..) => 50,
+                UseTInner::GetEnumT(..) => 51,
                 UseTInner::FilterOptionalT(..) => 52,
                 UseTInner::FilterMaybeT(..) => 53,
                 UseTInner::DeepReadOnlyT(..) => 54,
                 UseTInner::HooklikeT(..) => 55,
-                UseTInner::SealGenericT { .. } => 56,
-                UseTInner::OptionalIndexedAccessT { .. } => 57,
+                UseTInner::SealGenericT(..) => 56,
+                UseTInner::OptionalIndexedAccessT(..) => 57,
                 UseTInner::CheckUnusedPromiseT { .. } => 58,
-                UseTInner::WriteComputedObjPropCheckT { .. } => 59,
+                UseTInner::WriteComputedObjPropCheckT(..) => 59,
                 UseTInner::ConvertEmptyPropsToMixedT(..) => 60,
                 UseTInner::ExitRendersT { .. } => 61,
-                UseTInner::EvalTypeDestructorT { .. } => 62,
+                UseTInner::EvalTypeDestructorT(..) => 62,
             }
         }
         let disc = variant_index(self).cmp(&variant_index(other));
@@ -2833,63 +2743,10 @@ impl<CX> Ord for UseTInner<CX> {
             (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
-            (UseTInner::BindT(a1, b1, c1), UseTInner::BindT(a2, b2, c2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
-            }
-            (
-                UseTInner::CallT {
-                    use_op: a1,
-                    reason: b1,
-                    call_action: c1,
-                    return_hint: d1,
-                },
-                UseTInner::CallT {
-                    use_op: a2,
-                    reason: b2,
-                    call_action: c2,
-                    return_hint: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
-            (
-                UseTInner::ConditionalT {
-                    use_op: a1,
-                    reason: b1,
-                    distributive_tparam_name: c1,
-                    infer_tparams: d1,
-                    extends_t: e1,
-                    true_t: f1,
-                    false_t: g1,
-                    tout: h1,
-                },
-                UseTInner::ConditionalT {
-                    use_op: a2,
-                    reason: b2,
-                    distributive_tparam_name: c2,
-                    infer_tparams: d2,
-                    extends_t: e2,
-                    true_t: f2,
-                    false_t: g2,
-                    tout: h2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2))
-                .then_with(|| f1.cmp(f2))
-                .then_with(|| g1.cmp(g2))
-                .then_with(|| h1.cmp(h2)),
-            (UseTInner::MethodT(a1, b1, c1, d1, e1), UseTInner::MethodT(a2, b2, c2, d2, e2)) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
+            (UseTInner::BindT(a1), UseTInner::BindT(a2)) => a1.cmp(a2),
+            (UseTInner::CallT(a1), UseTInner::CallT(a2)) => a1.cmp(a2),
+            (UseTInner::ConditionalT(a1), UseTInner::ConditionalT(a2)) => a1.cmp(a2),
+            (UseTInner::MethodT(a1), UseTInner::MethodT(a2)) => a1.cmp(a2),
             (UseTInner::PrivateMethodT(a1), UseTInner::PrivateMethodT(a2)) => a1.cmp(a2),
             (
                 UseTInner::SetPropT(a1, b1, c1, d1, e1, f1, g1),
@@ -2903,99 +2760,15 @@ impl<CX> Ord for UseTInner<CX> {
                 .then_with(|| f1.cmp(f2))
                 .then_with(|| g1.cmp(g2)),
             (UseTInner::SetPrivatePropT(a1), UseTInner::SetPrivatePropT(a2)) => a1.cmp(a2),
-            (
-                UseTInner::GetTypeFromNamespaceT {
-                    use_op: a1,
-                    reason: b1,
-                    prop_ref: c1,
-                    tout: d1,
-                },
-                UseTInner::GetTypeFromNamespaceT {
-                    use_op: a2,
-                    reason: b2,
-                    prop_ref: c2,
-                    tout: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::GetTypeFromNamespaceT(a1), UseTInner::GetTypeFromNamespaceT(a2)) => {
+                a1.cmp(a2)
+            }
             (UseTInner::GetPropT(a1), UseTInner::GetPropT(a2)) => a1.cmp(a2),
             (UseTInner::GetPrivatePropT(a1), UseTInner::GetPrivatePropT(a2)) => a1.cmp(a2),
-            (
-                UseTInner::TestPropT {
-                    use_op: a1,
-                    reason: b1,
-                    id: c1,
-                    propref: d1,
-                    tout: e1,
-                    hint: f1,
-                },
-                UseTInner::TestPropT {
-                    use_op: a2,
-                    reason: b2,
-                    id: c2,
-                    propref: d2,
-                    tout: e2,
-                    hint: f2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2))
-                .then_with(|| f1.cmp(f2)),
-            (
-                UseTInner::SetElemT(a1, b1, c1, d1, e1, f1),
-                UseTInner::SetElemT(a2, b2, c2, d2, e2, f2),
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2))
-                .then_with(|| f1.cmp(f2)),
-            (
-                UseTInner::GetElemT {
-                    use_op: a1,
-                    reason: b1,
-                    id: c1,
-                    from_annot: d1,
-                    skip_optional: e1,
-                    access_iterables: f1,
-                    key_t: g1,
-                    tout: h1,
-                },
-                UseTInner::GetElemT {
-                    use_op: a2,
-                    reason: b2,
-                    id: c2,
-                    from_annot: d2,
-                    skip_optional: e2,
-                    access_iterables: f2,
-                    key_t: g2,
-                    tout: h2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2))
-                .then_with(|| f1.cmp(f2))
-                .then_with(|| g1.cmp(g2))
-                .then_with(|| h1.cmp(h2)),
-            (
-                UseTInner::CallElemT(a1, b1, c1, d1, e1),
-                UseTInner::CallElemT(a2, b2, c2, d2, e2),
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
+            (UseTInner::TestPropT(a1), UseTInner::TestPropT(a2)) => a1.cmp(a2),
+            (UseTInner::SetElemT(a1), UseTInner::SetElemT(a2)) => a1.cmp(a2),
+            (UseTInner::GetElemT(a1), UseTInner::GetElemT(a2)) => a1.cmp(a2),
+            (UseTInner::CallElemT(a1), UseTInner::CallElemT(a2)) => a1.cmp(a2),
             (UseTInner::GetStaticsT(a1), UseTInner::GetStaticsT(a2)) => a1.cmp(a2),
             (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
@@ -3015,15 +2788,9 @@ impl<CX> Ord for UseTInner<CX> {
                     use_t: c2,
                 },
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
-            (UseTInner::ReposUseT(a1, b1, c1, d1), UseTInner::ReposUseT(a2, b2, c2, d2)) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ReposUseT(a1), UseTInner::ReposUseT(a2)) => a1.cmp(a2),
             (UseTInner::ConstructorT(a1), UseTInner::ConstructorT(a2)) => a1.cmp(a2),
-            (UseTInner::SuperT(a1, b1, c1), UseTInner::SuperT(a2, b2, c2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
-            }
+            (UseTInner::SuperT(a1), UseTInner::SuperT(a2)) => a1.cmp(a2),
             (UseTInner::ImplementsT(a1, b1), UseTInner::ImplementsT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
@@ -3042,26 +2809,13 @@ impl<CX> Ord for UseTInner<CX> {
                     t_out: c2,
                 },
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
-            (
-                UseTInner::SpecializeT(a1, b1, c1, d1, e1),
-                UseTInner::SpecializeT(a2, b2, c2, d2, e2),
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
+            (UseTInner::SpecializeT(a1), UseTInner::SpecializeT(a2)) => a1.cmp(a2),
             (UseTInner::ThisSpecializeT(a1, b1, c1), UseTInner::ThisSpecializeT(a2, b2, c2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
             }
-            (
-                UseTInner::ValueToTypeReferenceT(a1, b1, c1, d1),
-                UseTInner::ValueToTypeReferenceT(a2, b2, c2, d2),
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ValueToTypeReferenceT(a1), UseTInner::ValueToTypeReferenceT(a2)) => {
+                a1.cmp(a2)
+            }
             (
                 UseTInner::ConcretizeTypeAppsT(a1, b1, c1, d1),
                 UseTInner::ConcretizeTypeAppsT(a2, b2, c2, d2),
@@ -3070,36 +2824,7 @@ impl<CX> Ord for UseTInner<CX> {
                 .then_with(|| b1.cmp(b2))
                 .then_with(|| c1.cmp(c2))
                 .then_with(|| d1.cmp(d2)),
-            (
-                UseTInner::LookupT {
-                    reason: a1,
-                    lookup_kind: b1,
-                    try_ts_on_failure: c1,
-                    propref: d1,
-                    lookup_action: e1,
-                    ids: f1,
-                    method_accessible: g1,
-                    ignore_dicts: h1,
-                },
-                UseTInner::LookupT {
-                    reason: a2,
-                    lookup_kind: b2,
-                    try_ts_on_failure: c2,
-                    propref: d2,
-                    lookup_action: e2,
-                    ids: f2,
-                    method_accessible: g2,
-                    ignore_dicts: h2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2))
-                .then_with(|| f1.cmp(f2))
-                .then_with(|| g1.cmp(g2))
-                .then_with(|| h1.cmp(h2)),
+            (UseTInner::LookupT(a1), UseTInner::LookupT(a2)) => a1.cmp(a2),
             (UseTInner::ObjRestT(a1, b1, c1, d1), UseTInner::ObjRestT(a2, b2, c2, d2)) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
@@ -3111,163 +2836,39 @@ impl<CX> Ord for UseTInner<CX> {
             (UseTInner::ObjTestT(a1, b1, c1), UseTInner::ObjTestT(a2, b2, c2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
             }
-            (UseTInner::ArrRestT(a1, b1, c1, d1), UseTInner::ArrRestT(a2, b2, c2, d2)) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ArrRestT(a1), UseTInner::ArrRestT(a2)) => a1.cmp(a2),
             (UseTInner::GetKeysT(a1, b1), UseTInner::GetKeysT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
-            (UseTInner::HasOwnPropT(a1, b1, c1), UseTInner::HasOwnPropT(a2, b2, c2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
-            }
+            (UseTInner::HasOwnPropT(a1), UseTInner::HasOwnPropT(a2)) => a1.cmp(a2),
             (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
             (UseTInner::GetDictValuesT(a1, b1), UseTInner::GetDictValuesT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
-            (
-                UseTInner::ElemT {
-                    use_op: a1,
-                    reason: b1,
-                    obj: c1,
-                    action: d1,
-                },
-                UseTInner::ElemT {
-                    use_op: a2,
-                    reason: b2,
-                    obj: c2,
-                    action: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
-            (UseTInner::MapTypeT(a1, b1, c1, d1), UseTInner::MapTypeT(a2, b2, c2, d2)) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ElemT(a1), UseTInner::ElemT(a2)) => a1.cmp(a2),
+            (UseTInner::MapTypeT(a1), UseTInner::MapTypeT(a2)) => a1.cmp(a2),
             (UseTInner::ObjKitT(a1, b1, c1, d1, e1), UseTInner::ObjKitT(a2, b2, c2, d2, e2)) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
                 .then_with(|| c1.cmp(c2))
                 .then_with(|| d1.cmp(d2))
                 .then_with(|| e1.cmp(e2)),
-            (UseTInner::ReactKitT(a1, b1, c1), UseTInner::ReactKitT(a2, b2, c2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
-            }
-            (
-                UseTInner::ConcretizeT {
-                    reason: a1,
-                    kind: b1,
-                    seen: c1,
-                    collector: d1,
-                },
-                UseTInner::ConcretizeT {
-                    reason: a2,
-                    kind: b2,
-                    seen: c2,
-                    collector: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
-            (UseTInner::ResolveSpreadT(a1, b1, c1), UseTInner::ResolveSpreadT(a2, b2, c2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
-            }
-            (UseTInner::CondT(a1, b1, c1, d1), UseTInner::CondT(a2, b2, c2, d2)) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
-            (
-                UseTInner::ExtendsUseT(a1, b1, c1, d1, e1),
-                UseTInner::ExtendsUseT(a2, b2, c2, d2, e2),
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
-            (
-                UseTInner::ResolveUnionT {
-                    reason: a1,
-                    unresolved: b1,
-                    resolved: c1,
-                    upper: d1,
-                    id: e1,
-                },
-                UseTInner::ResolveUnionT {
-                    reason: a2,
-                    unresolved: b2,
-                    resolved: c2,
-                    upper: d2,
-                    id: e2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
+            (UseTInner::ReactKitT(a1), UseTInner::ReactKitT(a2)) => a1.cmp(a2),
+            (UseTInner::ConcretizeT(a1), UseTInner::ConcretizeT(a2)) => a1.cmp(a2),
+            (UseTInner::ResolveSpreadT(a1), UseTInner::ResolveSpreadT(a2)) => a1.cmp(a2),
+            (UseTInner::CondT(a1), UseTInner::CondT(a2)) => a1.cmp(a2),
+            (UseTInner::ExtendsUseT(a1), UseTInner::ExtendsUseT(a2)) => a1.cmp(a2),
+            (UseTInner::ResolveUnionT(a1), UseTInner::ResolveUnionT(a2)) => a1.cmp(a2),
             (UseTInner::TypeCastT(a1, b1), UseTInner::TypeCastT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
-            (
-                UseTInner::EnumCastT {
-                    use_op: a1,
-                    enum_: b1,
-                },
-                UseTInner::EnumCastT {
-                    use_op: a2,
-                    enum_: b2,
-                },
-            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
-            (
-                UseTInner::EnumExhaustiveCheckT {
-                    reason: a1,
-                    check: b1,
-                    incomplete_out: c1,
-                    discriminant_after_check: d1,
-                },
-                UseTInner::EnumExhaustiveCheckT {
-                    reason: a2,
-                    check: b2,
-                    incomplete_out: c2,
-                    discriminant_after_check: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
-            (
-                UseTInner::GetEnumT {
-                    use_op: a1,
-                    reason: b1,
-                    orig_t: c1,
-                    kind: d1,
-                    tout: e1,
-                },
-                UseTInner::GetEnumT {
-                    use_op: a2,
-                    reason: b2,
-                    orig_t: c2,
-                    kind: d2,
-                    tout: e2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
+            (UseTInner::EnumCastT(a1), UseTInner::EnumCastT(a2)) => a1.cmp(a2),
+            (UseTInner::EnumExhaustiveCheckT(a1), UseTInner::EnumExhaustiveCheckT(a2)) => {
+                a1.cmp(a2)
+            }
+            (UseTInner::GetEnumT(a1), UseTInner::GetEnumT(a2)) => a1.cmp(a2),
             (UseTInner::FilterOptionalT(a1, b1), UseTInner::FilterOptionalT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
@@ -3278,45 +2879,10 @@ impl<CX> Ord for UseTInner<CX> {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
             (UseTInner::HooklikeT(a1), UseTInner::HooklikeT(a2)) => a1.cmp(a2),
-            (
-                UseTInner::SealGenericT {
-                    reason: a1,
-                    id: b1,
-                    name: c1,
-                    no_infer: d1,
-                    cont: e1,
-                },
-                UseTInner::SealGenericT {
-                    reason: a2,
-                    id: b2,
-                    name: c2,
-                    no_infer: d2,
-                    cont: e2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
-            (
-                UseTInner::OptionalIndexedAccessT {
-                    use_op: a1,
-                    reason: b1,
-                    index: c1,
-                    tout_tvar: d1,
-                },
-                UseTInner::OptionalIndexedAccessT {
-                    use_op: a2,
-                    reason: b2,
-                    index: c2,
-                    tout_tvar: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+            (UseTInner::SealGenericT(a1), UseTInner::SealGenericT(a2)) => a1.cmp(a2),
+            (UseTInner::OptionalIndexedAccessT(a1), UseTInner::OptionalIndexedAccessT(a2)) => {
+                a1.cmp(a2)
+            }
             (
                 UseTInner::CheckUnusedPromiseT {
                     reason: a1,
@@ -3328,23 +2894,9 @@ impl<CX> Ord for UseTInner<CX> {
                 },
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
             (
-                UseTInner::WriteComputedObjPropCheckT {
-                    reason: a1,
-                    reason_key: b1,
-                    value_t: c1,
-                    err_on_str_key: d1,
-                },
-                UseTInner::WriteComputedObjPropCheckT {
-                    reason: a2,
-                    reason_key: b2,
-                    value_t: c2,
-                    err_on_str_key: d2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2)),
+                UseTInner::WriteComputedObjPropCheckT(a1),
+                UseTInner::WriteComputedObjPropCheckT(a2),
+            ) => a1.cmp(a2),
             (
                 UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
                 UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
@@ -3359,27 +2911,7 @@ impl<CX> Ord for UseTInner<CX> {
                     u: b2,
                 },
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
-            (
-                UseTInner::EvalTypeDestructorT {
-                    destructor_use_op: a1,
-                    reason: b1,
-                    repos: c1,
-                    destructor: d1,
-                    tout: e1,
-                },
-                UseTInner::EvalTypeDestructorT {
-                    destructor_use_op: a2,
-                    reason: b2,
-                    repos: c2,
-                    destructor: d2,
-                    tout: e2,
-                },
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
+            (UseTInner::EvalTypeDestructorT(a1), UseTInner::EvalTypeDestructorT(a2)) => a1.cmp(a2),
             _ => std::cmp::Ordering::Equal,
         }
     }
@@ -3389,47 +2921,10 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             UseTInner::UseT(a, b) => f.debug_tuple("UseT").field(a).field(b).finish(),
-            UseTInner::BindT(a, b, c) => f.debug_tuple("BindT").field(a).field(b).field(c).finish(),
-            UseTInner::CallT {
-                use_op,
-                reason,
-                call_action,
-                return_hint,
-            } => f
-                .debug_struct("CallT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("call_action", call_action)
-                .field("return_hint", return_hint)
-                .finish(),
-            UseTInner::ConditionalT {
-                use_op,
-                reason,
-                distributive_tparam_name,
-                infer_tparams,
-                extends_t,
-                true_t,
-                false_t,
-                tout,
-            } => f
-                .debug_struct("ConditionalT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("distributive_tparam_name", distributive_tparam_name)
-                .field("infer_tparams", infer_tparams)
-                .field("extends_t", extends_t)
-                .field("true_t", true_t)
-                .field("false_t", false_t)
-                .field("tout", tout)
-                .finish(),
-            UseTInner::MethodT(a, b, c, d, e) => f
-                .debug_tuple("MethodT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .field(e)
-                .finish(),
+            UseTInner::BindT(a) => f.debug_tuple("BindT").field(a).finish(),
+            UseTInner::CallT(a) => f.debug_tuple("CallT").field(a).finish(),
+            UseTInner::ConditionalT(a) => f.debug_tuple("ConditionalT").field(a).finish(),
+            UseTInner::MethodT(a) => f.debug_tuple("MethodT").field(a).finish(),
             UseTInner::PrivateMethodT(a) => f.debug_tuple("PrivateMethodT").field(a).finish(),
             UseTInner::SetPropT(a, b, c, d, e, ff, g) => f
                 .debug_tuple("SetPropT")
@@ -3442,73 +2937,15 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(g)
                 .finish(),
             UseTInner::SetPrivatePropT(a) => f.debug_tuple("SetPrivatePropT").field(a).finish(),
-            UseTInner::GetTypeFromNamespaceT {
-                use_op,
-                reason,
-                prop_ref,
-                tout,
-            } => f
-                .debug_struct("GetTypeFromNamespaceT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("prop_ref", prop_ref)
-                .field("tout", tout)
-                .finish(),
+            UseTInner::GetTypeFromNamespaceT(a) => {
+                f.debug_tuple("GetTypeFromNamespaceT").field(a).finish()
+            }
             UseTInner::GetPropT(a) => f.debug_tuple("GetPropT").field(a).finish(),
             UseTInner::GetPrivatePropT(a) => f.debug_tuple("GetPrivatePropT").field(a).finish(),
-            UseTInner::TestPropT {
-                use_op,
-                reason,
-                id,
-                propref,
-                tout,
-                hint,
-            } => f
-                .debug_struct("TestPropT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("id", id)
-                .field("propref", propref)
-                .field("tout", tout)
-                .field("hint", hint)
-                .finish(),
-            UseTInner::SetElemT(a, b, c, d, e, ff) => f
-                .debug_tuple("SetElemT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .field(e)
-                .field(ff)
-                .finish(),
-            UseTInner::GetElemT {
-                use_op,
-                reason,
-                id,
-                from_annot,
-                skip_optional,
-                access_iterables,
-                key_t,
-                tout,
-            } => f
-                .debug_struct("GetElemT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("id", id)
-                .field("from_annot", from_annot)
-                .field("skip_optional", skip_optional)
-                .field("access_iterables", access_iterables)
-                .field("key_t", key_t)
-                .field("tout", tout)
-                .finish(),
-            UseTInner::CallElemT(a, b, c, d, e) => f
-                .debug_tuple("CallElemT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .field(e)
-                .finish(),
+            UseTInner::TestPropT(a) => f.debug_tuple("TestPropT").field(a).finish(),
+            UseTInner::SetElemT(a) => f.debug_tuple("SetElemT").field(a).finish(),
+            UseTInner::GetElemT(a) => f.debug_tuple("GetElemT").field(a).finish(),
+            UseTInner::CallElemT(a) => f.debug_tuple("CallElemT").field(a).finish(),
             UseTInner::GetStaticsT(a) => f.debug_tuple("GetStaticsT").field(a).finish(),
             UseTInner::GetProtoT(a, b) => f.debug_tuple("GetProtoT").field(a).field(b).finish(),
             UseTInner::SetProtoT(a, b) => f.debug_tuple("SetProtoT").field(a).field(b).finish(),
@@ -3522,17 +2959,9 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field("use_desc", use_desc)
                 .field("use_t", use_t)
                 .finish(),
-            UseTInner::ReposUseT(a, b, c, d) => f
-                .debug_tuple("ReposUseT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .finish(),
+            UseTInner::ReposUseT(a) => f.debug_tuple("ReposUseT").field(a).finish(),
             UseTInner::ConstructorT(a) => f.debug_tuple("ConstructorT").field(a).finish(),
-            UseTInner::SuperT(a, b, c) => {
-                f.debug_tuple("SuperT").field(a).field(b).field(c).finish()
-            }
+            UseTInner::SuperT(a) => f.debug_tuple("SuperT").field(a).finish(),
             UseTInner::ImplementsT(a, b) => f.debug_tuple("ImplementsT").field(a).field(b).finish(),
             UseTInner::MixinT(a, b) => f.debug_tuple("MixinT").field(a).field(b).finish(),
             UseTInner::ToStringT {
@@ -3545,27 +2974,16 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field("reason", reason)
                 .field("t_out", t_out)
                 .finish(),
-            UseTInner::SpecializeT(a, b, c, d, e) => f
-                .debug_tuple("SpecializeT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .field(e)
-                .finish(),
+            UseTInner::SpecializeT(a) => f.debug_tuple("SpecializeT").field(a).finish(),
             UseTInner::ThisSpecializeT(a, b, c) => f
                 .debug_tuple("ThisSpecializeT")
                 .field(a)
                 .field(b)
                 .field(c)
                 .finish(),
-            UseTInner::ValueToTypeReferenceT(a, b, c, d) => f
-                .debug_tuple("ValueToTypeReferenceT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .finish(),
+            UseTInner::ValueToTypeReferenceT(a) => {
+                f.debug_tuple("ValueToTypeReferenceT").field(a).finish()
+            }
             UseTInner::ConcretizeTypeAppsT(a, b, c, d) => f
                 .debug_tuple("ConcretizeTypeAppsT")
                 .field(a)
@@ -3573,26 +2991,7 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(c)
                 .field(d)
                 .finish(),
-            UseTInner::LookupT {
-                reason,
-                lookup_kind,
-                try_ts_on_failure,
-                propref,
-                lookup_action,
-                ids,
-                method_accessible,
-                ignore_dicts,
-            } => f
-                .debug_struct("LookupT")
-                .field("reason", reason)
-                .field("lookup_kind", lookup_kind)
-                .field("try_ts_on_failure", try_ts_on_failure)
-                .field("propref", propref)
-                .field("lookup_action", lookup_action)
-                .field("ids", ids)
-                .field("method_accessible", method_accessible)
-                .field("ignore_dicts", ignore_dicts)
-                .finish(),
+            UseTInner::LookupT(a) => f.debug_tuple("LookupT").field(a).finish(),
             UseTInner::ObjRestT(a, b, c, d) => f
                 .debug_tuple("ObjRestT")
                 .field(a)
@@ -3609,43 +3008,15 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(b)
                 .field(c)
                 .finish(),
-            UseTInner::ArrRestT(a, b, c, d) => f
-                .debug_tuple("ArrRestT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .finish(),
+            UseTInner::ArrRestT(a) => f.debug_tuple("ArrRestT").field(a).finish(),
             UseTInner::GetKeysT(a, b) => f.debug_tuple("GetKeysT").field(a).field(b).finish(),
-            UseTInner::HasOwnPropT(a, b, c) => f
-                .debug_tuple("HasOwnPropT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .finish(),
+            UseTInner::HasOwnPropT(a) => f.debug_tuple("HasOwnPropT").field(a).finish(),
             UseTInner::GetValuesT(a, b) => f.debug_tuple("GetValuesT").field(a).field(b).finish(),
             UseTInner::GetDictValuesT(a, b) => {
                 f.debug_tuple("GetDictValuesT").field(a).field(b).finish()
             }
-            UseTInner::ElemT {
-                use_op,
-                reason,
-                obj,
-                action,
-            } => f
-                .debug_struct("ElemT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("obj", obj)
-                .field("action", action)
-                .finish(),
-            UseTInner::MapTypeT(a, b, c, d) => f
-                .debug_tuple("MapTypeT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .finish(),
+            UseTInner::ElemT(a) => f.debug_tuple("ElemT").field(a).finish(),
+            UseTInner::MapTypeT(a) => f.debug_tuple("MapTypeT").field(a).finish(),
             UseTInner::ObjKitT(a, b, c, d, e) => f
                 .debug_tuple("ObjKitT")
                 .field(a)
@@ -3654,91 +3025,18 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(d)
                 .field(e)
                 .finish(),
-            UseTInner::ReactKitT(a, b, c) => f
-                .debug_tuple("ReactKitT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .finish(),
-            UseTInner::ConcretizeT {
-                reason,
-                kind,
-                seen,
-                collector,
-            } => f
-                .debug_struct("ConcretizeT")
-                .field("reason", reason)
-                .field("kind", kind)
-                .field("seen", seen)
-                .field("collector", collector)
-                .finish(),
-            UseTInner::ResolveSpreadT(a, b, c) => f
-                .debug_tuple("ResolveSpreadT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .finish(),
-            UseTInner::CondT(a, b, c, d) => f
-                .debug_tuple("CondT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .finish(),
-            UseTInner::ExtendsUseT(a, b, c, d, e) => f
-                .debug_tuple("ExtendsUseT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .field(e)
-                .finish(),
-            UseTInner::ResolveUnionT {
-                reason,
-                unresolved,
-                resolved,
-                upper,
-                id,
-            } => f
-                .debug_struct("ResolveUnionT")
-                .field("reason", reason)
-                .field("unresolved", unresolved)
-                .field("resolved", resolved)
-                .field("upper", upper)
-                .field("id", id)
-                .finish(),
+            UseTInner::ReactKitT(a) => f.debug_tuple("ReactKitT").field(a).finish(),
+            UseTInner::ConcretizeT(a) => f.debug_tuple("ConcretizeT").field(a).finish(),
+            UseTInner::ResolveSpreadT(a) => f.debug_tuple("ResolveSpreadT").field(a).finish(),
+            UseTInner::CondT(a) => f.debug_tuple("CondT").field(a).finish(),
+            UseTInner::ExtendsUseT(a) => f.debug_tuple("ExtendsUseT").field(a).finish(),
+            UseTInner::ResolveUnionT(a) => f.debug_tuple("ResolveUnionT").field(a).finish(),
             UseTInner::TypeCastT(a, b) => f.debug_tuple("TypeCastT").field(a).field(b).finish(),
-            UseTInner::EnumCastT { use_op, enum_ } => f
-                .debug_struct("EnumCastT")
-                .field("use_op", use_op)
-                .field("enum_", enum_)
-                .finish(),
-            UseTInner::EnumExhaustiveCheckT {
-                reason,
-                check,
-                incomplete_out,
-                discriminant_after_check,
-            } => f
-                .debug_struct("EnumExhaustiveCheckT")
-                .field("reason", reason)
-                .field("check", check)
-                .field("incomplete_out", incomplete_out)
-                .field("discriminant_after_check", discriminant_after_check)
-                .finish(),
-            UseTInner::GetEnumT {
-                use_op,
-                reason,
-                orig_t,
-                kind,
-                tout,
-            } => f
-                .debug_struct("GetEnumT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("orig_t", orig_t)
-                .field("kind", kind)
-                .field("tout", tout)
-                .finish(),
+            UseTInner::EnumCastT(a) => f.debug_tuple("EnumCastT").field(a).finish(),
+            UseTInner::EnumExhaustiveCheckT(a) => {
+                f.debug_tuple("EnumExhaustiveCheckT").field(a).finish()
+            }
+            UseTInner::GetEnumT(a) => f.debug_tuple("GetEnumT").field(a).finish(),
             UseTInner::FilterOptionalT(a, b) => {
                 f.debug_tuple("FilterOptionalT").field(a).field(b).finish()
             }
@@ -3749,48 +3047,18 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 f.debug_tuple("DeepReadOnlyT").field(a).field(b).finish()
             }
             UseTInner::HooklikeT(a) => f.debug_tuple("HooklikeT").field(a).finish(),
-            UseTInner::SealGenericT {
-                reason,
-                id,
-                name,
-                no_infer,
-                cont,
-            } => f
-                .debug_struct("SealGenericT")
-                .field("reason", reason)
-                .field("id", id)
-                .field("name", name)
-                .field("no_infer", no_infer)
-                .field("cont", cont)
-                .finish(),
-            UseTInner::OptionalIndexedAccessT {
-                use_op,
-                reason,
-                index,
-                tout_tvar,
-            } => f
-                .debug_struct("OptionalIndexedAccessT")
-                .field("use_op", use_op)
-                .field("reason", reason)
-                .field("index", index)
-                .field("tout_tvar", tout_tvar)
-                .finish(),
+            UseTInner::SealGenericT(a) => f.debug_tuple("SealGenericT").field(a).finish(),
+            UseTInner::OptionalIndexedAccessT(a) => {
+                f.debug_tuple("OptionalIndexedAccessT").field(a).finish()
+            }
             UseTInner::CheckUnusedPromiseT { reason, async_ } => f
                 .debug_struct("CheckUnusedPromiseT")
                 .field("reason", reason)
                 .field("async_", async_)
                 .finish(),
-            UseTInner::WriteComputedObjPropCheckT {
-                reason,
-                reason_key,
-                value_t,
-                err_on_str_key,
-            } => f
-                .debug_struct("WriteComputedObjPropCheckT")
-                .field("reason", reason)
-                .field("reason_key", reason_key)
-                .field("value_t", value_t)
-                .field("err_on_str_key", err_on_str_key)
+            UseTInner::WriteComputedObjPropCheckT(a) => f
+                .debug_tuple("WriteComputedObjPropCheckT")
+                .field(a)
                 .finish(),
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => f
                 .debug_tuple("ConvertEmptyPropsToMixedT")
@@ -3802,20 +3070,9 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field("renders_reason", renders_reason)
                 .field("u", u)
                 .finish(),
-            UseTInner::EvalTypeDestructorT {
-                destructor_use_op,
-                reason,
-                repos,
-                destructor,
-                tout,
-            } => f
-                .debug_struct("EvalTypeDestructorT")
-                .field("destructor_use_op", destructor_use_op)
-                .field("reason", reason)
-                .field("repos", repos)
-                .field("destructor", destructor)
-                .field("tout", tout)
-                .finish(),
+            UseTInner::EvalTypeDestructorT(a) => {
+                f.debug_tuple("EvalTypeDestructorT").field(a).finish()
+            }
         }
     }
 }
@@ -5799,31 +5056,28 @@ impl Property {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FieldData {
+    pub preferred_def_locs: Option<Vec1<ALoc>>,
+    pub key_loc: Option<ALoc>,
+    pub type_: Type,
+    pub polarity: Polarity,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GetSetData {
+    pub get_key_loc: Option<ALoc>,
+    pub get_type: Type,
+    pub set_key_loc: Option<ALoc>,
+    pub set_type: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PropertyInner {
-    Field {
-        preferred_def_locs: Option<Vec1<ALoc>>,
-        key_loc: Option<ALoc>,
-        type_: Type,
-        polarity: Polarity,
-    },
-    Get {
-        key_loc: Option<ALoc>,
-        type_: Type,
-    },
-    Set {
-        key_loc: Option<ALoc>,
-        type_: Type,
-    },
-    GetSet {
-        get_key_loc: Option<ALoc>,
-        get_type: Type,
-        set_key_loc: Option<ALoc>,
-        set_type: Type,
-    },
-    Method {
-        key_loc: Option<ALoc>,
-        type_: Type,
-    },
+    Field(Box<FieldData>),
+    Get { key_loc: Option<ALoc>, type_: Type },
+    Set { key_loc: Option<ALoc>, type_: Type },
+    GetSet(Box<GetSetData>),
+    Method { key_loc: Option<ALoc>, type_: Type },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -6450,11 +5704,9 @@ pub mod property {
 
     pub fn type_(p: &Property) -> PropertyType {
         match p.deref() {
-            PropertyInner::Field {
-                type_, polarity, ..
-            } => PropertyType::OrdinaryField {
-                type_: type_.dupe(),
-                polarity: *polarity,
+            PropertyInner::Field(f) => PropertyType::OrdinaryField {
+                type_: f.type_.dupe(),
+                polarity: f.polarity,
             },
             PropertyInner::Get { type_, .. } | PropertyInner::Method { type_, .. } => {
                 PropertyType::SyntheticField {
@@ -6466,21 +5718,19 @@ pub mod property {
                 get_type: None,
                 set_type: Some(type_.dupe()),
             },
-            PropertyInner::GetSet {
-                get_type, set_type, ..
-            } => PropertyType::SyntheticField {
-                get_type: Some(get_type.dupe()),
-                set_type: Some(set_type.dupe()),
+            PropertyInner::GetSet(gs) => PropertyType::SyntheticField {
+                get_type: Some(gs.get_type.dupe()),
+                set_type: Some(gs.set_type.dupe()),
             },
         }
     }
 
     pub fn polarity(p: &Property) -> Polarity {
         match p.deref() {
-            PropertyInner::Field { polarity, .. } => *polarity,
+            PropertyInner::Field(f) => f.polarity,
             PropertyInner::Get { .. } => Polarity::Positive,
             PropertyInner::Set { .. } => Polarity::Negative,
-            PropertyInner::GetSet { .. } => Polarity::Neutral,
+            PropertyInner::GetSet(_) => Polarity::Neutral,
             PropertyInner::Method { .. } => Polarity::Positive,
         }
     }
@@ -6548,35 +5798,31 @@ pub mod property {
 
     pub fn read_loc(p: &Property) -> Option<ALoc> {
         match p.deref() {
-            PropertyInner::Field { key_loc, .. }
-            | PropertyInner::Get { key_loc, .. }
-            | PropertyInner::Method { key_loc, .. } => key_loc.dupe(),
-            PropertyInner::GetSet { get_key_loc, .. } => get_key_loc.dupe(),
+            PropertyInner::Field(f) => f.key_loc.dupe(),
+            PropertyInner::Get { key_loc, .. } | PropertyInner::Method { key_loc, .. } => {
+                key_loc.dupe()
+            }
+            PropertyInner::GetSet(gs) => gs.get_key_loc.dupe(),
             PropertyInner::Set { .. } => None,
         }
     }
 
     pub fn write_loc(p: &Property) -> Option<ALoc> {
         match p.deref() {
-            PropertyInner::Field { key_loc, .. } | PropertyInner::Set { key_loc, .. } => {
-                key_loc.dupe()
-            }
-            PropertyInner::GetSet { set_key_loc, .. } => set_key_loc.dupe(),
+            PropertyInner::Field(f) => f.key_loc.dupe(),
+            PropertyInner::Set { key_loc, .. } => key_loc.dupe(),
+            PropertyInner::GetSet(gs) => gs.set_key_loc.dupe(),
             PropertyInner::Method { .. } | PropertyInner::Get { .. } => None,
         }
     }
 
     pub fn first_loc(p: &Property) -> Option<ALoc> {
         match p.deref() {
-            PropertyInner::Field { key_loc, .. }
-            | PropertyInner::Get { key_loc, .. }
+            PropertyInner::Field(f) => f.key_loc.dupe(),
+            PropertyInner::Get { key_loc, .. }
             | PropertyInner::Set { key_loc, .. }
             | PropertyInner::Method { key_loc, .. } => key_loc.dupe(),
-            PropertyInner::GetSet {
-                get_key_loc,
-                set_key_loc,
-                ..
-            } => match (get_key_loc, set_key_loc) {
+            PropertyInner::GetSet(gs) => match (&gs.get_key_loc, &gs.set_key_loc) {
                 (None, None) => None,
                 (Some(loc), None) | (None, Some(loc)) => Some(loc.dupe()),
                 (Some(loc1), Some(loc2)) => {
@@ -6592,25 +5838,16 @@ pub mod property {
 
     pub fn def_locs(p: &Property) -> Option<Vec1<ALoc>> {
         match p.deref() {
-            PropertyInner::Field {
-                preferred_def_locs: Some(locs),
-                ..
-            } => Some(locs.clone()),
-            PropertyInner::Field {
-                preferred_def_locs: None,
-                key_loc,
-                ..
+            PropertyInner::Field(f) if f.preferred_def_locs.is_some() => {
+                f.preferred_def_locs.clone()
             }
-            | PropertyInner::Get { key_loc, .. }
+            PropertyInner::Field(f) => f.key_loc.as_ref().map(|loc| Vec1::new(loc.dupe())),
+            PropertyInner::Get { key_loc, .. }
             | PropertyInner::Set { key_loc, .. }
             | PropertyInner::Method { key_loc, .. } => {
                 key_loc.as_ref().map(|loc| Vec1::new(loc.dupe()))
             }
-            PropertyInner::GetSet {
-                get_key_loc,
-                set_key_loc,
-                ..
-            } => match (get_key_loc, set_key_loc) {
+            PropertyInner::GetSet(gs) => match (&gs.get_key_loc, &gs.set_key_loc) {
                 (None, None) => None,
                 (Some(loc), None) | (None, Some(loc)) => Some(Vec1::new(loc.dupe())),
                 (Some(loc1), Some(loc2)) => {
@@ -6627,15 +5864,13 @@ pub mod property {
         F: FnMut(&Type),
     {
         match p.deref() {
-            PropertyInner::Field { type_, .. }
-            | PropertyInner::Get { type_, .. }
+            PropertyInner::Field(fd) => f(&fd.type_),
+            PropertyInner::Get { type_, .. }
             | PropertyInner::Set { type_, .. }
             | PropertyInner::Method { type_, .. } => f(type_),
-            PropertyInner::GetSet {
-                get_type, set_type, ..
-            } => {
-                f(get_type);
-                f(set_type);
+            PropertyInner::GetSet(gs) => {
+                f(&gs.get_type);
+                f(&gs.set_type);
             }
         }
     }
@@ -6645,13 +5880,11 @@ pub mod property {
         F: Fn(A, &Type) -> A,
     {
         match p.deref() {
-            PropertyInner::Field { type_, .. }
-            | PropertyInner::Get { type_, .. }
+            PropertyInner::Field(fd) => f(acc, &fd.type_),
+            PropertyInner::Get { type_, .. }
             | PropertyInner::Set { type_, .. }
             | PropertyInner::Method { type_, .. } => f(acc, type_),
-            PropertyInner::GetSet {
-                get_type, set_type, ..
-            } => f(f(acc, get_type), set_type),
+            PropertyInner::GetSet(gs) => f(f(acc, &gs.get_type), &gs.set_type),
         }
     }
 
@@ -6660,17 +5893,12 @@ pub mod property {
         F: Fn(&Type) -> Type,
     {
         match p.deref() {
-            PropertyInner::Field {
-                preferred_def_locs,
-                key_loc,
-                type_,
-                polarity,
-            } => Property::new(PropertyInner::Field {
-                preferred_def_locs: preferred_def_locs.clone(),
-                key_loc: key_loc.dupe(),
-                type_: f(type_),
-                polarity: *polarity,
-            }),
+            PropertyInner::Field(fd) => Property::new(PropertyInner::Field(Box::new(FieldData {
+                preferred_def_locs: fd.preferred_def_locs.clone(),
+                key_loc: fd.key_loc.dupe(),
+                type_: f(&fd.type_),
+                polarity: fd.polarity,
+            }))),
             PropertyInner::Get { key_loc, type_ } => Property::new(PropertyInner::Get {
                 key_loc: key_loc.dupe(),
                 type_: f(type_),
@@ -6679,17 +5907,14 @@ pub mod property {
                 key_loc: key_loc.dupe(),
                 type_: f(type_),
             }),
-            PropertyInner::GetSet {
-                get_key_loc,
-                get_type,
-                set_key_loc,
-                set_type,
-            } => Property::new(PropertyInner::GetSet {
-                get_key_loc: get_key_loc.dupe(),
-                get_type: f(get_type),
-                set_key_loc: set_key_loc.dupe(),
-                set_type: f(set_type),
-            }),
+            PropertyInner::GetSet(gs) => {
+                Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                    get_key_loc: gs.get_key_loc.dupe(),
+                    get_type: f(&gs.get_type),
+                    set_key_loc: gs.set_key_loc.dupe(),
+                    set_type: f(&gs.set_type),
+                })))
+            }
             PropertyInner::Method { key_loc, type_ } => Property::new(PropertyInner::Method {
                 key_loc: key_loc.dupe(),
                 type_: f(type_),
@@ -6702,22 +5927,17 @@ pub mod property {
         F: Fn(&Type) -> Type,
     {
         match p.deref() {
-            PropertyInner::Field {
-                preferred_def_locs,
-                key_loc,
-                type_,
-                polarity,
-            } => {
-                let type_prime = f(type_);
-                if Rc::ptr_eq(&type_prime.0, &type_.0) {
+            PropertyInner::Field(fd) => {
+                let type_prime = f(&fd.type_);
+                if Rc::ptr_eq(&type_prime.0, &fd.type_.0) {
                     Cow::Borrowed(p)
                 } else {
-                    Cow::Owned(Property::new(PropertyInner::Field {
-                        preferred_def_locs: preferred_def_locs.clone(),
-                        key_loc: key_loc.dupe(),
+                    Cow::Owned(Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
                         type_: type_prime,
-                        polarity: *polarity,
-                    }))
+                        polarity: fd.polarity,
+                    }))))
                 }
             }
             PropertyInner::Get { key_loc, type_ } => {
@@ -6742,25 +5962,20 @@ pub mod property {
                     }))
                 }
             }
-            PropertyInner::GetSet {
-                get_key_loc,
-                get_type,
-                set_key_loc,
-                set_type,
-            } => {
-                let get_type_prime = f(get_type);
-                let set_type_prime = f(set_type);
-                if Rc::ptr_eq(&get_type_prime.0, &get_type.0)
-                    && Rc::ptr_eq(&set_type_prime.0, &set_type.0)
+            PropertyInner::GetSet(gs) => {
+                let get_type_prime = f(&gs.get_type);
+                let set_type_prime = f(&gs.set_type);
+                if Rc::ptr_eq(&get_type_prime.0, &gs.get_type.0)
+                    && Rc::ptr_eq(&set_type_prime.0, &gs.set_type.0)
                 {
                     Cow::Borrowed(p)
                 } else {
-                    Cow::Owned(Property::new(PropertyInner::GetSet {
-                        get_key_loc: get_key_loc.dupe(),
+                    Cow::Owned(Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                        get_key_loc: gs.get_key_loc.dupe(),
                         get_type: get_type_prime,
-                        set_key_loc: set_key_loc.dupe(),
+                        set_key_loc: gs.set_key_loc.dupe(),
                         set_type: set_type_prime,
-                    }))
+                    }))))
                 }
             }
             PropertyInner::Method { key_loc, type_ } => {
@@ -6786,7 +6001,7 @@ pub mod property {
 
     pub fn assert_field(p: &Property) -> Type {
         match p.deref() {
-            PropertyInner::Field { type_, .. } => type_.dupe(),
+            PropertyInner::Field(fd) => fd.type_.dupe(),
             _ => panic!("Unexpected field type"),
         }
     }
@@ -6884,9 +6099,7 @@ pub mod properties {
             for (name, prop) in self.iter() {
                 if let Some(mut type_) = property::read_t(prop) {
                     let preferred_def_locs = match prop.deref() {
-                        PropertyInner::Field {
-                            preferred_def_locs, ..
-                        } => preferred_def_locs.clone(),
+                        PropertyInner::Field(fd) => fd.preferred_def_locs.clone(),
                         _ => None,
                     };
 
@@ -6931,17 +6144,14 @@ pub mod properties {
                 self.iter()
                     .map(|(name, prop)| {
                         let new_prop = match prop.deref() {
-                            PropertyInner::Field {
-                                preferred_def_locs,
-                                key_loc,
-                                type_,
-                                polarity,
-                            } => Property::new(PropertyInner::Field {
-                                preferred_def_locs: preferred_def_locs.clone(),
-                                key_loc: key_loc.dupe(),
-                                type_: f(type_),
-                                polarity: *polarity,
-                            }),
+                            PropertyInner::Field(fd) => {
+                                Property::new(PropertyInner::Field(Box::new(FieldData {
+                                    preferred_def_locs: fd.preferred_def_locs.clone(),
+                                    key_loc: fd.key_loc.dupe(),
+                                    type_: f(&fd.type_),
+                                    polarity: fd.polarity,
+                                })))
+                            }
                             _ => prop.dupe(),
                         };
                         (name.dupe(), new_prop)
@@ -6958,17 +6168,14 @@ pub mod properties {
                 self.iter()
                     .map(|(name, prop)| {
                         let new_prop = match prop.deref() {
-                            PropertyInner::Field {
-                                preferred_def_locs,
-                                key_loc,
-                                type_,
-                                polarity,
-                            } => Property::new(PropertyInner::Field {
-                                preferred_def_locs: preferred_def_locs.clone(),
-                                key_loc: key_loc.dupe(),
-                                type_: f(name, type_),
-                                polarity: *polarity,
-                            }),
+                            PropertyInner::Field(fd) => {
+                                Property::new(PropertyInner::Field(Box::new(FieldData {
+                                    preferred_def_locs: fd.preferred_def_locs.clone(),
+                                    key_loc: fd.key_loc.dupe(),
+                                    type_: f(name, &fd.type_),
+                                    polarity: fd.polarity,
+                                })))
+                            }
                             _ => prop.dupe(),
                         };
                         (name.dupe(), new_prop)
@@ -7008,24 +6215,24 @@ pub mod properties {
                         DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(new_ft))),
                     ))
                 }
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams,
                     t_out,
                     id,
-                } => {
+                }) => {
                     let new_t_out = unbind_this_method(t_out);
                     if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
                         t.dupe()
                     } else {
                         Type::new(TypeInner::DefT(
                             r.dupe(),
-                            DefT::new(DefTInner::PolyT {
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out: new_t_out,
                                 id: id.dupe(),
-                            }),
+                            }))),
                         ))
                     }
                 }
@@ -7934,7 +7141,7 @@ pub mod union_rep {
                     return Some(t.dupe());
                 }
                 TypeInner::DefT(_, def_t)
-                    if matches!(&**def_t, DefTInner::InstanceT(_) | DefTInner::PolyT { .. }) =>
+                    if matches!(&**def_t, DefTInner::InstanceT(_) | DefTInner::PolyT(_)) =>
                 {
                     return Some(t.dupe());
                 }
@@ -9578,6 +8785,60 @@ pub mod aconstraint {
     use super::*;
 
     #[derive(Clone)]
+    pub struct AnnotSpecializeTData {
+        pub use_op: UseOp,
+        pub reason: Reason,
+        pub reason2: Reason,
+        pub types: Option<Rc<[Type]>>,
+    }
+
+    #[derive(Clone)]
+    pub struct AnnotGetTypeFromNamespaceTData {
+        pub use_op: UseOp,
+        pub reason: Reason,
+        pub prop_ref: (Reason, Name),
+    }
+
+    #[derive(Clone)]
+    pub struct AnnotGetPropTData {
+        pub reason: Reason,
+        pub use_op: UseOp,
+        pub from_annot: bool,
+        pub prop_ref: PropRef,
+    }
+
+    #[derive(Clone)]
+    pub struct AnnotLookupTData {
+        pub reason: Reason,
+        pub use_op: UseOp,
+        pub prop_ref: PropRef,
+        pub type_: Type,
+    }
+
+    #[derive(Clone)]
+    pub struct AnnotObjKitTData {
+        pub reason: Reason,
+        pub use_op: UseOp,
+        pub resolve_tool: object::ResolveTool,
+        pub tool: object::Tool,
+    }
+
+    #[derive(Clone)]
+    pub struct AnnotArithTData {
+        pub reason: Reason,
+        pub flip: bool,
+        pub rhs_t: Type,
+        pub kind: arith_kind::ArithKind,
+    }
+
+    #[derive(Clone)]
+    pub struct AnnotDeepReadOnlyTData {
+        pub reason: Reason,
+        pub loc: ALoc,
+        pub dro_type: DroType,
+    }
+
+    #[derive(Clone)]
     pub enum OpInner {
         AnnotConcretizeForImportsExports {
             reason: Reason,
@@ -9596,12 +8857,7 @@ pub mod aconstraint {
             reason: Reason,
             name: Name,
         },
-        AnnotSpecializeT {
-            use_op: UseOp,
-            reason: Reason,
-            reason2: Reason,
-            types: Option<Rc<[Type]>>,
-        },
+        AnnotSpecializeT(Box<AnnotSpecializeTData>),
         AnnotThisSpecializeT {
             reason: Reason,
             type_: Type,
@@ -9610,18 +8866,9 @@ pub mod aconstraint {
             reason: Reason,
             kind: TypeTKind,
         },
-        AnnotGetTypeFromNamespaceT {
-            use_op: UseOp,
-            reason: Reason,
-            prop_ref: (Reason, Name),
-        },
+        AnnotGetTypeFromNamespaceT(Box<AnnotGetTypeFromNamespaceTData>),
         AnnotGetEnumT(Reason),
-        AnnotGetPropT {
-            reason: Reason,
-            use_op: UseOp,
-            from_annot: bool,
-            prop_ref: PropRef,
-        },
+        AnnotGetPropT(Box<AnnotGetPropTData>),
         AnnotGetElemT {
             reason: Reason,
             use_op: UseOp,
@@ -9634,37 +8881,18 @@ pub mod aconstraint {
             source: Type,
         },
         AnnotGetStaticsT(Reason),
-        AnnotLookupT {
-            reason: Reason,
-            use_op: UseOp,
-            prop_ref: PropRef,
-            type_: Type,
-        },
-        AnnotObjKitT {
-            reason: Reason,
-            use_op: UseOp,
-            resolve_tool: object::ResolveTool,
-            tool: object::Tool,
-        },
+        AnnotLookupT(Box<AnnotLookupTData>),
+        AnnotObjKitT(Box<AnnotObjKitTData>),
         AnnotObjTestProtoT(Reason),
         AnnotMixinT(Reason),
-        AnnotArithT {
-            reason: Reason,
-            flip: bool,
-            rhs_t: Type,
-            kind: arith_kind::ArithKind,
-        },
+        AnnotArithT(Box<AnnotArithTData>),
         AnnotUnaryArithT {
             reason: Reason,
             kind: UnaryArithKind,
         },
         AnnotNotT(Reason),
         AnnotObjKeyMirror(Reason),
-        AnnotDeepReadOnlyT {
-            reason: Reason,
-            loc: ALoc,
-            dro_type: DroType,
-        },
+        AnnotDeepReadOnlyT(Box<AnnotDeepReadOnlyTData>),
         AnnotGetKeysT(Reason),
         AnnotToStringT {
             orig_t: Option<Type>,
@@ -9775,40 +9003,41 @@ pub mod aconstraint {
                 | OpInner::AnnotConcretizeForInspection { reason, .. }
                 | OpInner::AnnotImportTypeofT { reason, .. }
                 | OpInner::AnnotAssertExportIsTypeT { reason, .. }
-                | OpInner::AnnotSpecializeT { reason, .. }
                 | OpInner::AnnotThisSpecializeT { reason, .. }
                 | OpInner::AnnotUseTTypeT { reason, .. }
-                | OpInner::AnnotGetTypeFromNamespaceT { reason, .. }
                 | OpInner::AnnotGetEnumT(reason)
-                | OpInner::AnnotGetPropT { reason, .. }
                 | OpInner::AnnotGetElemT { reason, .. }
                 | OpInner::AnnotElemT { reason, .. }
                 | OpInner::AnnotGetStaticsT(reason)
-                | OpInner::AnnotLookupT { reason, .. }
-                | OpInner::AnnotObjKitT { reason, .. }
                 | OpInner::AnnotObjTestProtoT(reason)
                 | OpInner::AnnotMixinT(reason)
-                | OpInner::AnnotArithT { reason, .. }
                 | OpInner::AnnotUnaryArithT { reason, .. }
                 | OpInner::AnnotNotT(reason)
                 | OpInner::AnnotObjKeyMirror(reason)
-                | OpInner::AnnotDeepReadOnlyT { reason, .. }
                 | OpInner::AnnotGetKeysT(reason)
                 | OpInner::AnnotToStringT { reason, .. }
                 | OpInner::AnnotObjRestT { reason, .. }
                 | OpInner::AnnotGetValuesT(reason) => reason.dupe(),
+                OpInner::AnnotSpecializeT(data) => data.reason.dupe(),
+                OpInner::AnnotGetTypeFromNamespaceT(data) => data.reason.dupe(),
+                OpInner::AnnotGetPropT(data) => data.reason.dupe(),
+                OpInner::AnnotLookupT(data) => data.reason.dupe(),
+                OpInner::AnnotObjKitT(data) => data.reason.dupe(),
+                OpInner::AnnotArithT(data) => data.reason.dupe(),
+                OpInner::AnnotDeepReadOnlyT(data) => data.reason.dupe(),
             }
         }
 
         pub fn use_op(&self) -> Option<UseOp> {
             match &**self {
-                OpInner::AnnotSpecializeT { use_op, .. }
-                | OpInner::AnnotGetTypeFromNamespaceT { use_op, .. }
-                | OpInner::AnnotGetPropT { use_op, .. }
-                | OpInner::AnnotGetElemT { use_op, .. }
-                | OpInner::AnnotElemT { use_op, .. }
-                | OpInner::AnnotLookupT { use_op, .. }
-                | OpInner::AnnotObjKitT { use_op, .. } => Some(use_op.dupe()),
+                OpInner::AnnotGetElemT { use_op, .. } | OpInner::AnnotElemT { use_op, .. } => {
+                    Some(use_op.dupe())
+                }
+                OpInner::AnnotSpecializeT(data) => Some(data.use_op.dupe()),
+                OpInner::AnnotGetTypeFromNamespaceT(data) => Some(data.use_op.dupe()),
+                OpInner::AnnotGetPropT(data) => Some(data.use_op.dupe()),
+                OpInner::AnnotLookupT(data) => Some(data.use_op.dupe()),
+                OpInner::AnnotObjKitT(data) => Some(data.use_op.dupe()),
                 _ => None,
             }
         }
@@ -9842,8 +9071,8 @@ pub mod aconstraint {
     impl Op {
         pub fn string_of_operation(&self) -> &'static str {
             match &**self {
-                OpInner::AnnotSpecializeT { .. } => "Annot_SpecializeT",
-                OpInner::AnnotDeepReadOnlyT { .. } => "Annot_DeepReadOnlyT",
+                OpInner::AnnotSpecializeT(_) => "Annot_SpecializeT",
+                OpInner::AnnotDeepReadOnlyT(_) => "Annot_DeepReadOnlyT",
                 OpInner::AnnotThisSpecializeT { .. } => "Annot_ThisSpecializeT",
                 OpInner::AnnotUseTTypeT { .. } => "Annot_UseT_TypeT",
                 OpInner::AnnotConcretizeForImportsExports { .. } => {
@@ -9855,17 +9084,17 @@ pub mod aconstraint {
                 OpInner::AnnotConcretizeForInspection { .. } => "Annot_ConcretizeForInspection",
                 OpInner::AnnotImportTypeofT { .. } => "Annot_ImportTypeofT",
                 OpInner::AnnotAssertExportIsTypeT { .. } => "Annot_AssertExportIsTypeT",
-                OpInner::AnnotGetTypeFromNamespaceT { .. } => "Annot_GetTypeFromNamespaceT",
-                OpInner::AnnotGetPropT { .. } => "Annot_GetPropT",
+                OpInner::AnnotGetTypeFromNamespaceT(_) => "Annot_GetTypeFromNamespaceT",
+                OpInner::AnnotGetPropT(_) => "Annot_GetPropT",
                 OpInner::AnnotGetElemT { .. } => "Annot_GetElemT",
                 OpInner::AnnotGetEnumT(_) => "Annot_GetEnumT",
                 OpInner::AnnotElemT { .. } => "Annot_ElemT",
                 OpInner::AnnotGetStaticsT(_) => "Annot_GetStaticsT",
-                OpInner::AnnotLookupT { .. } => "Annot_LookupT",
-                OpInner::AnnotObjKitT { .. } => "Annot_ObjKitT",
+                OpInner::AnnotLookupT(_) => "Annot_LookupT",
+                OpInner::AnnotObjKitT(_) => "Annot_ObjKitT",
                 OpInner::AnnotObjTestProtoT(_) => "Annot_ObjTestProtoT",
                 OpInner::AnnotMixinT(_) => "Annot_MixinT",
-                OpInner::AnnotArithT { .. } => "Annot_ArithT",
+                OpInner::AnnotArithT(_) => "Annot_ArithT",
                 OpInner::AnnotUnaryArithT { .. } => "Annot_UnaryArithT",
                 OpInner::AnnotNotT(_) => "Annot_NotT",
                 OpInner::AnnotObjKeyMirror(_) => "Annot_ObjKeyMirror",
@@ -9879,8 +9108,8 @@ pub mod aconstraint {
         pub fn display_reason(&self) -> Reason {
             use flow_common::reason::VirtualReasonDesc::*;
             match &**self {
-                OpInner::AnnotObjKitT { reason, tool, .. } => {
-                    let desc = match tool {
+                OpInner::AnnotObjKitT(data) => {
+                    let desc = match &data.tool {
                         object::Tool::MakeExact => RCustom("exact".into()),
                         object::Tool::ReactCheckComponentConfig { .. } => {
                             RCustom("react check component config".into())
@@ -9894,17 +9123,16 @@ pub mod aconstraint {
                         object::Tool::ObjectRep => RCustom("object".into()),
                         object::Tool::ObjectMap { .. } => RCustom("mapped type".into()),
                     };
-                    reason.dupe().replace_desc(desc)
+                    data.reason.dupe().replace_desc(desc)
                 }
                 OpInner::AnnotGetStaticsT(r) => r.dupe().replace_desc(RCustom("statics".into())),
                 OpInner::AnnotMixinT(r) => r.dupe().replace_desc(RMixins),
                 OpInner::AnnotUnaryArithT { reason, .. } => reason.dupe().replace_desc(RUnaryMinus),
                 OpInner::AnnotNotT(r) => r.dupe().replace_desc(RUnaryNot),
-                OpInner::AnnotGetPropT {
-                    reason, prop_ref, ..
-                } => reason
+                OpInner::AnnotGetPropT(data) => data
+                    .reason
                     .dupe()
-                    .replace_desc(RProperty(name_of_propref(prop_ref))),
+                    .replace_desc(RProperty(name_of_propref(&data.prop_ref))),
                 OpInner::AnnotObjRestT { reason, .. } => reason.dupe().replace_desc(RRest),
                 _ => self.reason(),
             }
@@ -10690,16 +9918,16 @@ pub fn drop_generic(t: Type) -> Type {
 pub fn primitive_promoting_use_t<CX>(use_t: &UseT<CX>) -> bool {
     match use_t.deref() {
         UseTInner::CallElemT(..)
-        | UseTInner::GetElemT { .. }
+        | UseTInner::GetElemT(..)
         | UseTInner::GetPropT(..)
         | UseTInner::GetPrivatePropT(..)
         | UseTInner::GetProtoT(..)
         | UseTInner::MethodT(..)
-        | UseTInner::TestPropT { .. } => true,
+        | UseTInner::TestPropT(..) => true,
         // "internal" use types, which should not be called directly on primitives,
         // but it's OK if they are in practice. TODO: consider making this an internal
         // error
-        UseTInner::LookupT { .. } => true,
+        UseTInner::LookupT(..) => true,
         // TODO: enumerate all use types
         _ => false,
     }
@@ -10792,8 +10020,8 @@ pub fn string_of_def_ctor(def: &DefT) -> &'static str {
         DefTInner::NullT => "NullT",
         DefTInner::NumGeneralT(_) => "NumT",
         DefTInner::ObjT(_) => "ObjT",
-        DefTInner::PolyT { .. } => "PolyT",
-        DefTInner::ReactAbstractComponentT { .. } => "ReactAbstractComponentT",
+        DefTInner::PolyT(_) => "PolyT",
+        DefTInner::ReactAbstractComponentT(_) => "ReactAbstractComponentT",
         DefTInner::RendersT(_) => "RendersT",
         DefTInner::NumericStrKeyT(_) => "NumericStrKeyT",
         DefTInner::SingletonBoolT { .. } => "SingletonBoolT",
@@ -10852,15 +10080,15 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::Cast { .. } => "Cast",
         VirtualRootUseOp::ClassExtendsCheck { .. } => "ClassExtendsCheck",
         VirtualRootUseOp::ClassImplementsCheck { .. } => "ClassImplementsCheck",
-        VirtualRootUseOp::ClassOwnProtoCheck { .. } => "ClassOwnProtoCheck",
+        VirtualRootUseOp::ClassOwnProtoCheck(..) => "ClassOwnProtoCheck",
         VirtualRootUseOp::ClassMethodDefinition { .. } => "ClassMethodDefinition",
         VirtualRootUseOp::Coercion { .. } => "Coercion",
-        VirtualRootUseOp::ConformToCommonInterface { .. } => "ConformToCommonInterface",
+        VirtualRootUseOp::ConformToCommonInterface(..) => "ConformToCommonInterface",
         VirtualRootUseOp::DeclareComponentRef { .. } => "DeclareComponentRef",
         VirtualRootUseOp::DeleteProperty { .. } => "DeleteProperty",
         VirtualRootUseOp::DeleteVar { .. } => "DeleteVar",
-        VirtualRootUseOp::FunCall { .. } => "FunCall",
-        VirtualRootUseOp::FunCallMethod { .. } => "FunCallMethod",
+        VirtualRootUseOp::FunCall(..) => "FunCall",
+        VirtualRootUseOp::FunCallMethod(..) => "FunCallMethod",
         VirtualRootUseOp::FunImplicitReturn { .. } => "FunImplicitReturn",
         VirtualRootUseOp::FunReturnStatement { .. } => "FunReturnStatement",
         VirtualRootUseOp::GeneratorYield { .. } => "GeneratorYield",
@@ -10869,22 +10097,22 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::IndexedTypeAccess { .. } => "IndexedTypeAccess",
         VirtualRootUseOp::InferBoundCompatibilityCheck { .. } => "InferBoundCompatibilityCheck",
         VirtualRootUseOp::JSXCreateElement { .. } => "JSXCreateElement",
-        VirtualRootUseOp::ReactCreateElementCall { .. } => "ReactCreateElementCall",
+        VirtualRootUseOp::ReactCreateElementCall(..) => "ReactCreateElementCall",
         VirtualRootUseOp::ReactGetIntrinsic { .. } => "ReactGetIntrinsic",
-        VirtualRootUseOp::RecordCreate { .. } => "RecordCreate",
+        VirtualRootUseOp::RecordCreate(..) => "RecordCreate",
         VirtualRootUseOp::Speculation { .. } => "Speculation",
         VirtualRootUseOp::TypeApplication { .. } => "TypeApplication",
         VirtualRootUseOp::SetProperty { .. } => "SetProperty",
         VirtualRootUseOp::UpdateProperty { .. } => "UpdateProperty",
         VirtualRootUseOp::RefinementCheck { .. } => "RefinementCheck",
-        VirtualRootUseOp::SwitchRefinementCheck { .. } => "SwitchRefinementCheck",
+        VirtualRootUseOp::SwitchRefinementCheck(..) => "SwitchRefinementCheck",
         VirtualRootUseOp::EvalMappedType { .. } => "EvalMappedType",
         VirtualRootUseOp::TypeGuardIncompatibility { .. } => "TypeGuardIncompatibility",
         VirtualRootUseOp::RenderTypeInstantiation { .. } => "RenderTypeInstantiation",
         VirtualRootUseOp::ComponentRestParamCompatibility { .. } => {
             "ComponentRestParamCompatibility"
         }
-        VirtualRootUseOp::PositiveTypeGuardConsistency { .. } => "PositiveTypeGuardConsistency",
+        VirtualRootUseOp::PositiveTypeGuardConsistency(..) => "PositiveTypeGuardConsistency",
         VirtualRootUseOp::UnknownUse => "UnknownUse",
     }
 }
@@ -10893,12 +10121,12 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
     op: &VirtualFrameUseOp<L>,
 ) -> &'static str {
     match op {
-        VirtualFrameUseOp::ConstrainedAssignment { .. } => "ConstrainedAssignment",
+        VirtualFrameUseOp::ConstrainedAssignment(..) => "ConstrainedAssignment",
         VirtualFrameUseOp::ReactDeepReadOnly { .. } => "ReactDeepReadOnly",
         VirtualFrameUseOp::ArrayElementCompatibility { .. } => "ArrayElementCompatibility",
         VirtualFrameUseOp::FunCompatibility { .. } => "FunCompatibility",
         VirtualFrameUseOp::FunMissingArg { .. } => "FunMissingArg",
-        VirtualFrameUseOp::FunParam { .. } => "FunParam",
+        VirtualFrameUseOp::FunParam(..) => "FunParam",
         VirtualFrameUseOp::FunRestParam { .. } => "FunRestParam",
         VirtualFrameUseOp::FunReturn { .. } => "FunReturn",
         VirtualFrameUseOp::ImplicitTypeParam => "ImplicitTypeParam",
@@ -10909,16 +10137,16 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::OpaqueTypeUpperBoundCompatibility { .. } => {
             "OpaqueTypeUpperBoundCompatibility"
         }
-        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility { .. } => {
+        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(..) => {
             "OpaqueTypeCustomErrorCompatibility"
         }
         VirtualFrameUseOp::MappedTypeKeyCompatibility { .. } => "MappedTypeKeyCompatibility",
-        VirtualFrameUseOp::PropertyCompatibility { .. } => "PropertyCompatibility",
+        VirtualFrameUseOp::PropertyCompatibility(..) => "PropertyCompatibility",
         VirtualFrameUseOp::ReactConfigCheck => "ReactConfigCheck",
         VirtualFrameUseOp::ReactGetConfig { .. } => "ReactGetConfig",
-        VirtualFrameUseOp::TupleElementCompatibility { .. } => "TupleElementCompatibility",
+        VirtualFrameUseOp::TupleElementCompatibility(..) => "TupleElementCompatibility",
         VirtualFrameUseOp::TupleAssignment { .. } => "TupleAssignment",
-        VirtualFrameUseOp::TypeArgCompatibility { .. } => "TypeArgCompatibility",
+        VirtualFrameUseOp::TypeArgCompatibility(..) => "TypeArgCompatibility",
         VirtualFrameUseOp::TypeParamBound { .. } => "TypeParamBound",
         VirtualFrameUseOp::OpaqueTypeLowerBound { .. } => "OpaqueTypeLowerBound",
         VirtualFrameUseOp::OpaqueTypeUpperBound { .. } => "OpaqueTypeUpperBound",
@@ -10971,29 +10199,29 @@ pub fn string_of_predicate_concretizer_variant(
 pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
     match use_t.deref() {
         UseTInner::UseT(op, t) => format!("UseT({}, {})", string_of_use_op(op), string_of_ctor(t)),
-        UseTInner::ArrRestT { .. } => "ArrRestT".to_string(),
-        UseTInner::BindT { .. } => "BindT".to_string(),
-        UseTInner::CallElemT { .. } => "CallElemT".to_string(),
-        UseTInner::CallT { .. } => "CallT".to_string(),
+        UseTInner::ArrRestT(..) => "ArrRestT".to_string(),
+        UseTInner::BindT(..) => "BindT".to_string(),
+        UseTInner::CallElemT(..) => "CallElemT".to_string(),
+        UseTInner::CallT(..) => "CallT".to_string(),
         UseTInner::ConstructorT(..) => "ConstructorT".to_string(),
-        UseTInner::ElemT { .. } => "ElemT".to_string(),
-        UseTInner::EnumCastT { .. } => "EnumCastT".to_string(),
-        UseTInner::EnumExhaustiveCheckT { .. } => "EnumExhaustiveCheckT".to_string(),
-        UseTInner::GetEnumT { .. } => "GetEnumT".to_string(),
-        UseTInner::ConditionalT { .. } => "ConditionalT".to_string(),
-        UseTInner::ExtendsUseT { .. } => "ExtendsUseT".to_string(),
-        UseTInner::GetElemT { .. } => "GetElemT".to_string(),
-        UseTInner::GetKeysT { .. } => "GetKeysT".to_string(),
-        UseTInner::GetValuesT { .. } => "GetValuesT".to_string(),
-        UseTInner::GetDictValuesT { .. } => "GetDictValuesT".to_string(),
-        UseTInner::GetTypeFromNamespaceT { .. } => "GetTypeFromNamespaceT".to_string(),
+        UseTInner::ElemT(..) => "ElemT".to_string(),
+        UseTInner::EnumCastT(..) => "EnumCastT".to_string(),
+        UseTInner::EnumExhaustiveCheckT(..) => "EnumExhaustiveCheckT".to_string(),
+        UseTInner::GetEnumT(..) => "GetEnumT".to_string(),
+        UseTInner::ConditionalT(..) => "ConditionalT".to_string(),
+        UseTInner::ExtendsUseT(..) => "ExtendsUseT".to_string(),
+        UseTInner::GetElemT(..) => "GetElemT".to_string(),
+        UseTInner::GetKeysT(..) => "GetKeysT".to_string(),
+        UseTInner::GetValuesT(..) => "GetValuesT".to_string(),
+        UseTInner::GetDictValuesT(..) => "GetDictValuesT".to_string(),
+        UseTInner::GetTypeFromNamespaceT(..) => "GetTypeFromNamespaceT".to_string(),
         UseTInner::GetPropT(..) => "GetPropT".to_string(),
         UseTInner::GetPrivatePropT(..) => "GetPrivatePropT".to_string(),
-        UseTInner::GetProtoT { .. } => "GetProtoT".to_string(),
-        UseTInner::GetStaticsT { .. } => "GetStaticsT".to_string(),
-        UseTInner::HasOwnPropT { .. } => "HasOwnPropT".to_string(),
-        UseTInner::ImplementsT { .. } => "ImplementsT".to_string(),
-        UseTInner::ConcretizeT { kind, .. } => match kind {
+        UseTInner::GetProtoT(..) => "GetProtoT".to_string(),
+        UseTInner::GetStaticsT(..) => "GetStaticsT".to_string(),
+        UseTInner::HasOwnPropT(..) => "HasOwnPropT".to_string(),
+        UseTInner::ImplementsT(..) => "ImplementsT".to_string(),
+        UseTInner::ConcretizeT(box ConcretizeTData { kind, .. }) => match kind {
             ConcretizationKind::ConcretizeForImportsExports => {
                 "ConcretizeT ConcretizeForImportsExports".to_string()
             }
@@ -11035,65 +10263,66 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
                 )
             }
         },
-        UseTInner::LookupT { .. } => "LookupT".to_string(),
-        UseTInner::MapTypeT { .. } => "MapTypeT".to_string(),
-        UseTInner::MethodT { .. } => "MethodT".to_string(),
+        UseTInner::LookupT(..) => "LookupT".to_string(),
+        UseTInner::MapTypeT(..) => "MapTypeT".to_string(),
+        UseTInner::MethodT(..) => "MethodT".to_string(),
         UseTInner::PrivateMethodT(..) => "PrivateMethodT".to_string(),
-        UseTInner::MixinT { .. } => "MixinT".to_string(),
-        UseTInner::ObjRestT { .. } => "ObjRestT".to_string(),
-        UseTInner::ObjTestProtoT { .. } => "ObjTestProtoT".to_string(),
-        UseTInner::ObjTestT { .. } => "ObjTestT".to_string(),
-        UseTInner::ReactKitT { .. } => "ReactKitT".to_string(),
+        UseTInner::MixinT(..) => "MixinT".to_string(),
+        UseTInner::ObjRestT(..) => "ObjRestT".to_string(),
+        UseTInner::ObjTestProtoT(..) => "ObjTestProtoT".to_string(),
+        UseTInner::ObjTestT(..) => "ObjTestT".to_string(),
+        UseTInner::ReactKitT(..) => "ReactKitT".to_string(),
         UseTInner::ReposLowerT { .. } => "ReposLowerT".to_string(),
-        UseTInner::ReposUseT { .. } => "ReposUseT".to_string(),
-        UseTInner::ResolveSpreadT(_, _, resolve_spread_type) => {
-            match &resolve_spread_type.rrt_resolve_to {
-                SpreadResolve::ResolveSpreadsToArray { .. } => {
-                    "ResolveSpreadT(ResolveSpreadsToArray)".to_string()
-                }
-                SpreadResolve::ResolveSpreadsToTupleType { id, .. } => {
-                    format!("ResolveSpreadT(ResolveSpreadsToTupleType ({}))", id)
-                }
-                SpreadResolve::ResolveSpreadsToArrayLiteral { id, .. } => {
-                    format!("ResolveSpreadT(ResolveSpreadsToArrayLiteral ({}))", id)
-                }
-                SpreadResolve::ResolveSpreadsToMultiflowCallFull { .. } => {
-                    "ResolveSpreadT(ResolveSpreadsToMultiflowCallFull)".to_string()
-                }
-                SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull { .. } => {
-                    "ResolveSpreadT(ResolveSpreadsToMultiflowSubtypeFull)".to_string()
-                }
-                SpreadResolve::ResolveSpreadsToMultiflowPartial { .. } => {
-                    "ResolveSpreadT(ResolveSpreadsToMultiflowPartial)".to_string()
-                }
+        UseTInner::ReposUseT(..) => "ReposUseT".to_string(),
+        UseTInner::ResolveSpreadT(box ResolveSpreadTData {
+            resolve_spread_type,
+            ..
+        }) => match &resolve_spread_type.rrt_resolve_to {
+            SpreadResolve::ResolveSpreadsToArray { .. } => {
+                "ResolveSpreadT(ResolveSpreadsToArray)".to_string()
             }
-        }
-        UseTInner::SetElemT { .. } => "SetElemT".to_string(),
-        UseTInner::SetPropT { .. } => "SetPropT".to_string(),
+            SpreadResolve::ResolveSpreadsToTupleType { id, .. } => {
+                format!("ResolveSpreadT(ResolveSpreadsToTupleType ({}))", id)
+            }
+            SpreadResolve::ResolveSpreadsToArrayLiteral { id, .. } => {
+                format!("ResolveSpreadT(ResolveSpreadsToArrayLiteral ({}))", id)
+            }
+            SpreadResolve::ResolveSpreadsToMultiflowCallFull { .. } => {
+                "ResolveSpreadT(ResolveSpreadsToMultiflowCallFull)".to_string()
+            }
+            SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull { .. } => {
+                "ResolveSpreadT(ResolveSpreadsToMultiflowSubtypeFull)".to_string()
+            }
+            SpreadResolve::ResolveSpreadsToMultiflowPartial { .. } => {
+                "ResolveSpreadT(ResolveSpreadsToMultiflowPartial)".to_string()
+            }
+        },
+        UseTInner::SetElemT(..) => "SetElemT".to_string(),
+        UseTInner::SetPropT(..) => "SetPropT".to_string(),
         UseTInner::SetPrivatePropT(..) => "SetPrivatePropT".to_string(),
-        UseTInner::SetProtoT { .. } => "SetProtoT".to_string(),
-        UseTInner::SpecializeT { .. } => "SpecializeT".to_string(),
-        UseTInner::ObjKitT { .. } => "ObjKitT".to_string(),
-        UseTInner::SuperT { .. } => "SuperT".to_string(),
-        UseTInner::TestPropT { .. } => "TestPropT".to_string(),
-        UseTInner::ThisSpecializeT { .. } => "ThisSpecializeT".to_string(),
+        UseTInner::SetProtoT(..) => "SetProtoT".to_string(),
+        UseTInner::SpecializeT(..) => "SpecializeT".to_string(),
+        UseTInner::ObjKitT(..) => "ObjKitT".to_string(),
+        UseTInner::SuperT(..) => "SuperT".to_string(),
+        UseTInner::TestPropT(..) => "TestPropT".to_string(),
+        UseTInner::ThisSpecializeT(..) => "ThisSpecializeT".to_string(),
         UseTInner::ToStringT { .. } => "ToStringT".to_string(),
-        UseTInner::ValueToTypeReferenceT { .. } => "ValueToTypeReferenceT".to_string(),
-        UseTInner::TypeCastT { .. } => "TypeCastT".to_string(),
-        UseTInner::ConcretizeTypeAppsT { .. } => "ConcretizeTypeAppsT".to_string(),
-        UseTInner::CondT { .. } => "CondT".to_string(),
-        UseTInner::ResolveUnionT { .. } => "ResolveUnionT".to_string(),
-        UseTInner::FilterOptionalT { .. } => "FilterOptionalT".to_string(),
-        UseTInner::FilterMaybeT { .. } => "FilterMaybeT".to_string(),
-        UseTInner::DeepReadOnlyT { .. } => "DeepReadOnlyT".to_string(),
-        UseTInner::HooklikeT { .. } => "HooklikeT".to_string(),
-        UseTInner::SealGenericT { .. } => "SealGenericT".to_string(),
-        UseTInner::OptionalIndexedAccessT { .. } => "OptionalIndexedAccessT".to_string(),
+        UseTInner::ValueToTypeReferenceT(..) => "ValueToTypeReferenceT".to_string(),
+        UseTInner::TypeCastT(..) => "TypeCastT".to_string(),
+        UseTInner::ConcretizeTypeAppsT(..) => "ConcretizeTypeAppsT".to_string(),
+        UseTInner::CondT(..) => "CondT".to_string(),
+        UseTInner::ResolveUnionT(..) => "ResolveUnionT".to_string(),
+        UseTInner::FilterOptionalT(..) => "FilterOptionalT".to_string(),
+        UseTInner::FilterMaybeT(..) => "FilterMaybeT".to_string(),
+        UseTInner::DeepReadOnlyT(..) => "DeepReadOnlyT".to_string(),
+        UseTInner::HooklikeT(..) => "HooklikeT".to_string(),
+        UseTInner::SealGenericT(..) => "SealGenericT".to_string(),
+        UseTInner::OptionalIndexedAccessT(..) => "OptionalIndexedAccessT".to_string(),
         UseTInner::CheckUnusedPromiseT { .. } => "CheckUnusedPromiseT".to_string(),
-        UseTInner::WriteComputedObjPropCheckT { .. } => "WriteComputedObjPropCheckT".to_string(),
-        UseTInner::ConvertEmptyPropsToMixedT { .. } => "ConvertEmptyPropsToMixedT".to_string(),
+        UseTInner::WriteComputedObjPropCheckT(..) => "WriteComputedObjPropCheckT".to_string(),
+        UseTInner::ConvertEmptyPropsToMixedT(..) => "ConvertEmptyPropsToMixedT".to_string(),
         UseTInner::ExitRendersT { .. } => "ExitRendersT".to_string(),
-        UseTInner::EvalTypeDestructorT { .. } => "EvalTypeDestructorT".to_string(),
+        UseTInner::EvalTypeDestructorT(..) => "EvalTypeDestructorT".to_string(),
     }
 }
 
@@ -11593,13 +10822,15 @@ pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodA
 
 pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
     match opt_use {
-        OptUseT::OptMethodT(op, r1, r2, propref, action) => UseT::new(UseTInner::MethodT(
-            op,
-            r1,
-            r2,
-            Box::new(propref),
-            Box::new(apply_opt_action(action, t_out)),
-        )),
+        OptUseT::OptMethodT(op, r1, r2, propref, action) => {
+            UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                use_op: op,
+                reason: r1,
+                prop_reason: r2,
+                propref: Box::new(propref),
+                method_action: Box::new(apply_opt_action(action, t_out)),
+            })))
+        }
         OptUseT::OptPrivateMethodT(op, r1, r2, p, scopes, is_static, action) => {
             UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
                 use_op: op,
@@ -11616,7 +10847,7 @@ pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
             reason,
             opt_funcalltype,
             return_hint,
-        } => UseT::new(UseTInner::CallT {
+        } => UseT::new(UseTInner::CallT(Box::new(CallTData {
             use_op,
             reason,
             call_action: Box::new(apply_opt_funcalltype(
@@ -11630,7 +10861,7 @@ pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
                 t_out,
             )),
             return_hint,
-        }),
+        }))),
         OptUseT::OptGetPropT {
             use_op,
             reason,
@@ -11658,17 +10889,17 @@ pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
             })))
         }
         OptUseT::OptTestPropT(use_op, reason, id, propref, hint) => {
-            UseT::new(UseTInner::TestPropT {
+            UseT::new(UseTInner::TestPropT(Box::new(TestPropTData {
                 use_op,
                 reason,
                 id,
                 propref: Box::new(propref),
                 tout: Box::new(t_out),
                 hint,
-            })
+            })))
         }
         OptUseT::OptGetElemT(use_op, reason, id, from_annot, key_t) => {
-            UseT::new(UseTInner::GetElemT {
+            UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
                 use_op,
                 reason,
                 id,
@@ -11677,15 +10908,17 @@ pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
                 access_iterables: false,
                 key_t,
                 tout: Box::new(t_out),
-            })
+            })))
         }
-        OptUseT::OptCallElemT(u, r1, r2, elt, call) => UseT::new(UseTInner::CallElemT(
-            u,
-            r1,
-            r2,
-            elt,
-            Box::new(apply_opt_action(call, t_out)),
-        )),
+        OptUseT::OptCallElemT(u, r1, r2, elt, call) => {
+            UseT::new(UseTInner::CallElemT(Box::new(CallElemTData {
+                use_op: u,
+                reason: r1,
+                prop_reason: r2,
+                key_t: elt,
+                method_action: Box::new(apply_opt_action(call, t_out)),
+            })))
+        }
     }
 }
 

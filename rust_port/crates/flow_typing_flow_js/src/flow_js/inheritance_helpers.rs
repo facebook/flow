@@ -8,6 +8,10 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::PropertyCompatibilityData;
+
 use super::helpers::*;
 use super::*;
 
@@ -24,6 +28,7 @@ pub(super) fn flow_type_args<'cx>(
     targs1: Rc<[(SubstName, Reason, Type, Polarity)]>,
     targs2: Rc<[(SubstName, Reason, Type, Polarity)]>,
 ) -> Result<(), FlowJsException> {
+    use flow_typing_type::type_::TypeArgCompatibilityData;
     use flow_typing_type::type_::VirtualFrameUseOp;
     assert_eq!(
         targs1.len(),
@@ -34,13 +39,15 @@ pub(super) fn flow_type_args<'cx>(
         targs1.iter().cloned().zip(targs2.iter().cloned())
     {
         let use_op = UseOp::Frame(
-            std::sync::Arc::new(VirtualFrameUseOp::TypeArgCompatibility {
-                name: x,
-                targ: targ_reason,
-                lower: lreason.dupe(),
-                upper: ureason.dupe(),
-                polarity,
-            }),
+            std::sync::Arc::new(VirtualFrameUseOp::TypeArgCompatibility(Box::new(
+                TypeArgCompatibilityData {
+                    name: x,
+                    targ: targ_reason,
+                    lower: lreason.dupe(),
+                    upper: ureason.dupe(),
+                    polarity,
+                },
+            ))),
             std::sync::Arc::new(use_op.dupe()),
         );
         match polarity {
@@ -182,8 +189,8 @@ pub(super) fn inst_structural_subtype<'cx>(
     let call_t = call_id.map(|id| cx.find_call(id));
     let read_only_if_lit = |p: &Property| -> PropertyType {
         match p.deref() {
-            PropertyInner::Field { type_, .. } if lit => PropertyType::OrdinaryField {
-                type_: type_.dupe(),
+            PropertyInner::Field(fd) if lit => PropertyType::OrdinaryField {
+                type_: fd.type_.dupe(),
                 polarity: Polarity::Positive,
             },
             _ => property::type_(p),
@@ -226,11 +233,13 @@ pub(super) fn inst_structural_subtype<'cx>(
                         cx,
                         Some(trace),
                         UseOp::Frame(
-                            Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                                prop: None,
-                                lower: lreason.dupe(),
-                                upper: reason_struct.dupe(),
-                            }),
+                            Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                                PropertyCompatibilityData {
+                                    prop: None,
+                                    lower: lreason.dupe(),
+                                    upper: reason_struct.dupe(),
+                                },
+                            ))),
                             Arc::new(use_op.dupe()),
                         ),
                         true,
@@ -253,10 +262,8 @@ pub(super) fn inst_structural_subtype<'cx>(
     }
     for (name, p) in own_props.iter() {
         match p.deref() {
-            PropertyInner::Field {
-                type_, polarity, ..
-            } if matches!(type_.deref(), TypeInner::OptionalT { .. }) => {
-                let t = type_;
+            PropertyInner::Field(fd) if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) => {
+                let t = &fd.type_;
                 let reason = reason_struct.dupe().update_desc(|desc| {
                     VirtualReasonDesc::ROptional(Arc::new(VirtualReasonDesc::RPropertyOf(
                         name.dupe(),
@@ -264,14 +271,14 @@ pub(super) fn inst_structural_subtype<'cx>(
                     )))
                 });
                 let propref = mk_named_prop(reason.dupe(), false, name.dupe());
-                let polarity = if lit { Polarity::Positive } else { *polarity };
+                let polarity = if lit { Polarity::Positive } else { fd.polarity };
                 let nonstrict_returning = inst_dict.as_ref().map(|d| (d.value.dupe(), t.dupe()));
                 rec_flow(
                     cx,
                     trace,
                     (
                         lower,
-                        &UseT::new(UseTInner::LookupT {
+                        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_struct.dupe(),
                             lookup_kind: Box::new(LookupKind::NonstrictReturning(
                                 nonstrict_returning,
@@ -292,7 +299,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                             method_accessible: true,
                             ids: Some(properties::Set::new()),
                             ignore_dicts: false,
-                        }),
+                        }))),
                     ),
                 )?;
             }
@@ -306,7 +313,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     trace,
                     (
                         lower,
-                        &UseT::new(UseTInner::LookupT {
+                        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_struct.dupe(),
                             lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
                             try_ts_on_failure: vec![].into(),
@@ -321,7 +328,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                             method_accessible: true,
                             ids: Some(properties::Set::new()),
                             ignore_dicts: false,
-                        }),
+                        }))),
                     ),
                 )?;
             }
@@ -337,7 +344,7 @@ pub(super) fn inst_structural_subtype<'cx>(
             trace,
             (
                 lower,
-                &UseT::new(UseTInner::LookupT {
+                &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason_struct.dupe(),
                     lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
                     try_ts_on_failure: vec![].into(),
@@ -352,7 +359,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     method_accessible: true,
                     ids: Some(properties::Set::new()),
                     ignore_dicts: false,
-                }),
+                }))),
             ),
         )?;
     }
@@ -375,25 +382,29 @@ pub(super) fn inst_structural_subtype<'cx>(
                         )?;
                     }
                     None => {
-                        let error_message = ErrorMessage::EPropNotFoundInSubtyping {
-                            reason_lower: lreason.dupe(),
-                            reason_upper: reason_struct.dupe(),
-                            prop_name,
-                            use_op: use_op.dupe(),
-                            suggestion: None,
-                        };
+                        let error_message = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                            EPropNotFoundInSubtypingData {
+                                reason_lower: lreason.dupe(),
+                                reason_upper: reason_struct.dupe(),
+                                prop_name,
+                                use_op: use_op.dupe(),
+                                suggestion: None,
+                            },
+                        ));
                         add_output(cx, error_message)?;
                     }
                 }
             }
             _ => {
-                let error_message = ErrorMessage::EPropNotFoundInSubtyping {
-                    reason_lower: lreason.dupe(),
-                    reason_upper: reason_struct.dupe(),
-                    prop_name,
-                    use_op: use_op.dupe(),
-                    suggestion: None,
-                };
+                let error_message = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                    EPropNotFoundInSubtypingData {
+                        reason_lower: lreason.dupe(),
+                        reason_upper: reason_struct.dupe(),
+                        prop_name,
+                        use_op: use_op.dupe(),
+                        suggestion: None,
+                    },
+                ));
                 add_output(cx, error_message)?;
             }
         }
@@ -412,11 +423,13 @@ pub(super) fn check_super<'cx>(
     p: &Property,
 ) -> Result<(), FlowJsException> {
     let use_op = UseOp::Frame(
-        Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-            prop: Some(x.dupe()),
-            lower: lreason.dupe(),
-            upper: ureason.dupe(),
-        }),
+        Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+            PropertyCompatibilityData {
+                prop: Some(x.dupe()),
+                lower: lreason.dupe(),
+                upper: ureason.dupe(),
+            },
+        ))),
         Arc::new(use_op),
     );
     let reason_prop = lreason
@@ -435,7 +448,7 @@ pub(super) fn check_super<'cx>(
         trace,
         (
             &t,
-            &UseT::new(UseTInner::LookupT {
+            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                 reason: lreason.dupe(),
                 lookup_kind: Box::new(LookupKind::NonstrictReturning(None, None)),
                 try_ts_on_failure: vec![].into(),
@@ -444,7 +457,7 @@ pub(super) fn check_super<'cx>(
                 ids: Some(properties::Set::new()),
                 method_accessible: true,
                 ignore_dicts: false,
-            }),
+            }))),
         ),
     )
 }

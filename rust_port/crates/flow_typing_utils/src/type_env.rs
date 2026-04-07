@@ -43,6 +43,7 @@ use flow_typing_key::Key;
 use flow_typing_loc_env::loc_env::LocEnv;
 use flow_typing_loc_env::loc_env::TypeEntry;
 use flow_typing_type::type_::ClassBinding;
+use flow_typing_type::type_::ConstrainedAssignmentData;
 use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::PredFuncallInfo;
@@ -212,7 +213,10 @@ fn with_debug_exn<'cx>(cx: &Context<'cx>, loc: ALoc, f: impl FnOnce() -> Type) -
             } else {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EInternal(loc.dupe(), InternalError::MissingEnvWrite(loc.dupe())),
+                    ErrorMessage::EInternal(Box::new((
+                        loc.dupe(),
+                        InternalError::MissingEnvWrite(loc.dupe()),
+                    ))),
                 );
                 any_t::at(AnySource::AnyError(None), loc)
             }
@@ -247,7 +251,10 @@ fn with_debug_exn_error<'cx, A: 'static>(
             } else {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EInternal(loc.dupe(), InternalError::MissingEnvWrite(loc)),
+                    ErrorMessage::EInternal(Box::new((
+                        loc.dupe(),
+                        InternalError::MissingEnvWrite(loc),
+                    ))),
                 );
                 error()
             }
@@ -283,7 +290,10 @@ pub fn checked_find_loc_env_write_opt<'cx>(
             use flow_typing_errors::error_message::InternalError;
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EInternal(loc.dupe(), InternalError::MissingEnvWrite(loc)),
+                ErrorMessage::EInternal(Box::new((
+                    loc.dupe(),
+                    InternalError::MissingEnvWrite(loc),
+                ))),
             );
             None
         }
@@ -352,7 +362,7 @@ pub fn provider_type_for_def_loc<'cx>(
                         use flow_typing_errors::error_message::InternalError;
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EInternal(
+                            ErrorMessage::EInternal(Box::new((
                                 loc.dupe(),
                                 InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
                                     format!(
@@ -362,7 +372,7 @@ pub fn provider_type_for_def_loc<'cx>(
                                     )
                                     .into(),
                                 )),
-                            ),
+                            ))),
                         );
                         None
                     }
@@ -498,6 +508,7 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
     use std::ops::Deref;
 
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::TypeInner;
 
     fn simplify_callee<'cx>(cx: &Context<'cx>, func_t: &Type) -> Type {
@@ -508,14 +519,19 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
                 use flow_typing_type::type_::Tvar;
                 use flow_typing_type::type_::UseT;
                 use flow_typing_type::type_::UseTInner;
-                let u = UseT::new(UseTInner::CallT {
-                    use_op: flow_typing_type::type_::unknown_use(),
-                    reason: reason.dupe(),
-                    call_action: Box::new(flow_typing_type::type_::CallAction::ConcretizeCallee(
-                        Tvar::new(r.dupe(), tvar_id as u32),
-                    )),
-                    return_hint: flow_typing_type::type_::hint_unavailable(),
-                });
+                let u = UseT::new(UseTInner::CallT(Box::new(
+                    flow_typing_type::type_::CallTData {
+                        use_op: flow_typing_type::type_::unknown_use(),
+                        reason: reason.dupe(),
+                        call_action: Box::new(
+                            flow_typing_type::type_::CallAction::ConcretizeCallee(Tvar::new(
+                                r.dupe(),
+                                tvar_id as u32,
+                            )),
+                        ),
+                        return_hint: flow_typing_type::type_::hint_unavailable(),
+                    },
+                )));
                 flow_js::flow_non_speculating(cx, (func_t, &u));
             })
         });
@@ -528,7 +544,7 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
             TypeInner::AnyT(_, _) => false,
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::FunT(_, fun_t) => fun_t.type_guard.is_some(),
-                DefTInner::PolyT { t_out, .. } => match t_out.deref() {
+                DefTInner::PolyT(box PolyTData { t_out, .. }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def_t) => match inner_def_t.deref() {
                         DefTInner::FunT(_, fun_t) => fun_t.type_guard.is_some(),
                         _ => false,
@@ -1214,7 +1230,7 @@ fn read_entry<'cx>(
             ) => {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EBindingError(
+                    ErrorMessage::EBindingError(Box::new((
                         BindingError::ETypeInValuePosition {
                             imported: *imported,
                             type_only_namespace: *type_only_namespace,
@@ -1223,7 +1239,7 @@ fn read_entry<'cx>(
                         loc.dupe(),
                         Name::new(name.dupe()),
                         def_loc.dupe(),
-                    ),
+                    ))),
                 );
                 Ok(any_t::at(AnySource::AnyError(None), loc))
             }
@@ -1259,7 +1275,7 @@ fn read_entry<'cx>(
             ) => {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EBindingError(
+                    ErrorMessage::EBindingError(Box::new((
                         BindingError::ETypeInValuePosition {
                             imported: *imported,
                             type_only_namespace: *type_only_namespace,
@@ -1268,7 +1284,7 @@ fn read_entry<'cx>(
                         loc.dupe(),
                         Name::new(name.dupe()),
                         def_loc.dupe(),
-                    ),
+                    ))),
                 );
                 Ok(any_t::at(AnySource::AnyError(None), loc))
             }
@@ -1604,10 +1620,10 @@ pub fn get_var_declared_type<'cx>(
                 None => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EInternal(
+                        ErrorMessage::EInternal(Box::new((
                             loc.dupe(),
                             InternalError::MissingEnvWrite(loc.dupe()),
-                        ),
+                        ))),
                     );
                     any_t::at(AnySource::AnyError(None), loc)
                 }
@@ -1679,6 +1695,7 @@ fn subtype_against_providers<'cx>(
     t: &Type,
     loc: ALoc,
 ) {
+    use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_type::type_::UseT;
     use flow_typing_type::type_::UseTInner;
@@ -1706,10 +1723,12 @@ fn subtype_against_providers<'cx>(
             {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EBuiltinNameLookupFailed {
-                        loc,
-                        name: name.into(),
-                    },
+                    ErrorMessage::EBuiltinNameLookupFailed(Box::new(
+                        EBuiltinNameLookupFailedData {
+                            loc,
+                            name: name.into(),
+                        },
+                    )),
                 );
             }
         }
@@ -1732,14 +1751,16 @@ fn subtype_against_providers<'cx>(
                                     None => vec![],
                                 };
                             VirtualUseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ConstrainedAssignment {
-                                    name,
-                                    declaration,
-                                    providers: provider_locs
-                                        .iter()
-                                        .map(|p| p.reason.loc().dupe())
-                                        .collect(),
-                                }),
+                                Arc::new(VirtualFrameUseOp::ConstrainedAssignment(Box::new(
+                                    ConstrainedAssignmentData {
+                                        name,
+                                        declaration,
+                                        providers: provider_locs
+                                            .iter()
+                                            .map(|p| p.reason.loc().dupe())
+                                            .collect(),
+                                    },
+                                ))),
                                 Arc::new(use_op.dupe()),
                             )
                         }
@@ -1776,10 +1797,10 @@ pub fn make_env_entries_under_resolution<'cx>(cx: &Context<'cx>, entries: EnvSet
                 > = flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EInternal(
+                        ErrorMessage::EInternal(Box::new((
                             loc_clone,
                             InternalError::ForcedReadOfUnderResolutionTvar(def_loc_kind),
-                        ),
+                        ))),
                     );
                     any_t::error(reason_clone)
                 }));
@@ -1833,7 +1854,10 @@ pub fn resolve_env_entry<'cx>(
         (_, None) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EInternal(loc.dupe(), InternalError::MissingEnvWrite(loc)),
+                ErrorMessage::EInternal(Box::new((
+                    loc.dupe(),
+                    InternalError::MissingEnvWrite(loc),
+                ))),
             );
         }
         (_, Some(type_entry)) => {
@@ -2014,10 +2038,10 @@ pub fn init_env<'cx>(cx: &Context<'cx>, toplevel_scope_kind: ScopeKind) {
                     > = flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EInternal(
+                            ErrorMessage::EInternal(Box::new((
                                 loc_clone,
                                 InternalError::ReadOfUnreachedTvar(def_loc_type),
-                            ),
+                            ))),
                         );
                         match &*cx.typing_mode() {
                             TypingMode::CheckingMode => any_t::error(reason_clone),

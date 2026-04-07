@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#![feature(box_patterns)]
 #![feature(if_let_guard)]
 
 pub mod type_of_name;

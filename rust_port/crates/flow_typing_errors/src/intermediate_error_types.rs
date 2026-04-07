@@ -497,56 +497,90 @@ pub enum ExplanationWithLazyParts<L: Dupe> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationConstrainedAssignData<L: Dupe> {
+    pub name: FlowSmolStr,
+    pub declaration: L,
+    pub providers: Arc<[L]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationCustomErrorData<L: Dupe> {
+    pub name: FlowSmolStr,
+    pub custom_error_loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationInvariantSubtypingDueToMutableArrayData<L: Dupe> {
+    pub lower_array_loc: L,
+    pub upper_array_loc: L,
+    pub lower_array_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_array_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_array_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationInvariantSubtypingDueToMutablePropertyData<L: Dupe> {
+    pub lower_obj_loc: L,
+    pub upper_obj_loc: L,
+    pub lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_object_reason: VirtualReason<L>,
+    pub property_name: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationInvariantSubtypingDueToMutablePropertiesData<L: Dupe> {
+    pub lower_obj_loc: L,
+    pub upper_obj_loc: L,
+    pub lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_object_reason: VirtualReason<L>,
+    pub properties: Vec<Name>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L: Dupe> {
+    pub props_plural: bool,
+    pub lower_obj_loc: L,
+    pub upper_obj_loc: L,
+    pub lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_object_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExplanationAdditionalUnionMembersData<L: Dupe> {
+    pub left: VirtualReason<L>,
+    pub right: VirtualReason<L>,
+    pub members: Vec<FlowSmolStr>,
+    pub extra_number: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Explanation<L: Dupe> {
     ExplanationAbstractEnumCasting,
     ExplanationArrayInvariantTyping,
-    ExplanationConstrainedAssign {
-        name: FlowSmolStr,
-        declaration: L,
-        providers: Arc<[L]>,
-    },
+    ExplanationConstrainedAssign(Box<ExplanationConstrainedAssignData<L>>),
     ExplanationConcreteEnumCasting {
         representation_type: FlowSmolStr,
         casting_syntax: CastingSyntax,
     },
-    ExplanationCustomError {
-        name: FlowSmolStr,
-        custom_error_loc: L,
-    },
+    ExplanationCustomError(Box<ExplanationCustomErrorData<L>>),
     ExplanationFunctionsWithStaticsToObject,
-    ExplanationInvariantSubtypingDueToMutableArray {
-        lower_array_loc: L,
-        upper_array_loc: L,
-        lower_array_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_array_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_array_reason: VirtualReason<L>,
-    },
-    ExplanationInvariantSubtypingDueToMutableProperty {
-        lower_obj_loc: L,
-        upper_obj_loc: L,
-        lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_object_reason: VirtualReason<L>,
-        property_name: Option<FlowSmolStr>,
-    },
-    ExplanationInvariantSubtypingDueToMutableProperties {
-        lower_obj_loc: L,
-        upper_obj_loc: L,
-        lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_object_reason: VirtualReason<L>,
-        properties: Vec<Name>,
-    },
+    ExplanationInvariantSubtypingDueToMutableArray(
+        Box<ExplanationInvariantSubtypingDueToMutableArrayData<L>>,
+    ),
+    ExplanationInvariantSubtypingDueToMutableProperty(
+        Box<ExplanationInvariantSubtypingDueToMutablePropertyData<L>>,
+    ),
+    ExplanationInvariantSubtypingDueToMutableProperties(
+        Box<ExplanationInvariantSubtypingDueToMutablePropertiesData<L>>,
+    ),
     ExplanationMultiplatform,
     ExplanationPropertyInvariantTyping,
-    ExplanationPropertyMissingDueToNeutralOptionalProperty {
-        props_plural: bool,
-        lower_obj_loc: L,
-        upper_obj_loc: L,
-        lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_object_reason: VirtualReason<L>,
-    },
+    ExplanationPropertyMissingDueToNeutralOptionalProperty(
+        Box<ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L>>,
+    ),
     ExplanationReactComponentPropsDeepReadOnly(L),
     ExplanationReactHookArgsDeepReadOnly(L),
     ExplanationReactHookIncompatibleWithEachOther,
@@ -559,12 +593,7 @@ pub enum Explanation<L: Dupe> {
         guard_type: VirtualReason<L>,
         is_return_false_statement: bool,
     },
-    ExplanationAdditionalUnionMembers {
-        left: VirtualReason<L>,
-        right: VirtualReason<L>,
-        members: Vec<FlowSmolStr>,
-        extra_number: i32,
-    },
+    ExplanationAdditionalUnionMembers(Box<ExplanationAdditionalUnionMembersData<L>>),
     ExplanationObjectLiteralNeedsRecordSyntax {
         record_name: FlowSmolStr,
         obj_reason: VirtualReason<L>,
@@ -730,14 +759,375 @@ pub enum ObjKind {
 }
 
 #[derive(Debug, Clone)]
+pub struct MessageAlreadyExhaustivelyCheckOneEnumMemberData<L: Dupe> {
+    pub member_name: FlowSmolStr,
+    pub prev_check_loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotAccessEnumMemberData<L: Dupe> {
+    pub member_name: Option<Name>,
+    pub suggestion: Option<FlowSmolStr>,
+    pub description: VirtualReasonDesc<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotAddComputedPropertyDueToPotentialOverwriteData<L: Dupe> {
+    pub key_loc: L,
+    pub overwritten_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotCallMaybeReactHookData<L: Dupe> {
+    pub callee_loc: L,
+    pub hooks: Vec<L>,
+    pub non_hooks: Vec<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotCompareData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub strict_comparison_opt: Option<StrictComparisonInfo<L>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotExportRenamedDefaultData {
+    pub name: Option<FlowSmolStr>,
+    pub is_reexport: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotExhaustivelyCheckAbstractEnumsData<L: Dupe> {
+    pub description: VirtualReasonDesc<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
+    pub description: VirtualReasonDesc<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotInstantiateObjectUtilTypeWithEnumData<L: Dupe> {
+    pub description: VirtualReasonDesc<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotResolveBuiltinModuleData {
+    pub name: FlowSmolStr,
+    pub potential_generator: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotSpreadGeneralData<L: Dupe> {
+    pub spread_reason: VirtualReason<L>,
+    pub object1_reason: VirtualReason<L>,
+    pub object2_reason: VirtualReason<L>,
+    pub propname: Name,
+    pub error_kind: ExactnessErrorKind,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
+    pub spread_reason: VirtualReason<L>,
+    pub object2_reason: VirtualReason<L>,
+    pub key_reason: VirtualReason<L>,
+    pub value_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotUseEnumMemberUsedAsTypeData<L: Dupe> {
+    pub description: VirtualReasonDesc<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
+    pub reason_op: VirtualReason<L>,
+    pub reason: VirtualReason<L>,
+    pub suggestion: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotUseTypeGuardWithFunctionParamHavocedData<L: Dupe> {
+    pub type_guard_desc: VirtualReasonDesc<L>,
+    pub param_reason: VirtualReason<L>,
+    pub call_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageCannotUseTypeInValuePositionData<L: Dupe> {
+    pub reason: VirtualReason<L>,
+    pub type_only_namespace: bool,
+    pub imported_name: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageDefinitionInvalidRecursiveData<L: Dupe> {
+    pub description: VirtualReasonDesc<L>,
+    pub recursion: Vec<L>,
+    pub annot_locs: Vec<AnnotLoc<L>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageDuplicateModuleProviderData<L: Dupe> {
+    pub module_name: FlowSmolStr,
+    pub provider: L,
+    pub conflict: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageEnumDuplicateMemberNameData<L: Dupe> {
+    pub member_name: String,
+    pub prev_use_loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageEnumInvalidMemberInitializerData<L: Dupe> {
+    pub member_name: String,
+    pub explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageExponentialSpreadData<L: Dupe> {
+    pub reason: VirtualReason<L>,
+    pub reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
+    pub reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageIncompatibleTupleArityData<L: Dupe> {
+    pub lower_reason: VirtualReason<L>,
+    pub lower_arity: (i32, i32),
+    pub lower_inexact: bool,
+    pub upper_reason: VirtualReason<L>,
+    pub upper_arity: (i32, i32),
+    pub upper_inexact: bool,
+    pub unify: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageIncompatibleImplicitReturnData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReasonDesc<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
+    pub lower_loc: L,
+    pub upper_loc: L,
+    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
+    pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
+    pub lower_loc: L,
+    pub upper_loc: L,
+    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageIncompatibleReactDeepReadOnlyData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub dro_loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
+    pub description: VirtualReasonDesc<L>,
+    pub enum_reason: VirtualReason<L>,
+    pub left_to_check: Vec<FlowSmolStr>,
+    pub default_case_loc: Option<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageInvalidEnumMemberCheckData<L: Dupe> {
+    pub enum_reason: VirtualReason<L>,
+    pub example_member: Option<FlowSmolStr>,
+    pub from_match: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageInvalidRefPropertyInSpreadData<L: Dupe> {
+    pub ref_loc: L,
+    pub spread_loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageInvalidKeyPropertyInSpreadData<L: Dupe> {
+    pub key_loc: L,
+    pub spread_loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageInvalidRendersTypeArgumentData<L: Dupe> {
+    pub renders_variant: RendersVariant,
+    pub invalid_render_type_kind: InvalidRenderTypeKind<L>,
+    pub invalid_type_reasons: Vec1<VirtualReason<L>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageInvalidSelfReferencingTypeAnnotationData<L: Dupe> {
+    pub name: FlowSmolStr,
+    pub loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageInvalidSelfReferencingDefaultData<L: Dupe> {
+    pub name: FlowSmolStr,
+    pub def_loc: L,
+    pub ref_loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageMissingPlatformSupportWithAvailablePlatformsData {
+    pub available_platforms: BTreeSet<FlowSmolStr>,
+    pub required_platforms: BTreeSet<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageNoDefaultExportData {
+    pub module_name: FlowSmolStr,
+    pub suggestion: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageNoNamedExportData {
+    pub module_name: FlowSmolStr,
+    pub export_name: FlowSmolStr,
+    pub suggestion: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageOnlyDefaultExportData {
+    pub module_name: FlowSmolStr,
+    pub export_name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessagePropExtraAgainstExactObjectData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub props: Vec1<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessagePropMissingData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: Option<VirtualReason<L>>,
+    pub prop: Option<FlowSmolStr>,
+    pub suggestion: Option<FlowSmolStr>,
+    pub reason_indexer: Option<VirtualReason<L>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessagePropsMissingData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub props: Vec1<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessagePropPolarityMismatchData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageReactIntrinsicOverlapData<L: Dupe> {
+    pub use_: VirtualReason<L>,
+    pub def: L,
+    pub type_: L,
+    pub mixed: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageRedeclareComponentPropData<L: Dupe> {
+    pub duplicates: Vec1<(L, Name, L)>,
+    pub spread_loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageShouldAnnotateVariableUsedInGenericContextData<L: Dupe> {
+    pub reason: VirtualReason<L>,
+    pub null_loc: L,
+    pub initialized: bool,
+    pub possible_generic_escape_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageSketchyNullCheckData<L: Dupe> {
+    pub kind: SketchyNullKind,
+    pub falsy_loc: L,
+    pub null_loc: L,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageTupleElementNotReadableData<L: Dupe> {
+    pub reason: VirtualReason<L>,
+    pub index: i32,
+    pub name: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageTupleElementNotWritableData<L: Dupe> {
+    pub reason: VirtualReason<L>,
+    pub index: i32,
+    pub name: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageTupleIndexOutOfBoundData<L: Dupe> {
+    pub reason_op: VirtualReason<L>,
+    pub inexact: bool,
+    pub length: i32,
+    pub index: FlowSmolStr,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageTupleNonIntegerIndexData<L: Dupe> {
+    pub index_def_loc: L,
+    pub index: FlowSmolStr,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageVariableOnlyAssignedByNullData<L: Dupe> {
+    pub reason: VirtualReason<L>,
+    pub null_loc: Option<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageMatchNonExhaustiveObjectPatternData<L: Dupe> {
+    pub rest: Option<VirtualReason<L>>,
+    pub missing_props: Vec<FlowSmolStr>,
+    pub pattern_kind: MatchObjPatternKind,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageMatchNonExplicitEnumCheckData<L: Dupe> {
+    pub wildcard_reason: VirtualReason<L>,
+    pub unchecked_members: Vec<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone)]
 pub enum Message<L: Dupe> {
     MessagePlainTextReservedForInternalErrorOnly(FlowSmolStr),
 
-    MessageAlreadyExhaustivelyCheckOneEnumMember {
-        member_name: FlowSmolStr,
-        prev_check_loc: L,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageAlreadyExhaustivelyCheckOneEnumMember(
+        Box<MessageAlreadyExhaustivelyCheckOneEnumMemberData<L>>,
+    ),
 
     MessageAlreadyExhaustivelyCheckAllEnumMembers {
         enum_reason: VirtualReason<L>,
@@ -750,12 +1140,7 @@ pub enum Message<L: Dupe> {
     MessageBadLibdefModuleOverride(VirtualReason<L>),
     MessageBadLibdefNameOverride(VirtualReason<L>),
 
-    MessageCannotAccessEnumMember {
-        member_name: Option<Name>,
-        suggestion: Option<FlowSmolStr>,
-        description: VirtualReasonDesc<L>,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageCannotAccessEnumMember(Box<MessageCannotAccessEnumMemberData<L>>),
 
     MessageCannotAccessObjectWithComputedProp {
         reason_obj: VirtualReason<L>,
@@ -768,10 +1153,9 @@ pub enum Message<L: Dupe> {
         in_hook: bool,
     },
 
-    MessageCannotAddComputedPropertyDueToPotentialOverwrite {
-        key_loc: L,
-        overwritten_locs: Vec<L>,
-    },
+    MessageCannotAddComputedPropertyDueToPotentialOverwrite(
+        Box<MessageCannotAddComputedPropertyDueToPotentialOverwriteData<L>>,
+    ),
 
     MessageCannotApplyNonPolymorphicType,
 
@@ -792,11 +1176,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotBuildTypedInterface(SignatureError<L>),
 
-    MessageCannotCallMaybeReactHook {
-        callee_loc: L,
-        hooks: Vec<L>,
-        non_hooks: Vec<L>,
-    },
+    MessageCannotCallMaybeReactHook(Box<MessageCannotCallMaybeReactHookData<L>>),
 
     MessageCannotCallNonHookSyntaxHook(L),
 
@@ -825,11 +1205,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotChangeEnumMember(VirtualReason<L>),
 
-    MessageCannotCompare {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        strict_comparison_opt: Option<StrictComparisonInfo<L>>,
-    },
+    MessageCannotCompare(Box<MessageCannotCompareData<L>>),
 
     MessageCannotCompareNonStrict {
         lower: VirtualReason<L>,
@@ -853,27 +1229,21 @@ pub enum Message<L: Dupe> {
     MessageCannotDetermineEmptyArrayLiteralType,
     MessageCannotDetermineModuleType,
 
-    MessageCannotExportRenamedDefault {
-        name: Option<FlowSmolStr>,
-        is_reexport: bool,
-    },
+    MessageCannotExportRenamedDefault(Box<MessageCannotExportRenamedDefaultData>),
 
-    MessageCannotExhaustivelyCheckAbstractEnums {
-        description: VirtualReasonDesc<L>,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageCannotExhaustivelyCheckAbstractEnums(
+        Box<MessageCannotExhaustivelyCheckAbstractEnumsData<L>>,
+    ),
 
-    MessageCannotExhaustivelyCheckEnumWithUnknowns {
-        description: VirtualReasonDesc<L>,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageCannotExhaustivelyCheckEnumWithUnknowns(
+        Box<MessageCannotExhaustivelyCheckEnumWithUnknownsData<L>>,
+    ),
 
     MessageCannotImplementNonInterface(VirtualReasonDesc<L>),
 
-    MessageCannotInstantiateObjectUtilTypeWithEnum {
-        description: VirtualReasonDesc<L>,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageCannotInstantiateObjectUtilTypeWithEnum(
+        Box<MessageCannotInstantiateObjectUtilTypeWithEnumData<L>>,
+    ),
 
     MessageCannotIterateEnum {
         reason: VirtualReason<L>,
@@ -921,10 +1291,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotResolveBuiltinName(FlowSmolStr),
 
-    MessageCannotResolveBuiltinModule {
-        name: FlowSmolStr,
-        potential_generator: Option<FlowSmolStr>,
-    },
+    MessageCannotResolveBuiltinModule(Box<MessageCannotResolveBuiltinModuleData>),
 
     MessageCannotResolveExpectedModule {
         name: FlowSmolStr,
@@ -937,20 +1304,11 @@ pub enum Message<L: Dupe> {
         key_reason: VirtualReason<L>,
     },
 
-    MessageCannotSpreadGeneral {
-        spread_reason: VirtualReason<L>,
-        object1_reason: VirtualReason<L>,
-        object2_reason: VirtualReason<L>,
-        propname: Name,
-        error_kind: ExactnessErrorKind,
-    },
+    MessageCannotSpreadGeneral(Box<MessageCannotSpreadGeneralData<L>>),
 
-    MessageCannotSpreadInexactMayOverwriteIndexer {
-        spread_reason: VirtualReason<L>,
-        object2_reason: VirtualReason<L>,
-        key_reason: VirtualReason<L>,
-        value_reason: VirtualReason<L>,
-    },
+    MessageCannotSpreadInexactMayOverwriteIndexer(
+        Box<MessageCannotSpreadInexactMayOverwriteIndexerData<L>>,
+    ),
 
     MessageCannotSpreadInterface {
         spread_reason: VirtualReason<L>,
@@ -966,10 +1324,7 @@ pub enum Message<L: Dupe> {
     MessageCannotUseDefaultImportWithDestrucuturing,
     MessageCannotUseDollarExports,
 
-    MessageCannotUseEnumMemberUsedAsType {
-        description: VirtualReasonDesc<L>,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageCannotUseEnumMemberUsedAsType(Box<MessageCannotUseEnumMemberUsedAsTypeData<L>>),
 
     MessageCannotUseExportInNonLegalToplevelContext(FlowSmolStr),
     MessageCannotUseImportStar(VirtualReason<L>),
@@ -999,23 +1354,15 @@ pub enum Message<L: Dupe> {
         actual_polarity: Polarity,
     },
 
-    MessageCannotUseTypeForAnnotationInference {
-        reason_op: VirtualReason<L>,
-        reason: VirtualReason<L>,
-        suggestion: Option<FlowSmolStr>,
-    },
+    MessageCannotUseTypeForAnnotationInference(
+        Box<MessageCannotUseTypeForAnnotationInferenceData<L>>,
+    ),
 
-    MessageCannotUseTypeGuardWithFunctionParamHavoced {
-        type_guard_desc: VirtualReasonDesc<L>,
-        param_reason: VirtualReason<L>,
-        call_locs: Vec<L>,
-    },
+    MessageCannotUseTypeGuardWithFunctionParamHavoced(
+        Box<MessageCannotUseTypeGuardWithFunctionParamHavocedData<L>>,
+    ),
 
-    MessageCannotUseTypeInValuePosition {
-        reason: VirtualReason<L>,
-        type_only_namespace: bool,
-        imported_name: Option<FlowSmolStr>,
-    },
+    MessageCannotUseTypeInValuePosition(Box<MessageCannotUseTypeInValuePositionData<L>>),
 
     MessageCannotUseTypeWithInvalidTypeArgs {
         reason_main: VirtualReason<L>,
@@ -1049,11 +1396,7 @@ pub enum Message<L: Dupe> {
 
     MessageDefinitionCycle(Vec1<(VirtualReason<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
-    MessageDefinitionInvalidRecursive {
-        description: VirtualReasonDesc<L>,
-        recursion: Vec<L>,
-        annot_locs: Vec<AnnotLoc<L>>,
-    },
+    MessageDefinitionInvalidRecursive(Box<MessageDefinitionInvalidRecursiveData<L>>),
 
     MessageDeprecatedBool,
 
@@ -1082,31 +1425,19 @@ pub enum Message<L: Dupe> {
         prev_use_loc: L,
     },
 
-    MessageDuplicateModuleProvider {
-        module_name: FlowSmolStr,
-        provider: L,
-        conflict: L,
-    },
+    MessageDuplicateModuleProvider(Box<MessageDuplicateModuleProviderData<L>>),
 
     MessageEnumsNotEnabled,
 
     MessageEnumConstNotSupported,
 
-    MessageEnumDuplicateMemberName {
-        member_name: String,
-        prev_use_loc: L,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageEnumDuplicateMemberName(Box<MessageEnumDuplicateMemberNameData<L>>),
 
     MessageEnumInconsistentMemberValues {
         enum_reason: VirtualReason<L>,
     },
 
-    MessageEnumInvalidMemberInitializer {
-        member_name: String,
-        explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
-        enum_reason: VirtualReason<L>,
-    },
+    MessageEnumInvalidMemberInitializer(Box<MessageEnumInvalidMemberInitializerData<L>>),
 
     MessageEnumBooleanMemberNotInitialized {
         member_name: String,
@@ -1137,11 +1468,7 @@ pub enum Message<L: Dupe> {
         enum_reason: VirtualReason<L>,
     },
 
-    MessageExponentialSpread {
-        reason: VirtualReason<L>,
-        reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
-        reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
-    },
+    MessageExponentialSpread(Box<MessageExponentialSpreadData<L>>),
 
     MessageExportValueAsType(FlowSmolStr),
 
@@ -1162,20 +1489,9 @@ pub enum Message<L: Dupe> {
         upper_arity: i32,
     },
 
-    MessageIncompatibleTupleArity {
-        lower_reason: VirtualReason<L>,
-        lower_arity: (i32, i32),
-        lower_inexact: bool,
-        upper_reason: VirtualReason<L>,
-        upper_arity: (i32, i32),
-        upper_inexact: bool,
-        unify: bool,
-    },
+    MessageIncompatibleTupleArity(Box<MessageIncompatibleTupleArityData<L>>),
 
-    MessageIncompatibleImplicitReturn {
-        lower: VirtualReason<L>,
-        upper: VirtualReasonDesc<L>,
-    },
+    MessageIncompatibleImplicitReturn(Box<MessageIncompatibleImplicitReturnData<L>>),
 
     MessageIncompatibleClassToObject {
         reason_class: VirtualReason<L>,
@@ -1196,20 +1512,13 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
-    MessageIncompatibleGeneralWithPrintedTypes {
-        lower_loc: L,
-        upper_loc: L,
-        lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-    },
+    MessageIncompatibleGeneralWithPrintedTypes(
+        Box<MessageIncompatibleGeneralWithPrintedTypesData<L>>,
+    ),
 
-    MessageIncompatibleDueToInvariantSubtyping {
-        sub_component: Option<SubComponentOfInvariantSubtypingError>,
-        lower_loc: L,
-        upper_loc: L,
-        lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-    },
+    MessageIncompatibleDueToInvariantSubtyping(
+        Box<MessageIncompatibleDueToInvariantSubtypingData<L>>,
+    ),
 
     MessageIncompatibleMappedTypeKey {
         source_type: VirtualReason<L>,
@@ -1226,11 +1535,7 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
-    MessageIncompatibleReactDeepReadOnly {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        dro_loc: L,
-    },
+    MessageIncompatibleReactDeepReadOnly(Box<MessageIncompatibleReactDeepReadOnlyData<L>>),
 
     MessageIncompatibleReactHooksDueToUniqueness {
         lower: VirtualReason<L>,
@@ -1255,12 +1560,7 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
-    MessageIncompleteExhausiveCheckEnum {
-        description: VirtualReasonDesc<L>,
-        enum_reason: VirtualReason<L>,
-        left_to_check: Vec<FlowSmolStr>,
-        default_case_loc: Option<L>,
-    },
+    MessageIncompleteExhausiveCheckEnum(Box<MessageIncompleteExhausiveCheckEnumData<L>>),
 
     MessageIncorrectType(IncorrectType),
 
@@ -1275,11 +1575,7 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidComponentRestParam,
 
-    MessageInvalidEnumMemberCheck {
-        enum_reason: VirtualReason<L>,
-        example_member: Option<FlowSmolStr>,
-        from_match: bool,
-    },
+    MessageInvalidEnumMemberCheck(Box<MessageInvalidEnumMemberCheckData<L>>),
 
     MessageInvalidGenericRef(FlowSmolStr),
     MessageInvalidGraphQL(GraphqlError),
@@ -1297,32 +1593,17 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidReactCreateElement(VirtualReason<L>),
 
-    MessageInvalidRefPropertyInSpread {
-        ref_loc: L,
-        spread_loc: L,
-    },
+    MessageInvalidRefPropertyInSpread(Box<MessageInvalidRefPropertyInSpreadData<L>>),
 
-    MessageInvalidKeyPropertyInSpread {
-        key_loc: L,
-        spread_loc: L,
-    },
+    MessageInvalidKeyPropertyInSpread(Box<MessageInvalidKeyPropertyInSpreadData<L>>),
 
-    MessageInvalidRendersTypeArgument {
-        renders_variant: RendersVariant,
-        invalid_render_type_kind: InvalidRenderTypeKind<L>,
-        invalid_type_reasons: Vec1<VirtualReason<L>>,
-    },
+    MessageInvalidRendersTypeArgument(Box<MessageInvalidRendersTypeArgumentData<L>>),
 
-    MessageInvalidSelfReferencingTypeAnnotation {
-        name: FlowSmolStr,
-        loc: L,
-    },
+    MessageInvalidSelfReferencingTypeAnnotation(
+        Box<MessageInvalidSelfReferencingTypeAnnotationData<L>>,
+    ),
 
-    MessageInvalidSelfReferencingDefault {
-        name: FlowSmolStr,
-        def_loc: L,
-        ref_loc: L,
-    },
+    MessageInvalidSelfReferencingDefault(Box<MessageInvalidSelfReferencingDefaultData<L>>),
 
     MessageInvalidTrivialRecursiveDefinition(VirtualReasonDesc<L>),
 
@@ -1382,104 +1663,60 @@ pub enum Message<L: Dupe> {
     MessageMissingAnnotationDueToContextualTypingFailure(VirtualReasonDesc<L>),
     MessageMissingAnnotationForGenericFunction(VirtualReasonDesc<L>),
 
-    MessageMissingPlatformSupportWithAvailablePlatforms {
-        available_platforms: BTreeSet<FlowSmolStr>,
-        required_platforms: BTreeSet<FlowSmolStr>,
-    },
+    MessageMissingPlatformSupportWithAvailablePlatforms(
+        Box<MessageMissingPlatformSupportWithAvailablePlatformsData>,
+    ),
 
     MessageMissingPlatformSupport {
         missing_platforms: BTreeSet<FlowSmolStr>,
     },
 
-    MessageNoDefaultExport {
-        module_name: FlowSmolStr,
-        suggestion: Option<FlowSmolStr>,
-    },
+    MessageNoDefaultExport(Box<MessageNoDefaultExportData>),
 
-    MessageNoNamedExport {
-        module_name: FlowSmolStr,
-        export_name: FlowSmolStr,
-        suggestion: Option<FlowSmolStr>,
-    },
+    MessageNoNamedExport(Box<MessageNoNamedExportData>),
 
     MessageNonConstVarExport(Option<VirtualReason<L>>),
     MessageNonStrictImport,
     MessageNonToplevelExport,
 
-    MessageOnlyDefaultExport {
-        module_name: FlowSmolStr,
-        export_name: FlowSmolStr,
-    },
+    MessageOnlyDefaultExport(Box<MessageOnlyDefaultExportData>),
 
     MessageParseError(ParseError),
     MessagePlatformSpecificImplementationModuleLookupFailed(FlowSmolStr),
 
-    MessagePropExtraAgainstExactObject {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        props: Vec1<FlowSmolStr>,
-    },
+    MessagePropExtraAgainstExactObject(Box<MessagePropExtraAgainstExactObjectData<L>>),
 
-    MessagePropMissing {
-        lower: VirtualReason<L>,
-        upper: Option<VirtualReason<L>>,
-        prop: Option<FlowSmolStr>,
-        suggestion: Option<FlowSmolStr>,
-        reason_indexer: Option<VirtualReason<L>>,
-    },
+    MessagePropMissing(Box<MessagePropMissingData<L>>),
 
-    MessagePropsMissing {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        props: Vec1<FlowSmolStr>,
-    },
+    MessagePropsMissing(Box<MessagePropsMissingData<L>>),
 
-    MessagePropPolarityMismatch {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
-    },
+    MessagePropPolarityMismatch(Box<MessagePropPolarityMismatchData<L>>),
 
     MessagePropNotReadable(Option<Name>),
     MessagePropNotWritable(Option<Name>),
 
-    MessageReactIntrinsicOverlap {
-        use_: VirtualReason<L>,
-        def: L,
-        type_: L,
-        mixed: bool,
-    },
+    MessageReactIntrinsicOverlap(Box<MessageReactIntrinsicOverlapData<L>>),
 
     MessageReadonlyArraysCannotBeWrittenTo,
     MessageRecursionLimitExceeded,
 
-    MessageRedeclareComponentProp {
-        duplicates: Vec1<(L, Name, L)>,
-        spread_loc: L,
-    },
+    MessageRedeclareComponentProp(Box<MessageRedeclareComponentPropData<L>>),
 
     MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
         reason: VirtualReason<L>,
         possible_generic_escape_locs: Vec<L>,
     },
 
-    MessageShouldAnnotateVariableUsedInGenericContext {
-        reason: VirtualReason<L>,
-        null_loc: L,
-        initialized: bool,
-        possible_generic_escape_locs: Vec<L>,
-    },
+    MessageShouldAnnotateVariableUsedInGenericContext(
+        Box<MessageShouldAnnotateVariableUsedInGenericContextData<L>>,
+    ),
 
     MessageShouldNotBeCoerced(VirtualReason<L>),
     MessageShouldUseArrayLiteral,
 
     MessageSketchyNumber(VirtualReason<L>),
 
-    MessageSketchyNullCheck {
-        kind: SketchyNullKind,
-        falsy_loc: L,
-        null_loc: L,
-    },
+    MessageSketchyNullCheck(Box<MessageSketchyNullCheckData<L>>),
 
     MessageSuppressionMalformedCode,
     MessageSuppressionMissingCode,
@@ -1507,29 +1744,13 @@ pub enum Message<L: Dupe> {
     MessageTSUndefinedType,
     MessageTSUnknownType,
 
-    MessageTupleElementNotReadable {
-        reason: VirtualReason<L>,
-        index: i32,
-        name: Option<FlowSmolStr>,
-    },
+    MessageTupleElementNotReadable(Box<MessageTupleElementNotReadableData<L>>),
 
-    MessageTupleElementNotWritable {
-        reason: VirtualReason<L>,
-        index: i32,
-        name: Option<FlowSmolStr>,
-    },
+    MessageTupleElementNotWritable(Box<MessageTupleElementNotWritableData<L>>),
 
-    MessageTupleIndexOutOfBound {
-        reason_op: VirtualReason<L>,
-        inexact: bool,
-        length: i32,
-        index: FlowSmolStr,
-    },
+    MessageTupleIndexOutOfBound(Box<MessageTupleIndexOutOfBoundData<L>>),
 
-    MessageTupleNonIntegerIndex {
-        index_def_loc: L,
-        index: FlowSmolStr,
-    },
+    MessageTupleNonIntegerIndex(Box<MessageTupleNonIntegerIndexData<L>>),
 
     MessageTupleNonStaticallyKnownIndex,
 
@@ -1601,10 +1822,7 @@ pub enum Message<L: Dupe> {
     MessageValueUsedAsType(VirtualReasonDesc<L>),
     MessageVariableNeverInitAssignedAnnotated(VirtualReason<L>),
 
-    MessageVariableOnlyAssignedByNull {
-        reason: VirtualReason<L>,
-        null_loc: Option<L>,
-    },
+    MessageVariableOnlyAssignedByNull(Box<MessageVariableOnlyAssignedByNullData<L>>),
 
     MessageMatchNotExhaustive {
         examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
@@ -1615,16 +1833,9 @@ pub enum Message<L: Dupe> {
         already_seen: Option<VirtualReason<L>>,
     },
 
-    MessageMatchNonExhaustiveObjectPattern {
-        rest: Option<VirtualReason<L>>,
-        missing_props: Vec<FlowSmolStr>,
-        pattern_kind: MatchObjPatternKind,
-    },
+    MessageMatchNonExhaustiveObjectPattern(Box<MessageMatchNonExhaustiveObjectPatternData<L>>),
 
-    MessageMatchNonExplicitEnumCheck {
-        wildcard_reason: VirtualReason<L>,
-        unchecked_members: Vec<FlowSmolStr>,
-    },
+    MessageMatchNonExplicitEnumCheck(Box<MessageMatchNonExplicitEnumCheckData<L>>),
 
     MessageMatchInvalidGuardedWildcard,
 

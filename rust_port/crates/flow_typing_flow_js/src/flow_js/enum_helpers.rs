@@ -9,6 +9,11 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+use flow_typing_errors::error_message::EnumAllMembersAlreadyCheckedData;
+use flow_typing_errors::error_message::EnumMemberAlreadyCheckedData;
+use flow_typing_errors::error_message::EnumNotAllCheckedData;
+use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
+use flow_typing_type::type_::EnumExhaustiveCheckTData;
 
 use super::helpers::*;
 use super::*;
@@ -42,12 +47,14 @@ pub(super) fn enum_exhaustive_check<'cx>(
             if !members_remaining.contains_key(member_name) {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked {
-                        case_test_loc: case_test_loc.dupe(),
-                        prev_check_loc: seen[member_name].dupe(),
-                        enum_reason: enum_reason.dupe(),
-                        member_name: member_name.dupe(),
-                    }),
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(Box::new(
+                        EnumMemberAlreadyCheckedData {
+                            case_test_loc: case_test_loc.dupe(),
+                            prev_check_loc: seen[member_name].dupe(),
+                            enum_reason: enum_reason.dupe(),
+                            member_name: member_name.dupe(),
+                        },
+                    ))),
                 )?;
             }
             members_remaining.remove(member_name);
@@ -65,12 +72,14 @@ pub(super) fn enum_exhaustive_check<'cx>(
             (false, default_case_loc, _) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
-                        reason: check_reason.dupe(),
-                        enum_reason: enum_reason.dupe(),
-                        left_to_check: left_over.keys().duped().collect(),
-                        default_case_loc,
-                    }),
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(Box::new(
+                        EnumNotAllCheckedData {
+                            reason: check_reason.dupe(),
+                            enum_reason: enum_reason.dupe(),
+                            left_to_check: left_over.keys().duped().collect(),
+                            default_case_loc,
+                        },
+                    ))),
                 )?;
                 // enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
                 enum_exhaustive_check_incomplete(cx, trace, check_reason, None, incomplete_out)?;
@@ -80,10 +89,12 @@ pub(super) fn enum_exhaustive_check<'cx>(
             (true, None, true) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked {
-                        reason: check_reason.dupe(),
-                        enum_reason: enum_reason.dupe(),
-                    }),
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(Box::new(
+                        EnumUnknownNotCheckedData {
+                            reason: check_reason.dupe(),
+                            enum_reason: enum_reason.dupe(),
+                        },
+                    ))),
                 )?;
                 enum_exhaustive_check_incomplete(cx, trace, check_reason, None, incomplete_out)?;
             }
@@ -91,10 +102,12 @@ pub(super) fn enum_exhaustive_check<'cx>(
             (true, Some(default_case_loc), false) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked {
-                        loc: default_case_loc,
-                        enum_reason: enum_reason.dupe(),
-                    }),
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(
+                        Box::new(EnumAllMembersAlreadyCheckedData {
+                            loc: default_case_loc,
+                            enum_reason: enum_reason.dupe(),
+                        }),
+                    )),
                 )?;
             }
             _ => {}
@@ -103,23 +116,25 @@ pub(super) fn enum_exhaustive_check<'cx>(
     };
 
     // There are still possible checks to resolve, continue to resolve them.
-    let exhaustive_check = UseT::new(UseTInner::EnumExhaustiveCheckT {
-        reason: check_reason.dupe(),
-        check: Box::new(
-            EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                tool: EnumExhaustiveCheckToolT::EnumResolveCaseTest {
-                    discriminant_enum: enum_info.dupe(),
-                    discriminant_reason: enum_reason.dupe(),
-                    check: check.clone(),
+    let exhaustive_check = UseT::new(UseTInner::EnumExhaustiveCheckT(Box::new(
+        EnumExhaustiveCheckTData {
+            reason: check_reason.dupe(),
+            check: Box::new(
+                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
+                    tool: EnumExhaustiveCheckToolT::EnumResolveCaseTest {
+                        discriminant_enum: enum_info.dupe(),
+                        discriminant_reason: enum_reason.dupe(),
+                        check: check.clone(),
+                    },
+                    possible_checks,
+                    checks: Rc::from(checks),
+                    default_case_loc,
                 },
-                possible_checks,
-                checks: Rc::from(checks),
-                default_case_loc,
-            },
-        ),
-        incomplete_out: incomplete_out.dupe(),
-        discriminant_after_check: discriminant_after_check.map(|t| t.dupe()),
-    });
+            ),
+            incomplete_out: incomplete_out.dupe(),
+            discriminant_after_check: discriminant_after_check.map(|t| t.dupe()),
+        },
+    )));
     rec_flow(cx, trace, (&obj_t, &exhaustive_check))
 }
 

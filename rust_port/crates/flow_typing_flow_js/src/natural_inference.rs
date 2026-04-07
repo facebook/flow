@@ -32,9 +32,12 @@ use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FrozenKind;
+use flow_typing_type::type_::GetSetData;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::NumberLiteral;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::TupleElement;
@@ -109,7 +112,9 @@ fn is_builtin_promise<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
                     }
                 }
             }
-            TypeInner::DefT(_, def_t) if let DefTInner::PolyT { t_out, .. } = def_t.deref() => {
+            TypeInner::DefT(_, def_t)
+                if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() =>
+            {
                 match t_out.deref() {
                     TypeInner::DefT(r, inner_def_t)
                         if let DefTInner::ClassT(_) = inner_def_t.deref() =>
@@ -376,23 +381,18 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
         let mut props_map_prime = BTreeMap::new();
         for (name, prop) in props_map.iter() {
             let new_prop = match prop.deref() {
-                PropertyInner::Field {
-                    preferred_def_locs,
-                    key_loc,
-                    type_,
-                    polarity,
-                } => {
-                    let type_prime = self.type_(cx, map_cx, type_.dupe());
-                    if type_.ptr_eq(&type_prime) {
+                PropertyInner::Field(fd) => {
+                    let type_prime = self.type_(cx, map_cx, fd.type_.dupe());
+                    if fd.type_.ptr_eq(&type_prime) {
                         prop.dupe()
                     } else {
                         changed = true;
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: preferred_def_locs.clone(),
-                            key_loc: key_loc.dupe(),
+                        Property::new(PropertyInner::Field(Box::new(FieldData {
+                            preferred_def_locs: fd.preferred_def_locs.clone(),
+                            key_loc: fd.key_loc.dupe(),
                             type_: type_prime,
-                            polarity: *polarity,
-                        })
+                            polarity: fd.polarity,
+                        })))
                     }
                 }
                 PropertyInner::Get { key_loc, type_ } => {
@@ -419,24 +419,19 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
                         })
                     }
                 }
-                PropertyInner::GetSet {
-                    get_key_loc,
-                    get_type,
-                    set_key_loc,
-                    set_type,
-                } => {
-                    let get_type_prime = self.type_(cx, map_cx, get_type.dupe());
-                    let set_type_prime = self.type_(cx, map_cx, set_type.dupe());
-                    if get_type.ptr_eq(&get_type_prime) && set_type.ptr_eq(&set_type_prime) {
+                PropertyInner::GetSet(gs) => {
+                    let get_type_prime = self.type_(cx, map_cx, gs.get_type.dupe());
+                    let set_type_prime = self.type_(cx, map_cx, gs.set_type.dupe());
+                    if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
                         prop.dupe()
                     } else {
                         changed = true;
-                        Property::new(PropertyInner::GetSet {
-                            get_key_loc: get_key_loc.dupe(),
+                        Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                            get_key_loc: gs.get_key_loc.dupe(),
                             get_type: get_type_prime,
-                            set_key_loc: set_key_loc.dupe(),
+                            set_key_loc: gs.set_key_loc.dupe(),
                             set_type: set_type_prime,
-                        })
+                        })))
                     }
                 }
                 PropertyInner::Method { key_loc, type_ } => {
@@ -732,20 +727,15 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
         let mut props_map_prime = BTreeMap::new();
         for (name, p) in props_map.iter() {
             let p_prime = match p.deref() {
-                PropertyInner::Field {
-                    preferred_def_locs,
-                    key_loc,
-                    type_,
-                    polarity: _,
-                } => {
-                    let type_prime = self.type_(cx, map_cx, type_.dupe());
+                PropertyInner::Field(fd) => {
+                    let type_prime = self.type_(cx, map_cx, fd.type_.dupe());
                     changed = true;
-                    Property::new(PropertyInner::Field {
-                        preferred_def_locs: preferred_def_locs.clone(),
-                        key_loc: key_loc.dupe(),
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
                         type_: type_prime,
                         polarity: Polarity::Positive,
-                    })
+                    })))
                 }
                 _ => p.dupe(),
             };

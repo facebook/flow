@@ -43,11 +43,11 @@ mod tests {
 
     // Helper to create an inexact object
     fn make_obj(props: Vec<Prop<ALoc>>) -> Ty<ALoc> {
-        Ty::Obj(ObjT {
+        Ty::Obj(Box::new(ObjT {
             obj_kind: ObjKind::InexactObj,
             obj_def_loc: None,
             obj_props: Arc::from(props),
-        })
+        }))
     }
 
     // {f: number} | {f: number}

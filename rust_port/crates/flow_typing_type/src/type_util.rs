@@ -25,24 +25,61 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
+use crate::type_::ArrRestTData;
+use crate::type_::BindTData;
+use crate::type_::CallTData;
+use crate::type_::ClassOwnProtoCheckData;
+use crate::type_::ConditionalTData;
+use crate::type_::ConformToCommonInterfaceData;
+use crate::type_::ConstrainedAssignmentData;
 use crate::type_::ConstructorTData;
+use crate::type_::ElemTData;
+use crate::type_::EnumCastTData;
+use crate::type_::ExtendsUseTData;
+use crate::type_::FunCallData;
+use crate::type_::FunCallMethodData;
+use crate::type_::FunParamData;
 use crate::type_::GenericTData;
+use crate::type_::GetElemTData;
+use crate::type_::GetEnumTData;
 use crate::type_::GetPrivatePropTData;
 use crate::type_::GetPropTData;
+use crate::type_::GetTypeFromNamespaceTData;
+use crate::type_::HasOwnPropTData;
+use crate::type_::MapTypeTData;
+use crate::type_::MethodTData;
 use crate::type_::MixedFlavor;
+use crate::type_::OpaqueTypeCustomErrorCompatibilityData;
+use crate::type_::OptionalIndexedAccessTData;
+use crate::type_::PolyTData;
+use crate::type_::PositiveTypeGuardConsistencyData;
 use crate::type_::PrivateMethodTData;
+use crate::type_::PropertyCompatibilityData;
+use crate::type_::ReactCreateElementCallData;
+use crate::type_::ReactKitTData;
+use crate::type_::RecordCreateData;
+use crate::type_::ReposUseTData;
+use crate::type_::ResolveSpreadTData;
 use crate::type_::RootUseOp;
+use crate::type_::SetElemTData;
 use crate::type_::SetPrivatePropTData;
+use crate::type_::SpecializeTData;
+use crate::type_::SuperTData;
+use crate::type_::SwitchRefinementCheckData;
+use crate::type_::TestPropTData;
 use crate::type_::ThisInstanceTData;
 use crate::type_::ThisTypeAppTData;
+use crate::type_::TupleElementCompatibilityData;
 use crate::type_::Type;
 use crate::type_::TypeAppTData;
+use crate::type_::TypeArgCompatibilityData;
 use crate::type_::TypeDestructorT;
 use crate::type_::TypeDestructorTInner;
 use crate::type_::TypeInner;
 use crate::type_::UseOp;
 use crate::type_::UseT;
 use crate::type_::UseTInner;
+use crate::type_::ValueToTypeReferenceTData;
 use crate::type_::VirtualFrameUseOp;
 use crate::type_::VirtualRootUseOp;
 use crate::type_::VirtualUseOp;
@@ -81,69 +118,69 @@ pub fn reason_of_defer_use_t(defer_use_t: &TypeDestructorT) -> &Reason {
 pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
     match u.deref() {
         UseTInner::UseT(_, t) => reason_of_t(t),
-        UseTInner::ArrRestT(_, reason, _, _) => reason,
-        UseTInner::BindT(_, reason, _) => reason,
-        UseTInner::CallElemT(_, reason, _, _, _) => reason,
-        UseTInner::CallT { reason, .. } => reason,
+        UseTInner::ArrRestT(data) => &data.reason,
+        UseTInner::BindT(data) => &data.reason,
+        UseTInner::CallElemT(data) => &data.reason,
+        UseTInner::CallT(data) => &data.reason,
         UseTInner::ConstructorT(data) => &data.reason,
-        UseTInner::ElemT { reason, .. } => reason,
-        UseTInner::EnumCastT {
+        UseTInner::ElemT(data) => &data.reason,
+        UseTInner::EnumCastT(box EnumCastTData {
             enum_: (reason, _), ..
-        } => reason,
-        UseTInner::EnumExhaustiveCheckT { reason, .. } => reason,
-        UseTInner::GetEnumT { reason, .. } => reason,
-        UseTInner::ConditionalT { reason, .. } => reason,
-        UseTInner::ExtendsUseT(_, reason, _, _, _) => reason,
-        UseTInner::GetElemT { reason, .. } => reason,
+        }) => reason,
+        UseTInner::EnumExhaustiveCheckT(data) => &data.reason,
+        UseTInner::GetEnumT(data) => &data.reason,
+        UseTInner::ConditionalT(data) => &data.reason,
+        UseTInner::ExtendsUseT(data) => &data.reason,
+        UseTInner::GetElemT(data) => &data.reason,
         UseTInner::GetKeysT(reason, _) => reason,
         UseTInner::GetValuesT(reason, _) => reason,
         UseTInner::GetDictValuesT(reason, _) => reason,
-        UseTInner::GetTypeFromNamespaceT { reason, .. } => reason,
+        UseTInner::GetTypeFromNamespaceT(data) => &data.reason,
         UseTInner::GetPropT(data) => &data.reason,
         UseTInner::GetPrivatePropT(data) => &data.reason,
         UseTInner::GetProtoT(reason, _) => reason,
         UseTInner::GetStaticsT(tvar) => tvar.reason(),
-        UseTInner::HasOwnPropT(_, reason, _) => reason,
+        UseTInner::HasOwnPropT(data) => &data.reason,
         UseTInner::ImplementsT(_, t) => reason_of_t(t),
-        UseTInner::ConcretizeT { reason, .. } => reason,
-        UseTInner::LookupT { reason, .. } => reason,
-        UseTInner::MapTypeT(_, reason, _, _) => reason,
-        UseTInner::MethodT(_, reason, _, _, _) => reason,
+        UseTInner::ConcretizeT(data) => &data.reason,
+        UseTInner::LookupT(data) => &data.reason,
+        UseTInner::MapTypeT(data) => &data.reason,
+        UseTInner::MethodT(data) => &data.reason,
         UseTInner::MixinT(reason, _) => reason,
         UseTInner::ObjRestT(reason, _, _, _) => reason,
         UseTInner::ObjTestProtoT(reason, _) => reason,
         UseTInner::ObjTestT(reason, _, _) => reason,
-        UseTInner::OptionalIndexedAccessT { reason, .. } => reason,
+        UseTInner::OptionalIndexedAccessT(data) => &data.reason,
         UseTInner::PrivateMethodT(data) => &data.reason,
-        UseTInner::ReactKitT(_, reason, _) => reason,
+        UseTInner::ReactKitT(data) => &data.reason,
         UseTInner::ReposLowerT { reason, .. } => reason,
-        UseTInner::ReposUseT(reason, _, _, _) => reason,
-        UseTInner::ResolveSpreadT(_, reason, _) => reason,
-        UseTInner::SetElemT(_, reason, _, _, _, _) => reason,
+        UseTInner::ReposUseT(data) => &data.reason,
+        UseTInner::ResolveSpreadT(data) => &data.reason,
+        UseTInner::SetElemT(data) => &data.reason,
         UseTInner::SetPropT(_, reason, _, _, _, _, _) => reason,
         UseTInner::SetPrivatePropT(data) => &data.reason,
         UseTInner::SetProtoT(reason, _) => reason,
-        UseTInner::SpecializeT(_, _, reason, _, _) => reason,
+        UseTInner::SpecializeT(data) => &data.reason,
         UseTInner::ObjKitT(_, reason, _, _, _) => reason,
-        UseTInner::SuperT(_, reason, _) => reason,
-        UseTInner::TestPropT { reason, .. } => reason,
+        UseTInner::SuperT(data) => &data.reason,
+        UseTInner::TestPropT(data) => &data.reason,
         UseTInner::ThisSpecializeT(reason, _, _) => reason,
         UseTInner::ToStringT { reason, .. } => reason,
-        UseTInner::ValueToTypeReferenceT(_, reason, _, _) => reason,
+        UseTInner::ValueToTypeReferenceT(data) => &data.reason,
         UseTInner::TypeCastT(_, t) => reason_of_t(t),
         UseTInner::FilterOptionalT(_, t) => reason_of_t(t),
         UseTInner::FilterMaybeT(_, t) => reason_of_t(t),
         UseTInner::DeepReadOnlyT(tvar, _) => tvar.reason(),
         UseTInner::HooklikeT(tvar) => tvar.reason(),
         UseTInner::ConcretizeTypeAppsT(_, _, box (_, _, _, _, reason), _) => reason,
-        UseTInner::CondT(reason, _, _, _) => reason,
-        UseTInner::SealGenericT { reason, .. } => reason,
-        UseTInner::ResolveUnionT { reason, .. } => reason,
+        UseTInner::CondT(data) => &data.reason,
+        UseTInner::SealGenericT(data) => &data.reason,
+        UseTInner::ResolveUnionT(data) => &data.reason,
         UseTInner::CheckUnusedPromiseT { reason, .. } => reason,
-        UseTInner::WriteComputedObjPropCheckT { reason, .. } => reason,
+        UseTInner::WriteComputedObjPropCheckT(data) => &data.reason,
         UseTInner::ConvertEmptyPropsToMixedT(reason, _) => reason,
         UseTInner::ExitRendersT { renders_reason, .. } => renders_reason,
-        UseTInner::EvalTypeDestructorT { reason, .. } => reason,
+        UseTInner::EvalTypeDestructorT(data) => &data.reason,
     }
 }
 
@@ -409,32 +446,27 @@ pub fn util_use_op_of_use_t<T, CX>(
             let t = t.dupe();
             call_util(op, &move |op| UseT::new(UseTInner::UseT(op, t.dupe())))
         }
-        UseTInner::BindT(op, r, f) => {
-            let r = r.dupe();
-            let f = f.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::BindT(op, r.dupe(), f.clone()))
+        UseTInner::BindT(data) => {
+            let r = data.reason.dupe();
+            let f = data.funcall_type.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::BindT(Box::new(BindTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    funcall_type: f.clone(),
+                })))
             })
         }
-        UseTInner::ConditionalT {
-            use_op,
-            reason,
-            distributive_tparam_name,
-            infer_tparams,
-            extends_t,
-            true_t,
-            false_t,
-            tout,
-        } => {
-            let reason = reason.dupe();
-            let distributive_tparam_name = distributive_tparam_name.clone();
-            let infer_tparams = infer_tparams.dupe();
-            let extends_t = extends_t.clone();
-            let true_t = true_t.clone();
-            let false_t = false_t.clone();
-            let tout = tout.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::ConditionalT {
+        UseTInner::ConditionalT(data) => {
+            let reason = data.reason.dupe();
+            let distributive_tparam_name = data.distributive_tparam_name.clone();
+            let infer_tparams = data.infer_tparams.dupe();
+            let extends_t = data.extends_t.clone();
+            let true_t = data.true_t.clone();
+            let false_t = data.false_t.clone();
+            let tout = data.tout.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::ConditionalT(Box::new(ConditionalTData {
                     use_op,
                     reason: reason.dupe(),
                     distributive_tparam_name: distributive_tparam_name.clone(),
@@ -443,40 +475,35 @@ pub fn util_use_op_of_use_t<T, CX>(
                     true_t: true_t.clone(),
                     false_t: false_t.clone(),
                     tout: tout.clone(),
-                })
+                })))
             })
         }
-        UseTInner::CallT {
-            use_op,
-            reason,
-            call_action,
-            return_hint,
-        } => {
-            let reason = reason.dupe();
-            let call_action = call_action.clone();
-            let return_hint = return_hint.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::CallT {
+        UseTInner::CallT(data) => {
+            let reason = data.reason.dupe();
+            let call_action = data.call_action.clone();
+            let return_hint = data.return_hint.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::CallT(Box::new(CallTData {
                     use_op,
                     reason: reason.dupe(),
                     call_action: call_action.clone(),
                     return_hint: return_hint.clone(),
-                })
+                })))
             })
         }
-        UseTInner::MethodT(op, r1, r2, p, f) => {
-            let r1 = r1.dupe();
-            let r2 = r2.dupe();
-            let p = p.clone();
-            let f = f.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::MethodT(
-                    op,
-                    r1.dupe(),
-                    r2.dupe(),
-                    p.clone(),
-                    f.clone(),
-                ))
+        UseTInner::MethodT(data) => {
+            let r1 = data.reason.dupe();
+            let r2 = data.prop_reason.dupe();
+            let p = data.propref.clone();
+            let f = data.method_action.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                    use_op: op,
+                    reason: r1.dupe(),
+                    prop_reason: r2.dupe(),
+                    propref: p.clone(),
+                    method_action: f.clone(),
+                })))
             })
         }
         UseTInner::PrivateMethodT(data) => {
@@ -540,22 +567,19 @@ pub fn util_use_op_of_use_t<T, CX>(
                 })))
             })
         }
-        UseTInner::GetTypeFromNamespaceT {
-            use_op,
-            reason,
-            prop_ref,
-            tout,
-        } => {
-            let reason = reason.dupe();
-            let prop_ref = prop_ref.clone();
-            let tout = tout.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::GetTypeFromNamespaceT {
-                    use_op,
-                    reason: reason.dupe(),
-                    prop_ref: prop_ref.clone(),
-                    tout: tout.clone(),
-                })
+        UseTInner::GetTypeFromNamespaceT(data) => {
+            let reason = data.reason.dupe();
+            let prop_ref = data.prop_ref.clone();
+            let tout = data.tout.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::GetTypeFromNamespaceT(Box::new(
+                    GetTypeFromNamespaceTData {
+                        use_op,
+                        reason: reason.dupe(),
+                        prop_ref: prop_ref.clone(),
+                        tout: tout.clone(),
+                    },
+                )))
             })
         }
         UseTInner::GetPropT(data) => {
@@ -579,28 +603,21 @@ pub fn util_use_op_of_use_t<T, CX>(
                 })))
             })
         }
-        UseTInner::TestPropT {
-            use_op,
-            reason,
-            id,
-            propref,
-            tout,
-            hint,
-        } => {
-            let reason = reason.dupe();
-            let id = *id;
-            let propref = propref.clone();
-            let tout = tout.clone();
-            let hint = hint.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::TestPropT {
+        UseTInner::TestPropT(data) => {
+            let reason = data.reason.dupe();
+            let id = data.id;
+            let propref = data.propref.clone();
+            let tout = data.tout.clone();
+            let hint = data.hint.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::TestPropT(Box::new(TestPropTData {
                     use_op,
                     reason: reason.dupe(),
                     id,
                     propref: propref.clone(),
                     tout: tout.clone(),
                     hint: hint.clone(),
-                })
+                })))
             })
         }
         UseTInner::GetPrivatePropT(data) => {
@@ -620,42 +637,33 @@ pub fn util_use_op_of_use_t<T, CX>(
                 })))
             })
         }
-        UseTInner::SetElemT(op, r, t1, m, t2, t3) => {
-            let r = r.dupe();
-            let t1 = t1.clone();
-            let m = m.clone();
-            let t2 = t2.clone();
-            let t3 = t3.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::SetElemT(
-                    op,
-                    r.dupe(),
-                    t1.clone(),
-                    m.clone(),
-                    t2.clone(),
-                    t3.clone(),
-                ))
+        UseTInner::SetElemT(data) => {
+            let r = data.reason.dupe();
+            let t1 = data.key_t.clone();
+            let m = data.set_mode.clone();
+            let t2 = data.tin.clone();
+            let t3 = data.tout.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::SetElemT(Box::new(SetElemTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    key_t: t1.clone(),
+                    set_mode: m.clone(),
+                    tin: t2.clone(),
+                    tout: t3.clone(),
+                })))
             })
         }
-        UseTInner::GetElemT {
-            use_op,
-            reason,
-            id,
-            from_annot,
-            skip_optional,
-            access_iterables,
-            key_t,
-            tout,
-        } => {
-            let reason = reason.dupe();
-            let id = id.clone();
-            let from_annot = *from_annot;
-            let skip_optional = *skip_optional;
-            let access_iterables = *access_iterables;
-            let key_t = key_t.clone();
-            let tout = tout.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::GetElemT {
+        UseTInner::GetElemT(data) => {
+            let reason = data.reason.dupe();
+            let id = data.id.clone();
+            let from_annot = data.from_annot;
+            let skip_optional = data.skip_optional;
+            let access_iterables = data.access_iterables;
+            let key_t = data.key_t.clone();
+            let tout = data.tout.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
                     use_op,
                     reason: reason.dupe(),
                     id: id.clone(),
@@ -664,25 +672,22 @@ pub fn util_use_op_of_use_t<T, CX>(
                     access_iterables,
                     key_t: key_t.clone(),
                     tout: tout.clone(),
-                })
+                })))
             })
         }
-        UseTInner::OptionalIndexedAccessT {
-            use_op,
-            reason,
-            index,
-            tout_tvar,
-        } => {
-            let reason = reason.dupe();
-            let index = index.clone();
-            let tout_tvar = tout_tvar.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::OptionalIndexedAccessT {
-                    use_op,
-                    reason: reason.dupe(),
-                    index: index.clone(),
-                    tout_tvar: tout_tvar.clone(),
-                })
+        UseTInner::OptionalIndexedAccessT(data) => {
+            let reason = data.reason.dupe();
+            let index = data.index.clone();
+            let tout_tvar = data.tout_tvar.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::OptionalIndexedAccessT(Box::new(
+                    OptionalIndexedAccessTData {
+                        use_op,
+                        reason: reason.dupe(),
+                        index: index.clone(),
+                        tout_tvar: tout_tvar.clone(),
+                    },
+                )))
             })
         }
         UseTInner::ReposLowerT {
@@ -707,12 +712,17 @@ pub fn util_use_op_of_use_t<T, CX>(
                 inner_use_t.as_ref(),
             )
         }
-        UseTInner::ReposUseT(r, d, op, t) => {
-            let r = r.dupe();
-            let d = *d;
-            let t = t.dupe();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::ReposUseT(r.dupe(), d, op, t.dupe()))
+        UseTInner::ReposUseT(data) => {
+            let r = data.reason.dupe();
+            let d = data.use_desc;
+            let t = data.type_.dupe();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                    reason: r.dupe(),
+                    use_desc: d,
+                    use_op: op,
+                    type_: t.dupe(),
+                })))
             })
         }
         UseTInner::ConstructorT(data) => {
@@ -734,11 +744,15 @@ pub fn util_use_op_of_use_t<T, CX>(
                 })))
             })
         }
-        UseTInner::SuperT(op, r, i) => {
-            let r = r.dupe();
-            let i = i.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::SuperT(op, r.dupe(), i.clone()))
+        UseTInner::SuperT(data) => {
+            let r = data.reason.dupe();
+            let i = data.derived_type.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::SuperT(Box::new(SuperTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    derived_type: i.clone(),
+                })))
             })
         }
         UseTInner::ImplementsT(op, t) => {
@@ -769,32 +783,32 @@ pub fn util_use_op_of_use_t<T, CX>(
                 t_out.as_ref(),
             )
         }
-        UseTInner::SpecializeT(op, r1, r2, ts, t) => {
-            let r1 = r1.dupe();
-            let r2 = r2.dupe();
-            let ts = ts.clone();
-            let t = t.dupe();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::SpecializeT(
-                    op,
-                    r1.dupe(),
-                    r2.dupe(),
-                    ts.clone(),
-                    t.dupe(),
-                ))
+        UseTInner::SpecializeT(data) => {
+            let r1 = data.reason.dupe();
+            let r2 = data.reason2.dupe();
+            let ts = data.targs.clone();
+            let t = data.tvar.dupe();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
+                    use_op: op,
+                    reason: r1.dupe(),
+                    reason2: r2.dupe(),
+                    targs: ts.clone(),
+                    tvar: t.dupe(),
+                })))
             })
         }
         UseTInner::TypeCastT(op, t) => {
             let t = t.dupe();
             call_util(op, &move |op| UseT::new(UseTInner::TypeCastT(op, t.dupe())))
         }
-        UseTInner::EnumCastT { use_op, enum_ } => {
-            let enum_ = enum_.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::EnumCastT {
+        UseTInner::EnumCastT(data) => {
+            let enum_ = data.enum_.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::EnumCastT(Box::new(EnumCastTData {
                     use_op,
                     enum_: enum_.clone(),
-                })
+                })))
             })
         }
         UseTInner::FilterOptionalT(op, t) => {
@@ -825,19 +839,28 @@ pub fn util_use_op_of_use_t<T, CX>(
                 ))
             })
         }
-        UseTInner::ArrRestT(op, r, i, t) => {
-            let r = r.dupe();
-            let i = *i;
-            let t = t.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::ArrRestT(op, r.dupe(), i, t.clone()))
+        UseTInner::ArrRestT(data) => {
+            let r = data.reason.dupe();
+            let i = data.index;
+            let t = data.tout.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    index: i,
+                    tout: t.clone(),
+                })))
             })
         }
-        UseTInner::HasOwnPropT(op, r, t) => {
-            let r = r.dupe();
-            let t = t.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::HasOwnPropT(op, r.dupe(), t.clone()))
+        UseTInner::HasOwnPropT(data) => {
+            let r = data.reason.dupe();
+            let t = data.type_.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    type_: t.clone(),
+                })))
             })
         }
         UseTInner::GetKeysT(r, inner_use_t) => {
@@ -869,22 +892,17 @@ pub fn util_use_op_of_use_t<T, CX>(
                 inner_use_t.as_ref(),
             )
         }
-        UseTInner::ElemT {
-            use_op,
-            reason,
-            obj,
-            action,
-        } => {
-            let reason = reason.dupe();
-            let obj = obj.dupe();
-            let action = action.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::ElemT {
+        UseTInner::ElemT(data) => {
+            let reason = data.reason.dupe();
+            let obj = data.obj.dupe();
+            let action = data.action.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                     use_op,
                     reason: reason.dupe(),
                     obj: obj.dupe(),
                     action: action.clone(),
-                })
+                })))
             })
         }
         UseTInner::ObjKitT(op, r, x, y, t) => {
@@ -902,78 +920,87 @@ pub fn util_use_op_of_use_t<T, CX>(
                 ))
             })
         }
-        UseTInner::ReactKitT(op, r, t) => {
-            let r = r.dupe();
-            let t = t.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::ReactKitT(op, r.dupe(), t.clone()))
+        UseTInner::ReactKitT(data) => {
+            let r = data.reason.dupe();
+            let t = data.tool.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    tool: t.clone(),
+                })))
             })
         }
-        UseTInner::ResolveSpreadT(op, r, s) => {
-            let r = r.dupe();
-            let s = s.clone();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::ResolveSpreadT(op, r.dupe(), s.clone()))
+        UseTInner::ResolveSpreadT(data) => {
+            let r = data.reason.dupe();
+            let s = data.resolve_spread_type.clone();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::ResolveSpreadT(Box::new(ResolveSpreadTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    resolve_spread_type: s.clone(),
+                })))
             })
         }
-        UseTInner::ExtendsUseT(op, r, ts, a, b) => {
-            let r = r.dupe();
-            let ts = ts.clone();
-            let a = a.dupe();
-            let b = b.dupe();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::ExtendsUseT(
-                    op,
-                    r.dupe(),
-                    ts.clone(),
-                    a.dupe(),
-                    b.dupe(),
-                ))
+        UseTInner::ExtendsUseT(data) => {
+            let r = data.reason.dupe();
+            let ts = data.targs.clone();
+            let a = data.true_t.dupe();
+            let b = data.false_t.dupe();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    targs: ts.clone(),
+                    true_t: a.dupe(),
+                    false_t: b.dupe(),
+                })))
             })
         }
-        UseTInner::MapTypeT(op, r, k, t) => {
-            let r = r.dupe();
-            let k = k.clone();
-            let t = t.dupe();
-            call_util(op, &move |op| {
-                UseT::new(UseTInner::MapTypeT(op, r.dupe(), k.clone(), t.dupe()))
+        UseTInner::MapTypeT(data) => {
+            let r = data.reason.dupe();
+            let k = data.type_map.clone();
+            let t = data.tout.dupe();
+            call_util(&data.use_op, &move |op| {
+                UseT::new(UseTInner::MapTypeT(Box::new(MapTypeTData {
+                    use_op: op,
+                    reason: r.dupe(),
+                    type_map: k.clone(),
+                    tout: t.dupe(),
+                })))
             })
         }
-        UseTInner::ValueToTypeReferenceT(use_op, reason, kind, t) => {
-            let reason = reason.dupe();
-            let kind = kind.clone();
-            let t = t.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::ValueToTypeReferenceT(
-                    use_op,
-                    reason.dupe(),
-                    kind.clone(),
-                    t.clone(),
-                ))
+        UseTInner::ValueToTypeReferenceT(data) => {
+            let reason = data.reason.dupe();
+            let kind = data.kind.clone();
+            let t = data.tout.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::ValueToTypeReferenceT(Box::new(
+                    ValueToTypeReferenceTData {
+                        use_op,
+                        reason: reason.dupe(),
+                        kind: kind.clone(),
+                        tout: t.clone(),
+                    },
+                )))
             })
         }
-        UseTInner::GetEnumT {
-            use_op,
-            reason,
-            orig_t,
-            kind,
-            tout,
-        } => {
-            let reason = reason.dupe();
-            let orig_t = orig_t.dupe();
-            let kind = kind.clone();
-            let tout = tout.clone();
-            call_util(use_op, &move |use_op| {
-                UseT::new(UseTInner::GetEnumT {
+        UseTInner::GetEnumT(data) => {
+            let reason = data.reason.dupe();
+            let orig_t = data.orig_t.dupe();
+            let kind = data.kind.clone();
+            let tout = data.tout.clone();
+            call_util(&data.use_op, &move |use_op| {
+                UseT::new(UseTInner::GetEnumT(Box::new(GetEnumTData {
                     use_op,
                     reason: reason.dupe(),
                     orig_t: orig_t.dupe(),
                     kind: kind.clone(),
                     tout: tout.clone(),
-                })
+                })))
             })
         }
-        UseTInner::CallElemT(_, _, _, _, _)
+        UseTInner::CallElemT(..)
         | UseTInner::GetStaticsT(_)
         | UseTInner::GetProtoT(_, _)
         | UseTInner::SetProtoT(_, _)
@@ -982,20 +1009,20 @@ pub fn util_use_op_of_use_t<T, CX>(
         | UseTInner::DeepReadOnlyT(_, _)
         | UseTInner::HooklikeT(_)
         | UseTInner::ThisSpecializeT(_, _, _)
-        | UseTInner::LookupT { .. }
+        | UseTInner::LookupT(..)
         | UseTInner::ObjRestT(_, _, _, _)
         | UseTInner::ObjTestProtoT(_, _)
         | UseTInner::ObjTestT(_, _, _)
         | UseTInner::GetValuesT(_, _)
-        | UseTInner::ConcretizeT { .. }
-        | UseTInner::CondT(_, _, _, _)
-        | UseTInner::ResolveUnionT { .. }
+        | UseTInner::ConcretizeT(..)
+        | UseTInner::CondT(..)
+        | UseTInner::ResolveUnionT(..)
         | UseTInner::ExitRendersT { .. }
-        | UseTInner::EnumExhaustiveCheckT { .. }
-        | UseTInner::SealGenericT { .. }
+        | UseTInner::EnumExhaustiveCheckT(..)
+        | UseTInner::SealGenericT(..)
         | UseTInner::CheckUnusedPromiseT { .. }
-        | UseTInner::WriteComputedObjPropCheckT { .. }
-        | UseTInner::EvalTypeDestructorT { .. } => nope(u),
+        | UseTInner::WriteComputedObjPropCheckT(..)
+        | UseTInner::EvalTypeDestructorT(..) => nope(u),
     }
 }
 
@@ -1004,7 +1031,7 @@ pub fn is_in_common_interface_conformance_check(use_op: &UseOp) -> bool {
     use crate::type_::root_of_use_op;
     matches!(
         root_of_use_op(use_op),
-        VirtualRootUseOp::ConformToCommonInterface { .. }
+        VirtualRootUseOp::ConformToCommonInterface(_)
     )
 }
 
@@ -1102,28 +1129,28 @@ where
                 name: mod_reason(name),
                 implements: mod_reason(implements),
             },
-            ClassOwnProtoCheck {
+            ClassOwnProtoCheck(box ClassOwnProtoCheckData {
                 own_loc,
                 proto_loc,
                 prop,
-            } => ClassOwnProtoCheck {
+            }) => ClassOwnProtoCheck(Box::new(ClassOwnProtoCheckData {
                 prop,
                 own_loc: own_loc.map(f),
                 proto_loc: proto_loc.map(f),
-            },
+            })),
             Coercion { from, target } => Coercion {
                 from: mod_reason(from),
                 target: mod_reason(target),
             },
-            ConformToCommonInterface {
+            ConformToCommonInterface(box ConformToCommonInterfaceData {
                 self_sig_loc,
                 self_module_loc,
                 originate_from_import,
-            } => ConformToCommonInterface {
+            }) => ConformToCommonInterface(Box::new(ConformToCommonInterfaceData {
                 self_sig_loc: f(self_sig_loc),
                 self_module_loc: f(self_module_loc),
                 originate_from_import,
-            },
+            })),
             DeclareComponentRef { op } => DeclareComponentRef { op: mod_reason(op) },
             DeleteProperty { lhs, prop } => DeleteProperty {
                 lhs: mod_reason(lhs),
@@ -1132,30 +1159,30 @@ where
             DeleteVar { var } => DeleteVar {
                 var: mod_reason(var),
             },
-            FunCall {
+            FunCall(box FunCallData {
                 op,
                 fn_,
                 args,
                 local,
-            } => FunCall {
+            }) => FunCall(Box::new(FunCallData {
                 local,
                 op: mod_reason(op),
                 fn_: mod_reason(fn_),
                 args: args.iter().map(|a| mod_reason(a.dupe())).collect(),
-            },
-            FunCallMethod {
+            })),
+            FunCallMethod(box FunCallMethodData {
                 op,
                 fn_,
                 args,
                 prop,
                 local,
-            } => FunCallMethod {
+            }) => FunCallMethod(Box::new(FunCallMethodData {
                 local,
                 op: mod_reason(op),
                 fn_: mod_reason(fn_),
                 prop: mod_reason(prop),
                 args: args.iter().map(|a| mod_reason(a.dupe())).collect(),
-            },
+            })),
             FunReturnStatement { value } => FunReturnStatement {
                 value: mod_reason(value),
             },
@@ -1185,27 +1212,27 @@ where
                 op: mod_reason(op),
                 component: mod_reason(component),
             },
-            ReactCreateElementCall {
+            ReactCreateElementCall(box ReactCreateElementCallData {
                 op,
                 component,
                 children,
-            } => ReactCreateElementCall {
+            }) => ReactCreateElementCall(Box::new(ReactCreateElementCallData {
                 op: mod_reason(op),
                 component: mod_reason(component),
                 children: f(children),
-            },
+            })),
             ReactGetIntrinsic { literal } => ReactGetIntrinsic {
                 literal: mod_reason(literal),
             },
-            RecordCreate {
+            RecordCreate(box RecordCreateData {
                 op,
                 constructor,
                 properties,
-            } => RecordCreate {
+            }) => RecordCreate(Box::new(RecordCreateData {
                 op: mod_reason(op),
                 constructor: mod_reason(constructor),
                 properties: f(properties),
-            },
+            })),
             Speculation(op) => {
                 Speculation(Arc::new(mod_loc_of_virtual_use_op_rec(op.as_ref().clone())))
             }
@@ -1225,10 +1252,12 @@ where
                 test: mod_reason(test),
                 discriminant: mod_reason(discriminant),
             },
-            SwitchRefinementCheck { test, discriminant } => SwitchRefinementCheck {
-                test: f(test),
-                discriminant: f(discriminant),
-            },
+            SwitchRefinementCheck(box SwitchRefinementCheckData { test, discriminant }) => {
+                SwitchRefinementCheck(Box::new(SwitchRefinementCheckData {
+                    test: f(test),
+                    discriminant: f(discriminant),
+                }))
+            }
             EvalMappedType { mapped_type } => EvalMappedType {
                 mapped_type: mod_reason(mapped_type),
             },
@@ -1245,19 +1274,19 @@ where
             ComponentRestParamCompatibility { rest_param } => ComponentRestParamCompatibility {
                 rest_param: mod_reason(rest_param),
             },
-            PositiveTypeGuardConsistency {
+            PositiveTypeGuardConsistency(box PositiveTypeGuardConsistencyData {
                 reason,
                 return_reason,
                 param_reason,
                 guard_type_reason,
                 is_return_false_statement,
-            } => PositiveTypeGuardConsistency {
+            }) => PositiveTypeGuardConsistency(Box::new(PositiveTypeGuardConsistencyData {
                 reason: mod_reason(reason),
                 return_reason: mod_reason(return_reason),
                 param_reason: mod_reason(param_reason),
                 guard_type_reason: mod_reason(guard_type_reason),
                 is_return_false_statement,
-            },
+            })),
             UnknownUse => UnknownUse,
         }
     }
@@ -1276,15 +1305,15 @@ where
         use VirtualFrameUseOp::*;
 
         match frame {
-            ConstrainedAssignment {
+            ConstrainedAssignment(box ConstrainedAssignmentData {
                 name,
                 declaration,
                 providers,
-            } => ConstrainedAssignment {
+            }) => ConstrainedAssignment(Box::new(ConstrainedAssignmentData {
                 name,
                 declaration: f(declaration),
                 providers: providers.iter().map(|p| f(p.dupe())).collect(),
-            },
+            })),
             ReactDeepReadOnly(loc, l) => ReactDeepReadOnly(f(loc), l),
             ArrayElementCompatibility { lower, upper } => ArrayElementCompatibility {
                 lower: mod_reason(lower),
@@ -1299,17 +1328,17 @@ where
                 op: mod_reason(op),
                 def: mod_reason(def),
             },
-            FunParam {
+            FunParam(box FunParamData {
                 n,
                 name,
                 lower,
                 upper,
-            } => FunParam {
+            }) => FunParam(Box::new(FunParamData {
                 n,
                 name,
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
-            },
+            })),
             FunRestParam { lower, upper } => FunRestParam {
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
@@ -1335,21 +1364,23 @@ where
                     upper: mod_reason(upper),
                 }
             }
-            OpaqueTypeCustomErrorCompatibility {
+            OpaqueTypeCustomErrorCompatibility(box OpaqueTypeCustomErrorCompatibilityData {
                 lower,
                 upper,
                 lower_t,
                 upper_t,
                 name,
                 custom_error_loc,
-            } => OpaqueTypeCustomErrorCompatibility {
-                lower: mod_reason(lower),
-                upper: mod_reason(upper),
-                lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
-                upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
-                name,
-                custom_error_loc: f(custom_error_loc),
-            },
+            }) => OpaqueTypeCustomErrorCompatibility(Box::new(
+                OpaqueTypeCustomErrorCompatibilityData {
+                    lower: mod_reason(lower),
+                    upper: mod_reason(upper),
+                    lower_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_t),
+                    upper_t: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_t),
+                    name,
+                    custom_error_loc: f(custom_error_loc),
+                },
+            )),
             MappedTypeKeyCompatibility {
                 source_type,
                 mapped_type,
@@ -1357,40 +1388,42 @@ where
                 source_type: mod_reason(source_type),
                 mapped_type: mod_reason(mapped_type),
             },
-            PropertyCompatibility { prop, lower, upper } => PropertyCompatibility {
-                prop,
-                lower: mod_reason(lower),
-                upper: mod_reason(upper),
-            },
+            PropertyCompatibility(box PropertyCompatibilityData { prop, lower, upper }) => {
+                PropertyCompatibility(Box::new(PropertyCompatibilityData {
+                    prop,
+                    lower: mod_reason(lower),
+                    upper: mod_reason(upper),
+                }))
+            }
             ReactConfigCheck => ReactConfigCheck,
             ReactGetConfig { polarity } => ReactGetConfig { polarity },
-            TupleElementCompatibility {
+            TupleElementCompatibility(box TupleElementCompatibilityData {
                 n,
                 lower,
                 upper,
                 lower_optional,
                 upper_optional,
-            } => TupleElementCompatibility {
+            }) => TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
                 n,
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
                 lower_optional,
                 upper_optional,
-            },
+            })),
             TupleAssignment { upper_optional } => TupleAssignment { upper_optional },
-            TypeArgCompatibility {
+            TypeArgCompatibility(box TypeArgCompatibilityData {
                 name,
                 targ,
                 lower,
                 upper,
                 polarity,
-            } => TypeArgCompatibility {
+            }) => TypeArgCompatibility(Box::new(TypeArgCompatibilityData {
                 name,
                 polarity,
                 targ: mod_reason(targ),
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
-            },
+            })),
             TypeParamBound { name } => TypeParamBound { name },
             OpaqueTypeLowerBound { opaque_t_reason } => OpaqueTypeLowerBound {
                 opaque_t_reason: mod_reason(opaque_t_reason),
@@ -1667,9 +1700,10 @@ pub fn is_mixed_subtype(l: &Type, mixed_flavor: MixedFlavor) -> bool {
             true
         }
         TypeInner::DefT(_, def_t)
-            if matches!(&**def_t, D::PolyT { .. }) && matches!(mixed_flavor, MixedFunction) =>
+            if matches!(&**def_t, D::PolyT(_)) && matches!(mixed_flavor, MixedFunction) =>
         {
-            if let D::PolyT { t_out, .. } = &**def_t {
+            if let D::PolyT(poly_t_data) = &**def_t {
+                let t_out = &poly_t_data.t_out;
                 is_def_t_match(t_out, |inner| matches!(inner, D::FunT(_, _)))
             } else {
                 false
@@ -2077,13 +2111,13 @@ pub fn extends_use_type<CX>(use_op: UseOp, l: Type, u: Type) -> UseT<CX> {
     let reason = reason_of_t(&u)
         .dupe()
         .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RExtends(Arc::new(desc)));
-    UseT::new(UseTInner::ExtendsUseT(
+    UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
         use_op,
         reason,
-        Vec::new().into(),
-        l,
-        u,
-    ))
+        targs: Vec::new().into(),
+        true_t: l,
+        false_t: u,
+    })))
 }
 
 pub fn poly_type(
@@ -2102,12 +2136,12 @@ pub fn poly_type(
     let reason = reason.annotate(annot_loc);
     Type::new(TypeInner::DefT(
         reason,
-        DefT::new(DefTInner::PolyT {
+        DefT::new(DefTInner::PolyT(Box::new(PolyTData {
             tparams_loc,
             tparams: tparams.into_vec().into(),
             t_out: t,
             id,
-        }),
+        }))),
     ))
 }
 

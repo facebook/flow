@@ -327,10 +327,10 @@ fn object_property<'a>(
         | pattern::object::Key::BigIntLiteral((loc, _)) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::DestructuringObjectPropertyInvalidLiteral,
-                ),
+                ))),
             );
             let mut mapper = ErrorMapper;
             let typed_key = match key {
@@ -451,10 +451,10 @@ pub fn pattern<'a>(
             if let (true, ast::types::AnnotationOrHint::Available(ann)) = (has_parent, annot) {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         ann.loc.dupe(),
                         UnsupportedSyntax::AnnotationInsideDestructuring,
-                    ),
+                    ))),
                 );
             }
         };
@@ -521,10 +521,10 @@ pub fn pattern<'a>(
         pattern::Pattern::Expression { inner, .. } => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::DestructuringExpressionPattern,
-                ),
+                ))),
             );
             let mut mapper = ErrorMapper;
             let Ok(typed_expr) = polymorphic_ast_mapper::expression(&mut mapper, inner);

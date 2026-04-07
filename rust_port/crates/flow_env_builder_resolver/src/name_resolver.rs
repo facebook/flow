@@ -55,8 +55,11 @@ use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_errors::error_message::BindingError;
+use flow_typing_errors::error_message::EAssignConstLikeBindingData;
+use flow_typing_errors::error_message::EInvalidDeclarationData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::MatchInvalidPatternReferenceData;
 use flow_typing_errors::error_message::NullWrite;
 use flow_typing_errors::intermediate_error_types::AssignedConstLikeBindingType;
 use refinement_key::Lookup;
@@ -941,7 +944,7 @@ fn error_for_assignment_kind(
         name: FlowSmolStr,
         def_loc: ALoc,
     ) -> ErrorMessage<ALoc> {
-        ErrorMessage::EBindingError(error, assignment_loc, Name::new(name), def_loc)
+        ErrorMessage::EBindingError(Box::new((error, assignment_loc, Name::new(name), def_loc)))
     }
 
     fn const_like_binding_error(
@@ -954,11 +957,11 @@ fn error_for_assignment_kind(
             VirtualReasonDesc::RIdentifier(Name::new(name.to_string())),
             def_loc,
         );
-        ErrorMessage::EAssignConstLikeBinding {
+        ErrorMessage::EAssignConstLikeBinding(Box::new(EAssignConstLikeBindingData {
             loc: assignment_loc,
             definition,
             binding_kind,
-        }
+        }))
     }
 
     // Identifiers with no binding can never reintroduce "cannot reassign binding" errors
@@ -1456,14 +1459,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 });
                 Fl::add_output(
                     self.cx,
-                    ErrorMessage::EInvalidDeclaration {
+                    ErrorMessage::EInvalidDeclaration(Box::new(EInvalidDeclarationData {
                         declaration: declaration.dupe(),
                         null_write,
                         possible_generic_escape_locs: possible_generic_escape_locs
                             .iter()
                             .duped()
                             .collect(),
-                    },
+                    })),
                 );
             };
 
@@ -2890,12 +2893,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     Some(def_loc) => {
                         Fl::add_output(
                             self.cx,
-                            ErrorMessage::EBindingError(
+                            ErrorMessage::EBindingError(Box::new((
                                 BindingError::EReferencedBeforeDeclaration,
                                 loc.dupe(),
                                 Name::new(x.dupe()),
                                 def_loc,
-                            ),
+                            ))),
                         );
                     }
                 }
@@ -3097,7 +3100,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         ssa_val::illegal_write(&mut *self.cache.borrow_mut(), reason);
                     Fl::add_output(
                         self.cx,
-                        ErrorMessage::EReferenceInAnnotation(def_loc, binding_name.dupe(), loc),
+                        ErrorMessage::EReferenceInAnnotation(Box::new((
+                            def_loc,
+                            binding_name.dupe(),
+                            loc,
+                        ))),
                     );
                 }
             }
@@ -3118,7 +3125,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 Some(binding_name) => {
                     Fl::add_output(
                         self.cx,
-                        ErrorMessage::EReferenceInDefault(def_loc, binding_name.dupe(), loc),
+                        ErrorMessage::EReferenceInDefault(Box::new((
+                            def_loc,
+                            binding_name.dupe(),
+                            loc,
+                        ))),
                     );
                 }
             }
@@ -3568,10 +3579,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         Fl::add_output(
                             self.resolver.cx,
                             ErrorMessage::EMatchError(
-                                MatchErrorKind::MatchInvalidPatternReference {
-                                    loc,
-                                    binding_reason,
-                                },
+                                MatchErrorKind::MatchInvalidPatternReference(Box::new(
+                                    MatchInvalidPatternReferenceData {
+                                        loc,
+                                        binding_reason,
+                                    },
+                                )),
                             ),
                         );
                     }
@@ -3608,7 +3621,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         };
                         let expr = Expression::new(ExpressionInner::NumberLiteral {
                             loc: loc.dupe(),
-                            inner: Arc::new(inner.clone()),
+                            inner: Arc::new(inner.as_ref().clone()),
                         });
                         self.resolver
                             .literal_test(true, true, loc.dupe(), acc, refi, &expr)?;
@@ -3623,7 +3636,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         };
                         let expr = Expression::new(ExpressionInner::BigIntLiteral {
                             loc: loc.dupe(),
-                            inner: Arc::new(inner.clone()),
+                            inner: Arc::new(inner.as_ref().clone()),
                         });
                         self.resolver
                             .literal_test(true, true, loc.dupe(), acc, refi, &expr)?;
@@ -3637,7 +3650,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         };
                         let expr = Expression::new(ExpressionInner::StringLiteral {
                             loc: loc.dupe(),
-                            inner: Arc::new(inner.clone()),
+                            inner: Arc::new(inner.as_ref().clone()),
                         });
                         self.resolver
                             .literal_test(true, true, loc.dupe(), acc, refi, &expr)?;
@@ -3651,7 +3664,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         };
                         let expr = Expression::new(ExpressionInner::BooleanLiteral {
                             loc: loc.dupe(),
-                            inner: Arc::new(inner.clone()),
+                            inner: Arc::new(inner.as_ref().clone()),
                         });
                         self.resolver
                             .literal_test(true, true, loc.dupe(), acc, refi, &expr)?;
@@ -3671,7 +3684,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         self.resolver.identifier(id)?;
                         let id_expr = Expression::new(ExpressionInner::Identifier {
                             loc: loc.dupe(),
-                            inner: id.dupe(),
+                            inner: id.as_ref().dupe(),
                         });
                         let refis = self.resolver.maybe_sentinel(
                             true,
@@ -5275,12 +5288,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             if keyword.is_type_reserved() {
                 Fl::add_output(
                     self.cx,
-                    ErrorMessage::EBindingError(
+                    ErrorMessage::EBindingError(Box::new((
                         BindingError::EReservedKeyword { keyword },
                         name_loc.dupe(),
                         flow_common::reason::Name::new(name.dupe()),
                         name_loc,
-                    ),
+                    ))),
                 );
             }
         }
@@ -6334,7 +6347,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             _ => {
                 Fl::add_output(
                     self.cx,
-                    ErrorMessage::EInvalidTypeof(str_loc, typename.into()),
+                    ErrorMessage::EInvalidTypeof(Box::new((str_loc, typename.into()))),
                 );
                 (None, false)
             }
@@ -7679,12 +7692,12 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         let reserved_keyword_error = if let Ok(keyword) = name.as_str().parse::<IncorrectType>() {
             if keyword.is_type_reserved() {
                 match kind {
-                    BindingsKind::Type { .. } => Some(ErrorMessage::EBindingError(
+                    BindingsKind::Type { .. } => Some(ErrorMessage::EBindingError(Box::new((
                         BindingError::EReservedKeyword { keyword },
                         loc.dupe(),
                         flow_common::reason::Name::new(name.dupe()),
                         loc.dupe(),
-                    )),
+                    )))),
                     _ => None,
                 }
             } else {
@@ -7708,12 +7721,12 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     {
                         // Types are already bound in hoister,
                         // so we only check for rebind in different locations.
-                        Some(ErrorMessage::EBindingError(
+                        Some(ErrorMessage::EBindingError(Box::new((
                             BindingError::ENameAlreadyBound,
                             loc.dupe(),
                             flow_common::reason::Name::new(name.dupe()),
                             def_loc_val.dupe(),
-                        ))
+                        ))))
                     }
                     BindingsKind::Type { .. } => None,
                     BindingsKind::Var
@@ -7726,12 +7739,12 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     | BindingsKind::Component
                     | BindingsKind::Parameter
                     | BindingsKind::ComponentParameter
-                    | BindingsKind::Import => Some(ErrorMessage::EBindingError(
+                    | BindingsKind::Import => Some(ErrorMessage::EBindingError(Box::new((
                         BindingError::ENameAlreadyBound,
                         loc.dupe(),
                         flow_common::reason::Name::new(name.to_string()),
                         def_loc_val.dupe(),
-                    )),
+                    )))),
                     _ => None,
                 },
             },
@@ -7739,7 +7752,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         if let Some(err) = error {
             let is_reserved_keyword = matches!(
                 &err,
-                ErrorMessage::EBindingError(BindingError::EReservedKeyword { .. }, _, _, _)
+                ErrorMessage::EBindingError(box (BindingError::EReservedKeyword { .. }, _, _, _))
             );
             Fl::add_output(self.cx, err);
             if !is_reserved_keyword {

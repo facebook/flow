@@ -124,7 +124,7 @@ impl<'ast> AstVisitor<'ast, Loc> for Mapper {
                     Kind::ObjShorthandToReference => {
                         let pattern = match_pattern::MatchPattern::IdentifierPattern {
                             loc: LOC_NONE,
-                            inner: id.dupe(),
+                            inner: Box::new(id.dupe()),
                         };
                         object_pattern::Property::Valid {
                             loc: LOC_NONE,
@@ -296,13 +296,13 @@ impl<'ast> AstVisitor<'ast, Loc> for Mapper {
                 let match_pattern::WildcardPattern {
                     comments,
                     invalid_syntax_default_keyword: _,
-                } = wildcard;
+                } = &**wildcard;
                 match_pattern::MatchPattern::WildcardPattern {
                     loc: loc.dupe(),
-                    inner: match_pattern::WildcardPattern {
+                    inner: Box::new(match_pattern::WildcardPattern {
                         comments: comments.clone(),
                         invalid_syntax_default_keyword: false,
-                    },
+                    }),
                 }
             }
             (
@@ -352,10 +352,10 @@ impl<'ast> AstVisitor<'ast, Loc> for Mapper {
                             };
                             let pattern = match_pattern::MatchPattern::WildcardPattern {
                                 loc: LOC_NONE,
-                                inner: match_pattern::WildcardPattern {
+                                inner: Box::new(match_pattern::WildcardPattern {
                                     comments: None,
                                     invalid_syntax_default_keyword: false,
-                                },
+                                }),
                             };
                             object_pattern::Property::Valid {
                                 loc: LOC_NONE,

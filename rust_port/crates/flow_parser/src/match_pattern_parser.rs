@@ -121,10 +121,10 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::WildcardPattern {
                 loc,
-                inner: match_pattern::WildcardPattern {
+                inner: Box::new(match_pattern::WildcardPattern {
                     comments,
                     invalid_syntax_default_keyword: false,
-                },
+                }),
             })
         }
         TokenKind::TDefault => {
@@ -135,10 +135,10 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::WildcardPattern {
                 loc,
-                inner: match_pattern::WildcardPattern {
+                inner: Box::new(match_pattern::WildcardPattern {
                     comments,
                     invalid_syntax_default_keyword: true,
-                },
+                }),
             })
         }
         TokenKind::TLparen => {
@@ -160,11 +160,11 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::NumberPattern {
                 loc,
-                inner: NumberLiteral {
+                inner: Box::new(NumberLiteral {
                     value,
                     raw,
                     comments,
-                },
+                }),
             })
         }
         TokenKind::TBigint { kind, raw } => {
@@ -177,11 +177,11 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::BigIntPattern {
                 loc,
-                inner: BigIntLiteral {
+                inner: Box::new(BigIntLiteral {
                     value,
                     raw,
                     comments,
-                },
+                }),
             })
         }
         TokenKind::TString(str_loc, value, raw, octal) => {
@@ -198,11 +198,11 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::StringPattern {
                 loc: str_loc,
-                inner: StringLiteral {
+                inner: Box::new(StringLiteral {
                     value,
                     raw,
                     comments,
-                },
+                }),
             })
         }
         TokenKind::TTrue | TokenKind::TFalse => {
@@ -214,7 +214,7 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::BooleanPattern {
                 loc,
-                inner: BooleanLiteral { value, comments },
+                inner: Box::new(BooleanLiteral { value, comments }),
             })
         }
         TokenKind::TNull => {
@@ -225,7 +225,7 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
             let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
             Ok(match_pattern::MatchPattern::NullPattern {
                 loc,
-                inner: comments,
+                inner: Box::new(comments),
             })
         }
         TokenKind::TPlus => {
@@ -462,7 +462,10 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
                     _ => match base {
                         match_pattern::member_pattern::Base::BaseIdentifier(id) => {
                             let loc = id.loc.dupe();
-                            Ok(match_pattern::MatchPattern::IdentifierPattern { loc, inner: id })
+                            Ok(match_pattern::MatchPattern::IdentifierPattern {
+                                loc,
+                                inner: Box::new(id),
+                            })
                         }
                         match_pattern::member_pattern::Base::BaseMember(member) => {
                             Ok(match_pattern::MatchPattern::MemberPattern {
@@ -484,10 +487,10 @@ fn subpattern(env: &mut ParserEnv) -> Result<match_pattern::MatchPattern<Loc, Lo
                     ast_utils::mk_comments_opt(Some(leading.into()), Some(Vec::new().into()));
                 Ok(match_pattern::MatchPattern::WildcardPattern {
                     loc,
-                    inner: match_pattern::WildcardPattern {
+                    inner: Box::new(match_pattern::WildcardPattern {
                         comments,
                         invalid_syntax_default_keyword: false,
-                    },
+                    }),
                 })
             }
         }
@@ -901,10 +904,10 @@ fn add_comments(
         }
         match_pattern::MatchPattern::NullPattern { loc, inner } => {
             let new_inner =
-                ast_utils::merge_comments(inner, ast_utils::mk_comments_opt(leading, trailing));
+                ast_utils::merge_comments(*inner, ast_utils::mk_comments_opt(leading, trailing));
             match_pattern::MatchPattern::NullPattern {
                 loc,
-                inner: new_inner,
+                inner: Box::new(new_inner),
             }
         }
         match_pattern::MatchPattern::UnaryPattern { loc, mut inner } => {
@@ -934,7 +937,7 @@ fn add_comments(
             });
             match_pattern::MatchPattern::IdentifierPattern {
                 loc,
-                inner: new_inner,
+                inner: Box::new(new_inner),
             }
         }
         match_pattern::MatchPattern::MemberPattern { loc, mut inner } => {

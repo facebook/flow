@@ -125,10 +125,10 @@ pub mod leaf {
                     Loc::none(),
                     match_pattern::MatchPattern::BooleanPattern {
                         loc: Loc::none(),
-                        inner: BooleanLiteral {
+                        inner: Box::new(BooleanLiteral {
                             value: *value,
                             comments: None,
-                        },
+                        }),
                     },
                 ),
                 LeafCtor::StrC(name) => {
@@ -138,11 +138,11 @@ pub mod leaf {
                         Loc::none(),
                         match_pattern::MatchPattern::StringPattern {
                             loc: Loc::none(),
-                            inner: StringLiteral {
+                            inner: Box::new(StringLiteral {
                                 value: value.into(),
                                 raw: raw.into(),
                                 comments: None,
-                            },
+                            }),
                         },
                     )
                 }
@@ -150,40 +150,40 @@ pub mod leaf {
                     Loc::none(),
                     match_pattern::MatchPattern::NumberPattern {
                         loc: Loc::none(),
-                        inner: AstNumberLiteral {
+                        inner: Box::new(AstNumberLiteral {
                             value: *value,
                             raw: raw.to_string().into(),
                             comments: None,
-                        },
+                        }),
                     },
                 ),
                 LeafCtor::BigIntC(BigIntLiteral(value, raw)) => (
                     Loc::none(),
                     match_pattern::MatchPattern::BigIntPattern {
                         loc: Loc::none(),
-                        inner: AstBigIntLiteral {
+                        inner: Box::new(AstBigIntLiteral {
                             value: *value,
                             raw: raw.to_string().into(),
                             comments: None,
-                        },
+                        }),
                     },
                 ),
                 LeafCtor::NullC => (
                     Loc::none(),
                     match_pattern::MatchPattern::NullPattern {
                         loc: Loc::none(),
-                        inner: None,
+                        inner: Box::new(None),
                     },
                 ),
                 LeafCtor::VoidC => (
                     Loc::none(),
                     match_pattern::MatchPattern::IdentifierPattern {
                         loc: Loc::none(),
-                        inner: Identifier::new(IdentifierInner {
+                        inner: Box::new(Identifier::new(IdentifierInner {
                             loc: Loc::none(),
                             name: "undefined".into(),
                             comments: None,
-                        }),
+                        })),
                     },
                 ),
                 LeafCtor::EnumMemberC(EnumMember {
@@ -749,10 +749,10 @@ pub mod pattern_union {
                     Loc::none(),
                     match_pattern::MatchPattern::WildcardPattern {
                         loc: Loc::none(),
-                        inner: WildcardPattern {
+                        inner: Box::new(WildcardPattern {
                             comments: None,
                             invalid_syntax_default_keyword: false,
-                        },
+                        }),
                     },
                 )]
             } else {

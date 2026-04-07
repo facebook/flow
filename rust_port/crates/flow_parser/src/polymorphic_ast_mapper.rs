@@ -1813,37 +1813,37 @@ pub fn match_pattern<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         ast::match_pattern::MatchPattern::WildcardPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::WildcardPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: match_wildcard_pattern(mapper, inner)?,
+                inner: Box::new(match_wildcard_pattern(mapper, inner)?),
             }
         }
         ast::match_pattern::MatchPattern::NumberPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::NumberPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: number_literal(mapper, inner)?,
+                inner: Box::new(number_literal(mapper, inner)?),
             }
         }
         ast::match_pattern::MatchPattern::BigIntPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::BigIntPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: bigint_literal(mapper, inner)?,
+                inner: Box::new(bigint_literal(mapper, inner)?),
             }
         }
         ast::match_pattern::MatchPattern::StringPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::StringPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: string_literal(mapper, inner)?,
+                inner: Box::new(string_literal(mapper, inner)?),
             }
         }
         ast::match_pattern::MatchPattern::BooleanPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::BooleanPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: boolean_literal(mapper, inner)?,
+                inner: Box::new(boolean_literal(mapper, inner)?),
             }
         }
         ast::match_pattern::MatchPattern::NullPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::NullPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: syntax_opt(mapper, inner.as_ref())?,
+                inner: Box::new(syntax_opt(mapper, (**inner).as_ref())?),
             }
         }
         ast::match_pattern::MatchPattern::UnaryPattern { loc, inner } => {
@@ -1861,7 +1861,7 @@ pub fn match_pattern<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         ast::match_pattern::MatchPattern::IdentifierPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::IdentifierPattern {
                 loc: mapper.on_loc_annot(loc)?,
-                inner: t_identifier(mapper, inner)?,
+                inner: Box::new(t_identifier(mapper, inner)?),
             }
         }
         ast::match_pattern::MatchPattern::MemberPattern { loc, inner } => {

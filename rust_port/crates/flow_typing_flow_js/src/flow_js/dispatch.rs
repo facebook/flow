@@ -9,10 +9,57 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use flow_typing_debug::verbose::print_types_if_verbose;
+use flow_typing_errors::error_message::ECallTypeArityData;
+use flow_typing_errors::error_message::EIncompatibleData;
+use flow_typing_errors::error_message::EIncompatiblePropData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EPropNotFoundInLookupData;
+use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_errors::error_message::EPropNotReadableData;
+use flow_typing_errors::error_message::EPropNotWritableData;
+use flow_typing_errors::error_message::ETupleInvalidTypeSpreadData;
+use flow_typing_errors::error_message::EnumInvalidAbstractUseData;
+use flow_typing_errors::error_message::EnumInvalidCheckData;
+use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
+use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
+use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
+use flow_typing_errors::error_message::EnumModificationData;
+use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::BindTData;
+use flow_typing_type::type_::CallElemTData;
+use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ConcretizeTData;
+use flow_typing_type::type_::CondTData;
+use flow_typing_type::type_::ConditionalTData;
+use flow_typing_type::type_::ElemTData;
+use flow_typing_type::type_::EnumCastTData;
+use flow_typing_type::type_::EnumExhaustiveCheckTData;
+use flow_typing_type::type_::EvalTypeDestructorTData;
+use flow_typing_type::type_::ExtendsUseTData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::GetElemTData;
+use flow_typing_type::type_::GetEnumTData;
+use flow_typing_type::type_::GetTypeFromNamespaceTData;
+use flow_typing_type::type_::HasOwnPropTData;
+use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::MapTypeTData;
+use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::OptionalIndexedAccessTData;
+use flow_typing_type::type_::PolyTData;
+use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ReposUseTData;
+use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveUnionTData;
+use flow_typing_type::type_::SealGenericTData;
+use flow_typing_type::type_::SetElemTData;
+use flow_typing_type::type_::SpecializeTData;
+use flow_typing_type::type_::SuperTData;
+use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::ValueToTypeReferenceTData;
+use flow_typing_type::type_::WriteComputedObjPropCheckTData;
 
 use super::any_helpers::*;
 use super::constraint_helpers::*;
@@ -80,7 +127,7 @@ pub(super) fn __flow<'cx>(
                 };
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ERecursionLimit(reasons.0, reasons.1),
+                    ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
                 );
                 break;
             }
@@ -215,12 +262,12 @@ fn __flow_impl<'cx>(
             // Tail call: in OCaml this is the last call in the match arm
             return Ok(Some(TailCall::RecFlow(
                 result,
-                UseT::new(UseTInner::ReposUseT(
-                    reason.dupe(),
-                    false,
-                    use_op.dupe(),
-                    l.dupe(),
-                )),
+                UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                    reason: reason.dupe(),
+                    use_desc: false,
+                    use_op: use_op.dupe(),
+                    type_: l.dupe(),
+                }))),
                 DepthTrace::rec_trace(trace),
             )));
         }
@@ -370,7 +417,7 @@ fn __flow_impl<'cx>(
                 // come from indirections through OpenT, most of them are already defended with
                 // Flow_js_utils.InvalidCyclicTypeValidation and turned to any, but there are gaps
                 // (especially EvalT from type sig), so we defend it again here.
-                UseTInner::ConcretizeT { seen, .. } => {
+                UseTInner::ConcretizeT(box ConcretizeTData { seen, .. }) => {
                     let tvar_id = tvar.id() as i32;
                     // ISet.mem tvar !seen
                     if seen.contains(&tvar_id) {
@@ -463,13 +510,13 @@ fn __flow_impl<'cx>(
         // ************************
         (
             _,
-            UseTInner::EvalTypeDestructorT {
+            UseTInner::EvalTypeDestructorT(box EvalTypeDestructorTData {
                 destructor_use_op,
                 reason,
                 repos,
                 destructor,
                 tout,
-            },
+            }),
         ) => {
             let l_repos = match repos {
                 None => l.dupe(),
@@ -498,52 +545,52 @@ fn __flow_impl<'cx>(
         // prevents a drastic blowup of cases which can cause perf problems.
         (
             TypeInner::UnionT(_, _),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForSentinelPropTest,
                 collector,
                 ..
-            },
+            }),
         )
         | (
             TypeInner::UnionT(_, _),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind:
                     ConcretizationKind::ConcretizeForPredicate(
                         PredicateConcretetizerVariant::ConcretizeRHSForLiteralPredicateTest,
                     ),
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
         (
             TypeInner::UnionT(_, rep),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind:
                     ConcretizationKind::ConcretizeForPredicate(
                         PredicateConcretetizerVariant::ConcretizeKeepOptimizedUnions,
                     ),
                 collector,
                 ..
-            },
+            }),
         ) if rep.is_optimized_finally() => {
             collector.add(l.dupe());
         }
         (
             TypeInner::UnionT(_, _),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForMatchArg { keep_unions: true },
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
-        (TypeInner::UnionT(_, urep), UseTInner::ConcretizeT { .. }) => {
+        (TypeInner::UnionT(_, urep), UseTInner::ConcretizeT(..)) => {
             flow_all_in_union(cx, trace, urep, u)?;
         }
-        (TypeInner::MaybeT(lreason, t), UseTInner::ConcretizeT { .. }) => {
+        (TypeInner::MaybeT(lreason, t), UseTInner::ConcretizeT(..)) => {
             let lreason = lreason.dupe().replace_desc(VirtualReasonDesc::RNullOrVoid);
             rec_flow(cx, trace, (&null::make(lreason.dupe()), u))?;
             rec_flow(cx, trace, (&void::make(lreason), u))?;
@@ -555,7 +602,7 @@ fn __flow_impl<'cx>(
                 type_: t,
                 use_desc,
             },
-            UseTInner::ConcretizeT { .. },
+            UseTInner::ConcretizeT(..),
         ) => {
             rec_flow(
                 cx,
@@ -564,7 +611,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, trace, (t, u))?;
         }
-        (TypeInner::AnnotT(r, t, use_desc), UseTInner::ConcretizeT { .. }) => {
+        (TypeInner::AnnotT(r, t, use_desc), UseTInner::ConcretizeT(..)) => {
             // TODO: directly derive loc and desc from the reason of tvar
             let loc = r.loc().dupe();
             let desc = if *use_desc {
@@ -595,7 +642,15 @@ fn __flow_impl<'cx>(
         // ***************
 
         // Special cases where we want to recursively concretize types within the lower bound.
-        (TypeInner::UnionT(r, rep), UseTInner::ReposUseT(reason, use_desc, use_op, l_inner)) => {
+        (
+            TypeInner::UnionT(r, rep),
+            UseTInner::ReposUseT(box ReposUseTData {
+                reason,
+                use_desc,
+                use_op,
+                type_: l_inner,
+            }),
+        ) => {
             let rep = {
                 let in_implicit = cx.in_implicit_instantiation();
                 rep.ident_map(false, |t| annot(in_implicit, *use_desc, t))
@@ -622,7 +677,12 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::MaybeT(r, u_inner),
-            UseTInner::ReposUseT(reason, use_desc, use_op, l_inner),
+            UseTInner::ReposUseT(box ReposUseTData {
+                reason,
+                use_desc,
+                use_op,
+                type_: l_inner,
+            }),
         ) => {
             let loc = reason.loc().dupe();
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
@@ -651,7 +711,12 @@ fn __flow_impl<'cx>(
                 type_: u_inner,
                 use_desc: use_desc_optional_t,
             },
-            UseTInner::ReposUseT(reason, use_desc, use_op, l_inner),
+            UseTInner::ReposUseT(box ReposUseTData {
+                reason,
+                use_desc,
+                use_op,
+                type_: l_inner,
+            }),
         ) => {
             let loc = reason.loc().dupe();
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
@@ -678,13 +743,20 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::DefT(r, def_t), UseTInner::ReposUseT(reason, use_desc, use_op, l_inner))
-            if let DefTInner::RendersT(renders_form) = def_t.deref()
-                && let CanonicalRendersForm::StructuralRenders {
-                    renders_variant,
-                    renders_structural_type,
-                } = renders_form.as_ref()
-                && let TypeInner::UnionT(_, rep) = renders_structural_type.deref() =>
+        (
+            TypeInner::DefT(r, def_t),
+            UseTInner::ReposUseT(box ReposUseTData {
+                reason,
+                use_desc,
+                use_op,
+                type_: l_inner,
+            }),
+        ) if let DefTInner::RendersT(renders_form) = def_t.deref()
+            && let CanonicalRendersForm::StructuralRenders {
+                renders_variant,
+                renders_structural_type,
+            } = renders_form.as_ref()
+            && let TypeInner::UnionT(_, rep) = renders_structural_type.deref() =>
         {
             let rep = {
                 let in_implicit = cx.in_implicit_instantiation();
@@ -721,7 +793,15 @@ fn __flow_impl<'cx>(
         // Waits for a def type to become concrete, repositions it as an upper UseT<Context<'cx>>
         // using the stored reason. This can be used to store a reason as it flows
         // through a tvar. *)
-        (_, UseTInner::ReposUseT(reason, use_desc, use_op, l_inner)) => {
+        (
+            _,
+            UseTInner::ReposUseT(box ReposUseTData {
+                reason,
+                use_desc,
+                use_op,
+                type_: l_inner,
+            }),
+        ) => {
             let u_repos = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
             rec_flow(
                 cx,
@@ -748,10 +828,10 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     cast_to_t,
-                    &UseT::new(UseTInner::EnumCastT {
+                    &UseT::new(UseTInner::EnumCastT(Box::new(EnumCastTData {
                         use_op: use_op.dupe(),
                         enum_: (reason.dupe(), (**enum_info).dupe()),
-                    }),
+                    }))),
                 ),
             )?;
         }
@@ -768,12 +848,12 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     t,
-                    &UseT::new(UseTInner::ReposUseT(
-                        r.dupe(),
-                        *use_desc,
-                        use_op.dupe(),
-                        l.dupe(),
-                    )),
+                    &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
+                        reason: r.dupe(),
+                        use_desc: *use_desc,
+                        use_op: use_op.dupe(),
+                        type_: l.dupe(),
+                    }))),
                 ),
             )?;
         }
@@ -874,10 +954,10 @@ fn __flow_impl<'cx>(
                         trace,
                         (
                             cast_to_t,
-                            &UseT::new(UseTInner::EnumCastT {
+                            &UseT::new(UseTInner::EnumCastT(Box::new(EnumCastTData {
                                 use_op: use_op.dupe(),
                                 enum_: (reason.dupe(), (**enum_info).dupe()),
-                            }),
+                            }))),
                         ),
                     )?;
                 }
@@ -903,10 +983,10 @@ fn __flow_impl<'cx>(
         // ***********************************************************************
         (
             _,
-            UseTInner::EnumCastT {
+            UseTInner::EnumCastT(box EnumCastTData {
                 use_op,
                 enum_: (_, enum_info),
-            },
+            }),
         ) if {
             let representation_t = match EnumInfo::deref(enum_info) {
                 EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
@@ -930,10 +1010,10 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::EnumCastT {
+            UseTInner::EnumCastT(box EnumCastTData {
                 use_op,
                 enum_: (reason, enum_info),
-            },
+            }),
         ) => {
             rec_flow(
                 cx,
@@ -952,11 +1032,11 @@ fn __flow_impl<'cx>(
         // ******************
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForCJSExtractNamedExportsAndTypeExports,
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -965,9 +1045,11 @@ fn __flow_impl<'cx>(
         // ***************************
         (
             TypeInner::DefT(r, def_t),
-            UseTInner::OptionalIndexedAccessT {
-                use_op, tout_tvar, ..
-            },
+            UseTInner::OptionalIndexedAccessT(box OptionalIndexedAccessTData {
+                use_op,
+                tout_tvar,
+                ..
+            }),
         ) if matches!(
             def_t.deref(),
             DefTInner::EmptyT | DefTInner::VoidT | DefTInner::NullT
@@ -983,18 +1065,18 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::MaybeT(_, t), UseTInner::OptionalIndexedAccessT { .. })
-        | (TypeInner::OptionalT { type_: t, .. }, UseTInner::OptionalIndexedAccessT { .. }) => {
+        (TypeInner::MaybeT(_, t), UseTInner::OptionalIndexedAccessT(..))
+        | (TypeInner::OptionalT { type_: t, .. }, UseTInner::OptionalIndexedAccessT(..)) => {
             rec_flow(cx, trace, (t, u))?;
         }
         (
             TypeInner::UnionT(_, rep),
-            UseTInner::OptionalIndexedAccessT {
+            UseTInner::OptionalIndexedAccessT(box OptionalIndexedAccessTData {
                 use_op,
                 reason,
                 index,
                 tout_tvar,
-            },
+            }),
         ) => {
             let mut members = rep.members_iter();
             let t0 = members.next().unwrap();
@@ -1011,12 +1093,14 @@ fn __flow_impl<'cx>(
                             trace,
                             (
                                 t,
-                                &UseT::new(UseTInner::OptionalIndexedAccessT {
-                                    use_op: use_op.dupe(),
-                                    reason: reason.dupe(),
-                                    index: index.dupe(),
-                                    tout_tvar: Box::new(tvar),
-                                }),
+                                &UseT::new(UseTInner::OptionalIndexedAccessT(Box::new(
+                                    OptionalIndexedAccessTData {
+                                        use_op: use_op.dupe(),
+                                        reason: reason.dupe(),
+                                        index: index.dupe(),
+                                        tout_tvar: Box::new(tvar),
+                                    },
+                                ))),
                             ),
                         )?;
                         Ok(())
@@ -1043,12 +1127,12 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::OptionalIndexedAccessT {
+            UseTInner::OptionalIndexedAccessT(box OptionalIndexedAccessTData {
                 use_op,
                 reason,
                 index,
                 tout_tvar,
-            },
+            }),
         ) if !matches!(l.deref(), TypeInner::IntersectionT(_, _)) => {
             let u_new = match index {
                 OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(name) => {
@@ -1067,7 +1151,7 @@ fn __flow_impl<'cx>(
                     })))
                 }
                 OptionalIndexedAccessIndex::OptionalIndexedAccessTypeIndex(key_t) => {
-                    UseT::new(UseTInner::GetElemT {
+                    UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         id: None,
@@ -1076,7 +1160,7 @@ fn __flow_impl<'cx>(
                         access_iterables: false,
                         key_t: key_t.dupe(),
                         tout: tout_tvar.clone(),
-                    })
+                    })))
                 }
             };
             rec_flow(cx, trace, (l, &u_new))?;
@@ -1405,12 +1489,12 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(rp, def_t), UseTInner::HooklikeT(tout))
-            if let DefTInner::PolyT {
+            if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams,
                 t_out,
                 id,
-            } = def_t.deref()
+            }) = def_t.deref()
                 && let TypeInner::DefT(r, inner_def) = t_out.deref()
                 && let DefTInner::FunT(s, funtype) = inner_def.deref()
                 && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
@@ -1425,12 +1509,12 @@ fn __flow_impl<'cx>(
             ));
             let new_l = Type::new(TypeInner::DefT(
                 rp.dupe(),
-                DefT::new(DefTInner::PolyT {
+                DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                     tparams_loc: tparams_loc.dupe(),
                     tparams: tparams.dupe(),
                     t_out: new_t_out,
                     id: id.dupe(),
-                }),
+                }))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
@@ -1467,12 +1551,12 @@ fn __flow_impl<'cx>(
                 }
                 // | DefT (rp, PolyT ({ t_out = DefT (rf, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype))); _ } as poly)) ->
                 TypeInner::DefT(rp, inner_def)
-                    if let DefTInner::PolyT {
+                    if let DefTInner::PolyT(box PolyTData {
                         tparams_loc,
                         tparams,
                         t_out,
                         id: poly_id,
-                    } = inner_def.deref()
+                    }) = inner_def.deref()
                         && let TypeInner::DefT(rf, fun_def) = t_out.deref()
                         && let DefTInner::FunT(s, funtype) = fun_def.deref()
                         && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
@@ -1487,12 +1571,12 @@ fn __flow_impl<'cx>(
                     ));
                     let call = Type::new(TypeInner::DefT(
                         rp.dupe(),
-                        DefT::new(DefTInner::PolyT {
+                        DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                             tparams_loc: tparams_loc.dupe(),
                             tparams: tparams.dupe(),
                             t_out: new_t_out,
                             id: poly_id.dupe(),
-                        }),
+                        }))),
                     ));
                     let new_id = cx.make_call_prop(call);
                     Type::new(TypeInner::DefT(
@@ -1518,7 +1602,7 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(_, def_t),
             UseTInner::DeepReadOnlyT(tout, _) | UseTInner::HooklikeT(tout),
-        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+        ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (l, &tout_t))?;
         }
@@ -1527,16 +1611,22 @@ fn __flow_impl<'cx>(
             UseTInner::GetKeysT { .. }
             | UseTInner::GetValuesT { .. }
             | UseTInner::GetDictValuesT { .. }
-            | UseTInner::CallT { .. }
-            | UseTInner::LookupT { .. }
-            | UseTInner::SetPropT { .. }
+            | UseTInner::CallT(..)
+            | UseTInner::LookupT(..)
+            | UseTInner::SetPropT(..)
             | UseTInner::GetPropT(..)
-            | UseTInner::MethodT(_, _, _, _, _)
+            | UseTInner::MethodT(box MethodTData {
+                use_op: _,
+                reason: _,
+                prop_reason: _,
+                propref: _,
+                method_action: _,
+            })
             | UseTInner::ObjRestT(_, _, _, _)
-            | UseTInner::SetElemT { .. }
-            | UseTInner::GetElemT { .. }
-            | UseTInner::CallElemT { .. }
-            | UseTInner::BindT { .. },
+            | UseTInner::SetElemT(..)
+            | UseTInner::GetElemT(..)
+            | UseTInner::CallElemT(..)
+            | UseTInner::BindT(..),
         ) if let DefTInner::InstanceT(instance) = def_t.deref()
             && let inst = &instance.inst
             && let Some(ReactDro(dro_loc, dro_type)) = inst.inst_react_dro.as_ref()
@@ -1547,12 +1637,16 @@ fn __flow_impl<'cx>(
             let (_, _, val_t, _) = &inst.type_args[1];
 
             match u.deref() {
-                UseTInner::MethodT(use_op, _, reason, box PropRef::Named { name, .. }, _)
-                    if matches!(name.as_str(), "clear" | "delete" | "set") =>
-                {
+                UseTInner::MethodT(box MethodTData {
+                    use_op,
+                    reason: _,
+                    prop_reason: reason,
+                    propref: box PropRef::Named { name, .. },
+                    method_action: _,
+                }) if matches!(name.as_str(), "clear" | "delete" | "set") => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
@@ -1562,16 +1656,16 @@ fn __flow_impl<'cx>(
                                 )),
                                 Arc::new(use_op.dupe()),
                             ),
-                        },
+                        })),
                     )?;
                 }
-                UseTInner::GetPropT(data)
+                UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
                         && matches!(name.as_str(), "clear" | "delete" | "set") =>
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: data.reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
@@ -1581,7 +1675,7 @@ fn __flow_impl<'cx>(
                                 )),
                                 Arc::new(data.use_op.dupe()),
                             ),
-                        },
+                        })),
                     )?;
                 }
                 _ => {
@@ -1622,16 +1716,22 @@ fn __flow_impl<'cx>(
             UseTInner::GetKeysT { .. }
             | UseTInner::GetValuesT { .. }
             | UseTInner::GetDictValuesT { .. }
-            | UseTInner::CallT { .. }
-            | UseTInner::LookupT { .. }
-            | UseTInner::SetPropT { .. }
+            | UseTInner::CallT(..)
+            | UseTInner::LookupT(..)
+            | UseTInner::SetPropT(..)
             | UseTInner::GetPropT(..)
-            | UseTInner::MethodT(_, _, _, _, _)
+            | UseTInner::MethodT(box MethodTData {
+                use_op: _,
+                reason: _,
+                prop_reason: _,
+                propref: _,
+                method_action: _,
+            })
             | UseTInner::ObjRestT(_, _, _, _)
-            | UseTInner::SetElemT { .. }
-            | UseTInner::GetElemT { .. }
-            | UseTInner::CallElemT { .. }
-            | UseTInner::BindT { .. },
+            | UseTInner::SetElemT(..)
+            | UseTInner::GetElemT(..)
+            | UseTInner::CallElemT(..)
+            | UseTInner::BindT(..),
         ) if let DefTInner::InstanceT(instance) = def_t.deref()
             && let inst = &instance.inst
             && let Some(ReactDro(dro_loc, dro_type)) = inst.inst_react_dro.as_ref()
@@ -1640,12 +1740,16 @@ fn __flow_impl<'cx>(
         {
             let (_, _, elem_t, _) = &inst.type_args[0];
             match u.deref() {
-                UseTInner::MethodT(use_op, _, reason, box PropRef::Named { name, .. }, _)
-                    if matches!(name.as_str(), "add" | "clear" | "delete") =>
-                {
+                UseTInner::MethodT(box MethodTData {
+                    use_op,
+                    reason: _,
+                    prop_reason: reason,
+                    propref: box PropRef::Named { name, .. },
+                    method_action: _,
+                }) if matches!(name.as_str(), "add" | "clear" | "delete") => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
@@ -1655,16 +1759,16 @@ fn __flow_impl<'cx>(
                                 )),
                                 Arc::new(use_op.dupe()),
                             ),
-                        },
+                        })),
                     )?;
                 }
-                UseTInner::GetPropT(data)
+                UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
                         && matches!(name.as_str(), "add" | "clear" | "delete") =>
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: data.reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
@@ -1674,7 +1778,7 @@ fn __flow_impl<'cx>(
                                 )),
                                 Arc::new(data.use_op.dupe()),
                             ),
-                        },
+                        })),
                     )?;
                 }
                 _ => {
@@ -1757,13 +1861,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::MaybeT(_, _),
-            UseTInner::ResolveUnionT {
+            UseTInner::ResolveUnionT(box ResolveUnionTData {
                 reason,
                 resolved,
                 unresolved,
                 upper,
                 id,
-            },
+            }),
         ) => {
             if let Some((tc_l, tc_u)) =
                 resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
@@ -1773,10 +1877,10 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::MaybeT(reason, t), _)
             if match u.deref() {
-                UseTInner::ConditionalT {
+                UseTInner::ConditionalT(box ConditionalTData {
                     distributive_tparam_name,
                     ..
-                } => distributive_tparam_name.is_some(),
+                }) => distributive_tparam_name.is_some(),
                 _ => true,
             } =>
         {
@@ -1816,13 +1920,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::OptionalT { .. },
-            UseTInner::ResolveUnionT {
+            UseTInner::ResolveUnionT(box ResolveUnionTData {
                 reason,
                 resolved,
                 unresolved,
                 upper,
                 id,
-            },
+            }),
         ) => {
             if let Some((tc_l, tc_u)) =
                 resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
@@ -1838,10 +1942,10 @@ fn __flow_impl<'cx>(
             },
             _,
         ) if match u.deref() {
-            UseTInner::ConditionalT {
+            UseTInner::ConditionalT(box ConditionalTData {
                 distributive_tparam_name,
                 ..
-            } => distributive_tparam_name.is_some(),
+            }) => distributive_tparam_name.is_some(),
             _ => true,
         } =>
         {
@@ -1893,7 +1997,14 @@ fn __flow_impl<'cx>(
                 from_value,
                 use_desc,
             }),
-            UseTInner::MethodT(_, _, _, _, _) | UseTInner::PrivateMethodT(..),
+            UseTInner::MethodT(box MethodTData {
+                use_op: _,
+                reason: _,
+                prop_reason: _,
+                propref: _,
+                method_action: _,
+            })
+            | UseTInner::PrivateMethodT(..),
         ) => {
             let reason_op = reason_of_use_t(u);
             let t = mk_typeapp_instance_annot(
@@ -1927,7 +2038,7 @@ fn __flow_impl<'cx>(
                 box (c1, ts1, fv1, op1, r1),
                 true,
             ),
-        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+        ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             let c2 = l.dupe();
             rec_flow(
                 cx,
@@ -1963,19 +2074,19 @@ fn __flow_impl<'cx>(
                 box (c2, ts2, fv2, _, r2),
                 false,
             ),
-        ) if let DefTInner::PolyT {
+        ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc,
             tparams,
             id: id1,
             t_out,
-        } = def_t.deref()
+        }) = def_t.deref()
             && let TypeInner::DefT(_, c2_def) = c2.deref()
-            && let DefTInner::PolyT {
+            && let DefTInner::PolyT(box PolyTData {
                 tparams_loc: _,
                 tparams: _,
                 id: id2,
                 t_out: _,
-            } = c2_def.deref()
+            }) = c2_def.deref()
             && id1 == id2
             && ts1.len() == ts2.len()
             && !flow_js_utils::wraps_utility_type(cx, t_out)
@@ -2007,19 +2118,19 @@ fn __flow_impl<'cx>(
                 box (c2, ts2, fv2, op2, r2),
                 false,
             ),
-        ) if let DefTInner::PolyT {
+        ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc: tparams_loc1,
             tparams: xs1,
             t_out: t1,
             id: id1,
-        } = def_t.deref()
+        }) = def_t.deref()
             && let TypeInner::DefT(_, c2_def) = c2.deref()
-            && let DefTInner::PolyT {
+            && let DefTInner::PolyT(box PolyTData {
                 tparams_loc: tparams_loc2,
                 tparams: xs2,
                 t_out: t2,
                 id: id2,
-            } = c2_def.deref() =>
+            }) = c2_def.deref() =>
         {
             let (op1_eff, op2_eff) = match root_of_use_op(use_op) {
                 RootUseOp::UnknownUse => (op1.dupe(), op2.dupe()),
@@ -2097,11 +2208,11 @@ fn __flow_impl<'cx>(
         // recorded as lower bound to the target tvar. *
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForImportsExports,
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -2109,12 +2220,12 @@ fn __flow_impl<'cx>(
         // Namespace and type qualification
         (
             TypeInner::NamespaceT(ns),
-            UseTInner::GetTypeFromNamespaceT {
+            UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData {
                 reason: reason_op,
                 use_op,
                 prop_ref: (prop_ref_reason, prop_name),
                 tout,
-            },
+            }),
         ) => {
             let props = cx.find_props(ns.types_tmap.dupe());
             match props.get(prop_name).and_then(property::read_t) {
@@ -2157,12 +2268,12 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::GetTypeFromNamespaceT {
+            UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData {
                 reason: reason_op,
                 use_op,
                 prop_ref: (prop_ref_reason, prop_name),
                 tout,
-            },
+            }),
         ) => {
             rec_flow(
                 cx,
@@ -2187,7 +2298,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         // unwrap namespace type into object type, drop all information about types in the namespace
-        (TypeInner::NamespaceT(ns), UseTInner::GetPropT(data))
+        (TypeInner::NamespaceT(ns), UseTInner::GetPropT(box data))
             if let UseOp::Op(root_op) = &data.use_op
                 && let VirtualRootUseOp::GetProperty(prop_reason) = root_op.deref()
                 && ns.namespace_symbol.kind()
@@ -2213,7 +2324,15 @@ fn __flow_impl<'cx>(
         // ***************************************
         // * transform values to type references *
         // ***************************************
-        (_, UseTInner::ValueToTypeReferenceT(use_op, reason_op, type_t_kind, tout)) => {
+        (
+            _,
+            UseTInner::ValueToTypeReferenceT(box ValueToTypeReferenceTData {
+                use_op,
+                reason: reason_op,
+                kind: type_t_kind,
+                tout,
+            }),
+        ) => {
             let t = flow_js_utils::value_to_type_reference_transform::run_on_concrete_type(
                 cx,
                 use_op.dupe(),
@@ -2314,7 +2433,12 @@ fn __flow_impl<'cx>(
         // performed on some concretized types.
         (
             TypeInner::NominalT { nominal_type, .. },
-            UseTInner::ObjKitT { .. } | UseTInner::ReactKitT(_, _, _),
+            UseTInner::ObjKitT { .. }
+            | UseTInner::ReactKitT(box ReactKitTData {
+                use_op: _,
+                reason: _,
+                tool: _,
+            }),
         ) if let Some(t) = nominal_type.upper_t.as_ref() => {
             rec_flow(cx, trace, (t, u))?;
         }
@@ -2385,18 +2509,23 @@ fn __flow_impl<'cx>(
         // recorded as lower bound to the target tvar.
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForInspection,
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
         // helpers
-        (TypeInner::DefT(reason_o, def_t), UseTInner::HasOwnPropT(use_op, reason_op, key))
-            if let DefTInner::ObjT(obj) = def_t.deref() =>
-        {
+        (
+            TypeInner::DefT(reason_o, def_t),
+            UseTInner::HasOwnPropT(box HasOwnPropTData {
+                use_op,
+                reason: reason_op,
+                type_: key,
+            }),
+        ) if let DefTInner::ObjT(obj) = def_t.deref() => {
             let ObjType {
                 props_tmap: mapr,
                 flags,
@@ -2432,46 +2561,58 @@ fn __flow_impl<'cx>(
                         }
                         _ => (None, None),
                     };
-                    let err = ErrorMessage::EPropNotFoundInLookup {
-                        prop_name: prop,
-                        reason_prop: reason_op.dupe(),
-                        reason_obj: reason_o.dupe(),
-                        use_op: use_op.dupe(),
-                        suggestion,
-                    };
+                    let err =
+                        ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                            prop_name: prop,
+                            reason_prop: reason_op.dupe(),
+                            reason_obj: reason_o.dupe(),
+                            use_op: use_op.dupe(),
+                            suggestion,
+                        }));
                     flow_js_utils::add_output(cx, err)?;
                 }
             }
         }
-        (TypeInner::DefT(reason_o, def_t), UseTInner::HasOwnPropT(use_op, reason_op, key))
-            if let DefTInner::InstanceT(instance_t) = def_t.deref()
-                && let Some(x) = match key.deref() {
-                    TypeInner::DefT(_, kd)
-                        if let DefTInner::SingletonStrT { value, .. } = kd.deref() =>
-                    {
-                        Some(value)
-                    }
-                    TypeInner::GenericT(box GenericTData { bound, .. })
-                        if let TypeInner::DefT(_, kd) = bound.deref()
-                            && let DefTInner::SingletonStrT { value, .. } = kd.deref() =>
-                    {
-                        Some(value)
-                    }
-                    _ => None,
-                } =>
+        (
+            TypeInner::DefT(reason_o, def_t),
+            UseTInner::HasOwnPropT(box HasOwnPropTData {
+                use_op,
+                reason: reason_op,
+                type_: key,
+            }),
+        ) if let DefTInner::InstanceT(instance_t) = def_t.deref()
+            && let Some(x) = match key.deref() {
+                TypeInner::DefT(_, kd)
+                    if let DefTInner::SingletonStrT { value, .. } = kd.deref() =>
+                {
+                    Some(value)
+                }
+                TypeInner::GenericT(box GenericTData { bound, .. })
+                    if let TypeInner::DefT(_, kd) = bound.deref()
+                        && let DefTInner::SingletonStrT { value, .. } = kd.deref() =>
+                {
+                    Some(value)
+                }
+                _ => None,
+            } =>
         {
             let inst = &instance_t.inst;
             let own_props = cx.find_props(inst.own_props.dupe());
             match own_props.get(x) {
                 Some(_) => {}
                 None => {
-                    let err = ErrorMessage::EPropNotFoundInLookup {
-                        prop_name: Some(x.dupe()),
-                        reason_prop: reason_op.dupe(),
-                        reason_obj: reason_o.dupe(),
-                        use_op: use_op.dupe(),
-                        suggestion: prop_typo_suggestion(cx, &[inst.own_props.dupe()], x.as_str()),
-                    };
+                    let err =
+                        ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                            prop_name: Some(x.dupe()),
+                            reason_prop: reason_op.dupe(),
+                            reason_obj: reason_o.dupe(),
+                            use_op: use_op.dupe(),
+                            suggestion: prop_typo_suggestion(
+                                cx,
+                                &[inst.own_props.dupe()],
+                                x.as_str(),
+                            ),
+                        }));
                     match &inst.inst_dict {
                         Some(DictType { key: dict_key, .. }) => {
                             let mod_key = type_util::mod_reason_of_t(&|_| reason_op.dupe(), key);
@@ -2484,20 +2625,32 @@ fn __flow_impl<'cx>(
                 }
             }
         }
-        (TypeInner::DefT(reason_o, def_t), UseTInner::HasOwnPropT(use_op, reason_op, _))
-            if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
-        {
-            let err = ErrorMessage::EPropNotFoundInLookup {
+        (
+            TypeInner::DefT(reason_o, def_t),
+            UseTInner::HasOwnPropT(box HasOwnPropTData {
+                use_op,
+                reason: reason_op,
+                type_: _,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
+            let err = ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name: None,
                 reason_prop: reason_op.dupe(),
                 reason_obj: reason_o.dupe(),
                 use_op: use_op.dupe(),
                 suggestion: None,
-            };
+            }));
             flow_js_utils::add_output(cx, err)?;
         }
         // AnyT has every prop
-        (TypeInner::AnyT(_, _), UseTInner::HasOwnPropT(_, _, _)) => {}
+        (
+            TypeInner::AnyT(_, _),
+            UseTInner::HasOwnPropT(box HasOwnPropTData {
+                use_op: _,
+                reason: _,
+                type_: _,
+            }),
+        ) => {}
         (TypeInner::DefT(_, def_t), UseTInner::GetKeysT(reason_op, keys))
             if let DefTInner::ObjT(obj) = def_t.deref() =>
         {
@@ -2639,13 +2792,13 @@ fn __flow_impl<'cx>(
         // considering its upper bound
         (
             _,
-            UseTInner::ResolveUnionT {
+            UseTInner::ResolveUnionT(box ResolveUnionTData {
                 reason,
                 resolved,
                 unresolved,
                 upper,
                 id,
-            },
+            }),
         ) => {
             if let Some((tc_l, tc_u)) =
                 resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
@@ -2726,13 +2879,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::UnionT(_, _),
-            UseTInner::SealGenericT {
+            UseTInner::SealGenericT(box SealGenericTData {
                 reason: _,
                 id,
                 name,
                 cont,
                 no_infer,
-            },
+            }),
         ) => {
             let reason = reason_of_t(l);
             let generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -2759,12 +2912,12 @@ fn __flow_impl<'cx>(
         // Shortcut for indexed accesses with the same type as the dict key.
         (
             TypeInner::UnionT(_, _),
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 reason,
                 obj,
                 action: box ElemAction::ReadElem { tout, .. },
-            },
+            }),
         ) if let TypeInner::DefT(_, obj_def) = obj.deref()
             && let DefTInner::ObjT(obj_t) = obj_def.deref()
             && {
@@ -2799,7 +2952,7 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::UnionT(_, rep),
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 reason,
                 obj,
@@ -2811,7 +2964,7 @@ fn __flow_impl<'cx>(
                         access_iterables,
                         tout,
                     },
-            },
+            }),
         ) => {
             let distribute = || -> Result<(), FlowJsException> {
                 let reason = reason.dupe().update_desc(|d| d.invalidate_rtype_alias());
@@ -2837,12 +2990,12 @@ fn __flow_impl<'cx>(
                                 trace,
                                 (
                                     t,
-                                    &UseT::new(UseTInner::ElemT {
+                                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                                         use_op: use_op.dupe(),
                                         reason: reason.dupe(),
                                         obj: obj.dupe(),
                                         action: Box::new(action),
-                                    }),
+                                    }))),
                                 ),
                             )
                         },
@@ -2914,11 +3067,11 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::UnionT(_, rep), _)
             if match u.deref() {
-                UseTInner::WriteComputedObjPropCheckT { .. } => false,
-                UseTInner::ConditionalT {
+                UseTInner::WriteComputedObjPropCheckT(..) => false,
+                UseTInner::ConditionalT(box ConditionalTData {
                     distributive_tparam_name,
                     ..
-                } => distributive_tparam_name.is_some(),
+                }) => distributive_tparam_name.is_some(),
                 _ => true,
             } =>
         {
@@ -2938,7 +3091,7 @@ fn __flow_impl<'cx>(
         // lookup of properties
         (
             TypeInner::IntersectionT(_, rep),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
                 try_ts_on_failure,
@@ -2947,7 +3100,7 @@ fn __flow_impl<'cx>(
                 ids,
                 method_accessible,
                 ignore_dicts,
-            },
+            }),
         ) => {
             let ts: Vec<_> = rep.members_iter().duped().collect();
             assert!(!ts.is_empty());
@@ -2963,7 +3116,7 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     hd,
-                    &UseT::new(UseTInner::LookupT {
+                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason.dupe(),
                         lookup_kind: lookup_kind.clone(),
                         try_ts_on_failure: new_try_ts.into(),
@@ -2972,14 +3125,14 @@ fn __flow_impl<'cx>(
                         ids: ids.dupe(),
                         method_accessible: *method_accessible,
                         ignore_dicts: *ignore_dicts,
-                    }),
+                    }))),
                 ),
             )?;
         }
         // Cases of an intersection need to produce errors on non-existent
         // properties instead of a default, so that other cases may be tried
         // instead and succeed.
-        (TypeInner::IntersectionT(_, _), UseTInner::GetPropT(data)) if data.id.is_some() => {
+        (TypeInner::IntersectionT(_, _), UseTInner::GetPropT(box data)) if data.id.is_some() => {
             rec_flow(
                 cx,
                 trace,
@@ -3000,14 +3153,14 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::IntersectionT(_, _),
-            UseTInner::TestPropT {
+            UseTInner::TestPropT(box TestPropTData {
                 use_op,
                 reason,
                 id: _,
                 propref,
                 tout,
                 hint,
-            },
+            }),
         ) => {
             rec_flow(
                 cx,
@@ -3030,7 +3183,13 @@ fn __flow_impl<'cx>(
         // extends
         (
             TypeInner::IntersectionT(_, rep),
-            UseTInner::ExtendsUseT(use_op, reason, try_ts_on_failure, ext_l, ext_u),
+            UseTInner::ExtendsUseT(box ExtendsUseTData {
+                use_op,
+                reason,
+                targs: try_ts_on_failure,
+                true_t: ext_l,
+                false_t: ext_u,
+            }),
         ) => {
             let mut members = rep.members_iter();
             let t = members.next().unwrap();
@@ -3042,18 +3201,25 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     t,
-                    &UseT::new(UseTInner::ExtendsUseT(
-                        use_op.dupe(),
-                        reason.dupe(),
-                        new_try_ts.into(),
-                        ext_l.dupe(),
-                        ext_u.dupe(),
-                    )),
+                    &UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
+                        use_op: use_op.dupe(),
+                        reason: reason.dupe(),
+                        targs: new_try_ts.into(),
+                        true_t: ext_l.dupe(),
+                        false_t: ext_u.dupe(),
+                    }))),
                 ),
             )?;
         }
         // consistent override of properties
-        (TypeInner::IntersectionT(_, rep), UseTInner::SuperT(use_op, reason, derived)) => {
+        (
+            TypeInner::IntersectionT(_, rep),
+            UseTInner::SuperT(box SuperTData {
+                use_op,
+                reason,
+                derived_type: derived,
+            }),
+        ) => {
             for t in rep.members_iter() {
                 let u_inner = match use_op {
                     VirtualUseOp::Op(root)
@@ -3065,11 +3231,11 @@ fn __flow_impl<'cx>(
                                 def: def.dupe(),
                                 extends: reason_of_t(t).dupe(),
                             }));
-                        UseT::new(UseTInner::SuperT(
-                            new_use_op,
-                            reason.dupe(),
-                            derived.clone(),
-                        ))
+                        UseT::new(UseTInner::SuperT(Box::new(SuperTData {
+                            use_op: new_use_op,
+                            reason: reason.dupe(),
+                            derived_type: derived.clone(),
+                        })))
                     }
                     _ => u.dupe(),
                 };
@@ -3104,12 +3270,12 @@ fn __flow_impl<'cx>(
         // an intersection lower bound
         (
             TypeInner::IntersectionT(_, _),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeForPredicate(_),
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -3144,13 +3310,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::IntersectionT(_, _),
-            UseTInner::SealGenericT {
+            UseTInner::SealGenericT(box SealGenericTData {
                 reason: _,
                 id,
                 name,
                 cont,
                 no_infer,
-            },
+            }),
         ) => {
             let reason = reason_of_t(l);
             let generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -3164,18 +3330,18 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::IntersectionT(_, _),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
-            },
+            }),
         ) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::IntersectionT(_, _),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind:
                     ConcretizationKind::ConcretizeForOptionalChain
@@ -3185,7 +3351,7 @@ fn __flow_impl<'cx>(
                     | ConcretizationKind::ConcretizeForDestructuring,
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -3203,12 +3369,12 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeForOptionalChain,
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -3220,7 +3386,14 @@ fn __flow_impl<'cx>(
         // `any` is obviously fine as a spread element. `Object` is fine because
         // any Iterable can be spread, and `Object` is the any type that covers
         // iterable objects.
-        (TypeInner::AnyT(r, src), UseTInner::ResolveSpreadT(use_op, reason_op, resolve_spread)) => {
+        (
+            TypeInner::AnyT(r, src),
+            UseTInner::ResolveSpreadT(box ResolveSpreadTData {
+                use_op,
+                reason: reason_op,
+                resolve_spread_type: resolve_spread,
+            }),
+        ) => {
             let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
             rrt_resolved.push(ResolvedParam::ResolvedAnySpreadArg(r.dupe(), *src));
             resolve_spread_list_rec(
@@ -3233,7 +3406,14 @@ fn __flow_impl<'cx>(
                 resolve_spread.rrt_resolve_to.clone(),
             )?;
         }
-        (_, UseTInner::ResolveSpreadT(use_op, reason_op, resolve_spread)) => {
+        (
+            _,
+            UseTInner::ResolveSpreadT(box ResolveSpreadTData {
+                use_op,
+                reason: reason_op,
+                resolve_spread_type: resolve_spread,
+            }),
+        ) => {
             let reason = reason_of_t(l);
             let (lt, generic) = match l.deref() {
                 TypeInner::GenericT(box GenericTData {
@@ -3261,10 +3441,12 @@ fn __flow_impl<'cx>(
                             // Only tuples can be spread into tuple types.
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::ETupleInvalidTypeSpread {
-                                    reason_spread: reason_op.dupe(),
-                                    reason_arg: reason.dupe(),
-                                },
+                                ErrorMessage::ETupleInvalidTypeSpread(Box::new(
+                                    ETupleInvalidTypeSpreadData {
+                                        reason_spread: reason_op.dupe(),
+                                        reason_arg: reason.dupe(),
+                                    },
+                                )),
                             )?;
                             ArrType::ArrayAT {
                                 elem_t: any_t::error(reason.dupe()),
@@ -3332,10 +3514,12 @@ fn __flow_impl<'cx>(
                         ResolveTo::Tuple => {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::ETupleInvalidTypeSpread {
-                                    reason_spread: reason_op.dupe(),
-                                    reason_arg: reason.dupe(),
-                                },
+                                ErrorMessage::ETupleInvalidTypeSpread(Box::new(
+                                    ETupleInvalidTypeSpreadData {
+                                        reason_spread: reason_op.dupe(),
+                                        reason_arg: reason.dupe(),
+                                    },
+                                )),
                             )?;
                             any_t::error(reason.dupe())
                         }
@@ -3416,23 +3600,27 @@ fn __flow_impl<'cx>(
                                         trace,
                                         (
                                             l,
-                                            &UseT::new(UseTInner::ResolveSpreadT(
-                                                use_op.dupe(),
-                                                reason_op.dupe(),
-                                                Box::new(ResolveSpreadType {
-                                                    rrt_resolved: resolve_spread
-                                                        .rrt_resolved
-                                                        .clone(),
-                                                    rrt_unresolved: resolve_spread
-                                                        .rrt_unresolved
-                                                        .clone(),
-                                                    rrt_resolve_to:
-                                                        SpreadResolve::ResolveSpreadsToArray(
-                                                            cfe_elem_t.dupe(),
-                                                            tout.dupe(),
-                                                        ),
-                                                }),
-                                            )),
+                                            &UseT::new(UseTInner::ResolveSpreadT(Box::new(
+                                                ResolveSpreadTData {
+                                                    use_op: use_op.dupe(),
+                                                    reason: reason_op.dupe(),
+                                                    resolve_spread_type: Box::new(
+                                                        ResolveSpreadType {
+                                                            rrt_resolved: resolve_spread
+                                                                .rrt_resolved
+                                                                .clone(),
+                                                            rrt_unresolved: resolve_spread
+                                                                .rrt_unresolved
+                                                                .clone(),
+                                                            rrt_resolve_to:
+                                                                SpreadResolve::ResolveSpreadsToArray(
+                                                                    cfe_elem_t.dupe(),
+                                                                    tout.dupe(),
+                                                                ),
+                                                        },
+                                                    ),
+                                                },
+                                            ))),
                                         ),
                                     )?;
                                 }
@@ -3557,20 +3745,21 @@ fn __flow_impl<'cx>(
         // ********************
         // * conditional type *
         // ********************
-        (TypeInner::DefT(_, def_t), UseTInner::ConditionalT { use_op, tout, .. })
-            if matches!(def_t.deref(), DefTInner::EmptyT) =>
-        {
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::ConditionalT(box ConditionalTData { use_op, tout, .. }),
+        ) if matches!(def_t.deref(), DefTInner::EmptyT) => {
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::DefT(reason_tapp, def_t),
-            UseTInner::ConditionalT {
+            UseTInner::ConditionalT(box ConditionalTData {
                 use_op,
                 reason: reason_op,
                 ..
-            },
-        ) if let DefTInner::PolyT { tparams, t_out, .. } = def_t.deref() => {
+            }),
+        ) if let DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) = def_t.deref() => {
             let t_ = implicit_instantiation::kit::run_monomorphize(
                 cx,
                 trace,
@@ -3584,7 +3773,7 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::ConditionalT {
+            UseTInner::ConditionalT(box ConditionalTData {
                 use_op,
                 reason,
                 distributive_tparam_name: Some(name),
@@ -3593,7 +3782,7 @@ fn __flow_impl<'cx>(
                 true_t,
                 false_t,
                 tout,
-            },
+            }),
         ) => {
             let subst = flow_js_utils::mk_distributive_tparam_subst_fn(
                 cx,
@@ -3620,7 +3809,7 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     l,
-                    &UseT::new(UseTInner::ConditionalT {
+                    &UseT::new(UseTInner::ConditionalT(Box::new(ConditionalTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         distributive_tparam_name: None,
@@ -3629,13 +3818,13 @@ fn __flow_impl<'cx>(
                         true_t: subst(true_t.dupe()),
                         false_t: subst(false_t.dupe()),
                         tout: tout.clone(),
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             _,
-            UseTInner::ConditionalT {
+            UseTInner::ConditionalT(box ConditionalTData {
                 use_op,
                 reason,
                 distributive_tparam_name: None,
@@ -3644,7 +3833,7 @@ fn __flow_impl<'cx>(
                 true_t,
                 false_t,
                 tout,
-            },
+            }),
         ) => {
             let result = implicit_instantiation::kit::run_conditional(
                 cx,
@@ -3741,12 +3930,12 @@ fn __flow_impl<'cx>(
         }
 
         (TypeInner::DefT(_, def_t), UseTInner::MixinT(r, tvar))
-            if let DefTInner::PolyT {
+            if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams: xs,
                 t_out,
                 ..
-            } = def_t.deref()
+            }) = def_t.deref()
                 && let TypeInner::DefT(class_r, inner_def) = t_out.deref()
                 && let DefTInner::ClassT(inner) = inner_def.deref()
                 && let TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -3808,13 +3997,19 @@ fn __flow_impl<'cx>(
         // types, so the decision to cache or not originates there.)
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::SpecializeT(use_op, reason_op, reason_tapp, ts, tvar),
-        ) if let DefTInner::PolyT {
+            UseTInner::SpecializeT(box SpecializeTData {
+                use_op,
+                reason: reason_op,
+                reason2: reason_tapp,
+                targs: ts,
+                tvar,
+            }),
+        ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc,
             tparams: xs,
             t_out: t,
             id,
-        } = def_t.deref() =>
+        }) = def_t.deref() =>
         {
             let ts_val = ts
                 .as_ref()
@@ -3835,12 +4030,28 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, trace, unknown_use(), (&t_, tvar))?;
         }
         // empty targs specialization of non-polymorphic classes is a no-op
-        (TypeInner::DefT(_, def_t), UseTInner::SpecializeT(_, _, _, None, tvar))
-            if matches!(def_t.deref(), DefTInner::ClassT(_)) =>
-        {
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::SpecializeT(box SpecializeTData {
+                use_op: _,
+                reason: _,
+                reason2: _,
+                targs: None,
+                tvar,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::ClassT(_)) => {
             rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
         }
-        (TypeInner::AnyT(_, _), UseTInner::SpecializeT(_, _, _, _, tvar)) => {
+        (
+            TypeInner::AnyT(_, _),
+            UseTInner::SpecializeT(box SpecializeTData {
+                use_op: _,
+                reason: _,
+                reason2: _,
+                targs: _,
+                tvar,
+            }),
+        ) => {
             // rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
             rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
         }
@@ -3890,7 +4101,7 @@ fn __flow_impl<'cx>(
                 use_desc,
                 use_t: u_inner,
             },
-        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+        ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
             rec_flow(cx, trace, (&repos_l, u_inner))?;
         }
@@ -3909,19 +4120,19 @@ fn __flow_impl<'cx>(
         // Special case for `_ instanceof C` where C is polymorphic
         (
             TypeInner::DefT(reason_tapp, def_t),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind:
                     ConcretizationKind::ConcretizeForPredicate(
                         PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest,
                     ),
                 ..
-            },
-        ) if let DefTInner::PolyT {
+            }),
+        ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc,
             tparams: ids,
             t_out: t,
             ..
-        } = def_t.deref() =>
+        }) = def_t.deref() =>
         {
             let reason_op = reason_of_use_t(u);
             let new_l = instantiate_poly_default_args(
@@ -3938,22 +4149,22 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForPredicate(_),
                 collector,
                 ..
-            },
-        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+            }),
+        ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             collector.add(l.dupe());
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForDestructuring,
                 collector,
                 ..
-            },
-        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+            }),
+        ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             collector.add(l.dupe());
         }
 
@@ -3975,17 +4186,17 @@ fn __flow_impl<'cx>(
         // instantiation here that would be un-annotatable.
         (
             TypeInner::DefT(reason_tapp, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 ..
-            },
-        ) if let DefTInner::PolyT {
+            }),
+        ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc,
             tparams: ids,
             t_out: t,
             ..
-        } = def_t.deref()
+        }) = def_t.deref()
             && let TypeInner::DefT(_, inner_def) = t.deref()
             && let DefTInner::ClassT(inner) = inner_def.deref()
             && let TypeInner::ThisInstanceT(..) = inner.deref() =>
@@ -4016,12 +4227,12 @@ fn __flow_impl<'cx>(
         // decomposition code that has some knowledge of the call arguments.
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
-            },
-        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+            }),
+        ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
         }
@@ -4050,18 +4261,18 @@ fn __flow_impl<'cx>(
         // without fearing regressions in termination guarantees.
         (
             TypeInner::DefT(reason_tapp, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 call_action: box CallAction::Funcalltype(calltype),
                 return_hint,
-            },
-        ) if let DefTInner::PolyT {
+            }),
+        ) if let DefTInner::PolyT(box PolyTData {
             tparams_loc,
             tparams: ids,
             t_out: t,
             ..
-        } = def_t.deref() =>
+        }) = def_t.deref() =>
         {
             let lparts = (
                 reason_tapp.dupe(),
@@ -4100,21 +4311,21 @@ fn __flow_impl<'cx>(
                 call_targs: None,
                 ..calltype.clone()
             };
-            let new_u = UseT::new(UseTInner::CallT {
+            let new_u = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
                 call_action: Box::new(CallAction::Funcalltype(new_calltype)),
                 return_hint: return_hint.clone(),
-            });
+            })));
             rec_flow(cx, trace, (&t_, &new_u))?;
         }
-        (TypeInner::DefT(reason_tapp, def_t), UseTInner::ConstructorT(ctor_data))
-            if let DefTInner::PolyT {
+        (TypeInner::DefT(reason_tapp, def_t), UseTInner::ConstructorT(box ctor_data))
+            if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams: ids,
                 t_out: t,
                 ..
-            } = def_t.deref() =>
+            }) = def_t.deref() =>
         {
             let lparts = (
                 reason_tapp.dupe(),
@@ -4162,23 +4373,29 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(cx, trace, (&t_, &new_u))?;
         }
-        (TypeInner::DefT(reason_tapp, def_t), UseTInner::ReactKitT(use_op, reason_op, tool))
-            if let DefTInner::PolyT {
-                tparams_loc,
-                tparams: ids,
-                t_out: t,
+        (
+            TypeInner::DefT(reason_tapp, def_t),
+            UseTInner::ReactKitT(box ReactKitTData {
+                use_op,
+                reason: reason_op,
+                tool,
+            }),
+        ) if let DefTInner::PolyT(box PolyTData {
+            tparams_loc,
+            tparams: ids,
+            t_out: t,
+            ..
+        }) = def_t.deref()
+            && let react::Tool::CreateElement {
+                component,
+                jsx_props,
+                should_generalize,
+                return_hint,
+                targs,
+                tout,
+                specialized_component,
                 ..
-            } = def_t.deref()
-                && let react::Tool::CreateElement {
-                    component,
-                    jsx_props,
-                    should_generalize,
-                    return_hint,
-                    targs,
-                    tout,
-                    specialized_component,
-                    ..
-                } = &**tool =>
+            } = &**tool =>
         {
             let lparts = (
                 reason_tapp.dupe(),
@@ -4220,10 +4437,10 @@ fn __flow_impl<'cx>(
             };
             let (t_, inferred_targs) =
                 instantiate_poly_call_or_new_with_soln(cx, trace, lparts, uparts, &check)?;
-            let new_u = UseT::new(UseTInner::ReactKitT(
-                use_op.dupe(),
-                reason_op.dupe(),
-                Box::new(react::Tool::<Context<'cx>>::CreateElement {
+            let new_u = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                use_op: use_op.dupe(),
+                reason: reason_op.dupe(),
+                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement {
                     component: component.dupe(),
                     jsx_props: jsx_props.dupe(),
                     should_generalize: *should_generalize,
@@ -4234,36 +4451,48 @@ fn __flow_impl<'cx>(
                     inferred_targs: Some(inferred_targs.into()),
                     specialized_component: specialized_component.clone(),
                 }),
-            ));
+            })));
             rec_flow(cx, trace, (&t_, &new_u))?;
         }
-        (TypeInner::DefT(r, def_t), UseTInner::ReactKitT(_, _, tool))
-            if let DefTInner::ObjT(obj) = def_t.deref()
-                && obj.call_t.is_some()
-                && matches!(
-                    &**tool,
-                    react::Tool::CreateElement { .. }
-                        | react::Tool::GetConfig { .. }
-                        | react::Tool::ConfigCheck { .. }
-                )
-                && {
-                    let id = obj.call_t.as_ref().unwrap();
-                    let found = cx.find_call(id.dupe());
-                    match found.deref() {
-                        TypeInner::DefT(_, inner_def)
-                            if matches!(inner_def.deref(), DefTInner::PolyT { t_out, .. }
+        (
+            TypeInner::DefT(r, def_t),
+            UseTInner::ReactKitT(box ReactKitTData {
+                use_op: _,
+                reason: _,
+                tool,
+            }),
+        ) if let DefTInner::ObjT(obj) = def_t.deref()
+            && obj.call_t.is_some()
+            && matches!(
+                &**tool,
+                react::Tool::CreateElement { .. }
+                    | react::Tool::GetConfig { .. }
+                    | react::Tool::ConfigCheck { .. }
+            )
+            && {
+                let id = obj.call_t.as_ref().unwrap();
+                let found = cx.find_call(id.dupe());
+                match found.deref() {
+                    TypeInner::DefT(_, inner_def)
+                        if matches!(inner_def.deref(), DefTInner::PolyT(box PolyTData { t_out, .. })
                             if matches!(t_out.deref(), TypeInner::DefT(_, inner2) if matches!(inner2.deref(), DefTInner::FunT(_, _)))) =>
-                        {
-                            let fun_t_repos = type_util::mod_reason_of_t(&|_| r.dupe(), &found);
-                            rec_flow(cx, trace, (&fun_t_repos, u))?;
-                            true
-                        }
-                        _ => false,
+                    {
+                        let fun_t_repos = type_util::mod_reason_of_t(&|_| r.dupe(), &found);
+                        rec_flow(cx, trace, (&fun_t_repos, u))?;
+                        true
                     }
-                } => {}
-        (TypeInner::DefT(reason_tapp, def_t), UseTInner::ReactKitT(use_op, reason_op, tool))
-            if let DefTInner::PolyT { tparams, t_out, .. } = def_t.deref()
-                && matches!(&**tool, react::Tool::GetConfig { .. }) =>
+                    _ => false,
+                }
+            } => {}
+        (
+            TypeInner::DefT(reason_tapp, def_t),
+            UseTInner::ReactKitT(box ReactKitTData {
+                use_op,
+                reason: reason_op,
+                tool,
+            }),
+        ) if let DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) = def_t.deref()
+            && matches!(&**tool, react::Tool::GetConfig { .. }) =>
         {
             let t_ = implicit_instantiation::kit::run_monomorphize(
                 cx,
@@ -4282,10 +4511,16 @@ fn __flow_impl<'cx>(
         // ******************************
         (
             TypeInner::DefT(l_reason, def_t),
-            UseTInner::MethodT(use_op, reason_call, reason_lookup, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: reason_call,
+                prop_reason: reason_lookup,
+                propref,
+                method_action: action,
+            }),
         ) if let Some((reason, static_)) = match def_t.deref() {
             DefTInner::FunT(static_, _) => Some((l_reason.dupe(), static_.dupe())),
-            DefTInner::PolyT { t_out, .. } => {
+            DefTInner::PolyT(box PolyTData { t_out, .. }) => {
                 if let TypeInner::DefT(reason, inner) = t_out.deref()
                     && let DefTInner::FunT(static_, _) = inner.deref()
                 {
@@ -4337,12 +4572,12 @@ fn __flow_impl<'cx>(
             )?;
         }
         (TypeInner::DefT(reason_tapp, def_t), _)
-            if let DefTInner::PolyT {
+            if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams: ids,
                 t_out: t,
                 ..
-            } = def_t.deref() =>
+            }) = def_t.deref() =>
         {
             let reason_op = reason_of_use_t(u);
             let use_op = match use_op_of_use_t(u) {
@@ -4350,7 +4585,13 @@ fn __flow_impl<'cx>(
                 None => unknown_use(),
             };
             let unify_bounds = match u.deref() {
-                UseTInner::MethodT(_, _, _, _, box MethodAction::NoMethodAction(_)) => true,
+                UseTInner::MethodT(box MethodTData {
+                    use_op: _,
+                    reason: _,
+                    prop_reason: _,
+                    propref: _,
+                    method_action: box MethodAction::NoMethodAction(_),
+                }) => true,
                 _ => false,
             };
             let (t_, _) = FlowJs::instantiate_poly(
@@ -4418,14 +4659,14 @@ fn __flow_impl<'cx>(
         // * React Abstract Components *
         // *****************************
         (TypeInner::DefT(r, def_t), _)
-            if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT { .. })
+            if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT(box _))
                 && matches!(
                     u.deref(),
-                    UseTInner::TestPropT { .. }
+                    UseTInner::TestPropT(..)
                         | UseTInner::GetPropT(..)
                         | UseTInner::SetPropT(..)
-                        | UseTInner::GetElemT { .. }
-                        | UseTInner::SetElemT { .. }
+                        | UseTInner::GetElemT(..)
+                        | UseTInner::SetElemT(..)
                 ) =>
         {
             let statics = FlowJs::get_builtin_type(
@@ -4440,13 +4681,13 @@ fn __flow_impl<'cx>(
         // Components can never be called
         (
             TypeInner::DefT(r, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason,
                 call_action: box CallAction::Funcalltype(calltype),
                 ..
-            },
-        ) if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT { .. }) => {
+            }),
+        ) if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT(box _)) => {
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::ECannotCallReactComponent { reason: r.dupe() },
@@ -4463,23 +4704,23 @@ fn __flow_impl<'cx>(
         // FunT ~> CallT
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::FunT(_, _)) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::DefT(reason_fundef, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_callsite,
                 call_action: box CallAction::Funcalltype(calltype),
                 return_hint: _,
-            },
+            }),
         ) if let DefTInner::FunT(_, funtype) = def_t.deref() => {
             let return_t = match &funtype.effect_ {
                 ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot => {
@@ -4530,12 +4771,12 @@ fn __flow_impl<'cx>(
             if call_targs.is_some() {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::ECallTypeArity {
+                    ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_callsite.loc().dupe(),
                         is_new: false,
                         reason_arity: reason_fundef.dupe(),
                         expected_arity: 0,
-                    },
+                    })),
                 )?;
             }
             let modified_funtype = FunType {
@@ -4577,23 +4818,23 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::AnyT(_, _),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
-            },
+            }),
         ) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::AnyT(reason_fundef, src),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 call_action: box CallAction::Funcalltype(calltype),
                 return_hint: _,
-            },
+            }),
         ) => {
             let call_this_t = &calltype.call_this_t;
             // An untyped receiver can't do anything with type args
@@ -4624,7 +4865,14 @@ fn __flow_impl<'cx>(
             let open_tout = Type::new(TypeInner::OpenT(call_tout.dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (&any_op, &open_tout))?;
         }
-        (_, UseTInner::ReactKitT(use_op, reason_op, tool)) => {
+        (
+            _,
+            UseTInner::ReactKitT(box ReactKitTData {
+                use_op,
+                reason: reason_op,
+                tool,
+            }),
+        ) => {
             // ReactJs.run cx trace ~use_op reason_op l tool
             react_kit::run(cx, trace, use_op.dupe(), reason_op, l, tool)?;
         }
@@ -4634,11 +4882,11 @@ fn __flow_impl<'cx>(
         // ****************************************
         (
             TypeInner::DefT(reason, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 ..
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::InstanceT(_)) => {
             let prop_name = Some(Name::new(FlowSmolStr::new_inline("$call")));
             let fun_t = match def_t.deref() {
@@ -4650,13 +4898,14 @@ fn __flow_impl<'cx>(
                     let reason_prop = reason_op
                         .dupe()
                         .replace_desc(VirtualReasonDesc::RProperty(prop_name.dupe()));
-                    let error_message = ErrorMessage::EPropNotFoundInLookup {
-                        reason_prop: reason_prop.dupe(),
-                        reason_obj: reason.dupe(),
-                        prop_name,
-                        use_op: use_op.dupe(),
-                        suggestion: None,
-                    };
+                    let error_message =
+                        ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                            reason_prop: reason_prop.dupe(),
+                            reason_obj: reason.dupe(),
+                            prop_name,
+                            use_op: use_op.dupe(),
+                            suggestion: None,
+                        }));
                     flow_js_utils::add_output(cx, error_message)?;
                     any_t::error(reason_op.dupe())
                 }
@@ -4706,7 +4955,10 @@ fn __flow_impl<'cx>(
             } else {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EInvalidPrototype(reason_op.loc().dupe(), reason_of_t(l).dupe()),
+                    ErrorMessage::EInvalidPrototype(Box::new((
+                        reason_op.loc().dupe(),
+                        reason_of_t(l).dupe(),
+                    ))),
                 )?;
                 Type::new(TypeInner::ObjProtoT(
                     reason_op
@@ -4722,7 +4974,13 @@ fn __flow_impl<'cx>(
         // **************************************************
         (
             TypeInner::DefT(reason, def_t),
-            UseTInner::ExtendsUseT(use_op, reason_op, try_ts_on_failure, ext_l, ext_u),
+            UseTInner::ExtendsUseT(box ExtendsUseTData {
+                use_op,
+                reason: reason_op,
+                targs: try_ts_on_failure,
+                true_t: ext_l,
+                false_t: ext_u,
+            }),
         ) if let DefTInner::InstanceT(inst_t) = def_t.deref()
             && let TypeInner::DefT(reason_u, inner_def_u) = ext_u.deref()
             && let DefTInner::InstanceT(inst_super_t) = inner_def_u.deref() =>
@@ -4832,13 +5090,13 @@ fn __flow_impl<'cx>(
                 // structural test at the use site.
                 let mut combined = try_ts_on_failure.to_vec();
                 combined.extend(implements.iter().duped());
-                let use_t = UseT::new(UseTInner::ExtendsUseT(
-                    use_op.dupe(),
-                    reason_op.dupe(),
-                    combined.into(),
-                    ext_l.dupe(),
-                    ext_u.dupe(),
-                ));
+                let use_t = UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
+                    use_op: use_op.dupe(),
+                    reason: reason_op.dupe(),
+                    targs: combined.into(),
+                    true_t: ext_l.dupe(),
+                    false_t: ext_u.dupe(),
+                })));
                 let repos_use = UseT::new(UseTInner::ReposLowerT {
                     reason: reason.dupe(),
                     use_desc: false,
@@ -4851,7 +5109,7 @@ fn __flow_impl<'cx>(
         // *********************************************************
         // * class types derive instance types (with constructors) *
         // *********************************************************
-        (TypeInner::DefT(reason, def_t), UseTInner::ConstructorT(ctor_data))
+        (TypeInner::DefT(reason, def_t), UseTInner::ConstructorT(box ctor_data))
             if let DefTInner::ClassT(this) = def_t.deref() =>
         {
             let use_op = &ctor_data.use_op;
@@ -4869,12 +5127,12 @@ fn __flow_impl<'cx>(
             if targs.is_some() {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::ECallTypeArity {
+                    ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: annot_loc.dupe(),
                         is_new: true,
                         reason_arity: reason_of_t(this).dupe(),
                         expected_arity: 0,
-                    },
+                    })),
                 )?;
             }
             // call this.constructor(args)
@@ -4900,17 +5158,17 @@ fn __flow_impl<'cx>(
                         trace,
                         (
                             this,
-                            &UseT::new(UseTInner::MethodT(
-                                use_op.dupe(),
-                                reason_op.dupe(),
-                                reason_o.dupe(),
-                                Box::new(propref),
-                                Box::new(MethodAction::CallM {
+                            &UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                                use_op: use_op.dupe(),
+                                reason: reason_op.dupe(),
+                                prop_reason: reason_o.dupe(),
+                                propref: Box::new(propref),
+                                method_action: Box::new(MethodAction::CallM {
                                     methodcalltype: funtype,
                                     return_hint: return_hint.clone(),
                                     specialized_callee: specialized_ctor.clone(),
                                 }),
-                            )),
+                            }))),
                         ),
                     )?;
                     Ok::<(), FlowJsException>(())
@@ -4930,7 +5188,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::ConstructorT(ctor_data)) => {
+        (TypeInner::AnyT(_, src), UseTInner::ConstructorT(box ctor_data)) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any_op = any_t::why(src, ctor_data.reason.dupe());
             // An untyped receiver can't do anything with type args
@@ -4951,7 +5209,7 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, trace, unknown_use(), (&any_op, &ctor_data.tout))?;
         }
         // Only classes (and `any`) can be constructed.
-        (_, UseTInner::ConstructorT(ctor_data)) => {
+        (_, UseTInner::ConstructorT(box ctor_data)) => {
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EInvalidConstructor(reason_of_t(l).dupe()),
@@ -4968,13 +5226,19 @@ fn __flow_impl<'cx>(
         // parameter is an AnyT.
         (
             TypeInner::AnyT(_, src),
-            UseTInner::MethodT(_, _, _, propref, box MethodAction::NoMethodAction(prop_t)),
+            UseTInner::MethodT(box MethodTData {
+                use_op: _,
+                reason: _,
+                prop_reason: _,
+                propref,
+                method_action: box MethodAction::NoMethodAction(prop_t),
+            }),
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, type_util::reason_of_propref(propref).dupe());
             rec_flow_t(cx, trace, unknown_use(), (&any, prop_t))?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(pm_data))
+        (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
             if let MethodAction::NoMethodAction(prop_t) = pm_data.method_action.as_ref() =>
         {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
@@ -4983,17 +5247,18 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::AnyT(_, src),
-            UseTInner::MethodT(
+            UseTInner::MethodT(box MethodTData {
                 use_op,
-                reason_op,
-                _,
-                _,
-                box MethodAction::CallM {
-                    methodcalltype,
-                    specialized_callee,
-                    ..
-                },
-            ),
+                reason: reason_op,
+                prop_reason: _,
+                propref: _,
+                method_action:
+                    box MethodAction::CallM {
+                        methodcalltype,
+                        specialized_callee,
+                        ..
+                    },
+            }),
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, reason_op.dupe());
@@ -5017,7 +5282,7 @@ fn __flow_impl<'cx>(
             let open_tout = Type::new(TypeInner::OpenT(methodcalltype.meth_tout.dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&any, &open_tout))?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(pm_data))
+        (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
             if let MethodAction::CallM {
                 methodcalltype,
                 specialized_callee,
@@ -5051,7 +5316,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::AnyT(_, src),
-            UseTInner::MethodT(use_op, reason_op, _, _, box chain @ MethodAction::ChainM { .. }),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: reason_op,
+                prop_reason: _,
+                propref: _,
+                method_action: box chain @ MethodAction::ChainM { .. },
+            }),
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, reason_op.dupe());
@@ -5065,7 +5336,7 @@ fn __flow_impl<'cx>(
                 chain,
             )?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(pm_data))
+        (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
             if let chain @ MethodAction::ChainM { .. } = pm_data.method_action.as_ref() =>
         {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
@@ -5193,7 +5464,7 @@ fn __flow_impl<'cx>(
         // ********************************************************
         (
             TypeInner::DefT(lreason, def_t),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: kind,
                 try_ts_on_failure,
@@ -5202,7 +5473,7 @@ fn __flow_impl<'cx>(
                 ids,
                 method_accessible,
                 ignore_dicts,
-            },
+            }),
         ) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
@@ -5257,7 +5528,7 @@ fn __flow_impl<'cx>(
                         trace,
                         (
                             super_,
-                            &UseT::new(UseTInner::LookupT {
+                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
                                 lookup_kind: kind.clone(),
                                 try_ts_on_failure: try_ts_on_failure.clone(),
@@ -5266,7 +5537,7 @@ fn __flow_impl<'cx>(
                                 ids: new_ids,
                                 method_accessible: *method_accessible,
                                 ignore_dicts: *ignore_dicts,
-                            }),
+                            }))),
                         ),
                     )?;
                 }
@@ -5292,11 +5563,11 @@ fn __flow_impl<'cx>(
             );
             add_output(
                 cx,
-                ErrorMessage::EPropNotWritable {
+                ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
                     reason_prop: reason_prop.dupe(),
                     prop_name,
                     use_op,
-                },
+                })),
             )?;
         }
         (
@@ -5327,7 +5598,7 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     l,
-                    &UseT::new(UseTInner::LookupT {
+                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason_op.dupe(),
                         lookup_kind: Box::new(lookup_kind),
                         try_ts_on_failure: Rc::from([]),
@@ -5336,24 +5607,24 @@ fn __flow_impl<'cx>(
                         ids: None,
                         method_accessible,
                         ignore_dicts: true,
-                    }),
+                    }))),
                 ),
             )?;
         }
-        (TypeInner::DefT(reason_c, def_t), UseTInner::SetPrivatePropT(spp_data))
+        (TypeInner::DefT(reason_c, def_t), UseTInner::SetPrivatePropT(box spp_data))
             if matches!(def_t.deref(), DefTInner::InstanceT(_))
                 && spp_data.class_bindings.is_empty() =>
         {
             add_output(
                 cx,
-                ErrorMessage::EPrivateLookupFailed(
+                ErrorMessage::EPrivateLookupFailed(Box::new((
                     (spp_data.reason.dupe(), reason_c.dupe()),
                     Name::new(spp_data.name.dupe()),
                     spp_data.use_op.dupe(),
-                ),
+                ))),
             )?;
         }
-        (TypeInner::DefT(reason_c, def_t), UseTInner::SetPrivatePropT(spp_data))
+        (TypeInner::DefT(reason_c, def_t), UseTInner::SetPrivatePropT(box spp_data))
             if let DefTInner::InstanceT(inst_t) = def_t.deref()
                 && !spp_data.class_bindings.is_empty() =>
         {
@@ -5391,11 +5662,11 @@ fn __flow_impl<'cx>(
                     None => {
                         add_output(
                             cx,
-                            ErrorMessage::EPrivateLookupFailed(
+                            ErrorMessage::EPrivateLookupFailed(Box::new((
                                 (spp_data.reason.dupe(), reason_c.dupe()),
                                 name,
                                 spp_data.use_op.dupe(),
-                            ),
+                            ))),
                         )?;
                     }
                     Some(p) => {
@@ -5426,7 +5697,7 @@ fn __flow_impl<'cx>(
         // *****************************
         // * ... and their fields read *
         // *****************************
-        (TypeInner::DefT(r, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(r, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::InstanceT(_))
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.as_str() == "constructor") =>
         {
@@ -5438,7 +5709,7 @@ fn __flow_impl<'cx>(
                 (&t, &Type::new(TypeInner::OpenT((*data.tout).dupe()))),
             )?;
         }
-        (TypeInner::DefT(reason_instance, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(reason_instance, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
             let super_ = &inst_t.super_;
@@ -5475,7 +5746,7 @@ fn __flow_impl<'cx>(
                 &data.reason,
             )?(cx, (*data.tout).dupe())?;
         }
-        (TypeInner::DefT(reason_c, def_t), UseTInner::GetPrivatePropT(gpp_data))
+        (TypeInner::DefT(reason_c, def_t), UseTInner::GetPrivatePropT(box gpp_data))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
             let inst = &inst_t.inst;
@@ -5499,7 +5770,13 @@ fn __flow_impl<'cx>(
         // ********************************
         (
             TypeInner::DefT(reason_instance, def_t),
-            UseTInner::MethodT(use_op, reason_call, reason_lookup, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: reason_call,
+                prop_reason: reason_lookup,
+                propref,
+                method_action: action,
+            }),
         ) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
@@ -5556,7 +5833,7 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (TypeInner::DefT(reason_c, def_t), UseTInner::PrivateMethodT(pm_data))
+        (TypeInner::DefT(reason_c, def_t), UseTInner::PrivateMethodT(box pm_data))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
             let inst = &inst_t.inst;
@@ -5600,21 +5877,21 @@ fn __flow_impl<'cx>(
         // *****************************************************************
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForObjectAssign,
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 kind: ConcretizationKind::ConcretizeForDestructuring,
                 collector,
                 ..
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -5751,7 +6028,7 @@ fn __flow_impl<'cx>(
         // *******************************************
         (
             TypeInner::DefT(reason_obj, def_t),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind,
                 try_ts_on_failure,
@@ -5760,7 +6037,7 @@ fn __flow_impl<'cx>(
                 ids,
                 method_accessible,
                 ignore_dicts,
-            },
+            }),
         ) if let DefTInner::ObjT(o) = def_t.deref() => {
             match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
                 cx,
@@ -5798,7 +6075,7 @@ fn __flow_impl<'cx>(
                         trace,
                         (
                             &o.proto_t,
-                            &UseT::new(UseTInner::LookupT {
+                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
                                 lookup_kind: lookup_kind.clone(),
                                 try_ts_on_failure: try_ts_on_failure.clone(),
@@ -5807,7 +6084,7 @@ fn __flow_impl<'cx>(
                                 method_accessible: *method_accessible,
                                 ids: new_ids,
                                 ignore_dicts: *ignore_dicts,
-                            }),
+                            }))),
                         ),
                     )?;
                 }
@@ -5815,13 +6092,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::AnyT(reason, src),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind,
                 propref,
                 lookup_action: action,
                 ..
-            },
+            }),
         ) => {
             match action {
                 box LookupAction::SuperProp(_, lp)
@@ -5879,11 +6156,11 @@ fn __flow_impl<'cx>(
             };
             add_output(
                 cx,
-                ErrorMessage::EPropNotWritable {
+                ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
                     reason_prop: reason_prop.dupe(),
                     prop_name,
                     use_op,
-                },
+                })),
             )?;
         }
         (
@@ -5922,7 +6199,7 @@ fn __flow_impl<'cx>(
         // *****************************
         // * ... and their fields read *
         // *****************************
-        (TypeInner::DefT(_, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::ObjT(_))
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.as_str() == "constructor") =>
         {
@@ -5936,7 +6213,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::DefT(reason_obj, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(reason_obj, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::ObjT(o) = def_t.deref() =>
         {
             let lookup_info = data
@@ -5968,7 +6245,7 @@ fn __flow_impl<'cx>(
                 lookup_info,
             )?(cx, (*data.tout).dupe())?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::GetPropT(data)) => {
+        (TypeInner::AnyT(_, src), UseTInner::GetPropT(box data)) => {
             if let Some(id) = data.id {
                 cx.test_prop_hit(id);
             }
@@ -5983,7 +6260,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::GetPrivatePropT(gpp_data)) => {
+        (TypeInner::AnyT(_, src), UseTInner::GetPrivatePropT(box gpp_data)) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             rec_flow_t(
                 cx,
@@ -5998,9 +6275,17 @@ fn __flow_impl<'cx>(
         // ********************************
         // * ... and their methods called *
         // ********************************
-        (TypeInner::DefT(_, def_t), UseTInner::MethodT(_, reason_call, _, propref, action))
-            if matches!(def_t.deref(), DefTInner::ObjT(_))
-                && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::MethodT(box MethodTData {
+                use_op: _,
+                reason: reason_call,
+                prop_reason: _,
+                propref,
+                method_action: action,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::ObjT(_))
+            && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
         {
             add_specialized_callee_method_action(
                 cx,
@@ -6011,7 +6296,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(reason_obj, def_t),
-            UseTInner::MethodT(use_op, reason_call, reason_lookup, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: reason_call,
+                prop_reason: reason_lookup,
+                propref,
+                method_action: action,
+            }),
         ) if let DefTInner::ObjT(o) = def_t.deref() => {
             let t = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
@@ -6047,13 +6338,13 @@ fn __flow_impl<'cx>(
         // ******************************************
         (
             TypeInner::DefT(reason_s, def_t),
-            UseTInner::GetElemT {
+            UseTInner::GetElemT(box GetElemTData {
                 use_op,
                 reason: reason_op,
                 key_t,
                 tout,
                 ..
-            },
+            }),
         ) if matches!(
             def_t.deref(),
             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
@@ -6089,11 +6380,20 @@ fn __flow_impl<'cx>(
         // **********************************************************************
         // * objects/arrays may have their properties/elements written and read *
         // **********************************************************************
-        (TypeInner::DefT(_, def_t), UseTInner::SetElemT(use_op, reason, key, mode, tin, tout))
-            if matches!(
-                def_t.deref(),
-                DefTInner::ObjT(_) | DefTInner::ArrT(_) | DefTInner::InstanceT(_)
-            ) =>
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::SetElemT(box SetElemTData {
+                use_op,
+                reason,
+                key_t: key,
+                set_mode: mode,
+                tin,
+                tout,
+            }),
+        ) if matches!(
+            def_t.deref(),
+            DefTInner::ObjT(_) | DefTInner::ArrT(_) | DefTInner::InstanceT(_)
+        ) =>
         {
             let action = ElemAction::WriteElem {
                 tin: tin.dupe(),
@@ -6105,16 +6405,26 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     key,
-                    &UseT::new(UseTInner::ElemT {
+                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         obj: l.dupe(),
                         action: Box::new(action),
-                    }),
+                    }))),
                 ),
             )?;
         }
-        (TypeInner::AnyT(_, _), UseTInner::SetElemT(use_op, reason, key, mode, tin, tout)) => {
+        (
+            TypeInner::AnyT(_, _),
+            UseTInner::SetElemT(box SetElemTData {
+                use_op,
+                reason,
+                key_t: key,
+                set_mode: mode,
+                tin,
+                tout,
+            }),
+        ) => {
             let action = ElemAction::WriteElem {
                 tin: tin.dupe(),
                 tout: tout.as_ref().map(|t| t.dupe()),
@@ -6125,18 +6435,18 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     key,
-                    &UseT::new(UseTInner::ElemT {
+                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         obj: l.dupe(),
                         action: Box::new(action),
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::GetElemT {
+            UseTInner::GetElemT(box GetElemTData {
                 use_op,
                 reason,
                 id,
@@ -6145,7 +6455,7 @@ fn __flow_impl<'cx>(
                 access_iterables,
                 key_t,
                 tout,
-            },
+            }),
         ) if matches!(
             def_t.deref(),
             DefTInner::ObjT(_) | DefTInner::ArrT(_) | DefTInner::InstanceT(_)
@@ -6163,18 +6473,18 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     key_t,
-                    &UseT::new(UseTInner::ElemT {
+                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         obj: l.dupe(),
                         action: Box::new(action),
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             TypeInner::AnyT(_, _),
-            UseTInner::GetElemT {
+            UseTInner::GetElemT(box GetElemTData {
                 use_op,
                 reason,
                 id,
@@ -6183,7 +6493,7 @@ fn __flow_impl<'cx>(
                 access_iterables,
                 key_t,
                 tout,
-            },
+            }),
         ) => {
             let action = ElemAction::ReadElem {
                 id: *id,
@@ -6197,18 +6507,24 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     key_t,
-                    &UseT::new(UseTInner::ElemT {
+                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         obj: l.dupe(),
                         action: Box::new(action),
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::CallElemT(use_op, reason_call, reason_lookup, key, action),
+            UseTInner::CallElemT(box CallElemTData {
+                use_op,
+                reason: reason_call,
+                prop_reason: reason_lookup,
+                key_t: key,
+                method_action: action,
+            }),
         ) if matches!(
             def_t.deref(),
             DefTInner::ObjT(_) | DefTInner::ArrT(_) | DefTInner::InstanceT(_)
@@ -6220,18 +6536,24 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     key,
-                    &UseT::new(UseTInner::ElemT {
+                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                         use_op: use_op.dupe(),
                         reason: reason_lookup.dupe(),
                         obj: l.dupe(),
                         action: Box::new(action),
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             TypeInner::AnyT(_, _),
-            UseTInner::CallElemT(use_op, reason_call, reason_lookup, key, action),
+            UseTInner::CallElemT(box CallElemTData {
+                use_op,
+                reason: reason_call,
+                prop_reason: reason_lookup,
+                key_t: key,
+                method_action: action,
+            }),
         ) => {
             let action = ElemAction::CallElem(reason_call.dupe(), action.clone());
             rec_flow(
@@ -6239,12 +6561,12 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     key,
-                    &UseT::new(UseTInner::ElemT {
+                    &UseT::new(UseTInner::ElemT(Box::new(ElemTData {
                         use_op: use_op.dupe(),
                         reason: reason_lookup.dupe(),
                         obj: l.dupe(),
                         action: Box::new(action),
-                    }),
+                    }))),
                 ),
             )?;
         }
@@ -6252,7 +6574,7 @@ fn __flow_impl<'cx>(
         // then output `T`.
         (
             TypeInner::DefT(_, def_t_l),
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 obj,
                 action:
@@ -6262,7 +6584,7 @@ fn __flow_impl<'cx>(
                         ..
                     },
                 ..
-            },
+            }),
         ) if matches!(
             def_t_l.deref(),
             DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
@@ -6281,24 +6603,24 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 reason,
                 obj,
                 action,
-            },
+            }),
         ) if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::InstanceT(_))) =>
         {
             elem_action_on_obj(cx, trace, use_op, l, obj, reason, action)?;
         }
         (
             _,
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 reason,
                 obj,
                 action,
-            },
+            }),
         ) if let TypeInner::AnyT(_, src) = obj.deref() => {
             let value = any_t::why(*src, reason.dupe());
             perform_elem_action(cx, trace, use_op.dupe(), false, reason, obj, &value, action)?;
@@ -6308,12 +6630,12 @@ fn __flow_impl<'cx>(
         // error when `tup[0] = 123` does not.
         (
             TypeInner::AnyT(_, _),
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 reason: reason_op,
                 obj,
                 action,
-            },
+            }),
         ) if let TypeInner::DefT(reason_tup, obj_def_t) = obj.deref()
             && let DefTInner::ArrT(arrtype) = obj_def_t.deref() =>
         {
@@ -6375,12 +6697,12 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t_l),
-            UseTInner::ElemT {
+            UseTInner::ElemT(box ElemTData {
                 use_op,
                 reason,
                 obj,
                 action,
-            },
+            }),
         ) if matches!(
             def_t_l.deref(),
             DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
@@ -6409,7 +6731,7 @@ fn __flow_impl<'cx>(
             };
             perform_elem_action(cx, trace, use_op_out, is_tuple, reason, obj, &value, action)?;
         }
-        (TypeInner::DefT(_, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::ArrT(_))
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.as_str() == "constructor") =>
         {
@@ -6427,9 +6749,17 @@ fn __flow_impl<'cx>(
             if matches!(def_t.deref(), DefTInner::ArrT(_))
                 && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
             {}
-        (TypeInner::DefT(_, def_t), UseTInner::MethodT(_, reason_call, _, propref, action))
-            if matches!(def_t.deref(), DefTInner::ArrT(_))
-                && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::MethodT(box MethodTData {
+                use_op: _,
+                reason: reason_call,
+                prop_reason: _,
+                propref,
+                method_action: action,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::ArrT(_))
+            && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
         {
             add_specialized_callee_method_action(
                 cx,
@@ -6441,9 +6771,15 @@ fn __flow_impl<'cx>(
         // **************************************************
         // * array pattern can consume the rest of an array *
         // **************************************************
-        (TypeInner::DefT(_, def_t), UseTInner::ArrRestT(_, reason, i, tout))
-            if let DefTInner::ArrT(arrtype) = def_t.deref() =>
-        {
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::ArrRestT(box ArrRestTData {
+                use_op: _,
+                reason,
+                index: i,
+                tout,
+            }),
+        ) if let DefTInner::ArrT(arrtype) = def_t.deref() => {
             let i = *i as usize;
             let arrtype = match arrtype.deref() {
                 ArrType::ArrayAT {
@@ -6494,7 +6830,15 @@ fn __flow_impl<'cx>(
             ));
             rec_flow_t(cx, trace, unknown_use(), (&a, tout))?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::ArrRestT(_, reason, _, tout)) => {
+        (
+            TypeInner::AnyT(_, src),
+            UseTInner::ArrRestT(box ArrRestTData {
+                use_op: _,
+                reason,
+                index: _,
+                tout,
+            }),
+        ) => {
             rec_flow_t(
                 cx,
                 trace,
@@ -6505,7 +6849,15 @@ fn __flow_impl<'cx>(
         // **************************************************
         // * function types can be mapped over a structure  *
         // **************************************************
-        (TypeInner::AnyT(_, src), UseTInner::MapTypeT(_, reason_op, _, tout)) => {
+        (
+            TypeInner::AnyT(_, src),
+            UseTInner::MapTypeT(box MapTypeTData {
+                use_op: _,
+                reason: reason_op,
+                type_map: _,
+                tout,
+            }),
+        ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             rec_flow_t(
                 cx,
@@ -6516,7 +6868,12 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::MapTypeT(_, reason_op, TypeMap::ObjectKeyMirror, tout),
+            UseTInner::MapTypeT(box MapTypeTData {
+                use_op: _,
+                reason: reason_op,
+                type_map: TypeMap::ObjectKeyMirror,
+                tout,
+            }),
         ) if let DefTInner::ObjT(o) = def_t.deref() => {
             let mirrored = flow_js_utils::obj_key_mirror(cx, o, reason_op);
             rec_flow_t(cx, trace, unknown_use(), (&mirrored, tout))?;
@@ -6749,23 +7106,23 @@ fn __flow_impl<'cx>(
         // ************************************************************************
         (
             TypeInner::FunProtoBindT(_),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
-            },
+            }),
         ) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
             rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::FunProtoBindT(lreason),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
                 call_action: box CallAction::Funcalltype(funtype),
                 return_hint: _,
-            },
+            }),
         ) if !funtype.call_args_tlist.is_empty() => {
             let func = &funtype.call_this_t;
             let call_targs = &funtype.call_targs;
@@ -6774,12 +7131,12 @@ fn __flow_impl<'cx>(
             if call_targs.is_some() {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::ECallTypeArity {
+                    ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_op.loc().dupe(),
                         is_new: false,
                         reason_arity: lreason.dupe(),
                         expected_arity: 0,
-                    },
+                    })),
                 )?;
             }
             let call_this_t = extract_non_spread(cx, first_arg)?;
@@ -6797,17 +7154,22 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     func,
-                    &UseT::new(UseTInner::BindT(
-                        use_op.dupe(),
-                        reason_op.dupe(),
-                        Box::new(new_funtype),
-                    )),
+                    &UseT::new(UseTInner::BindT(Box::new(BindTData {
+                        use_op: use_op.dupe(),
+                        reason: reason_op.dupe(),
+                        funcall_type: Box::new(new_funtype),
+                    }))),
                 ),
             )?;
         }
-        (TypeInner::DefT(reason, def_t), UseTInner::BindT(use_op, reason_op, calltype))
-            if let DefTInner::FunT(_, ft_rc) = def_t.deref() =>
-        {
+        (
+            TypeInner::DefT(reason, def_t),
+            UseTInner::BindT(box BindTData {
+                use_op,
+                reason: reason_op,
+                funcall_type: calltype,
+            }),
+        ) if let DefTInner::FunT(_, ft_rc) = def_t.deref() => {
             let ft = ft_rc.deref();
             let (o1, _) = &ft.this_t;
             let o2 = &calltype.call_this_t;
@@ -6837,23 +7199,42 @@ fn __flow_impl<'cx>(
                 resolve_to,
             )?;
         }
-        (TypeInner::DefT(_, def_t), UseTInner::BindT(_, _, _))
-            if let DefTInner::ObjT(obj) = def_t.deref()
-                && obj.call_t.is_some() =>
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::BindT(box BindTData {
+                use_op: _,
+                reason: _,
+                funcall_type: _,
+            }),
+        ) if let DefTInner::ObjT(obj) = def_t.deref()
+            && obj.call_t.is_some() =>
         {
             let id = obj.call_t.as_ref().unwrap();
             let call_t = cx.find_call(*id);
             rec_flow(cx, trace, (&call_t, u))?;
         }
-        (TypeInner::DefT(_, def_t), UseTInner::BindT(_, _, _))
-            if let DefTInner::InstanceT(inst_t) = def_t.deref()
-                && inst_t.inst.inst_call_t.is_some() =>
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::BindT(box BindTData {
+                use_op: _,
+                reason: _,
+                funcall_type: _,
+            }),
+        ) if let DefTInner::InstanceT(inst_t) = def_t.deref()
+            && inst_t.inst.inst_call_t.is_some() =>
         {
             let id = inst_t.inst.inst_call_t.as_ref().unwrap();
             let call_t = cx.find_call(*id);
             rec_flow(cx, trace, (&call_t, u))?;
         }
-        (TypeInner::AnyT(_, src), UseTInner::BindT(use_op, reason, calltype)) => {
+        (
+            TypeInner::AnyT(_, src),
+            UseTInner::BindT(box BindTData {
+                use_op,
+                reason,
+                funcall_type: calltype,
+            }),
+        ) => {
             let call_this_t = &calltype.call_this_t;
             let call_args_tlist = &calltype.call_args_tlist;
             let call_tout = &calltype.call_tout;
@@ -6942,12 +7323,18 @@ fn __flow_impl<'cx>(
         // properties with overridden properties. As such, the lookups performed
         // for the inherited properties are non-strict: they are not required to
         // exist.
-        (TypeInner::DefT(ureason, def_t), UseTInner::SuperT(use_op, reason, derived))
-            if let DefTInner::InstanceT(inst_t) = def_t.deref()
-                && matches!(
-                    &inst_t.inst.inst_kind,
-                    InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
-                ) =>
+        (
+            TypeInner::DefT(ureason, def_t),
+            UseTInner::SuperT(box SuperTData {
+                use_op,
+                reason,
+                derived_type: derived,
+            }),
+        ) if let DefTInner::InstanceT(inst_t) = def_t.deref()
+            && matches!(
+                &inst_t.inst.inst_kind,
+                InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
+            ) =>
         {
             let st = &inst_t.static_;
             let DerivedType {
@@ -6976,12 +7363,12 @@ fn __flow_impl<'cx>(
         // Keep opaque types in computed object keys
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeForComputedObjectKeys,
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -6993,24 +7380,24 @@ fn __flow_impl<'cx>(
         // Predicate_kit should not see unwrapped opaque type
         (
             TypeInner::NominalT { .. },
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeForPredicate(_),
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
         (
             TypeInner::NominalT { .. },
-            UseTInner::SealGenericT {
+            UseTInner::SealGenericT(box SealGenericTData {
                 reason: _,
                 id,
                 name,
                 cont,
                 no_infer,
-            },
+            }),
         ) => {
             let reason = reason_of_t(l);
             let generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -7028,7 +7415,12 @@ fn __flow_impl<'cx>(
                 nominal_type: opaque,
                 ..
             },
-            UseTInner::CondT(r, then_t_opt, else_t, tout),
+            UseTInner::CondT(box CondTData {
+                reason: r,
+                opt_type: then_t_opt,
+                true_t: else_t,
+                false_t: tout,
+            }),
         ) if opaque.upper_t.is_some() => {
             let t = opaque.upper_t.as_ref().unwrap();
             let new_then_t_opt = match then_t_opt {
@@ -7040,12 +7432,12 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     t,
-                    &UseT::new(UseTInner::CondT(
-                        r.dupe(),
-                        new_then_t_opt,
-                        else_t.dupe(),
-                        tout.dupe(),
-                    )),
+                    &UseT::new(UseTInner::CondT(Box::new(CondTData {
+                        reason: r.dupe(),
+                        opt_type: new_then_t_opt,
+                        true_t: else_t.dupe(),
+                        false_t: tout.dupe(),
+                    }))),
                 ),
             )?;
         }
@@ -7075,12 +7467,12 @@ fn __flow_impl<'cx>(
         // recorded as lower bound to the target tvar.
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeForOperatorsChecking,
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -7089,14 +7481,14 @@ fn __flow_impl<'cx>(
         // **************************************************************************
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind:
                     ConcretizationKind::ConcretizeForPredicate(_)
                     | ConcretizationKind::ConcretizeForSentinelPropTest,
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -7123,7 +7515,7 @@ fn __flow_impl<'cx>(
         // *****************************************
         // * classes can have their prototype read *
         // *****************************************
-        (TypeInner::DefT(reason, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(reason, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::ClassT(instance) = def_t.deref()
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name == &Name::new("prototype")) =>
         {
@@ -7149,7 +7541,7 @@ fn __flow_impl<'cx>(
         // Instead, we just flip the boolean flag to true, indicating that when the
         // InstanceT ~> Set/GetPrivatePropT or PrivateMethodT constraint is processed that we should
         // look at the private static fields instead of the private instance fields.
-        (TypeInner::DefT(reason, def_t), UseTInner::GetPrivatePropT(gpp_data))
+        (TypeInner::DefT(reason, def_t), UseTInner::GetPrivatePropT(box gpp_data))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
             let new_u = UseT::new(UseTInner::GetPrivatePropT(Box::new(GetPrivatePropTData {
@@ -7173,7 +7565,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::DefT(reason, def_t), UseTInner::SetPrivatePropT(spp_data))
+        (TypeInner::DefT(reason, def_t), UseTInner::SetPrivatePropT(box spp_data))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
             let new_u = UseT::new(UseTInner::SetPrivatePropT(Box::new(SetPrivatePropTData {
@@ -7200,7 +7592,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::DefT(reason, def_t), UseTInner::PrivateMethodT(pm_data))
+        (TypeInner::DefT(reason, def_t), UseTInner::PrivateMethodT(box pm_data))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
             let new_u = UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
@@ -7227,7 +7619,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(reason, def_t),
-            UseTInner::MethodT(use_op, reason_call, reason_lookup, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: reason_call,
+                prop_reason: reason_lookup,
+                propref,
+                method_action: action,
+            }),
         ) if let DefTInner::ClassT(instance) = def_t.deref() => {
             let statics_tvar = flow_typing_tvar::mk_no_wrap(cx, reason);
             let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
@@ -7319,7 +7717,7 @@ fn __flow_impl<'cx>(
           excluded from subclass compatibility checks, but are allowed on ClassT
           types.
         */
-        (TypeInner::DefT(reason, def_t), UseTInner::CallT { .. })
+        (TypeInner::DefT(reason, def_t), UseTInner::CallT(..))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
             let statics_tvar = flow_typing_tvar::mk_no_wrap(cx, reason);
@@ -7338,7 +7736,7 @@ fn __flow_impl<'cx>(
         // *********
         // * enums *
         // *********
-        (TypeInner::DefT(enum_reason, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(enum_reason, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::EnumObjectT {
                 enum_value_t,
                 enum_info,
@@ -7367,13 +7765,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::TestPropT {
+            UseTInner::TestPropT(box TestPropTData {
                 reason,
                 propref,
                 tout,
                 hint,
                 ..
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             rec_flow(
                 cx,
@@ -7397,7 +7795,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::MethodT(use_op, call_reason, lookup_reason, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: call_reason,
+                prop_reason: lookup_reason,
+                propref,
+                method_action: action,
+            }),
         ) if let DefTInner::EnumObjectT {
             enum_value_t,
             enum_info,
@@ -7450,18 +7854,21 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (TypeInner::DefT(enum_reason, def_t), UseTInner::GetElemT { key_t, tout, .. })
-            if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
-        {
+        (
+            TypeInner::DefT(enum_reason, def_t),
+            UseTInner::GetElemT(box GetElemTData { key_t, tout, .. }),
+        ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             let reason = reason_of_t(key_t);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess {
-                    member_name: None,
-                    suggestion: None,
-                    reason: reason.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(Box::new(
+                    EnumInvalidMemberAccessData {
+                        member_name: None,
+                        suggestion: None,
+                        reason: reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
             )?;
             let any = any_t::error(reason.dupe());
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
@@ -7473,25 +7880,37 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumModification {
-                    loc: op_reason.loc().dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
+                    EnumModificationData {
+                        loc: op_reason.loc().dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
             )?;
             if let Some(tout) = tout {
                 let any = any_t::error(op_reason.dupe());
                 rec_flow_t(cx, trace, unknown_use(), (&any, tout))?;
             }
         }
-        (TypeInner::DefT(enum_reason, def_t), UseTInner::SetElemT(_, op_reason, _, _, _, tout))
-            if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
-        {
+        (
+            TypeInner::DefT(enum_reason, def_t),
+            UseTInner::SetElemT(box SetElemTData {
+                use_op: _,
+                reason: op_reason,
+                key_t: _,
+                set_mode: _,
+                tin: _,
+                tout,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumModification {
-                    loc: op_reason.loc().dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
+                    EnumModificationData {
+                        loc: op_reason.loc().dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
             )?;
             if let Some(tout) = tout {
                 let any = any_t::error(op_reason.dupe());
@@ -7503,10 +7922,12 @@ fn __flow_impl<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType {
-                    reason: op_reason.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
+                    EnumInvalidObjectUtilTypeData {
+                        reason: op_reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
             )?;
             let any = any_t::error(op_reason.dupe());
             rec_flow_t(cx, trace, unknown_use(), (&any, tout))?;
@@ -7516,17 +7937,25 @@ fn __flow_impl<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction {
-                    reason: reason.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(Box::new(
+                    EnumInvalidObjectFunctionData {
+                        reason: reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
             )?;
             let any = any_t::error(reason.dupe());
             rec_flow(cx, trace, (&any, result))?;
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::MethodT(use_op, call_reason, lookup_reason, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: call_reason,
+                prop_reason: lookup_reason,
+                propref,
+                method_action: action,
+            }),
         ) if let DefTInner::EnumValueT(enum_info) = def_t.deref()
             && matches!(&**propref, PropRef::Named { .. }) =>
         {
@@ -7591,14 +8020,14 @@ fn __flow_impl<'cx>(
         // **************************************************************************
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::TestPropT {
+            UseTInner::TestPropT(box TestPropTData {
                 use_op,
                 reason,
                 id,
                 propref,
                 tout,
                 hint,
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) => {
             // The wildcard TestPropT implementation forwards the lower bound to
             // LookupT. This is unfortunate, because LookupT is designed to terminate
@@ -7626,9 +8055,9 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(r, def_t),
-            UseTInner::TestPropT {
+            UseTInner::TestPropT(box TestPropTData {
                 use_op, id, tout, ..
-            },
+            }),
         ) if matches!(
             def_t.deref(),
             DefTInner::MixedT(MixedFlavor::MixedTruthy)
@@ -7647,14 +8076,14 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::TestPropT {
+            UseTInner::TestPropT(box TestPropTData {
                 use_op,
                 reason,
                 id,
                 propref,
                 tout,
                 hint,
-            },
+            }),
         ) if matches!(&**propref, PropRef::Named { name, .. } if name == &Name::new("constructor")) =>
         {
             rec_flow(
@@ -7677,14 +8106,14 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::TestPropT {
+            UseTInner::TestPropT(box TestPropTData {
                 use_op,
                 reason: reason_op,
                 id,
                 propref,
                 tout,
                 hint: _,
-            },
+            }),
         ) => {
             // NonstrictReturning lookups unify their result, but we don't want to
             // unify with the tout tvar directly, so we create an indirection here to
@@ -7742,7 +8171,7 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     l,
-                    &UseT::new(UseTInner::LookupT {
+                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason_op.dupe(),
                         lookup_kind: Box::new(lookup_kind),
                         try_ts_on_failure: vec![].into(),
@@ -7755,7 +8184,7 @@ fn __flow_impl<'cx>(
                         method_accessible,
                         ids: Some(Default::default()),
                         ignore_dicts: false,
-                    }),
+                    }))),
                 ),
             )?;
         }
@@ -7765,13 +8194,27 @@ fn __flow_impl<'cx>(
         // ***************************
 
         // Use our alternate if our lower bound is empty.
-        (TypeInner::DefT(_, def_t), UseTInner::CondT(_, _, else_t, tout))
-            if matches!(def_t.deref(), DefTInner::EmptyT) =>
-        {
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::CondT(box CondTData {
+                reason: _,
+                opt_type: _,
+                true_t: else_t,
+                false_t: tout,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::EmptyT) => {
             rec_flow_t(cx, trace, unknown_use(), (else_t, tout))?;
         }
         // Otherwise continue by Flowing out lower bound to tout.
-        (_, UseTInner::CondT(_, then_t_opt, _, tout)) => {
+        (
+            _,
+            UseTInner::CondT(box CondTData {
+                reason: _,
+                opt_type: then_t_opt,
+                true_t: _,
+                false_t: tout,
+            }),
+        ) => {
             //   let then_t =
             //     match then_t_opt with
             //     | Some t -> t
@@ -7808,13 +8251,13 @@ fn __flow_impl<'cx>(
         // ***********************************************************
         (
             _,
-            UseTInner::SealGenericT {
+            UseTInner::SealGenericT(box SealGenericTData {
                 reason: _,
                 id,
                 name,
                 cont,
                 no_infer,
-            },
+            }),
         ) => {
             let reason = reason_of_t(l);
             let generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -7835,13 +8278,13 @@ fn __flow_impl<'cx>(
         // ************
         (
             TypeInner::DefT(enum_reason, def_t),
-            UseTInner::GetEnumT {
+            UseTInner::GetEnumT(box GetEnumTData {
                 use_op,
                 orig_t,
                 kind: GetEnumKind::GetEnumObject,
                 tout,
                 ..
-            },
+            }),
         ) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
             let enum_value_t = match orig_t {
                 Some(t) => t.dupe(),
@@ -7865,12 +8308,12 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::GetEnumT {
+            UseTInner::GetEnumT(box GetEnumTData {
                 use_op,
                 kind: GetEnumKind::GetEnumObject,
                 tout,
                 ..
-            },
+            }),
         ) => {
             rec_flow(
                 cx,
@@ -7880,12 +8323,12 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::GetEnumT {
+            UseTInner::GetEnumT(box GetEnumTData {
                 use_op,
                 kind: GetEnumKind::GetEnumValue,
                 tout,
                 ..
-            },
+            }),
         ) if let DefTInner::EnumObjectT { enum_value_t, .. } = def_t.deref() => {
             rec_flow(
                 cx,
@@ -7901,12 +8344,12 @@ fn __flow_impl<'cx>(
         // **********************************
         (
             _,
-            UseTInner::GetEnumT {
+            UseTInner::GetEnumT(box GetEnumTData {
                 use_op,
                 kind: GetEnumKind::GetEnumValue,
                 tout,
                 ..
-            },
+            }),
         ) => {
             rec_flow(
                 cx,
@@ -7916,7 +8359,7 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(enum_reason, def_t),
-            UseTInner::EnumExhaustiveCheckT {
+            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
                 reason: check_reason,
                 check:
                     box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
@@ -7927,7 +8370,7 @@ fn __flow_impl<'cx>(
                     },
                 incomplete_out,
                 discriminant_after_check,
-            },
+            }),
         ) if let DefTInner::EnumValueT(info) = def_t.deref()
             && let EnumInfoInner::ConcreteEnum(enum_info) = EnumInfo::deref(info) =>
         {
@@ -7944,21 +8387,25 @@ fn __flow_impl<'cx>(
                 discriminant_after_check.as_ref(),
             )?;
         }
-        (TypeInner::DefT(enum_reason, def_t), UseTInner::EnumExhaustiveCheckT { reason, .. })
-            if matches!(def_t.deref(), DefTInner::EnumValueT(info) if matches!(EnumInfo::deref(info), EnumInfoInner::AbstractEnum { .. })) =>
+        (
+            TypeInner::DefT(enum_reason, def_t),
+            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData { reason, .. }),
+        ) if matches!(def_t.deref(), DefTInner::EnumValueT(info) if matches!(EnumInfo::deref(info), EnumInfoInner::AbstractEnum { .. })) =>
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse {
-                    reason: reason.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(Box::new(
+                    EnumInvalidAbstractUseData {
+                        reason: reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
             )?;
         }
         // Resolving the case tests.
         (
             _,
-            UseTInner::EnumExhaustiveCheckT {
+            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
                 reason: check_reason,
                 check:
                     box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
@@ -7974,7 +8421,7 @@ fn __flow_impl<'cx>(
                     },
                 incomplete_out,
                 discriminant_after_check,
-            },
+            }),
         ) => {
             let member_name = &check.member_name;
             let enum_id_discriminant = &discriminant_enum.enum_id;
@@ -8018,12 +8465,12 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(enum_reason, def_t),
-            UseTInner::EnumExhaustiveCheckT {
+            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
                 reason,
                 check: box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(reasons),
                 incomplete_out,
                 discriminant_after_check: _,
-            },
+            }),
         ) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
             let example_member = match EnumInfo::deref(enum_info) {
                 EnumInfoInner::ConcreteEnum(concrete) => {
@@ -8034,12 +8481,14 @@ fn __flow_impl<'cx>(
             for loc in reasons.iter() {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck {
-                        loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
-                        example_member: example_member.dupe(),
-                        from_match: false,
-                    }),
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(Box::new(
+                        EnumInvalidCheckData {
+                            loc: loc.dupe(),
+                            enum_reason: enum_reason.dupe(),
+                            example_member: example_member.dupe(),
+                            from_match: false,
+                        },
+                    ))),
                 )?;
             }
             enum_helpers::enum_exhaustive_check_incomplete(
@@ -8051,16 +8500,18 @@ fn __flow_impl<'cx>(
             )?;
         }
         // If the discriminant is empty, the check is successful.
-        (TypeInner::DefT(_, def_t), UseTInner::EnumExhaustiveCheckT { check, .. })
-            if matches!(def_t.deref(), DefTInner::EmptyT)
-                && matches!(
-                    check,
-                    box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_)
-                        | box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                            tool: EnumExhaustiveCheckToolT::EnumResolveDiscriminant,
-                            ..
-                        }
-                ) => {}
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData { check, .. }),
+        ) if matches!(def_t.deref(), DefTInner::EmptyT)
+            && matches!(
+                check,
+                box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_)
+                    | box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
+                        tool: EnumExhaustiveCheckToolT::EnumResolveDiscriminant,
+                        ..
+                    }
+            ) => {}
 
         // Non-enum discriminants.
         // If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
@@ -8068,7 +8519,7 @@ fn __flow_impl<'cx>(
         // return that could occur otherwise.
         (
             _,
-            UseTInner::EnumExhaustiveCheckT {
+            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
                 reason,
                 check:
                     box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_)
@@ -8078,7 +8529,7 @@ fn __flow_impl<'cx>(
                     },
                 incomplete_out,
                 discriminant_after_check,
-            },
+            }),
         ) => {
             enum_helpers::enum_exhaustive_check_incomplete(
                 cx,
@@ -8101,7 +8552,7 @@ fn __flow_impl<'cx>(
         // does not.
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
                 try_ts_on_failure,
@@ -8110,7 +8561,7 @@ fn __flow_impl<'cx>(
                 method_accessible,
                 ids,
                 ignore_dicts,
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::NullT) && !try_ts_on_failure.is_empty() => {
             let next = &try_ts_on_failure[0];
             let rest = try_ts_on_failure[1..].to_vec();
@@ -8121,7 +8572,7 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     next,
-                    &UseT::new(UseTInner::LookupT {
+                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason.dupe(),
                         lookup_kind: lookup_kind.clone(),
                         try_ts_on_failure: rest.into(),
@@ -8130,13 +8581,13 @@ fn __flow_impl<'cx>(
                         method_accessible: *method_accessible,
                         ids: ids.dupe(),
                         ignore_dicts: *ignore_dicts,
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             TypeInner::ObjProtoT(_),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
                 try_ts_on_failure,
@@ -8145,7 +8596,7 @@ fn __flow_impl<'cx>(
                 method_accessible,
                 ids,
                 ignore_dicts,
-            },
+            }),
         ) if !try_ts_on_failure.is_empty() => {
             // __proto__ is a getter/setter on Object.prototype
             let next = &try_ts_on_failure[0];
@@ -8155,7 +8606,7 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     next,
-                    &UseT::new(UseTInner::LookupT {
+                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason.dupe(),
                         lookup_kind: lookup_kind.clone(),
                         try_ts_on_failure: rest.into(),
@@ -8164,13 +8615,13 @@ fn __flow_impl<'cx>(
                         method_accessible: *method_accessible,
                         ids: ids.dupe(),
                         ignore_dicts: *ignore_dicts,
-                    }),
+                    }))),
                 ),
             )?;
         }
         (
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: _,
                 try_ts_on_failure,
@@ -8184,7 +8635,7 @@ fn __flow_impl<'cx>(
                 ids: _,
                 method_accessible: _,
                 ignore_dicts: _,
-            },
+            }),
         ) if try_ts_on_failure.is_empty() && name == &Name::new("__proto__") => {
             // __proto__ is a getter/setter on Object.prototype
             rec_flow(
@@ -8201,7 +8652,7 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: _,
                 try_ts_on_failure,
@@ -8218,7 +8669,7 @@ fn __flow_impl<'cx>(
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
-            },
+            }),
         ) if try_ts_on_failure.is_empty() && name == &Name::new("__proto__") => {
             // __proto__ is a getter/setter on Object.prototype
             rec_flow(
@@ -8232,12 +8683,12 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::ObjProtoT(_),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 try_ts_on_failure,
                 propref: box PropRef::Named { name, .. },
                 ..
-            },
+            }),
         ) if try_ts_on_failure.is_empty() && flow_js_utils::is_object_prototype_method(name) => {
             // TODO: These properties should go in Object.prototype. Currently we
             // model Object.prototype as a ObjProtoT, as an optimization against a
@@ -8249,11 +8700,11 @@ fn __flow_impl<'cx>(
         //   rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
         (
             TypeInner::FunProtoT(_),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 propref: box PropRef::Named { name, .. },
                 ..
-            },
+            }),
         ) if flow_js_utils::is_function_prototype(name) => {
             // TODO: Ditto above comment for Function.prototype
             let fun = helpers::get_builtin_type(cx, Some(trace), reason_op, None, "Function")?;
@@ -8261,7 +8712,7 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(reason, def_t),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
                 try_ts_on_failure,
@@ -8270,7 +8721,7 @@ fn __flow_impl<'cx>(
                 method_accessible: _,
                 ids,
                 ignore_dicts: _,
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::NullT)
             && try_ts_on_failure.is_empty()
             && let PropRef::Named {
@@ -8290,22 +8741,24 @@ fn __flow_impl<'cx>(
                     prop_name,
                     reason_lower,
                     reason_upper,
-                } => ErrorMessage::EPropNotFoundInSubtyping {
-                    prop_name: Some(prop_name.dupe()),
-                    suggestion,
-                    reason_lower: reason_lower.dupe(),
-                    reason_upper: reason_upper.dupe(),
-                    use_op: use_op.dupe(),
-                },
+                } => {
+                    ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
+                        prop_name: Some(prop_name.dupe()),
+                        suggestion,
+                        reason_lower: reason_lower.dupe(),
+                        reason_upper: reason_upper.dupe(),
+                        use_op: use_op.dupe(),
+                    }))
+                }
                 _ => {
                     let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                    ErrorMessage::EPropNotFoundInLookup {
+                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         reason_prop: reason_prop.dupe(),
                         reason_obj: strict_reason.dupe(),
                         prop_name: Some(name.dupe()),
                         use_op,
                         suggestion,
-                    }
+                    }))
                 }
             };
             flow_js_utils::add_output(cx, error_message)?;
@@ -8327,7 +8780,7 @@ fn __flow_impl<'cx>(
 
         (
             TypeInner::ObjProtoT(reason) | TypeInner::FunProtoT(reason),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
                 try_ts_on_failure,
@@ -8336,7 +8789,7 @@ fn __flow_impl<'cx>(
                 method_accessible: _,
                 ids,
                 ignore_dicts: _,
-            },
+            }),
         ) if try_ts_on_failure.is_empty()
             && let PropRef::Named {
                 reason: reason_prop,
@@ -8355,22 +8808,24 @@ fn __flow_impl<'cx>(
                     prop_name,
                     reason_lower,
                     reason_upper,
-                } => ErrorMessage::EPropNotFoundInSubtyping {
-                    prop_name: Some(prop_name.dupe()),
-                    suggestion,
-                    reason_lower: reason_lower.dupe(),
-                    reason_upper: reason_upper.dupe(),
-                    use_op: use_op.dupe(),
-                },
+                } => {
+                    ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
+                        prop_name: Some(prop_name.dupe()),
+                        suggestion,
+                        reason_lower: reason_lower.dupe(),
+                        reason_upper: reason_upper.dupe(),
+                        use_op: use_op.dupe(),
+                    }))
+                }
                 _ => {
                     let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                    ErrorMessage::EPropNotFoundInLookup {
+                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         reason_prop: reason_prop.dupe(),
                         reason_obj: strict_reason.dupe(),
                         prop_name: Some(name.dupe()),
                         use_op,
                         suggestion,
-                    }
+                    }))
                 }
             };
             flow_js_utils::add_output(cx, error_message)?;
@@ -8391,7 +8846,7 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(reason, def_t),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
                 try_ts_on_failure,
@@ -8400,7 +8855,7 @@ fn __flow_impl<'cx>(
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::NullT)
             && try_ts_on_failure.is_empty()
             && let PropRef::Computed(elem_t) = &**propref =>
@@ -8410,7 +8865,10 @@ fn __flow_impl<'cx>(
                     let loc = loc_of_t(elem_t);
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EInternal(loc.dupe(), InternalError::PropRefComputedOpen),
+                        ErrorMessage::EInternal(Box::new((
+                            loc.dupe(),
+                            InternalError::PropRefComputedOpen,
+                        ))),
                     )?;
                 }
                 TypeInner::DefT(_, inner_def)
@@ -8419,7 +8877,10 @@ fn __flow_impl<'cx>(
                     let loc = loc_of_t(elem_t);
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EInternal(loc.dupe(), InternalError::PropRefComputedLiteral),
+                        ErrorMessage::EInternal(Box::new((
+                            loc.dupe(),
+                            InternalError::PropRefComputedLiteral,
+                        ))),
                     )?;
                 }
                 TypeInner::AnyT(_, src) => {
@@ -8448,22 +8909,26 @@ fn __flow_impl<'cx>(
                             prop_name,
                             reason_lower,
                             reason_upper,
-                        } => ErrorMessage::EPropNotFoundInSubtyping {
-                            prop_name: Some(prop_name.dupe()),
-                            suggestion: None,
-                            reason_lower: reason_lower.dupe(),
-                            reason_upper: reason_upper.dupe(),
-                            use_op: use_op.dupe(),
-                        },
+                        } => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                            EPropNotFoundInSubtypingData {
+                                prop_name: Some(prop_name.dupe()),
+                                suggestion: None,
+                                reason_lower: reason_lower.dupe(),
+                                reason_upper: reason_upper.dupe(),
+                                use_op: use_op.dupe(),
+                            },
+                        )),
                         _ => {
                             let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                            ErrorMessage::EPropNotFoundInLookup {
-                                reason_prop: reason_prop.dupe(),
-                                reason_obj: strict_reason.dupe(),
-                                prop_name: None,
-                                use_op,
-                                suggestion: None,
-                            }
+                            ErrorMessage::EPropNotFoundInLookup(Box::new(
+                                EPropNotFoundInLookupData {
+                                    reason_prop: reason_prop.dupe(),
+                                    reason_obj: strict_reason.dupe(),
+                                    prop_name: None,
+                                    use_op,
+                                    suggestion: None,
+                                },
+                            ))
                         }
                     };
                     flow_js_utils::add_output(cx, error_message)?;
@@ -8472,7 +8937,7 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::ObjProtoT(reason) | TypeInner::FunProtoT(reason),
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
                 try_ts_on_failure,
@@ -8481,7 +8946,7 @@ fn __flow_impl<'cx>(
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
-            },
+            }),
         ) if try_ts_on_failure.is_empty()
             && let PropRef::Computed(elem_t) = &**propref =>
         {
@@ -8490,7 +8955,10 @@ fn __flow_impl<'cx>(
                     let loc = loc_of_t(elem_t);
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EInternal(loc.dupe(), InternalError::PropRefComputedOpen),
+                        ErrorMessage::EInternal(Box::new((
+                            loc.dupe(),
+                            InternalError::PropRefComputedOpen,
+                        ))),
                     )?;
                 }
                 TypeInner::DefT(_, inner_def)
@@ -8499,7 +8967,10 @@ fn __flow_impl<'cx>(
                     let loc = loc_of_t(elem_t);
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EInternal(loc.dupe(), InternalError::PropRefComputedLiteral),
+                        ErrorMessage::EInternal(Box::new((
+                            loc.dupe(),
+                            InternalError::PropRefComputedLiteral,
+                        ))),
                     )?;
                 }
                 TypeInner::AnyT(_, src) => {
@@ -8528,22 +8999,26 @@ fn __flow_impl<'cx>(
                             prop_name,
                             reason_lower,
                             reason_upper,
-                        } => ErrorMessage::EPropNotFoundInSubtyping {
-                            prop_name: Some(prop_name.dupe()),
-                            suggestion: None,
-                            reason_lower: reason_lower.dupe(),
-                            reason_upper: reason_upper.dupe(),
-                            use_op: use_op.dupe(),
-                        },
+                        } => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                            EPropNotFoundInSubtypingData {
+                                prop_name: Some(prop_name.dupe()),
+                                suggestion: None,
+                                reason_lower: reason_lower.dupe(),
+                                reason_upper: reason_upper.dupe(),
+                                use_op: use_op.dupe(),
+                            },
+                        )),
                         _ => {
                             let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                            ErrorMessage::EPropNotFoundInLookup {
-                                reason_prop: reason_prop.dupe(),
-                                reason_obj: strict_reason.dupe(),
-                                prop_name: None,
-                                use_op,
-                                suggestion: None,
-                            }
+                            ErrorMessage::EPropNotFoundInLookup(Box::new(
+                                EPropNotFoundInLookupData {
+                                    reason_prop: reason_prop.dupe(),
+                                    reason_obj: strict_reason.dupe(),
+                                    prop_name: None,
+                                    use_op,
+                                    suggestion: None,
+                                },
+                            ))
                         }
                     };
                     flow_js_utils::add_output(cx, error_message)?;
@@ -8552,14 +9027,14 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 lookup_kind: box LookupKind::NonstrictReturning(t_opt, test_opt),
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
                 ids,
                 ..
-            },
+            }),
         ) if match l.deref() {
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) => true,
             TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::NullT),
@@ -8615,13 +9090,22 @@ fn __flow_impl<'cx>(
             }
         }
         // SuperT only involves non-strict lookups
-        (TypeInner::DefT(_, def_t), UseTInner::SuperT { .. })
+        (TypeInner::DefT(_, def_t), UseTInner::SuperT(..))
             if matches!(def_t.deref(), DefTInner::NullT) => {}
-        (TypeInner::ObjProtoT(_), UseTInner::SuperT { .. }) => {}
-        (TypeInner::FunProtoT(_), UseTInner::SuperT { .. }) => {}
+        (TypeInner::ObjProtoT(_), UseTInner::SuperT(..)) => {}
+        (TypeInner::FunProtoT(_), UseTInner::SuperT(..)) => {}
         // ExtendsUseT searches for a nominal superclass. The search terminates with
         // either failure at the root or a structural subtype check.
-        (TypeInner::AnyT(_, src), UseTInner::ExtendsUseT(use_op, reason_op, ts, t1, t2)) => {
+        (
+            TypeInner::AnyT(_, src),
+            UseTInner::ExtendsUseT(box ExtendsUseTData {
+                use_op,
+                reason: reason_op,
+                targs: ts,
+                true_t: t1,
+                false_t: t2,
+            }),
+        ) => {
             for t in ts.iter() {
                 let any = any_t::why(*src, reason_op.dupe());
                 rec_flow_t(cx, trace, use_op.dupe(), (&any, t))?;
@@ -8663,7 +9147,13 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::ExtendsUseT(use_op, reason_ext, try_ts, ext_l, ext_u),
+            UseTInner::ExtendsUseT(box ExtendsUseTData {
+                use_op,
+                reason: reason_ext,
+                targs: try_ts,
+                true_t: ext_l,
+                false_t: ext_u,
+            }),
         ) if matches!(def_t.deref(), DefTInner::NullT) && !try_ts.is_empty() => {
             // When seaching for a nominal superclass fails, we always try to look it
             // up in the next element in the list try_ts_on_failure.
@@ -8674,22 +9164,30 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     next,
-                    &UseT::new(UseTInner::ExtendsUseT(
-                        use_op.dupe(),
-                        reason_ext.dupe(),
-                        rest.into(),
-                        ext_l.dupe(),
-                        ext_u.dupe(),
-                    )),
+                    &UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
+                        use_op: use_op.dupe(),
+                        reason: reason_ext.dupe(),
+                        targs: rest.into(),
+                        true_t: ext_l.dupe(),
+                        false_t: ext_u.dupe(),
+                    }))),
                 ),
             )?;
         }
-        (TypeInner::DefT(_, def_t), UseTInner::ExtendsUseT(use_op, _, try_ts, ext_l, ext_u))
-            if matches!(def_t.deref(), DefTInner::NullT)
-                && try_ts.is_empty()
-                && let TypeInner::DefT(reason_inst, inner_def) = ext_u.deref()
-                && let DefTInner::InstanceT(inst_t) = inner_def.deref()
-                && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::ExtendsUseT(box ExtendsUseTData {
+                use_op,
+                reason: _,
+                targs: try_ts,
+                true_t: ext_l,
+                false_t: ext_u,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::NullT)
+            && try_ts.is_empty()
+            && let TypeInner::DefT(reason_inst, inner_def) = ext_u.deref()
+            && let DefTInner::InstanceT(inst_t) = inner_def.deref()
+            && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             let super_ = &inst_t.super_;
             let own_props = inst_t.inst.own_props.dupe();
@@ -8804,19 +9302,28 @@ fn __flow_impl<'cx>(
                 helpers::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
             rec_flow(cx, trace, (&fun_proto, u))?;
         }
-        (_, UseTInner::ExtendsUseT(use_op, _, try_ts, t, tc)) if try_ts.is_empty() => {
+        (
+            _,
+            UseTInner::ExtendsUseT(box ExtendsUseTData {
+                use_op,
+                reason: _,
+                targs: try_ts,
+                true_t: t,
+                false_t: tc,
+            }),
+        ) if try_ts.is_empty() => {
             let (reason_l, reason_u) = flow_typing_errors::flow_error::ordered_reasons((
                 reason_of_t(t).dupe(),
                 reason_of_t(tc).dupe(),
             ));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower: reason_l,
                     reason_upper: reason_u,
                     use_op: use_op.dupe(),
                     explanation: None,
-                },
+                })),
             )?;
         }
         // *********
@@ -8824,12 +9331,12 @@ fn __flow_impl<'cx>(
         // *********
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeForMatchArg { .. },
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
@@ -8911,24 +9418,24 @@ fn __flow_impl<'cx>(
                     UseTInner::GetPropT(..)
                         | UseTInner::SetPropT(..)
                         | UseTInner::MethodT(..)
-                        | UseTInner::LookupT { .. }
+                        | UseTInner::LookupT(..)
                 ) =>
         {
             match u.deref() {
-                UseTInner::MethodT(
+                UseTInner::MethodT(box MethodTData {
                     use_op,
-                    _,
-                    method_reason,
-                    box PropRef::Named { name, .. },
-                    _,
-                ) if matches!(
+                    reason: _,
+                    prop_reason: method_reason,
+                    propref: box PropRef::Named { name, .. },
+                    method_action: _,
+                }) if matches!(
                     name.as_str(),
                     "fill" | "pop" | "push" | "reverse" | "shift" | "sort" | "splice" | "unshift"
                 ) =>
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: method_reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: VirtualUseOp::Frame(
@@ -8938,7 +9445,7 @@ fn __flow_impl<'cx>(
                                 )),
                                 Arc::new(use_op.dupe()),
                             ),
-                        },
+                        })),
                     )?;
                     let arr_no_dro = Type::new(TypeInner::DefT(
                         reason.dupe(),
@@ -8950,7 +9457,7 @@ fn __flow_impl<'cx>(
                     ));
                     rec_flow(cx, trace, (&arr_no_dro, u))?;
                 }
-                UseTInner::GetPropT(data)
+                UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
                         && matches!(
                             name.as_str(),
@@ -8966,7 +9473,7 @@ fn __flow_impl<'cx>(
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: data.reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: VirtualUseOp::Frame(
@@ -8976,7 +9483,7 @@ fn __flow_impl<'cx>(
                                 )),
                                 Arc::new(data.use_op.dupe()),
                             ),
-                        },
+                        })),
                     )?;
                     let arr_no_dro = Type::new(TypeInner::DefT(
                         reason.dupe(),
@@ -9026,7 +9533,7 @@ fn __flow_impl<'cx>(
                     UseTInner::GetPropT(..)
                         | UseTInner::SetPropT(..)
                         | UseTInner::MethodT(..)
-                        | UseTInner::LookupT { .. }
+                        | UseTInner::LookupT(..)
                 ) =>
         {
             let arr_t = get_builtin_typeapp(cx, reason, None, "Array", vec![elem_t.dupe()]);
@@ -9035,7 +9542,7 @@ fn __flow_impl<'cx>(
         // *************************
         // * Tuple "length" access *
         // *************************
-        (TypeInner::DefT(reason, def_t), UseTInner::GetPropT(data))
+        (TypeInner::DefT(reason, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::ArrT(arr) = def_t.deref()
                 && let ArrType::TupleAT { arity, inexact, .. } = arr.deref()
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name == &Name::new("length")) =>
@@ -9063,7 +9570,7 @@ fn __flow_impl<'cx>(
                     UseTInner::GetPropT(..)
                         | UseTInner::SetPropT(..)
                         | UseTInner::MethodT(..)
-                        | UseTInner::LookupT { .. }
+                        | UseTInner::LookupT(..)
                 ) =>
         {
             let (elem_t, dro) = match arr.deref() {
@@ -9109,7 +9616,7 @@ fn __flow_impl<'cx>(
                     UseTInner::GetPropT(..)
                         | UseTInner::SetPropT(..)
                         | UseTInner::MethodT(..)
-                        | UseTInner::LookupT { .. }
+                        | UseTInner::LookupT(..)
                 ) =>
         {
             let t = elemt_of_arrtype(arr);
@@ -9186,7 +9693,7 @@ fn __flow_impl<'cx>(
                     UseTInner::MethodT(..)
                         | UseTInner::SetPropT(..)
                         | UseTInner::GetPropT(..)
-                        | UseTInner::LookupT { .. }
+                        | UseTInner::LookupT(..)
                 ) =>
         {
             let fun_proto = Type::new(TypeInner::FunProtoT(lreason.dupe()));
@@ -9194,29 +9701,29 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction)) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
             rec_flow_t(cx, trace, unknown_use(), (l, &open_tout))?;
         }
         (
             TypeInner::DefT(lreason, def_t),
-            UseTInner::CallT {
+            UseTInner::CallT(box CallTData {
                 use_op,
                 reason: ureason,
                 ..
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction)) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatible {
+                ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                     lower: (lreason.dupe(), None),
                     upper: (ureason.dupe(), UpperKind::IncompatibleMixedCallT),
                     use_op: Some(use_op.dupe()),
-                },
+                })),
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
             rec_flow(cx, trace, (&any, u))?;
@@ -9224,7 +9731,13 @@ fn __flow_impl<'cx>(
         // Special cases of FunT
         (
             TypeInner::FunProtoBindT(reason),
-            UseTInner::MethodT(use_op, call_r, lookup_r, propref, action),
+            UseTInner::MethodT(box MethodTData {
+                use_op,
+                reason: call_r,
+                prop_reason: lookup_r,
+                propref,
+                method_action: action,
+            }),
         ) => {
             let method_type = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
@@ -9261,11 +9774,11 @@ fn __flow_impl<'cx>(
         }
         (
             _,
-            UseTInner::LookupT {
+            UseTInner::LookupT(box LookupTData {
                 propref,
                 lookup_action,
                 ..
-            },
+            }),
         ) => {
             default_resolve::default_resolve_touts(
                 &|l_inner: Type, r_inner: Type| {
@@ -9280,13 +9793,13 @@ fn __flow_impl<'cx>(
             let use_op = Some(use_op_of_lookup_action(lookup_action));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleProp {
+                ErrorMessage::EIncompatibleProp(Box::new(EIncompatiblePropData {
                     prop: name_of_propref(propref),
                     reason_prop: reason_of_propref(propref).dupe(),
                     reason_obj: reason_of_t(l).dupe(),
                     special: flow_js_utils::error_message_kind_of_lower(l),
                     use_op,
-                },
+                })),
             )?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::CheckUnusedPromiseT { reason, async_ })
@@ -9325,29 +9838,31 @@ fn __flow_impl<'cx>(
         // computed properties
         (
             _,
-            UseTInner::ConcretizeT {
+            UseTInner::ConcretizeT(box ConcretizeTData {
                 reason: _,
                 kind: ConcretizationKind::ConcretizeAll,
                 seen: _,
                 collector,
-            },
+            }),
         ) => {
             collector.add(l.dupe());
         }
-        (TypeInner::DefT(lreason, def_t), UseTInner::WriteComputedObjPropCheckT { .. })
+        (TypeInner::DefT(lreason, def_t), UseTInner::WriteComputedObjPropCheckT(..))
             if matches!(def_t.deref(), DefTInner::SingletonStrT { .. }) =>
         {
             let loc = lreason.loc().dupe();
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EInternal(loc, InternalError::PropRefComputedLiteral),
+                ErrorMessage::EInternal(Box::new((loc, InternalError::PropRefComputedLiteral))),
             )?;
         }
         (
             TypeInner::AnyT(_, src),
-            UseTInner::WriteComputedObjPropCheckT {
-                reason, value_t, ..
-            },
+            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
+                reason,
+                value_t,
+                ..
+            }),
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, reason.dupe());
@@ -9355,25 +9870,28 @@ fn __flow_impl<'cx>(
         }
         (
             TypeInner::DefT(_, def_t),
-            UseTInner::WriteComputedObjPropCheckT {
+            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
                 err_on_str_key: box (use_op, reason_obj),
                 ..
-            },
+            }),
         ) if matches!(def_t.deref(), DefTInner::StrGeneralT(_)) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EPropNotFoundInLookup {
+                ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                     prop_name: None,
                     reason_prop: reason_of_t(l).dupe(),
                     reason_obj: reason_obj.dupe(),
                     use_op: use_op.dupe(),
                     suggestion: None,
-                },
+                })),
             )?;
         }
         (
             TypeInner::DefT(reason, def_t),
-            UseTInner::WriteComputedObjPropCheckT { reason_key, .. },
+            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
+                reason_key,
+                ..
+            }),
         ) if let DefTInner::SingletonNumT {
             value: NumberLiteral(value, _),
             ..
@@ -9385,24 +9903,34 @@ fn __flow_impl<'cx>(
                 );
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EObjectComputedPropertyAssign(reason.dupe(), reason_key.dupe(), kind),
+                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
+                    reason.dupe(),
+                    reason_key.dupe(),
+                    kind,
+                ))),
             )?;
         }
-        (_, UseTInner::WriteComputedObjPropCheckT { reason_key, .. }) => {
+        (
+            _,
+            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
+                reason_key,
+                ..
+            }),
+        ) => {
             let reason = reason_of_t(l);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EObjectComputedPropertyAssign(
+                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                     reason.dupe(),
                     reason_key.dupe(),
                     flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
-                ),
+                ))),
             )?;
         }
         _ => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatible {
+                ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                     lower: (
                         reason_of_t(l).dupe(),
                         flow_js_utils::error_message_kind_of_lower(l),
@@ -9412,10 +9940,10 @@ fn __flow_impl<'cx>(
                         flow_js_utils::error_message_kind_of_upper(u),
                     ),
                     use_op: use_op_of_use_t(u),
-                },
+                })),
             )?;
             let resolve_callee = match u.deref() {
-                UseTInner::CallT { .. } => Some((reason_of_t(l).dupe(), vec![l.dupe()])),
+                UseTInner::CallT(..) => Some((reason_of_t(l).dupe(), vec![l.dupe()])),
                 _ => None,
             };
             default_resolve::default_resolve_touts(

@@ -315,7 +315,7 @@ fn scan_for_lint_suppressions(
     }
 
     fn add_error((loc, kind): (Loc, LintParseError)) -> ErrorMessage<ALoc> {
-        ErrorMessage::ELintSetting(ALoc::of_loc(loc), kind)
+        ErrorMessage::ELintSetting(Box::new((ALoc::of_loc(loc), kind)))
     }
 
     fn parse_kind(loc_str: &Located<String>) -> Result<Vec<LintKind>, (Loc, LintParseError)> {
@@ -344,10 +344,10 @@ fn scan_for_lint_suppressions(
         let (rule, setting) = match (parts.next(), parts.next(), parts.next()) {
             (Some(rule), Some(setting), None) => (rule, setting),
             _ => {
-                errs.push(ErrorMessage::ELintSetting(
+                errs.push(ErrorMessage::ELintSetting(Box::new((
                     ALoc::of_loc(arg_loc),
                     LintParseError::MalformedArgument,
-                ));
+                ))));
                 return;
             }
         };
@@ -364,14 +364,26 @@ fn scan_for_lint_suppressions(
                 acc.push(settings);
             }
             (Err((loc, err)), Ok(_)) => {
-                errs.push(ErrorMessage::ELintSetting(ALoc::of_loc(loc), err));
+                errs.push(ErrorMessage::ELintSetting(Box::new((
+                    ALoc::of_loc(loc),
+                    err,
+                ))));
             }
             (Ok(_), Err((loc, err))) => {
-                errs.push(ErrorMessage::ELintSetting(ALoc::of_loc(loc), err));
+                errs.push(ErrorMessage::ELintSetting(Box::new((
+                    ALoc::of_loc(loc),
+                    err,
+                ))));
             }
             (Err((loc1, err1)), Err((loc2, err2))) => {
-                errs.push(ErrorMessage::ELintSetting(ALoc::of_loc(loc1), err1));
-                errs.push(ErrorMessage::ELintSetting(ALoc::of_loc(loc2), err2));
+                errs.push(ErrorMessage::ELintSetting(Box::new((
+                    ALoc::of_loc(loc1),
+                    err1,
+                ))));
+                errs.push(ErrorMessage::ELintSetting(Box::new((
+                    ALoc::of_loc(loc2),
+                    err2,
+                ))));
             }
         }
     }
@@ -793,7 +805,7 @@ pub fn initialize_env<'cx>(
         let loc = loc.unwrap_or_else(|| aloc_ast.loc.dupe());
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::EInternal(loc, InternalError::EnvInvariant(failure)),
+            ErrorMessage::EInternal(Box::new((loc, InternalError::EnvInvariant(failure)))),
         );
     }
 }
@@ -862,12 +874,12 @@ fn stmt_validator(
 ) -> bool {
     let loc = stmt.loc().dupe();
     let error = |kind: &str| -> ErrorMessage<ALoc> {
-        ErrorMessage::EUnsupportedSyntax(
+        ErrorMessage::EUnsupportedSyntax(Box::new((
             loc.dupe(),
             UnsupportedSyntax::ContextDependentUnsupportedStatement(
                 ContextDependentUnsupportedStatement::UnsupportedStatementInLibdef(kind.into()),
             ),
-        )
+        )))
     };
     let error_opt: Option<ErrorMessage<ALoc>> = match &**stmt {
         statement::StatementInner::DeclareClass { .. }
@@ -902,24 +914,24 @@ fn stmt_validator(
         }
         statement::StatementInner::ImportDeclaration { .. } => {
             if in_toplevel_scope {
-                Some(ErrorMessage::EUnsupportedSyntax(
+                Some(ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::ContextDependentUnsupportedStatement(
                         ContextDependentUnsupportedStatement::ToplevelLibraryImport,
                     ),
-                ))
+                ))))
             } else {
                 None
             }
         }
         statement::StatementInner::ImportEqualsDeclaration { .. } => {
             if in_toplevel_scope {
-                Some(ErrorMessage::EUnsupportedSyntax(
+                Some(ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::ContextDependentUnsupportedStatement(
                         ContextDependentUnsupportedStatement::ToplevelLibraryImport,
                     ),
-                ))
+                ))))
             } else {
                 None
             }

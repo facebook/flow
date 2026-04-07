@@ -5867,27 +5867,27 @@ pub mod match_pattern {
     pub enum MatchPattern<M: Dupe, T: Dupe> {
         WildcardPattern {
             loc: M,
-            inner: WildcardPattern<M>,
+            inner: Box<WildcardPattern<M>>,
         },
         NumberPattern {
             loc: M,
-            inner: NumberLiteral<M>,
+            inner: Box<NumberLiteral<M>>,
         },
         BigIntPattern {
             loc: M,
-            inner: BigIntLiteral<M>,
+            inner: Box<BigIntLiteral<M>>,
         },
         StringPattern {
             loc: M,
-            inner: StringLiteral<M>,
+            inner: Box<StringLiteral<M>>,
         },
         BooleanPattern {
             loc: M,
-            inner: BooleanLiteral<M>,
+            inner: Box<BooleanLiteral<M>>,
         },
         NullPattern {
             loc: M,
-            inner: Option<Syntax<M, ()>>,
+            inner: Box<Option<Syntax<M, ()>>>,
         },
         UnaryPattern {
             loc: M,
@@ -5899,7 +5899,7 @@ pub mod match_pattern {
         },
         IdentifierPattern {
             loc: M,
-            inner: Identifier<M, T>,
+            inner: Box<Identifier<M, T>>,
         },
         MemberPattern {
             loc: M,

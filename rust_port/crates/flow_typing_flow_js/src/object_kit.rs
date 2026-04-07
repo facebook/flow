@@ -22,9 +22,11 @@ use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
+use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DictType;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::Flags;
 use flow_typing_type::type_::MappedTypeFlags;
 use flow_typing_type::type_::ObjKind;
@@ -498,12 +500,12 @@ pub fn run<'cx>(
                             type_: t.dupe(),
                         })
                     } else {
-                        Property::new(PropertyInner::Field {
+                        Property::new(PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc: key_loc.dupe(),
                             type_: t.dupe(),
                             polarity,
-                        })
+                        })))
                     };
                     (name.dupe(), p)
                 })
@@ -714,12 +716,12 @@ pub fn run<'cx>(
                                             cx,
                                             trace,
                                             &open_t,
-                                            &UseT::new(UseTInner::CondT(
-                                                reason.dupe(),
-                                                None,
-                                                t2_clone.dupe(),
-                                                tvar.dupe(),
-                                            )),
+                                            &UseT::new(UseTInner::CondT(Box::new(CondTData {
+                                                reason: reason.dupe(),
+                                                opt_type: None,
+                                                true_t: t2_clone.dupe(),
+                                                false_t: tvar.dupe(),
+                                            }))),
                                         )?;
                                         Ok::<(), FlowJsException>(())
                                     },
@@ -839,12 +841,12 @@ pub fn run<'cx>(
                             type_: type_.dupe(),
                         })
                     } else {
-                        Property::new(PropertyInner::Field {
+                        Property::new(PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc: key_loc.dupe(),
                             type_: type_.dupe(),
                             polarity: prop_polarity,
-                        })
+                        })))
                     };
                     (name.dupe(), p)
                 })

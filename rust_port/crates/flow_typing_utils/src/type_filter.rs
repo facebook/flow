@@ -38,6 +38,7 @@ use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::ObjKind;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleElement;
@@ -286,12 +287,12 @@ fn filter_opaque(
 fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(r, d) => match d.deref() {
-            DefTInner::PolyT {
+            DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams,
                 t_out,
                 id,
-            } => {
+            }) => {
                 let FilterResult { type_, changed } = f(t_out.dupe());
                 match type_.deref() {
                     TypeInner::DefT(_, d2) if matches!(&**d2, DefTInner::EmptyT) => {
@@ -300,12 +301,12 @@ fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
                     _ => FilterResult {
                         type_: Type::new(TypeInner::DefT(
                             r.dupe(),
-                            DefT::new(DefTInner::PolyT {
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out: type_,
                                 id: id.dupe(),
-                            }),
+                            }))),
                         )),
                         changed,
                     },
@@ -376,7 +377,7 @@ pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
         return unchanged_result(t);
     }
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT { .. }) => {
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => {
             map_poly(&|t| not_truthy(cx, t), t)
         }
         TypeInner::NominalT {
@@ -401,7 +402,7 @@ pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
             | DefTInner::InstanceT(_)
             | DefTInner::EnumObjectT { .. }
             | DefTInner::FunT(_, _)
-            | DefTInner::ReactAbstractComponentT { .. }
+            | DefTInner::ReactAbstractComponentT(_)
             | DefTInner::SingletonNumT { .. }
             | DefTInner::NumGeneralT(Literal::Truthy)
             | DefTInner::MixedT(MixedFlavor::MixedTruthy) => changed_result(empty_t::why(r.dupe())),
@@ -1387,7 +1388,7 @@ pub fn not_bigint(t: Type) -> FilterResult {
 
 pub fn object_<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT { .. }) => {
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => {
             map_poly(&|t| object_(cx, t), t)
         }
         TypeInner::DefT(r, d) => match d.deref() {
@@ -1452,9 +1453,7 @@ pub fn object_<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
 
 pub fn not_object(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT { .. }) => {
-            map_poly(&not_object, t)
-        }
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&not_object, t),
         TypeInner::AnyT(_, _) => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::ObjT(_)
@@ -1470,7 +1469,7 @@ pub fn not_object(t: Type) -> FilterResult {
 
 pub fn function_(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT { .. }) => map_poly(&function_, t),
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&function_, t),
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::MixedT(_) => changed_result(Type::new(TypeInner::DefT(
                 r.dupe().replace_desc_new(VirtualReasonDesc::RFunction(
@@ -1488,9 +1487,7 @@ pub fn function_(t: Type) -> FilterResult {
 
 pub fn not_function(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT { .. }) => {
-            map_poly(&not_function, t)
-        }
+        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT(_)) => map_poly(&not_function, t),
         TypeInner::AnyT(_, _) => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::FunT(_, _) | DefTInner::ClassT(_) => {
@@ -1890,7 +1887,7 @@ fn sentinel_of_obj<'cx>(cx: &Context<'cx>, id: properties::Id) -> type_tag::Sent
     cx.fold_props(
         id,
         |name, prop, acc: type_tag::SentinelMap| match prop.deref() {
-            PropertyInner::Field { type_, .. } => match tag_of_value(cx, type_) {
+            PropertyInner::Field(fd) => match tag_of_value(cx, &fd.type_) {
                 Some(v) => {
                     let mut acc = acc;
                     acc.insert(name.as_smol_str().dupe(), v);
@@ -1968,14 +1965,14 @@ fn tag_of_def_t<'cx>(cx: &Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
                 })]))
             }
         },
-        DefTInner::PolyT { t_out, .. } => tag_of_t(cx, t_out),
+        DefTInner::PolyT(box PolyTData { t_out, .. }) => tag_of_t(cx, t_out),
         DefTInner::EnumValueT(_) => Some(BTreeSet::from([TypeTag(TypeTagInner::EnumTag)])),
         DefTInner::EmptyT => Some(BTreeSet::new()),
         DefTInner::RendersT(_) => Some(BTreeSet::from([TypeTag(TypeTagInner::RendersTag)])),
         DefTInner::MixedT(_)
         | DefTInner::ClassT(_)
         | DefTInner::TypeT { .. }
-        | DefTInner::ReactAbstractComponentT { .. }
+        | DefTInner::ReactAbstractComponentT(_)
         | DefTInner::EnumObjectT { .. } => None,
     }
 }

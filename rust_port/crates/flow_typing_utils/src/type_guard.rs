@@ -23,12 +23,17 @@ use flow_parser::ast::function;
 use flow_parser::ast::pattern;
 use flow_typing_context::Context;
 use flow_typing_context::TypingMode;
+use flow_typing_errors::error_message::ENegativeTypeGuardConsistencyData;
+use flow_typing_errors::error_message::ETypeGuardFunctionInvalidWritesData;
+use flow_typing_errors::error_message::ETypeGuardFunctionParamHavocedData;
+use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::Type;
@@ -70,11 +75,13 @@ fn check_type_guard_consistency<'cx>(
         Some((Some(havoced_loc_set), _)) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ETypeGuardFunctionParamHavoced {
-                    param_reason,
-                    type_guard_reason: tg_reason.dupe(),
-                    call_locs: havoced_loc_set.iter().cloned().collect(),
-                },
+                ErrorMessage::ETypeGuardFunctionParamHavoced(Box::new(
+                    ETypeGuardFunctionParamHavocedData {
+                        param_reason,
+                        type_guard_reason: tg_reason.dupe(),
+                        call_locs: havoced_loc_set.iter().cloned().collect(),
+                    },
+                )),
             );
         }
         Some((None, reads)) => {
@@ -105,13 +112,15 @@ fn check_type_guard_consistency<'cx>(
                         if !is_return_false_statement {
                             let guard_type_reason = reason_of_t(type_guard);
                             let use_op = UseOp::Op(Arc::new(
-                                VirtualRootUseOp::PositiveTypeGuardConsistency {
-                                    reason: reason.dupe(),
-                                    param_reason: param_reason.dupe(),
-                                    guard_type_reason: guard_type_reason.dupe(),
-                                    return_reason: return_reason.dupe(),
-                                    is_return_false_statement,
-                                },
+                                VirtualRootUseOp::PositiveTypeGuardConsistency(Box::new(
+                                    PositiveTypeGuardConsistencyData {
+                                        reason: reason.dupe(),
+                                        param_reason: param_reason.dupe(),
+                                        guard_type_reason: guard_type_reason.dupe(),
+                                        return_reason: return_reason.dupe(),
+                                        is_return_false_statement,
+                                    },
+                                )),
                             ));
                             flow_js::flow_non_speculating(
                                 cx,
@@ -146,11 +155,13 @@ fn check_type_guard_consistency<'cx>(
                             ) {
                                 flow_js::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::ENegativeTypeGuardConsistency {
-                                        reason: reason.dupe(),
-                                        return_reason: return_reason.dupe(),
-                                        type_reason: reason_of_t(type_guard).dupe(),
-                                    },
+                                    ErrorMessage::ENegativeTypeGuardConsistency(Box::new(
+                                        ENegativeTypeGuardConsistencyData {
+                                            reason: reason.dupe(),
+                                            return_reason: return_reason.dupe(),
+                                            type_reason: reason_of_t(type_guard).dupe(),
+                                        },
+                                    )),
                                 );
                             }
                         }
@@ -158,11 +169,13 @@ fn check_type_guard_consistency<'cx>(
                     Err(write_locs) => {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::ETypeGuardFunctionInvalidWrites {
-                                reason: return_reason.dupe(),
-                                type_guard_reason: tg_reason.dupe(),
-                                write_locs,
-                            },
+                            ErrorMessage::ETypeGuardFunctionInvalidWrites(Box::new(
+                                ETypeGuardFunctionInvalidWritesData {
+                                    reason: return_reason.dupe(),
+                                    type_guard_reason: tg_reason.dupe(),
+                                    write_locs,
+                                },
+                            )),
                         );
                     }
                 }
@@ -188,10 +201,10 @@ pub fn check_type_guard<'cx>(
         let binding_reason = mk_reason(desc, binding_loc);
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::ETypeGuardInvalidParameter {
+            ErrorMessage::ETypeGuardInvalidParameter(Box::new(ETypeGuardInvalidParameterData {
                 type_guard_reason: type_guard_reason.dupe(),
                 binding_reason,
-            },
+            })),
         );
     };
 

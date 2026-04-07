@@ -16,21 +16,43 @@ use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
 use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::CallElemTData;
+use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::CondTData;
+use flow_typing_type::type_::ConditionalTData;
 use flow_typing_type::type_::Cont;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::ElemAction;
+use flow_typing_type::type_::ElemTData;
+use flow_typing_type::type_::GetElemTData;
+use flow_typing_type::type_::GetEnumTData;
+use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::LookupAction;
+use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodAction;
+use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::MixedFlavor;
+use flow_typing_type::type_::OptionalIndexedAccessTData;
+use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveUnionTData;
+use flow_typing_type::type_::SealGenericTData;
+use flow_typing_type::type_::SetElemTData;
+use flow_typing_type::type_::SpecializeTData;
 use flow_typing_type::type_::SpecializedCallee;
 use flow_typing_type::type_::SpreadResolve;
+use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::react;
@@ -146,35 +168,40 @@ pub fn default_resolve_touts<'cx>(
     };
     match u.deref() {
         UseTInner::UseT(..) => Ok(()),
-        UseTInner::BindT(_, _, funcalltype) => resolve_tvar(&funcalltype.call_tout),
-        UseTInner::CallT {
-            use_op: _,
-            reason: _,
+        UseTInner::BindT(box BindTData {
+            funcall_type: funcalltype,
+            ..
+        }) => resolve_tvar(&funcalltype.call_tout),
+        UseTInner::CallT(box CallTData {
             call_action: box CallAction::Funcalltype(funcalltype),
-            return_hint: _,
-        } => {
+            ..
+        }) => {
             resolve_tvar(&funcalltype.call_tout)?;
             resolve_specialized_callee(&funcalltype.call_specialized_callee);
             Ok(())
         }
-        UseTInner::CallT {
-            use_op: _,
-            reason: _,
+        UseTInner::CallT(box CallTData {
             call_action: box CallAction::ConcretizeCallee(tout),
-            return_hint: _,
-        } => resolve_tvar(tout),
-        UseTInner::ConditionalT { tout, .. } => resolve_tvar(tout),
-        UseTInner::MethodT(_, _, _, _, action) => resolve_method_action(action),
+            ..
+        }) => resolve_tvar(tout),
+        UseTInner::ConditionalT(box ConditionalTData { tout, .. }) => resolve_tvar(tout),
+        UseTInner::MethodT(box MethodTData {
+            method_action: action,
+            ..
+        }) => resolve_method_action(action),
         UseTInner::PrivateMethodT(data) => resolve_method_action(&data.method_action),
         UseTInner::SetPropT(_, _, _, _, _, _, topt) => map_opt(topt),
         UseTInner::SetPrivatePropT(data) => map_opt(&data.tout),
-        UseTInner::GetTypeFromNamespaceT { tout: tvar, .. }
-        | UseTInner::TestPropT { tout: tvar, .. } => resolve_tvar(tvar),
+        UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData { tout: tvar, .. })
+        | UseTInner::TestPropT(box TestPropTData { tout: tvar, .. }) => resolve_tvar(tvar),
         UseTInner::GetPrivatePropT(data) => resolve_tvar(&data.tout),
         UseTInner::GetPropT(data) => resolve_tvar(&data.tout),
-        UseTInner::SetElemT(_, _, _, _, _, topt) => map_opt(topt),
-        UseTInner::GetElemT { tout, .. } => resolve_tvar(tout),
-        UseTInner::CallElemT(_, _, _, _, action) => resolve_method_action(action),
+        UseTInner::SetElemT(box SetElemTData { tout: topt, .. }) => map_opt(topt),
+        UseTInner::GetElemT(box GetElemTData { tout, .. }) => resolve_tvar(tout),
+        UseTInner::CallElemT(box CallElemTData {
+            method_action: action,
+            ..
+        }) => resolve_method_action(action),
         UseTInner::GetStaticsT(tvar) | UseTInner::GetProtoT(_, tvar) => resolve_tvar(tvar),
         UseTInner::SetProtoT(..) => Ok(()),
         UseTInner::ReposLowerT { .. } | UseTInner::ReposUseT(..) => Ok(()),
@@ -185,14 +212,17 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ToStringT { t_out, .. } => {
             default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), t_out)
         }
-        UseTInner::SpecializeT(_, _, _, _, tout) => resolve(tout.dupe()),
+        UseTInner::SpecializeT(box SpecializeTData { tvar: tout, .. }) => resolve(tout.dupe()),
         UseTInner::ThisSpecializeT(_, _, k) => resolve_cont(k),
-        UseTInner::ValueToTypeReferenceT(_, _, _, tvar) => resolve_tvar(tvar),
+        UseTInner::ValueToTypeReferenceT(box ValueToTypeReferenceTData { tout: tvar, .. }) => {
+            resolve_tvar(tvar)
+        }
         UseTInner::ConcretizeTypeAppsT(..) => Ok(()),
-        UseTInner::LookupT { lookup_action, .. } => resolve_lookup_action(lookup_action),
-        UseTInner::ObjRestT(_, _, t, _)
-        | UseTInner::ObjTestT(_, _, t)
-        | UseTInner::ArrRestT(_, _, _, t) => resolve(t.dupe()),
+        UseTInner::LookupT(box LookupTData { lookup_action, .. }) => {
+            resolve_lookup_action(lookup_action)
+        }
+        UseTInner::ObjRestT(_, _, t, _) | UseTInner::ObjTestT(_, _, t) => resolve(t.dupe()),
+        UseTInner::ArrRestT(box ArrRestTData { tout: t, .. }) => resolve(t.dupe()),
         UseTInner::ObjTestProtoT(_, t) => resolve(t.dupe()),
         UseTInner::GetDictValuesT(_, use_) => {
             default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_)
@@ -202,32 +232,36 @@ pub fn default_resolve_touts<'cx>(
         }
         UseTInner::HasOwnPropT(..) => Ok(()),
         UseTInner::GetValuesT(_, t) => resolve(t.dupe()),
-        UseTInner::ElemT { action, .. } => resolve_elem_action(action),
-        UseTInner::MapTypeT(_, _, _, t) | UseTInner::ObjKitT(_, _, _, _, t) => resolve(t.dupe()),
-        UseTInner::ReactKitT(_, _, tool) => resolve_react_tool(tool),
-        UseTInner::ConcretizeT { .. } => Ok(()),
-        UseTInner::ResolveSpreadT(_, _, resolve_spread_type) => {
-            resolve_spread_resolve(&resolve_spread_type.rrt_resolve_to)
-        }
-        UseTInner::CondT(_, _, _, t) => resolve(t.dupe()),
+        UseTInner::ElemT(box ElemTData { action, .. }) => resolve_elem_action(action),
+        UseTInner::MapTypeT(box MapTypeTData { tout: t, .. })
+        | UseTInner::ObjKitT(_, _, _, _, t) => resolve(t.dupe()),
+        UseTInner::ReactKitT(box ReactKitTData { tool, .. }) => resolve_react_tool(tool),
+        UseTInner::ConcretizeT(..) => Ok(()),
+        UseTInner::ResolveSpreadT(box ResolveSpreadTData {
+            resolve_spread_type,
+            ..
+        }) => resolve_spread_resolve(&resolve_spread_type.rrt_resolve_to),
+        UseTInner::CondT(box CondTData { false_t: t, .. }) => resolve(t.dupe()),
         UseTInner::ExtendsUseT(..) => Ok(()),
-        UseTInner::ResolveUnionT { upper, .. } => {
+        UseTInner::ResolveUnionT(box ResolveUnionTData { upper, .. }) => {
             default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), upper)
         }
         UseTInner::TypeCastT(_, t) => resolve(t.dupe()),
-        UseTInner::GetEnumT { tout, .. } => resolve(tout.dupe()),
-        UseTInner::EnumCastT { .. } | UseTInner::EnumExhaustiveCheckT { .. } => Ok(()),
+        UseTInner::GetEnumT(box GetEnumTData { tout, .. }) => resolve(tout.dupe()),
+        UseTInner::EnumCastT(..) | UseTInner::EnumExhaustiveCheckT(..) => Ok(()),
         UseTInner::HooklikeT(tvar) | UseTInner::DeepReadOnlyT(tvar, _) => resolve_tvar(tvar),
         UseTInner::FilterOptionalT(_, t) | UseTInner::FilterMaybeT(_, t) => resolve(t.dupe()),
-        UseTInner::SealGenericT { cont, .. } => resolve_cont(cont),
-        UseTInner::OptionalIndexedAccessT { tout_tvar, .. } => resolve_tvar(tout_tvar),
+        UseTInner::SealGenericT(box SealGenericTData { cont, .. }) => resolve_cont(cont),
+        UseTInner::OptionalIndexedAccessT(box OptionalIndexedAccessTData { tout_tvar, .. }) => {
+            resolve_tvar(tout_tvar)
+        }
         UseTInner::CheckUnusedPromiseT { .. } => Ok(()),
-        UseTInner::WriteComputedObjPropCheckT { .. } => Ok(()),
+        UseTInner::WriteComputedObjPropCheckT(..) => Ok(()),
         UseTInner::ConvertEmptyPropsToMixedT(_, tout) => resolve(tout.dupe()),
         UseTInner::ExitRendersT {
             renders_reason: _,
             u,
         } => default_resolve_touts(flow, resolve_callee, cx, loc, u),
-        UseTInner::EvalTypeDestructorT { .. } => Ok(()),
+        UseTInner::EvalTypeDestructorT(..) => Ok(()),
     }
 }

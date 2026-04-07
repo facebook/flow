@@ -13,6 +13,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::MethodAction;
+use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseT;
@@ -147,13 +148,13 @@ pub fn get_method_type_unsafe<'cx>(
     let t = t.dupe();
     let reason2 = reason.dupe();
     flow_typing_tvar::mk_where_result(cx, reason, move |cx, prop_t| {
-        let use_t = UseT::new(UseTInner::MethodT(
-            unknown_use(),
-            reason2.dupe(),
-            reason2.dupe(),
-            Box::new(propref),
-            Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
-        ));
+        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+            use_op: unknown_use(),
+            reason: reason2.dupe(),
+            prop_reason: reason2.dupe(),
+            propref: Box::new(propref),
+            method_action: Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
+        })));
         resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))
     })
 }

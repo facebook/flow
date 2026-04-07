@@ -34,12 +34,27 @@ use flow_env_builder::env_api::RefinementKind;
 use flow_env_builder::env_api::Values;
 use flow_env_builder::env_api::WriteLoc;
 use flow_env_builder::name_def::pattern_has_annot;
+use flow_env_builder::name_def_types::AnnotationData;
 use flow_env_builder::name_def_types::AstHint;
 use flow_env_builder::name_def_types::Binding;
+use flow_env_builder::name_def_types::ClassDefData;
+use flow_env_builder::name_def_types::ComponentDefData;
+use flow_env_builder::name_def_types::ContextualData;
 use flow_env_builder::name_def_types::Def;
+use flow_env_builder::name_def_types::EmptyArrayData;
 use flow_env_builder::name_def_types::ExpressionDef;
+use flow_env_builder::name_def_types::FunctionDefData;
 use flow_env_builder::name_def_types::FunctionSynthKind;
+use flow_env_builder::name_def_types::FunctionValueData;
+use flow_env_builder::name_def_types::ImportData;
+use flow_env_builder::name_def_types::MatchCasePatternData;
+use flow_env_builder::name_def_types::MatchCaseRootData;
+use flow_env_builder::name_def_types::MemberAssignData;
+use flow_env_builder::name_def_types::ObjectValueData;
+use flow_env_builder::name_def_types::OpAssignData;
+use flow_env_builder::name_def_types::RecordDefData;
 use flow_env_builder::name_def_types::Root;
+use flow_env_builder::name_def_types::TypeParamData;
 use flow_env_builder::name_def_types::print::string_of_source;
 use flow_env_builder::provider_api;
 use flow_env_builder::selector::Selector;
@@ -381,10 +396,10 @@ where
                 if !allow_missing {
                     Fl::add_output(
                         self.cx,
-                        ErrorMessage::EInternal(
+                        ErrorMessage::EInternal(Box::new((
                             loc.dupe(),
                             InternalError::MissingEnvRead(loc.dupe()),
-                        ),
+                        ))),
                     );
                 }
                 &[]
@@ -2300,9 +2315,9 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
         use flow_env_builder::name_def_types::Root;
 
         match root {
-            Root::Annotation {
+            Root::Annotation(box AnnotationData {
                 tparams_map, annot, ..
-            } => {
+            }) => {
                 let annot_struct = ast::types::Annotation {
                     loc: annot.0.dupe(),
                     annotation: annot.1.clone(),
@@ -2319,7 +2334,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     state,
                 )
             }
-            Root::Value(flow_env_builder::name_def_types::Value { hints, expr, .. }) => {
+            Root::Value(box flow_env_builder::name_def_types::Value { hints, expr, .. }) => {
                 let state = depends_of_hints::<Cx, Fl>(
                     cx,
                     autocomplete_hooks,
@@ -2344,11 +2359,11 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     state,
                 )
             }
-            Root::MatchCaseRoot {
+            Root::MatchCaseRoot(box MatchCaseRootData {
                 case_match_root_loc,
                 root_pattern_loc: _,
                 prev_pattern_loc,
-            } => depends_of_node::<Cx, Fl>(
+            }) => depends_of_node::<Cx, Fl>(
                 cx,
                 this_super_dep_loc_map,
                 env_values,
@@ -2371,11 +2386,11 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     }
                 },
             ),
-            Root::ObjectValue {
+            Root::ObjectValue(box ObjectValueData {
                 obj,
                 obj_loc: _,
                 synthesizable: OS { .. },
-            } => {
+            }) => {
                 fn depends_of_synthesizable_expression<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     cx: &'cx Cx,
                     autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
@@ -2622,7 +2637,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     state,
                 )
             }
-            Root::ObjectValue { obj, obj_loc, .. } => {
+            Root::ObjectValue(box ObjectValueData { obj, obj_loc, .. }) => {
                 let expr = ast::expression::Expression(Arc::new(
                     ast::expression::ExpressionInner::Object {
                         loc: obj_loc.dupe(),
@@ -2642,7 +2657,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     EnvMap::empty(),
                 )
             }
-            Root::FunctionValue {
+            Root::FunctionValue(box FunctionValueData {
                 hints,
                 synthesizable_from_annotation,
                 function_loc: _,
@@ -2650,7 +2665,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 statics,
                 arrow: _,
                 tparams_map,
-            } => depends_of_fun::<Cx, Fl>(
+            }) => depends_of_fun::<Cx, Fl>(
                 cx,
                 autocomplete_hooks,
                 this_super_dep_loc_map,
@@ -2666,9 +2681,9 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 function_,
                 state,
             ),
-            Root::EmptyArray {
+            Root::EmptyArray(box EmptyArrayData {
                 array_providers, ..
-            } => array_providers.iter().fold(state, |mut acc, loc| {
+            }) => array_providers.iter().fold(state, |mut acc, loc| {
                 let key = EnvKey::new(DefLocType::ArrayProviderLoc, loc.dupe());
                 let new_value = match acc.get(&key) {
                     None => Vec1::new(id_loc.dupe()),
@@ -2681,7 +2696,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 acc.insert(key, new_value);
                 acc
             }),
-            Root::For(_, exp) => depends_of_expression::<Cx, Fl>(
+            Root::For(box (_, exp)) => depends_of_expression::<Cx, Fl>(
                 cx,
                 this_super_dep_loc_map,
                 env_values,
@@ -2693,12 +2708,12 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 &exp.1,
                 state,
             ),
-            Root::Contextual {
+            Root::Contextual(box ContextualData {
                 reason: _,
                 hints,
                 optional: _,
                 default_expression,
-            } => {
+            }) => {
                 let state = match default_expression {
                     Some(e) => depends_of_expression::<Cx, Fl>(
                         cx,
@@ -3068,12 +3083,12 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             id_loc,
             binding,
         ),
-        Def::MatchCasePattern {
+        Def::MatchCasePattern(box MatchCasePatternData {
             case_match_root_loc,
             has_guard: _,
             pattern,
             prev_pattern_loc,
-        } => {
+        }) => {
             // Add dependency on the immediately previous pattern for incremental PatternUnion building
             let state = match prev_pattern_loc {
                 Some(prev_loc) => {
@@ -3098,7 +3113,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 state,
             )
         }
-        Def::ExpressionDef(ExpressionDef { expr, hints, .. }) => {
+        Def::ExpressionDef(box ExpressionDef { expr, hints, .. }) => {
             depends_of_hinted_expression::<Cx, Fl>(
                 cx,
                 autocomplete_hooks,
@@ -3123,12 +3138,12 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             id_loc,
             None,
         ),
-        Def::MemberAssign {
+        Def::MemberAssign(box MemberAssignData {
             member_loc,
             member,
             rhs,
             ..
-        } => depends_of_member_assign::<Cx, Fl>(
+        }) => depends_of_member_assign::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
             env_values,
@@ -3139,7 +3154,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             member,
             &rhs.1,
         ),
-        Def::OpAssign { lhs, rhs, .. } => depends_of_op_assign::<Cx, Fl>(
+        Def::OpAssign(box OpAssignData { lhs, rhs, .. }) => depends_of_op_assign::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
             env_values,
@@ -3150,7 +3165,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             &lhs.1,
             &rhs.1,
         ),
-        Def::Function {
+        Def::Function(box FunctionDefData {
             synthesizable_from_annotation,
             arrow: _,
             function_,
@@ -3159,7 +3174,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             tparams_map,
             statics,
             hints,
-        } => depends_of_fun::<Cx, Fl>(
+        }) => depends_of_fun::<Cx, Fl>(
             cx,
             autocomplete_hooks,
             this_super_dep_loc_map,
@@ -3175,11 +3190,11 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             function_,
             EnvMap::empty(),
         ),
-        Def::Component {
+        Def::Component(box ComponentDefData {
             tparams_map,
             component,
             component_loc: _,
-        } => depends_of_component::<Cx, Fl>(
+        }) => depends_of_component::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
             env_values,
@@ -3190,12 +3205,12 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             component,
             EnvMap::empty(),
         ),
-        Def::Class {
+        Def::Class(box ClassDefData {
             class_,
             class_loc: _,
             this_super_write_locs: _,
             kind: _,
-        } => depends_of_class::<Cx, Fl>(
+        }) => depends_of_class::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
             env_values,
@@ -3204,12 +3219,12 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             refinement_of_id,
             class_,
         ),
-        Def::Record {
+        Def::Record(box RecordDefData {
             record,
             record_loc: _,
             this_super_write_locs: _,
             defaulted_props: _,
-        } => depends_of_record::<Cx, Fl>(
+        }) => depends_of_record::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
             env_values,
@@ -3255,11 +3270,11 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             refinement_of_id,
             alias,
         ),
-        Def::TypeParam {
+        Def::TypeParam(box TypeParamData {
             tparams_map,
             kind: _,
             tparam,
-        } => depends_of_tparam::<Cx, Fl>(
+        }) => depends_of_tparam::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,
             env_values,
@@ -3278,7 +3293,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             refinement_of_id,
             inter,
         ),
-        Def::GeneratorNext(Some(gen_annot)) => {
+        Def::GeneratorNext(box Some(gen_annot)) => {
             let return_annot_struct = ast::types::Annotation {
                 loc: gen_annot.return_annot.0.dupe(),
                 annotation: gen_annot.return_annot.1.clone(),
@@ -3304,9 +3319,9 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             refinement_of_id,
             ns,
         ),
-        Def::GeneratorNext(None) => EnvMap::empty(),
-        Def::Enum { .. } => EnvMap::empty(),
-        Def::Import { .. } => EnvMap::empty(),
+        Def::GeneratorNext(box None) => EnvMap::empty(),
+        Def::Enum(_) => EnvMap::empty(),
+        Def::Import(_) => EnvMap::empty(),
         Def::MissingThisAnnot => EnvMap::empty(),
     }
 }
@@ -3327,19 +3342,19 @@ fn recursively_resolvable(def: &Def) -> bool {
             Binding::Root(Root::CatchUnannotated) => true,
             Binding::Root(Root::DeclareVariableMissingAnnotationAndInit) => true,
             Binding::Root(Root::UnannotatedParameter { .. }) => true,
-            Binding::Root(Root::Annotation { .. }) => true,
-            Binding::Root(Root::ObjectValue {
+            Binding::Root(Root::Annotation(_)) => true,
+            Binding::Root(Root::ObjectValue(box ObjectValueData {
                 synthesizable: ObjectSynthKind::ObjectSynthesizable { .. },
                 ..
-            }) => true,
+            })) => true,
             Binding::Root(
                 Root::For(..)
-                | Root::Value { .. }
-                | Root::MatchCaseRoot { .. }
-                | Root::FunctionValue { .. }
-                | Root::Contextual { .. }
-                | Root::EmptyArray { .. }
-                | Root::ObjectValue { .. },
+                | Root::Value(_)
+                | Root::MatchCaseRoot(_)
+                | Root::FunctionValue(_)
+                | Root::Contextual(_)
+                | Root::EmptyArray(_)
+                | Root::ObjectValue(_),
             ) => false,
             Binding::Select {
                 selector: Selector::Computed { .. },
@@ -3379,58 +3394,58 @@ fn recursively_resolvable(def: &Def) -> bool {
 
     match def {
         Def::Binding(bind) => bind_loop(bind),
-        Def::ExpressionDef(ExpressionDef { hints, expr, .. }) if hints.is_empty() => {
+        Def::ExpressionDef(box ExpressionDef { hints, expr, .. }) if hints.is_empty() => {
             expression_resolvable(expr)
         }
         Def::GeneratorNext(_)
         | Def::TypeAlias(..)
         | Def::OpaqueType(..)
-        | Def::TypeParam { .. }
+        | Def::TypeParam(_)
         | Def::Interface(..)
         // Imports are academic here since they can't be in a cycle anyways, since they depend on nothing
-        | Def::Import {
+        | Def::Import(box ImportData {
             import_kind: ast::statement::ImportKind::ImportType,
             ..
-        }
-        | Def::Import {
+        })
+        | Def::Import(box ImportData {
             import_kind: ast::statement::ImportKind::ImportTypeof,
             ..
-        }
-        | Def::Import {
+        })
+        | Def::Import(box ImportData {
             import:
                 Import::Named {
                     kind: Some(ast::statement::ImportKind::ImportType),
                     ..
                 },
             ..
-        }
-        | Def::Import {
+        })
+        | Def::Import(box ImportData {
             import:
                 Import::Named {
                     kind: Some(ast::statement::ImportKind::ImportTypeof),
                     ..
                 },
             ..
-        }
-        | Def::Class { .. }
-        | Def::Record { .. }
+        })
+        | Def::Class(_)
+        | Def::Record(_)
         | Def::MissingThisAnnot
         | Def::DeclaredComponent(..)
         | Def::DeclaredClass(..)
         | Def::DeclaredNamespace(..)
-        | Def::Function {
+        | Def::Function(box FunctionDefData {
             synthesizable_from_annotation: FunctionSynthKind::FunctionSynthesizable,
             ..
-        }
-        | Def::Component { .. } => true,
-        Def::MatchCasePattern { .. }
+        })
+        | Def::Component(_) => true,
+        Def::MatchCasePattern(_)
         | Def::ExpressionDef(_)
         | Def::Update { .. }
-        | Def::MemberAssign { .. }
-        | Def::OpAssign { .. }
-        | Def::Function { .. }
-        | Def::Enum { .. }
-        | Def::Import { .. } => false,
+        | Def::MemberAssign(_)
+        | Def::OpAssign(_)
+        | Def::Function(_)
+        | Def::Enum(_)
+        | Def::Import(_) => false,
     }
 }
 
@@ -3460,21 +3475,21 @@ fn annotation_locs(
             Binding::Root(Root::CatchUnannotated)
             | Binding::Root(Root::DeclareVariableMissingAnnotationAndInit)
             | Binding::Root(Root::UnannotatedParameter { .. })
-            | Binding::Root(Root::Annotation { .. })
-            | Binding::Root(Root::ObjectValue {
+            | Binding::Root(Root::Annotation(_))
+            | Binding::Root(Root::ObjectValue(box ObjectValueData {
                 synthesizable: ObjectSynthKind::ObjectSynthesizable { .. },
                 ..
-            }) => vec![],
+            })) => vec![],
 
-            Binding::Root(Root::FunctionValue {
+            Binding::Root(Root::FunctionValue(box FunctionValueData {
                 synthesizable_from_annotation: FunctionSynthKind::MissingReturn(ret_loc),
                 ..
-            }) => vec![AnnotLoc::Loc(ret_loc.dupe())],
+            })) => vec![AnnotLoc::Loc(ret_loc.dupe())],
 
-            Binding::Root(Root::ObjectValue {
+            Binding::Root(Root::ObjectValue(box ObjectValueData {
                 synthesizable: ObjectSynthKind::MissingMemberAnnots { locs },
                 ..
-            }) => {
+            })) => {
                 let mut functions: Vec<AnnotLoc<ALoc>> = Vec::new();
                 let mut others: Vec<ALoc> = Vec::new();
                 for annot in locs.iter() {
@@ -3514,12 +3529,12 @@ fn annotation_locs(
 
             Binding::Root(
                 Root::For(..)
-                | Root::Value { .. }
-                | Root::MatchCaseRoot { .. }
-                | Root::FunctionValue { .. }
-                | Root::Contextual { .. }
-                | Root::EmptyArray { .. }
-                | Root::ObjectValue { .. },
+                | Root::Value(_)
+                | Root::MatchCaseRoot(_)
+                | Root::FunctionValue(_)
+                | Root::Contextual(_)
+                | Root::EmptyArray(_)
+                | Root::ObjectValue(_),
             ) => {
                 let Some(def_providers) = providers.providers_of_def(loc) else {
                     return vec![];
@@ -3547,30 +3562,30 @@ fn annotation_locs(
 
     match def {
         Def::Binding(bind) => bind_loop(scopes, providers, &loc, bind),
-        Def::GeneratorNext(None) => vec![AnnotLoc::Loc(loc)],
-        Def::Function {
+        Def::GeneratorNext(box None) => vec![AnnotLoc::Loc(loc)],
+        Def::Function(box FunctionDefData {
             synthesizable_from_annotation: FunctionSynthKind::MissingReturn(ret_loc),
             ..
-        } => vec![AnnotLoc::Loc(ret_loc.dupe())],
-        Def::Component { .. }
+        }) => vec![AnnotLoc::Loc(ret_loc.dupe())],
+        Def::Component(_)
         | Def::TypeAlias(..)
         | Def::OpaqueType(..)
-        | Def::TypeParam { .. }
-        | Def::Function { .. }
+        | Def::TypeParam(_)
+        | Def::Function(_)
         | Def::Interface(..)
-        | Def::Enum { .. }
-        | Def::Import { .. }
-        | Def::Class { .. }
-        | Def::Record { .. }
+        | Def::Enum(_)
+        | Def::Import(_)
+        | Def::Class(_)
+        | Def::Record(_)
         | Def::DeclaredClass(..)
         | Def::DeclaredComponent(..)
-        | Def::MatchCasePattern { .. }
+        | Def::MatchCasePattern(_)
         | Def::ExpressionDef(_)
         | Def::DeclaredNamespace(..)
         | Def::MissingThisAnnot
-        | Def::GeneratorNext(Some(_)) => vec![],
+        | Def::GeneratorNext(box Some(_)) => vec![],
         // TODO
-        Def::Update { .. } | Def::MemberAssign { .. } | Def::OpAssign { .. } => vec![],
+        Def::Update { .. } | Def::MemberAssign(_) | Def::OpAssign(_) => vec![],
     }
 }
 
@@ -3596,12 +3611,12 @@ fn dependencies<Cx: Context, F: Flow<Cx = Cx>>(
         def,
     );
     if acc.contains_key(&key) {
-        return Err(Box::new(ErrorMessage::EInternal(
+        return Err(Box::new(ErrorMessage::EInternal(Box::new((
             key.loc.dupe(),
             InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
                 "Duplicate name defs for the same location".into(),
             )),
-        )));
+        )))));
     }
     acc.insert(key, depends_result);
     Ok(())
@@ -3625,26 +3640,26 @@ pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     let mut this_super_dep_loc_map: EnvMap<ALoc, EnvKey<ALoc>> = EnvMap::empty();
     for (kind_and_loc, (def, _, _, _)) in map.iter() {
         match def {
-            Def::Class {
+            Def::Class(box ClassDefData {
                 this_super_write_locs: locs,
                 ..
-            }
-            | Def::Record {
+            })
+            | Def::Record(box RecordDefData {
                 this_super_write_locs: locs,
                 ..
-            } => {
+            }) => {
                 for this_super_kind_and_loc in locs.iter() {
                     this_super_dep_loc_map
                         .insert(this_super_kind_and_loc.dupe(), kind_and_loc.dupe());
                 }
             }
-            Def::Binding(Binding::Root(Root::ObjectValue {
+            Def::Binding(box Binding::Root(Root::ObjectValue(box ObjectValueData {
                 synthesizable:
                     ObjectSynthKind::ObjectSynthesizable {
                         this_write_locs, ..
                     },
                 ..
-            })) => {
+            }))) => {
                 for this_super_kind_and_loc in this_write_locs.iter() {
                     this_super_dep_loc_map
                         .insert(this_super_kind_and_loc.dupe(), kind_and_loc.dupe());
@@ -3681,10 +3696,10 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     ) -> std::result::Result<&'a V, Box<ErrorMessage<ALoc>>> {
         match map.get(k) {
             Some(t) => Ok(t),
-            None => Err(Box::new(ErrorMessage::EInternal(
+            None => Err(Box::new(ErrorMessage::EInternal(Box::new((
                 k.loc.dupe(),
                 InternalError::EnvInvariant(EnvInvariantFailure::NameDefGraphMismatch),
-            ))),
+            ))))),
         }
     }
 
@@ -3739,14 +3754,14 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
         let all: Vec<ALoc> = all_deps.iter().map(|l| l.loc.dupe()).collect();
         let roots_locs: Vec<ALoc> = roots.iter().map(|l| l.loc.dupe()).collect();
         let error_loc = missing_roots[0].dupe();
-        return Err(Box::new(ErrorMessage::EInternal(
+        return Err(Box::new(ErrorMessage::EInternal(Box::new((
             error_loc,
             InternalError::EnvInvariant(EnvInvariantFailure::NameDefOrderingFailure {
                 all,
                 missing_roots,
                 roots: roots_locs,
             }),
-        )));
+        )))));
     }
 
     let mut results: Vec<OrderingResult> = Vec::new();

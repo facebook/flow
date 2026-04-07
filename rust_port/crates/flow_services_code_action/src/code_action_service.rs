@@ -53,13 +53,30 @@ use flow_services_inference::types_js_types::TypecheckArtifacts;
 use flow_type_sig::signature_error::TolerableError;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::BindingError;
+use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
+use flow_typing_errors::error_message::EClassToObjectData;
+use flow_typing_errors::error_message::EDuplicateComponentPropData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
+use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
+use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
+use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
+use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::FriendlyMessageRecipe;
 use flow_typing_errors::error_message::InOutVariance;
+use flow_typing_errors::error_message::IncompatibleUseData;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
+use flow_typing_errors::error_message::MatchInvalidObjectShorthandData;
+use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
+use flow_typing_errors::error_message::MatchNotExhaustiveData;
+use flow_typing_errors::error_message::MatchUnusedPatternData;
+use flow_typing_errors::error_message::PropMissingInLookupData;
 use flow_typing_errors::error_message::ReadonlyTypeKind;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
@@ -936,10 +953,10 @@ fn find_unbound_names_from_scope(
                     error.msg_of_error().clone(),
                 );
                 match error_message {
-                    ErrorMessage::EBuiltinNameLookupFailed {
+                    ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData {
                         loc: error_loc,
                         name: _,
-                    } => {
+                    }) => {
                         loc_set.insert(error_loc);
                         loc_set
                     }
@@ -1300,10 +1317,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EDuplicateComponentProp {
+        ErrorMessage::EDuplicateComponentProp(box EDuplicateComponentPropData {
             spread: error_loc,
             duplicates,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 //     ...
                 let duplicates = duplicates.clone();
@@ -1380,11 +1397,13 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess {
-            reason,
-            suggestion: Some(fixed_prop_name),
-            ..
-        }) => {
+        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
+            box EnumInvalidMemberAccessData {
+                reason,
+                suggestion: Some(fixed_prop_name),
+                ..
+            },
+        )) => {
             let error_loc = reason.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let original_prop_name = flow_common::reason::string_of_desc::<Loc>(&reason.desc);
@@ -1407,11 +1426,13 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName {
-            loc: error_loc,
-            member_name,
-            ..
-        }) => {
+        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName(
+            box EnumInvalidMemberNameData {
+                loc: error_loc,
+                member_name,
+                ..
+            },
+        )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let mut chars = member_name.chars();
                 let fixed_name = match chars.next() {
@@ -1433,11 +1454,11 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EClassToObject {
+        ErrorMessage::EClassToObject(box EClassToObjectData {
             reason_class,
             reason_obj,
             ..
-        } => {
+        }) => {
             let error_loc = reason_class.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let obj_loc = reason_obj.def_loc().dupe();
@@ -1456,11 +1477,11 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EMethodUnbinding {
+        ErrorMessage::EMethodUnbinding(box EMethodUnbindingData {
             reason_op,
             reason_prop,
             ..
-        } => {
+        }) => {
             let error_loc = reason_op.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let method_loc = reason_prop.def_loc().dupe();
@@ -1511,10 +1532,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSUnknown,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `mixed`".to_string(),
@@ -1529,10 +1550,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSNever,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `empty`".to_string(),
@@ -1547,10 +1568,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSUndefined,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `void`".to_string(),
@@ -1565,10 +1586,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSKeyof,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `$Keys<T>`".to_string(),
@@ -1583,10 +1604,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSTypeParamExtends,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `: T`".to_string(),
@@ -1601,10 +1622,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::DeprecatedTypeParamColon,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `extends T`".to_string(),
@@ -1619,10 +1640,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSReadonlyVariance,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `+`".to_string(),
@@ -1637,10 +1658,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSInOutVariance(InOutVariance::In),
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `-`".to_string(),
@@ -1655,10 +1676,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSInOutVariance(InOutVariance::Out),
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `+`".to_string(),
@@ -1673,10 +1694,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSInOutVariance(InOutVariance::InOut),
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Remove".to_string(),
@@ -1691,10 +1712,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSSatisfiesType(enabled_casting_syntax),
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let title = match enabled_casting_syntax {
                     CastingSyntax::As | CastingSyntax::Both => {
@@ -1714,10 +1735,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSReadonlyType(Some(ReadonlyTypeKind::Array)),
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `ReadonlyArray`".to_string(),
@@ -1732,10 +1753,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::ETSSyntax {
+        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSReadonlyType(Some(ReadonlyTypeKind::Tuple)),
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `Readonly`".to_string(),
@@ -1777,10 +1798,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EIncorrectTypeWithReplacement {
+        ErrorMessage::EIncorrectTypeWithReplacement(box EIncorrectTypeWithReplacementData {
             kind: IncorrectType::DollarKeys,
             loc: error_loc,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Convert to `keyof`".to_string(),
@@ -1795,10 +1816,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EIncorrectTypeWithReplacement {
+        ErrorMessage::EIncorrectTypeWithReplacement(box EIncorrectTypeWithReplacementData {
             kind,
             loc: error_loc,
-        } => {
+        }) => {
             let incorrect_name = kind.incorrect_of_kind();
             let replacement_name = kind.replacement_of_kind();
             let title = format!("Convert to `{}`", replacement_name);
@@ -1884,12 +1905,12 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EInvalidRendersTypeArgument {
+        ErrorMessage::EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
             loc: error_loc,
             renders_variant,
             invalid_render_type_kind,
             ..
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 match (renders_variant, invalid_render_type_kind) {
                     (
@@ -1953,10 +1974,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EBuiltinNameLookupFailed {
+        ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData {
             loc: error_loc,
             name,
-        } => {
+        }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let name = name.to_string();
                 let loc_of_aloc = loc_of_aloc.dupe();
@@ -1981,12 +2002,12 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EBindingError(
+        ErrorMessage::EBindingError(box (
             BindingError::ETypeInValuePosition { name, .. },
             error_loc,
             _,
             _,
-        ) => {
+        )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 //   Autofix_type_to_value_import.convert_type_to_value_import ast loc
                 let name = name.to_string();
@@ -2003,11 +2024,13 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand {
-            loc: error_loc,
-            name,
-            pattern_kind: _,
-        }) => {
+        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand(
+            box MatchInvalidObjectShorthandData {
+                loc: error_loc,
+                name,
+                pattern_kind: _,
+            },
+        )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![
                     AstTransformOfError {
@@ -2082,10 +2105,12 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
-            loc: error_loc,
-            kind: _,
-        }) => {
+        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax(
+            box MatchInvalidCaseSyntaxData {
+                loc: error_loc,
+                kind: _,
+            },
+        )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Fix invalid match syntax".to_string(),
@@ -2100,12 +2125,14 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern {
-            loc: error_loc,
-            rest,
-            missing_props,
-            pattern_kind: _,
-        }) => {
+        ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(
+            box MatchNonExhaustiveObjectPatternData {
+                loc: error_loc,
+                rest,
+                missing_props,
+                pattern_kind: _,
+            },
+        )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let add_only_rest = AstTransformOfError {
                     title: "Add rest `...` to object pattern".to_string(),
@@ -2186,11 +2213,13 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive {
-            loc: error_loc,
-            examples,
-            missing_pattern_asts,
-        }) => {
+        ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive(
+            box MatchNotExhaustiveData {
+                loc: error_loc,
+                examples,
+                missing_pattern_asts,
+            },
+        )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let num_examples = examples.len();
                 let num_asts = missing_pattern_asts.len();
@@ -2222,10 +2251,12 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
-            reason,
-            already_seen: _,
-        }) => {
+        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(
+            box MatchUnusedPatternData {
+                reason,
+                already_seen: _,
+            },
+        )) => {
             let error_loc = reason.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
@@ -2260,14 +2291,14 @@ pub fn ast_transforms_of_error(
             }
         }
         //         Some
-        ErrorMessage::EIncompatibleWithUseOp {
+        ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
             explanation:
                 Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
                     record_name,
                     obj_reason,
                 }),
             ..
-        } => {
+        }) => {
             let error_loc = obj_reason.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let record_name_str = record_name.to_string();
@@ -2421,12 +2452,12 @@ pub fn ast_transforms_of_error(
         error_message => {
             // (match error_message |> Error_message.friendly_message_of_msg with ...)
             match error_message.clone().friendly_message_of_msg() {
-                FriendlyMessageRecipe::PropMissingInLookup {
+                FriendlyMessageRecipe::PropMissingInLookup(box PropMissingInLookupData {
                     loc: error_loc,
                     suggestion: Some(suggestion),
                     prop: Some(prop_name),
                     ..
-                } => {
+                }) => {
                     if loc_opt_intersects(loc, error_loc.dupe()) {
                         let title = format!("Replace `{}` with `{}`", prop_name, suggestion);
                         let suggestion: FlowSmolStr = suggestion.as_str().into();
@@ -2447,12 +2478,12 @@ pub fn ast_transforms_of_error(
                         vec![]
                     }
                 }
-                FriendlyMessageRecipe::IncompatibleUse {
+                FriendlyMessageRecipe::IncompatibleUse(box IncompatibleUseData {
                     loc: error_loc,
                     upper_kind: UpperKind::IncompatibleGetPropT(..),
                     reason_lower,
                     ..
-                } => {
+                }) => {
                     match (
                         loc_opt_intersects(loc, error_loc.dupe()),
                         &reason_lower.desc,
@@ -2586,10 +2617,10 @@ fn code_actions_of_errors(
                 bool,
             ) = match (&error_message, &env.exports) {
                 (
-                    ErrorMessage::EBuiltinNameLookupFailed {
+                    ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData {
                         loc: error_loc,
                         name,
-                    },
+                    }),
                     Some(exports),
                 ) if options.autoimports => {
                     let actions = if include_quick_fixes && Loc::intersects(error_loc, &loc) {
@@ -3113,10 +3144,10 @@ fn autofix_imports_fn(
             );
             match (&error_message, &env.exports) {
                 (
-                    ErrorMessage::EBuiltinNameLookupFailed {
+                    ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData {
                         loc: error_loc,
                         name,
-                    },
+                    }),
                     Some(exports),
                 ) if options.autoimports => {
                     match preferred_import(ast, exports, name.as_str(), error_loc.dupe()) {
@@ -3435,10 +3466,12 @@ pub fn suggest_imports_cli(
                     );
                     match (&error_message, &env.exports) {
                         (
-                            ErrorMessage::EBuiltinNameLookupFailed {
-                                loc: error_loc,
-                                name,
-                            },
+                            ErrorMessage::EBuiltinNameLookupFailed(
+                                box EBuiltinNameLookupFailedData {
+                                    loc: error_loc,
+                                    name,
+                                },
+                            ),
                             Some(exports),
                         ) if options.autoimports => {
                             let ranked_imports = suggest_imports(

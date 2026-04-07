@@ -19,8 +19,8 @@ use crate::ty_symbol::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Ty<L> {
-    Bound(L, String),
-    Generic(GenericT<L>),
+    Bound(Box<(L, String)>),
+    Generic(Box<GenericT<L>>),
     Any(AnyKind<L>),
     Top,
     Bot(BotKind<L>),
@@ -36,7 +36,7 @@ pub enum Ty<L> {
     BoolLit(bool),
     BigIntLit(String),
     Fun(Box<FunT<L>>),
-    Obj(ObjT<L>),
+    Obj(Box<ObjT<L>>),
     Arr(ArrT<L>),
     Tup {
         elements: Arc<[TupleElement<L>]>,
@@ -49,8 +49,8 @@ pub enum Ty<L> {
         Arc<[Arc<Ty<L>>]>,
     ),
     Inter(Arc<Ty<L>>, Arc<Ty<L>>, Arc<[Arc<Ty<L>>]>),
-    InlineInterface(InterfaceT<L>),
-    TypeOf(BuiltinOrSymbol<L>, Option<Arc<[Arc<Ty<L>>]>>),
+    InlineInterface(Box<InterfaceT<L>>),
+    TypeOf(Box<(BuiltinOrSymbol<L>, Option<Arc<[Arc<Ty<L>>]>>)>),
     Utility(Utility<L>),
     IndexedAccess {
         _object: Arc<Ty<L>>,
@@ -63,7 +63,7 @@ pub enum Ty<L> {
         true_type: Arc<Ty<L>>,
         false_type: Arc<Ty<L>>,
     },
-    Infer(Symbol<L>, Option<Arc<Ty<L>>>),
+    Infer(Box<(Symbol<L>, Option<Arc<Ty<L>>>)>),
     Component {
         regular_props: ComponentProps<L>,
         renders: Option<Arc<Ty<L>>>,
@@ -359,41 +359,56 @@ pub enum BuiltinOrSymbol<L> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DeclTypeAliasDeclData<L> {
+    pub import: bool,
+    pub name: Symbol<L>,
+    pub tparams: Option<Arc<[TypeParam<L>]>>,
+    pub type_: Option<Arc<Ty<L>>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DeclEnumDeclData<L> {
+    pub name: Symbol<L>,
+    pub members: Option<Arc<[FlowSmolStr]>>,
+    pub has_unknown_members: bool,
+    pub truncated_members_count: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DeclNominalComponentDeclData<L> {
+    pub name: Symbol<L>,
+    pub tparams: Option<Arc<[TypeParam<L>]>>,
+    /* Used to show instantiation at JSX creation site. */
+    pub targs: Option<Arc<[Arc<Ty<L>>]>>,
+    pub props: ComponentProps<L>,
+    pub renders: Option<Ty<L>>,
+    pub is_type: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DeclNamespaceDeclData<L> {
+    pub name: Option<Symbol<L>>,
+    pub exports: Arc<[Decl<L>]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DeclModuleDeclData<L> {
+    pub name: Option<Symbol<L>>,
+    pub exports: Arc<[Decl<L>]>,
+    pub default: Option<Arc<Ty<L>>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Decl<L> {
-    VariableDecl(Name, Arc<Ty<L>>),
-    TypeAliasDecl {
-        import: bool,
-        name: Symbol<L>,
-        tparams: Option<Arc<[TypeParam<L>]>>,
-        type_: Option<Arc<Ty<L>>>,
-    },
-    ClassDecl(Symbol<L>, Option<Arc<[TypeParam<L>]>>),
-    InterfaceDecl(Symbol<L>, Option<Arc<[TypeParam<L>]>>),
-    RecordDecl(Symbol<L>, Option<Arc<[TypeParam<L>]>>),
-    EnumDecl {
-        name: Symbol<L>,
-        members: Option<Arc<[FlowSmolStr]>>,
-        has_unknown_members: bool,
-        truncated_members_count: i64,
-    },
-    NominalComponentDecl {
-        name: Symbol<L>,
-        tparams: Option<Arc<[TypeParam<L>]>>,
-        /* Used to show instantiation at JSX creation site. */
-        targs: Option<Arc<[Arc<Ty<L>>]>>,
-        props: ComponentProps<L>,
-        renders: Option<Ty<L>>,
-        is_type: bool,
-    },
-    NamespaceDecl {
-        name: Option<Symbol<L>>,
-        exports: Arc<[Decl<L>]>,
-    },
-    ModuleDecl {
-        name: Option<Symbol<L>>,
-        exports: Arc<[Decl<L>]>,
-        default: Option<Arc<Ty<L>>>,
-    },
+    VariableDecl(Box<(Name, Arc<Ty<L>>)>),
+    TypeAliasDecl(Box<DeclTypeAliasDeclData<L>>),
+    ClassDecl(Box<(Symbol<L>, Option<Arc<[TypeParam<L>]>>)>),
+    InterfaceDecl(Box<(Symbol<L>, Option<Arc<[TypeParam<L>]>>)>),
+    RecordDecl(Box<(Symbol<L>, Option<Arc<[TypeParam<L>]>>)>),
+    EnumDecl(Box<DeclEnumDeclData<L>>),
+    NominalComponentDecl(Box<DeclNominalComponentDeclData<L>>),
+    NamespaceDecl(Box<DeclNamespaceDeclData<L>>),
+    ModuleDecl(Box<DeclModuleDeclData<L>>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -525,15 +540,15 @@ pub fn mk_maybe<L: Dupe>(t: Ty<L>) -> Ty<L> {
 }
 
 pub fn mk_generic_class<L>(sym: Symbol<L>, targs: Option<Arc<[Arc<Ty<L>>]>>) -> Ty<L> {
-    Ty::Generic((sym, GenKind::ClassKind, targs))
+    Ty::Generic(Box::new((sym, GenKind::ClassKind, targs)))
 }
 
 pub fn mk_generic_interface<L>(sym: Symbol<L>, targs: Option<Arc<[Arc<Ty<L>>]>>) -> Ty<L> {
-    Ty::Generic((sym, GenKind::InterfaceKind, targs))
+    Ty::Generic(Box::new((sym, GenKind::InterfaceKind, targs)))
 }
 
 pub fn mk_generic_talias<L>(sym: Symbol<L>, targs: Option<Arc<[Arc<Ty<L>>]>>) -> Ty<L> {
-    Ty::Generic((sym, GenKind::TypeAliasKind, targs))
+    Ty::Generic(Box::new((sym, GenKind::TypeAliasKind, targs)))
 }
 
 pub fn mk_exact<L>(ty: Ty<L>) -> Ty<L> {
@@ -543,7 +558,7 @@ pub fn mk_exact<L>(ty: Ty<L>) -> Ty<L> {
                 ObjKind::InexactObj => ObjKind::ExactObj,
                 _ => o.obj_kind,
             };
-            Ty::Obj(ObjT { obj_kind, ..o })
+            Ty::Obj(Box::new(ObjT { obj_kind, ..*o }))
         }
         // Not applicable
         Ty::Any(_)
@@ -564,17 +579,17 @@ pub fn mk_exact<L>(ty: Ty<L>) -> Ty<L> {
         | Ty::Arr(_)
         | Ty::Tup { .. }
         | Ty::InlineInterface(_)
-        | Ty::Infer(_, _)
+        | Ty::Infer(_)
         | Ty::Component { .. }
         | Ty::Renders(_, _) => ty,
         // Do not nest $Exact
         Ty::Utility(Utility::Exact(_)) => ty,
         // Wrap in $Exact<...>
         Ty::Generic(_)
-        | Ty::Bound(_, _)
+        | Ty::Bound(_)
         | Ty::Union(_, _, _, _)
         | Ty::Inter(_, _, _)
-        | Ty::TypeOf(_, _)
+        | Ty::TypeOf(_)
         | Ty::Utility(_)
         | Ty::IndexedAccess { .. }
         | Ty::Conditional { .. } => Ty::Utility(Utility::Exact(Arc::new(ty))),
@@ -673,7 +688,8 @@ where
 {
     fn default_on_t(&mut self, env: &Env, t: &Ty<L>) {
         match t {
-            Ty::Bound(_loc, s) => {
+            Ty::Bound(data) => {
+                let (_loc, s) = data.as_ref();
                 self.on_string(env, s);
             }
             Ty::Generic(g) => {
@@ -735,7 +751,8 @@ where
             Ty::InlineInterface(iface) => {
                 self.on_interface_t(env, iface);
             }
-            Ty::TypeOf(bos, targs) => {
+            Ty::TypeOf(data) => {
+                let (bos, targs) = data.as_ref();
                 self.on_builtin_or_symbol(env, bos);
                 if let Some(ts) = targs {
                     for t in ts.iter() {
@@ -766,7 +783,8 @@ where
                 self.on_t(env, true_type);
                 self.on_t(env, false_type);
             }
-            Ty::Infer(sym, bound) => {
+            Ty::Infer(data) => {
+                let (sym, bound) = data.as_ref();
                 self.on_symbol(env, sym);
                 if let Some(b) = bound {
                     self.on_t(env, b);
@@ -793,16 +811,16 @@ where
 
     fn default_on_decl(&mut self, env: &Env, d: &Decl<L>) {
         match d {
-            Decl::VariableDecl(name, t) => {
+            Decl::VariableDecl(box (name, t)) => {
                 self.on_name(env, name);
                 self.on_t(env, t);
             }
-            Decl::TypeAliasDecl {
+            Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
                 import,
                 name,
                 tparams,
                 type_,
-            } => {
+            }) => {
                 self.on_bool(env, *import);
                 self.on_symbol(env, name);
                 if let Some(tps) = tparams {
@@ -814,9 +832,9 @@ where
                     self.on_t(env, t);
                 }
             }
-            Decl::ClassDecl(sym, tparams)
-            | Decl::InterfaceDecl(sym, tparams)
-            | Decl::RecordDecl(sym, tparams) => {
+            Decl::ClassDecl(box (sym, tparams))
+            | Decl::InterfaceDecl(box (sym, tparams))
+            | Decl::RecordDecl(box (sym, tparams)) => {
                 self.on_symbol(env, sym);
                 if let Some(tps) = tparams {
                     for tp in tps.iter() {
@@ -824,12 +842,12 @@ where
                     }
                 }
             }
-            Decl::EnumDecl {
+            Decl::EnumDecl(box DeclEnumDeclData {
                 name,
                 members,
                 has_unknown_members,
                 truncated_members_count,
-            } => {
+            }) => {
                 self.on_symbol(env, name);
                 if let Some(ms) = members {
                     for member in ms.iter() {
@@ -839,14 +857,14 @@ where
                 self.on_bool(env, *has_unknown_members);
                 self.on_int(env, *truncated_members_count);
             }
-            Decl::NominalComponentDecl {
+            Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
                 name,
                 tparams,
                 targs,
                 props,
                 renders,
                 is_type,
-            } => {
+            }) => {
                 self.on_symbol(env, name);
                 if let Some(tps) = tparams {
                     for tp in tps.iter() {
@@ -864,7 +882,7 @@ where
                 }
                 self.on_bool(env, *is_type);
             }
-            Decl::NamespaceDecl { name, exports } => {
+            Decl::NamespaceDecl(box DeclNamespaceDeclData { name, exports }) => {
                 if let Some(n) = name {
                     self.on_symbol(env, n);
                 }
@@ -872,11 +890,11 @@ where
                     self.on_decl(env, d);
                 }
             }
-            Decl::ModuleDecl {
+            Decl::ModuleDecl(box DeclModuleDeclData {
                 name,
                 exports,
                 default,
-            } => {
+            }) => {
                 if let Some(n) = name {
                     self.on_symbol(env, n);
                 }
@@ -1172,7 +1190,9 @@ where
 {
     fn on_t(&mut self, env: &Env, t1: &Ty<L>, t2: &Ty<L>) -> Result<(), StructuralMismatch> {
         match (t1, t2) {
-            (Ty::Bound(_l1, s1), Ty::Bound(_l2, s2)) => {
+            (Ty::Bound(d1), Ty::Bound(d2)) => {
+                let (_l1, s1) = d1.as_ref();
+                let (_l2, s2) = d2.as_ref();
                 self.on_string(env, s1, s2)?;
                 Ok(())
             }
@@ -1225,7 +1245,9 @@ where
                 self.on_list(|s, e, x, y| s.on_t(e, x, y), env, r1, r2)
             }
             (Ty::InlineInterface(i1), Ty::InlineInterface(i2)) => self.on_interface_t(env, i1, i2),
-            (Ty::TypeOf(bos1, targs1), Ty::TypeOf(bos2, targs2)) => {
+            (Ty::TypeOf(d1), Ty::TypeOf(d2)) => {
+                let (bos1, targs1) = d1.as_ref();
+                let (bos2, targs2) = d2.as_ref();
                 self.on_builtin_or_symbol(env, bos1, bos2)?;
                 self.on_option_vec_ty(env, targs1, targs2)
             }
@@ -1265,7 +1287,9 @@ where
                 self.on_t(env, tt1, tt2)?;
                 self.on_t(env, ft1, ft2)
             }
-            (Ty::Infer(s1, b1), Ty::Infer(s2, b2)) => {
+            (Ty::Infer(d1), Ty::Infer(d2)) => {
+                let (s1, b1) = d1.as_ref();
+                let (s2, b2) = d2.as_ref();
                 self.on_symbol(env, s1, s2)?;
                 self.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), env, b1, b2)
             }
@@ -1300,48 +1324,48 @@ where
 
     fn on_decl(&mut self, env: &Env, d1: &Decl<L>, d2: &Decl<L>) -> Result<(), StructuralMismatch> {
         match (d1, d2) {
-            (Decl::VariableDecl(n1, t1), Decl::VariableDecl(n2, t2)) => {
+            (Decl::VariableDecl(box (n1, t1)), Decl::VariableDecl(box (n2, t2))) => {
                 self.on_name(env, n1, n2)?;
                 self.on_t(env, t1, t2)
             }
             (
-                Decl::TypeAliasDecl {
+                Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
                     import: i1,
                     name: n1,
                     tparams: tp1,
                     type_: ty1,
-                },
-                Decl::TypeAliasDecl {
+                }),
+                Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
                     import: i2,
                     name: n2,
                     tparams: tp2,
                     type_: ty2,
-                },
+                }),
             ) => {
                 self.on_bool(env, *i1, *i2)?;
                 self.on_symbol(env, n1, n2)?;
                 self.on_option_vec_type_param(env, tp1, tp2)?;
                 self.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), env, ty1, ty2)
             }
-            (Decl::ClassDecl(s1, tp1), Decl::ClassDecl(s2, tp2))
-            | (Decl::InterfaceDecl(s1, tp1), Decl::InterfaceDecl(s2, tp2))
-            | (Decl::RecordDecl(s1, tp1), Decl::RecordDecl(s2, tp2)) => {
+            (Decl::ClassDecl(box (s1, tp1)), Decl::ClassDecl(box (s2, tp2)))
+            | (Decl::InterfaceDecl(box (s1, tp1)), Decl::InterfaceDecl(box (s2, tp2)))
+            | (Decl::RecordDecl(box (s1, tp1)), Decl::RecordDecl(box (s2, tp2))) => {
                 self.on_symbol(env, s1, s2)?;
                 self.on_option_vec_type_param(env, tp1, tp2)
             }
             (
-                Decl::EnumDecl {
+                Decl::EnumDecl(box DeclEnumDeclData {
                     name: n1,
                     members: m1,
                     has_unknown_members: hum1,
                     truncated_members_count: tmc1,
-                },
-                Decl::EnumDecl {
+                }),
+                Decl::EnumDecl(box DeclEnumDeclData {
                     name: n2,
                     members: m2,
                     has_unknown_members: hum2,
                     truncated_members_count: tmc2,
-                },
+                }),
             ) => {
                 self.on_symbol(env, n1, n2)?;
                 match (m1, m2) {
@@ -1358,22 +1382,22 @@ where
                 self.on_int(env, *tmc1, *tmc2)
             }
             (
-                Decl::NominalComponentDecl {
+                Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
                     name: n1,
                     tparams: tp1,
                     targs: ta1,
                     props: p1,
                     renders: r1,
                     is_type: it1,
-                },
-                Decl::NominalComponentDecl {
+                }),
+                Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
                     name: n2,
                     tparams: tp2,
                     targs: ta2,
                     props: p2,
                     renders: r2,
                     is_type: it2,
-                },
+                }),
             ) => {
                 self.on_symbol(env, n1, n2)?;
                 self.on_option_vec_type_param(env, tp1, tp2)?;
@@ -1383,29 +1407,29 @@ where
                 self.on_bool(env, *it1, *it2)
             }
             (
-                Decl::NamespaceDecl {
+                Decl::NamespaceDecl(box DeclNamespaceDeclData {
                     name: n1,
                     exports: e1,
-                },
-                Decl::NamespaceDecl {
+                }),
+                Decl::NamespaceDecl(box DeclNamespaceDeclData {
                     name: n2,
                     exports: e2,
-                },
+                }),
             ) => {
                 self.on_option(|s, e, s1, s2| s.on_symbol(e, s1, s2), env, n1, n2)?;
                 self.on_list(|s, e, d1, d2| s.on_decl(e, d1, d2), env, e1, e2)
             }
             (
-                Decl::ModuleDecl {
+                Decl::ModuleDecl(box DeclModuleDeclData {
                     name: n1,
                     exports: e1,
                     default: d1,
-                },
-                Decl::ModuleDecl {
+                }),
+                Decl::ModuleDecl(box DeclModuleDeclData {
                     name: n2,
                     exports: e2,
                     default: d2,
-                },
+                }),
             ) => {
                 self.on_option(|s, e, s1, s2| s.on_symbol(e, s1, s2), env, n1, n2)?;
                 self.on_list(|s, e, d1, d2| s.on_decl(e, d1, d2), env, e1, e2)?;
@@ -2189,7 +2213,10 @@ where
 {
     fn on_t(&mut self, env: &Env, t: &Ty<L>) -> Self::Acc {
         match t {
-            Ty::Bound(_loc, s) => self.on_string(env, s),
+            Ty::Bound(data) => {
+                let (_loc, s) = data.as_ref();
+                self.on_string(env, s)
+            }
             Ty::Generic(g) => self.on_generic_t(env, g),
             Ty::Any(ak) => self.on_any_kind(env, ak),
             Ty::Top
@@ -2232,7 +2259,8 @@ where
                 acc
             }
             Ty::InlineInterface(iface) => self.on_interface_t(env, iface),
-            Ty::TypeOf(bos, targs) => {
+            Ty::TypeOf(data) => {
+                let (bos, targs) = data.as_ref();
                 let mut acc = self.on_builtin_or_symbol(env, bos);
                 if let Some(ts) = targs {
                     for t in ts.iter() {
@@ -2262,7 +2290,8 @@ where
                 acc = Self::Acc::plus(acc, self.on_t(env, true_type));
                 Self::Acc::plus(acc, self.on_t(env, false_type))
             }
-            Ty::Infer(sym, bound) => {
+            Ty::Infer(data) => {
+                let (sym, bound) = data.as_ref();
                 let mut acc = self.on_symbol(env, sym);
                 if let Some(b) = bound {
                     acc = Self::Acc::plus(acc, self.on_t(env, b));
@@ -2285,15 +2314,15 @@ where
 
     fn on_decl(&mut self, env: &Env, d: &Decl<L>) -> Self::Acc {
         match d {
-            Decl::VariableDecl(name, t) => {
+            Decl::VariableDecl(box (name, t)) => {
                 Self::Acc::plus(self.on_name(env, name), self.on_t(env, t))
             }
-            Decl::TypeAliasDecl {
+            Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
                 import,
                 name,
                 tparams,
                 type_,
-            } => {
+            }) => {
                 let mut acc = self.on_bool(env, *import);
                 acc = Self::Acc::plus(acc, self.on_symbol(env, name));
                 if let Some(tps) = tparams {
@@ -2306,9 +2335,9 @@ where
                 }
                 acc
             }
-            Decl::ClassDecl(sym, tparams)
-            | Decl::InterfaceDecl(sym, tparams)
-            | Decl::RecordDecl(sym, tparams) => {
+            Decl::ClassDecl(box (sym, tparams))
+            | Decl::InterfaceDecl(box (sym, tparams))
+            | Decl::RecordDecl(box (sym, tparams)) => {
                 let mut acc = self.on_symbol(env, sym);
                 if let Some(tps) = tparams {
                     for tp in tps.iter() {
@@ -2317,12 +2346,12 @@ where
                 }
                 acc
             }
-            Decl::EnumDecl {
+            Decl::EnumDecl(box DeclEnumDeclData {
                 name,
                 members,
                 has_unknown_members,
                 truncated_members_count,
-            } => {
+            }) => {
                 let mut acc = self.on_symbol(env, name);
                 if let Some(ms) = members {
                     for member in ms.iter() {
@@ -2332,14 +2361,14 @@ where
                 acc = Self::Acc::plus(acc, self.on_bool(env, *has_unknown_members));
                 Self::Acc::plus(acc, self.on_int(env, *truncated_members_count))
             }
-            Decl::NominalComponentDecl {
+            Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
                 name,
                 tparams,
                 targs,
                 props,
                 renders,
                 is_type,
-            } => {
+            }) => {
                 let mut acc = self.on_symbol(env, name);
                 if let Some(tps) = tparams {
                     for tp in tps.iter() {
@@ -2357,7 +2386,7 @@ where
                 }
                 Self::Acc::plus(acc, self.on_bool(env, *is_type))
             }
-            Decl::NamespaceDecl { name, exports } => {
+            Decl::NamespaceDecl(box DeclNamespaceDeclData { name, exports }) => {
                 let mut acc = Self::Acc::zero();
                 if let Some(n) = name {
                     acc = self.on_symbol(env, n);
@@ -2367,11 +2396,11 @@ where
                 }
                 acc
             }
-            Decl::ModuleDecl {
+            Decl::ModuleDecl(box DeclModuleDeclData {
                 name,
                 exports,
                 default,
-            } => {
+            }) => {
                 let mut acc = Self::Acc::zero();
                 if let Some(n) = name {
                     acc = self.on_symbol(env, n);
@@ -2644,13 +2673,14 @@ where
 {
     fn default_on_t(&mut self, env: &Env, t: Arc<Ty<L>>) -> Arc<Ty<L>> {
         match t.as_ref() {
-            Ty::Bound(loc, s) => {
+            Ty::Bound(data) => {
+                let (loc, s) = data.as_ref();
                 let s_new = self.on_string(env, s.clone());
-                Arc::new(Ty::Bound(loc.clone(), s_new))
+                Arc::new(Ty::Bound(Box::new((loc.clone(), s_new))))
             }
             Ty::Generic(g) => {
-                let g_new = self.on_generic_t(env, g.clone());
-                Arc::new(Ty::Generic(g_new))
+                let g_new = self.on_generic_t(env, (**g).clone());
+                Arc::new(Ty::Generic(Box::new(g_new)))
             }
             Ty::Any(ak) => {
                 let ak_new = self.on_any_kind(env, ak.clone());
@@ -2689,8 +2719,8 @@ where
                 Arc::new(Ty::Fun(Box::new(fun_t_new)))
             }
             Ty::Obj(obj_t) => {
-                let obj_t_new = self.on_obj_t(env, obj_t.clone());
-                Arc::new(Ty::Obj(obj_t_new))
+                let obj_t_new = self.on_obj_t(env, (**obj_t).clone());
+                Arc::new(Ty::Obj(Box::new(obj_t_new)))
             }
             Ty::Arr(arr_t) => {
                 let arr_t_new = self.on_arr_t(env, arr_t.clone());
@@ -2720,16 +2750,17 @@ where
                 Arc::new(Ty::Inter(t1_new, t2_new, rest_new))
             }
             Ty::InlineInterface(iface) => {
-                let iface_new = self.on_interface_t(env, iface.clone());
-                Arc::new(Ty::InlineInterface(iface_new))
+                let iface_new = self.on_interface_t(env, (**iface).clone());
+                Arc::new(Ty::InlineInterface(Box::new(iface_new)))
             }
-            Ty::TypeOf(bos, targs) => {
+            Ty::TypeOf(data) => {
+                let (bos, targs) = data.as_ref();
                 let bos_new = self.on_builtin_or_symbol(env, bos.clone());
                 let targs_new = targs.as_ref().map(|ts| {
                     let v: Arc<[_]> = self.on_list(|s2, e2, t| s2.on_t(e2, t), env, ts).into();
                     v
                 });
-                Arc::new(Ty::TypeOf(bos_new, targs_new))
+                Arc::new(Ty::TypeOf(Box::new((bos_new, targs_new))))
             }
             Ty::Utility(u) => {
                 let u_new = self.on_utility(env, u.clone());
@@ -2766,10 +2797,11 @@ where
                     false_type: false_type_new,
                 })
             }
-            Ty::Infer(sym, bound) => {
+            Ty::Infer(data) => {
+                let (sym, bound) = data.as_ref();
                 let sym_new = self.on_symbol(env, sym.clone());
                 let bound_new = self.on_option(|s, e, b| s.on_t(e, b), env, bound.clone());
-                Arc::new(Ty::Infer(sym_new, bound_new))
+                Arc::new(Ty::Infer(Box::new((sym_new, bound_new))))
             }
             Ty::Component {
                 regular_props,
@@ -2801,17 +2833,17 @@ where
 
     fn default_on_decl(&mut self, env: &Env, d: Decl<L>) -> Decl<L> {
         match d {
-            Decl::VariableDecl(name, t) => {
+            Decl::VariableDecl(box (name, t)) => {
                 let name_new = self.on_name(env, name);
                 let t_new = self.on_t(env, t);
-                Decl::VariableDecl(name_new, t_new)
+                Decl::VariableDecl(Box::new((name_new, t_new)))
             }
-            Decl::TypeAliasDecl {
+            Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
                 import,
                 name,
                 tparams,
                 type_,
-            } => {
+            }) => {
                 let import_new = self.on_bool(env, import);
                 let name_new = self.on_symbol(env, name);
                 let tparams_new = tparams.map(|tps| -> Arc<[_]> {
@@ -2819,43 +2851,43 @@ where
                         .into()
                 });
                 let type_new = self.on_option(|s, e, t| s.on_t(e, t), env, type_);
-                Decl::TypeAliasDecl {
+                Decl::TypeAliasDecl(Box::new(DeclTypeAliasDeclData {
                     import: import_new,
                     name: name_new,
                     tparams: tparams_new,
                     type_: type_new,
-                }
+                }))
             }
-            Decl::ClassDecl(sym, tparams) => {
+            Decl::ClassDecl(box (sym, tparams)) => {
                 let sym_new = self.on_symbol(env, sym);
                 let tparams_new = tparams.map(|tps| -> Arc<[_]> {
                     self.on_list(|s2, e2, tp| s2.on_type_param(e2, tp), env, &tps)
                         .into()
                 });
-                Decl::ClassDecl(sym_new, tparams_new)
+                Decl::ClassDecl(Box::new((sym_new, tparams_new)))
             }
-            Decl::InterfaceDecl(sym, tparams) => {
+            Decl::InterfaceDecl(box (sym, tparams)) => {
                 let sym_new = self.on_symbol(env, sym);
                 let tparams_new = tparams.map(|tps| -> Arc<[_]> {
                     self.on_list(|s2, e2, tp| s2.on_type_param(e2, tp), env, &tps)
                         .into()
                 });
-                Decl::InterfaceDecl(sym_new, tparams_new)
+                Decl::InterfaceDecl(Box::new((sym_new, tparams_new)))
             }
-            Decl::RecordDecl(sym, tparams) => {
+            Decl::RecordDecl(box (sym, tparams)) => {
                 let sym_new = self.on_symbol(env, sym);
                 let tparams_new = tparams.map(|tps| -> Arc<[_]> {
                     self.on_list(|s2, e2, tp| s2.on_type_param(e2, tp), env, &tps)
                         .into()
                 });
-                Decl::RecordDecl(sym_new, tparams_new)
+                Decl::RecordDecl(Box::new((sym_new, tparams_new)))
             }
-            Decl::EnumDecl {
+            Decl::EnumDecl(box DeclEnumDeclData {
                 name,
                 members,
                 has_unknown_members,
                 truncated_members_count,
-            } => {
+            }) => {
                 let name_new = self.on_symbol(env, name);
                 let members_new = members.map(|ms| -> Arc<[_]> {
                     self.on_list(
@@ -2869,21 +2901,21 @@ where
                 });
                 let has_unknown_members_new = self.on_bool(env, has_unknown_members);
                 let truncated_members_count_new = self.on_int(env, truncated_members_count);
-                Decl::EnumDecl {
+                Decl::EnumDecl(Box::new(DeclEnumDeclData {
                     name: name_new,
                     members: members_new,
                     has_unknown_members: has_unknown_members_new,
                     truncated_members_count: truncated_members_count_new,
-                }
+                }))
             }
-            Decl::NominalComponentDecl {
+            Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
                 name,
                 tparams,
                 targs,
                 props,
                 renders,
                 is_type,
-            } => {
+            }) => {
                 let name_new = self.on_symbol(env, name);
                 let tparams_new = tparams.map(|tps| -> Arc<[_]> {
                     self.on_list(|s2, e2, tp| s2.on_type_param(e2, tp), env, &tps)
@@ -2895,40 +2927,40 @@ where
                 let props_new = self.on_component_props(env, props);
                 let renders_new = self.on_option(|s, e, r| s.on_t_owned(e, r), env, renders);
                 let is_type_new = self.on_bool(env, is_type);
-                Decl::NominalComponentDecl {
+                Decl::NominalComponentDecl(Box::new(DeclNominalComponentDeclData {
                     name: name_new,
                     tparams: tparams_new,
                     targs: targs_new,
                     props: props_new,
                     renders: renders_new,
                     is_type: is_type_new,
-                }
+                }))
             }
-            Decl::NamespaceDecl { name, exports } => {
+            Decl::NamespaceDecl(box DeclNamespaceDeclData { name, exports }) => {
                 let name_new = self.on_option(|s, e, n| s.on_symbol(e, n), env, name);
                 let exports_new: Arc<[_]> = self
                     .on_list(|s, e, d| s.on_decl(e, d), env, &exports)
                     .into();
-                Decl::NamespaceDecl {
+                Decl::NamespaceDecl(Box::new(DeclNamespaceDeclData {
                     name: name_new,
                     exports: exports_new,
-                }
+                }))
             }
-            Decl::ModuleDecl {
+            Decl::ModuleDecl(box DeclModuleDeclData {
                 name,
                 exports,
                 default,
-            } => {
+            }) => {
                 let name_new = self.on_option(|s, e, n| s.on_symbol(e, n), env, name);
                 let exports_new: Arc<[_]> = self
                     .on_list(|s, e, d| s.on_decl(e, d), env, &exports)
                     .into();
                 let default_new = self.on_option(|s, e, t| s.on_t(e, t), env, default);
-                Decl::ModuleDecl {
+                Decl::ModuleDecl(Box::new(DeclModuleDeclData {
                     name: name_new,
                     exports: exports_new,
                     default: default_new,
-                }
+                }))
             }
         }
     }
@@ -3508,9 +3540,9 @@ pub fn tag_of_t<L>(_t: &Ty<L>) -> i32 {
         Ty::StrLit(_) => 11,
         Ty::Str => 12,
         Ty::Symbol => 13,
-        Ty::Bound(_, _) => 15,
+        Ty::Bound(_) => 15,
         Ty::Generic(_) => 16,
-        Ty::TypeOf(_, _) => 17,
+        Ty::TypeOf(_) => 17,
         Ty::Utility(_) => 18,
         Ty::IndexedAccess { .. } => 19,
         Ty::Tup { .. } => 20,
@@ -3529,15 +3561,15 @@ pub fn tag_of_t<L>(_t: &Ty<L>) -> i32 {
 
 pub fn tag_of_decl<L>(_d: &Decl<L>) -> i32 {
     match _d {
-        Decl::VariableDecl { .. } => 0,
-        Decl::TypeAliasDecl { .. } => 1,
-        Decl::ClassDecl { .. } => 2,
-        Decl::InterfaceDecl { .. } => 3,
-        Decl::RecordDecl { .. } => 4,
-        Decl::EnumDecl { .. } => 5,
-        Decl::NominalComponentDecl { .. } => 6,
-        Decl::NamespaceDecl { .. } => 7,
-        Decl::ModuleDecl { .. } => 8,
+        Decl::VariableDecl(..) => 0,
+        Decl::TypeAliasDecl(..) => 1,
+        Decl::ClassDecl(..) => 2,
+        Decl::InterfaceDecl(..) => 3,
+        Decl::RecordDecl(..) => 4,
+        Decl::EnumDecl(..) => 5,
+        Decl::NominalComponentDecl(..) => 6,
+        Decl::NamespaceDecl(..) => 7,
+        Decl::ModuleDecl(..) => 8,
     }
 }
 
@@ -4161,17 +4193,23 @@ impl<L: Dupe> Ty<L> {
         M: Dupe,
     {
         match self {
-            Ty::Bound(loc, name) => Ty::Bound(f(loc), name.clone()),
-            Ty::Generic((sym, kind, targs)) => Ty::Generic((
-                sym.map_locs(f),
-                *kind,
-                targs.as_ref().map(|args| {
-                    args.iter()
-                        .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f)))
-                        .collect::<Vec<_>>()
-                        .into()
-                }),
-            )),
+            Ty::Bound(data) => {
+                let (loc, name) = data.as_ref();
+                Ty::Bound(Box::new((f(loc), name.clone())))
+            }
+            Ty::Generic(g) => {
+                let (sym, kind, targs) = g.as_ref();
+                Ty::Generic(Box::new((
+                    sym.map_locs(f),
+                    *kind,
+                    targs.as_ref().map(|args| {
+                        args.iter()
+                            .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f)))
+                            .collect::<Vec<_>>()
+                            .into()
+                    }),
+                )))
+            }
             Ty::Any(any_kind) => Ty::Any(any_kind.map_locs(f)),
             Ty::Top => Ty::Top,
             Ty::Bot(bot_kind) => Ty::Bot(bot_kind.map_locs(f)),
@@ -4187,7 +4225,7 @@ impl<L: Dupe> Ty<L> {
             Ty::BoolLit(b) => Ty::BoolLit(*b),
             Ty::BigIntLit(s) => Ty::BigIntLit(s.clone()),
             Ty::Fun(fun) => Ty::Fun(Box::new(fun.map_locs(f))),
-            Ty::Obj(obj) => Ty::Obj(obj.map_locs(f)),
+            Ty::Obj(obj) => Ty::Obj(Box::new(obj.map_locs(f))),
             Ty::Arr(arr) => Ty::Arr(arr.map_locs(f)),
             Ty::Tup { elements, inexact } => Ty::Tup {
                 elements: elements
@@ -4214,16 +4252,19 @@ impl<L: Dupe> Ty<L> {
                     .collect::<Vec<_>>()
                     .into(),
             ),
-            Ty::InlineInterface(iface) => Ty::InlineInterface(iface.map_locs(f)),
-            Ty::TypeOf(builtin_or_symbol, targs) => Ty::TypeOf(
-                builtin_or_symbol.map_locs(f),
-                targs.as_ref().map(|args| {
-                    args.iter()
-                        .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f)))
-                        .collect::<Vec<_>>()
-                        .into()
-                }),
-            ),
+            Ty::InlineInterface(iface) => Ty::InlineInterface(Box::new(iface.map_locs(f))),
+            Ty::TypeOf(data) => {
+                let (builtin_or_symbol, targs) = data.as_ref();
+                Ty::TypeOf(Box::new((
+                    builtin_or_symbol.map_locs(f),
+                    targs.as_ref().map(|args| {
+                        args.iter()
+                            .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f)))
+                            .collect::<Vec<_>>()
+                            .into()
+                    }),
+                )))
+            }
             Ty::Utility(utility) => Ty::Utility(utility.map_locs(f)),
             Ty::IndexedAccess {
                 _object,
@@ -4245,12 +4286,15 @@ impl<L: Dupe> Ty<L> {
                 true_type: Arc::new(true_type.as_ref().map_locs(f)),
                 false_type: Arc::new(false_type.as_ref().map_locs(f)),
             },
-            Ty::Infer(sym, bound) => Ty::Infer(
-                sym.map_locs(f),
-                bound
-                    .as_ref()
-                    .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
-            ),
+            Ty::Infer(data) => {
+                let (sym, bound) = data.as_ref();
+                Ty::Infer(Box::new((
+                    sym.map_locs(f),
+                    bound
+                        .as_ref()
+                        .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
+                )))
+            }
             Ty::Component {
                 regular_props,
                 renders,
@@ -4305,19 +4349,19 @@ where
     match elt {
         Elt::Type(t) => collector.on_t(&(), t),
         Elt::Decl(d) => match d {
-            Decl::VariableDecl(_, _)
-            | Decl::TypeAliasDecl { .. }
-            | Decl::ClassDecl(_, _)
-            | Decl::InterfaceDecl(_, _)
-            | Decl::RecordDecl(_, _)
-            | Decl::EnumDecl { .. }
-            | Decl::NominalComponentDecl { .. } => collector.on_decl(&(), d),
-            Decl::NamespaceDecl { name, exports: _ }
-            | Decl::ModuleDecl {
+            Decl::VariableDecl(..)
+            | Decl::TypeAliasDecl(..)
+            | Decl::ClassDecl(..)
+            | Decl::InterfaceDecl(..)
+            | Decl::RecordDecl(..)
+            | Decl::EnumDecl(..)
+            | Decl::NominalComponentDecl(..) => collector.on_decl(&(), d),
+            Decl::NamespaceDecl(box DeclNamespaceDeclData { name, exports: _ })
+            | Decl::ModuleDecl(box DeclModuleDeclData {
                 name,
                 exports: _,
                 default: _,
-            } => match name {
+            }) => match name {
                 Some(sym) => {
                     let mapped_sym = sym.map_locs(&collector.loc_of_aloc);
                     let mut set = BTreeSet::new();

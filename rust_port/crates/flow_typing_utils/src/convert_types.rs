@@ -34,8 +34,10 @@ use flow_typing_type::type_::MappedTypeVariance;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::OptionalIndexedAccessIndex;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::RendersVariant;
 use flow_typing_type::type_::StrUtilOp;
@@ -641,12 +643,12 @@ fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
                 ("type", type_to_json(cx, depth - 1, t)),
             ],
         ),
-        DefTInner::PolyT {
+        DefTInner::PolyT(box PolyTData {
             tparams_loc: _,
             tparams,
             t_out,
             id,
-        } => json_with_type(
+        }) => json_with_type(
             "Poly",
             vec![
                 ("tparams", json_of_typeparams(cx, depth, tparams)),
@@ -654,11 +656,11 @@ fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
                 ("id", Json::String(id.stable_string())),
             ],
         ),
-        DefTInner::ReactAbstractComponentT {
+        DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
             config,
             renders,
             component_kind,
-        } => {
+        }) => {
             let component_kind_json = match component_kind {
                 ComponentKind::Structural => json!({"kind": "Structural"}),
                 ComponentKind::Nominal(id, name, types_opt) => {
@@ -795,16 +797,11 @@ fn json_of_flags<'cx>(cx: &Context<'cx>, depth: i32, flags: &Flags) -> Json {
 // Convert property to JSON
 fn json_of_property<'cx>(cx: &Context<'cx>, depth: i32, property: &Property) -> Json {
     match &**property {
-        PropertyInner::Field {
-            preferred_def_locs: _,
-            key_loc: _,
-            type_,
-            polarity,
-        } => {
+        PropertyInner::Field(fd) => {
             json!({
                 "kind": "Field",
-                "type": type_to_json(cx, depth - 1, type_),
-                "polarity": polarity_to_string(polarity),
+                "type": type_to_json(cx, depth - 1, &fd.type_),
+                "polarity": polarity_to_string(&fd.polarity),
             })
         }
         PropertyInner::Get { type_, .. } => {
@@ -815,13 +812,11 @@ fn json_of_property<'cx>(cx: &Context<'cx>, depth: i32, property: &Property) -> 
         } => {
             json!({"kind": "Set", "type": type_to_json(cx, depth - 1, type_)})
         }
-        PropertyInner::GetSet {
-            get_type, set_type, ..
-        } => {
+        PropertyInner::GetSet(gs) => {
             json!({
                 "kind": "GetSet",
-                "get_type": type_to_json(cx, depth - 1, get_type),
-                "set_type": type_to_json(cx, depth - 1, set_type),
+                "get_type": type_to_json(cx, depth - 1, &gs.get_type),
+                "set_type": type_to_json(cx, depth - 1, &gs.set_type),
             })
         }
         PropertyInner::Method { type_, .. } => {

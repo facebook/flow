@@ -19,6 +19,7 @@ use flow_typing_loc_env::component_sig_types::declaration_param_config;
 use flow_typing_loc_env::component_sig_types::param_types;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_utils::abnormal::AbnormalControlFlow;
@@ -84,7 +85,9 @@ impl TypeVisitor<Result<FlowOrdSet<SubstName>, Found>> for TparamFinder {
                     type_visitor::type_default(self, cx, pole, Ok(tparam_names), t)
                 }
             }
-            TypeInner::DefT(_, def_t) if let DefTInner::PolyT { tparams, .. } = def_t.deref() => {
+            TypeInner::DefT(_, def_t)
+                if let DefTInner::PolyT(box PolyTData { tparams, .. }) = def_t.deref() =>
+            {
                 let mut tparam_names_prime = tparam_names.dupe();
                 for tp in tparams.iter() {
                     tparam_names_prime.remove(&tp.name);
@@ -133,12 +136,12 @@ pub fn config<'a, C: Config>(
             }
             (
                 flow_common::reason::Name::new(key),
-                Property::new(PropertyInner::Field {
+                Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc: Some(key_loc),
                     type_: t,
                     polarity: Polarity::Positive,
-                }),
+                }))),
             )
         })
         .collect();

@@ -34,6 +34,7 @@ use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_::ExportKind;
 use flow_typing_type::type_::ExportTypes;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::ModuleTypeInner;
 use flow_typing_type::type_::NamedSymbol;
@@ -959,12 +960,12 @@ fn mk_module_type<'a>(
                     .map(|(name, (key_loc, type_))| {
                         (
                             Name::new(name.dupe()),
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: Some(key_loc.dupe()),
                                 polarity: Polarity::Positive,
                                 type_: type_.dupe(),
-                            }),
+                            }))),
                         )
                     })
                     .collect();
@@ -1188,14 +1189,14 @@ pub fn analyze_declare_namespace<'a>(
             Err(kind) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         stmt.loc().dupe(),
                         UnsupportedSyntax::ContextDependentUnsupportedStatement(
                             ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareNamespace(
                                 FlowSmolStr::from(kind),
                             ),
                         ),
-                    ),
+                    ))),
                 )
                 .expect("Should not be under speculation");
             }

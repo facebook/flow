@@ -31,17 +31,21 @@ use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::GetPropTData;
+use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
+use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::MethodCallType;
+use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::PropertyType;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::SpecializedCallee;
 use flow_typing_type::type_::Tvar;
@@ -149,14 +153,14 @@ fn get_intrinsic<'cx>(
                 cx,
                 trace,
                 &intrinsics,
-                &UseT::new(UseTInner::HasOwnPropT(
-                    use_op.dupe(),
-                    reason.dupe(),
-                    Type::new(TypeInner::DefT(
+                &UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                    use_op: use_op.dupe(),
+                    reason: reason.dupe(),
+                    type_: Type::new(TypeInner::DefT(
                         reason.dupe(),
                         DefT::new(DefTInner::StrGeneralT(gen_lit.clone())),
                     )),
-                )),
+                }))),
             )?;
         }
     }
@@ -218,7 +222,7 @@ fn get_intrinsic<'cx>(
         cx,
         trace,
         &intrinsic,
-        &UseT::new(UseTInner::LookupT {
+        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
             reason: reason_op.dupe(),
             lookup_kind: Box::new(LookupKind::Strict(reason_op.dupe())),
             try_ts_on_failure: vec![].into(),
@@ -230,7 +234,7 @@ fn get_intrinsic<'cx>(
             method_accessible: true,
             ids: Some(properties::Set::new()),
             ignore_dicts: false,
-        }),
+        }))),
     )
 }
 
@@ -264,13 +268,13 @@ pub fn subtype_class_component_render<'cx>(
         cx,
         trace,
         class_component_instance,
-        &UseT::new(UseTInner::MethodT(
-            unknown_use(),
-            reason_op.dupe(),
-            reason_op.dupe(),
-            Box::new(propref),
-            Box::new(action),
-        )),
+        &UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+            use_op: unknown_use(),
+            reason: reason_op.dupe(),
+            prop_reason: reason_op.dupe(),
+            propref: Box::new(propref),
+            method_action: Box::new(action),
+        }))),
     )?;
     FlowJs::rec_flow_t(
         cx,
@@ -315,7 +319,7 @@ fn lookup_defaults<'cx>(
         cx,
         trace,
         component,
-        &UseT::new(UseTInner::LookupT {
+        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
             reason: reason_op.dupe(),
             lookup_kind: Box::new(lookup_kind),
             try_ts_on_failure: vec![].into(),
@@ -324,7 +328,7 @@ fn lookup_defaults<'cx>(
             method_accessible: true,
             ids: Some(properties::Set::new()),
             ignore_dicts: false,
-        }),
+        }))),
     )?;
     Ok(())
 }
@@ -540,7 +544,9 @@ fn props_to_tout<'cx>(
                 add_optional_ref_prop_to_props(cx, trace, &props, reason_op, &i, tout)?;
                 Ok(())
             }
-            DefTInner::ReactAbstractComponentT { config, .. } => {
+            DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                config, ..
+            }) => {
                 FlowJs::rec_flow(
                     cx,
                     trace,
@@ -619,7 +625,9 @@ pub fn get_config<'cx>(
 ) -> Result<(), FlowJsException> {
     let dropped = drop_generic(component.dupe());
     if let TypeInner::DefT(_, def_t) = dropped.deref()
-        && let DefTInner::ReactAbstractComponentT { config, .. } = def_t.deref()
+        && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+            config, ..
+        }) = def_t.deref()
     {
         let use_op = VirtualUseOp::Frame(
             Arc::new(VirtualFrameUseOp::ReactGetConfig { polarity: pole }),
@@ -804,7 +812,7 @@ pub fn run<'cx>(
                     Ok(())
                 }
                 // Abstract components.
-                DefTInner::ReactAbstractComponentT { .. } => {
+                DefTInner::ReactAbstractComponentT(_) => {
                     FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &mixed_t::why(r.dupe()))?;
                     Ok(())
                 }
@@ -883,7 +891,10 @@ pub fn run<'cx>(
         let dropped = drop_generic(l.dupe());
         let (component_props, component_default_props) = if let TypeInner::DefT(_, def_t) =
             dropped.deref()
-            && let DefTInner::ReactAbstractComponentT { config, .. } = def_t.deref()
+            && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                config,
+                ..
+            }) = def_t.deref()
         {
             (config.dupe(), None)
         } else {
@@ -1043,7 +1054,7 @@ pub fn run<'cx>(
                 cx,
                 trace,
                 &normalized_jsx_props,
-                &UseT::new(UseTInner::LookupT {
+                &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason_key,
                     lookup_kind: Box::new(lookup_kind),
                     try_ts_on_failure: vec![].into(),
@@ -1052,7 +1063,7 @@ pub fn run<'cx>(
                     method_accessible: true,
                     ids: Some(properties::Set::new()),
                     ignore_dicts: false,
-                }),
+                }))),
             )?;
         }
 
@@ -1140,11 +1151,11 @@ pub fn run<'cx>(
             if let TypeInner::DefT(r, def_t) = dropped.deref() {
                 match (def_t.deref(), inferred_targs) {
                     (
-                        DefTInner::ReactAbstractComponentT {
+                        DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                             config,
                             renders,
                             component_kind: ComponentKind::Nominal(loc, name, _),
-                        },
+                        }),
                         Some(inferred_targs_val),
                     ) => {
                         let ts = Some(
@@ -1155,11 +1166,17 @@ pub fn run<'cx>(
                         );
                         let inst_component = Type::new(TypeInner::DefT(
                             r.dupe(),
-                            DefT::new(DefTInner::ReactAbstractComponentT {
-                                config: config.dupe(),
-                                renders: renders.dupe(),
-                                component_kind: ComponentKind::Nominal(loc.dupe(), name.dupe(), ts),
-                            }),
+                            DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
+                                ReactAbstractComponentTData {
+                                    config: config.dupe(),
+                                    renders: renders.dupe(),
+                                    component_kind: ComponentKind::Nominal(
+                                        loc.dupe(),
+                                        name.dupe(),
+                                        ts,
+                                    ),
+                                },
+                            ))),
                         ));
                         callee_recorder::add_callee(
                             cx,

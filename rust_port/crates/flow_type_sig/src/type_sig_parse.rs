@@ -2103,16 +2103,10 @@ pub(super) mod scope {
                         match parsed {
                             Parsed::Value(_) => {
                                 if let ModuleKind::CJSModule(Parsed::Value(
-                                    box ParsedValue::FunExpr {
-                                        loc: _,
-                                        async_: _,
-                                        generator: _,
-                                        def: _,
-                                        statics,
-                                    },
+                                    box ParsedValue::FunExpr(inner),
                                 )) = &mut exports.kind
                                 {
-                                    statics.insert(name, prop);
+                                    inner.statics.insert(name, prop);
                                 }
                             }
                             Parsed::ValRef {
@@ -2830,16 +2824,18 @@ mod obj_annot_acc {
                 };
                 let mut computed_props = computed_props;
                 computed_props.reverse();
-                return Parsed::Annot(Box::new(ParsedAnnot::ObjAnnot {
+                return Parsed::Annot(Box::new(ParsedAnnot::ObjAnnot(Box::new(AnnotObjAnnot {
                     loc,
                     obj_kind,
                     props,
                     computed_props,
                     proto,
-                }));
+                }))));
             }
             let elems = Vec1::from_vec_push(tail, last);
-            Parsed::Annot(Box::new(ParsedAnnot::ObjSpreadAnnot { loc, exact, elems }))
+            Parsed::Annot(Box::new(ParsedAnnot::ObjSpreadAnnot(Box::new(
+                AnnotObjSpreadAnnot { loc, exact, elems },
+            ))))
         }
     }
 }
@@ -3444,31 +3440,33 @@ mod object_literal_acc {
                 }
             };
             if elems.is_empty() {
-                return Parsed::Value(Box::new(ParsedValue::ObjLit {
+                return Parsed::Value(Box::new(ParsedValue::ObjLit(Box::new(ValueObjLit {
                     loc,
                     frozen,
                     proto: self.proto,
                     props: BTreeMap::new(),
-                }));
+                }))));
             }
             if elems.len() == 1
                 && matches!(&elems[0], ObjValueSpreadElem::ObjValueSpreadSlice(_))
                 && let Some(ObjValueSpreadElem::ObjValueSpreadSlice(props)) = elems.pop()
             {
-                return Parsed::Value(Box::new(ParsedValue::ObjLit {
+                return Parsed::Value(Box::new(ParsedValue::ObjLit(Box::new(ValueObjLit {
                     loc,
                     frozen,
                     proto: self.proto,
                     props,
-                }));
+                }))));
             }
 
-            Parsed::Value(Box::new(ParsedValue::ObjSpreadLit {
-                loc,
-                frozen,
-                proto: self.proto,
-                elems: Vec1::try_from_vec(elems).unwrap(),
-            }))
+            Parsed::Value(Box::new(ParsedValue::ObjSpreadLit(Box::new(
+                ValueObjSpreadLit {
+                    loc,
+                    frozen,
+                    proto: self.proto,
+                    elems: Vec1::try_from_vec(elems).unwrap(),
+                },
+            ))))
         }
     }
 }
@@ -3488,10 +3486,10 @@ fn expression_for_computed_key<'arena, 'ast>(
             string_literal(FrozenKind::NotFrozen, loc, &inner.value)
         }
         ExpressionInner::NumberLiteral { inner, .. } => Parsed::Value(Box::new(
-            ParsedValue::NumberLit(loc, inner.value, inner.raw.dupe()),
+            ParsedValue::NumberLit(Box::new((loc, inner.value, inner.raw.dupe()))),
         )),
         ExpressionInner::BigIntLiteral { inner, .. } => Parsed::Value(Box::new(
-            ParsedValue::BigIntLit(loc, inner.value, inner.raw.dupe()),
+            ParsedValue::BigIntLit(Box::new((loc, inner.value, inner.raw.dupe()))),
         )),
         ExpressionInner::Member { inner, .. } => {
             let base = expression_for_computed_key(scope, tbls, &inner.object);
@@ -3630,24 +3628,24 @@ fn annot_with_loc<'arena, 'ast>(
         TypeInner::Undefined { .. } => Parsed::Annot(Box::new(ParsedAnnot::Void(loc))),
         TypeInner::UniqueSymbol { .. } => Parsed::Annot(Box::new(ParsedAnnot::UniqueSymbol(loc))),
         TypeInner::StringLiteral { literal, .. } => Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonString(loc, literal.value.dupe()),
+            ParsedAnnot::SingletonString(Box::new((loc, literal.value.dupe()))),
         )),
         TypeInner::NumberLiteral { literal, .. } => Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonNumber(loc, literal.value, literal.raw.dupe()),
+            ParsedAnnot::SingletonNumber(Box::new((loc, literal.value, literal.raw.dupe()))),
         )),
         TypeInner::BigIntLiteral { literal, .. } => Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonBigInt(loc, literal.value, literal.raw.dupe()),
+            ParsedAnnot::SingletonBigInt(Box::new((loc, literal.value, literal.raw.dupe()))),
         )),
         TypeInner::BooleanLiteral { literal, .. } => {
             Parsed::Annot(Box::new(ParsedAnnot::SingletonBoolean(loc, literal.value)))
         }
         TypeInner::Nullable { inner, .. } => {
             let arg = annot(opts, scope, scopes, tbls, xs, &inner.argument);
-            Parsed::Annot(Box::new(ParsedAnnot::Maybe(loc, arg)))
+            Parsed::Annot(Box::new(ParsedAnnot::Maybe(Box::new((loc, arg)))))
         }
         TypeInner::Array { inner, .. } => {
             let arg = annot(opts, scope, scopes, tbls, xs, &inner.argument);
-            Parsed::Annot(Box::new(ParsedAnnot::Array(loc, arg)))
+            Parsed::Annot(Box::new(ParsedAnnot::Array(Box::new((loc, arg)))))
         }
         TypeInner::Conditional { inner, .. } => {
             conditional_type(opts, scope, scopes, tbls, xs, loc, inner.as_ref())
@@ -3657,7 +3655,7 @@ fn annot_with_loc<'arena, 'ast>(
         }
         TypeInner::Function { inner, .. } => {
             let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
-            Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(loc, def)))
+            Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((loc, def)))))
         }
         TypeInner::Component { inner, .. } => {
             let def = component_type(
@@ -3670,7 +3668,7 @@ fn annot_with_loc<'arena, 'ast>(
                 &inner.params,
                 &inner.renders,
             );
-            Parsed::Annot(Box::new(ParsedAnnot::ComponentAnnot(loc, def)))
+            Parsed::Annot(Box::new(ParsedAnnot::ComponentAnnot(Box::new((loc, def)))))
         }
         TypeInner::Object { inner, .. } => {
             object_type(opts, scope, scopes, tbls, xs, loc, inner.as_ref())
@@ -3685,7 +3683,7 @@ fn annot_with_loc<'arena, 'ast>(
                 &inner.extends,
                 &inner.body.1.properties,
             );
-            Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(loc, def)))
+            Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
         }
         TypeInner::Generic { inner, .. } => {
             maybe_special_generic(opts, scope, scopes, tbls, xs, loc, inner.as_ref())
@@ -3693,16 +3691,18 @@ fn annot_with_loc<'arena, 'ast>(
         TypeInner::IndexedAccess { inner, .. } => {
             let obj = annot(opts, scope, scopes, tbls, xs, &inner.object);
             match &*inner.index {
-                TypeInner::StringLiteral { literal: lit, .. } => {
-                    Parsed::Annot(Box::new(ParsedAnnot::PropertyType {
+                TypeInner::StringLiteral { literal: lit, .. } => Parsed::Annot(Box::new(
+                    ParsedAnnot::PropertyType(Box::new(AnnotPropertyType {
                         loc,
                         obj,
                         prop: lit.value.dupe(),
-                    }))
-                }
+                    })),
+                )),
                 _ => {
                     let elem = annot(opts, scope, scopes, tbls, xs, &inner.index);
-                    Parsed::Annot(Box::new(ParsedAnnot::ElementType { loc, obj, elem }))
+                    Parsed::Annot(Box::new(ParsedAnnot::ElementType(Box::new(
+                        AnnotElementType { loc, obj, elem },
+                    ))))
                 }
             }
         }
@@ -3716,11 +3716,11 @@ fn annot_with_loc<'arena, 'ast>(
             for el in inner.elements.iter() {
                 elems.push(tuple_element(opts, scope, scopes, tbls, xs, el));
             }
-            Parsed::Annot(Box::new(ParsedAnnot::Tuple {
+            Parsed::Annot(Box::new(ParsedAnnot::Tuple(Box::new(AnnotTuple {
                 loc,
                 elems,
                 inexact: inner.inexact,
-            }))
+            }))))
         }
         TypeInner::Union { inner, .. } => {
             let t0 = annot(opts, scope, scopes, tbls, xs, &inner.types.0);
@@ -3731,7 +3731,12 @@ fn annot_with_loc<'arena, 'ast>(
                 .iter()
                 .map(|t| annot(opts, scope, scopes, tbls, xs, t))
                 .collect();
-            Parsed::Annot(Box::new(ParsedAnnot::Union { loc, t0, t1, ts }))
+            Parsed::Annot(Box::new(ParsedAnnot::Union(Box::new(AnnotUnion {
+                loc,
+                t0,
+                t1,
+                ts,
+            }))))
         }
         TypeInner::Intersection { inner, .. } => {
             let t0 = annot(opts, scope, scopes, tbls, xs, &inner.types.0);
@@ -3742,7 +3747,9 @@ fn annot_with_loc<'arena, 'ast>(
                 .iter()
                 .map(|t| annot(opts, scope, scopes, tbls, xs, t))
                 .collect();
-            Parsed::Annot(Box::new(ParsedAnnot::Intersection { loc, t0, t1, ts }))
+            Parsed::Annot(Box::new(ParsedAnnot::Intersection(Box::new(
+                AnnotIntersection { loc, t0, t1, ts },
+            ))))
         }
         TypeInner::Typeof { inner, .. } => typeof_(
             opts,
@@ -3756,24 +3763,24 @@ fn annot_with_loc<'arena, 'ast>(
         ),
         TypeInner::Renders { inner, .. } => {
             let arg = annot(opts, scope, scopes, tbls, xs, &inner.argument);
-            Parsed::Annot(Box::new(ParsedAnnot::Renders {
+            Parsed::Annot(Box::new(ParsedAnnot::Renders(Box::new(AnnotRenders {
                 loc,
                 arg,
                 variant: inner.variant,
-            }))
+            }))))
         }
         TypeInner::Keyof { inner, .. } => {
             let t = annot(opts, scope, scopes, tbls, xs, &inner.argument);
-            Parsed::Annot(Box::new(ParsedAnnot::Keys(loc, t)))
+            Parsed::Annot(Box::new(ParsedAnnot::Keys(Box::new((loc, t)))))
         }
         TypeInner::ReadOnly { inner, .. } => match &*inner.argument {
             TypeInner::Tuple { .. } => {
                 let t = annot(opts, scope, scopes, tbls, xs, &inner.argument);
-                Parsed::Annot(Box::new(ParsedAnnot::ReadOnly(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::ReadOnly(Box::new((loc, t)))))
             }
             TypeInner::Array { inner: arr, .. } => {
                 let t = annot(opts, scope, scopes, tbls, xs, &arr.argument);
-                Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(Box::new((loc, t)))))
             }
             _ => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
         },
@@ -3823,12 +3830,12 @@ fn typeof_<'arena, 'ast>(
                 .map(|t| annot(opts, scope, scopes, tbls, xs, t))
                 .collect()
         });
-        Parsed::Annot(Box::new(ParsedAnnot::Typeof {
+        Parsed::Annot(Box::new(ParsedAnnot::Typeof(Box::new(AnnotTypeof {
             loc: typeof_loc,
             qname,
             t,
             targs,
-        }))
+        }))))
     }
 
     let mut target = expr;
@@ -4175,11 +4182,11 @@ fn component_type<'arena, 'ast>(
         ast::types::ComponentRendersAnnotation::AvailableRenders(loc, r) => {
             let loc = tbls.push_loc(loc.dupe());
             let arg = annot(opts, scope, scopes, tbls, xs, &r.argument);
-            Parsed::Annot(Box::new(ParsedAnnot::Renders {
+            Parsed::Annot(Box::new(ParsedAnnot::Renders(Box::new(AnnotRenders {
                 loc,
                 arg,
                 variant: r.variant,
-            }))
+            }))))
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let loc = tbls.push_loc(loc.dupe());
@@ -4282,7 +4289,7 @@ fn optional_method_as_field<'arena, 'ast>(
     let id_loc = tbls.push_loc(id_loc.dupe());
     let def = function_type(opts, scope, scopes, tbls, xs, func);
     let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(Box::new(
-        ParsedAnnot::FunAnnot(fn_loc, def),
+        ParsedAnnot::FunAnnot(Box::new((fn_loc, def))),
     )))));
     (id_loc, t)
 }
@@ -4353,7 +4360,7 @@ fn object_type<'arena, 'ast>(
                         let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                                Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
+                                Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
                             ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -4563,18 +4570,20 @@ fn object_type<'arena, 'ast>(
                         let property_type = annot(opts, scope, scopes, tbls, xs, prop_type);
                         xs.pop_frame();
 
-                        Parsed::Annot(Box::new(ParsedAnnot::MappedTypeAnnot {
-                            loc,
-                            source_type,
-                            property_type,
-                            key_tparam,
-                            variance: polarity(
-                                variance.as_ref().map(|v| (v.loc.dupe(), v.clone())),
-                            ),
-                            variance_op: *variance_op,
-                            optional: p.optional.clone(),
-                            inline_keyof,
-                        }))
+                        Parsed::Annot(Box::new(ParsedAnnot::MappedTypeAnnot(Box::new(
+                            AnnotMappedTypeAnnot {
+                                loc,
+                                source_type,
+                                property_type,
+                                key_tparam,
+                                variance: polarity(
+                                    variance.as_ref().map(|v| (v.loc.dupe(), v.clone())),
+                                ),
+                                variance_op: *variance_op,
+                                optional: p.optional.clone(),
+                                inline_keyof,
+                            },
+                        ))))
                     }
                     _ => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
                 }
@@ -4611,7 +4620,7 @@ fn object_type<'arena, 'ast>(
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
                 let def = function_type(opts, scope, scopes, tbls, xs, &p.value.1);
-                let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(fn_loc, def)));
+                let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))));
                 acc.add_call(t);
             }
             O::Property::InternalSlot(p) => {
@@ -4769,7 +4778,7 @@ fn interface_props<'arena, 'ast>(
                         let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                                Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
+                                Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
                             ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -4843,7 +4852,7 @@ fn interface_props<'arena, 'ast>(
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
                 let def = function_type(opts, scope, scopes, tbls, xs, &p.value.1);
-                let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(fn_loc, def)));
+                let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))));
                 acc.append_call(t);
             }
             O::Property::InternalSlot(p) => {
@@ -4875,13 +4884,13 @@ fn literal_expr_to_annot<'arena, 'ast>(
     use ast::expression::ExpressionInner;
     match expr.deref() {
         ExpressionInner::StringLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonString(loc, inner.value.dupe()),
+            ParsedAnnot::SingletonString(Box::new((loc, inner.value.dupe()))),
         ))),
         ExpressionInner::NumberLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonNumber(loc, inner.value, inner.raw.dupe()),
+            ParsedAnnot::SingletonNumber(Box::new((loc, inner.value, inner.raw.dupe()))),
         ))),
         ExpressionInner::BigIntLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonBigInt(loc, inner.value, inner.raw.dupe()),
+            ParsedAnnot::SingletonBigInt(Box::new((loc, inner.value, inner.raw.dupe()))),
         ))),
         ExpressionInner::BooleanLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
             ParsedAnnot::SingletonBoolean(loc, inner.value),
@@ -4892,9 +4901,7 @@ fn literal_expr_to_annot<'arena, 'ast>(
             match inner.argument.deref() {
                 ExpressionInner::NumberLiteral { inner: num, .. } => {
                     Some(Parsed::Annot(Box::new(ParsedAnnot::SingletonNumber(
-                        loc,
-                        -num.value,
-                        FlowSmolStr::new(format!("-{}", num.raw)),
+                        Box::new((loc, -num.value, FlowSmolStr::new(format!("-{}", num.raw)))),
                     ))))
                 }
                 ExpressionInner::BigIntLiteral {
@@ -4903,9 +4910,11 @@ fn literal_expr_to_annot<'arena, 'ast>(
                 } => {
                     let negated = bigint_inner.value.map(|i| -i);
                     Some(Parsed::Annot(Box::new(ParsedAnnot::SingletonBigInt(
-                        loc,
-                        negated,
-                        FlowSmolStr::new(format!("-{}", bigint_inner.raw)),
+                        Box::new((
+                            loc,
+                            negated,
+                            FlowSmolStr::new(format!("-{}", bigint_inner.raw)),
+                        )),
                     ))))
                 }
                 _ => None,
@@ -5058,7 +5067,7 @@ fn declare_class_props<'arena, 'ast>(
                         let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
                             let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                                Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
+                                Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
                             ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5159,7 +5168,7 @@ fn declare_class_props<'arena, 'ast>(
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
                 let def = function_type(opts, scope, scopes, tbls, xs, &p.value.1);
-                let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(fn_loc, def)));
+                let t = Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))));
                 acc.append_call(p.static_, t);
             }
             O::Property::InternalSlot(p) => {
@@ -5408,10 +5417,10 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
     match name.as_str() {
         _ if xs.contains(name) => {
             // TODO: error if targs is not None
-            Parsed::Annot(Box::new(ParsedAnnot::Bound {
+            Parsed::Annot(Box::new(ParsedAnnot::Bound(Box::new(AnnotBound {
                 ref_loc,
                 name: name.clone(),
-            }))
+            }))))
         }
         _ if !opts.for_builtins && scope::lookup_type(scopes, scope, name).is_some() => {
             let name = TyName::Unqualified(Box::new(Ref {
@@ -5425,14 +5434,14 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         "Array" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Array(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Array(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "Class" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::ClassT(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::ClassT(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
@@ -5454,28 +5463,28 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         "$ReadOnlyArray" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$EnumValue" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::EnumValue(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::EnumValue(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$Enum" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Enum(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Enum(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$NonMaybeType" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::NonMaybeType(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::NonMaybeType(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
@@ -5484,14 +5493,14 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             Some(type_args) if type_args.arguments.len() == 2 => {
                 let t1 = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
                 let t2 = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[1]);
-                Parsed::Annot(Box::new(ParsedAnnot::Omit(loc, t1, t2)))
+                Parsed::Annot(Box::new(ParsedAnnot::Omit(Box::new((loc, t1, t2)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$ReadOnly" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::ReadOnly(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::ReadOnly(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
@@ -5499,28 +5508,28 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         "Partial" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Partial(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Partial(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "Required" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Required(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Required(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$Keys" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Keys(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Keys(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$Values" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Values(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Values(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
@@ -5529,7 +5538,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                 match targs {
                     Some(type_args) if type_args.arguments.len() == 1 => {
                         let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                        Parsed::Annot(Box::new(ParsedAnnot::Values(loc, t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::Values(Box::new((loc, t)))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5540,16 +5549,19 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         "$Exact" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::Exact(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Exact(Box::new((loc, t)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "$Exports" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 match type_args.arguments[0].deref() {
-                    TypeInner::StringLiteral { literal, .. } => Parsed::Annot(Box::new(
-                        ParsedAnnot::ExportsT(loc, Userland::from_smol_str(literal.value.dupe())),
-                    )),
+                    TypeInner::StringLiteral { literal, .. } => {
+                        Parsed::Annot(Box::new(ParsedAnnot::ExportsT(Box::new((
+                            loc,
+                            Userland::from_smol_str(literal.value.dupe()),
+                        )))))
+                    }
                     _ => {
                         let arg_loc = tbls.push_loc(type_args.arguments[0].loc().clone());
                         Parsed::Err(arg_loc, Errno::CheckError)
@@ -5561,14 +5573,18 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         "$KeyMirror" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let obj = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::ObjKeyMirror { loc, obj }))
+                Parsed::Annot(Box::new(ParsedAnnot::ObjKeyMirror(Box::new(
+                    AnnotObjKeyMirror { loc, obj },
+                ))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "React$ElementConfig" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::ReactElementConfig(loc, t)))
+                Parsed::Annot(Box::new(ParsedAnnot::ReactElementConfig(Box::new((
+                    loc, t,
+                )))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
@@ -5580,11 +5596,13 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                         literal,
                     } => {
                         let loc = tbls.push_loc(arg_loc.clone());
-                        Parsed::Annot(Box::new(ParsedAnnot::StringPrefix {
-                            loc,
-                            prefix: literal.value.dupe(),
-                            remainder: None,
-                        }))
+                        Parsed::Annot(Box::new(ParsedAnnot::StringPrefix(Box::new(
+                            AnnotStringPrefix {
+                                loc,
+                                prefix: literal.value.dupe(),
+                                remainder: None,
+                            },
+                        ))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5604,11 +5622,13 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                             xs,
                             &type_args.arguments[1],
                         ));
-                        Parsed::Annot(Box::new(ParsedAnnot::StringPrefix {
-                            loc,
-                            prefix: literal.value.dupe(),
-                            remainder,
-                        }))
+                        Parsed::Annot(Box::new(ParsedAnnot::StringPrefix(Box::new(
+                            AnnotStringPrefix {
+                                loc,
+                                prefix: literal.value.dupe(),
+                                remainder,
+                            },
+                        ))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5623,11 +5643,13 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                         literal,
                     } => {
                         let loc = tbls.push_loc(arg_loc.clone());
-                        Parsed::Annot(Box::new(ParsedAnnot::StringSuffix {
-                            loc,
-                            suffix: literal.value.dupe(),
-                            remainder: None,
-                        }))
+                        Parsed::Annot(Box::new(ParsedAnnot::StringSuffix(Box::new(
+                            AnnotStringSuffix {
+                                loc,
+                                suffix: literal.value.dupe(),
+                                remainder: None,
+                            },
+                        ))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5647,11 +5669,13 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                             xs,
                             &type_args.arguments[1],
                         ));
-                        Parsed::Annot(Box::new(ParsedAnnot::StringSuffix {
-                            loc,
-                            suffix: literal.value.dupe(),
-                            remainder,
-                        }))
+                        Parsed::Annot(Box::new(ParsedAnnot::StringSuffix(Box::new(
+                            AnnotStringSuffix {
+                                loc,
+                                suffix: literal.value.dupe(),
+                                remainder,
+                            },
+                        ))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5669,7 +5693,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                 match targs {
                     Some(type_args) if type_args.arguments.len() == 1 => {
                         let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                        Parsed::Annot(Box::new(ParsedAnnot::ReadOnly(loc, t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::ReadOnly(Box::new((loc, t)))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5682,7 +5706,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                 match targs {
                     Some(type_args) if type_args.arguments.len() == 1 => {
                         let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                        Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(loc, t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(Box::new((loc, t)))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5695,7 +5719,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                 match targs {
                     Some(type_args) if type_args.arguments.len() == 1 => {
                         let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                        Parsed::Annot(Box::new(ParsedAnnot::NonMaybeType(loc, t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::NonMaybeType(Box::new((loc, t)))))
                     }
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
@@ -5809,8 +5833,9 @@ fn conditional_type<'arena, 'ast>(
 ) -> Parsed<'arena, 'ast> {
     let check_type = annot(opts, scope, scopes, tbls, xs, &t.check_type);
     let distributive_tparam = if let Parsed::Annot(annot) = &check_type
-        && let ParsedAnnot::Bound { ref_loc, name } = annot.as_ref()
+        && let ParsedAnnot::Bound(inner) = annot.as_ref()
     {
+        let AnnotBound { ref_loc, name } = inner.as_ref();
         // If check type is a bound type, then this is a distributive conditional type.
         Some(TParam {
             name_loc: ref_loc.dupe(),
@@ -5873,15 +5898,17 @@ fn conditional_type<'arena, 'ast>(
     let true_type = annot(opts, scope, scopes, tbls, xs, &t.true_type);
     xs.pop_frame();
     let false_type = annot(opts, scope, scopes, tbls, xs, &t.false_type);
-    Parsed::Annot(Box::new(ParsedAnnot::Conditional {
-        loc,
-        distributive_tparam,
-        infer_tparams,
-        check_type,
-        extends_type,
-        true_type,
-        false_type,
-    }))
+    Parsed::Annot(Box::new(ParsedAnnot::Conditional(Box::new(
+        AnnotConditional {
+            loc,
+            distributive_tparam,
+            infer_tparams,
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        },
+    ))))
 }
 
 fn infer_type<'arena, 'ast>(
@@ -5913,10 +5940,10 @@ fn infer_type<'arena, 'ast>(
                 }
                 name_loc
             };
-            Parsed::Annot(Box::new(ParsedAnnot::Bound {
+            Parsed::Annot(Box::new(ParsedAnnot::Bound(Box::new(AnnotBound {
                 ref_loc: name_loc,
                 name: name.clone(),
-            }))
+            }))))
         }
     }
 }
@@ -5943,23 +5970,29 @@ fn optional_indexed_access<'arena, 'ast>(
     };
     let index = annot(opts, scope, scopes, tbls, xs, &indexed_access.index);
     let non_maybe_result = if optional {
-        Parsed::Annot(Box::new(ParsedAnnot::OptionalIndexedAccessNonMaybeType {
-            loc: loc.dupe(),
-            obj,
-            index,
-        }))
+        Parsed::Annot(Box::new(ParsedAnnot::OptionalIndexedAccessNonMaybeType(
+            Box::new(AnnotOptionalIndexedAccessNonMaybeType {
+                loc: loc.dupe(),
+                obj,
+                index,
+            }),
+        )))
     } else {
-        Parsed::Annot(Box::new(ParsedAnnot::ElementType {
-            loc: loc.dupe(),
-            obj,
-            elem: index,
-        }))
+        Parsed::Annot(Box::new(ParsedAnnot::ElementType(Box::new(
+            AnnotElementType {
+                loc: loc.dupe(),
+                obj,
+                elem: index,
+            },
+        ))))
     };
-    let result = Parsed::Annot(Box::new(ParsedAnnot::OptionalIndexedAccessResultType {
-        loc,
-        non_maybe_result: non_maybe_result.clone(),
-        void_loc: obj_loc,
-    }));
+    let result = Parsed::Annot(Box::new(ParsedAnnot::OptionalIndexedAccessResultType(
+        Box::new(AnnotOptionalIndexedAccessResultType {
+            loc,
+            non_maybe_result: non_maybe_result.clone(),
+            void_loc: obj_loc,
+        }),
+    )));
     (non_maybe_result, result)
 }
 
@@ -6140,9 +6173,12 @@ fn string_literal<'arena, 'ast>(
     s: &FlowSmolStr,
 ) -> Parsed<'arena, 'ast> {
     if frozen == FrozenKind::FrozenProp {
-        Parsed::Annot(Box::new(ParsedAnnot::SingletonString(loc, s.clone())))
+        Parsed::Annot(Box::new(ParsedAnnot::SingletonString(Box::new((
+            loc,
+            s.clone(),
+        )))))
     } else {
-        Parsed::Value(Box::new(ParsedValue::StringLit(loc, s.clone())))
+        Parsed::Value(Box::new(ParsedValue::StringLit(Box::new((loc, s.clone())))))
     }
 }
 
@@ -6227,10 +6263,10 @@ fn key_mirror<'arena, 'ast>(
                 };
                 let id_loc = tbls.push_loc(id_loc.dupe());
                 if name.as_str() != "__proto__" {
-                    let t = Parsed::Annot(Box::new(ParsedAnnot::SingletonString(
+                    let t = Parsed::Annot(Box::new(ParsedAnnot::SingletonString(Box::new((
                         id_loc.dupe(),
                         name.clone(),
-                    )));
+                    )))));
                     acc.add_field(name.clone(), id_loc, t, Polarity::Neutral);
                 }
             }
@@ -6333,32 +6369,32 @@ fn expression<'arena: 'ast, 'ast>(
         E::StringLiteral { inner, .. } => string_literal(frozen, loc, &inner.value),
         E::NumberLiteral { inner, .. } => {
             if frozen == FrozenKind::FrozenProp {
-                Parsed::Annot(Box::new(ParsedAnnot::SingletonNumber(
+                Parsed::Annot(Box::new(ParsedAnnot::SingletonNumber(Box::new((
                     loc,
                     inner.value,
                     inner.raw.dupe(),
-                )))
+                )))))
             } else {
-                Parsed::Value(Box::new(ParsedValue::NumberLit(
+                Parsed::Value(Box::new(ParsedValue::NumberLit(Box::new((
                     loc,
                     inner.value,
                     inner.raw.dupe(),
-                )))
+                )))))
             }
         }
         E::BigIntLiteral { inner, .. } => {
             if frozen == FrozenKind::FrozenProp {
-                Parsed::Annot(Box::new(ParsedAnnot::SingletonBigInt(
+                Parsed::Annot(Box::new(ParsedAnnot::SingletonBigInt(Box::new((
                     loc,
                     inner.value,
                     inner.raw.dupe(),
-                )))
+                )))))
             } else {
-                Parsed::Value(Box::new(ParsedValue::BigIntLit(
+                Parsed::Value(Box::new(ParsedValue::BigIntLit(Box::new((
                     loc,
                     inner.value,
                     inner.raw.dupe(),
-                )))
+                )))))
             }
         }
         E::BooleanLiteral { inner, .. } => {
@@ -6421,7 +6457,7 @@ fn expression<'arena: 'ast, 'ast>(
             }
             None => {
                 let def = class_def(opts, scope, scopes, tbls, inner.as_ref());
-                Parsed::Value(Box::new(ParsedValue::ClassExpr(loc, def)))
+                Parsed::Value(Box::new(ParsedValue::ClassExpr(Box::new((loc, def)))))
             }
         },
         E::Function { inner, .. } => {
@@ -6471,13 +6507,13 @@ fn expression<'arena: 'ast, 'ast>(
                     let mut xs = tparam_stack::TParamStack::new();
                     let def = function_def(opts, scope, scopes, tbls, &mut xs, loc, inner.as_ref());
                     let statics = BTreeMap::new();
-                    Parsed::Value(Box::new(ParsedValue::FunExpr {
+                    Parsed::Value(Box::new(ParsedValue::FunExpr(Box::new(ValueFunExpr {
                         loc: sig_loc_node,
                         async_: *async_,
                         generator: *generator,
                         def,
                         statics,
-                    }))
+                    }))))
                 }
             }
         }
@@ -6496,13 +6532,13 @@ fn expression<'arena: 'ast, 'ast>(
                 inner.as_ref(),
             );
             let statics = BTreeMap::new();
-            Parsed::Value(Box::new(ParsedValue::FunExpr {
+            Parsed::Value(Box::new(ParsedValue::FunExpr(Box::new(ValueFunExpr {
                 loc,
                 async_: *async_,
                 generator: *generator,
                 def,
                 statics,
-            }))
+            }))))
         }
         E::TypeCast { inner, .. } => {
             let mut xs = tparam_stack::TParamStack::new();
@@ -7593,11 +7629,11 @@ fn component_sig_helper<'arena: 'ast, 'ast>(
         ast::types::ComponentRendersAnnotation::AvailableRenders(loc, rt) => {
             let loc_node = tbls.push_loc(loc.clone());
             let arg = annot(opts, scope, scopes, tbls, &mut xs, &rt.argument);
-            Parsed::Annot(Box::new(ParsedAnnot::Renders {
+            Parsed::Annot(Box::new(ParsedAnnot::Renders(Box::new(AnnotRenders {
                 loc: loc_node,
                 arg,
                 variant: rt.variant,
-            }))
+            }))))
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let loc_node = tbls.push_loc(loc.clone());
@@ -7859,7 +7895,7 @@ fn class_def<'arena: 'ast, 'ast>(
                         let fn_loc_node = tbls.push_loc(annot_loc.dupe());
                         let def = function_type(opts, scope, scopes, tbls, &mut xs, f.as_ref());
                         let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                            Box::new(ParsedAnnot::FunAnnot(fn_loc_node, def)),
+                            Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc_node, def)))),
                         ))));
                         let polarity = Polarity::Neutral;
                         acc.add_field(*is_static, name, id_loc_node, polarity, t);
@@ -8250,7 +8286,7 @@ fn array_literal<'arena: 'ast, 'ast>(
         )
     } else {
         let first = acc.remove(0);
-        Parsed::Value(Box::new(ParsedValue::ArrayLit(loc, first, acc)))
+        Parsed::Value(Box::new(ParsedValue::ArrayLit(Box::new((loc, first, acc)))))
     }
 }
 
@@ -8440,13 +8476,13 @@ fn type_alias_decl<'arena: 'ast, 'ast>(
             let mut xs = tparam_stack::TParamStack::new();
             let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps_clone.as_ref());
             let body = annot(opts, scope, scopes, tbls, &mut xs, &t_clone);
-            Def::TypeAlias {
+            Def::TypeAlias(Box::new(DefTypeAlias {
                 id_loc: id_loc_node_for_def,
                 custom_error_loc_opt,
                 name: name_string.into(),
                 tparams,
                 body,
-            }
+            }))
         })
     }));
 
@@ -8488,14 +8524,14 @@ fn opaque_type_decl<'arena: 'ast, 'ast>(
             let body = impl_type
                 .as_ref()
                 .map(|t| annot(opts, scope, scopes, tbls, &mut xs, t));
-            Def::OpaqueType {
+            Def::OpaqueType(Box::new(DefOpaqueType {
                 id_loc: id_loc_node_for_def,
                 name: name_string,
                 tparams,
                 lower_bound,
                 upper_bound,
                 body,
-            }
+            }))
         })
     }));
 
@@ -9394,12 +9430,12 @@ fn interface_decl<'arena: 'ast, 'ast>(
             let mut xs = tparam_stack::TParamStack::new();
             let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
             let def = interface_def(opts, scope, scopes, tbls, &mut xs, extends, properties);
-            Def::Interface {
+            Def::Interface(Box::new(DefInterface {
                 id_loc: id_loc_node_for_def,
                 name: name.clone(),
                 tparams,
                 def,
-            }
+            }))
         })
     }));
 
@@ -9731,7 +9767,9 @@ fn export_default_decl<'arena: 'ast, 'ast>(
                     }
                     None => {
                         let def = class_def(opts, scope, scopes, tbls, decl);
-                        let def = Parsed::Value(Box::new(ParsedValue::ClassExpr(loc_node, def)));
+                        let def = Parsed::Value(Box::new(ParsedValue::ClassExpr(Box::new((
+                            loc_node, def,
+                        )))));
                         scope::export_default(scopes, scope, default_loc, def);
                     }
                 }
@@ -9779,13 +9817,14 @@ fn export_default_decl<'arena: 'ast, 'ast>(
                             fun_decl,
                         );
                         let statics = BTreeMap::new();
-                        let def = Parsed::Value(Box::new(ParsedValue::FunExpr {
-                            loc: loc_node,
-                            async_: fun_decl.async_,
-                            generator: fun_decl.generator,
-                            def,
-                            statics,
-                        }));
+                        let def =
+                            Parsed::Value(Box::new(ParsedValue::FunExpr(Box::new(ValueFunExpr {
+                                loc: loc_node,
+                                async_: fun_decl.async_,
+                                generator: fun_decl.generator,
+                                def,
+                                statics,
+                            }))));
                         scope::export_default(scopes, scope, default_loc, def);
                     }
                 }

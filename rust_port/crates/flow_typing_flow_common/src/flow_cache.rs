@@ -53,34 +53,34 @@ pub mod flow_constraint {
             (_, UseTInner::UseT(_, inner_t)) if matches!(inner_t.deref(), TypeInner::OpenT(_)) => {
                 false
             }
-            (_, UseTInner::ReposUseT { .. }) => false,
+            (_, UseTInner::ReposUseT(..)) => false,
             // Don't cache concretization constraints, since the concretization operation should already
             // have defense against bad cyclic types.
-            (_, UseTInner::ConcretizeT { .. }) => false,
+            (_, UseTInner::ConcretizeT(..)) => false,
             (
                 _,
-                UseTInner::BindT { .. }
-                | UseTInner::CallT { .. }
-                | UseTInner::MethodT { .. }
+                UseTInner::BindT(..)
+                | UseTInner::CallT(..)
+                | UseTInner::MethodT(..)
                 | UseTInner::PrivateMethodT(..)
                 | UseTInner::ConstructorT(..)
-                | UseTInner::LookupT { .. }
+                | UseTInner::LookupT(..)
                 | UseTInner::GetPropT(..)
                 | UseTInner::ObjRestT { .. }
                 | UseTInner::ObjTestT { .. }
-                | UseTInner::ArrRestT { .. }
-                | UseTInner::ValueToTypeReferenceT { .. }
-                | UseTInner::SpecializeT { .. }
-                | UseTInner::EvalTypeDestructorT { .. }
+                | UseTInner::ArrRestT(..)
+                | UseTInner::ValueToTypeReferenceT(..)
+                | UseTInner::SpecializeT(..)
+                | UseTInner::EvalTypeDestructorT(..)
                 | UseTInner::ConcretizeTypeAppsT { .. }
-                | UseTInner::ExtendsUseT { .. }
-                | UseTInner::ResolveUnionT { .. }
-                | UseTInner::ConditionalT { .. }
+                | UseTInner::ExtendsUseT(..)
+                | UseTInner::ResolveUnionT(..)
+                | UseTInner::ConditionalT(..)
                 | UseTInner::DeepReadOnlyT { .. }
-                | UseTInner::ElemT { .. }
+                | UseTInner::ElemT(..)
                 | UseTInner::ReposLowerT { .. }
                 | UseTInner::ObjKitT { .. }
-                | UseTInner::HasOwnPropT { .. },
+                | UseTInner::HasOwnPropT(..),
             ) => false,
             _ => {
                 // Use ops are purely for better error messages: they should have no

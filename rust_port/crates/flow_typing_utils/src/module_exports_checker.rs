@@ -180,7 +180,7 @@ impl<'a> ExportsErrorChecker<'a> {
                 let id = inner.name.name.dupe();
                 let loc = inner.name.loc.dupe();
                 let Ok(()) = self.expression(right);
-                self.add_error(ErrorMessage::EBadExportContext(id, loc));
+                self.add_error(ErrorMessage::EBadExportContext(Box::new((id, loc))));
             }
             _ => {
                 let Ok(()) = ast_visitor::assignment_default(self, _loc, expr);
@@ -276,10 +276,10 @@ impl<'ast, 'a> AstVisitor<'ast, ALoc> for ExportsErrorChecker<'a> {
             } if (ident.name == "module" || ident.name == "exports")
                 && !(self.is_local_use)(&ident.loc) =>
             {
-                self.add_error(ErrorMessage::EBadExportContext(
+                self.add_error(ErrorMessage::EBadExportContext(Box::new((
                     ident.name.dupe(),
                     ident.loc.dupe(),
-                ));
+                ))));
             }
             _ => {}
         }
@@ -545,7 +545,7 @@ fn filter_irrelevant_errors(module_kind: ModuleKind, errors: &mut Vec<ErrorMessa
             errors.retain(|err| {
                 !matches!(
                     err,
-                    ErrorMessage::EBadExportPosition(_) | ErrorMessage::EBadExportContext(_, _)
+                    ErrorMessage::EBadExportPosition(_) | ErrorMessage::EBadExportContext(box (_, _))
                 )
             });
         }

@@ -551,12 +551,12 @@ fn to_field<C: ConfigTypes>(entry: &class_types::FieldPrime<C>) -> Property {
         class_types::Field::Annot(t) => t.dupe(),
         class_types::Field::Infer(fsig, _) => func_sig::gettertype(fsig),
     };
-    Property::new(PropertyInner::Field {
+    Property::new(PropertyInner::Field(Box::new(FieldData {
         preferred_def_locs: None,
         key_loc: key_loc.dupe(),
         type_,
         polarity: *polarity,
-    })
+    })))
 }
 
 fn to_method<'a, C: crate::func_params_intf::Config>(
@@ -736,12 +736,12 @@ fn elements<'a, C: crate::func_params_intf::Config>(
         let setter = setters.get(&name);
         let prop = match (getter, setter) {
             (Some((get_key_loc, get_type, _)), Some((set_key_loc, set_type, _))) => {
-                Property::new(PropertyInner::GetSet {
+                Property::new(PropertyInner::GetSet(Box::new(GetSetData {
                     get_key_loc: get_key_loc.dupe(),
                     get_type: get_type.dupe(),
                     set_key_loc: set_key_loc.dupe(),
                     set_type: set_type.dupe(),
-                })
+                })))
             }
             (Some((key_loc, type_, _)), None) => Property::new(PropertyInner::Get {
                 key_loc: key_loc.dupe(),
@@ -1303,11 +1303,13 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     for (x_name, p1) in &own {
         if let Some(p2) = proto.get(x_name) {
             let prop = Name::new(x_name.as_str());
-            let use_op = UseOp::Op(Arc::new(RootUseOp::ClassOwnProtoCheck {
-                prop: prop.dupe(),
-                own_loc: property::first_loc(p1),
-                proto_loc: property::first_loc(p2),
-            }));
+            let use_op = UseOp::Op(Arc::new(RootUseOp::ClassOwnProtoCheck(Box::new(
+                ClassOwnProtoCheckData {
+                    prop: prop.dupe(),
+                    own_loc: property::first_loc(p1),
+                    proto_loc: property::first_loc(p2),
+                },
+            ))));
             let propref = type_util::mk_named_prop(reason.dupe(), false, prop);
             let pt1 = property::type_(p1);
             let pt2 = property::type_(p2);
@@ -1334,15 +1336,15 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     }
     cx.add_post_inference_validation_flow(
         super_,
-        UseT::new(UseTInner::SuperT(
+        UseT::new(UseTInner::SuperT(Box::new(SuperTData {
             use_op,
             reason,
-            DerivedType {
+            derived_type: DerivedType {
                 own: own_name_map,
                 proto: proto_name_map,
                 static_: static_name_map,
             },
-        )),
+        }))),
     );
 }
 

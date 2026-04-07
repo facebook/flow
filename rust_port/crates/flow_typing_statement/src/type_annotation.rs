@@ -26,6 +26,11 @@ use flow_parser::ast;
 use flow_parser::polymorphic_ast_mapper;
 use flow_parser::polymorphic_ast_mapper::LocMapper;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
+use flow_typing_errors::error_message::ETSSyntaxData;
+use flow_typing_errors::error_message::ETooManyTypeArgsData;
+use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
+use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::intermediate_error_types;
@@ -338,10 +343,10 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             }) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSReadonlyVariance,
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             Some(ast::Variance {
@@ -351,12 +356,12 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             }) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance(
                             flow_typing_errors::error_message::InOutVariance::In,
                         ),
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             Some(ast::Variance {
@@ -366,12 +371,12 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             }) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance(
                             flow_typing_errors::error_message::InOutVariance::Out,
                         ),
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             Some(ast::Variance {
@@ -381,12 +386,12 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             }) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance(
                             flow_typing_errors::error_message::InOutVariance::InOut,
                         ),
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             _ => {}
@@ -498,10 +503,10 @@ pub fn error_on_unsupported_variance_annotation<'a>(
             if let Some(ref variance) = tparam.variance {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedVarianceAnnotation(
+                    ErrorMessage::EUnsupportedVarianceAnnotation(Box::new((
                         variance.loc.dupe(),
                         FlowSmolStr::new(kind),
-                    ),
+                    ))),
                 );
             }
         }
@@ -588,10 +593,12 @@ fn convert_inner<'a>(
             if cx.is_utility_type_deprecated("mixed") && cx.ts_utility_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EIncorrectTypeWithReplacement {
-                        loc: loc.dupe(),
-                        kind: intermediate_error_types::IncorrectType::Mixed,
-                    },
+                    ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                        EIncorrectTypeWithReplacementData {
+                            loc: loc.dupe(),
+                            kind: intermediate_error_types::IncorrectType::Mixed,
+                        },
+                    )),
                 );
             }
             let rt = mixed_t::at(loc.dupe());
@@ -667,10 +674,10 @@ fn convert_inner<'a>(
             if !(cx.ts_syntax() || cx.ts_utility_syntax()) {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSUnknown,
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             let rt = mixed_t::at(loc.dupe());
@@ -683,10 +690,10 @@ fn convert_inner<'a>(
             if !cx.ts_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSNever,
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             let rt = empty_t::at(loc.dupe());
@@ -699,10 +706,10 @@ fn convert_inner<'a>(
             if !cx.ts_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSUndefined,
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             let rt = void::at(loc.dupe());
@@ -716,12 +723,12 @@ fn convert_inner<'a>(
                 error_type(
                     cx,
                     loc.dupe(),
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             TsLibSyntaxKind::UniqueSymbolType,
                         ),
-                    ),
+                    ))),
                     t,
                 )
             } else {
@@ -838,10 +845,10 @@ fn convert_inner<'a>(
             if !(cx.ts_syntax() || cx.ts_utility_syntax()) {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSKeyof,
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
             }
             ast::types::Type::new(TypeInner::Keyof {
@@ -865,12 +872,12 @@ fn convert_inner<'a>(
                 if !cx.ts_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ETSSyntax {
+                        ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                             kind: flow_typing_errors::error_message::TSSyntaxKind::TSReadonlyType(
                                 Some(flow_typing_errors::error_message::ReadonlyTypeKind::Tuple),
                             ),
                             loc: loc.dupe(),
-                        },
+                        })),
                     );
                 }
                 let argument_ast = convert_inner(cx, env, &inner.argument);
@@ -905,12 +912,12 @@ fn convert_inner<'a>(
                 if !cx.ts_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ETSSyntax {
+                        ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                             kind: flow_typing_errors::error_message::TSSyntaxKind::TSReadonlyType(
                                 Some(flow_typing_errors::error_message::ReadonlyTypeKind::Array),
                             ),
                             loc: loc.dupe(),
-                        },
+                        })),
                     );
                 }
                 let argument_ast = convert_inner(cx, env, &arr_inner.argument);
@@ -949,10 +956,10 @@ fn convert_inner<'a>(
             _ => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: flow_typing_errors::error_message::TSSyntaxKind::TSReadonlyType(None),
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
                 let t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                 let mapped_ro = {
@@ -1578,11 +1585,11 @@ fn convert_inner<'a>(
                             _ => error_type(
                                 cx,
                                 loc.dupe(),
-                                ErrorMessage::ETooManyTypeArgs {
+                                ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                                     reason_tapp: reason,
                                     arity_loc: loc.dupe(),
                                     maximum_arity: 2,
-                                },
+                                })),
                                 t,
                             ),
                         }
@@ -1651,11 +1658,11 @@ fn convert_inner<'a>(
                             _ => error_type(
                                 cx,
                                 loc.dupe(),
-                                ErrorMessage::ETooManyTypeArgs {
+                                ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                                     reason_tapp: reason,
                                     arity_loc: loc.dupe(),
                                     maximum_arity: 2,
-                                },
+                                })),
                                 t,
                             ),
                         }
@@ -1690,11 +1697,11 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$ReadOnlyArray") {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarReadOnlyArray,
-                                },
+                                })),
                             );
                         }
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -1721,11 +1728,11 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$NonMaybeType") {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarNonMaybeType,
-                                },
+                                })),
                             );
                         }
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -1755,10 +1762,12 @@ fn convert_inner<'a>(
                     "$Partial" => error_type(
                         cx,
                         loc.dupe(),
-                        ErrorMessage::EIncorrectTypeWithReplacement {
-                            loc: loc.dupe(),
-                            kind: intermediate_error_types::IncorrectType::Partial,
-                        },
+                        ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                            EIncorrectTypeWithReplacementData {
+                                loc: loc.dupe(),
+                                kind: intermediate_error_types::IncorrectType::Partial,
+                            },
+                        )),
                         t,
                     ),
                     // Partial<T> makes all of `T`'s properties optional
@@ -1815,10 +1824,12 @@ fn convert_inner<'a>(
                     "$Shape" => error_type(
                         cx,
                         loc.dupe(),
-                        ErrorMessage::EIncorrectTypeWithReplacement {
-                            loc: loc.dupe(),
-                            kind: intermediate_error_types::IncorrectType::Shape,
-                        },
+                        ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                            EIncorrectTypeWithReplacementData {
+                                loc: loc.dupe(),
+                                kind: intermediate_error_types::IncorrectType::Shape,
+                            },
+                        )),
                         t,
                     ),
                     // $Omit
@@ -1890,10 +1901,13 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$ReadOnly") {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::DollarReadOnly,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind:
+                                            intermediate_error_types::IncorrectType::DollarReadOnly,
+                                    },
+                                )),
                             );
                         }
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -1957,10 +1971,12 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$Keys") {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::DollarKeys,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind: intermediate_error_types::IncorrectType::DollarKeys,
+                                    },
+                                )),
                             );
                         }
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -1985,10 +2001,12 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$Values") {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::DollarValues,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind: intermediate_error_types::IncorrectType::DollarValues,
+                                    },
+                                )),
                             );
                         }
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -2043,10 +2061,12 @@ fn convert_inner<'a>(
                             error_type(
                                 cx,
                                 loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::Values,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind: intermediate_error_types::IncorrectType::Values,
+                                    },
+                                )),
                                 t,
                             )
                         }
@@ -2369,10 +2389,12 @@ fn convert_inner<'a>(
                             error_type(
                                 cx,
                                 loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::TSReadonly,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind: intermediate_error_types::IncorrectType::TSReadonly,
+                                    },
+                                )),
                                 t,
                             )
                         }
@@ -2401,10 +2423,13 @@ fn convert_inner<'a>(
                             error_type(
                                 cx,
                                 loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::TSReadonlyArray,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind:
+                                            intermediate_error_types::IncorrectType::TSReadonlyArray,
+                                    },
+                                )),
                                 t,
                             )
                         }
@@ -2412,19 +2437,23 @@ fn convert_inner<'a>(
                     "ReadonlyMap" if !(cx.ts_syntax() || cx.ts_utility_syntax()) => error_type(
                         cx,
                         loc.dupe(),
-                        ErrorMessage::EIncorrectTypeWithReplacement {
-                            loc: loc.dupe(),
-                            kind: intermediate_error_types::IncorrectType::TSReadonlyMap,
-                        },
+                        ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                            EIncorrectTypeWithReplacementData {
+                                loc: loc.dupe(),
+                                kind: intermediate_error_types::IncorrectType::TSReadonlyMap,
+                            },
+                        )),
                         t,
                     ),
                     "ReadonlySet" if !(cx.ts_syntax() || cx.ts_utility_syntax()) => error_type(
                         cx,
                         loc.dupe(),
-                        ErrorMessage::EIncorrectTypeWithReplacement {
-                            loc: loc.dupe(),
-                            kind: intermediate_error_types::IncorrectType::TSReadonlySet,
-                        },
+                        ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                            EIncorrectTypeWithReplacementData {
+                                loc: loc.dupe(),
+                                kind: intermediate_error_types::IncorrectType::TSReadonlySet,
+                            },
+                        )),
                         t,
                     ),
                     "NonNullable" => {
@@ -2455,10 +2484,13 @@ fn convert_inner<'a>(
                             error_type(
                                 cx,
                                 loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement {
-                                    loc: loc.dupe(),
-                                    kind: intermediate_error_types::IncorrectType::TSNonNullable,
-                                },
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                    EIncorrectTypeWithReplacementData {
+                                        loc: loc.dupe(),
+                                        kind:
+                                            intermediate_error_types::IncorrectType::TSNonNullable,
+                                    },
+                                )),
                                 t,
                             )
                         }
@@ -2489,11 +2521,11 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$ReadOnlyMap") && cx.ts_utility_syntax() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarReadOnlyMap,
-                                },
+                                })),
                             );
                         }
                         local_generic_type(
@@ -2510,11 +2542,11 @@ fn convert_inner<'a>(
                         if cx.is_utility_type_deprecated("$ReadOnlySet") && cx.ts_utility_syntax() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement {
+                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarReadOnlySet,
-                                },
+                                })),
                             );
                         }
                         local_generic_type(
@@ -2768,12 +2800,12 @@ fn convert_inner<'a>(
             } else if name_type.is_some() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         obj_loc.dupe(),
                         flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MappedTypeKeyRemapping,
                         ),
-                    ),
+                    ))),
                 );
                 {
                     let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
@@ -2782,12 +2814,12 @@ fn convert_inner<'a>(
             } else if variance_op.is_some() && !cx.tslib_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         mapped_type_loc.dupe(),
                         flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::ReadonlyMappedTypeVarianceOp,
                         ),
-                    ),
+                    ))),
                 );
                 {
                     let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
@@ -3155,12 +3187,12 @@ fn convert_inner<'a>(
         TypeInner::TemplateLiteral { loc, .. } => {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                         TsLibSyntaxKind::TemplateLiteralType,
                     ),
-                ),
+                ))),
             );
             let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
             v
@@ -3168,12 +3200,12 @@ fn convert_inner<'a>(
         TypeInner::ConstructorType { loc, .. } => {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                         TsLibSyntaxKind::ConstructorType,
                     ),
-                ),
+                ))),
             );
             let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
             v
@@ -3181,10 +3213,10 @@ fn convert_inner<'a>(
         TypeInner::Exists { loc, comments } => {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     intermediate_error_types::UnsupportedSyntax::ExistsType,
-                ),
+                ))),
             );
             let rt = any_t::at(AnySource::AnnotatedAny, loc.dupe());
             ast::types::Type::new(TypeInner::Exists {
@@ -3312,12 +3344,12 @@ fn convert_qualification_with_lookup_mode<'a>(
             if !cx.tslib_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         import.loc.dupe(),
                         intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             TsLibSyntaxKind::ImportTypeAnnotation,
                         ),
-                    ),
+                    ))),
                 );
                 let t = type_::any_t::at(type_::AnySource::AnyError(None), import.loc.dupe());
                 (
@@ -3421,12 +3453,12 @@ fn convert_typeof<'a>(
             if ident.name == "this" && !cx.tslib_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         ident.loc.dupe(),
                         intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             TsLibSyntaxKind::TypeofThis,
                         ),
-                    ),
+                    ))),
                 );
                 let t = type_::any_t::at(type_::AnySource::AnyError(None), ident.loc.dupe());
                 let Ok(mapped) = polymorphic_ast_mapper::typeof_expression(
@@ -3463,12 +3495,12 @@ fn convert_typeof<'a>(
             if !cx.tslib_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         import.loc.dupe(),
                         intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             TsLibSyntaxKind::TypeofImport,
                         ),
-                    ),
+                    ))),
                 );
                 let t = type_::any_t::at(type_::AnySource::AnyError(None), import.loc.dupe());
                 let Ok(mapped) = polymorphic_ast_mapper::typeof_expression(
@@ -3830,6 +3862,7 @@ fn convert_object<'a>(
         prop: &ast::types::object::NormalProperty<ALoc, ALoc>,
     ) -> ast::types::object::NormalProperty<ALoc, (ALoc, Type)> {
         use flow_parser::ast::expression::object::Key;
+        use flow_typing_errors::error_message::ETSSyntaxData;
         use flow_typing_errors::error_message::ErrorMessage;
         use flow_typing_type::type_::*;
         match &prop.value {
@@ -3842,21 +3875,21 @@ fn convert_object<'a>(
                 if abstract_ && !cx.metadata().frozen.abstract_classes {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ETSSyntax {
+                        ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                             kind: flow_typing_errors::error_message::TSSyntaxKind::AbstractMethod,
                             loc: prop.loc.dupe(),
-                        },
+                        })),
                     );
                 }
                 if optional && method && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             prop.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 TsLibSyntaxKind::OptionalShorthandMethod,
                             ),
-                        ),
+                        ))),
                     );
                 }
                 let prop_of_name = |cx,
@@ -3916,7 +3949,7 @@ fn convert_object<'a>(
                         if let Err(err) = acc.add_proto(typeof_annot) {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(key_loc.dupe(), err),
+                                ErrorMessage::EUnsupportedSyntax(Box::new((key_loc.dupe(), err))),
                             );
                         }
                         make_prop_ast(proto)
@@ -3946,12 +3979,14 @@ fn convert_object<'a>(
                             acc.add_prop(move |pmap| {
                                 pmap.insert(
                                     prop_name,
-                                    type_::Property::new(type_::PropertyInner::Field {
-                                        preferred_def_locs: None,
-                                        key_loc: Some(key_loc_clone),
-                                        type_: t_clone,
-                                        polarity: pol,
-                                    }),
+                                    type_::Property::new(type_::PropertyInner::Field(Box::new(
+                                        FieldData {
+                                            preferred_def_locs: None,
+                                            key_loc: Some(key_loc_clone),
+                                            type_: t_clone,
+                                            polarity: pol,
+                                        },
+                                    ))),
                                 );
                             });
                         }
@@ -4082,12 +4117,14 @@ fn convert_object<'a>(
                                     acc.add_prop(move |pmap| {
                                         pmap.insert(
                                             name,
-                                            type_::Property::new(type_::PropertyInner::Field {
-                                                preferred_def_locs: None,
-                                                key_loc: Some(id_loc_clone),
-                                                type_: t_clone,
-                                                polarity: pol,
-                                            }),
+                                            type_::Property::new(type_::PropertyInner::Field(
+                                                Box::new(FieldData {
+                                                    preferred_def_locs: None,
+                                                    key_loc: Some(id_loc_clone),
+                                                    type_: t_clone,
+                                                    polarity: pol,
+                                                }),
+                                            )),
                                         );
                                     });
                                 }
@@ -4153,12 +4190,14 @@ fn convert_object<'a>(
                             Some(type_::PropertyInner::Set {
                                 key_loc: set_key_loc,
                                 type_: set_type,
-                            }) => type_::Property::new(type_::PropertyInner::GetSet {
-                                get_key_loc: Some(id_loc_clone),
-                                get_type: return_t_clone,
-                                set_key_loc: set_key_loc.dupe(),
-                                set_type: set_type.dupe(),
-                            }),
+                            }) => type_::Property::new(type_::PropertyInner::GetSet(Box::new(
+                                GetSetData {
+                                    get_key_loc: Some(id_loc_clone),
+                                    get_type: return_t_clone,
+                                    set_key_loc: set_key_loc.dupe(),
+                                    set_type: set_type.dupe(),
+                                },
+                            ))),
                             _ => type_::Property::new(type_::PropertyInner::Get {
                                 key_loc: Some(id_loc_clone),
                                 type_: return_t_clone,
@@ -4195,10 +4234,10 @@ fn convert_object<'a>(
                 _ => {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             prop.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::ObjectPropertyGetSet,
-                        ),
+                        ))),
                     );
                     {
                         let Ok(v) = polymorphic_ast_mapper::object_property_type(
@@ -4232,12 +4271,14 @@ fn convert_object<'a>(
                             Some(type_::PropertyInner::Get {
                                 key_loc: get_key_loc,
                                 type_: get_type,
-                            }) => type_::Property::new(type_::PropertyInner::GetSet {
-                                get_key_loc: get_key_loc.dupe(),
-                                get_type: get_type.dupe(),
-                                set_key_loc: Some(id_loc_clone),
-                                set_type: param_t_clone,
-                            }),
+                            }) => type_::Property::new(type_::PropertyInner::GetSet(Box::new(
+                                GetSetData {
+                                    get_key_loc: get_key_loc.dupe(),
+                                    get_type: get_type.dupe(),
+                                    set_key_loc: Some(id_loc_clone),
+                                    set_type: param_t_clone,
+                                },
+                            ))),
                             _ => type_::Property::new(type_::PropertyInner::Set {
                                 key_loc: Some(id_loc_clone),
                                 type_: param_t_clone,
@@ -4274,10 +4315,10 @@ fn convert_object<'a>(
                 _ => {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             prop.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::ObjectPropertyGetSet,
-                        ),
+                        ))),
                     );
                     {
                         let Ok(v) = polymorphic_ast_mapper::object_property_type(
@@ -4322,7 +4363,7 @@ fn convert_object<'a>(
                 if let Err(err) = acc.add_call(t) {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(cp_loc.dupe(), err),
+                        ErrorMessage::EUnsupportedSyntax(Box::new((cp_loc.dupe(), err))),
                     );
                 }
                 prop_asts.push(Property::CallProperty(call_ast));
@@ -4331,12 +4372,12 @@ fn convert_object<'a>(
                 if indexer.optional && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             indexer.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 intermediate_error_types::TsLibSyntaxKind::OptionalIndexer,
                             ),
-                        ),
+                        ))),
                     );
                     let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
                         &mut typed_ast_utils::ErrorMapper,
@@ -4379,7 +4420,7 @@ fn convert_object<'a>(
                     if let Err(err) = acc.add_dict(d) {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(indexer.loc.dupe(), err),
+                            ErrorMessage::EUnsupportedSyntax(Box::new((indexer.loc.dupe(), err))),
                         );
                     }
                     prop_asts.push(Property::Indexer(indexer_ast));
@@ -4400,7 +4441,7 @@ fn convert_object<'a>(
                     if let Err(err) = acc.add_call(t) {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(slot.loc.dupe(), err),
+                            ErrorMessage::EUnsupportedSyntax(Box::new((slot.loc.dupe(), err))),
                         );
                     }
                     let slot_ast = ast::types::object::InternalSlot {
@@ -4420,13 +4461,13 @@ fn convert_object<'a>(
                 } else {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             slot.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::UnsupportedInternalSlot {
                                 name: slot_name.dupe(),
                                 static_: false,
                             },
-                        ),
+                        ))),
                     );
                     let Ok(mapped) = polymorphic_ast_mapper::object_type_property(
                         &mut typed_ast_utils::ErrorMapper,
@@ -4583,12 +4624,12 @@ fn convert_tuple_element<'a>(
             if *optional && !cx.tslib_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                             TsLibSyntaxKind::OptionalUnlabeledTupleElement,
                         ),
-                    ),
+                    ))),
                 );
                 // let element_ast = Tast_utils.error_mapper#tuple_element (loc, el) in
                 let Ok(element_ast) = polymorphic_ast_mapper::tuple_element(
@@ -4885,25 +4926,29 @@ fn convert_return_annotation<'a>(
                 }
             });
             if let Some(rloc) = is_rest_param_conflict {
-                let msg = ErrorMessage::ETypeGuardInvalidParameter {
-                    type_guard_reason: reason::mk_reason(
-                        reason::VirtualReasonDesc::RTypeGuardParam(name.dupe()),
-                        name_loc,
-                    ),
-                    binding_reason: reason::mk_reason(
-                        reason::VirtualReasonDesc::RRestParameter(Some(name.dupe())),
-                        rloc,
-                    ),
-                };
+                let msg = ErrorMessage::ETypeGuardInvalidParameter(Box::new(
+                    ETypeGuardInvalidParameterData {
+                        type_guard_reason: reason::mk_reason(
+                            reason::VirtualReasonDesc::RTypeGuardParam(name.dupe()),
+                            name_loc,
+                        ),
+                        binding_reason: reason::mk_reason(
+                            reason::VirtualReasonDesc::RRestParameter(Some(name.dupe())),
+                            rloc,
+                        ),
+                    },
+                ));
                 let (bool_t, guard_prime, predicate) =
                     error_type_guard(cx, env, gloc, x, t, kind, comments, msg);
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)
             } else if !allows_type_guards(meth_kind) {
                 // Check that type guard variable appears in parameter list
-                let msg = ErrorMessage::ETypeGuardIncompatibleWithFunctionKind {
-                    loc: gloc.dupe(),
-                    kind: FlowSmolStr::new(method_kind_to_string(meth_kind)),
-                };
+                let msg = ErrorMessage::ETypeGuardIncompatibleWithFunctionKind(Box::new(
+                    ETypeGuardIncompatibleWithFunctionKindData {
+                        loc: gloc.dupe(),
+                        kind: FlowSmolStr::new(method_kind_to_string(meth_kind)),
+                    },
+                ));
                 let (bool_t, guard_prime, predicate) =
                     error_type_guard(cx, env, gloc, x, t, kind, comments, msg);
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)
@@ -4931,10 +4976,10 @@ fn convert_return_annotation<'a>(
             let kind = guard.kind;
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     intermediate_error_types::UnsupportedSyntax::UserDefinedTypeGuards { kind },
-                ),
+                ))),
             );
             let any_t = type_::any_t::at(type_::AnySource::AnyError(None), loc);
             let Ok(mapped_ret) = polymorphic_ast_mapper::function_type_return_annotation(
@@ -4948,10 +4993,10 @@ fn convert_return_annotation<'a>(
                 if !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 loc.dupe(),
                                 intermediate_error_types::UnsupportedSyntax::DeclareClassMethodMissingReturnType,
-                            ),
+                            ))),
                         );
                 }
                 let void_t = type_::void::at(loc.dupe());
@@ -4960,10 +5005,10 @@ fn convert_return_annotation<'a>(
             _ => {
                 flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::DeclareClassMethodMissingReturnType,
-                        ),
+                        ))),
                     );
                 let any_t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                 (any_t, ReturnAnnotation::Missing(loc.dupe()), None)
@@ -5336,13 +5381,15 @@ fn mk_nominal_type_inner<'a>(
                         let tvar_t = flow_typing_tvar::mk(cx, app_reason.dupe());
                         cx.add_post_inference_validation_flow(
                             type_t.dupe(),
-                            type_::UseT::new(type_::UseTInner::SpecializeT(
-                                use_op.dupe(),
-                                app_reason.dupe(),
-                                app_reason.dupe(),
-                                Some(app_targs.clone()),
-                                tvar_t,
-                            )),
+                            type_::UseT::new(type_::UseTInner::SpecializeT(Box::new(
+                                type_::SpecializeTData {
+                                    use_op: use_op.dupe(),
+                                    reason: app_reason.dupe(),
+                                    reason2: app_reason.dupe(),
+                                    targs: Some(app_targs.clone()),
+                                    tvar: tvar_t,
+                                },
+                            ))),
                         );
                     }
                     _ => panic!("typeapp_annot should create a TypeAppT"),
@@ -5419,10 +5466,10 @@ fn mk_type_param_inner<'a>(
     {
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::ETSSyntax {
+            ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                 kind: flow_typing_errors::error_message::TSSyntaxKind::DeprecatedTypeParamColon,
                 loc: loc.dupe(),
-            },
+            })),
         );
     }
     let (bound_t, bound_ast) = match bound {
@@ -5698,10 +5745,10 @@ fn add_interface_properties<'a>(
             Property::Indexer(idx) if class_sig::has_indexer(idx.static_, &s) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         idx.loc.dupe(),
                         intermediate_error_types::UnsupportedSyntax::MultipleIndexers,
-                    ),
+                    ))),
                 );
                 let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
                     &mut typed_ast_utils::ErrorMapper,
@@ -5713,12 +5760,12 @@ fn add_interface_properties<'a>(
                 if idx.optional && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             idx.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 intermediate_error_types::TsLibSyntaxKind::OptionalIndexer,
                             ),
-                        ),
+                        ))),
                     );
                     let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
                         &mut typed_ast_utils::ErrorMapper,
@@ -5749,12 +5796,12 @@ fn add_interface_properties<'a>(
                 if np.override_ {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             np.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 TsLibSyntaxKind::OverrideModifier,
                             ),
-                        ),
+                        ))),
                     );
                 }
                 let init_ = &np.init;
@@ -5763,10 +5810,10 @@ fn add_interface_properties<'a>(
                         if !cx.ts_syntax() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::ETSSyntax {
+                                ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                                     kind: flow_typing_errors::error_message::TSSyntaxKind::TSClassAccessibility(acc.kind),
                                     loc: acc.loc.dupe(),
-                                },
+                                })),
                             );
                         }
                         matches!(
@@ -5798,23 +5845,23 @@ fn add_interface_properties<'a>(
                     (Some(_), _) if !cx.tslib_syntax() => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 np.loc.dupe(),
                                 intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                     TsLibSyntaxKind::PropertyValueInitializer,
                                 ),
-                            ),
+                            ))),
                         );
                     }
                     (Some(init_expr), ast::types::object::PropertyValue::Init(Some(_))) => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 init_expr.loc().dupe(),
                                 intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
                                     intermediate_error_types::DeclareClassPropKind::AnnotationAndInit,
                                 ),
-                            ),
+                            ))),
                         );
                     }
                     (Some(init_expr), ast::types::object::PropertyValue::Init(None)) => {
@@ -5828,35 +5875,35 @@ fn add_interface_properties<'a>(
                         if !is_readonly {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     init_expr.loc().dupe(),
                                     intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
                                         intermediate_error_types::DeclareClassPropKind::InitWithoutReadonly,
                                     ),
-                                ),
+                                ))),
                             );
                         }
                         if !is_literal_init(init_expr) {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     init_expr.loc().dupe(),
                                     intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
                                         intermediate_error_types::DeclareClassPropKind::NonLiteralInit,
                                     ),
-                                ),
+                                ))),
                             );
                         }
                     }
                     (None, ast::types::object::PropertyValue::Init(None)) if !is_ts_private => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 np.loc.dupe(),
                                 intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
                                     intermediate_error_types::DeclareClassPropKind::MissingAnnotationOrInit,
                                 ),
-                            ),
+                            ))),
                         );
                     }
                     _ => {}
@@ -5873,22 +5920,22 @@ fn add_interface_properties<'a>(
                     if np.abstract_ && !cx.metadata().frozen.abstract_classes {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::ETSSyntax {
+                            ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                                 kind:
                                     flow_typing_errors::error_message::TSSyntaxKind::AbstractMethod,
                                 loc: np.loc.dupe(),
-                            },
+                            })),
                         );
                     }
                     if np.optional && np.method && !cx.tslib_syntax() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 np.loc.dupe(),
                                 intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                     TsLibSyntaxKind::OptionalShorthandMethod,
                                 ),
-                            ),
+                            ))),
                         );
                         let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
                             &mut typed_ast_utils::ErrorMapper,
@@ -5967,10 +6014,10 @@ fn add_interface_properties<'a>(
                         | Key::BigIntLiteral((loc, _)) => {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     loc.dupe(),
                                     intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                ),
+                                ))),
                             );
                             let Ok(error_prop) = polymorphic_ast_mapper::object_property_type(
                                 &mut typed_ast_utils::ErrorMapper,
@@ -5982,10 +6029,10 @@ fn add_interface_properties<'a>(
                         Key::PrivateName(pn) => {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     pn.loc.dupe(),
                                     intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                ),
+                                ))),
                             );
                             let Ok(error_prop) = polymorphic_ast_mapper::object_property_type(
                                 &mut typed_ast_utils::ErrorMapper,
@@ -6070,10 +6117,10 @@ fn add_interface_properties<'a>(
                                             _ => {
                                                 flow_js_utils::add_output_non_speculating(
                                                     cx,
-                                                    ErrorMessage::EUnsupportedSyntax(
+                                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                                         ck.loc.dupe(),
                                                         intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                                    ),
+                                                    ))),
                                                 );
                                                 let Ok(error_prop) =
                                                     polymorphic_ast_mapper::object_property_type(
@@ -6185,10 +6232,10 @@ fn add_interface_properties<'a>(
                                             _ => {
                                                 flow_js_utils::add_output_non_speculating(
                                                     cx,
-                                                    ErrorMessage::EUnsupportedSyntax(
+                                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                                         ck.loc.dupe(),
                                                         intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                                    ),
+                                                    ))),
                                                 );
                                                 let Ok(error_prop) =
                                                     polymorphic_ast_mapper::object_property_type(
@@ -6204,10 +6251,10 @@ fn add_interface_properties<'a>(
                                 None => {
                                     flow_js_utils::add_output_non_speculating(
                                         cx,
-                                        ErrorMessage::EUnsupportedSyntax(
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
                                             ck.loc.dupe(),
                                             intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                        ),
+                                        ))),
                                     );
                                     let Ok(error_prop) =
                                         polymorphic_ast_mapper::object_property_type(
@@ -6309,10 +6356,10 @@ fn add_interface_properties<'a>(
                                     _ => {
                                         flow_js_utils::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EInternal(
+                                            ErrorMessage::EInternal(Box::new((
                                                 np.loc.dupe(),
                                                 InternalError::MethodNotAFunction,
-                                            ),
+                                            ))),
                                         );
                                         let Ok(error_prop) =
                                             polymorphic_ast_mapper::object_property_type(
@@ -6326,10 +6373,10 @@ fn add_interface_properties<'a>(
                             _ => {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EInternal(
+                                    ErrorMessage::EInternal(Box::new((
                                         np.loc.dupe(),
                                         InternalError::MethodNotAFunction,
-                                    ),
+                                    ))),
                                 );
                                 let Ok(error_prop) = polymorphic_ast_mapper::object_property_type(
                                     &mut typed_ast_utils::ErrorMapper,
@@ -6586,13 +6633,13 @@ fn add_interface_properties<'a>(
                     // Unsupported internal slot
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             is.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::UnsupportedInternalSlot {
                                 name: name.dupe(),
                                 static_: is.static_,
                             },
-                        ),
+                        ))),
                     );
                     let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
                         &mut typed_ast_utils::ErrorMapper,
@@ -6604,7 +6651,10 @@ fn add_interface_properties<'a>(
             Property::SpreadProperty(sp) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EInternal(sp.loc.dupe(), InternalError::InterfaceTypeSpread),
+                    ErrorMessage::EInternal(Box::new((
+                        sp.loc.dupe(),
+                        InternalError::InterfaceTypeSpread,
+                    ))),
                 );
                 let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
                     &mut typed_ast_utils::ErrorMapper,
@@ -6616,12 +6666,12 @@ fn add_interface_properties<'a>(
                 if !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             pf.loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 TsLibSyntaxKind::PrivateClassField,
                             ),
-                        ),
+                        ))),
                     );
                 }
                 // Private fields are intentionally ignored — they are not part of the
@@ -7543,12 +7593,12 @@ pub fn mk_declare_class_sig<'a>(
                 Some((loc, ext @ DeclareClassExtends::ExtendsCall { .. })) => {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 TsLibSyntaxKind::ClassExtendsCall,
                             ),
-                        ),
+                        ))),
                     );
                     let Ok(ext_ast) = polymorphic_ast_mapper::declare_class_extends(
                         &mut typed_ast_utils::ErrorMapper,
@@ -7579,12 +7629,12 @@ pub fn mk_declare_class_sig<'a>(
                             {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EUnsupportedSyntax(
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                         iface.loc.dupe(),
                                         intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                             TsLibSyntaxKind::ImplementsDottedPath,
                                         ),
-                                    ),
+                                    ))),
                                 );
                             }
                             _ => {}

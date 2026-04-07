@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#![feature(box_patterns)]
+
 pub mod ty;
 pub mod ty_ancestors;
 pub mod ty_debug;

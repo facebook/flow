@@ -51,6 +51,17 @@ use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
 use flow_typing_context::Metadata;
 use flow_typing_context::ResolvedRequire;
+use flow_typing_errors::error_message::EComparisonData;
+use flow_typing_errors::error_message::EConstantConditionData;
+use flow_typing_errors::error_message::EDevOnlyInvalidatedRefinementInfoData;
+use flow_typing_errors::error_message::EDevOnlyRefinedLocInfoData;
+use flow_typing_errors::error_message::EDuplicateModuleProviderData;
+use flow_typing_errors::error_message::EIllegalAssertOperatorData;
+use flow_typing_errors::error_message::EKeySpreadPropData;
+use flow_typing_errors::error_message::EMissingPlatformSupportData;
+use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLookupFailedData;
+use flow_typing_errors::error_message::EPropNotFoundInLookupData;
+use flow_typing_errors::error_message::ESketchyNullLintData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::FlowError;
@@ -69,6 +80,7 @@ use flow_typing_statement::module_info_analyzer;
 use flow_typing_statement::react_rules;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::BigIntLiteral;
+use flow_typing_type::type_::ConformToCommonInterfaceData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::EnumInfo;
 use flow_typing_type::type_::EnumInfoInner;
@@ -123,12 +135,12 @@ fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
     let add_error = |loc: &ALoc, null_loc: &ALoc, kind: SketchyNullKind, falsy_loc: &ALoc| {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::ESketchyNullLint {
+            ErrorMessage::ESketchyNullLint(Box::new(ESketchyNullLintData {
                 kind,
                 loc: loc.dupe(),
                 null_loc: null_loc.dupe(),
                 falsy_loc: falsy_loc.dupe(),
-            },
+            })),
         );
     };
 
@@ -447,13 +459,13 @@ fn detect_test_prop_misses<'cx>(cx: &Context<'cx>) {
     for (prop_name, (reason_prop, reason_obj), use_op, suggestion) in misses.iter() {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EPropNotFoundInLookup {
+            ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name: prop_name.dupe(),
                 reason_prop: reason_prop.dupe(),
                 reason_obj: reason_obj.dupe(),
                 use_op: use_op.dupe(),
                 suggestion: suggestion.dupe(),
-            },
+            })),
         );
     }
 }
@@ -582,8 +594,8 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> Truthy
                 }
             }
             DefTInner::TypeT(..) => TruthynessResult::ConstCondUnknown,
-            DefTInner::PolyT { .. } => TruthynessResult::ConstCondUnknown,
-            DefTInner::ReactAbstractComponentT { .. } => TruthynessResult::ConstCondUnknown,
+            DefTInner::PolyT(_) => TruthynessResult::ConstCondUnknown,
+            DefTInner::ReactAbstractComponentT(_) => TruthynessResult::ConstCondUnknown,
             DefTInner::RendersT(_) => TruthynessResult::ConstCondUnknown,
             DefTInner::EnumValueT(_) => TruthynessResult::ConstCondUnknown,
             DefTInner::EnumObjectT { .. } => TruthynessResult::ConstCondUnknown,
@@ -929,13 +941,13 @@ fn detect_constant_conditions<'cx>(cx: &Context<'cx>) {
     for (loc, is_truthy, show_warning, constant_condition_kind, reason) in banned_conditions {
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::EConstantCondition {
+            ErrorMessage::EConstantCondition(Box::new(EConstantConditionData {
                 loc,
                 is_truthy,
                 show_warning,
                 constant_condition_kind,
                 reason,
-            },
+            })),
         );
     }
 }
@@ -1069,7 +1081,7 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) {
     for result in check_strict_comparison(cx, &all_strict_comparisons) {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EComparison {
+            ErrorMessage::EComparison(Box::new(EComparisonData {
                 r1: result.l_reason,
                 r2: result.r_reason,
                 loc_opt: Some(result.primary_loc),
@@ -1078,7 +1090,7 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) {
                     right_precise_reason: result.r_singleton_reason,
                     strict_comparison_kind: result.kind,
                 }),
-            },
+            })),
         );
     }
 }
@@ -1087,7 +1099,7 @@ fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
     for (loc, lhs_reason) in cx.unnecessary_optional_chains().iter() {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EUnnecessaryOptionalChain(loc.dupe(), lhs_reason.dupe()),
+            ErrorMessage::EUnnecessaryOptionalChain(Box::new((loc.dupe(), lhs_reason.dupe()))),
         );
     }
 }
@@ -1208,8 +1220,8 @@ fn detect_non_voidable_properties<'cx>(cx: &Context<'cx>) {
         for (name, errs) in errors.iter() {
             let should_error = match pmap.get(&Name::new(name.dupe())) {
                 Some(prop) => match &**prop {
-                    PropertyInner::Field { type_, .. } => {
-                        !is_voidable(cx, &mut TvarSeenSet::new(), type_)
+                    PropertyInner::Field(fd) => {
+                        !is_voidable(cx, &mut TvarSeenSet::new(), &fd.type_)
                     }
                     _ => true,
                 },
@@ -1280,11 +1292,11 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
     let add_duplicate_provider_error = |platform_specific_provider_file: &FileKey| {
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::EDuplicateModuleProvider {
+            ErrorMessage::EDuplicateModuleProvider(Box::new(EDuplicateModuleProviderData {
                 module_name: haste_name.dupe(),
                 conflict: loc_of_file(filename),
                 provider: loc_of_file(platform_specific_provider_file),
-            },
+            })),
         );
     };
     if files::has_flow_ext(filename) {
@@ -1378,11 +1390,13 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
                             true,
                             &platform_specific_t,
                         );
-                        let use_op = UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface {
-                            self_sig_loc,
-                            self_module_loc: prog_aloc,
-                            originate_from_import: false,
-                        }));
+                        let use_op = UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface(
+                            Box::new(ConformToCommonInterfaceData {
+                                self_sig_loc,
+                                self_module_loc: prog_aloc,
+                                originate_from_import: false,
+                            }),
+                        )));
                         flow_js::flow_non_speculating(
                             cx,
                             (
@@ -1507,11 +1521,13 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                                     &alternative_module_t,
                                 );
                                 let use_op =
-                                    UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface {
-                                        self_sig_loc: error_loc.dupe(),
-                                        self_module_loc: error_loc.dupe(),
-                                        originate_from_import: true,
-                                    }));
+                                    UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface(
+                                        Box::new(ConformToCommonInterfaceData {
+                                            self_sig_loc: error_loc.dupe(),
+                                            self_module_loc: error_loc.dupe(),
+                                            originate_from_import: true,
+                                        }),
+                                    )));
                                 flow_js::flow_non_speculating(
                                     cx,
                                     (
@@ -1534,10 +1550,12 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                 if !all_missing.is_empty() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMissingPlatformSupport {
-                            loc: error_loc.dupe(),
-                            missing_platforms: all_missing,
-                        },
+                        ErrorMessage::EMissingPlatformSupport(Box::new(
+                            EMissingPlatformSupportData {
+                                loc: error_loc.dupe(),
+                                missing_platforms: all_missing,
+                            },
+                        )),
                     );
                 }
             }
@@ -1630,11 +1648,13 @@ fn check_multiplatform_conformance<'cx>(
                         &interface_t,
                     );
                     tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &self_t);
-                    let use_op = UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface {
-                        self_sig_loc,
-                        self_module_loc: prog_aloc.dupe(),
-                        originate_from_import: false,
-                    }));
+                    let use_op = UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface(
+                        Box::new(ConformToCommonInterfaceData {
+                            self_sig_loc,
+                            self_module_loc: prog_aloc.dupe(),
+                            originate_from_import: false,
+                        }),
+                    )));
                     flow_js::flow_non_speculating(
                         cx,
                         (&self_t, &UseT::new(UseTInner::UseT(use_op, interface_t))),
@@ -1676,10 +1696,17 @@ fn check_multiplatform_conformance<'cx>(
                     } else {
                         for name in &unconditional_extensions {
                             if !module_exists(name) {
-                                flow_js_utils::add_output_non_speculating(cx,
-                                    ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed {
-                                        loc: file_loc.dupe(), name: FlowSmolStr::new(name),
-                                    });
+                                flow_js_utils::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(
+                                        Box::new(
+                                            EPlatformSpecificImplementationModuleLookupFailedData {
+                                                loc: file_loc.dupe(),
+                                                name: FlowSmolStr::new(name),
+                                            },
+                                        ),
+                                    ),
+                                );
                             }
                         }
                         for (grouped, conditional) in
@@ -1690,9 +1717,9 @@ fn check_multiplatform_conformance<'cx>(
                                     if !module_exists(name) {
                                         flow_js_utils::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed {
+                                            ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(Box::new(EPlatformSpecificImplementationModuleLookupFailedData {
                                                 loc: file_loc.dupe(), name:  FlowSmolStr::new(name),
-                                            }
+                                            }))
                                         );
                                     }
                                 }
@@ -1743,10 +1770,10 @@ fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALo
                         let loc = property::first_loc(&prop).unwrap_or_else(|| r.loc().dupe());
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EKeySpreadProp {
+                            ErrorMessage::EKeySpreadProp(Box::new(EKeySpreadPropData {
                                 spread: spread.dupe(),
                                 loc,
-                            },
+                            })),
                         );
                     }
                 }
@@ -1821,10 +1848,10 @@ fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
         for (refined_loc, refining_locs) in cx.refined_locations().iter() {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EDevOnlyRefinedLocInfo {
+                ErrorMessage::EDevOnlyRefinedLocInfo(Box::new(EDevOnlyRefinedLocInfoData {
                     refined_loc: refined_loc.dupe(),
                     refining_locs: refining_locs.iter().map(|l| l.dupe()).collect(),
-                },
+                })),
             );
         }
     }
@@ -1832,13 +1859,15 @@ fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
         for (read_loc, invalidation_info) in cx.aggressively_invalidated_locations().iter() {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EDevOnlyInvalidatedRefinementInfo {
-                    read_loc: read_loc.dupe(),
-                    invalidation_info: invalidation_info
-                        .iter()
-                        .map(|(k, v)| (k.dupe(), *v))
-                        .collect(),
-                },
+                ErrorMessage::EDevOnlyInvalidatedRefinementInfo(Box::new(
+                    EDevOnlyInvalidatedRefinementInfoData {
+                        read_loc: read_loc.dupe(),
+                        invalidation_info: invalidation_info
+                            .iter()
+                            .map(|(k, v)| (k.dupe(), *v))
+                            .collect(),
+                    },
+                )),
             );
         }
     }
@@ -1922,11 +1951,11 @@ fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc
             _ => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EIllegalAssertOperator {
+                    ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op: op_reason.dupe(),
                         obj: obj_reason,
                         specialized: true,
-                    },
+                    })),
                 );
             }
         }
@@ -1953,11 +1982,11 @@ fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc
         if !legal {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EIllegalAssertOperator {
+                ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op: op_reason.dupe(),
                     obj: obj_reason,
                     specialized: false,
-                },
+                })),
             );
         }
     }

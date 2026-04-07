@@ -24,6 +24,7 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
+use flow_typing_errors::error_message::EDuplicateModuleProviderData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
@@ -93,11 +94,12 @@ fn collate_duplicate_providers(
                 start: pos,
                 end: pos,
             };
-            let msg = ErrorMessage::EDuplicateModuleProvider {
-                module_name: module_name.dupe(),
-                provider: provider.dupe(),
-                conflict,
-            };
+            let msg =
+                ErrorMessage::EDuplicateModuleProvider(Box::new(EDuplicateModuleProviderData {
+                    module_name: module_name.dupe(),
+                    provider: provider.dupe(),
+                    conflict,
+                }));
             let flow_error = error_of_msg(duplicate.dupe(), msg);
             let intermediate = make_intermediate_error(Loc::dupe, false, &flow_error);
             let err = to_printable_error(

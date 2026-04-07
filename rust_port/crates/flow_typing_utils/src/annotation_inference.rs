@@ -16,6 +16,11 @@ use flow_common::reason::mk_id;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EIncompatibleData;
+use flow_typing_errors::error_message::EMissingTypeArgsData;
+use flow_typing_errors::error_message::EPropNotFoundInLookupData;
+use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
+use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -32,6 +37,13 @@ use flow_typing_type::type_::TypeMap;
 use flow_typing_type::type_::TypeTKind;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::aconstraint::AConstraintInner;
+use flow_typing_type::type_::aconstraint::AnnotArithTData;
+use flow_typing_type::type_::aconstraint::AnnotDeepReadOnlyTData;
+use flow_typing_type::type_::aconstraint::AnnotGetPropTData;
+use flow_typing_type::type_::aconstraint::AnnotGetTypeFromNamespaceTData;
+use flow_typing_type::type_::aconstraint::AnnotLookupTData;
+use flow_typing_type::type_::aconstraint::AnnotObjKitTData;
+use flow_typing_type::type_::aconstraint::AnnotSpecializeTData;
 use flow_typing_type::type_::aconstraint::Op;
 use flow_typing_type::type_::aconstraint::OpInner;
 use flow_typing_type::type_::constraint::Constraints;
@@ -45,7 +57,7 @@ use crate::avar;
 
 fn object_like_op(op: &OpInner) -> bool {
     match op {
-        OpInner::AnnotSpecializeT { .. }
+        OpInner::AnnotSpecializeT(_)
         | OpInner::AnnotThisSpecializeT { .. }
         | OpInner::AnnotUseTTypeT { .. }
         | OpInner::AnnotConcretizeForImportsExports { .. }
@@ -56,21 +68,21 @@ fn object_like_op(op: &OpInner) -> bool {
         | OpInner::AnnotElemT { .. }
         | OpInner::AnnotGetStaticsT(_)
         | OpInner::AnnotMixinT(_)
-        | OpInner::AnnotObjKitT { .. }
+        | OpInner::AnnotObjKitT(_)
         | OpInner::AnnotObjTestProtoT(_)
-        | OpInner::AnnotArithT { .. }
+        | OpInner::AnnotArithT(_)
         | OpInner::AnnotUnaryArithT { .. }
         | OpInner::AnnotNotT(_)
         | OpInner::AnnotObjKeyMirror(_)
         | OpInner::AnnotGetKeysT(_)
         | OpInner::AnnotGetEnumT(_)
-        | OpInner::AnnotDeepReadOnlyT { .. }
+        | OpInner::AnnotDeepReadOnlyT(_)
         | OpInner::AnnotToStringT { .. } => false,
 
-        OpInner::AnnotGetTypeFromNamespaceT { .. }
-        | OpInner::AnnotGetPropT { .. }
+        OpInner::AnnotGetTypeFromNamespaceT(_)
+        | OpInner::AnnotGetPropT(_)
         | OpInner::AnnotGetElemT { .. }
-        | OpInner::AnnotLookupT { .. }
+        | OpInner::AnnotLookupT(_)
         | OpInner::AnnotObjRestT { .. }
         | OpInner::AnnotGetValuesT(_) => true,
     }
@@ -78,9 +90,9 @@ fn object_like_op(op: &OpInner) -> bool {
 
 fn primitive_promoting_op(op: &OpInner) -> bool {
     match op {
-        OpInner::AnnotGetPropT { .. }
-        | OpInner::AnnotGetElemT { .. }
-        | OpInner::AnnotLookupT { .. } => true,
+        OpInner::AnnotGetPropT(_) | OpInner::AnnotGetElemT { .. } | OpInner::AnnotLookupT(_) => {
+            true
+        }
         // TODO: enumerate all use types
         _ => false,
     }
@@ -126,7 +138,8 @@ fn error_unsupported_reason(
     reason_op: Reason,
 ) -> Type {
     let loc = reason_op.loc().dupe();
-    let msg = ErrorMessage::EAnnotationInference(loc, reason_op.dupe(), reason, suggestion);
+    let msg =
+        ErrorMessage::EAnnotationInference(Box::new((loc, reason_op.dupe(), reason, suggestion)));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
     type_::any_t::error(reason_op)
 }
@@ -144,7 +157,7 @@ fn error_unsupported(
 
 pub(crate) fn error_recursive(cx: &Context, dst_cx: &Context, reason: &Reason) -> Type {
     let loc = reason.loc().dupe();
-    let msg = ErrorMessage::ETrivialRecursiveDefinition(loc, reason.dupe());
+    let msg = ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc, reason.dupe())));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
     type_::any_t::error(reason.dupe())
 }
@@ -202,10 +215,10 @@ fn get_lazy_module_type_or_any_src<'cx>(
 
 fn error_internal_reason(cx: &Context, dst_cx: &Context, msg: &str, reason_op: Reason) -> Type {
     let loc = reason_op.loc().dupe();
-    let err_msg = ErrorMessage::EInternal(
+    let err_msg = ErrorMessage::EInternal(Box::new((
         loc,
         flow_typing_errors::error_message::InternalError::UnexpectedAnnotationInference(msg.into()),
-    );
+    )));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, err_msg);
     type_::any_t::error(reason_op)
 }
@@ -353,12 +366,12 @@ fn cg_lookup_<'cx>(
         &effective_dst_cx(cx),
         None,
         t,
-        Op::new(OpInner::AnnotLookupT {
+        Op::new(OpInner::AnnotLookupT(Box::new(AnnotLookupTData {
             reason: reason_op.dupe(),
             use_op: use_op.dupe(),
             prop_ref: propref.clone(),
             type_: objt.dupe(),
-        }),
+        }))),
     )
 }
 
@@ -447,12 +460,12 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
             &effective_dst_cx(cx),
             None,
             t,
-            Op::new(OpInner::AnnotGetPropT {
+            Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
                 reason: access_reason,
                 use_op,
                 from_annot: false,
                 prop_ref: type_util::mk_named_prop(prop_reason, false, name),
-            }),
+            }))),
         ))
     }
 
@@ -468,11 +481,13 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
             &effective_dst_cx(cx),
             None,
             t,
-            Op::new(OpInner::AnnotDeepReadOnlyT {
-                reason: reason.dupe(),
-                loc: dro.0.dupe(),
-                dro_type: dro.1.clone(),
-            }),
+            Op::new(OpInner::AnnotDeepReadOnlyT(Box::new(
+                AnnotDeepReadOnlyTData {
+                    reason: reason.dupe(),
+                    loc: dro.0.dupe(),
+                    dro_type: dro.1.clone(),
+                },
+            ))),
         )
     }
 
@@ -692,11 +707,13 @@ pub fn elab_t<'cx>(
                         dst_cx,
                         None,
                         inner_t.dupe(),
-                        Op::new(OpInner::AnnotDeepReadOnlyT {
-                            reason: reason.dupe(),
-                            loc: react_dro.0.dupe(),
-                            dro_type: react_dro.1.clone(),
-                        }),
+                        Op::new(OpInner::AnnotDeepReadOnlyT(Box::new(
+                            AnnotDeepReadOnlyTData {
+                                reason: reason.dupe(),
+                                loc: react_dro.0.dupe(),
+                                dro_type: react_dro.1.clone(),
+                            },
+                        ))),
                     );
                     elab_t(cx, dst_cx, None, t, op)
                 }
@@ -775,7 +792,7 @@ pub fn elab_t<'cx>(
                         dst_cx,
                         None,
                         inner_t.dupe(),
-                        Op::new(OpInner::AnnotGetPropT {
+                        Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
                             reason: reason_op,
                             use_op,
                             from_annot: true,
@@ -784,7 +801,7 @@ pub fn elab_t<'cx>(
                                 name: name.dupe(),
                                 from_indexed_access: true,
                             },
-                        }),
+                        }))),
                     );
                     elab_t(cx, dst_cx, None, t, op)
                 }
@@ -865,11 +882,13 @@ fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &
     let use_op = op.use_op();
     flow_js_utils::add_output_non_speculating(
         cx,
-        flow_typing_errors::error_message::ErrorMessage::EIncompatible {
-            lower,
-            upper,
-            use_op,
-        },
+        flow_typing_errors::error_message::ErrorMessage::EIncompatible(Box::new(
+            EIncompatibleData {
+                lower,
+                upper,
+                use_op,
+            },
+        )),
     );
     any_t::error(reason_op)
 }
@@ -883,6 +902,7 @@ fn elab_t_concrete<'cx>(
 ) -> Type {
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::EnumInfoInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::any_t;
 
     match (t.deref(), op.deref()) {
@@ -947,11 +967,11 @@ fn elab_t_concrete<'cx>(
                 //   let subst_map = ...
                 //   let t_ = subst cx subst_map t in
                 //   elab_t cx t_ op
-                DefTInner::PolyT { tparams, t_out, .. }
+                DefTInner::PolyT(box PolyTData { tparams, t_out, .. })
                     if matches!(kind, flow_typing_type::type_::TypeTKind::RenderTypeKind)
                         && matches!(
                             t_out.deref(),
-                            TypeInner::DefT(_, dt) if matches!(dt.deref(), DefTInner::ReactAbstractComponentT { .. })
+                            TypeInner::DefT(_, dt) if matches!(dt.deref(), DefTInner::ReactAbstractComponentT(_))
                         ) =>
                 {
                     let mut subst_map = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
@@ -969,22 +989,24 @@ fn elab_t_concrete<'cx>(
                     );
                     elab_t(cx, dst_cx, Some(seen), t_, op)
                 }
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams,
                     ..
-                } => {
+                }) => {
                     let reason_tapp = def_reason.dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EMissingTypeArgs {
-                            reason_op: reason.dupe(),
-                            reason_tapp,
-                            arity_loc: tparams_loc.dupe(),
-                            min_arity: tparams.iter().filter(|tp| tp.default.is_none()).count()
-                                as i32,
-                            max_arity: tparams.len() as i32,
-                        },
+                        flow_typing_errors::error_message::ErrorMessage::EMissingTypeArgs(
+                            Box::new(EMissingTypeArgsData {
+                                reason_op: reason.dupe(),
+                                reason_tapp,
+                                arity_loc: tparams_loc.dupe(),
+                                min_arity: tparams.iter().filter(|tp| tp.default.is_none()).count()
+                                    as i32,
+                                max_arity: tparams.len() as i32,
+                            }),
+                        ),
                     );
                     any_t::error(reason.dupe())
                 }
@@ -1013,7 +1035,7 @@ fn elab_t_concrete<'cx>(
                     _ => reposition(cx, reason.loc().dupe(), instance.dupe()),
                 },
                 // a component syntax value annotation becomes an element of that component
-                DefTInner::ReactAbstractComponentT { .. } => {
+                DefTInner::ReactAbstractComponentT(_) => {
                     get_builtin_typeapp(cx, reason.dupe(), "React$RendersExactly", vec![t.dupe()])
                 }
                 DefTInner::TypeT(_, l) => l.dupe(),
@@ -1023,10 +1045,14 @@ fn elab_t_concrete<'cx>(
                     let enum_reason = def_reason.dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EEnumError(flow_typing_errors::error_message::EnumErrorKind::EnumMemberUsedAsType {
-                            reason: reason.dupe(),
-                            enum_reason,
-                        }),
+                        flow_typing_errors::error_message::ErrorMessage::EEnumError(
+                            flow_typing_errors::error_message::EnumErrorKind::EnumMemberUsedAsType(
+                                Box::new(EnumMemberUsedAsTypeData {
+                                    reason: reason.dupe(),
+                                    enum_reason,
+                                }),
+                            ),
+                        ),
                     );
                     any_t::error(reason.dupe())
                 }
@@ -1262,22 +1288,14 @@ fn elab_t_concrete<'cx>(
         // ******************************
         //  Union and intersection types
         // ******************************
-        (
-            TypeInner::UnionT(_, _),
-            OpInner::AnnotObjKitT {
-                reason,
-                use_op,
-                resolve_tool,
-                tool,
-            },
-        ) => object_kit_concrete(
+        (TypeInner::UnionT(_, _), OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
             dst_cx,
-            use_op.dupe(),
+            data.use_op.dupe(),
             &op,
-            reason.dupe(),
-            resolve_tool.clone(),
-            tool.clone(),
+            data.reason.dupe(),
+            data.resolve_tool.clone(),
+            data.tool.clone(),
             t,
         ),
         (TypeInner::UnionT(_, rep), _) => {
@@ -1288,22 +1306,14 @@ fn elab_t_concrete<'cx>(
                 .collect();
             type_util::union_of_ts(reason, ts, None)
         }
-        (
-            TypeInner::IntersectionT(_, _),
-            OpInner::AnnotObjKitT {
-                reason,
-                use_op,
-                resolve_tool,
-                tool,
-            },
-        ) => object_kit_concrete(
+        (TypeInner::IntersectionT(_, _), OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
             dst_cx,
-            use_op.dupe(),
+            data.use_op.dupe(),
             &op,
-            reason.dupe(),
-            resolve_tool.clone(),
-            tool.clone(),
+            data.reason.dupe(),
+            data.resolve_tool.clone(),
+            data.tool.clone(),
             t,
         ),
         (TypeInner::IntersectionT(reason, _), _) => {
@@ -1442,12 +1452,12 @@ fn elab_t_concrete<'cx>(
                             )
                         }
                     }
-                    DefTInner::PolyT {
+                    DefTInner::PolyT(box PolyTData {
                         tparams_loc,
                         tparams: xs,
                         t_out,
                         ..
-                    } => {
+                    }) => {
                         if let TypeInner::DefT(class_r2, inner_def_t) = t_out.deref() {
                             if let DefTInner::ClassT(inner) = inner_def_t.deref() {
                                 if let TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -1507,30 +1517,24 @@ fn elab_t_concrete<'cx>(
         // ********************
         //  Type specialization
         // ********************
-        (
-            TypeInner::DefT(_, def_t),
-            OpInner::AnnotSpecializeT {
-                use_op,
-                reason,
-                reason2: reason_tapp,
-                types,
-            },
-        ) if let DefTInner::PolyT {
-            tparams_loc,
-            tparams: xs,
-            t_out,
-            id,
-        } = def_t.deref() =>
+        (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT(data))
+            if let DefTInner::PolyT(box PolyTData {
+                tparams_loc,
+                tparams: xs,
+                t_out,
+                id,
+            }) = def_t.deref() =>
         {
-            let ts: Rc<[Type]> = types
+            let ts: Rc<[Type]> = data
+                .types
                 .as_ref()
                 .map(|rc| rc.dupe())
                 .unwrap_or_else(|| Rc::from([]));
             mk_typeapp_of_poly(
                 cx,
-                use_op.dupe(),
-                reason.dupe(),
-                reason_tapp.dupe(),
+                data.use_op.dupe(),
+                data.reason.dupe(),
+                data.reason2.dupe(),
                 id.clone(),
                 tparams_loc.dupe(),
                 xs.to_vec(),
@@ -1538,12 +1542,12 @@ fn elab_t_concrete<'cx>(
                 ts,
             )
         }
-        (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT { types: None, .. })
-            if matches!(def_t.deref(), DefTInner::ClassT(_)) =>
+        (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT(data))
+            if data.types.is_none() && matches!(def_t.deref(), DefTInner::ClassT(_)) =>
         {
             t
         }
-        (TypeInner::AnyT(_, _), OpInner::AnnotSpecializeT { .. }) => t,
+        (TypeInner::AnyT(_, _), OpInner::AnnotSpecializeT(_)) => t,
         (
             TypeInner::DefT(_, def_t),
             OpInner::AnnotThisSpecializeT {
@@ -1594,12 +1598,12 @@ fn elab_t_concrete<'cx>(
         //  Type instantiation
         // *********************
         (TypeInner::DefT(reason_tapp, def_t), _)
-            if let DefTInner::PolyT {
+            if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams: ids,
                 t_out,
                 ..
-            } = def_t.deref() =>
+            }) = def_t.deref() =>
         {
             let use_op = type_::unknown_use();
             let reason_op = op.reason();
@@ -1638,10 +1642,10 @@ fn elab_t_concrete<'cx>(
         //  React Abstract Components
         // ***************************
         (TypeInner::DefT(reason, def_t), _)
-            if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT { .. })
+            if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT(_))
                 && matches!(
                     op.deref(),
-                    OpInner::AnnotGetPropT { .. } | OpInner::AnnotGetElemT { .. }
+                    OpInner::AnnotGetPropT(_) | OpInner::AnnotGetElemT { .. }
                 ) =>
         {
             let statics = flow_js_utils::lookup_builtin_type(
@@ -1668,10 +1672,10 @@ fn elab_t_concrete<'cx>(
             } else {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    flow_typing_errors::error_message::ErrorMessage::EInvalidPrototype(
+                    flow_typing_errors::error_message::ErrorMessage::EInvalidPrototype(Box::new((
                         reason_op.loc().dupe(),
                         type_util::reason_of_t(&t).dupe(),
-                    ),
+                    ))),
                 );
                 type_::obj_proto::why(reason_op.dupe())
             }
@@ -1696,18 +1700,14 @@ fn elab_t_concrete<'cx>(
         // *************
         //  LookupT pt1
         // *************
-        (TypeInner::AnyT(_, _), OpInner::AnnotLookupT { reason, .. }) => {
-            any_t::untyped(reason.dupe())
-        }
-        (
-            _,
-            OpInner::AnnotLookupT {
+        (TypeInner::AnyT(_, _), OpInner::AnnotLookupT(data)) => any_t::untyped(data.reason.dupe()),
+        (_, OpInner::AnnotLookupT(data)) => {
+            let AnnotLookupTData {
                 reason: reason_op,
                 use_op,
                 prop_ref: propref,
                 type_: objt,
-            },
-        ) => {
+            } = data.as_ref();
             use flow_typing_flow_common::flow_js_utils::get_prop_t_kit;
             use flow_typing_type::type_::property;
 
@@ -1828,13 +1828,15 @@ fn elab_t_concrete<'cx>(
                 {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup {
-                            reason_prop: reason_prop.dupe(),
-                            reason_obj: reason_op.dupe(),
-                            prop_name: Some(name.dupe()),
-                            use_op: use_op.dupe(),
-                            suggestion: None,
-                        },
+                        flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(
+                            Box::new(EPropNotFoundInLookupData {
+                                reason_prop: reason_prop.dupe(),
+                                reason_obj: reason_op.dupe(),
+                                prop_name: Some(name.dupe()),
+                                use_op: use_op.dupe(),
+                                suggestion: None,
+                            }),
+                        ),
                     );
                     any_t::error_of_kind(type_::AnyErrorKind::UnresolvedName, reason_op.dupe())
                 }
@@ -1847,13 +1849,15 @@ fn elab_t_concrete<'cx>(
                 {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup {
-                            reason_prop: reason_prop.dupe(),
-                            reason_obj: reason_op.dupe(),
-                            prop_name: Some(name.dupe()),
-                            use_op: use_op.dupe(),
-                            suggestion: None,
-                        },
+                        flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(
+                            Box::new(EPropNotFoundInLookupData {
+                                reason_prop: reason_prop.dupe(),
+                                reason_obj: reason_op.dupe(),
+                                prop_name: Some(name.dupe()),
+                                use_op: use_op.dupe(),
+                                suggestion: None,
+                            }),
+                        ),
                     );
                     any_t::error_of_kind(type_::AnyErrorKind::UnresolvedName, reason_op.dupe())
                 }
@@ -1864,18 +1868,11 @@ fn elab_t_concrete<'cx>(
         // ******
         //  DRO
         // ******
-        (
-            _,
-            OpInner::AnnotDeepReadOnlyT {
-                reason: _,
-                loc: dro_loc,
-                dro_type: dro_kind,
-            },
-        ) => {
+        (_, OpInner::AnnotDeepReadOnlyT(data)) => {
             use flow_typing_type::type_::ArrType;
             use flow_typing_type::type_::ReactDro;
 
-            let dro = Some(ReactDro(dro_loc.dupe(), dro_kind.clone()));
+            let dro = Some(ReactDro(data.loc.dupe(), data.dro_type.clone()));
 
             match t.deref() {
                 TypeInner::DefT(r, def_t) => match def_t.deref() {
@@ -2003,11 +2000,13 @@ fn elab_t_concrete<'cx>(
                     let use_op = op.use_op();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EIncompatible {
-                            lower,
-                            upper,
-                            use_op,
-                        },
+                        flow_typing_errors::error_message::ErrorMessage::EIncompatible(Box::new(
+                            EIncompatibleData {
+                                lower,
+                                upper,
+                                use_op,
+                            },
+                        )),
                     );
                     any_t::error(reason_op_catch)
                 }
@@ -2017,14 +2016,12 @@ fn elab_t_concrete<'cx>(
         // **********************************
         //  Namespace and type qualification
         // **********************************
-        (
-            TypeInner::NamespaceT(ns),
-            OpInner::AnnotGetTypeFromNamespaceT {
+        (TypeInner::NamespaceT(ns), OpInner::AnnotGetTypeFromNamespaceT(data)) => {
+            let AnnotGetTypeFromNamespaceTData {
                 reason,
                 use_op,
                 prop_ref,
-            },
-        ) => {
+            } = data.as_ref();
             let (prop_ref_reason, prop_name) = prop_ref;
             match cx
                 .find_props(ns.types_tmap.dupe())
@@ -2037,7 +2034,7 @@ fn elab_t_concrete<'cx>(
                     dst_cx,
                     Some(seen),
                     ns.values_type.dupe(),
-                    Op::new(OpInner::AnnotGetPropT {
+                    Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
                         reason: reason.dupe(),
                         use_op: use_op.dupe(),
                         from_annot: false,
@@ -2046,26 +2043,24 @@ fn elab_t_concrete<'cx>(
                             false,
                             prop_name.dupe(),
                         ),
-                    }),
+                    }))),
                 ),
             }
         }
         (TypeInner::NamespaceT(ns), _) => elab_t(cx, dst_cx, Some(seen), ns.values_type.dupe(), op),
-        (
-            _,
-            OpInner::AnnotGetTypeFromNamespaceT {
+        (_, OpInner::AnnotGetTypeFromNamespaceT(data)) => {
+            let AnnotGetTypeFromNamespaceTData {
                 reason,
                 use_op,
                 prop_ref,
-            },
-        ) => {
+            } = data.as_ref();
             let (prop_ref_reason, prop_name) = prop_ref;
             elab_t(
                 cx,
                 dst_cx,
                 Some(seen),
                 t,
-                Op::new(OpInner::AnnotGetPropT {
+                Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
                     reason: reason.dupe(),
                     use_op: use_op.dupe(),
                     from_annot: false,
@@ -2074,24 +2069,23 @@ fn elab_t_concrete<'cx>(
                         false,
                         prop_name.dupe(),
                     ),
-                }),
+                }))),
             )
         }
         // **********
         //  GetPropT
         // **********
-        (TypeInner::AnyT(_, _), OpInner::AnnotGetPropT { reason, .. }) => {
-            Type::new(TypeInner::AnyT(reason.dupe(), type_::AnySource::Untyped))
-        }
-        (
-            _,
-            OpInner::AnnotGetPropT {
+        (TypeInner::AnyT(_, _), OpInner::AnnotGetPropT(data)) => Type::new(TypeInner::AnyT(
+            data.reason.dupe(),
+            type_::AnySource::Untyped,
+        )),
+        (_, OpInner::AnnotGetPropT(data)) => {
+            let AnnotGetPropTData {
                 reason: reason_op,
                 use_op,
                 from_annot,
                 prop_ref: propref,
-            },
-        ) => {
+            } = data.as_ref();
             use flow_typing_flow_common::flow_js_utils::get_prop_t_kit;
 
             match t.deref() {
@@ -2245,22 +2239,14 @@ fn elab_t_concrete<'cx>(
         // ************
         //  Object Kit
         // ************
-        (
-            _,
-            OpInner::AnnotObjKitT {
-                reason,
-                use_op,
-                resolve_tool,
-                tool,
-            },
-        ) => object_kit_concrete(
+        (_, OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
             dst_cx,
-            use_op.dupe(),
+            data.use_op.dupe(),
             &op,
-            reason.dupe(),
-            resolve_tool.clone(),
-            tool.clone(),
+            data.reason.dupe(),
+            data.resolve_tool.clone(),
+            data.tool.clone(),
             t,
         ),
         // ******************
@@ -2346,12 +2332,12 @@ fn elab_t_concrete<'cx>(
                         dst_cx,
                         Some(seen),
                         source_type,
-                        Op::new(OpInner::AnnotGetPropT {
+                        Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
                             reason: reason_op.dupe(),
                             from_annot: *from_annot,
                             use_op: use_op.dupe(),
                             prop_ref,
-                        }),
+                        }))),
                     )
                 }
                 (_, TypeInner::AnyT(_, _)) => {
@@ -2422,15 +2408,13 @@ fn elab_t_concrete<'cx>(
         // ************************
         //  Binary arith operators
         // ************************
-        (
-            _,
-            OpInner::AnnotArithT {
+        (_, OpInner::AnnotArithT(data)) => {
+            let AnnotArithTData {
                 reason,
                 flip,
                 rhs_t,
                 kind,
-            },
-        ) => {
+            } = data.as_ref();
             let rhs_type = rhs_t.dupe();
             if flow_js_utils::needs_resolution(&rhs_type) || flow_js_utils::is_generic(&rhs_type) {
                 elab_t(
@@ -2438,12 +2422,12 @@ fn elab_t_concrete<'cx>(
                     dst_cx,
                     Some(seen),
                     rhs_type,
-                    Op::new(OpInner::AnnotArithT {
+                    Op::new(OpInner::AnnotArithT(Box::new(AnnotArithTData {
                         reason: reason.dupe(),
                         flip: !flip,
                         rhs_t: t.dupe(),
                         kind: kind.clone(),
-                    }),
+                    }))),
                 )
             } else {
                 let (lhs_t, rhs_t) = if *flip {
@@ -2518,12 +2502,14 @@ fn elab_t_concrete<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EEnumError(
-                    flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess {
-                        member_name: None,
-                        suggestion: None,
-                        reason: reason.dupe(),
-                        enum_reason: enum_reason.dupe(),
-                    },
+                    flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess(
+                        Box::new(EnumInvalidMemberAccessData {
+                            member_name: None,
+                            suggestion: None,
+                            reason: reason.dupe(),
+                            enum_reason: enum_reason.dupe(),
+                        }),
+                    ),
                 ),
             );
             any_t::error(reason_op.dupe())
@@ -2584,7 +2570,7 @@ fn elab_t_concrete<'cx>(
                 DefTInner::MixedT(type_::MixedFlavor::MixedFunction)
             ) && matches!(
                 op.deref(),
-                OpInner::AnnotGetPropT { .. } | OpInner::AnnotLookupT { .. }
+                OpInner::AnnotGetPropT(_) | OpInner::AnnotLookupT(_)
             ) =>
         {
             elab_t(
@@ -2664,7 +2650,7 @@ fn elab_t_wildcard_op<'cx>(
         )
         && matches!(
             op.deref(),
-            OpInner::AnnotGetPropT { .. } | OpInner::AnnotLookupT { .. }
+            OpInner::AnnotGetPropT(_) | OpInner::AnnotLookupT(_)
         )
     {
         return elab_t(
@@ -2703,12 +2689,12 @@ pub fn specialize<'cx>(
         &effective_dst_cx(cx),
         None,
         t,
-        Op::new(OpInner::AnnotSpecializeT {
+        Op::new(OpInner::AnnotSpecializeT(Box::new(AnnotSpecializeTData {
             use_op,
             reason: reason_op,
             reason2: reason_tapp,
             types: ts,
-        }),
+        }))),
     )
 }
 
@@ -2860,12 +2846,12 @@ pub fn get_prop<'cx>(
         &effective_dst_cx(cx),
         None,
         t,
-        Op::new(OpInner::AnnotGetPropT {
+        Op::new(OpInner::AnnotGetPropT(Box::new(AnnotGetPropTData {
             reason: op_reason,
             use_op,
             from_annot: false,
             prop_ref: type_util::mk_named_prop(reason, false, name),
-        }),
+        }))),
     )
 }
 
@@ -2903,11 +2889,13 @@ pub fn qualify_type<'cx>(
             &dst_cx,
             None,
             t2.dupe(),
-            Op::new(OpInner::AnnotGetTypeFromNamespaceT {
-                reason: op_reason2.dupe(),
-                use_op: use_op2.dupe(),
-                prop_ref: (reason2.dupe(), prop_name2.dupe()),
-            }),
+            Op::new(OpInner::AnnotGetTypeFromNamespaceT(Box::new(
+                AnnotGetTypeFromNamespaceTData {
+                    reason: op_reason2.dupe(),
+                    use_op: use_op2.dupe(),
+                    prop_ref: (reason2.dupe(), prop_name2.dupe()),
+                },
+            ))),
         );
         resolve_id(cx, &dst_cx, op_reason2, id, t);
     })
@@ -3285,12 +3273,12 @@ pub fn arith<'cx>(
         &effective_dst_cx(cx),
         None,
         lhs_t,
-        Op::new(OpInner::AnnotArithT {
+        Op::new(OpInner::AnnotArithT(Box::new(AnnotArithTData {
             reason,
             flip: false,
             rhs_t,
             kind,
-        }),
+        }))),
     )
 }
 
@@ -3505,12 +3493,12 @@ fn object_kit<'cx>(
         dst_cx,
         None,
         t,
-        Op::new(OpInner::AnnotObjKitT {
+        Op::new(OpInner::AnnotObjKitT(Box::new(AnnotObjKitTData {
             reason,
             use_op,
             resolve_tool,
             tool,
-        }),
+        }))),
     )
 }
 

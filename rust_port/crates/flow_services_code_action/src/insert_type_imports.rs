@@ -229,14 +229,12 @@ pub mod exports_helper {
                     default: true,
                 })
             }
-            Some(type_sig_pack::Packed::Value(box type_sig::Value::ObjLit { props, .. }))
-                if props.contains_key(remote_name) =>
-            {
-                Some(ImportInfo {
-                    import_kind,
-                    default: false,
-                })
-            }
+            Some(type_sig_pack::Packed::Value(box type_sig::Value::ObjLit(
+                box type_sig::ValueObjLit { props, .. },
+            ))) if props.contains_key(remote_name) => Some(ImportInfo {
+                import_kind,
+                default: false,
+            }),
             _ => None,
         }
     }
@@ -786,7 +784,7 @@ pub mod imports_helper {
                     // OCaml equivalent: self#convert_symbol (direct method call on enclosing class)
                     let converter = self.converter;
                     match t.as_ref() {
-                        ty::Ty::TypeOf(ty::BuiltinOrSymbol::TSymbol(s), None)
+                        ty::Ty::TypeOf(box (ty::BuiltinOrSymbol::TSymbol(s), None))
                             if !s.sym_anonymous
                                 && matches!(
                                     &s.sym_provenance,
@@ -797,16 +795,18 @@ pub mod imports_helper {
                                 ) =>
                         {
                             match converter.convert_symbol(UseMode::ValueUseMode, s) {
-                                Ok(local) => {
-                                    Arc::new(ty::Ty::Generic((local, ty::GenKind::ClassKind, None)))
-                                }
+                                Ok(local) => Arc::new(ty::Ty::Generic(Box::new((
+                                    local,
+                                    ty::GenKind::ClassKind,
+                                    None,
+                                )))),
                                 Err(err) => {
                                     self.error = Some(err);
                                     t
                                 }
                             }
                         }
-                        ty::Ty::TypeOf(
+                        ty::Ty::TypeOf(box (
                             ty::BuiltinOrSymbol::TSymbol(Symbol {
                                 sym_provenance:
                                     Provenance::Remote(RemoteInfo {
@@ -821,14 +821,18 @@ pub mod imports_helper {
                                 ..
                             }),
                             None,
-                        ) => {
+                        )) => {
                             let local = Symbol {
                                 sym_provenance: Provenance::Local,
                                 sym_def_loc: sym_def_loc.dupe(),
                                 sym_name: flow_common::reason::Name::new(sym_name.as_str()),
                                 sym_anonymous: false,
                             };
-                            Arc::new(ty::Ty::Generic((local, ty::GenKind::ClassKind, None)))
+                            Arc::new(ty::Ty::Generic(Box::new((
+                                local,
+                                ty::GenKind::ClassKind,
+                                None,
+                            ))))
                         }
                         _ => self.default_on_t(env, t),
                     }

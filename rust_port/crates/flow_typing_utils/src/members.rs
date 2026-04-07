@@ -36,6 +36,7 @@ use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ObjKind;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ThisInstanceTData;
@@ -193,16 +194,12 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                         ),
                         (Some(p1), Some(p2)) => match (p1.deref(), p2.deref()) {
                             // Covariant fields can be merged.
-                            (
-                                PropertyInner::Field {
-                                    polarity: Polarity::Positive,
-                                    ..
-                                },
-                                PropertyInner::Field {
-                                    polarity: Polarity::Positive,
-                                    ..
-                                },
-                            ) => Some(true),
+                            (PropertyInner::Field(fd1), PropertyInner::Field(fd2))
+                                if fd1.polarity == Polarity::Positive
+                                    && fd2.polarity == Polarity::Positive =>
+                            {
+                                Some(true)
+                            }
                             // Getters are covariant and thus can be merged.
                             (PropertyInner::Get { .. }, PropertyInner::Get { .. }) => Some(true),
                             // Anything else is can't be merged.
@@ -608,11 +605,11 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
 fn instantiate_poly_t<'cx>(cx: &Context<'cx>, t: Type, args: Option<&[Type]>) -> Type {
     match t.deref() {
         TypeInner::DefT(_, def_t) => match def_t.deref() {
-            DefTInner::PolyT {
+            DefTInner::PolyT(box PolyTData {
                 tparams: type_params,
                 t_out,
                 ..
-            } => {
+            }) => {
                 let args = args.map(|s| s.to_vec()).unwrap_or_default();
                 let maximum_arity = type_params.len();
                 if args.len() > maximum_arity {
@@ -905,7 +902,7 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
             DefTInner::ObjT(_) => GenericT::Success(this_t),
             DefTInner::EnumObjectT { .. } => GenericT::Success(this_t),
             // TODO: replace type parameters with stable/proper names?
-            DefTInner::PolyT { t_out, .. } => extract_type(cx, t_out.dupe()),
+            DefTInner::PolyT(box PolyTData { t_out, .. }) => extract_type(cx, t_out.dupe()),
             DefTInner::ClassT(inner) => match inner.deref() {
                 TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
                     extract_type(cx, instance.static_.dupe())
@@ -954,7 +951,7 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
                     Err(_) => GenericT::FailureUnhandledType(this_t),
                 }
             }
-            DefTInner::ReactAbstractComponentT { .. } => GenericT::Success(this_t),
+            DefTInner::ReactAbstractComponentT(_) => GenericT::Success(this_t),
             DefTInner::RendersT(_) => GenericT::Success(this_t),
             DefTInner::ArrT(arrtype) => {
                 let (builtin, elem_t) = match arrtype.deref() {
@@ -1021,10 +1018,10 @@ pub fn extract_members<'cx>(
                     // property in autocomplete, so for now we just return the getter
                     // type.
                     let t = match p.deref() {
-                        PropertyInner::Field { type_, .. } => type_.dupe(),
+                        PropertyInner::Field(fd) => fd.type_.dupe(),
                         PropertyInner::Get { type_, .. } => type_.dupe(),
                         PropertyInner::Set { type_, .. } => type_.dupe(),
-                        PropertyInner::GetSet { get_type, .. } => get_type.dupe(),
+                        PropertyInner::GetSet(gs) => gs.get_type.dupe(),
                         PropertyInner::Method { type_, .. } => type_.dupe(),
                     };
                     let locs = flow_typing_type::type_::property::def_locs(p);

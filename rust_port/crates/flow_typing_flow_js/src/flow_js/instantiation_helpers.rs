@@ -9,6 +9,7 @@ use std::rc::Rc;
 
 use flow_typing_flow_common::instantiation_utils::implicit_type_argument;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
+use flow_typing_type::type_::SpecializeTData;
 
 use super::helpers::*;
 use super::*;
@@ -234,13 +235,13 @@ pub(super) fn instantiate_this_class<'cx>(
                 trace,
                 (
                     c,
-                    &UseT::new(UseTInner::SpecializeT(
-                        unknown_use(),
-                        reason_op.dupe(),
-                        reason_tapp.dupe(),
-                        Some(ts),
-                        tout.dupe(),
-                    )),
+                    &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
+                        use_op: unknown_use(),
+                        reason: reason_op.dupe(),
+                        reason2: reason_tapp.dupe(),
+                        targs: Some(ts),
+                        tvar: tout.dupe(),
+                    }))),
                 ),
             )
         })?,

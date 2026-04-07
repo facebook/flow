@@ -369,6 +369,8 @@ pub fn def_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     def_t: &DefT,
 ) -> Acc {
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
+    use flow_typing_type::type_::ReactAbstractComponentTData;
     match &**def_t {
         DefTInner::NumGeneralT(_)
         | DefTInner::StrGeneralT(_)
@@ -421,18 +423,18 @@ pub fn def_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
 
         DefTInner::TypeT(_, t) => visitor.type_(cx, pole, acc, t),
 
-        DefTInner::PolyT { tparams, t_out, .. } => {
+        DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) => {
             let acc = tparams
                 .iter()
                 .fold(acc, |acc, tp| visitor.type_param(cx, pole, acc, tp));
             visitor.type_(cx, pole, acc, t_out)
         }
 
-        DefTInner::ReactAbstractComponentT {
+        DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
             config,
             renders,
             component_kind,
-        } => {
+        }) => {
             let acc = visitor.type_(cx, pole.inv(), acc, config);
             let acc = visitor.type_(cx, pole, acc, renders);
             match component_kind {
@@ -719,17 +721,15 @@ pub fn prop_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
 ) -> Acc {
     use flow_typing_type::type_::PropertyInner;
     match prop.deref() {
-        PropertyInner::Field {
-            type_, polarity, ..
-        } => visitor.type_(cx, Polarity::mult(pole, *polarity), acc, type_),
+        PropertyInner::Field(fd) => {
+            visitor.type_(cx, Polarity::mult(pole, fd.polarity), acc, &fd.type_)
+        }
         PropertyInner::Method { type_, .. } => visitor.type_(cx, pole, acc, type_),
         PropertyInner::Get { type_, .. } => visitor.type_(cx, pole, acc, type_),
         PropertyInner::Set { type_, .. } => visitor.type_(cx, pole.inv(), acc, type_),
-        PropertyInner::GetSet {
-            get_type, set_type, ..
-        } => {
-            let acc = visitor.type_(cx, pole, acc, get_type);
-            visitor.type_(cx, pole.inv(), acc, set_type)
+        PropertyInner::GetSet(gs) => {
+            let acc = visitor.type_(cx, pole, acc, &gs.get_type);
+            visitor.type_(cx, pole.inv(), acc, &gs.set_type)
         }
     }
 }
@@ -1023,15 +1023,13 @@ pub fn object_kit_spread_operand_slice_default<'cx, Acc, V: TypeVisitor<Acc> + ?
     let acc = prop_map.values().fold(acc, |acc, prop| {
         use flow_typing_type::type_::PropertyInner;
         match prop.deref() {
-            PropertyInner::Field { type_, .. }
-            | PropertyInner::Method { type_, .. }
+            PropertyInner::Field(fd) => visitor.type_(cx, pole_todo(), acc, &fd.type_),
+            PropertyInner::Method { type_, .. }
             | PropertyInner::Get { type_, .. }
             | PropertyInner::Set { type_, .. } => visitor.type_(cx, pole_todo(), acc, type_),
-            PropertyInner::GetSet {
-                get_type, set_type, ..
-            } => {
-                let acc = visitor.type_(cx, pole_todo(), acc, get_type);
-                visitor.type_(cx, pole_todo(), acc, set_type)
+            PropertyInner::GetSet(gs) => {
+                let acc = visitor.type_(cx, pole_todo(), acc, &gs.get_type);
+                visitor.type_(cx, pole_todo(), acc, &gs.set_type)
             }
         }
     });

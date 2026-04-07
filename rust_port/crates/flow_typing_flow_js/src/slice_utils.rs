@@ -19,6 +19,15 @@ use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::ECannotSpreadIndexerOnRightData;
+use flow_typing_errors::error_message::ECannotSpreadInterfaceData;
+use flow_typing_errors::error_message::EDuplicateComponentPropData;
+use flow_typing_errors::error_message::EExponentialSpreadData;
+use flow_typing_errors::error_message::EInexactMayOverwriteIndexerData;
+use flow_typing_errors::error_message::EInvalidObjectKitData;
+use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_errors::error_message::ERefComponentPropData;
+use flow_typing_errors::error_message::EUnableToSpreadData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::intermediate_error_types;
@@ -32,6 +41,7 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::DictType;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::Flags;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::InstType;
@@ -462,21 +472,23 @@ fn spread2<'cx>(
             // We take dict1 because we want to use the key from d1
             Ok(Some(d1.clone()))
         }
-        (_, Some(d2)) => Err(Box::new(ErrorMessage::ECannotSpreadIndexerOnRight {
-            spread_reason: reason.dupe(),
-            object_reason: r2.dupe(),
-            key_reason: type_util::reason_of_t(&d2.key).dupe(),
-            use_op: use_op.dupe(),
-        })),
-        (Some(d1), _) if !(exact2 || *inline2) => {
-            Err(Box::new(ErrorMessage::EInexactMayOverwriteIndexer {
+        (_, Some(d2)) => Err(Box::new(ErrorMessage::ECannotSpreadIndexerOnRight(
+            Box::new(ECannotSpreadIndexerOnRightData {
+                spread_reason: reason.dupe(),
+                object_reason: r2.dupe(),
+                key_reason: type_util::reason_of_t(&d2.key).dupe(),
+                use_op: use_op.dupe(),
+            }),
+        ))),
+        (Some(d1), _) if !(exact2 || *inline2) => Err(Box::new(
+            ErrorMessage::EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
                 spread_reason: reason.dupe(),
                 key_reason: type_util::reason_of_t(&d1.key).dupe(),
                 value_reason: type_util::reason_of_t(&d1.value).dupe(),
                 object2_reason: r2.dupe(),
                 use_op: use_op.dupe(),
-            }))
-        }
+            })),
+        )),
         (d1, _) => Ok(d1.cloned()),
     };
     let dict = dict.map_err(|e| FlowJsException::Speculative(SpeculativeError(e)))?;
@@ -562,7 +574,7 @@ fn spread2<'cx>(
                         })
                     } else {
                         return Err(FlowJsException::Speculative(SpeculativeError(Box::new(
-                            ErrorMessage::EUnableToSpread {
+                            ErrorMessage::EUnableToSpread(Box::new(EUnableToSpreadData {
                                 spread_reason: reason.dupe(),
                                 object1_reason: r1.dupe(),
                                 object2_reason: r2.dupe(),
@@ -570,7 +582,7 @@ fn spread2<'cx>(
                                 error_kind:
                                     intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
                                 use_op: use_op.dupe(),
-                            },
+                            })),
                         ))));
                     }
                 }
@@ -605,14 +617,14 @@ fn spread2<'cx>(
                                 Some(r) => r.dupe(),
                             };
                             return Err(FlowJsException::Speculative(SpeculativeError(Box::new(
-                                ErrorMessage::EUnableToSpread {
+                                ErrorMessage::EUnableToSpread(Box::new(EUnableToSpreadData {
                                     spread_reason: reason.dupe(),
                                     object1_reason: r2.dupe(),
                                     object2_reason: inexact_reason,
                                     propname: x,
                                     error_kind,
                                     use_op: use_op.dupe(),
-                                },
+                                })),
                             ))));
                         }
                         _ => Some(object::Prop {
@@ -803,12 +815,12 @@ pub fn spread_mk_object<'cx>(
                     type_: mk_dro(p.prop_t.dupe()),
                 })
             } else {
-                Property::new(PropertyInner::Field {
+                Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc: p.key_loc.dupe(),
                     type_: mk_dro(p.prop_t.dupe()),
                     polarity: Polarity::object_literal_polarity(positive_polarity),
-                })
+                })))
             };
             (k.dupe(), prop)
         })
@@ -921,11 +933,11 @@ pub fn object_spread<'cx, A>(
             flow_typing_spread_cache::get_error_groups(cache, spread_id);
         add_output(
             cx,
-            ErrorMessage::EExponentialSpread {
+            ErrorMessage::EExponentialSpread(Box::new(EExponentialSpreadData {
                 reason: reason.dupe(),
                 reasons_for_operand1,
                 reasons_for_operand2,
-            },
+            })),
         )?;
         return return_(cx, use_op, any_t::error(reason.dupe()));
     }
@@ -1055,12 +1067,12 @@ fn check_config2<'cx>(
                     type_: p.prop_t.dupe(),
                 })
             } else {
-                Property::new(PropertyInner::Field {
+                Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc: p.key_loc.dupe(),
                     type_: p.prop_t.dupe(),
                     polarity: Polarity::Positive,
-                })
+                })))
             };
             (k.dupe(), prop)
         })
@@ -1104,20 +1116,20 @@ pub fn check_component_config<'cx, A>(
                 let duplicates = Vec1::try_from_vec(duplicate_props_in_spread).unwrap();
                 add_output(
                     cx,
-                    ErrorMessage::EDuplicateComponentProp {
+                    ErrorMessage::EDuplicateComponentProp(Box::new(EDuplicateComponentPropData {
                         spread: xelt.reason.loc().dupe(),
                         duplicates,
-                    },
+                    })),
                 )?;
             }
             if !allow_ref_in_spread {
                 if let Some(loc) = ref_prop_in_spread {
                     add_output(
                         cx,
-                        ErrorMessage::ERefComponentProp {
+                        ErrorMessage::ERefComponentProp(Box::new(ERefComponentPropData {
                             spread: xelt.reason.loc().dupe(),
                             loc,
-                        },
+                        })),
                     )?;
                 }
             }
@@ -1247,12 +1259,12 @@ pub fn object_rest<'cx, A>(
                             type_: p1.prop_t.dupe(),
                         })
                     } else {
-                        Property::new(PropertyInner::Field {
+                        Property::new(PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc: p1.key_loc.dupe(),
                             type_: p1.prop_t.dupe(),
                             polarity: Polarity::Positive,
-                        })
+                        })))
                     };
                     Some(prop)
                 }
@@ -1263,12 +1275,12 @@ pub fn object_rest<'cx, A>(
                             type_: p1.prop_t.dupe(),
                         })
                     } else {
-                        Property::new(PropertyInner::Field {
+                        Property::new(PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc: p1.key_loc.dupe(),
                             type_: p1.prop_t.dupe(),
                             polarity: p1.polarity,
-                        })
+                        })))
                     };
                     Some(prop)
                 }
@@ -1309,12 +1321,12 @@ pub fn object_rest<'cx, A>(
                                     type_: p1.prop_t.dupe(),
                                 })
                             } else {
-                                Property::new(PropertyInner::Field {
+                                Property::new(PropertyInner::Field(Box::new(FieldData {
                                     preferred_def_locs: None,
                                     key_loc: p1.key_loc.dupe(),
                                     type_: p1.prop_t.dupe(),
                                     polarity: Polarity::Neutral,
-                                })
+                                })))
                             };
                             Some(prop)
                         }
@@ -1335,12 +1347,12 @@ pub fn object_rest<'cx, A>(
                                     type_: optional(p1.prop_t.dupe()),
                                 })
                             } else {
-                                Property::new(PropertyInner::Field {
+                                Property::new(PropertyInner::Field(Box::new(FieldData {
                                     preferred_def_locs: None,
                                     key_loc: p1.key_loc.dupe(),
                                     type_: optional(p1.prop_t.dupe()),
                                     polarity: Polarity::Positive,
-                                })
+                                })))
                             };
                             Some(prop)
                         }
@@ -1360,13 +1372,15 @@ pub fn object_rest<'cx, A>(
                 // then we need to throw an error.
                 (object::rest::MergeMode::ReactConfigMerge(_), None, Some(_), _) => {
                     if obj_type::is_exact(&flags1.obj_kind) {
-                        let err = ErrorMessage::EPropNotFoundInSubtyping {
-                            prop_name: Some(k.dupe()),
-                            reason_lower: r2.dupe(),
-                            reason_upper: r1.dupe(),
-                            use_op: unknown_use(),
-                            suggestion: None,
-                        };
+                        let err = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                            EPropNotFoundInSubtypingData {
+                                prop_name: Some(k.dupe()),
+                                reason_lower: r2.dupe(),
+                                reason_upper: r1.dupe(),
+                                use_op: unknown_use(),
+                                suggestion: None,
+                            },
+                        ));
                         add_output(cx, err)?;
                     }
                     None
@@ -1490,7 +1504,7 @@ pub fn object_make_exact<'cx>(
             Some(_) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EUnsupportedExact(reason.dupe(), r.dupe()),
+                    ErrorMessage::EUnsupportedExact(Box::new((reason.dupe(), r.dupe()))),
                 )?;
                 Ok(any_t::error(reason.dupe()))
             }
@@ -1504,12 +1518,12 @@ pub fn object_make_exact<'cx>(
                                 type_: p.prop_t.dupe(),
                             })
                         } else {
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: p.key_loc.dupe(),
                                 type_: p.prop_t.dupe(),
                                 polarity: p.polarity,
-                            })
+                            })))
                         };
                         (k.dupe(), prop)
                     })
@@ -1608,12 +1622,12 @@ pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object:
                         type_: p.prop_t.dupe(),
                     })
                 } else {
-                    Property::new(PropertyInner::Field {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: None,
                         key_loc: p.key_loc.dupe(),
                         type_: p.prop_t.dupe(),
                         polarity,
-                    })
+                    })))
                 };
                 (k.dupe(), prop)
             })
@@ -1708,15 +1722,15 @@ pub fn object_update_optionality<'cx>(
                         (t, ObjectUpdateOptionalityKind::Partial)
                             if matches!(t.deref(), TypeInner::OptionalT { .. }) =>
                         {
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: p.key_loc.dupe(),
                                 type_: p.prop_t.dupe(),
                                 polarity: prop_polarity,
-                            })
+                            })))
                         }
                         (_, ObjectUpdateOptionalityKind::Partial) => {
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: p.key_loc.dupe(),
                                 type_: Type::new(TypeInner::OptionalT {
@@ -1725,7 +1739,7 @@ pub fn object_update_optionality<'cx>(
                                     use_desc: false,
                                 }),
                                 polarity: prop_polarity,
-                            })
+                            })))
                         }
                         (t, ObjectUpdateOptionalityKind::Required)
                             if matches!(t.deref(), TypeInner::OptionalT { .. }) =>
@@ -1734,20 +1748,20 @@ pub fn object_update_optionality<'cx>(
                                 TypeInner::OptionalT { type_, .. } => type_.dupe(),
                                 _ => unreachable!(),
                             };
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: p.key_loc.dupe(),
                                 type_: inner_type,
                                 polarity: prop_polarity,
-                            })
+                            })))
                         }
                         (_, ObjectUpdateOptionalityKind::Required) => {
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: p.key_loc.dupe(),
                                 type_: p.prop_t.dupe(),
                                 polarity: prop_polarity,
-                            })
+                            })))
                         }
                     }
                 };
@@ -2160,11 +2174,13 @@ pub fn resolve<'cx, A>(
                     (object::Tool::Spread(_, _), InstanceKind::InterfaceKind { .. }) => {
                         add_output(
                             cx,
-                            ErrorMessage::ECannotSpreadInterface {
-                                spread_reason: reason.dupe(),
-                                interface_reason: r.dupe(),
-                                use_op: use_op.dupe(),
-                            },
+                            ErrorMessage::ECannotSpreadInterface(Box::new(
+                                ECannotSpreadInterfaceData {
+                                    spread_reason: reason.dupe(),
+                                    interface_reason: r.dupe(),
+                                    use_op: use_op.dupe(),
+                                },
+                            )),
                         )?;
                         return_(cx, use_op, any_t::error(reason.dupe()))
                     }
@@ -2503,17 +2519,20 @@ pub fn resolve<'cx, A>(
         object::Tool::MakeExact => {
             add_output(
                 cx,
-                ErrorMessage::EUnsupportedExact(reason.dupe(), type_util::reason_of_t(&t).dupe()),
+                ErrorMessage::EUnsupportedExact(Box::new((
+                    reason.dupe(),
+                    type_util::reason_of_t(&t).dupe(),
+                ))),
             )?;
         }
         _ => {
             add_output(
                 cx,
-                ErrorMessage::EInvalidObjectKit {
+                ErrorMessage::EInvalidObjectKit(Box::new(EInvalidObjectKitData {
                     reason: type_util::reason_of_t(&t).dupe(),
                     reason_op: reason.dupe(),
                     use_op: use_op.clone(),
-                },
+                })),
             )?;
         }
     }
@@ -2673,7 +2692,7 @@ pub fn map_object<'cx>(
                 // This is possible if a key is passed that does not actually conform to the
                 // $Keys/keyof upper bound. That already results in an error, so we refuse to evaluate
                 // the mapped type and signal to return `any` here
-                let field = Property::new(PropertyInner::Field {
+                let field = Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc: None,
                     type_: any_t::why(AnySource::AnyError(None), reason.dupe()),
@@ -2682,7 +2701,7 @@ pub fn map_object<'cx>(
                     } else {
                         Polarity::Neutral
                     },
-                });
+                })));
                 props_map.insert(key.dupe(), field);
             }
             // Methods have no special consideration. There is no guarantee that the prop inserted by
@@ -2712,12 +2731,12 @@ pub fn map_object<'cx>(
                 } else {
                     mk_variance(variance, prop_polarity)
                 };
-                let field = Property::new(PropertyInner::Field {
+                let field = Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc: Some(key_loc),
                     type_: mk_prop_type(key_t, prop_optional),
                     polarity,
-                });
+                })));
                 props_map.insert(key.dupe(), field);
             }
         }

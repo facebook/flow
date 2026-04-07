@@ -10,9 +10,23 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use flow_typing_errors::error_message::EPropNotReadableData;
+use flow_typing_errors::error_message::EPropNotWritableData;
+use flow_typing_errors::error_message::ETooFewTypeArgsData;
+use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::SpeculativeError;
+use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::PropertyCompatibilityData;
+use flow_typing_type::type_::ResolveUnionTData;
+use flow_typing_type::type_::SealGenericTData;
+use flow_typing_type::type_::SpecializeTData;
+use flow_typing_type::type_::TypeArgCompatibilityData;
+use flow_typing_type::type_::ValueToTypeReferenceTData;
 
 use super::constraint_helpers::resolve_id;
 use super::dispatch::__flow;
@@ -135,11 +149,13 @@ pub(super) fn perform_lookup_action<'cx>(
             reason_upper,
         } => {
             let use_op = UseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                    prop: Some(prop_name.dupe()),
-                    lower: reason_lower.dupe(),
-                    upper: reason_upper.dupe(),
-                }),
+                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                    PropertyCompatibilityData {
+                        prop: Some(prop_name.dupe()),
+                        lower: reason_lower.dupe(),
+                        upper: reason_upper.dupe(),
+                    },
+                ))),
                 Arc::new(use_op.dupe()),
             );
             subtyping_kit::rec_flow_p(
@@ -227,11 +243,11 @@ pub(super) fn perform_lookup_action<'cx>(
                 (None, _, _) => {
                     let reason_prop = reason_of_propref(propref);
                     let prop_name = name_of_propref(propref);
-                    let msg = ErrorMessage::EPropNotWritable {
+                    let msg = ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
                         reason_prop: reason_prop.dupe(),
                         prop_name,
                         use_op: use_op.dupe(),
-                    };
+                    }));
                     flow_js_utils::add_output(cx, msg)?;
                 }
             }
@@ -254,11 +270,11 @@ pub(super) fn perform_lookup_action<'cx>(
                 let prop_name = name_of_propref(propref);
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EPropNotReadable {
+                    ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                         reason_prop: reason_prop.dupe(),
                         prop_name,
                         use_op: use_op.dupe(),
-                    },
+                    })),
                 )?;
             }
         },
@@ -317,7 +333,7 @@ pub(super) fn empty_success(u: &UseT<Context>) -> bool {
     match u.deref() {
         // Work has to happen when Empty flows to these types
         UseTInner::UseT(_, t) if matches!(t.deref(), TypeInner::OpenT(_)) => false,
-        UseTInner::EvalTypeDestructorT { .. } => false,
+        UseTInner::EvalTypeDestructorT(..) => false,
         UseTInner::UseT(_, t)
             if matches!(
                 t.deref(),
@@ -326,21 +342,21 @@ pub(super) fn empty_success(u: &UseT<Context>) -> bool {
         {
             false
         }
-        UseTInner::CondT { .. } => false,
-        UseTInner::ConditionalT { .. } => false,
-        UseTInner::EnumExhaustiveCheckT { .. } => false,
-        UseTInner::FilterMaybeT { .. } => false,
-        UseTInner::ObjKitT { .. } => false,
-        UseTInner::OptionalIndexedAccessT { .. } => false,
+        UseTInner::CondT(..) => false,
+        UseTInner::ConditionalT(..) => false,
+        UseTInner::EnumExhaustiveCheckT(..) => false,
+        UseTInner::FilterMaybeT(..) => false,
+        UseTInner::ObjKitT(..) => false,
+        UseTInner::OptionalIndexedAccessT(..) => false,
         UseTInner::ReposLowerT { .. } => false,
-        UseTInner::ReposUseT { .. } => false,
-        UseTInner::SealGenericT { .. } => false,
-        UseTInner::ResolveUnionT { .. } => false,
-        UseTInner::EnumCastT { .. } => false,
-        UseTInner::ConvertEmptyPropsToMixedT { .. } => false,
-        UseTInner::HooklikeT { .. } => false,
-        UseTInner::SpecializeT { .. } => false,
-        UseTInner::ValueToTypeReferenceT { .. } => false,
+        UseTInner::ReposUseT(..) => false,
+        UseTInner::SealGenericT(..) => false,
+        UseTInner::ResolveUnionT(..) => false,
+        UseTInner::EnumCastT(..) => false,
+        UseTInner::ConvertEmptyPropsToMixedT(..) => false,
+        UseTInner::HooklikeT(..) => false,
+        UseTInner::SpecializeT(..) => false,
+        UseTInner::ValueToTypeReferenceT(..) => false,
         _ => true,
     }
 }
@@ -386,13 +402,13 @@ pub(super) fn handle_generic<'cx>(
         let repos_bound = reposition_reason(cx, Some(trace), reason, false, bound)?;
         rec_flow(cx, trace, (&repos_bound, &use_t))?;
         let open_t = Type::new(TypeInner::OpenT(t_out_prime));
-        let seal = UseT::new(UseTInner::SealGenericT {
+        let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
             reason: reason.dupe(),
             id: id.clone(),
             name: name.dupe(),
             cont,
             no_infer,
-        });
+        })));
         rec_flow(cx, trace, (&open_t, &seal))
     };
     let narrow_generic_use = |mk_use_t: &dyn Fn(Tvar) -> UseT<Context<'cx>>,
@@ -429,13 +445,13 @@ pub(super) fn handle_generic<'cx>(
         |upper: Option<&UseT<Context<'cx>>>| -> Result<bool, FlowJsException> {
             let upper = upper.unwrap_or(u);
             let repos_bound = reposition_reason(cx, Some(trace), reason, false, bound)?;
-            let seal = UseT::new(UseTInner::SealGenericT {
+            let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
                 reason: reason.dupe(),
                 id: id.clone(),
                 name: name.dupe(),
                 cont: Cont::Upper(Box::new(upper.dupe())),
                 no_infer,
-            });
+            })));
             rec_flow(cx, trace, (&repos_bound, &seal))?;
             Ok(true)
         };
@@ -555,13 +571,13 @@ pub(super) fn handle_generic<'cx>(
         }
         TypeInner::KeysT(..) => {
             let repos_bound = reposition_reason(cx, Some(trace), reason, false, bound)?;
-            let seal = UseT::new(UseTInner::SealGenericT {
+            let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
                 reason: reason.dupe(),
                 id: id.clone(),
                 name: name.dupe(),
                 no_infer,
                 cont: Cont::Upper(Box::new(u.dupe())),
-            });
+            })));
             rec_flow(cx, trace, (&repos_bound, &seal))?;
             true
         }
@@ -574,20 +590,20 @@ pub(super) fn handle_generic<'cx>(
     match u.deref() {
         // In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
         // in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow.
-        UseTInner::ConcretizeT {
+        UseTInner::ConcretizeT(box ConcretizeTData {
             kind: ConcretizationKind::ConcretizeForOperatorsChecking,
             ..
-        }
-        | UseTInner::ConcretizeT {
+        })
+        | UseTInner::ConcretizeT(box ConcretizeTData {
             kind: ConcretizationKind::ConcretizeForComputedObjectKeys,
             ..
-        }
-        | UseTInner::ConcretizeT {
+        })
+        | UseTInner::ConcretizeT(box ConcretizeTData {
             kind: ConcretizationKind::ConcretizeForOptionalChain,
             ..
-        }
-        | UseTInner::TestPropT { .. }
-        | UseTInner::OptionalIndexedAccessT { .. } => {
+        })
+        | UseTInner::TestPropT(..)
+        | UseTInner::OptionalIndexedAccessT(..) => {
             let repos_bound = reposition_reason(cx, Some(trace), reason, false, bound)?;
             rec_flow(cx, trace, (&repos_bound, u))?;
             Ok(true)
@@ -817,23 +833,29 @@ pub(super) fn handle_generic<'cx>(
                 wait_for_concrete_bound(None)
             }
         }
-        UseTInner::ElemT { .. } => {
+        UseTInner::ElemT(..) => {
             if is_concrete(bound) {
                 distribute_union_intersection(None)
             } else {
                 wait_for_concrete_bound(None)
             }
         }
-        UseTInner::MethodT(op, r1, r2, prop, action) => {
+        UseTInner::MethodT(box MethodTData {
+            use_op: op,
+            reason: r1,
+            prop_reason: r2,
+            propref: prop,
+            method_action: action,
+        }) => {
             let l = make_generic(bound.dupe());
             let action_prime = update_action_meth_generic_this(l, action);
-            let u_prime = UseT::new(UseTInner::MethodT(
-                op.dupe(),
-                r1.dupe(),
-                r2.dupe(),
-                prop.clone(),
-                Box::new(action_prime),
-            ));
+            let u_prime = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                use_op: op.dupe(),
+                reason: r1.dupe(),
+                prop_reason: r2.dupe(),
+                propref: prop.clone(),
+                method_action: Box::new(action_prime),
+            })));
             let consumed = {
                 if is_concrete(bound) {
                     distribute_union_intersection(Some(&u_prime))?
@@ -913,7 +935,7 @@ pub(super) fn handle_generic<'cx>(
                 wait_for_concrete_bound(None)
             }
         }
-        UseTInner::EvalTypeDestructorT { .. } => {
+        UseTInner::EvalTypeDestructorT(..) => {
             if is_concrete(bound) {
                 Ok(false)
             } else {
@@ -958,13 +980,13 @@ pub(super) fn resolve_union<'cx>(
                     // This is a tail call in OCaml. Return the continuation for the trampoline.
                     Ok(Some((
                         next.dupe(),
-                        UseT::new(UseTInner::ResolveUnionT {
+                        UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
                             reason: reason.dupe(),
                             resolved: resolved.into(),
                             unresolved: Rc::from(rest),
                             upper: Box::new(upper.dupe()),
                             id,
-                        }),
+                        }))),
                     )))
                 }
             }
@@ -1019,6 +1041,8 @@ pub(super) fn filter_optional<'cx>(
 
 pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> UseOp {
     use flow_typing_type::type_::FrameUseOp;
+    use flow_typing_type::type_::FunCallData;
+    use flow_typing_type::type_::FunCallMethodData;
     use flow_typing_type::type_::RootUseOp;
     use flow_typing_type::type_::VirtualFrameUseOp;
     use flow_typing_type::type_::VirtualRootUseOp;
@@ -1060,8 +1084,10 @@ pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> U
                 // abstract locations, we determine whether to do this using a heuristic
                 // based on the 'locality' of the use_op root.
                 VirtualFrameUseOp::ImplicitTypeParam if !should_replace => match root_of_op2 {
-                    VirtualRootUseOp::FunCall { local, .. }
-                    | VirtualRootUseOp::FunCallMethod { local, .. } => *local,
+                    VirtualRootUseOp::FunCall(box FunCallData { local, .. })
+                    | VirtualRootUseOp::FunCallMethod(box FunCallMethodData { local, .. }) => {
+                        *local
+                    }
                     VirtualRootUseOp::AssignVar { .. }
                     | VirtualRootUseOp::Coercion { .. }
                     | VirtualRootUseOp::DeleteVar { .. }
@@ -1085,21 +1111,21 @@ pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> U
                     | VirtualRootUseOp::InitField { .. } => true,
                     VirtualRootUseOp::Cast { .. }
                     | VirtualRootUseOp::RefinementCheck { .. }
-                    | VirtualRootUseOp::SwitchRefinementCheck { .. }
+                    | VirtualRootUseOp::SwitchRefinementCheck(..)
                     | VirtualRootUseOp::ClassExtendsCheck { .. }
                     | VirtualRootUseOp::ClassMethodDefinition { .. }
                     | VirtualRootUseOp::ClassImplementsCheck { .. }
-                    | VirtualRootUseOp::ClassOwnProtoCheck { .. }
-                    | VirtualRootUseOp::ConformToCommonInterface { .. }
+                    | VirtualRootUseOp::ClassOwnProtoCheck(..)
+                    | VirtualRootUseOp::ConformToCommonInterface(..)
                     | VirtualRootUseOp::DeclareComponentRef { .. }
                     | VirtualRootUseOp::GeneratorYield { .. }
-                    | VirtualRootUseOp::ReactCreateElementCall { .. }
+                    | VirtualRootUseOp::ReactCreateElementCall(..)
                     | VirtualRootUseOp::ReactGetIntrinsic { .. }
-                    | VirtualRootUseOp::RecordCreate { .. }
+                    | VirtualRootUseOp::RecordCreate(..)
                     | VirtualRootUseOp::TypeGuardIncompatibility { .. }
                     | VirtualRootUseOp::RenderTypeInstantiation { .. }
                     | VirtualRootUseOp::ComponentRestParamCompatibility { .. }
-                    | VirtualRootUseOp::PositiveTypeGuardConsistency { .. }
+                    | VirtualRootUseOp::PositiveTypeGuardConsistency(..)
                     | VirtualRootUseOp::UnknownUse => false,
                 },
                 VirtualFrameUseOp::UnifyFlip if !should_replace => match root_of_op2 {
@@ -1136,7 +1162,7 @@ pub(super) fn apply_method_action<'cx>(
             return_hint,
             specialized_callee,
         } => {
-            let u = UseT::new(UseTInner::CallT {
+            let u = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason_call,
                 call_action: Box::new(CallAction::Funcalltype(call_of_method_app(
@@ -1145,7 +1171,7 @@ pub(super) fn apply_method_action<'cx>(
                     app.clone(),
                 ))),
                 return_hint: return_hint.clone(),
-            });
+            })));
             rec_flow(cx, trace, (l, &u))
         }
         MethodAction::ChainM {
@@ -1161,7 +1187,7 @@ pub(super) fn apply_method_action<'cx>(
             l,
             exp_reason,
             lhs_reason,
-            &UseT::new(UseTInner::CallT {
+            &UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason_call,
                 call_action: Box::new(CallAction::Funcalltype(call_of_method_app(
@@ -1170,7 +1196,7 @@ pub(super) fn apply_method_action<'cx>(
                     app.clone(),
                 ))),
                 return_hint: return_hint.clone(),
-            }),
+            }))),
             voided_out_collector,
         ),
         MethodAction::NoMethodAction(prop_t) => rec_flow_t(cx, trace, unknown_use(), (l, prop_t)),
@@ -1324,13 +1350,13 @@ pub(super) fn mk_typeapp_instance_annot<'cx>(
         trace.clone(),
         (
             c,
-            &UseT::new(UseTInner::SpecializeT(
+            &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
                 use_op,
-                reason_op.dupe(),
-                reason_tapp.dupe(),
-                Some(ts),
-                t.dupe(),
-            )),
+                reason: reason_op.dupe(),
+                reason2: reason_tapp.dupe(),
+                targs: Some(ts),
+                tvar: t.dupe(),
+            }))),
         ),
     )?;
     if from_value {
@@ -1357,13 +1383,13 @@ pub(super) fn mk_typeapp_instance<'cx>(
         trace.clone(),
         (
             c,
-            &UseT::new(UseTInner::SpecializeT(
+            &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
                 use_op,
-                reason_op.dupe(),
-                reason_tapp.dupe(),
-                Some(ts),
-                t.dupe(),
-            )),
+                reason: reason_op.dupe(),
+                reason2: reason_tapp.dupe(),
+                targs: Some(ts),
+                tvar: t.dupe(),
+            }))),
         ),
     )?;
     if from_value {
@@ -1451,12 +1477,14 @@ pub(super) fn mk_instance_source<'cx>(
             trace,
             (
                 c,
-                &UseT::new(UseTInner::ValueToTypeReferenceT(
-                    unknown_use(),
-                    reason_type.dupe(),
-                    type_t_kind,
-                    Box::new(tvar),
-                )),
+                &UseT::new(UseTInner::ValueToTypeReferenceT(Box::new(
+                    ValueToTypeReferenceTData {
+                        use_op: unknown_use(),
+                        reason: reason_type.dupe(),
+                        kind: type_t_kind,
+                        tout: Box::new(tvar),
+                    },
+                ))),
             ),
         )?;
         Ok(())
@@ -1511,7 +1539,7 @@ pub(super) fn instance_lookup_kind<'cx>(
                         trace,
                         (
                             tvar,
-                            &UseT::new(UseTInner::LookupT {
+                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
                                 lookup_kind: Box::new(LookupKind::Strict(reason_instance.dupe())),
                                 try_ts_on_failure: Rc::from([]),
@@ -1520,7 +1548,7 @@ pub(super) fn instance_lookup_kind<'cx>(
                                 ids: None,
                                 method_accessible,
                                 ignore_dicts: false,
-                            }),
+                            }))),
                         ),
                     )?;
                     Ok::<(), FlowJsException>(())
@@ -1944,10 +1972,10 @@ pub(super) fn extract_non_spread<'cx>(
             let loc = loc_of_t(arr).dupe();
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc,
                     flow_typing_errors::intermediate_error_types::UnsupportedSyntax::SpreadArgument,
-                ),
+                ))),
             )?;
             Ok(any_t::error(reason.dupe()))
         }
@@ -2042,8 +2070,11 @@ pub(super) fn flow<'cx>(
                 UseTInner::UseT(_, _) => (ru, rl),
                 _ => flow_error::ordered_reasons((rl, ru)),
             };
-            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reasons.0, reasons.1))
-                .expect("Non speculative");
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
+            )
+            .expect("Non speculative");
             Ok(())
         }
         Err(FlowJsException::Speculative(e)) => Err(e),
@@ -2135,8 +2166,11 @@ pub(super) fn unify<'cx>(
         Err(FlowJsException::LimitExceeded) => {
             let reasons =
                 flow_error::ordered_reasons((reason_of_t(t1).dupe(), reason_of_t(t2).dupe()));
-            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reasons.0, reasons.1))
-                .expect("Non speculative");
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
+            )
+            .expect("Non speculative");
             Ok(())
         }
         Err(FlowJsException::Speculative(e)) => Err(e),
@@ -2198,11 +2232,11 @@ pub(super) fn type_app_variance_check<'cx>(
     if targs.len() > maximum_arity {
         flow_js_utils::add_output(
             cx,
-            ErrorMessage::ETooManyTypeArgs {
+            ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                 reason_tapp: reason_tapp.dupe(),
                 arity_loc,
                 maximum_arity: maximum_arity as i32,
-            },
+            })),
         )?;
     } else {
         let mut targs = VecDeque::from(targs);
@@ -2215,13 +2249,15 @@ pub(super) fn type_app_variance_check<'cx>(
             let reason = &tparam.reason;
             let flow_targs = |t1: &Type, t2: &Type| -> Result<(), FlowJsException> {
                 let use_op = UseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::TypeArgCompatibility {
-                        name: name.dupe(),
-                        targ: reason.dupe(),
-                        lower: reason_op.dupe(),
-                        upper: reason_tapp.dupe(),
-                        polarity,
-                    }),
+                    Arc::new(VirtualFrameUseOp::TypeArgCompatibility(Box::new(
+                        TypeArgCompatibilityData {
+                            name: name.dupe(),
+                            targ: reason.dupe(),
+                            lower: reason_op.dupe(),
+                            upper: reason_tapp.dupe(),
+                            polarity,
+                        },
+                    ))),
                     Arc::new(use_op.dupe()),
                 );
                 match polarity {
@@ -2245,11 +2281,11 @@ pub(super) fn type_app_variance_check<'cx>(
                     // fewer arguments than params but no default
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::ETooFewTypeArgs {
+                        ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                             reason_tapp: reason_tapp.dupe(),
                             arity_loc: arity_loc.dupe(),
                             minimum_arity: minimum_arity as i32,
-                        },
+                        })),
                     )?;
                 }
                 (Some(default), None) => {
@@ -2282,12 +2318,12 @@ pub(super) fn possible_concrete_types<'cx>(
         cx,
         (
             t,
-            &UseT::new(UseTInner::ConcretizeT {
+            &UseT::new(UseTInner::ConcretizeT(Box::new(ConcretizeTData {
                 reason: reason.dupe(),
                 kind,
                 seen: concretize_seen::ConcretizeSeen::new(),
                 collector: collector.dupe(),
-            }),
+            }))),
         ),
     )?;
     Ok(collector.collect_to_vec())

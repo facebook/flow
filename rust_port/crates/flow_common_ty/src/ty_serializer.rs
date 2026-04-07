@@ -178,8 +178,14 @@ impl Serializer {
 
     pub fn type_<L: Dupe>(&self, t: &Arc<Ty<L>>) -> AstType {
         match t.as_ref() {
-            Ty::Bound(_, name) => builtin_from_string(name, None),
-            Ty::Generic((x, _, ts)) => self.generic_type(x, ts.as_deref()),
+            Ty::Bound(data) => {
+                let (_, name) = data.as_ref();
+                builtin_from_string(name, None)
+            }
+            Ty::Generic(g) => {
+                let (x, _, ts) = g.as_ref();
+                self.generic_type(x, ts.as_deref())
+            }
             Ty::Any(_) => ast::types::Type::new(TypeInner::Any {
                 loc: LOC_NONE,
                 comments: None,
@@ -299,7 +305,8 @@ impl Serializer {
                     }),
                 })
             }
-            Ty::Infer(s, b) => {
+            Ty::Infer(data) => {
+                let (s, b) = data.as_ref();
                 let id = id_from_symbol(s);
                 let bound = match b {
                     None => ast::types::AnnotationOrHint::Missing(LOC_NONE),
@@ -328,23 +335,26 @@ impl Serializer {
                     }),
                 })
             }
-            Ty::TypeOf(builtin_or_sym, targs) => match builtin_or_sym {
-                BuiltinOrSymbol::TSymbol(name) => {
-                    let id = id_from_symbol(name);
-                    let targs = targs.as_ref().map(|ts| self.type_arguments(ts));
-                    ast::types::Type::new(TypeInner::Typeof {
-                        loc: LOC_NONE,
-                        inner: Arc::new(ast::types::Typeof {
-                            argument: mk_typeof_expr(id),
-                            targs,
-                            comments: None,
-                        }),
-                    })
+            Ty::TypeOf(data) => {
+                let (builtin_or_sym, targs) = data.as_ref();
+                match builtin_or_sym {
+                    BuiltinOrSymbol::TSymbol(name) => {
+                        let id = id_from_symbol(name);
+                        let targs = targs.as_ref().map(|ts| self.type_arguments(ts));
+                        ast::types::Type::new(TypeInner::Typeof {
+                            loc: LOC_NONE,
+                            inner: Arc::new(ast::types::Typeof {
+                                argument: mk_typeof_expr(id),
+                                targs,
+                                comments: None,
+                            }),
+                        })
+                    }
+                    BuiltinOrSymbol::FunProto => qualified2("Object", "prototype"),
+                    BuiltinOrSymbol::ObjProto => qualified2("Function", "prototype"),
+                    BuiltinOrSymbol::FunProtoBind => qualified3("Function", "prototype", "bind"),
                 }
-                BuiltinOrSymbol::FunProto => qualified2("Object", "prototype"),
-                BuiltinOrSymbol::ObjProto => qualified2("Function", "prototype"),
-                BuiltinOrSymbol::FunProtoBind => qualified3("Function", "prototype", "bind"),
-            },
+            }
             Ty::Component {
                 regular_props,
                 renders,

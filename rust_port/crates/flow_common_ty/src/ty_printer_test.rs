@@ -32,11 +32,11 @@ mod tests {
             source: PropSource::Other,
             def_locs: vec![].into(),
         };
-        let obj = Ty::<ALoc>::Obj(ObjT {
+        let obj = Ty::<ALoc>::Obj(Box::new(ObjT {
             obj_kind: ObjKind::ExactObj,
             obj_def_loc: None,
             obj_props: vec![getter].into(),
-        });
+        }));
         let opts = PrinterOptions {
             prefer_single_quotes: false,
             size: 80,
@@ -57,11 +57,11 @@ mod tests {
             source: PropSource::Other,
             def_locs: vec![].into(),
         };
-        let obj = Ty::<ALoc>::Obj(ObjT {
+        let obj = Ty::<ALoc>::Obj(Box::new(ObjT {
             obj_kind: ObjKind::ExactObj,
             obj_def_loc: None,
             obj_props: vec![setter].into(),
-        });
+        }));
         let opts = PrinterOptions {
             prefer_single_quotes: false,
             size: 80,

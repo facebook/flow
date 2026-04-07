@@ -57,6 +57,7 @@ mod tests {
     use flow_typing_type::type_::ClassBinding;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::FunType;
     use flow_typing_type::type_::HintEvalResult;
     use flow_typing_type::type_::InstType;
@@ -982,12 +983,12 @@ mod tests {
         mk_private_method_eval_hint_test(
             "() => void",
             false,
-            Some(Property::new(PropertyInner::Field {
+            Some(Property::new(PropertyInner::Field(Box::new(FieldData {
                 preferred_def_locs: None,
                 key_loc: Some(ALoc::none()),
                 type_: fun_t(&[], void::make(dummy_reason())),
                 polarity: Polarity::Neutral,
-            })),
+            })))),
             None,
             None,
             None,
@@ -1000,12 +1001,12 @@ mod tests {
             "() => void",
             true,
             None,
-            Some(Property::new(PropertyInner::Field {
+            Some(Property::new(PropertyInner::Field(Box::new(FieldData {
                 preferred_def_locs: None,
                 key_loc: Some(ALoc::none()),
                 type_: fun_t(&[], void::make(dummy_reason())),
                 polarity: Polarity::Neutral,
-            })),
+            })))),
             None,
             None,
         );

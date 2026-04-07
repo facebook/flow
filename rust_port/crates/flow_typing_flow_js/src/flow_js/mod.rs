@@ -84,6 +84,7 @@ use flow_typing_type::type_::EnumExhaustiveCheckToolT;
 use flow_typing_type::type_::EnumInfo;
 use flow_typing_type::type_::EnumInfoInner;
 use flow_typing_type::type_::EnumPossibleExhaustiveCheckT;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::Flags;
 use flow_typing_type::type_::FrameUseOp;
 use flow_typing_type::type_::FunParam;
@@ -112,6 +113,7 @@ use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::OptionalIndexedAccessIndex;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PredicateConcretetizerVariant;
 use flow_typing_type::type_::PrivateMethodTData;
 use flow_typing_type::type_::PropRef;
@@ -119,6 +121,7 @@ use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::PropertySource;
 use flow_typing_type::type_::PropertyType;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactDro;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::RendersVariant;
@@ -1056,7 +1059,7 @@ pub fn mk_type_destructor<'cx>(
         Err(FlowJsException::LimitExceeded) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::ERecursionLimit(reason.dupe(), reason.dupe()),
+                ErrorMessage::ERecursionLimit(Box::new((reason.dupe(), reason.dupe()))),
             )?;
             let result = any_t::why(AnySource::AnyError(None), reason.dupe());
             let mut evaluated = cx.evaluated();

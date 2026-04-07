@@ -57,6 +57,7 @@ impl FlowServer {
         }
     }
 
+    #[expect(dead_code)]
     pub(crate) fn run(&self) {
         self.run_with_signal_ready(false);
     }

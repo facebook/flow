@@ -21,6 +21,11 @@ use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils;
 use flow_common_ty::ty;
 use flow_common_ty::ty::Decl;
+use flow_common_ty::ty::DeclEnumDeclData;
+use flow_common_ty::ty::DeclModuleDeclData;
+use flow_common_ty::ty::DeclNamespaceDeclData;
+use flow_common_ty::ty::DeclNominalComponentDeclData;
+use flow_common_ty::ty::DeclTypeAliasDeclData;
 use flow_common_ty::ty::Elt;
 use flow_common_ty::ty::Ty;
 use flow_common_ty::ty_printer;
@@ -51,6 +56,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseOp;
@@ -183,7 +189,7 @@ fn lsp_completion_of_type(ty_: &Ty<ALoc>) -> LspCompletionItemKind {
         | Ty::Null
         | Ty::Obj(_)
         | Ty::Inter(..)
-        | Ty::Bound(_, _)
+        | Ty::Bound(_)
         | Ty::Generic(_)
         | Ty::Any(_)
         | Ty::Top
@@ -218,17 +224,17 @@ fn lsp_completion_of_type(ty_: &Ty<ALoc>) -> LspCompletionItemKind {
 
 fn lsp_completion_of_decl(decl: &Decl<ALoc>) -> LspCompletionItemKind {
     match decl {
-        Decl::VariableDecl(_, ty_) => lsp_completion_of_type(ty_),
-        Decl::TypeAliasDecl { type_, .. } => match type_ {
+        Decl::VariableDecl(box (_, ty_)) => lsp_completion_of_type(ty_),
+        Decl::TypeAliasDecl(box DeclTypeAliasDeclData { type_, .. }) => match type_ {
             Some(type_) => lsp_completion_of_type(type_),
             None => LspCompletionItemKind::ENUM,
         },
-        Decl::ClassDecl(_, _) => LspCompletionItemKind::CLASS,
-        Decl::InterfaceDecl(_, _) => LspCompletionItemKind::INTERFACE,
-        Decl::RecordDecl(_, _) => LspCompletionItemKind::STRUCT,
-        Decl::EnumDecl { .. } => LspCompletionItemKind::ENUM,
-        Decl::NominalComponentDecl { .. } => LspCompletionItemKind::VARIABLE,
-        Decl::NamespaceDecl { .. } | Decl::ModuleDecl { .. } => LspCompletionItemKind::MODULE,
+        Decl::ClassDecl(..) => LspCompletionItemKind::CLASS,
+        Decl::InterfaceDecl(..) => LspCompletionItemKind::INTERFACE,
+        Decl::RecordDecl(..) => LspCompletionItemKind::STRUCT,
+        Decl::EnumDecl(..) => LspCompletionItemKind::ENUM,
+        Decl::NominalComponentDecl(..) => LspCompletionItemKind::VARIABLE,
+        Decl::NamespaceDecl(..) | Decl::ModuleDecl(..) => LspCompletionItemKind::MODULE,
     }
 }
 
@@ -285,15 +291,15 @@ fn detail_of_ty_decl(
         },
     );
     let detail = match decl {
-        Decl::ClassDecl(_, _)
-        | Decl::EnumDecl { .. }
-        | Decl::InterfaceDecl(_, _)
-        | Decl::RecordDecl(_, _)
-        | Decl::NominalComponentDecl { .. }
-        | Decl::NamespaceDecl { .. }
-        | Decl::ModuleDecl { .. }
-        | Decl::TypeAliasDecl { .. } => None,
-        Decl::VariableDecl(_, ty_) => detail_of_ty(exact_by_default, false, ts_syntax, ty_).1,
+        Decl::ClassDecl(..)
+        | Decl::EnumDecl(..)
+        | Decl::InterfaceDecl(..)
+        | Decl::RecordDecl(..)
+        | Decl::NominalComponentDecl(..)
+        | Decl::NamespaceDecl(..)
+        | Decl::ModuleDecl(..)
+        | Decl::TypeAliasDecl(..) => None,
+        Decl::VariableDecl(box (_, ty_)) => detail_of_ty(exact_by_default, false, ts_syntax, ty_).1,
     };
     (Some(type_), detail)
 }
@@ -668,7 +674,7 @@ fn autocomplete_record(
     match ty_normalizer_flow::from_type(&typing.norm_genv(), record_type) {
         Err(_) => None,
         Ok(elt) => match elt {
-            Elt::Decl(record_decl @ Decl::RecordDecl(_, _)) => {
+            Elt::Decl(record_decl @ Decl::RecordDecl(..)) => {
                 match extract_record_fields(typing, defaulted_props, record_type) {
                     Err(_) => None,
                     Ok(fields) => {
@@ -1414,13 +1420,16 @@ fn exports_of_module_ty(
     let is_ok =
         |export_kind: ModuleExportKind, name: &Name| is_kind(export_kind) && filter_name(name);
     let exports = match decl {
-        Decl::ModuleDecl { exports, .. } | Decl::NamespaceDecl { exports, .. } => exports,
+        Decl::ModuleDecl(box DeclModuleDeclData { exports, .. })
+        | Decl::NamespaceDecl(box DeclNamespaceDeclData { exports, .. }) => exports,
         _ => return Vec::new(),
     };
     let mut items = exports
         .iter()
         .filter_map(|decl| match decl {
-            Decl::TypeAliasDecl { name, .. } if is_ok(ModuleExportKind::Type, &name.sym_name) => {
+            Decl::TypeAliasDecl(box DeclTypeAliasDeclData { name, .. })
+                if is_ok(ModuleExportKind::Type, &name.sym_name) =>
+            {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1437,7 +1446,7 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::InterfaceDecl(name, _) if is_ok(ModuleExportKind::Type, &name.sym_name) => {
+            Decl::InterfaceDecl(box (name, _)) if is_ok(ModuleExportKind::Type, &name.sym_name) => {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1454,7 +1463,7 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::ClassDecl(name, _) if is_ok(ModuleExportKind::Either, &name.sym_name) => {
+            Decl::ClassDecl(box (name, _)) if is_ok(ModuleExportKind::Either, &name.sym_name) => {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1471,7 +1480,7 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::RecordDecl(name, _) if is_ok(ModuleExportKind::Either, &name.sym_name) => {
+            Decl::RecordDecl(box (name, _)) if is_ok(ModuleExportKind::Either, &name.sym_name) => {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1488,7 +1497,9 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::EnumDecl { name, .. } if is_ok(ModuleExportKind::Either, &name.sym_name) => {
+            Decl::EnumDecl(box DeclEnumDeclData { name, .. })
+                if is_ok(ModuleExportKind::Either, &name.sym_name) =>
+            {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1505,7 +1516,7 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::VariableDecl(name, _) if is_ok(ModuleExportKind::Value, name) => {
+            Decl::VariableDecl(box (name, _)) if is_ok(ModuleExportKind::Value, name) => {
                 Some(autocomplete_create_result_decl(
                     None,
                     0,
@@ -1520,7 +1531,7 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::NominalComponentDecl { name, .. }
+            Decl::NominalComponentDecl(box DeclNominalComponentDeclData { name, .. })
                 if is_ok(ModuleExportKind::Value, &name.sym_name) =>
             {
                 let documentation_and_tags =
@@ -1539,9 +1550,9 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::NamespaceDecl {
+            Decl::NamespaceDecl(box DeclNamespaceDeclData {
                 name: Some(name), ..
-            } if is_ok(ModuleExportKind::Value, &name.sym_name) => {
+            }) if is_ok(ModuleExportKind::Value, &name.sym_name) => {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1905,11 +1916,7 @@ fn autocomplete_unqualified_type(
     for ((name, documentation_and_tags, _), ty_res) in value_identifiers {
         match ty_res {
             Err(err) => errors_to_log.push(err.to_string()),
-            Ok(
-                elt @ Elt::Decl(
-                    Decl::ClassDecl(_, _) | Decl::RecordDecl(_, _) | Decl::EnumDecl { .. },
-                ),
-            ) => {
+            Ok(elt @ Elt::Decl(Decl::ClassDecl(_) | Decl::RecordDecl(_) | Decl::EnumDecl(_))) => {
                 items_rev.push(autocomplete_create_result_elt(
                     None,
                     0,
@@ -2577,11 +2584,11 @@ fn autocomplete_jsx_attribute(
     );
     let props_object = flow_typing_tvar::mk_where(typing.cx, reason.dupe(), |_cx, tvar| {
         let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
-        let use_t = UseT::new(UseTInner::ReactKitT(
+        let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
             use_op,
-            reason.dupe(),
-            Box::new(flow_typing_type::type_::react::Tool::GetConfig { tout: tvar.dupe() }),
-        ));
+            reason: reason.dupe(),
+            tool: Box::new(flow_typing_type::type_::react::Tool::GetConfig { tout: tvar.dupe() }),
+        })));
         flow_typing_flow_js::flow_js::flow_non_speculating(typing.cx, (cls, &use_t));
     });
     let mut exclude_keys = used_attr_names.clone();

@@ -15,6 +15,8 @@ use crate::ty::BotKind;
 use crate::ty::BuiltinOrSymbol;
 use crate::ty::ComparatorTy;
 use crate::ty::Decl;
+use crate::ty::DeclEnumDeclData;
+use crate::ty::DeclNominalComponentDeclData;
 use crate::ty::Elt;
 use crate::ty::Ty;
 use crate::ty::TyEndoTy;
@@ -619,32 +621,37 @@ pub fn elt_equal(elt1: &Elt<ALoc>, elt2: &Elt<ALoc>) -> bool {
 pub fn typify_elt(elt: Elt<ALoc>) -> Option<ALocTy> {
     match elt {
         Elt::Type(ty) => Some(ty),
-        Elt::Decl(Decl::ClassDecl(s, _))
-        | Elt::Decl(Decl::EnumDecl { name: s, .. })
-        | Elt::Decl(Decl::NominalComponentDecl { name: s, .. }) => {
-            Some(Arc::new(Ty::TypeOf(BuiltinOrSymbol::TSymbol(s), None)))
-        }
+        Elt::Decl(Decl::ClassDecl(box (s, _)))
+        | Elt::Decl(Decl::EnumDecl(box DeclEnumDeclData { name: s, .. }))
+        | Elt::Decl(Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
+            name: s, ..
+        })) => Some(Arc::new(Ty::TypeOf(Box::new((
+            BuiltinOrSymbol::TSymbol(s),
+            None,
+        ))))),
         Elt::Decl(_) => None,
     }
 }
 
 pub fn reinterpret_elt_as_type_identifier(elt: Elt<ALoc>) -> Elt<ALoc> {
     match elt {
-        Elt::Decl(Decl::NominalComponentDecl {
+        Elt::Decl(Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
             name,
             tparams,
             targs,
             props,
             renders,
             ..
-        }) => Elt::Decl(Decl::NominalComponentDecl {
-            name,
-            tparams,
-            targs,
-            props,
-            renders,
-            is_type: true,
-        }),
+        })) => Elt::Decl(Decl::NominalComponentDecl(Box::new(
+            DeclNominalComponentDeclData {
+                name,
+                tparams,
+                targs,
+                props,
+                renders,
+                is_type: true,
+            },
+        ))),
         elt => elt,
     }
 }

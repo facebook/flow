@@ -17,7 +17,9 @@ use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_type::type_::GetPropTData;
+use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::PropRef;
+use flow_typing_type::type_::SpecializeTData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -41,13 +43,13 @@ pub fn specialize<'a>(
     let reason_inner = reason.dupe();
     let f = move |cx: &Context<'_>, c: Type| -> Type {
         tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner.dupe(), move |cx, tvar| {
-            let use_t = UseT::new(UseTInner::SpecializeT(
+            let use_t = UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
                 use_op,
-                reason_op,
-                reason_tapp,
-                targs.map(Rc::from),
-                tvar.dupe(),
-            ));
+                reason: reason_op,
+                reason2: reason_tapp,
+                targs: targs.map(Rc::from),
+                tvar: tvar.dupe(),
+            })));
             flow_js::flow_non_speculating(cx, (&c, &use_t));
         })
     };
@@ -153,12 +155,14 @@ pub fn qualify_type<'a>(
             op_reason_inner,
             move |cx, tout_reason, tout_id| {
                 let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
-                let use_t = UseT::new(UseTInner::GetTypeFromNamespaceT {
-                    use_op,
-                    reason: op_reason_for_flow,
-                    prop_ref: (reason, prop_name),
-                    tout: Box::new(tout),
-                });
+                let use_t = UseT::new(UseTInner::GetTypeFromNamespaceT(Box::new(
+                    GetTypeFromNamespaceTData {
+                        use_op,
+                        reason: op_reason_for_flow,
+                        prop_ref: (reason, prop_name),
+                        tout: Box::new(tout),
+                    },
+                )));
                 flow_js::flow_non_speculating(cx, (&l, &use_t));
             },
         )

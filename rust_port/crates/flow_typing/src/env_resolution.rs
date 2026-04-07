@@ -31,11 +31,26 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api;
 use flow_env_builder::env_api::EnvMap;
 use flow_env_builder::name_def_types;
+use flow_env_builder::name_def_types::AnnotationData;
 use flow_env_builder::name_def_types::Binding;
+use flow_env_builder::name_def_types::ClassDefData;
+use flow_env_builder::name_def_types::ComponentDefData;
+use flow_env_builder::name_def_types::ContextualData;
 use flow_env_builder::name_def_types::Def;
+use flow_env_builder::name_def_types::EmptyArrayData;
+use flow_env_builder::name_def_types::FunctionDefData;
+use flow_env_builder::name_def_types::FunctionValueData;
 use flow_env_builder::name_def_types::Import;
+use flow_env_builder::name_def_types::ImportData;
+use flow_env_builder::name_def_types::MatchCasePatternData;
+use flow_env_builder::name_def_types::MatchCaseRootData;
+use flow_env_builder::name_def_types::MemberAssignData;
+use flow_env_builder::name_def_types::ObjectValueData;
+use flow_env_builder::name_def_types::OpAssignData;
+use flow_env_builder::name_def_types::RecordDefData;
 use flow_env_builder::name_def_types::Root;
 use flow_env_builder::name_def_types::ScopeKind;
+use flow_env_builder::name_def_types::TypeParamData;
 use flow_env_builder::selector;
 use flow_env_builder_resolver::name_def_ordering;
 use flow_parser::ast;
@@ -630,12 +645,14 @@ fn resolve_hint<'cx>(
                             acc.add_prop(move |mut props_map| {
                                 props_map.insert(
                                     reason::Name::new(n),
-                                    type_::Property::new(type_::PropertyInner::Field {
-                                        preferred_def_locs: None,
-                                        key_loc: Some(l),
-                                        type_: t,
-                                        polarity: flow_common::polarity::Polarity::Neutral,
-                                    }),
+                                    type_::Property::new(type_::PropertyInner::Field(Box::new(
+                                        type_::FieldData {
+                                            preferred_def_locs: None,
+                                            key_loc: Some(l),
+                                            type_: t,
+                                            polarity: flow_common::polarity::Polarity::Neutral,
+                                        },
+                                    ))),
                                 );
                                 props_map
                             })
@@ -785,12 +802,14 @@ pub fn resolve_pred_func<'cx>(
     let info = info.clone();
     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let loc = info.callee.loc();
-        let use_op = type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::FunCall {
-            op: reason::mk_expression_reason(&info.call_expr),
-            fn_: reason::mk_expression_reason(&info.callee),
-            args: reason::mk_initial_arguments_reason(&info.arguments).into(),
-            local: true,
-        }));
+        let use_op = type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::FunCall(Box::new(
+            type_::FunCallData {
+                op: reason::mk_expression_reason(&info.call_expr),
+                fn_: reason::mk_expression_reason(&info.callee),
+                args: reason::mk_initial_arguments_reason(&info.arguments).into(),
+                local: true,
+            },
+        ))));
         // [callee] might be a member access expression. Since we are explicitly unbinding it from
         // the call, make sure we don't raise a method-unbinding error.
         let callee_t = type_env::with_class_stack(cx, info.class_stack.dupe(), || {
@@ -849,10 +868,10 @@ fn resolve_annotated_function<'cx>(
     {
         flow_js_utils::add_output_non_speculating(
             cx,
-            flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(
+            flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(Box::new((
                 function_loc.dupe(),
                 flow_typing_errors::intermediate_error_types::UnsupportedSyntax::AsyncHookSyntax,
-            ),
+            ))),
         );
     }
     let cache = cx.node_cache();
@@ -903,10 +922,10 @@ fn resolve_annotated_component<'cx>(
     if !cx.component_syntax() {
         flow_js_utils::add_output_non_speculating(
             cx,
-            flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(
+            flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(Box::new((
                 component_loc.dupe(),
                 flow_typing_errors::intermediate_error_types::UnsupportedSyntax::ComponentSyntax,
-            ),
+            ))),
         );
         any_t::at(AnySource::AnyError(None), component_loc)
     } else {
@@ -921,10 +940,10 @@ fn resolve_annotated_component<'cx>(
         if component.async_ && !cx.metadata().frozen.async_component_syntax {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(
+                flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(Box::new((
                     component_loc.dupe(),
                     flow_typing_errors::intermediate_error_types::UnsupportedSyntax::AsyncComponentSyntax,
-                ),
+                ))),
             );
         }
         let tparams_map = mk_tparams_map(cx, tparams_map);
@@ -956,7 +975,7 @@ fn resolve_annotated_component<'cx>(
 
 fn binding_has_annot(binding: &Binding) -> bool {
     match binding {
-        Binding::Root(Root::Annotation { .. }) => true,
+        Binding::Root(Root::Annotation(_)) => true,
         Binding::Hooklike(b) | Binding::Select { parent: (_, b), .. } => binding_has_annot(b),
         _ => false,
     }
@@ -970,7 +989,7 @@ fn resolve_binding<'cx>(
     b: &Binding,
 ) -> Result<Type, AbnormalControlFlow> {
     match b {
-        Binding::Root(Root::Annotation {
+        Binding::Root(Root::Annotation(box AnnotationData {
             tparams_map,
             optional,
             has_default_expression,
@@ -978,7 +997,7 @@ fn resolve_binding<'cx>(
             annot,
             react_deep_read_only,
             concrete: _,
-        }) => {
+        })) => {
             let t = resolve_annotation(
                 cx,
                 tparams_map,
@@ -1005,17 +1024,17 @@ fn resolve_binding<'cx>(
                 Ok(t)
             }
         }
-        Binding::Root(Root::Value(name_def_types::Value {
+        Binding::Root(Root::Value(box name_def_types::Value {
             hints: _,
             expr,
             decl_kind,
             as_const,
         })) => expression(cx, None, *decl_kind, Some(*as_const), expr),
-        Binding::Root(Root::MatchCaseRoot {
+        Binding::Root(Root::MatchCaseRoot(box MatchCaseRootData {
             case_match_root_loc,
             root_pattern_loc,
             prev_pattern_loc,
-        }) => {
+        })) => {
             let unfiltered_t = type_env::var_ref(
                 None,
                 cx,
@@ -1048,11 +1067,11 @@ fn resolve_binding<'cx>(
             );
             Ok(value_left.to_type(type_util::reason_of_t(&unfiltered_t).dupe()))
         }
-        Binding::Root(Root::ObjectValue {
+        Binding::Root(Root::ObjectValue(box ObjectValueData {
             obj_loc,
             obj,
             synthesizable: name_def_types::ObjectSynthKind::ObjectSynthesizable { .. },
-        }) => {
+        })) => {
             let resolve_prop = |bind_this: bool,
                                 prop_loc: ALoc,
                                 fn_loc: ALoc,
@@ -1324,13 +1343,13 @@ fn resolve_binding<'cx>(
                                         acc.add_prop(move |mut props_map| {
                                             props_map.insert(
                                                 reason::Name::new(name),
-                                                type_::Property::new(type_::PropertyInner::Field {
+                                                type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                                                     preferred_def_locs: None,
                                                     key_loc: Some(name_loc.dupe()),
                                                     type_: t,
                                                     polarity:
                                                         flow_common::polarity::Polarity::Neutral,
-                                                }),
+                                                }))),
                                             );
                                             props_map
                                         })
@@ -1340,13 +1359,13 @@ fn resolve_binding<'cx>(
                                         acc.add_prop(move |mut props_map| {
                                             props_map.insert(
                                                 reason::Name::new(name),
-                                                type_::Property::new(type_::PropertyInner::Field {
+                                                type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                                                     preferred_def_locs: None,
                                                     key_loc: Some(name_loc.dupe()),
                                                     type_: t,
                                                     polarity:
                                                         flow_common::polarity::Polarity::Neutral,
-                                                }),
+                                                }))),
                                             );
                                             props_map
                                         })
@@ -1370,18 +1389,18 @@ fn resolve_binding<'cx>(
                 obj,
             )
         }
-        Binding::Root(Root::ObjectValue {
+        Binding::Root(Root::ObjectValue(box ObjectValueData {
             obj_loc,
             obj,
             synthesizable: _,
-        }) => {
+        })) => {
             let expr = ast::expression::Expression::new(ast::expression::ExpressionInner::Object {
                 loc: obj_loc.dupe(),
                 inner: obj.clone().into(),
             });
             expression(cx, None, None, None, &expr)
         }
-        Binding::Root(Root::FunctionValue {
+        Binding::Root(Root::FunctionValue(box FunctionValueData {
             hints: _,
             synthesizable_from_annotation: name_def_types::FunctionSynthKind::FunctionSynthesizable,
             function_loc,
@@ -1389,7 +1408,7 @@ fn resolve_binding<'cx>(
             statics,
             arrow,
             tparams_map,
-        }) => {
+        })) => {
             let cache = cx.node_cache();
             let tparams_map = mk_tparams_map(cx, tparams_map);
             let sig_loc = function_.sig_loc.dupe();
@@ -1434,7 +1453,7 @@ fn resolve_binding<'cx>(
             );
             Ok(t)
         }
-        Binding::Root(Root::FunctionValue {
+        Binding::Root(Root::FunctionValue(box FunctionValueData {
             hints: _,
             synthesizable_from_annotation: _,
             function_loc,
@@ -1442,7 +1461,7 @@ fn resolve_binding<'cx>(
             statics,
             arrow,
             tparams_map: _,
-        }) => {
+        })) => {
             let id = &function_.id;
             let async_ = function_.async_;
             let generator = function_.generator;
@@ -1493,10 +1512,10 @@ fn resolve_binding<'cx>(
             cache.set_expression(expr);
             Ok(func_type)
         }
-        Binding::Root(Root::EmptyArray {
+        Binding::Root(Root::EmptyArray(box EmptyArrayData {
             array_providers,
             arr_loc,
-        }) => {
+        })) => {
             let (elem_t, tuple_view, arr_reason) = if !array_providers.is_empty() {
                 let ts: Vec<Type> = array_providers
                     .iter()
@@ -1562,12 +1581,12 @@ fn resolve_binding<'cx>(
             cache.set_expression(exp);
             Ok(t)
         }
-        Binding::Root(Root::Contextual {
+        Binding::Root(Root::Contextual(box ContextualData {
             reason: ctx_reason,
             hints,
             optional,
             default_expression,
-        }) => {
+        })) => {
             let param_loc = ctx_reason.loc().dupe();
             let type_::LazyHintT(has_hint, lazy_hint) = lazily_resolve_hints(cx, loc.dupe(), hints);
             let t = match lazy_hint(cx, false, None, ctx_reason.dupe()) {
@@ -1655,7 +1674,7 @@ fn resolve_binding<'cx>(
                 r,
             ))
         }
-        Binding::Root(Root::For(kind, (_, exp_inner))) => {
+        Binding::Root(Root::For(box (kind, (_, exp_inner)))) => {
             let right_t = expression(
                 cx,
                 Some(EnclosingContext::OtherTestContext),
@@ -1845,10 +1864,10 @@ fn resolve_inferred_function<'cx>(
     {
         flow_js_utils::add_output_non_speculating(
             cx,
-            flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(
+            flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(Box::new((
                 function_loc.dupe(),
                 flow_typing_errors::intermediate_error_types::UnsupportedSyntax::AsyncHookSyntax,
-            ),
+            ))),
         );
     }
     Ok(
@@ -2325,12 +2344,12 @@ fn resolve<'cx>(
         Def::Binding(b) => {
             resolve_binding(cx, def_scope_kind, def_reason.dupe(), id_loc.dupe(), b)?
         }
-        Def::MatchCasePattern {
+        Def::MatchCasePattern(box MatchCasePatternData {
             case_match_root_loc,
             has_guard,
             pattern,
             prev_pattern_loc,
-        } => resolve_match_pattern(
+        }) => resolve_match_pattern(
             cx,
             def_reason,
             case_match_root_loc.dupe(),
@@ -2338,23 +2357,23 @@ fn resolve<'cx>(
             prev_pattern_loc.dupe(),
             &pattern.1,
         )?,
-        Def::ExpressionDef(name_def_types::ExpressionDef {
+        Def::ExpressionDef(box name_def_types::ExpressionDef {
             cond_context,
             expr,
             chain: true,
             ..
         }) => resolve_chain_expression(cx, cond_context.dupe(), expr)?,
-        Def::ExpressionDef(name_def_types::ExpressionDef {
+        Def::ExpressionDef(box name_def_types::ExpressionDef {
             cond_context,
             expr,
             chain: false,
             ..
         }) => resolve_write_expression(cx, cond_context.dupe(), expr)?,
-        Def::Component {
+        Def::Component(box ComponentDefData {
             component,
             component_loc,
             tparams_map,
-        } => resolve_annotated_component(
+        }) => resolve_annotated_component(
             cx,
             def_scope_kind,
             def_reason,
@@ -2362,7 +2381,7 @@ fn resolve<'cx>(
             component_loc.dupe(),
             component,
         ),
-        Def::Function {
+        Def::Function(box FunctionDefData {
             function_,
             synthesizable_from_annotation: name_def_types::FunctionSynthKind::FunctionSynthesizable,
             arrow,
@@ -2371,7 +2390,7 @@ fn resolve<'cx>(
             tparams_map,
             statics,
             hints: _,
-        } => {
+        }) => {
             let hook_like = ast_utils::hook_function(function_).is_some();
             resolve_annotated_function(
                 cx,
@@ -2385,7 +2404,7 @@ fn resolve<'cx>(
                 function_,
             )?
         }
-        Def::Function {
+        Def::Function(box FunctionDefData {
             function_,
             synthesizable_from_annotation: _,
             arrow,
@@ -2394,7 +2413,7 @@ fn resolve<'cx>(
             tparams_map: _,
             statics,
             hints: _,
-        } => resolve_inferred_function(
+        }) => resolve_inferred_function(
             cx,
             def_scope_kind,
             statics,
@@ -2404,12 +2423,12 @@ fn resolve<'cx>(
             function_loc.dupe(),
             function_,
         )?,
-        Def::Class {
+        Def::Class(box ClassDefData {
             class_,
             class_loc,
             kind,
             this_super_write_locs: _,
-        } => resolve_class(
+        }) => resolve_class(
             cx,
             id_loc.dupe(),
             def_reason,
@@ -2417,12 +2436,12 @@ fn resolve<'cx>(
             class_loc.dupe(),
             class_,
         )?,
-        Def::Record {
+        Def::Record(box RecordDefData {
             record,
             record_loc,
             this_super_write_locs: _,
             defaulted_props,
-        } => resolve_record(
+        }) => resolve_record(
             cx,
             id_loc.dupe(),
             def_reason,
@@ -2430,29 +2449,29 @@ fn resolve<'cx>(
             defaulted_props,
             record,
         )?,
-        Def::MemberAssign {
+        Def::MemberAssign(box MemberAssignData {
             member_loc: _,
             member: _,
             rhs,
-        } => expression(cx, None, None, None, &rhs.1)?,
-        Def::OpAssign {
+        }) => expression(cx, None, None, None, &rhs.1)?,
+        Def::OpAssign(box OpAssignData {
             exp_loc,
             lhs,
             op,
             rhs,
             assertion,
-        } => resolve_op_assign(cx, exp_loc.dupe(), &lhs.1, *assertion, *op, &rhs.1)?,
+        }) => resolve_op_assign(cx, exp_loc.dupe(), &lhs.1, *assertion, *op, &rhs.1)?,
         Def::Update { exp_loc, op: _ } => {
             resolve_update(cx, id_loc.dupe(), exp_loc.dupe(), def_reason)
         }
         Def::TypeAlias(loc, alias) => resolve_type_alias(cx, loc.dupe(), alias),
         Def::OpaqueType(loc, opaque) => resolve_opaque_type(cx, loc.dupe(), opaque),
-        Def::Import {
+        Def::Import(box ImportData {
             import_kind,
             source,
             source_loc,
             import,
-        } => resolve_import(
+        }) => resolve_import(
             cx,
             id_loc.dupe(),
             def_reason,
@@ -2464,7 +2483,7 @@ fn resolve<'cx>(
         Def::Interface(loc, inter) => resolve_interface(cx, loc.dupe(), inter),
         Def::DeclaredClass(loc, class_) => resolve_declare_class(cx, loc.dupe(), class_),
         Def::DeclaredComponent(loc, comp) => resolve_declare_component(cx, loc.dupe(), comp),
-        Def::Enum(enum_loc, name, enum_) => resolve_enum(
+        Def::Enum(box (enum_loc, name, enum_)) => resolve_enum(
             cx,
             id_loc.dupe(),
             def_reason,
@@ -2472,8 +2491,10 @@ fn resolve<'cx>(
             name.as_str(),
             enum_,
         ),
-        Def::TypeParam { .. } => resolve_type_param(cx, &id_loc),
-        Def::GeneratorNext(gen_info) => resolve_generator_next(cx, def_reason, gen_info.as_ref()),
+        Def::TypeParam(_) => resolve_type_param(cx, &id_loc),
+        Def::GeneratorNext(gen_info) => {
+            resolve_generator_next(cx, def_reason, (**gen_info).as_ref())
+        }
         Def::DeclaredNamespace(loc, ns) => resolve_declare_namespace(cx, loc.dupe(), ns),
         Def::MissingThisAnnot => any_t::at(AnySource::AnyError(None), id_loc.dupe()),
     };
@@ -2495,9 +2516,9 @@ fn resolve<'cx>(
         }
     }
     let add_array_or_object_literal_declaration_tracking = match def {
-        Def::Binding(Binding::Root(Root::ObjectValue { .. })) => true,
-        Def::Binding(Binding::Root(Root::EmptyArray { .. })) => true,
-        Def::Binding(Binding::Root(Root::Value(name_def_types::Value {
+        Def::Binding(box Binding::Root(Root::ObjectValue(_))) => true,
+        Def::Binding(box Binding::Root(Root::EmptyArray(_))) => true,
+        Def::Binding(box Binding::Root(Root::Value(box name_def_types::Value {
             hints: _,
             expr,
             decl_kind: Some(_),
@@ -2538,37 +2559,37 @@ fn entries_of_def(
                     r.loc().dupe(),
                 ));
             }
-            Binding::Root(Root::Annotation {
+            Binding::Root(Root::Annotation(box AnnotationData {
                 param_loc: Some(l), ..
-            }) => {
+            })) => {
                 acc.insert(env_api::EnvKey::new(
                     env_api::DefLocType::FunctionParamLoc,
                     l.dupe(),
                 ));
             }
-            Binding::Root(Root::Contextual { reason, .. }) => {
+            Binding::Root(Root::Contextual(box ContextualData { reason, .. })) => {
                 let l = reason.loc().dupe();
                 acc.insert(env_api::EnvKey::new(
                     env_api::DefLocType::FunctionParamLoc,
                     l,
                 ));
             }
-            Binding::Root(Root::FunctionValue {
+            Binding::Root(Root::FunctionValue(box FunctionValueData {
                 function_loc,
                 arrow: false,
                 function_,
                 ..
-            }) if function_.params.this_.is_none() => {
+            })) if function_.params.this_.is_none() => {
                 acc.insert(env_api::EnvKey::new(
                     env_api::DefLocType::FunctionThisLoc,
                     function_loc.dupe(),
                 ));
             }
-            Binding::Root(Root::ObjectValue {
+            Binding::Root(Root::ObjectValue(box ObjectValueData {
                 synthesizable:
                     name_def_types::ObjectSynthKind::ObjectSynthesizable { this_write_locs },
                 ..
-            }) => {
+            })) => {
                 for entry in this_write_locs.iter() {
                     acc.insert(entry.dupe());
                 }
@@ -2585,28 +2606,28 @@ fn entries_of_def(
             Def::Binding(b) => {
                 add_from_bindings(&mut acc, b);
             }
-            Def::Class {
+            Def::Class(box ClassDefData {
                 this_super_write_locs,
                 ..
-            } => {
+            }) => {
                 for entry in this_super_write_locs.iter() {
                     acc.insert(entry.dupe());
                 }
             }
-            Def::Record {
+            Def::Record(box RecordDefData {
                 this_super_write_locs,
                 ..
-            } => {
+            }) => {
                 for entry in this_super_write_locs.iter() {
                     acc.insert(entry.dupe());
                 }
             }
-            Def::Function {
+            Def::Function(box FunctionDefData {
                 has_this_def: true,
                 function_loc,
                 function_,
                 ..
-            } if function_.params.this_.is_none() => {
+            }) if function_.params.this_.is_none() => {
                 acc.insert(env_api::EnvKey::new(
                     env_api::DefLocType::FunctionThisLoc,
                     function_loc.dupe(),
@@ -2697,11 +2718,11 @@ fn init_type_param<'cx>(
         .get_ordinary(&def_loc)
         .expect("init_type_param: def_loc not found in graph");
     let tparam_entry = match def {
-        Def::TypeParam {
+        Def::TypeParam(box TypeParamData {
             tparams_map: tparams_locs,
             kind,
             tparam,
-        } => {
+        }) => {
             let tparams_map = mk_tparams_map_from_graph(cx, graph, tparams_locs);
             let (_, tparam_inner) = tparam;
             let info = type_annotation::mk_type_param(cx, tparams_map, *kind, tparam_inner);
@@ -2711,7 +2732,7 @@ fn init_type_param<'cx>(
             cache.set_tparam(info);
             result
         }
-        Def::Class { class_loc, .. } => {
+        Def::Class(box ClassDefData { class_loc, .. }) => {
             let self_ = type_env::read_class_self_type(cx, class_loc.dupe());
             let (this_param, this_t) =
                 flow_typing_statement::class_sig::mk_this(self_, cx, reason.dupe());
@@ -2721,7 +2742,7 @@ fn init_type_param<'cx>(
                 this_t,
             )
         }
-        Def::Record { record_loc, .. } => {
+        Def::Record(box RecordDefData { record_loc, .. }) => {
             let self_ = type_env::read_class_self_type(cx, record_loc.dupe());
             let (this_param, this_t) =
                 flow_typing_statement::class_sig::mk_this(self_, cx, reason.dupe());
@@ -2753,10 +2774,10 @@ fn resolve_component_type_params<'cx>(
         |loc: ALoc, def: &(Def, ScopeKind, name_def_types::ClassStack, Reason)| {
             let (def, _, _, _) = def;
             match def {
-                Def::TypeParam {
+                Def::TypeParam(box TypeParamData {
                     tparam: (_, tparam),
                     ..
-                } => {
+                }) => {
                     let name_loc = tparam.name.loc.dupe();
                     let str_name = tparam.name.name.dupe();
                     let name = SubstName::name(str_name.dupe());
@@ -2781,7 +2802,7 @@ fn resolve_component_type_params<'cx>(
                         (name, tp, any_t::at(AnySource::AnyError(None), loc)),
                     );
                 }
-                Def::Class { .. } => {
+                Def::Class(_) => {
                     let name = SubstName::name(FlowSmolStr::new("this"));
                     let tp_reason =
                         reason::mk_annot_reason(reason::VirtualReasonDesc::RThis, loc.dupe());
@@ -2802,7 +2823,7 @@ fn resolve_component_type_params<'cx>(
                         (name, tp, any_t::at(AnySource::AnyError(None), loc)),
                     );
                 }
-                Def::Record { .. } => {
+                Def::Record(_) => {
                     let name = SubstName::name(FlowSmolStr::new("this"));
                     let tp_reason =
                         reason::mk_annot_reason(reason::VirtualReasonDesc::RThis, loc.dupe());
@@ -2837,7 +2858,7 @@ fn resolve_component_type_params<'cx>(
         }
         name_def_ordering::Element::Normal(key) | name_def_ordering::Element::Resolvable(key) => {
             if let Some((def, _, _, _)) = graph.get(key)
-                && let Def::TypeParam { .. } | Def::Class { .. } | Def::Record { .. } = def
+                && let Def::TypeParam(_) | Def::Class(_) | Def::Record(_) = def
             {
                 init_type_param(cx, graph, key.loc.dupe());
             }

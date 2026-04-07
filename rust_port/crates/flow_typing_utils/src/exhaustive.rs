@@ -25,8 +25,14 @@ use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::EnumInvalidCheckData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::MatchInvalidIdentOrMemberPatternData;
+use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
+use flow_typing_errors::error_message::MatchNonExplicitEnumCheckData;
+use flow_typing_errors::error_message::MatchNotExhaustiveData;
+use flow_typing_errors::error_message::MatchUnusedPatternData;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -127,10 +133,12 @@ pub mod pattern_union_builder {
                 if raise_errors {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
-                            reason: reason.dupe(),
-                            already_seen: Some(already_seen.dupe()),
-                        }),
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
+                            MatchUnusedPatternData {
+                                reason: reason.dupe(),
+                                already_seen: Some(already_seen.dupe()),
+                            },
+                        ))),
                     );
                 }
                 false
@@ -157,10 +165,12 @@ pub mod pattern_union_builder {
                 if raise_errors {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
-                            reason: reason.dupe(),
-                            already_seen: Some(already_seen),
-                        }),
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
+                            MatchUnusedPatternData {
+                                reason: reason.dupe(),
+                                already_seen: Some(already_seen),
+                            },
+                        ))),
                     );
                 }
                 pattern_union
@@ -298,12 +308,14 @@ pub mod pattern_union_builder {
                         if raise_errors {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck {
-                                    loc: loc.dupe(),
-                                    enum_reason: reason_of_t(t).dupe(),
-                                    example_member,
-                                    from_match: true,
-                                }),
+                                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
+                                    Box::new(EnumInvalidCheckData {
+                                        loc: loc.dupe(),
+                                        enum_reason: reason_of_t(t).dupe(),
+                                        example_member,
+                                        from_match: true,
+                                    }),
+                                )),
                             );
                         }
                         return None;
@@ -333,10 +345,12 @@ pub mod pattern_union_builder {
         if raise_errors {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern {
-                    loc: loc.dupe(),
-                    type_reason: reason_of_t(t).dupe(),
-                }),
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(
+                    Box::new(MatchInvalidIdentOrMemberPatternData {
+                        loc: loc.dupe(),
+                        type_reason: reason_of_t(t).dupe(),
+                    }),
+                )),
             );
         }
         None
@@ -1833,7 +1847,7 @@ fn filter_object_by_pattern<'cx>(
                     if raise_errors {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern {
+                            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(Box::new(MatchNonExhaustiveObjectPatternData {
                                 loc: reason_pattern.loc().dupe(),
                                 rest: value_rest.as_ref().map(|r| r.dupe()),
                                 missing_props,
@@ -1841,7 +1855,7 @@ fn filter_object_by_pattern<'cx>(
                                     Some(_) => flow_typing_errors::intermediate_error_types::MatchObjPatternKind::Instance,
                                     None => flow_typing_errors::intermediate_error_types::MatchObjPatternKind::Object,
                                 },
-                            }),
+                            }))),
                         );
                     }
                 }
@@ -2012,10 +2026,12 @@ fn check_for_unused_patterns<'cx>(
     let error = |reason: Reason| {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
-                reason,
-                already_seen: None,
-            }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
+                MatchUnusedPatternData {
+                    reason,
+                    already_seen: None,
+                },
+            ))),
         )
     };
     for leaf_val in &pattern_union.leafs {
@@ -2093,11 +2109,13 @@ pub fn analyze<'cx>(
                         .collect();
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck {
-                            loc: match_loc.dupe(),
-                            wildcard_reason: wildcard_reason.dupe(),
-                            unchecked_members,
-                        }),
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
+                            Box::new(MatchNonExplicitEnumCheckData {
+                                loc: match_loc.dupe(),
+                                wildcard_reason: wildcard_reason.dupe(),
+                                unchecked_members,
+                            }),
+                        )),
                     );
                 }
             }
@@ -2234,11 +2252,13 @@ pub fn analyze<'cx>(
             asts.into_iter().take(25).map(|(_, pat)| pat).collect();
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive {
-                loc: match_loc.dupe(),
-                examples,
-                missing_pattern_asts,
-            }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive(Box::new(
+                MatchNotExhaustiveData {
+                    loc: match_loc.dupe(),
+                    examples,
+                    missing_pattern_asts,
+                },
+            ))),
         );
     }
     check_for_unused_patterns(cx, &pattern_union, &used_pattern_locs);

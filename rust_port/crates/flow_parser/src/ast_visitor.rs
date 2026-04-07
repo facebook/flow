@@ -15393,7 +15393,7 @@ pub fn match_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             visitor.boolean_literal(inner)?;
         }
         ast::match_pattern::MatchPattern::NullPattern { loc: _, inner } => {
-            visitor.syntax_opt(inner.as_ref())?;
+            visitor.syntax_opt((**inner).as_ref())?;
         }
         ast::match_pattern::MatchPattern::NumberPattern { loc: _, inner } => {
             visitor.number_literal(inner)?;
@@ -15440,37 +15440,37 @@ pub fn map_match_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         ast::match_pattern::MatchPattern::WildcardPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::WildcardPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_match_wildcard_pattern(inner),
+                inner: Box::new(visitor.map_match_wildcard_pattern(inner)),
             }
         }
         ast::match_pattern::MatchPattern::StringPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::StringPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_string_literal(inner),
+                inner: Box::new(visitor.map_string_literal(inner)),
             }
         }
         ast::match_pattern::MatchPattern::BooleanPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::BooleanPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_boolean_literal(inner),
+                inner: Box::new(visitor.map_boolean_literal(inner)),
             }
         }
         ast::match_pattern::MatchPattern::NullPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::NullPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_syntax_opt(inner.as_ref()),
+                inner: Box::new(visitor.map_syntax_opt((**inner).as_ref())),
             }
         }
         ast::match_pattern::MatchPattern::NumberPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::NumberPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_number_literal(inner),
+                inner: Box::new(visitor.map_number_literal(inner)),
             }
         }
         ast::match_pattern::MatchPattern::BigIntPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::BigIntPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_bigint_literal(inner),
+                inner: Box::new(visitor.map_bigint_literal(inner)),
             }
         }
         ast::match_pattern::MatchPattern::UnaryPattern { loc, inner } => {
@@ -15482,7 +15482,7 @@ pub fn map_match_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         ast::match_pattern::MatchPattern::IdentifierPattern { loc, inner } => {
             ast::match_pattern::MatchPattern::IdentifierPattern {
                 loc: loc.dupe(),
-                inner: visitor.map_identifier(inner),
+                inner: Box::new(visitor.map_identifier(inner)),
             }
         }
         ast::match_pattern::MatchPattern::MemberPattern { loc, inner } => {

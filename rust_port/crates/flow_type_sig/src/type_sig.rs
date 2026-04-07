@@ -1130,104 +1130,153 @@ pub enum EnumRep {
 // The signature format is designed to exploit these forms of indirection to
 // preserve sharing and minimize size. Two references to a given definition will
 // always be represented as pointers to a shared signature of that definition.
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefTypeAlias<Loc, T> {
+    pub id_loc: Loc,
+    pub custom_error_loc_opt: Option<Loc>,
+    pub name: FlowSmolStr,
+    pub tparams: TParams<Loc, T>,
+    pub body: T,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefOpaqueType<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub tparams: TParams<Loc, T>,
+    pub lower_bound: Option<T>,
+    pub upper_bound: Option<T>,
+    pub body: Option<T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefInterface<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub tparams: TParams<Loc, T>,
+    pub def: InterfaceSig<Loc, T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefClassBinding<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub def: ClassSig<Loc, T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefDeclareClassBinding<Loc, T> {
+    pub id_loc: Loc,
+    pub nominal_id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub def: DeclareClassSig<Loc, T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefRecordBinding<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub def: ClassSig<Loc, T>,
+    pub defaulted_props: BTreeSet<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefDisabledRecordBinding<Loc> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefFunBinding<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub async_: bool,
+    pub generator: bool,
+    pub fn_loc: Loc,
+    pub def: FunSig<Loc, T>,
+    pub statics: BTreeMap<FlowSmolStr, (Loc, T)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefDeclareFun<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub fn_loc: Loc,
+    pub def: FunSig<Loc, T>,
+    pub tail: Vec<(Loc, Loc, FunSig<Loc, T>)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefComponentBinding<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub fn_loc: Loc,
+    pub def: ComponentSig<Loc, T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefDisabledComponentBinding<Loc> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefVariable<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub def: T,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefParameter<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub def: T,
+    pub tparams: TParams<Loc, T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefEnumBinding<Loc> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub rep: Option<EnumRep>,
+    pub members: BTreeMap<FlowSmolStr, Loc>,
+    pub has_unknown_members: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefDisabledEnumBinding<Loc> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct DefNamespaceBinding<Loc, T> {
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub values: BTreeMap<FlowSmolStr, (Loc, T)>,
+    pub types: BTreeMap<FlowSmolStr, (Loc, T)>,
+}
+
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Def<Loc, T> {
-    TypeAlias {
-        id_loc: Loc,
-        custom_error_loc_opt: Option<Loc>,
-        name: FlowSmolStr,
-        tparams: TParams<Loc, T>,
-        body: T,
-    },
-    OpaqueType {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        tparams: TParams<Loc, T>,
-        lower_bound: Option<T>,
-        upper_bound: Option<T>,
-        body: Option<T>,
-    },
-    Interface {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        tparams: TParams<Loc, T>,
-        def: InterfaceSig<Loc, T>,
-    },
-    ClassBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        def: ClassSig<Loc, T>,
-    },
-    DeclareClassBinding {
-        id_loc: Loc,
-        nominal_id_loc: Loc,
-        name: FlowSmolStr,
-        def: DeclareClassSig<Loc, T>,
-    },
-    RecordBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        def: ClassSig<Loc, T>,
-        defaulted_props: BTreeSet<FlowSmolStr>,
-    },
-    DisabledRecordBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-    },
-    FunBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        async_: bool,
-        generator: bool,
-        fn_loc: Loc,
-        def: FunSig<Loc, T>,
-        statics: BTreeMap<FlowSmolStr, (Loc, T)>,
-    },
-    DeclareFun {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        fn_loc: Loc,
-        def: FunSig<Loc, T>,
-        tail: Vec<(Loc, Loc, FunSig<Loc, T>)>,
-    },
-    ComponentBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        fn_loc: Loc,
-        def: ComponentSig<Loc, T>,
-    },
-    DisabledComponentBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-    },
-    Variable {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        def: T,
-    },
-    Parameter {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        def: T,
-        tparams: TParams<Loc, T>,
-    },
-    EnumBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        rep: Option<EnumRep>,
-        members: BTreeMap<FlowSmolStr, Loc>,
-        has_unknown_members: bool,
-    },
-    DisabledEnumBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-    },
-    NamespaceBinding {
-        id_loc: Loc,
-        name: FlowSmolStr,
-        values: BTreeMap<FlowSmolStr, (Loc, T)>,
-        types: BTreeMap<FlowSmolStr, (Loc, T)>,
-    },
+    TypeAlias(Box<DefTypeAlias<Loc, T>>),
+    OpaqueType(Box<DefOpaqueType<Loc, T>>),
+    Interface(Box<DefInterface<Loc, T>>),
+    ClassBinding(Box<DefClassBinding<Loc, T>>),
+    DeclareClassBinding(Box<DefDeclareClassBinding<Loc, T>>),
+    RecordBinding(Box<DefRecordBinding<Loc, T>>),
+    DisabledRecordBinding(Box<DefDisabledRecordBinding<Loc>>),
+    FunBinding(Box<DefFunBinding<Loc, T>>),
+    DeclareFun(Box<DefDeclareFun<Loc, T>>),
+    ComponentBinding(Box<DefComponentBinding<Loc, T>>),
+    DisabledComponentBinding(Box<DefDisabledComponentBinding<Loc>>),
+    Variable(Box<DefVariable<Loc, T>>),
+    Parameter(Box<DefParameter<Loc, T>>),
+    EnumBinding(Box<DefEnumBinding<Loc>>),
+    DisabledEnumBinding(Box<DefDisabledEnumBinding<Loc>>),
+    NamespaceBinding(Box<DefNamespaceBinding<Loc, T>>),
 }
 
 impl<Loc: Clone, T> Def<Loc, T> {
@@ -1235,46 +1284,43 @@ impl<Loc: Clone, T> Def<Loc, T> {
     // id_loc and name have the same offset for each constructor.
     pub fn id_loc(&self) -> Loc {
         match self {
-            Def::TypeAlias { id_loc, .. }
-            | Def::OpaqueType { id_loc, .. }
-            | Def::Interface { id_loc, .. }
-            | Def::ClassBinding { id_loc, .. }
-            | Def::DeclareClassBinding { id_loc, .. }
-            | Def::RecordBinding { id_loc, .. }
-            | Def::DisabledRecordBinding { id_loc, .. }
-            | Def::FunBinding { id_loc, .. }
-            | Def::DeclareFun { id_loc, .. }
-            | Def::ComponentBinding { id_loc, .. }
-            | Def::DisabledComponentBinding { id_loc, .. }
-            | Def::Variable { id_loc, .. }
-            | Def::Parameter { id_loc, .. }
-            | Def::EnumBinding { id_loc, .. }
-            | Def::DisabledEnumBinding { id_loc, .. }
-            | Def::NamespaceBinding { id_loc, .. } => {
-                // clone needed: generic Loc type
-                id_loc.clone()
-            }
+            Def::TypeAlias(inner) => inner.id_loc.clone(),
+            Def::OpaqueType(inner) => inner.id_loc.clone(),
+            Def::Interface(inner) => inner.id_loc.clone(),
+            Def::ClassBinding(inner) => inner.id_loc.clone(),
+            Def::DeclareClassBinding(inner) => inner.id_loc.clone(),
+            Def::RecordBinding(inner) => inner.id_loc.clone(),
+            Def::DisabledRecordBinding(inner) => inner.id_loc.clone(),
+            Def::FunBinding(inner) => inner.id_loc.clone(),
+            Def::DeclareFun(inner) => inner.id_loc.clone(),
+            Def::ComponentBinding(inner) => inner.id_loc.clone(),
+            Def::DisabledComponentBinding(inner) => inner.id_loc.clone(),
+            Def::Variable(inner) => inner.id_loc.clone(),
+            Def::Parameter(inner) => inner.id_loc.clone(),
+            Def::EnumBinding(inner) => inner.id_loc.clone(),
+            Def::DisabledEnumBinding(inner) => inner.id_loc.clone(),
+            Def::NamespaceBinding(inner) => inner.id_loc.clone(),
         }
     }
 
     pub fn name(&self) -> &FlowSmolStr {
         match self {
-            Def::TypeAlias { name, .. }
-            | Def::OpaqueType { name, .. }
-            | Def::Interface { name, .. }
-            | Def::ClassBinding { name, .. }
-            | Def::DeclareClassBinding { name, .. }
-            | Def::RecordBinding { name, .. }
-            | Def::DisabledRecordBinding { name, .. }
-            | Def::FunBinding { name, .. }
-            | Def::DeclareFun { name, .. }
-            | Def::ComponentBinding { name, .. }
-            | Def::DisabledComponentBinding { name, .. }
-            | Def::Variable { name, .. }
-            | Def::Parameter { name, .. }
-            | Def::EnumBinding { name, .. }
-            | Def::DisabledEnumBinding { name, .. }
-            | Def::NamespaceBinding { name, .. } => name,
+            Def::TypeAlias(inner) => &inner.name,
+            Def::OpaqueType(inner) => &inner.name,
+            Def::Interface(inner) => &inner.name,
+            Def::ClassBinding(inner) => &inner.name,
+            Def::DeclareClassBinding(inner) => &inner.name,
+            Def::RecordBinding(inner) => &inner.name,
+            Def::DisabledRecordBinding(inner) => &inner.name,
+            Def::FunBinding(inner) => &inner.name,
+            Def::DeclareFun(inner) => &inner.name,
+            Def::ComponentBinding(inner) => &inner.name,
+            Def::DisabledComponentBinding(inner) => &inner.name,
+            Def::Variable(inner) => &inner.name,
+            Def::Parameter(inner) => &inner.name,
+            Def::EnumBinding(inner) => &inner.name,
+            Def::DisabledEnumBinding(inner) => &inner.name,
+            Def::NamespaceBinding(inner) => &inner.name,
         }
     }
 
@@ -1285,171 +1331,100 @@ impl<Loc: Clone, T> Def<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            Def::TypeAlias {
-                id_loc,
-                custom_error_loc_opt,
-                name: _,
-                tparams,
-                body,
-            } => {
-                f_loc(cx, id_loc);
-                if let Some(loc) = custom_error_loc_opt {
+            Def::TypeAlias(inner) => {
+                f_loc(cx, &inner.id_loc);
+                if let Some(loc) = &inner.custom_error_loc_opt {
                     f_loc(cx, loc);
                 }
-                tparams.iter(cx, f_loc, f_t);
-                f_t(cx, body);
+                inner.tparams.iter(cx, f_loc, f_t);
+                f_t(cx, &inner.body);
             }
-            Def::OpaqueType {
-                id_loc,
-                name: _,
-                tparams,
-                lower_bound,
-                upper_bound,
-                body,
-            } => {
-                f_loc(cx, id_loc);
-                tparams.iter(cx, f_loc, f_t);
-                if let Some(t) = lower_bound {
+            Def::OpaqueType(inner) => {
+                f_loc(cx, &inner.id_loc);
+                inner.tparams.iter(cx, f_loc, f_t);
+                if let Some(t) = &inner.lower_bound {
                     f_t(cx, t);
                 }
-                if let Some(t) = upper_bound {
+                if let Some(t) = &inner.upper_bound {
                     f_t(cx, t);
                 }
-                if let Some(t) = body {
+                if let Some(t) = &inner.body {
                     f_t(cx, t);
                 }
             }
-            Def::Interface {
-                id_loc,
-                name: _,
-                tparams,
-                def,
-            } => {
-                f_loc(cx, id_loc);
-                tparams.iter(cx, f_loc, f_t);
-                def.iter(cx, f_loc, f_t);
+            Def::Interface(inner) => {
+                f_loc(cx, &inner.id_loc);
+                inner.tparams.iter(cx, f_loc, f_t);
+                inner.def.iter(cx, f_loc, f_t);
             }
-            Def::ClassBinding {
-                id_loc,
-                name: _,
-                def,
-            } => {
-                f_loc(cx, id_loc);
-                def.iter(cx, f_loc, f_t);
+            Def::ClassBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                inner.def.iter(cx, f_loc, f_t);
             }
-            Def::DeclareClassBinding {
-                id_loc,
-                nominal_id_loc,
-                name: _,
-                def,
-            } => {
-                f_loc(cx, id_loc);
-                f_loc(cx, nominal_id_loc);
-                def.iter(cx, f_loc, f_t);
+            Def::DeclareClassBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                f_loc(cx, &inner.nominal_id_loc);
+                inner.def.iter(cx, f_loc, f_t);
             }
-            Def::RecordBinding {
-                id_loc,
-                name: _,
-                def,
-                defaulted_props: _,
-            } => {
-                f_loc(cx, id_loc);
-                def.iter(cx, f_loc, f_t);
+            Def::RecordBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                inner.def.iter(cx, f_loc, f_t);
             }
-            Def::DisabledRecordBinding { id_loc, name: _ } => {
-                f_loc(cx, id_loc);
+            Def::DisabledRecordBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
             }
-            Def::FunBinding {
-                id_loc,
-                name: _,
-                async_: _,
-                generator: _,
-                fn_loc,
-                def,
-                statics,
-            } => {
-                f_loc(cx, id_loc);
-                f_loc(cx, fn_loc);
-                def.iter(cx, f_loc, f_t);
-                for (loc, t) in statics.values() {
+            Def::FunBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                f_loc(cx, &inner.fn_loc);
+                inner.def.iter(cx, f_loc, f_t);
+                for (loc, t) in inner.statics.values() {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
             }
-            Def::DeclareFun {
-                id_loc,
-                name: _,
-                fn_loc,
-                def,
-                tail,
-            } => {
-                f_loc(cx, id_loc);
-                f_loc(cx, fn_loc);
-                def.iter(cx, f_loc, f_t);
-                for (loc1, loc2, sig) in tail {
+            Def::DeclareFun(inner) => {
+                f_loc(cx, &inner.id_loc);
+                f_loc(cx, &inner.fn_loc);
+                inner.def.iter(cx, f_loc, f_t);
+                for (loc1, loc2, sig) in &inner.tail {
                     f_loc(cx, loc1);
                     f_loc(cx, loc2);
                     sig.iter(cx, f_loc, f_t);
                 }
             }
-            Def::ComponentBinding {
-                id_loc,
-                name: _,
-                fn_loc,
-                def,
-            } => {
-                f_loc(cx, id_loc);
-                f_loc(cx, fn_loc);
-                def.iter(cx, f_loc, f_t);
+            Def::ComponentBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                f_loc(cx, &inner.fn_loc);
+                inner.def.iter(cx, f_loc, f_t);
             }
-            Def::DisabledComponentBinding { id_loc, name: _ } => {
-                f_loc(cx, id_loc);
+            Def::DisabledComponentBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
             }
-            Def::Variable {
-                id_loc,
-                name: _,
-                def,
-            } => {
-                f_loc(cx, id_loc);
-                f_t(cx, def);
+            Def::Variable(inner) => {
+                f_loc(cx, &inner.id_loc);
+                f_t(cx, &inner.def);
             }
-            Def::Parameter {
-                id_loc,
-                name: _,
-                def,
-                tparams,
-            } => {
-                f_loc(cx, id_loc);
-                f_t(cx, def);
-                tparams.iter(cx, f_loc, f_t);
+            Def::Parameter(inner) => {
+                f_loc(cx, &inner.id_loc);
+                f_t(cx, &inner.def);
+                inner.tparams.iter(cx, f_loc, f_t);
             }
-            Def::EnumBinding {
-                id_loc,
-                name: _,
-                rep: _,
-                members,
-                has_unknown_members: _,
-            } => {
-                f_loc(cx, id_loc);
-                for loc in members.values() {
+            Def::EnumBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                for loc in inner.members.values() {
                     f_loc(cx, loc);
                 }
             }
-            Def::DisabledEnumBinding { id_loc, name: _ } => {
-                f_loc(cx, id_loc);
+            Def::DisabledEnumBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
             }
-            Def::NamespaceBinding {
-                id_loc,
-                name: _,
-                values,
-                types,
-            } => {
-                f_loc(cx, id_loc);
-                for (loc, t) in values.values() {
+            Def::NamespaceBinding(inner) => {
+                f_loc(cx, &inner.id_loc);
+                for (loc, t) in inner.values.values() {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
-                for (loc, t) in types.values() {
+                for (loc, t) in inner.types.values() {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
@@ -1464,182 +1439,135 @@ impl<Loc: Clone, T> Def<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> Def<Loc2, T2> {
         match self {
-            Def::TypeAlias {
-                id_loc,
-                custom_error_loc_opt,
-                name,
-                tparams,
-                body,
-            } => Def::TypeAlias {
-                id_loc: f_loc(cx, id_loc),
-                custom_error_loc_opt: custom_error_loc_opt.as_ref().map(|loc| f_loc(cx, loc)),
-                name: name.dupe(),
-                tparams: tparams.map(cx, &f_loc, &f_t),
-                body: f_t(cx, body),
-            },
-            Def::OpaqueType {
-                id_loc,
-                name,
-                tparams,
-                lower_bound,
-                upper_bound,
-                body,
-            } => Def::OpaqueType {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                tparams: tparams.map(cx, &f_loc, &f_t),
-                lower_bound: lower_bound.as_ref().map(|t| f_t(cx, t)),
-                upper_bound: upper_bound.as_ref().map(|t| f_t(cx, t)),
-                body: body.as_ref().map(|t| f_t(cx, t)),
-            },
-            Def::Interface {
-                id_loc,
-                name,
-                tparams,
-                def,
-            } => Def::Interface {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                tparams: tparams.map(cx, &f_loc, &f_t),
-                def: def.map(cx, &f_loc, &f_t),
-            },
-            Def::ClassBinding { id_loc, name, def } => Def::ClassBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                def: def.map(cx, &f_loc, &f_t),
-            },
-            Def::DeclareClassBinding {
-                id_loc,
-                nominal_id_loc,
-                name,
-                def,
-            } => Def::DeclareClassBinding {
-                id_loc: f_loc(cx, id_loc),
-                nominal_id_loc: f_loc(cx, nominal_id_loc),
-                name: name.dupe(),
-                def: def.map(cx, &f_loc, &f_t),
-            },
-            Def::RecordBinding {
-                id_loc,
-                name,
-                def,
-                defaulted_props,
-            } => Def::RecordBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                def: def.map(cx, &f_loc, &f_t),
-                defaulted_props: defaulted_props.clone(),
-            },
-            Def::DisabledRecordBinding { id_loc, name } => Def::DisabledRecordBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-            },
-            Def::FunBinding {
-                id_loc,
-                name,
-                async_,
-                generator,
-                fn_loc,
-                def,
-                statics,
-            } => Def::FunBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                async_: *async_,
-                generator: *generator,
-                fn_loc: f_loc(cx, fn_loc),
-                def: def.map(cx, &f_loc, &f_t),
-                statics: statics
+            Def::TypeAlias(inner) => Def::TypeAlias(Box::new(DefTypeAlias {
+                id_loc: f_loc(cx, &inner.id_loc),
+                custom_error_loc_opt: inner
+                    .custom_error_loc_opt
+                    .as_ref()
+                    .map(|loc| f_loc(cx, loc)),
+                name: inner.name.dupe(),
+                tparams: inner.tparams.map(cx, &f_loc, &f_t),
+                body: f_t(cx, &inner.body),
+            })),
+            Def::OpaqueType(inner) => Def::OpaqueType(Box::new(DefOpaqueType {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                tparams: inner.tparams.map(cx, &f_loc, &f_t),
+                lower_bound: inner.lower_bound.as_ref().map(|t| f_t(cx, t)),
+                upper_bound: inner.upper_bound.as_ref().map(|t| f_t(cx, t)),
+                body: inner.body.as_ref().map(|t| f_t(cx, t)),
+            })),
+            Def::Interface(inner) => Def::Interface(Box::new(DefInterface {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                tparams: inner.tparams.map(cx, &f_loc, &f_t),
+                def: inner.def.map(cx, &f_loc, &f_t),
+            })),
+            Def::ClassBinding(inner) => Def::ClassBinding(Box::new(DefClassBinding {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                def: inner.def.map(cx, &f_loc, &f_t),
+            })),
+            Def::DeclareClassBinding(inner) => {
+                Def::DeclareClassBinding(Box::new(DefDeclareClassBinding {
+                    id_loc: f_loc(cx, &inner.id_loc),
+                    nominal_id_loc: f_loc(cx, &inner.nominal_id_loc),
+                    name: inner.name.dupe(),
+                    def: inner.def.map(cx, &f_loc, &f_t),
+                }))
+            }
+            Def::RecordBinding(inner) => Def::RecordBinding(Box::new(DefRecordBinding {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                def: inner.def.map(cx, &f_loc, &f_t),
+                defaulted_props: inner.defaulted_props.clone(),
+            })),
+            Def::DisabledRecordBinding(inner) => {
+                Def::DisabledRecordBinding(Box::new(DefDisabledRecordBinding {
+                    id_loc: f_loc(cx, &inner.id_loc),
+                    name: inner.name.dupe(),
+                }))
+            }
+            Def::FunBinding(inner) => Def::FunBinding(Box::new(DefFunBinding {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                async_: inner.async_,
+                generator: inner.generator,
+                fn_loc: f_loc(cx, &inner.fn_loc),
+                def: inner.def.map(cx, &f_loc, &f_t),
+                statics: inner
+                    .statics
                     .iter()
                     .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
                     .collect(),
-            },
-            Def::DeclareFun {
-                id_loc,
-                name,
-                fn_loc,
-                def,
-                tail,
-            } => Def::DeclareFun {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                fn_loc: f_loc(cx, fn_loc),
-                def: def.map(cx, &f_loc, &f_t),
-                tail: tail
+            })),
+            Def::DeclareFun(inner) => Def::DeclareFun(Box::new(DefDeclareFun {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                fn_loc: f_loc(cx, &inner.fn_loc),
+                def: inner.def.map(cx, &f_loc, &f_t),
+                tail: inner
+                    .tail
                     .iter()
                     .map(|(loc1, loc2, sig)| {
                         (f_loc(cx, loc1), f_loc(cx, loc2), sig.map(cx, &f_loc, &f_t))
                     })
                     .collect(),
-            },
-            Def::ComponentBinding {
-                id_loc,
-                name,
-                fn_loc,
-                def,
-            } => Def::ComponentBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                fn_loc: f_loc(cx, fn_loc),
-                def: def.map(cx, &f_loc, &f_t),
-            },
-            Def::DisabledComponentBinding { id_loc, name } => Def::DisabledComponentBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-            },
-            Def::Variable { id_loc, name, def } => Def::Variable {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                def: f_t(cx, def),
-            },
-            Def::Parameter {
-                id_loc,
-                name,
-                def,
-                tparams,
-            } => Def::Parameter {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                def: f_t(cx, def),
-                tparams: tparams.map(cx, &f_loc, &f_t),
-            },
-            Def::EnumBinding {
-                id_loc,
-                name,
-                rep,
-                members,
-                has_unknown_members,
-            } => Def::EnumBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                rep: *rep,
-                members: members
+            })),
+            Def::ComponentBinding(inner) => Def::ComponentBinding(Box::new(DefComponentBinding {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                fn_loc: f_loc(cx, &inner.fn_loc),
+                def: inner.def.map(cx, &f_loc, &f_t),
+            })),
+            Def::DisabledComponentBinding(inner) => {
+                Def::DisabledComponentBinding(Box::new(DefDisabledComponentBinding {
+                    id_loc: f_loc(cx, &inner.id_loc),
+                    name: inner.name.dupe(),
+                }))
+            }
+            Def::Variable(inner) => Def::Variable(Box::new(DefVariable {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                def: f_t(cx, &inner.def),
+            })),
+            Def::Parameter(inner) => Def::Parameter(Box::new(DefParameter {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                def: f_t(cx, &inner.def),
+                tparams: inner.tparams.map(cx, &f_loc, &f_t),
+            })),
+            Def::EnumBinding(inner) => Def::EnumBinding(Box::new(DefEnumBinding {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                rep: inner.rep,
+                members: inner
+                    .members
                     .iter()
                     .map(|(k, loc)| (k.dupe(), f_loc(cx, loc)))
                     .collect(),
-                has_unknown_members: *has_unknown_members,
-            },
-            Def::DisabledEnumBinding { id_loc, name } => Def::DisabledEnumBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-            },
-            Def::NamespaceBinding {
-                id_loc,
-                name,
-                values,
-                types,
-            } => Def::NamespaceBinding {
-                id_loc: f_loc(cx, id_loc),
-                name: name.dupe(),
-                values: values
+                has_unknown_members: inner.has_unknown_members,
+            })),
+            Def::DisabledEnumBinding(inner) => {
+                Def::DisabledEnumBinding(Box::new(DefDisabledEnumBinding {
+                    id_loc: f_loc(cx, &inner.id_loc),
+                    name: inner.name.dupe(),
+                }))
+            }
+            Def::NamespaceBinding(inner) => Def::NamespaceBinding(Box::new(DefNamespaceBinding {
+                id_loc: f_loc(cx, &inner.id_loc),
+                name: inner.name.dupe(),
+                values: inner
+                    .values
                     .iter()
                     .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
                     .collect(),
-                types: types
+                types: inner
+                    .types
                     .iter()
                     .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
                     .collect(),
-            },
+            })),
         }
     }
 }
@@ -1647,44 +1575,57 @@ impl<Loc: Clone, T> Def<Loc, T> {
 // The signature extractor relies heavily on annotations, but will extract
 // signatures corresponding to some literal expressions as well. The
 // representation of these things are kept distinct from annotations, below.
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueFunExpr<Loc, T> {
+    pub loc: Loc,
+    pub async_: bool,
+    pub generator: bool,
+    pub def: FunSig<Loc, T>,
+    pub statics: BTreeMap<FlowSmolStr, (Loc, T)>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueDeclareModuleImplicitlyExportedObject<Loc, T> {
+    pub loc: Loc,
+    pub module_name: flow_import_specifier::Userland,
+    pub props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueObjLit<Loc, T> {
+    pub loc: Loc,
+    pub frozen: bool,
+    pub proto: Option<(Loc, T)>,
+    pub props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueObjSpreadLit<Loc, T> {
+    pub loc: Loc,
+    pub frozen: bool,
+    pub proto: Option<(Loc, T)>,
+    pub elems: Vec1<ObjValueSpreadElem<Loc, T>>,
+}
+
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Value<Loc, T> {
-    ClassExpr(Loc, ClassSig<Loc, T>),
-    FunExpr {
-        loc: Loc,
-        async_: bool,
-        generator: bool,
-        def: FunSig<Loc, T>,
-        statics: BTreeMap<FlowSmolStr, (Loc, T)>,
-    },
+    ClassExpr(Box<(Loc, ClassSig<Loc, T>)>),
+    FunExpr(Box<ValueFunExpr<Loc, T>>),
     StringVal(Loc),
-    StringLit(Loc, FlowSmolStr),
+    StringLit(Box<(Loc, FlowSmolStr)>),
     NumberVal(Loc),
-    NumberLit(Loc, f64, FlowSmolStr),
+    NumberLit(Box<(Loc, f64, FlowSmolStr)>),
     BigIntVal(Loc),
-    BigIntLit(Loc, Option<i64>, FlowSmolStr),
+    BigIntLit(Box<(Loc, Option<i64>, FlowSmolStr)>),
     BooleanVal(Loc),
     BooleanLit(Loc, bool),
     NullLit(Loc),
-    DeclareModuleImplicitlyExportedObject {
-        loc: Loc,
-        module_name: flow_import_specifier::Userland,
-        props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
-    },
-    ObjLit {
-        loc: Loc,
-        frozen: bool,
-        proto: Option<(Loc, T)>,
-        props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
-    },
-    ObjSpreadLit {
-        loc: Loc,
-        frozen: bool,
-        proto: Option<(Loc, T)>,
-        elems: Vec1<ObjValueSpreadElem<Loc, T>>,
-    },
+    DeclareModuleImplicitlyExportedObject(Box<ValueDeclareModuleImplicitlyExportedObject<Loc, T>>),
+    ObjLit(Box<ValueObjLit<Loc, T>>),
+    ObjSpreadLit(Box<ValueObjSpreadLit<Loc, T>>),
     EmptyConstArrayLit(Loc),
-    ArrayLit(Loc, T, Vec<T>),
+    ArrayLit(Box<(Loc, T, Vec<T>)>),
     AsConst(Box<Value<Loc, T>>),
 }
 
@@ -1692,39 +1633,33 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T>
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            Value::ClassExpr(loc, sig) => {
-                loc.hash(state);
-                sig.hash(state);
+            Value::ClassExpr(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Value::FunExpr {
-                loc,
-                async_,
-                generator,
-                def,
-                statics,
-            } => {
-                loc.hash(state);
-                async_.hash(state);
-                generator.hash(state);
-                def.hash(state);
-                statics.hash(state);
+            Value::FunExpr(inner) => {
+                inner.loc.hash(state);
+                inner.async_.hash(state);
+                inner.generator.hash(state);
+                inner.def.hash(state);
+                inner.statics.hash(state);
             }
             Value::StringVal(loc) => loc.hash(state),
-            Value::StringLit(loc, s) => {
-                loc.hash(state);
-                s.hash(state);
+            Value::StringLit(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
             Value::NumberVal(loc) => loc.hash(state),
-            Value::NumberLit(loc, n, s) => {
-                loc.hash(state);
-                n.to_bits().hash(state);
-                s.hash(state);
+            Value::NumberLit(inner) => {
+                inner.0.hash(state);
+                inner.1.to_bits().hash(state);
+                inner.2.hash(state);
             }
             Value::BigIntVal(loc) => loc.hash(state),
-            Value::BigIntLit(loc, n, s) => {
-                loc.hash(state);
-                n.hash(state);
-                s.hash(state);
+            Value::BigIntLit(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+                inner.2.hash(state);
             }
             Value::BooleanVal(loc) => loc.hash(state),
             Value::BooleanLit(loc, b) => {
@@ -1732,42 +1667,28 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T>
                 b.hash(state);
             }
             Value::NullLit(loc) => loc.hash(state),
-            Value::DeclareModuleImplicitlyExportedObject {
-                loc,
-                module_name,
-                props,
-            } => {
-                loc.hash(state);
-                module_name.hash(state);
-                props.hash(state);
+            Value::DeclareModuleImplicitlyExportedObject(inner) => {
+                inner.loc.hash(state);
+                inner.module_name.hash(state);
+                inner.props.hash(state);
             }
-            Value::ObjLit {
-                loc,
-                frozen,
-                proto,
-                props,
-            } => {
-                loc.hash(state);
-                frozen.hash(state);
-                proto.hash(state);
-                props.hash(state);
+            Value::ObjLit(inner) => {
+                inner.loc.hash(state);
+                inner.frozen.hash(state);
+                inner.proto.hash(state);
+                inner.props.hash(state);
             }
-            Value::ObjSpreadLit {
-                loc,
-                frozen,
-                proto,
-                elems,
-            } => {
-                loc.hash(state);
-                frozen.hash(state);
-                proto.hash(state);
-                elems.hash(state);
+            Value::ObjSpreadLit(inner) => {
+                inner.loc.hash(state);
+                inner.frozen.hash(state);
+                inner.proto.hash(state);
+                inner.elems.hash(state);
             }
             Value::EmptyConstArrayLit(loc) => loc.hash(state),
-            Value::ArrayLit(loc, t, ts) => {
-                loc.hash(state);
-                t.hash(state);
-                ts.hash(state);
+            Value::ArrayLit(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+                inner.2.hash(state);
             }
             Value::AsConst(v) => v.hash(state),
         }
@@ -1782,78 +1703,58 @@ impl<Loc, T> Value<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            Value::ClassExpr(loc, sig) => {
-                f_loc(cx, loc);
-                sig.iter(cx, f_loc, f_t);
+            Value::ClassExpr(inner) => {
+                f_loc(cx, &inner.0);
+                inner.1.iter(cx, f_loc, f_t);
             }
-            Value::FunExpr {
-                loc,
-                async_: _,
-                generator: _,
-                def,
-                statics,
-            } => {
-                f_loc(cx, loc);
-                def.iter(cx, f_loc, f_t);
-                for (loc, t) in statics.values() {
+            Value::FunExpr(inner) => {
+                f_loc(cx, &inner.loc);
+                inner.def.iter(cx, f_loc, f_t);
+                for (loc, t) in inner.statics.values() {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
             }
             Value::StringVal(loc) => f_loc(cx, loc),
-            Value::StringLit(loc, _) => f_loc(cx, loc),
+            Value::StringLit(inner) => f_loc(cx, &inner.0),
             Value::NumberVal(loc) => f_loc(cx, loc),
-            Value::NumberLit(loc, _, _) => f_loc(cx, loc),
+            Value::NumberLit(inner) => f_loc(cx, &inner.0),
             Value::BigIntVal(loc) => f_loc(cx, loc),
-            Value::BigIntLit(loc, _, _) => f_loc(cx, loc),
+            Value::BigIntLit(inner) => f_loc(cx, &inner.0),
             Value::BooleanVal(loc) => f_loc(cx, loc),
             Value::BooleanLit(loc, _) => f_loc(cx, loc),
             Value::NullLit(loc) => f_loc(cx, loc),
-            Value::DeclareModuleImplicitlyExportedObject {
-                loc,
-                module_name: _,
-                props,
-            } => {
-                f_loc(cx, loc);
-                for v in props.values() {
+            Value::DeclareModuleImplicitlyExportedObject(inner) => {
+                f_loc(cx, &inner.loc);
+                for v in inner.props.values() {
                     v.iter(cx, f_loc, f_t);
                 }
             }
-            Value::ObjLit {
-                loc,
-                frozen: _,
-                proto,
-                props,
-            } => {
-                f_loc(cx, loc);
-                if let Some((loc, t)) = proto {
+            Value::ObjLit(inner) => {
+                f_loc(cx, &inner.loc);
+                if let Some((loc, t)) = &inner.proto {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
-                for v in props.values() {
+                for v in inner.props.values() {
                     v.iter(cx, f_loc, f_t);
                 }
             }
-            Value::ObjSpreadLit {
-                loc,
-                frozen: _,
-                proto,
-                elems,
-            } => {
-                f_loc(cx, loc);
-                if let Some((loc, t)) = proto {
+            Value::ObjSpreadLit(inner) => {
+                f_loc(cx, &inner.loc);
+                if let Some((loc, t)) = &inner.proto {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
-                for elem in elems.iter() {
+                for elem in inner.elems.iter() {
                     elem.iter(cx, f_loc, f_t);
                 }
             }
             Value::EmptyConstArrayLit(loc) => f_loc(cx, loc),
-            Value::ArrayLit(loc, t, ts) => {
-                f_loc(cx, loc);
-                f_t(cx, t);
-                for t in ts {
+            Value::ArrayLit(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
+                for t in &inner.2 {
                     f_t(cx, t);
                 }
             }
@@ -1868,75 +1769,76 @@ impl<Loc, T> Value<Loc, T> {
         f_t: &dyn Fn(&mut CX, &T) -> T2,
     ) -> Value<Loc2, T2> {
         match self {
-            Value::ClassExpr(loc, sig) => Value::ClassExpr(f_loc(cx, loc), sig.map(cx, f_loc, f_t)),
-            Value::FunExpr {
-                loc,
-                async_,
-                generator,
-                def,
-                statics,
-            } => Value::FunExpr {
-                loc: f_loc(cx, loc),
-                async_: *async_,
-                generator: *generator,
-                def: def.map(cx, f_loc, f_t),
-                statics: statics
+            Value::ClassExpr(inner) => {
+                Value::ClassExpr(Box::new((f_loc(cx, &inner.0), inner.1.map(cx, f_loc, f_t))))
+            }
+            Value::FunExpr(inner) => Value::FunExpr(Box::new(ValueFunExpr {
+                loc: f_loc(cx, &inner.loc),
+                async_: inner.async_,
+                generator: inner.generator,
+                def: inner.def.map(cx, f_loc, f_t),
+                statics: inner
+                    .statics
                     .iter()
                     .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
                     .collect(),
-            },
+            })),
             Value::StringVal(loc) => Value::StringVal(f_loc(cx, loc)),
-            Value::StringLit(loc, s) => Value::StringLit(f_loc(cx, loc), s.dupe()),
+            Value::StringLit(inner) => {
+                Value::StringLit(Box::new((f_loc(cx, &inner.0), inner.1.dupe())))
+            }
             Value::NumberVal(loc) => Value::NumberVal(f_loc(cx, loc)),
-            Value::NumberLit(loc, n, s) => Value::NumberLit(f_loc(cx, loc), *n, s.dupe()),
+            Value::NumberLit(inner) => {
+                Value::NumberLit(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
+            }
             Value::BigIntVal(loc) => Value::BigIntVal(f_loc(cx, loc)),
-            Value::BigIntLit(loc, i, s) => Value::BigIntLit(f_loc(cx, loc), *i, s.dupe()),
+            Value::BigIntLit(inner) => {
+                Value::BigIntLit(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
+            }
             Value::BooleanVal(loc) => Value::BooleanVal(f_loc(cx, loc)),
             Value::BooleanLit(loc, b) => Value::BooleanLit(f_loc(cx, loc), *b),
             Value::NullLit(loc) => Value::NullLit(f_loc(cx, loc)),
-            Value::DeclareModuleImplicitlyExportedObject {
-                loc,
-                module_name,
-                props,
-            } => Value::DeclareModuleImplicitlyExportedObject {
-                loc: f_loc(cx, loc),
-                module_name: module_name.clone(),
-                props: props
+            Value::DeclareModuleImplicitlyExportedObject(inner) => {
+                Value::DeclareModuleImplicitlyExportedObject(Box::new(
+                    ValueDeclareModuleImplicitlyExportedObject {
+                        loc: f_loc(cx, &inner.loc),
+                        module_name: inner.module_name.clone(),
+                        props: inner
+                            .props
+                            .iter()
+                            .map(|(k, v)| (k.dupe(), v.map(cx, f_loc, f_t)))
+                            .collect(),
+                    },
+                ))
+            }
+            Value::ObjLit(inner) => Value::ObjLit(Box::new(ValueObjLit {
+                loc: f_loc(cx, &inner.loc),
+                frozen: inner.frozen,
+                proto: inner
+                    .proto
+                    .as_ref()
+                    .map(|(loc, t)| (f_loc(cx, loc), f_t(cx, t))),
+                props: inner
+                    .props
                     .iter()
                     .map(|(k, v)| (k.dupe(), v.map(cx, f_loc, f_t)))
                     .collect(),
-            },
-            Value::ObjLit {
-                loc,
-                frozen,
-                proto,
-                props,
-            } => Value::ObjLit {
-                loc: f_loc(cx, loc),
-                frozen: *frozen,
-                proto: proto.as_ref().map(|(loc, t)| (f_loc(cx, loc), f_t(cx, t))),
-                props: props
-                    .iter()
-                    .map(|(k, v)| (k.dupe(), v.map(cx, f_loc, f_t)))
-                    .collect(),
-            },
-            Value::ObjSpreadLit {
-                loc,
-                frozen,
-                proto,
-                elems,
-            } => Value::ObjSpreadLit {
-                loc: f_loc(cx, loc),
-                frozen: *frozen,
-                proto: proto.as_ref().map(|(loc, t)| (f_loc(cx, loc), f_t(cx, t))),
-                elems: elems.mapped_ref(|elem| elem.map(cx, f_loc, f_t)),
-            },
+            })),
+            Value::ObjSpreadLit(inner) => Value::ObjSpreadLit(Box::new(ValueObjSpreadLit {
+                loc: f_loc(cx, &inner.loc),
+                frozen: inner.frozen,
+                proto: inner
+                    .proto
+                    .as_ref()
+                    .map(|(loc, t)| (f_loc(cx, loc), f_t(cx, t))),
+                elems: inner.elems.mapped_ref(|elem| elem.map(cx, f_loc, f_t)),
+            })),
             Value::EmptyConstArrayLit(loc) => Value::EmptyConstArrayLit(f_loc(cx, loc)),
-            Value::ArrayLit(loc, t, ts) => Value::ArrayLit(
-                f_loc(cx, loc),
-                f_t(cx, t),
-                ts.iter().map(|t| f_t(cx, t)).collect(),
-            ),
+            Value::ArrayLit(inner) => Value::ArrayLit(Box::new((
+                f_loc(cx, &inner.0),
+                f_t(cx, &inner.1),
+                inner.2.iter().map(|t| f_t(cx, t)).collect(),
+            ))),
             Value::AsConst(v) => Value::AsConst(Box::new(v.map(cx, &f_loc, &f_t))),
         }
     }
@@ -1947,6 +1849,137 @@ pub enum ObjKind<T> {
     ExactObj,
     InexactObj,
     IndexedObj(ObjAnnotDict<T>),
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotUnion<Loc, T> {
+    pub loc: Loc,
+    pub t0: T,
+    pub t1: T,
+    pub ts: Vec<T>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotIntersection<Loc, T> {
+    pub loc: Loc,
+    pub t0: T,
+    pub t1: T,
+    pub ts: Vec<T>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotTuple<Loc, T> {
+    pub loc: Loc,
+    pub elems: Vec<TupleElement<Loc, T>>,
+    pub inexact: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotStringPrefix<Loc, T> {
+    pub loc: Loc,
+    pub prefix: FlowSmolStr,
+    pub remainder: Option<T>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotStringSuffix<Loc, T> {
+    pub loc: Loc,
+    pub suffix: FlowSmolStr,
+    pub remainder: Option<T>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotTypeof<Loc, T> {
+    pub loc: Loc,
+    pub qname: Vec<FlowSmolStr>,
+    pub t: T,
+    pub targs: Option<Vec<T>>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotBound<Loc> {
+    pub ref_loc: Loc,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotPropertyType<Loc, T> {
+    pub loc: Loc,
+    pub obj: T,
+    pub prop: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotElementType<Loc, T> {
+    pub loc: Loc,
+    pub obj: T,
+    pub elem: T,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotOptionalIndexedAccessNonMaybeType<Loc, T> {
+    pub loc: Loc,
+    pub obj: T,
+    pub index: T,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotOptionalIndexedAccessResultType<Loc, T> {
+    pub loc: Loc,
+    pub non_maybe_result: T,
+    pub void_loc: Loc,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotRenders<Loc, T> {
+    pub loc: Loc,
+    pub arg: T,
+    pub variant: ast::types::RendersVariant,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotConditional<Loc, T> {
+    pub loc: Loc,
+    pub distributive_tparam: Option<TParam<Loc, T>>,
+    pub infer_tparams: TParams<Loc, T>,
+    pub check_type: T,
+    pub extends_type: T,
+    pub true_type: T,
+    pub false_type: T,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotObjKeyMirror<Loc, T> {
+    pub loc: Loc,
+    pub obj: T,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotMappedTypeAnnot<Loc, T> {
+    pub loc: Loc,
+    pub source_type: T,
+    pub property_type: T,
+    pub key_tparam: TParam<Loc, T>,
+    pub variance: Polarity,
+    pub variance_op: Option<ast::types::object::MappedTypeVarianceOp>,
+    pub optional: ast::types::object::MappedTypeOptionalFlag,
+    pub inline_keyof: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotObjAnnot<Loc, T> {
+    pub loc: Loc,
+    pub obj_kind: ObjKind<T>,
+    pub props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
+    pub computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
+    pub proto: ObjAnnotProto<Loc, T>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotObjSpreadAnnot<Loc, T> {
+    pub loc: Loc,
+    pub exact: bool,
+    pub elems: Vec1<ObjSpreadAnnotElem<Loc, T>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1964,129 +1997,49 @@ pub enum Annot<Loc, T> {
     Boolean(Loc),
     Exists(Loc),
     Optional(T),
-    Maybe(Loc, T),
-    Union {
-        loc: Loc,
-        t0: T,
-        t1: T,
-        ts: Vec<T>,
-    },
-    Intersection {
-        loc: Loc,
-        t0: T,
-        t1: T,
-        ts: Vec<T>,
-    },
-    Tuple {
-        loc: Loc,
-        elems: Vec<TupleElement<Loc, T>>,
-        inexact: bool,
-    },
-    Array(Loc, T),
-    ReadOnlyArray(Loc, T),
-    SingletonString(Loc, FlowSmolStr),
-    SingletonNumber(Loc, f64, FlowSmolStr),
-    SingletonBigInt(Loc, Option<i64>, FlowSmolStr),
+    Maybe(Box<(Loc, T)>),
+    Union(Box<AnnotUnion<Loc, T>>),
+    Intersection(Box<AnnotIntersection<Loc, T>>),
+    Tuple(Box<AnnotTuple<Loc, T>>),
+    Array(Box<(Loc, T)>),
+    ReadOnlyArray(Box<(Loc, T)>),
+    SingletonString(Box<(Loc, FlowSmolStr)>),
+    SingletonNumber(Box<(Loc, f64, FlowSmolStr)>),
+    SingletonBigInt(Box<(Loc, Option<i64>, FlowSmolStr)>),
     SingletonBoolean(Loc, bool),
-    StringPrefix {
-        loc: Loc,
-        prefix: FlowSmolStr,
-        remainder: Option<T>,
-    },
-    StringSuffix {
-        loc: Loc,
-        suffix: FlowSmolStr,
-        remainder: Option<T>,
-    },
-    Typeof {
-        loc: Loc,
-        qname: Vec<FlowSmolStr>,
-        t: T,
-        targs: Option<Vec<T>>,
-    },
-    Bound {
-        ref_loc: Loc,
-        name: FlowSmolStr,
-    },
+    StringPrefix(Box<AnnotStringPrefix<Loc, T>>),
+    StringSuffix(Box<AnnotStringSuffix<Loc, T>>),
+    Typeof(Box<AnnotTypeof<Loc, T>>),
+    Bound(Box<AnnotBound<Loc>>),
     NoInfer(T),
-    PropertyType {
-        loc: Loc,
-        obj: T,
-        prop: FlowSmolStr,
-    },
-    ElementType {
-        loc: Loc,
-        obj: T,
-        elem: T,
-    },
-    EnumValue(Loc, T),
-    Enum(Loc, T),
-    OptionalIndexedAccessNonMaybeType {
-        loc: Loc,
-        obj: T,
-        index: T,
-    },
-    OptionalIndexedAccessResultType {
-        loc: Loc,
-        non_maybe_result: T,
-        void_loc: Loc,
-    },
-    NonMaybeType(Loc, T),
-    Omit(Loc, T, T),
-    ReadOnly(Loc, T),
-    Partial(Loc, T),
-    Required(Loc, T),
-    Keys(Loc, T),
-    Renders {
-        loc: Loc,
-        arg: T,
-        variant: ast::types::RendersVariant,
-    },
+    PropertyType(Box<AnnotPropertyType<Loc, T>>),
+    ElementType(Box<AnnotElementType<Loc, T>>),
+    EnumValue(Box<(Loc, T)>),
+    Enum(Box<(Loc, T)>),
+    OptionalIndexedAccessNonMaybeType(Box<AnnotOptionalIndexedAccessNonMaybeType<Loc, T>>),
+    OptionalIndexedAccessResultType(Box<AnnotOptionalIndexedAccessResultType<Loc, T>>),
+    NonMaybeType(Box<(Loc, T)>),
+    Omit(Box<(Loc, T, T)>),
+    ReadOnly(Box<(Loc, T)>),
+    Partial(Box<(Loc, T)>),
+    Required(Box<(Loc, T)>),
+    Keys(Box<(Loc, T)>),
+    Renders(Box<AnnotRenders<Loc, T>>),
     ComponentMissingRenders(Loc),
-    Values(Loc, T),
-    Exact(Loc, T),
-    ExportsT(Loc, flow_import_specifier::Userland),
-    Conditional {
-        loc: Loc,
-        distributive_tparam: Option<TParam<Loc, T>>,
-        infer_tparams: TParams<Loc, T>,
-        check_type: T,
-        extends_type: T,
-        true_type: T,
-        false_type: T,
-    },
-    ObjKeyMirror {
-        loc: Loc,
-        obj: T,
-    },
-    ClassT(Loc, T),
+    Values(Box<(Loc, T)>),
+    Exact(Box<(Loc, T)>),
+    ExportsT(Box<(Loc, flow_import_specifier::Userland)>),
+    Conditional(Box<AnnotConditional<Loc, T>>),
+    ObjKeyMirror(Box<AnnotObjKeyMirror<Loc, T>>),
+    ClassT(Box<(Loc, T)>),
     FunctionBind(Loc),
-    ReactElementConfig(Loc, T),
-    FunAnnot(Loc, FunSig<Loc, T>),
-    ComponentAnnot(Loc, ComponentSig<Loc, T>),
-    MappedTypeAnnot {
-        loc: Loc,
-        source_type: T,
-        property_type: T,
-        key_tparam: TParam<Loc, T>,
-        variance: Polarity,
-        variance_op: Option<ast::types::object::MappedTypeVarianceOp>,
-        optional: ast::types::object::MappedTypeOptionalFlag,
-        inline_keyof: bool,
-    },
-    ObjAnnot {
-        loc: Loc,
-        obj_kind: ObjKind<T>,
-        props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
-        computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
-        proto: ObjAnnotProto<Loc, T>,
-    },
-    ObjSpreadAnnot {
-        loc: Loc,
-        exact: bool,
-        elems: Vec1<ObjSpreadAnnotElem<Loc, T>>,
-    },
-    InlineInterface(Loc, InterfaceSig<Loc, T>),
+    ReactElementConfig(Box<(Loc, T)>),
+    FunAnnot(Box<(Loc, FunSig<Loc, T>)>),
+    ComponentAnnot(Box<(Loc, ComponentSig<Loc, T>)>),
+    MappedTypeAnnot(Box<AnnotMappedTypeAnnot<Loc, T>>),
+    ObjAnnot(Box<AnnotObjAnnot<Loc, T>>),
+    ObjSpreadAnnot(Box<AnnotObjSpreadAnnot<Loc, T>>),
+    InlineInterface(Box<(Loc, InterfaceSig<Loc, T>)>),
 }
 
 impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T> {
@@ -2106,208 +2059,170 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
             | Annot::Boolean(l)
             | Annot::Exists(l) => l.hash(state),
             Annot::Optional(t) => t.hash(state),
-            Annot::Maybe(l, t) => {
-                l.hash(state);
-                t.hash(state);
+            Annot::Maybe(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::Union { loc, t0, t1, ts } | Annot::Intersection { loc, t0, t1, ts } => {
-                loc.hash(state);
-                t0.hash(state);
-                t1.hash(state);
-                ts.hash(state);
+            Annot::Union(inner) => {
+                inner.loc.hash(state);
+                inner.t0.hash(state);
+                inner.t1.hash(state);
+                inner.ts.hash(state);
             }
-            Annot::Tuple {
-                loc,
-                elems,
-                inexact,
-            } => {
-                loc.hash(state);
-                elems.hash(state);
-                inexact.hash(state);
+            Annot::Intersection(inner) => {
+                inner.loc.hash(state);
+                inner.t0.hash(state);
+                inner.t1.hash(state);
+                inner.ts.hash(state);
             }
-            Annot::Array(l, t) | Annot::ReadOnlyArray(l, t) => {
-                l.hash(state);
-                t.hash(state);
+            Annot::Tuple(inner) => {
+                inner.loc.hash(state);
+                inner.elems.hash(state);
+                inner.inexact.hash(state);
             }
-            Annot::SingletonString(l, s) => {
-                l.hash(state);
-                s.hash(state);
+            Annot::Array(inner) | Annot::ReadOnlyArray(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::SingletonNumber(l, n, s) => {
-                l.hash(state);
-                n.to_bits().hash(state);
-                s.hash(state);
+            Annot::SingletonString(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::SingletonBigInt(l, n, s) => {
-                l.hash(state);
-                n.hash(state);
-                s.hash(state);
+            Annot::SingletonNumber(inner) => {
+                inner.0.hash(state);
+                inner.1.to_bits().hash(state);
+                inner.2.hash(state);
+            }
+            Annot::SingletonBigInt(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+                inner.2.hash(state);
             }
             Annot::SingletonBoolean(l, b) => {
                 l.hash(state);
                 b.hash(state);
             }
-            Annot::StringPrefix {
-                loc,
-                prefix,
-                remainder,
-            } => {
-                loc.hash(state);
-                prefix.hash(state);
-                remainder.hash(state);
+            Annot::StringPrefix(inner) => {
+                inner.loc.hash(state);
+                inner.prefix.hash(state);
+                inner.remainder.hash(state);
             }
-            Annot::StringSuffix {
-                loc,
-                suffix,
-                remainder,
-            } => {
-                loc.hash(state);
-                suffix.hash(state);
-                remainder.hash(state);
+            Annot::StringSuffix(inner) => {
+                inner.loc.hash(state);
+                inner.suffix.hash(state);
+                inner.remainder.hash(state);
             }
-            Annot::Typeof {
-                loc,
-                qname,
-                t,
-                targs,
-            } => {
-                loc.hash(state);
-                qname.hash(state);
-                t.hash(state);
-                targs.hash(state);
+            Annot::Typeof(inner) => {
+                inner.loc.hash(state);
+                inner.qname.hash(state);
+                inner.t.hash(state);
+                inner.targs.hash(state);
             }
-            Annot::Bound { ref_loc, name } => {
-                ref_loc.hash(state);
-                name.hash(state);
+            Annot::Bound(inner) => {
+                inner.ref_loc.hash(state);
+                inner.name.hash(state);
             }
             Annot::NoInfer(t) => t.hash(state),
-            Annot::PropertyType { loc, obj, prop } => {
-                loc.hash(state);
-                obj.hash(state);
-                prop.hash(state);
+            Annot::PropertyType(inner) => {
+                inner.loc.hash(state);
+                inner.obj.hash(state);
+                inner.prop.hash(state);
             }
-            Annot::ElementType { loc, obj, elem } => {
-                loc.hash(state);
-                obj.hash(state);
-                elem.hash(state);
+            Annot::ElementType(inner) => {
+                inner.loc.hash(state);
+                inner.obj.hash(state);
+                inner.elem.hash(state);
             }
-            Annot::EnumValue(l, t) | Annot::Enum(l, t) => {
-                l.hash(state);
-                t.hash(state);
+            Annot::EnumValue(inner) | Annot::Enum(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::OptionalIndexedAccessNonMaybeType { loc, obj, index } => {
-                loc.hash(state);
-                obj.hash(state);
-                index.hash(state);
+            Annot::OptionalIndexedAccessNonMaybeType(inner) => {
+                inner.loc.hash(state);
+                inner.obj.hash(state);
+                inner.index.hash(state);
             }
-            Annot::OptionalIndexedAccessResultType {
-                loc,
-                non_maybe_result,
-                void_loc,
-            } => {
-                loc.hash(state);
-                non_maybe_result.hash(state);
-                void_loc.hash(state);
+            Annot::OptionalIndexedAccessResultType(inner) => {
+                inner.loc.hash(state);
+                inner.non_maybe_result.hash(state);
+                inner.void_loc.hash(state);
             }
-            Annot::NonMaybeType(l, t) => {
-                l.hash(state);
-                t.hash(state);
+            Annot::NonMaybeType(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::Omit(l, t1, t2) => {
-                l.hash(state);
-                t1.hash(state);
-                t2.hash(state);
+            Annot::Omit(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+                inner.2.hash(state);
             }
-            Annot::ReadOnly(l, t)
-            | Annot::Partial(l, t)
-            | Annot::Required(l, t)
-            | Annot::Keys(l, t)
-            | Annot::Values(l, t)
-            | Annot::Exact(l, t)
-            | Annot::ClassT(l, t)
-            | Annot::ReactElementConfig(l, t) => {
-                l.hash(state);
-                t.hash(state);
+            Annot::ReadOnly(inner)
+            | Annot::Partial(inner)
+            | Annot::Required(inner)
+            | Annot::Keys(inner)
+            | Annot::Values(inner)
+            | Annot::Exact(inner)
+            | Annot::ClassT(inner)
+            | Annot::ReactElementConfig(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::Renders { loc, arg, variant } => {
-                loc.hash(state);
-                arg.hash(state);
-                variant.hash(state);
+            Annot::Renders(inner) => {
+                inner.loc.hash(state);
+                inner.arg.hash(state);
+                inner.variant.hash(state);
             }
             Annot::ComponentMissingRenders(l) | Annot::FunctionBind(l) => l.hash(state),
-            Annot::ExportsT(l, u) => {
-                l.hash(state);
-                u.hash(state);
+            Annot::ExportsT(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::Conditional {
-                loc,
-                distributive_tparam,
-                infer_tparams,
-                check_type,
-                extends_type,
-                true_type,
-                false_type,
-            } => {
-                loc.hash(state);
-                distributive_tparam.hash(state);
-                infer_tparams.hash(state);
-                check_type.hash(state);
-                extends_type.hash(state);
-                true_type.hash(state);
-                false_type.hash(state);
+            Annot::Conditional(inner) => {
+                inner.loc.hash(state);
+                inner.distributive_tparam.hash(state);
+                inner.infer_tparams.hash(state);
+                inner.check_type.hash(state);
+                inner.extends_type.hash(state);
+                inner.true_type.hash(state);
+                inner.false_type.hash(state);
             }
-            Annot::ObjKeyMirror { loc, obj } => {
-                loc.hash(state);
-                obj.hash(state);
+            Annot::ObjKeyMirror(inner) => {
+                inner.loc.hash(state);
+                inner.obj.hash(state);
             }
-            Annot::FunAnnot(l, sig) => {
-                l.hash(state);
-                sig.hash(state);
+            Annot::FunAnnot(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::ComponentAnnot(l, sig) => {
-                l.hash(state);
-                sig.hash(state);
+            Annot::ComponentAnnot(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
-            Annot::MappedTypeAnnot {
-                loc,
-                source_type,
-                property_type,
-                key_tparam,
-                variance,
-                variance_op,
-                optional,
-                inline_keyof,
-            } => {
-                loc.hash(state);
-                source_type.hash(state);
-                property_type.hash(state);
-                key_tparam.hash(state);
-                variance.hash(state);
-                variance_op.hash(state);
-                optional.hash(state);
-                inline_keyof.hash(state);
+            Annot::MappedTypeAnnot(inner) => {
+                inner.loc.hash(state);
+                inner.source_type.hash(state);
+                inner.property_type.hash(state);
+                inner.key_tparam.hash(state);
+                inner.variance.hash(state);
+                inner.variance_op.hash(state);
+                inner.optional.hash(state);
+                inner.inline_keyof.hash(state);
             }
-            Annot::ObjAnnot {
-                loc,
-                obj_kind,
-                props,
-                computed_props,
-                proto,
-            } => {
-                loc.hash(state);
-                obj_kind.hash(state);
-                props.hash(state);
-                computed_props.hash(state);
-                proto.hash(state);
+            Annot::ObjAnnot(inner) => {
+                inner.loc.hash(state);
+                inner.obj_kind.hash(state);
+                inner.props.hash(state);
+                inner.computed_props.hash(state);
+                inner.proto.hash(state);
             }
-            Annot::ObjSpreadAnnot { loc, exact, elems } => {
-                loc.hash(state);
-                exact.hash(state);
-                elems.hash(state);
+            Annot::ObjSpreadAnnot(inner) => {
+                inner.loc.hash(state);
+                inner.exact.hash(state);
+                inner.elems.hash(state);
             }
-            Annot::InlineInterface(l, sig) => {
-                l.hash(state);
-                sig.hash(state);
+            Annot::InlineInterface(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
         }
     }
@@ -2334,33 +2249,29 @@ impl<Loc, T> Annot<Loc, T> {
             | Annot::Boolean(loc)
             | Annot::Exists(loc) => f_loc(cx, loc),
             Annot::Optional(t) => f_t(cx, t),
-            Annot::Maybe(loc, t) => {
-                f_loc(cx, loc);
-                f_t(cx, t);
+            Annot::Maybe(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
             }
-            Annot::Union { loc, t0, t1, ts } => {
-                f_loc(cx, loc);
-                f_t(cx, t0);
-                f_t(cx, t1);
-                for t in ts {
+            Annot::Union(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.t0);
+                f_t(cx, &inner.t1);
+                for t in &inner.ts {
                     f_t(cx, t);
                 }
             }
-            Annot::Intersection { loc, t0, t1, ts } => {
-                f_loc(cx, loc);
-                f_t(cx, t0);
-                f_t(cx, t1);
-                for t in ts {
+            Annot::Intersection(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.t0);
+                f_t(cx, &inner.t1);
+                for t in &inner.ts {
                     f_t(cx, t);
                 }
             }
-            Annot::Tuple {
-                loc,
-                elems,
-                inexact: _,
-            } => {
-                f_loc(cx, loc);
-                for elem in elems {
+            Annot::Tuple(inner) => {
+                f_loc(cx, &inner.loc);
+                for elem in &inner.elems {
                     match elem {
                         TupleElement::TupleElement {
                             loc,
@@ -2379,119 +2290,90 @@ impl<Loc, T> Annot<Loc, T> {
                     }
                 }
             }
-            Annot::Array(loc, t) => {
-                f_loc(cx, loc);
-                f_t(cx, t);
+            Annot::Array(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
             }
-            Annot::ReadOnlyArray(loc, t) => {
-                f_loc(cx, loc);
-                f_t(cx, t);
+            Annot::ReadOnlyArray(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
             }
-            Annot::SingletonString(loc, _)
-            | Annot::SingletonNumber(loc, _, _)
-            | Annot::SingletonBigInt(loc, _, _)
-            | Annot::SingletonBoolean(loc, _) => f_loc(cx, loc),
-            Annot::StringPrefix {
-                loc,
-                prefix: _,
-                remainder,
-            } => {
-                f_loc(cx, loc);
-                if let Some(t) = remainder {
+            Annot::SingletonString(inner) => f_loc(cx, &inner.0),
+            Annot::SingletonNumber(inner) => f_loc(cx, &inner.0),
+            Annot::SingletonBigInt(inner) => f_loc(cx, &inner.0),
+            Annot::SingletonBoolean(loc, _) => f_loc(cx, loc),
+            Annot::StringPrefix(inner) => {
+                f_loc(cx, &inner.loc);
+                if let Some(t) = &inner.remainder {
                     f_t(cx, t);
                 }
             }
-            Annot::StringSuffix {
-                loc,
-                suffix: _,
-                remainder,
-            } => {
-                f_loc(cx, loc);
-                if let Some(t) = remainder {
+            Annot::StringSuffix(inner) => {
+                f_loc(cx, &inner.loc);
+                if let Some(t) = &inner.remainder {
                     f_t(cx, t);
                 }
             }
-            Annot::Typeof {
-                loc,
-                qname: _,
-                t,
-                targs,
-            } => {
-                f_loc(cx, loc);
-                f_t(cx, t);
-                if let Some(targs) = targs {
+            Annot::Typeof(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.t);
+                if let Some(targs) = &inner.targs {
                     for t in targs {
                         f_t(cx, t);
                     }
                 }
             }
-            Annot::Bound { ref_loc, name: _ } => f_loc(cx, ref_loc),
+            Annot::Bound(inner) => f_loc(cx, &inner.ref_loc),
             Annot::NoInfer(t) => f_t(cx, t),
-            Annot::PropertyType { loc, obj, prop: _ } => {
-                f_loc(cx, loc);
-                f_t(cx, obj);
+            Annot::PropertyType(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.obj);
             }
-            Annot::ElementType { loc, obj, elem } => {
-                f_loc(cx, loc);
-                f_t(cx, obj);
-                f_t(cx, elem);
+            Annot::ElementType(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.obj);
+                f_t(cx, &inner.elem);
             }
-            Annot::EnumValue(loc, t) | Annot::Enum(loc, t) => {
-                f_loc(cx, loc);
-                f_t(cx, t);
+            Annot::EnumValue(inner) | Annot::Enum(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
             }
-            Annot::OptionalIndexedAccessNonMaybeType { loc, obj, index } => {
-                f_loc(cx, loc);
-                f_t(cx, obj);
-                f_t(cx, index);
+            Annot::OptionalIndexedAccessNonMaybeType(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.obj);
+                f_t(cx, &inner.index);
             }
-            Annot::OptionalIndexedAccessResultType {
-                loc,
-                non_maybe_result,
-                void_loc,
-            } => {
-                f_loc(cx, loc);
-                f_t(cx, non_maybe_result);
-                f_loc(cx, void_loc);
+            Annot::OptionalIndexedAccessResultType(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.non_maybe_result);
+                f_loc(cx, &inner.void_loc);
             }
-            Annot::NonMaybeType(loc, t)
-            | Annot::ReadOnly(loc, t)
-            | Annot::Partial(loc, t)
-            | Annot::Required(loc, t)
-            | Annot::Keys(loc, t)
-            | Annot::Values(loc, t)
-            | Annot::Exact(loc, t)
-            | Annot::ClassT(loc, t)
-            | Annot::ReactElementConfig(loc, t) => {
-                f_loc(cx, loc);
-                f_t(cx, t);
+            Annot::NonMaybeType(inner)
+            | Annot::ReadOnly(inner)
+            | Annot::Partial(inner)
+            | Annot::Required(inner)
+            | Annot::Keys(inner)
+            | Annot::Values(inner)
+            | Annot::Exact(inner)
+            | Annot::ClassT(inner)
+            | Annot::ReactElementConfig(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
             }
-            Annot::Omit(loc, t1, t2) => {
-                f_loc(cx, loc);
-                f_t(cx, t1);
-                f_t(cx, t2);
+            Annot::Omit(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
+                f_t(cx, &inner.2);
             }
-            Annot::Renders {
-                loc,
-                arg,
-                variant: _,
-            } => {
-                f_loc(cx, loc);
-                f_t(cx, arg);
+            Annot::Renders(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.arg);
             }
             Annot::ComponentMissingRenders(loc) | Annot::FunctionBind(loc) => f_loc(cx, loc),
-            Annot::ExportsT(loc, _) => f_loc(cx, loc),
-            Annot::Conditional {
-                loc,
-                distributive_tparam,
-                infer_tparams,
-                check_type,
-                extends_type,
-                true_type,
-                false_type,
-            } => {
-                f_loc(cx, loc);
-                if let Some(tp) = distributive_tparam {
+            Annot::ExportsT(inner) => f_loc(cx, &inner.0),
+            Annot::Conditional(inner) => {
+                f_loc(cx, &inner.loc);
+                if let Some(tp) = &inner.distributive_tparam {
                     f_loc(cx, &tp.name_loc);
                     if let Some(b) = &tp.bound {
                         f_t(cx, b);
@@ -2500,61 +2382,46 @@ impl<Loc, T> Annot<Loc, T> {
                         f_t(cx, d);
                     }
                 }
-                infer_tparams.iter(cx, f_loc, f_t);
-                f_t(cx, check_type);
-                f_t(cx, extends_type);
-                f_t(cx, true_type);
-                f_t(cx, false_type);
+                inner.infer_tparams.iter(cx, f_loc, f_t);
+                f_t(cx, &inner.check_type);
+                f_t(cx, &inner.extends_type);
+                f_t(cx, &inner.true_type);
+                f_t(cx, &inner.false_type);
             }
-            Annot::ObjKeyMirror { loc, obj } => {
-                f_loc(cx, loc);
-                f_t(cx, obj);
+            Annot::ObjKeyMirror(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.obj);
             }
-            Annot::FunAnnot(loc, sig) => {
-                f_loc(cx, loc);
-                sig.iter(cx, f_loc, f_t);
+            Annot::FunAnnot(inner) => {
+                f_loc(cx, &inner.0);
+                inner.1.iter(cx, f_loc, f_t);
             }
-            Annot::ComponentAnnot(loc, sig) => {
-                f_loc(cx, loc);
-                sig.iter(cx, f_loc, f_t);
+            Annot::ComponentAnnot(inner) => {
+                f_loc(cx, &inner.0);
+                inner.1.iter(cx, f_loc, f_t);
             }
-            Annot::MappedTypeAnnot {
-                loc,
-                source_type,
-                property_type,
-                key_tparam,
-                variance: _,
-                variance_op: _,
-                optional: _,
-                inline_keyof: _,
-            } => {
-                f_loc(cx, loc);
-                f_t(cx, source_type);
-                f_t(cx, property_type);
-                f_loc(cx, &key_tparam.name_loc);
-                if let Some(b) = &key_tparam.bound {
+            Annot::MappedTypeAnnot(inner) => {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.source_type);
+                f_t(cx, &inner.property_type);
+                f_loc(cx, &inner.key_tparam.name_loc);
+                if let Some(b) = &inner.key_tparam.bound {
                     f_t(cx, b);
                 }
-                if let Some(d) = &key_tparam.default {
+                if let Some(d) = &inner.key_tparam.default {
                     f_t(cx, d);
                 }
             }
-            Annot::ObjAnnot {
-                loc,
-                obj_kind,
-                props,
-                computed_props,
-                proto,
-            } => {
-                f_loc(cx, loc);
-                match obj_kind {
+            Annot::ObjAnnot(inner) => {
+                f_loc(cx, &inner.loc);
+                match &inner.obj_kind {
                     ObjKind::ExactObj | ObjKind::InexactObj => {}
                     ObjKind::IndexedObj(dict) => {
                         f_t(cx, &dict.key);
                         f_t(cx, &dict.value);
                     }
                 }
-                for v in props.values() {
+                for v in inner.props.values() {
                     match v {
                         ObjAnnotProp::ObjAnnotField(loc, t, _) => {
                             f_loc(cx, loc);
@@ -2572,7 +2439,7 @@ impl<Loc, T> Annot<Loc, T> {
                         }
                     }
                 }
-                for (t, prop) in computed_props {
+                for (t, prop) in &inner.computed_props {
                     f_t(cx, t);
                     match prop {
                         ObjAnnotProp::ObjAnnotField(loc, t, _) => {
@@ -2591,7 +2458,7 @@ impl<Loc, T> Annot<Loc, T> {
                         }
                     }
                 }
-                match proto {
+                match &inner.proto {
                     ObjAnnotProto::ObjAnnotImplicitProto => {}
                     ObjAnnotProto::ObjAnnotExplicitProto(loc, t) => {
                         f_loc(cx, loc);
@@ -2604,13 +2471,9 @@ impl<Loc, T> Annot<Loc, T> {
                     }
                 }
             }
-            Annot::ObjSpreadAnnot {
-                loc,
-                exact: _,
-                elems,
-            } => {
-                f_loc(cx, loc);
-                for elem in elems.iter() {
+            Annot::ObjSpreadAnnot(inner) => {
+                f_loc(cx, &inner.loc);
+                for elem in inner.elems.iter() {
                     match elem {
                         ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => f_t(cx, t),
                         ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
@@ -2667,9 +2530,9 @@ impl<Loc, T> Annot<Loc, T> {
                     }
                 }
             }
-            Annot::InlineInterface(loc, sig) => {
-                f_loc(cx, loc);
-                sig.iter(cx, f_loc, f_t);
+            Annot::InlineInterface(inner) => {
+                f_loc(cx, &inner.0);
+                inner.1.iter(cx, f_loc, f_t);
             }
         }
     }
@@ -2694,202 +2557,200 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::Boolean(loc) => Annot::Boolean(f_loc(cx, loc)),
             Annot::Exists(loc) => Annot::Exists(f_loc(cx, loc)),
             Annot::Optional(t) => Annot::Optional(f_t(cx, t)),
-            Annot::Maybe(loc, t) => Annot::Maybe(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Union { loc, t0, t1, ts } => Annot::Union {
-                loc: f_loc(cx, loc),
-                t0: f_t(cx, t0),
-                t1: f_t(cx, t1),
-                ts: ts.iter().map(|t| f_t(cx, t)).collect(),
-            },
-            Annot::Intersection { loc, t0, t1, ts } => Annot::Intersection {
-                loc: f_loc(cx, loc),
-                t0: f_t(cx, t0),
-                t1: f_t(cx, t1),
-                ts: ts.iter().map(|t| f_t(cx, t)).collect(),
-            },
-            Annot::Tuple {
-                loc,
-                elems,
-                inexact,
-            } => Annot::Tuple {
-                loc: f_loc(cx, loc),
-                elems: elems
+            Annot::Maybe(inner) => Annot::Maybe(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
+            Annot::Union(inner) => Annot::Union(Box::new(AnnotUnion {
+                loc: f_loc(cx, &inner.loc),
+                t0: f_t(cx, &inner.t0),
+                t1: f_t(cx, &inner.t1),
+                ts: inner.ts.iter().map(|t| f_t(cx, t)).collect(),
+            })),
+            Annot::Intersection(inner) => Annot::Intersection(Box::new(AnnotIntersection {
+                loc: f_loc(cx, &inner.loc),
+                t0: f_t(cx, &inner.t0),
+                t1: f_t(cx, &inner.t1),
+                ts: inner.ts.iter().map(|t| f_t(cx, t)).collect(),
+            })),
+            Annot::Tuple(inner) => Annot::Tuple(Box::new(AnnotTuple {
+                loc: f_loc(cx, &inner.loc),
+                elems: inner
+                    .elems
                     .iter()
                     .map(|elem| elem.map(cx, &f_loc, &f_t))
                     .collect(),
-                inexact: *inexact,
-            },
-            Annot::Array(loc, t) => Annot::Array(f_loc(cx, loc), f_t(cx, t)),
-            Annot::ReadOnlyArray(loc, t) => Annot::ReadOnlyArray(f_loc(cx, loc), f_t(cx, t)),
-            Annot::SingletonString(loc, s) => Annot::SingletonString(f_loc(cx, loc), s.dupe()),
-            Annot::SingletonNumber(loc, n, s) => {
-                Annot::SingletonNumber(f_loc(cx, loc), *n, s.dupe())
+                inexact: inner.inexact,
+            })),
+            Annot::Array(inner) => Annot::Array(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
+            Annot::ReadOnlyArray(inner) => {
+                Annot::ReadOnlyArray(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
-            Annot::SingletonBigInt(loc, i, s) => {
-                Annot::SingletonBigInt(f_loc(cx, loc), *i, s.dupe())
+            Annot::SingletonString(inner) => {
+                Annot::SingletonString(Box::new((f_loc(cx, &inner.0), inner.1.dupe())))
+            }
+            Annot::SingletonNumber(inner) => {
+                Annot::SingletonNumber(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
+            }
+            Annot::SingletonBigInt(inner) => {
+                Annot::SingletonBigInt(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
             }
             Annot::SingletonBoolean(loc, b) => Annot::SingletonBoolean(f_loc(cx, loc), *b),
-            Annot::StringPrefix {
-                loc,
-                prefix,
-                remainder,
-            } => Annot::StringPrefix {
-                loc: f_loc(cx, loc),
-                prefix: prefix.dupe(),
-                remainder: remainder.as_ref().map(|t| f_t(cx, t)),
-            },
-            Annot::StringSuffix {
-                loc,
-                suffix,
-                remainder,
-            } => Annot::StringSuffix {
-                loc: f_loc(cx, loc),
-                suffix: suffix.dupe(),
-                remainder: remainder.as_ref().map(|t| f_t(cx, t)),
-            },
-            Annot::Typeof {
-                loc,
-                qname,
-                t,
-                targs,
-            } => Annot::Typeof {
-                loc: f_loc(cx, loc),
-                qname: qname.clone(),
-                t: f_t(cx, t),
-                targs: targs
+            Annot::StringPrefix(inner) => Annot::StringPrefix(Box::new(AnnotStringPrefix {
+                loc: f_loc(cx, &inner.loc),
+                prefix: inner.prefix.dupe(),
+                remainder: inner.remainder.as_ref().map(|t| f_t(cx, t)),
+            })),
+            Annot::StringSuffix(inner) => Annot::StringSuffix(Box::new(AnnotStringSuffix {
+                loc: f_loc(cx, &inner.loc),
+                suffix: inner.suffix.dupe(),
+                remainder: inner.remainder.as_ref().map(|t| f_t(cx, t)),
+            })),
+            Annot::Typeof(inner) => Annot::Typeof(Box::new(AnnotTypeof {
+                loc: f_loc(cx, &inner.loc),
+                qname: inner.qname.clone(),
+                t: f_t(cx, &inner.t),
+                targs: inner
+                    .targs
                     .as_ref()
                     .map(|targs| targs.iter().map(|t| f_t(cx, t)).collect()),
-            },
-            Annot::Bound { ref_loc, name } => Annot::Bound {
-                ref_loc: f_loc(cx, ref_loc),
-                name: name.dupe(),
-            },
+            })),
+            Annot::Bound(inner) => Annot::Bound(Box::new(AnnotBound {
+                ref_loc: f_loc(cx, &inner.ref_loc),
+                name: inner.name.dupe(),
+            })),
             Annot::NoInfer(t) => Annot::NoInfer(f_t(cx, t)),
-            Annot::PropertyType { loc, obj, prop } => Annot::PropertyType {
-                loc: f_loc(cx, loc),
-                obj: f_t(cx, obj),
-                prop: prop.dupe(),
-            },
-            Annot::ElementType { loc, obj, elem } => Annot::ElementType {
-                loc: f_loc(cx, loc),
-                obj: f_t(cx, obj),
-                elem: f_t(cx, elem),
-            },
-            Annot::EnumValue(loc, t) => Annot::EnumValue(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Enum(loc, t) => Annot::Enum(f_loc(cx, loc), f_t(cx, t)),
-            Annot::OptionalIndexedAccessNonMaybeType { loc, obj, index } => {
-                Annot::OptionalIndexedAccessNonMaybeType {
-                    loc: f_loc(cx, loc),
-                    obj: f_t(cx, obj),
-                    index: f_t(cx, index),
-                }
+            Annot::PropertyType(inner) => Annot::PropertyType(Box::new(AnnotPropertyType {
+                loc: f_loc(cx, &inner.loc),
+                obj: f_t(cx, &inner.obj),
+                prop: inner.prop.dupe(),
+            })),
+            Annot::ElementType(inner) => Annot::ElementType(Box::new(AnnotElementType {
+                loc: f_loc(cx, &inner.loc),
+                obj: f_t(cx, &inner.obj),
+                elem: f_t(cx, &inner.elem),
+            })),
+            Annot::EnumValue(inner) => {
+                Annot::EnumValue(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
-            Annot::OptionalIndexedAccessResultType {
-                loc,
-                non_maybe_result,
-                void_loc,
-            } => Annot::OptionalIndexedAccessResultType {
-                loc: f_loc(cx, loc),
-                non_maybe_result: f_t(cx, non_maybe_result),
-                void_loc: f_loc(cx, void_loc),
-            },
-            Annot::NonMaybeType(loc, t) => Annot::NonMaybeType(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Omit(loc, t1, t2) => Annot::Omit(f_loc(cx, loc), f_t(cx, t1), f_t(cx, t2)),
-            Annot::ReadOnly(loc, t) => Annot::ReadOnly(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Partial(loc, t) => Annot::Partial(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Required(loc, t) => Annot::Required(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Keys(loc, t) => Annot::Keys(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Renders { loc, arg, variant } => Annot::Renders {
-                loc: f_loc(cx, loc),
-                arg: f_t(cx, arg),
-                variant: *variant,
-            },
+            Annot::Enum(inner) => Annot::Enum(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
+            Annot::OptionalIndexedAccessNonMaybeType(inner) => {
+                Annot::OptionalIndexedAccessNonMaybeType(Box::new(
+                    AnnotOptionalIndexedAccessNonMaybeType {
+                        loc: f_loc(cx, &inner.loc),
+                        obj: f_t(cx, &inner.obj),
+                        index: f_t(cx, &inner.index),
+                    },
+                ))
+            }
+            Annot::OptionalIndexedAccessResultType(inner) => {
+                Annot::OptionalIndexedAccessResultType(Box::new(
+                    AnnotOptionalIndexedAccessResultType {
+                        loc: f_loc(cx, &inner.loc),
+                        non_maybe_result: f_t(cx, &inner.non_maybe_result),
+                        void_loc: f_loc(cx, &inner.void_loc),
+                    },
+                ))
+            }
+            Annot::NonMaybeType(inner) => {
+                Annot::NonMaybeType(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Omit(inner) => Annot::Omit(Box::new((
+                f_loc(cx, &inner.0),
+                f_t(cx, &inner.1),
+                f_t(cx, &inner.2),
+            ))),
+            Annot::ReadOnly(inner) => {
+                Annot::ReadOnly(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Partial(inner) => {
+                Annot::Partial(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Required(inner) => {
+                Annot::Required(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Keys(inner) => Annot::Keys(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
+            Annot::Renders(inner) => Annot::Renders(Box::new(AnnotRenders {
+                loc: f_loc(cx, &inner.loc),
+                arg: f_t(cx, &inner.arg),
+                variant: inner.variant,
+            })),
             Annot::ComponentMissingRenders(loc) => Annot::ComponentMissingRenders(f_loc(cx, loc)),
-            Annot::Values(loc, t) => Annot::Values(f_loc(cx, loc), f_t(cx, t)),
-            Annot::Exact(loc, t) => Annot::Exact(f_loc(cx, loc), f_t(cx, t)),
-            Annot::ExportsT(loc, userland) => Annot::ExportsT(f_loc(cx, loc), userland.clone()),
-            Annot::Conditional {
-                loc,
-                distributive_tparam,
-                infer_tparams,
-                check_type,
-                extends_type,
-                true_type,
-                false_type,
-            } => Annot::Conditional {
-                loc: f_loc(cx, loc),
-                distributive_tparam: distributive_tparam
+            Annot::Values(inner) => {
+                Annot::Values(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Exact(inner) => Annot::Exact(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
+            Annot::ExportsT(inner) => {
+                Annot::ExportsT(Box::new((f_loc(cx, &inner.0), inner.1.clone())))
+            }
+            Annot::Conditional(inner) => Annot::Conditional(Box::new(AnnotConditional {
+                loc: f_loc(cx, &inner.loc),
+                distributive_tparam: inner
+                    .distributive_tparam
                     .as_ref()
                     .map(|tp| tp.map(cx, &f_loc, &f_t)),
-                infer_tparams: infer_tparams.map(cx, &f_loc, &f_t),
-                check_type: f_t(cx, check_type),
-                extends_type: f_t(cx, extends_type),
-                true_type: f_t(cx, true_type),
-                false_type: f_t(cx, false_type),
-            },
-            Annot::ObjKeyMirror { loc, obj } => Annot::ObjKeyMirror {
-                loc: f_loc(cx, loc),
-                obj: f_t(cx, obj),
-            },
-            Annot::ClassT(loc, t) => Annot::ClassT(f_loc(cx, loc), f_t(cx, t)),
+                infer_tparams: inner.infer_tparams.map(cx, &f_loc, &f_t),
+                check_type: f_t(cx, &inner.check_type),
+                extends_type: f_t(cx, &inner.extends_type),
+                true_type: f_t(cx, &inner.true_type),
+                false_type: f_t(cx, &inner.false_type),
+            })),
+            Annot::ObjKeyMirror(inner) => Annot::ObjKeyMirror(Box::new(AnnotObjKeyMirror {
+                loc: f_loc(cx, &inner.loc),
+                obj: f_t(cx, &inner.obj),
+            })),
+            Annot::ClassT(inner) => {
+                Annot::ClassT(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
             Annot::FunctionBind(loc) => Annot::FunctionBind(f_loc(cx, loc)),
-            Annot::ReactElementConfig(loc, t) => {
-                Annot::ReactElementConfig(f_loc(cx, loc), f_t(cx, t))
+            Annot::ReactElementConfig(inner) => {
+                Annot::ReactElementConfig(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
-            Annot::FunAnnot(loc, sig) => Annot::FunAnnot(f_loc(cx, loc), sig.map(cx, &f_loc, &f_t)),
-            Annot::ComponentAnnot(loc, sig) => {
-                Annot::ComponentAnnot(f_loc(cx, loc), sig.map(cx, &f_loc, &f_t))
+            Annot::FunAnnot(inner) => Annot::FunAnnot(Box::new((
+                f_loc(cx, &inner.0),
+                inner.1.map(cx, &f_loc, &f_t),
+            ))),
+            Annot::ComponentAnnot(inner) => Annot::ComponentAnnot(Box::new((
+                f_loc(cx, &inner.0),
+                inner.1.map(cx, &f_loc, &f_t),
+            ))),
+            Annot::MappedTypeAnnot(inner) => {
+                Annot::MappedTypeAnnot(Box::new(AnnotMappedTypeAnnot {
+                    loc: f_loc(cx, &inner.loc),
+                    source_type: f_t(cx, &inner.source_type),
+                    property_type: f_t(cx, &inner.property_type),
+                    key_tparam: inner.key_tparam.map(cx, &f_loc, &f_t),
+                    variance: inner.variance,
+                    variance_op: inner.variance_op,
+                    optional: inner.optional,
+                    inline_keyof: inner.inline_keyof,
+                }))
             }
-            Annot::MappedTypeAnnot {
-                loc,
-                source_type,
-                property_type,
-                key_tparam,
-                variance,
-                variance_op,
-                optional,
-                inline_keyof,
-            } => Annot::MappedTypeAnnot {
-                loc: f_loc(cx, loc),
-                source_type: f_t(cx, source_type),
-                property_type: f_t(cx, property_type),
-                key_tparam: key_tparam.map(cx, &f_loc, &f_t),
-                variance: *variance,
-                variance_op: *variance_op,
-                optional: *optional,
-                inline_keyof: *inline_keyof,
-            },
-            Annot::ObjAnnot {
-                loc,
-                obj_kind,
-                props,
-                computed_props,
-                proto,
-            } => Annot::ObjAnnot {
-                loc: f_loc(cx, loc),
-                obj_kind: match obj_kind {
+            Annot::ObjAnnot(inner) => Annot::ObjAnnot(Box::new(AnnotObjAnnot {
+                loc: f_loc(cx, &inner.loc),
+                obj_kind: match &inner.obj_kind {
                     ObjKind::ExactObj => ObjKind::ExactObj,
                     ObjKind::InexactObj => ObjKind::InexactObj,
                     ObjKind::IndexedObj(dict) => ObjKind::IndexedObj(dict.map(cx, &f_t)),
                 },
-                props: props
+                props: inner
+                    .props
                     .iter()
                     .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
                     .collect(),
-                computed_props: computed_props
+                computed_props: inner
+                    .computed_props
                     .iter()
                     .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                     .collect(),
-                proto: proto.map(cx, &f_loc, &f_t),
-            },
-            Annot::ObjSpreadAnnot { loc, exact, elems } => Annot::ObjSpreadAnnot {
-                loc: f_loc(cx, loc),
-                exact: *exact,
-                elems: elems.mapped_ref(|elem| elem.map(cx, &f_loc, &f_t)),
-            },
-            Annot::InlineInterface(loc, sig) => {
-                Annot::InlineInterface(f_loc(cx, loc), sig.map(cx, &f_loc, &f_t))
-            }
+                proto: inner.proto.map(cx, &f_loc, &f_t),
+            })),
+            Annot::ObjSpreadAnnot(inner) => Annot::ObjSpreadAnnot(Box::new(AnnotObjSpreadAnnot {
+                loc: f_loc(cx, &inner.loc),
+                exact: inner.exact,
+                elems: inner.elems.mapped_ref(|elem| elem.map(cx, &f_loc, &f_t)),
+            })),
+            Annot::InlineInterface(inner) => Annot::InlineInterface(Box::new((
+                f_loc(cx, &inner.0),
+                inner.1.map(cx, &f_loc, &f_t),
+            ))),
         }
     }
 }

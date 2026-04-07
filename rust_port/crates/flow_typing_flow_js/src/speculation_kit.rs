@@ -20,6 +20,8 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EUnionOptimizationData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
 use flow_typing_errors::error_message::EUnionSpeculationFailedData;
 use flow_typing_errors::error_message::ErrorMessage;
@@ -32,12 +34,16 @@ use flow_typing_speculation_state::Branch as SpeculationBranch;
 use flow_typing_speculation_state::Case as SpeculationCase;
 use flow_typing_speculation_state::InformationForSynthesisLogging;
 use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::FuncallType;
 use flow_typing_type::type_::LookupAction;
+use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodAction;
+use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::SpecState;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Type;
@@ -138,36 +144,34 @@ fn log_synthesis_result<'cx>(
 
 fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation_id: i32) {
     match use_t.deref() {
-        UseTInner::CallT {
+        UseTInner::CallT(box CallTData {
             call_action:
                 box CallAction::Funcalltype(FuncallType {
                     call_specialized_callee: Some(c),
                     ..
                 }),
             ..
-        }
-        | UseTInner::MethodT(
-            _,
-            _,
-            _,
-            _,
-            box MethodAction::CallM {
-                specialized_callee: Some(c),
-                ..
-            }
-            | box MethodAction::ChainM {
-                specialized_callee: Some(c),
-                ..
-            },
-        )
-        | UseTInner::ReactKitT(
-            _,
-            _,
-            box react::Tool::CreateElement {
-                specialized_component: Some(c),
-                ..
-            },
-        ) => {
+        })
+        | UseTInner::MethodT(box MethodTData {
+            method_action:
+                box MethodAction::CallM {
+                    specialized_callee: Some(c),
+                    ..
+                }
+                | box MethodAction::ChainM {
+                    specialized_callee: Some(c),
+                    ..
+                },
+            ..
+        })
+        | UseTInner::ReactKitT(box ReactKitTData {
+            tool:
+                box react::Tool::CreateElement {
+                    specialized_component: Some(c),
+                    ..
+                },
+            ..
+        }) => {
             let spec_id = SpecState {
                 speculation_id,
                 case_id: case.case_id,
@@ -587,11 +591,11 @@ fn long_path_speculative_matches<'cx>(
                             branches: msgs,
                         }))
                     }
-                    UseTInner::LookupT {
+                    UseTInner::LookupT(box LookupTData {
                         reason,
                         lookup_action: box LookupAction::MatchProp { use_op, .. },
                         ..
-                    } => {
+                    }) => {
                         let mut op_reasons = Vec1::new(r.dupe());
                         for t in ls.iter() {
                             op_reasons.push(type_util::reason_of_t(t).dupe());
@@ -625,10 +629,10 @@ fn long_path_speculative_matches<'cx>(
     for (case_id, case_spec) in trials {
         let information_for_synthesis_logging = match &case_spec {
             CaseSpec::FlowCase(lhs_t, use_t)
-                if let UseTInner::CallT {
+                if let UseTInner::CallT(box CallTData {
                     call_action: box CallAction::Funcalltype(funcalltype),
                     ..
-                } = use_t.deref() =>
+                }) = use_t.deref() =>
             {
                 match &funcalltype.call_speculation_hint_state {
                     Some(call_callee_hint_ref) => {
@@ -834,10 +838,10 @@ fn optimize_spec_try_shortcut<'cx>(
                 Err(kind) => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EUnionOptimization {
+                        ErrorMessage::EUnionOptimization(Box::new(EUnionOptimizationData {
                             loc: reason.loc().dupe(),
                             kind,
-                        },
+                        })),
                     )?;
                 }
                 Ok(
@@ -934,20 +938,22 @@ fn optimize_spec_try_shortcut<'cx>(
                             | DefTInner::ClassT(..)
                             | DefTInner::InstanceT(..)
                             | DefTInner::TypeT(..)
-                            | DefTInner::PolyT { .. }
-                            | DefTInner::ReactAbstractComponentT { .. }
+                            | DefTInner::PolyT(_)
+                            | DefTInner::ReactAbstractComponentT(_)
                             | DefTInner::EnumValueT(..)
                             | DefTInner::EnumObjectT { .. }
                     ) && rep.check_enum().is_some() =>
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EIncompatibleWithUseOp {
-                            reason_lower: type_util::reason_of_t(l).dupe(),
-                            reason_upper: reason_op.dupe(),
-                            use_op: use_op.dupe(),
-                            explanation: None,
-                        },
+                        ErrorMessage::EIncompatibleWithUseOp(Box::new(
+                            EIncompatibleWithUseOpData {
+                                reason_lower: type_util::reason_of_t(l).dupe(),
+                                reason_upper: reason_op.dupe(),
+                                use_op: use_op.dupe(),
+                                explanation: None,
+                            },
+                        )),
                     )?;
                     true
                 }

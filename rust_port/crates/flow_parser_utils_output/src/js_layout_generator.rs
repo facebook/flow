@@ -5337,7 +5337,7 @@ pub(crate) fn match_pattern(
             boolean_literal(loc, inner)
         }
         ast::match_pattern::MatchPattern::NullPattern { loc, inner } => {
-            null_literal(loc, inner.as_ref())
+            null_literal(loc, (**inner).as_ref())
         }
         ast::match_pattern::MatchPattern::IdentifierPattern { inner, .. } => identifier(inner),
         ast::match_pattern::MatchPattern::MemberPattern { inner, .. } => {

@@ -9,7 +9,10 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 
 use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::ResolveSpreadTData;
 use flow_typing_type::type_::dummy_this;
 use flow_typing_type::type_::mk_methodtype;
 
@@ -154,12 +157,12 @@ pub(super) fn multiflow_partial<'cx>(
 
                 let tout_use = {
                     let use_op = VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::FunParam {
+                        Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
                             n,
                             name: name.dupe(),
                             lower: reason_of_t(&tin).dupe(),
                             upper: reason_of_t(&tout).dupe(),
-                        }),
+                        }))),
                         Arc::new(use_op.dupe()),
                     );
                     UseT::new(UseTInner::UseT(use_op, tout.dupe()))
@@ -214,7 +217,7 @@ pub(super) fn multiflow_partial<'cx>(
                 if let Some((first_unused_arg, _)) = unused_arglist.front() {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EFunctionCallExtraArg(
+                        ErrorMessage::EFunctionCallExtraArg(Box::new((
                             flow_common::reason::mk_reason(
                                 VirtualReasonDesc::RFunctionUnusedArgument,
                                 reason_of_t(first_unused_arg).loc().dupe(),
@@ -222,7 +225,7 @@ pub(super) fn multiflow_partial<'cx>(
                             def_reason.dupe(),
                             original_parlist_len as i32,
                             use_op.dupe(),
-                        ),
+                        ))),
                     )?;
                 }
             }
@@ -275,12 +278,12 @@ pub(super) fn multiflow_partial<'cx>(
                             trace,
                             (
                                 &rest_param_t,
-                                &UseT::new(UseTInner::ArrRestT(
-                                    use_op.dupe(),
-                                    orig_rest_reason.dupe(),
-                                    i,
-                                    tout.dupe(),
-                                )),
+                                &UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                    use_op: use_op.dupe(),
+                                    reason: orig_rest_reason.dupe(),
+                                    index: i,
+                                    tout: tout.dupe(),
+                                }))),
                             ),
                         )?;
                         Ok::<(), FlowJsException>(())
@@ -430,15 +433,15 @@ pub(super) fn resolve_spread_list_rec<'cx>(
                     trace,
                     (
                         &next_t,
-                        &UseT::new(UseTInner::ResolveSpreadT(
+                        &UseT::new(UseTInner::ResolveSpreadT(Box::new(ResolveSpreadTData {
                             use_op,
-                            reason_op.dupe(),
-                            Box::new(ResolveSpreadType {
+                            reason: reason_op.dupe(),
+                            resolve_spread_type: Box::new(ResolveSpreadType {
                                 rrt_resolved: resolved.into(),
                                 rrt_unresolved: Vec::from(unresolved).into(),
                                 rrt_resolve_to: resolve_to,
                             }),
-                        )),
+                        }))),
                     ),
                 );
             }

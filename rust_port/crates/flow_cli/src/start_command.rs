@@ -128,6 +128,7 @@ fn spec() -> command_spec::Spec {
     .anon("root", &command_spec::optional(command_spec::string()))
 }
 
+#[allow(clippy::zombie_processes)] // Intentionally spawning a background daemon server
 fn main(args: &command_spec::Values) {
     let flowconfig_name = command_spec::get(
         args,

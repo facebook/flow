@@ -175,11 +175,14 @@ mod potential_ordinary_refs_search {
                             let props_object =
                                 flow_typing_tvar::mk_where(self.cx, reason.dupe(), |_cx, tvar| {
                                     let use_op = UseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse));
-                                    let use_t = UseT::new(UseTInner::ReactKitT(
-                                        use_op,
-                                        reason.dupe(),
-                                        Box::new(react::Tool::GetConfig { tout: tvar.dupe() }),
-                                    ));
+                                    let use_t =
+                                        UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                                            use_op,
+                                            reason: reason.dupe(),
+                                            tool: Box::new(react::Tool::GetConfig {
+                                                tout: tvar.dupe(),
+                                            }),
+                                        })));
                                     flow_typing_flow_js::flow_js::flow_non_speculating(
                                         self.cx,
                                         (component_t, &use_t),

@@ -50,6 +50,8 @@ use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::PolyTData;
+use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::Type;
@@ -385,9 +387,11 @@ fn app_on_generic(
     let c = c?;
     let ts: Vec<ALocTy> = ts.into_iter().collect::<Result<_, Error>>()?;
     Ok(match c.as_ref() {
-        ty::Ty::Generic((s, k, _)) => {
-            Arc::new(ty::Ty::Generic((s.clone(), k.clone(), Some(ts.into()))))
-        }
+        ty::Ty::Generic(box (s, k, _)) => Arc::new(ty::Ty::Generic(Box::new((
+            s.clone(),
+            k.clone(),
+            Some(ts.into()),
+        )))),
         _ => c,
     })
 }
@@ -424,8 +428,12 @@ fn mk_fun(
         fun_rest_param,
         fun_return,
         fun_type_params: fun_type_params.map(Into::into),
-        fun_static: static_
-            .unwrap_or_else(|| Arc::new(ty::Ty::TypeOf(ty::BuiltinOrSymbol::FunProto, None))),
+        fun_static: static_.unwrap_or_else(|| {
+            Arc::new(ty::Ty::TypeOf(Box::new((
+                ty::BuiltinOrSymbol::FunProto,
+                None,
+            ))))
+        }),
         fun_effect: effect_.unwrap_or(ty::FunEffect::Arbitrary),
     }
 }
@@ -1136,10 +1144,10 @@ mod type_converter {
                 let sym_def_loc = ns.namespace_symbol.def_loc_of_symbol().clone();
                 let sym_name = Name::new(ns.namespace_symbol.name().to_string());
                 let symbol = symbol_from_loc(env, sym_def_loc, sym_name);
-                Ok(Arc::new(ty::Ty::TypeOf(
+                Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                     ty::BuiltinOrSymbol::TSymbol(symbol),
                     None,
-                )))
+                )))))
             }
             _ => {
                 let reason = flow_typing_type::type_util::reason_of_t(t);
@@ -1272,10 +1280,12 @@ mod type_converter {
                 DefTInner::ObjT(o) => {
                     let obj =
                         obj_ty::<I>(env, state, reason, o, false, ty::PropSource::Other, None)?;
-                    Ok(Arc::new(ty::Ty::Obj(obj)))
+                    Ok(Arc::new(ty::Ty::Obj(Box::new(obj))))
                 }
                 DefTInner::ArrT(a) => arr_ty::<I>(env, state, reason, a),
-                DefTInner::PolyT { tparams, t_out, .. } => poly_ty::<I>(env, state, t_out, tparams),
+                DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) => {
+                    poly_ty::<I>(env, state, t_out, tparams)
+                }
                 DefTInner::InstanceT(instance_t_val) => instance_t::<I>(
                     env,
                     state,
@@ -1294,11 +1304,11 @@ mod type_converter {
                         Ok(Arc::new(ty::Ty::Utility(ty::Utility::Class(ty))))
                     }
                 },
-                DefTInner::ReactAbstractComponentT {
+                DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind:
                         flow_typing_type::type_::ComponentKind::Nominal(_, name, inferred_targs),
                     ..
-                } => {
+                }) => {
                     let targs = match inferred_targs {
                         None => None,
                         Some(targs) => {
@@ -1310,14 +1320,16 @@ mod type_converter {
                         }
                     };
                     let symbol = reason_utils::component_symbol(env, name, reason);
-                    Ok(Arc::new(ty::Ty::TypeOf(
+                    Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                         ty::BuiltinOrSymbol::TSymbol(symbol),
                         targs.map(Into::into),
-                    )))
+                    )))))
                 }
-                DefTInner::ReactAbstractComponentT {
-                    config, renders, ..
-                } => {
+                DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                    config,
+                    renders,
+                    ..
+                }) => {
                     let (regular_props, renders_ty) =
                         convert_component::<I>(env, state, config, renders)?;
                     Ok(Arc::new(ty::Ty::Component {
@@ -1334,11 +1346,11 @@ mod type_converter {
                         }
                         CanonicalRendersForm::NominalRenders { renders_name, .. } => {
                             let symbol = reason_utils::component_symbol(env, renders_name, reason);
-                            Ok(Arc::new(ty::Ty::Generic((
+                            Ok(Arc::new(ty::Ty::Generic(Box::new((
                                 symbol,
                                 ty::GenKind::ComponentKind,
                                 None,
-                            ))))
+                            )))))
                         }
                         CanonicalRendersForm::StructuralRenders {
                             renders_variant,
@@ -1359,7 +1371,11 @@ mod type_converter {
                                 &FlowSmolStr::new("React.Node"),
                                 reason,
                             );
-                            let ty = ty::Ty::Generic((symbol, ty::GenKind::ComponentKind, None));
+                            let ty = ty::Ty::Generic(Box::new((
+                                symbol,
+                                ty::GenKind::ComponentKind,
+                                None,
+                            )));
                             Ok(Arc::new(ty::Ty::Renders(
                                 Arc::new(ty),
                                 ty::RendersKind::RendersNormal,
@@ -1369,18 +1385,18 @@ mod type_converter {
                 }
                 DefTInner::EnumObjectT { .. } => {
                     let symbol = reason_utils::local_type_alias_symbol(env, reason)?;
-                    Ok(Arc::new(ty::Ty::TypeOf(
+                    Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                         ty::BuiltinOrSymbol::TSymbol(symbol),
                         None,
-                    )))
+                    )))))
                 }
                 DefTInner::EnumValueT(_) => {
                     let symbol = reason_utils::local_type_alias_symbol(env, reason)?;
-                    Ok(Arc::new(ty::Ty::Generic((
+                    Ok(Arc::new(ty::Ty::Generic(Box::new((
                         symbol,
                         ty::GenKind::EnumKind,
                         None,
-                    ))))
+                    )))))
                 }
                 DefTInner::TypeT(..) => Err(terr(
                     ErrorKind::UnexpectedTypeCtor(flow_typing_type::type_::string_of_ctor(t)),
@@ -1447,14 +1463,14 @@ mod type_converter {
                 reason,
                 nominal_type,
             } => nominal_t::<I>(env, state, reason, nominal_type),
-            TypeInner::ObjProtoT(_) => Ok(Arc::new(ty::Ty::TypeOf(
+            TypeInner::ObjProtoT(_) => Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                 ty::BuiltinOrSymbol::ObjProto,
                 None,
-            ))),
-            TypeInner::FunProtoT(_) => Ok(Arc::new(ty::Ty::TypeOf(
+            ))))),
+            TypeInner::FunProtoT(_) => Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                 ty::BuiltinOrSymbol::FunProto,
                 None,
-            ))),
+            ))))),
             // | FunProtoBindT _ -> ...
             TypeInner::FunProtoBindT(_) => {
                 if env.expand_internal_types() {
@@ -1483,10 +1499,10 @@ mod type_converter {
                         ty::ReturnT::ReturnType(explicit_any),
                     )))))
                 } else {
-                    Ok(Arc::new(ty::Ty::TypeOf(
+                    Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                         ty::BuiltinOrSymbol::FunProtoBind,
                         None,
-                    )))
+                    )))))
                 }
             }
             TypeInner::NullProtoT(_) => Ok(Arc::new(ty::Ty::Null)),
@@ -1681,12 +1697,10 @@ mod type_converter {
         };
 
         match prop.deref() {
-            PropertyInner::Field {
-                type_, polarity, ..
-            } => {
-                let polarity = type_polarity(*polarity);
-                let (t, optional) = opt_t::<I>(env, state, type_)?;
-                let dl = def_locs(type_, prop);
+            PropertyInner::Field(fd) => {
+                let polarity = type_polarity(fd.polarity);
+                let (t, optional) = opt_t::<I>(env, state, &fd.type_)?;
+                let dl = def_locs(&fd.type_, prop);
                 let named_prop = ty::NamedProp::Field {
                     t,
                     polarity,
@@ -1734,21 +1748,16 @@ mod type_converter {
                     def_locs: def_locs(type_, prop).into(),
                 }])
             }
-            PropertyInner::GetSet {
-                get_key_loc,
-                get_type,
-                set_key_loc,
-                set_type,
-            } => {
+            PropertyInner::GetSet(gs) => {
                 let get_prop = flow_typing_type::type_::Property::new(PropertyInner::Get {
-                    key_loc: get_key_loc.clone(),
-                    type_: get_type.clone(),
+                    key_loc: gs.get_key_loc.clone(),
+                    type_: gs.get_type.clone(),
                 });
                 let mut props =
                     obj_prop_t::<I>(env, state, name, &get_prop, inherited, source.clone())?;
                 let set_prop = flow_typing_type::type_::Property::new(PropertyInner::Set {
-                    key_loc: set_key_loc.clone(),
-                    type_: set_type.clone(),
+                    key_loc: gs.set_key_loc.clone(),
+                    type_: gs.set_type.clone(),
                 });
                 props.extend(obj_prop_t::<I>(
                     env, state, name, &set_prop, inherited, source,
@@ -1898,11 +1907,11 @@ mod type_converter {
             tys.push(type__::<I>(env, state, None, t)?);
         }
         let targs = if tys.is_empty() { None } else { Some(tys) };
-        Ok(Arc::new(ty::Ty::Generic((
+        Ok(Arc::new(ty::Ty::Generic(Box::new((
             symbol,
             kind,
             targs.map(Into::into),
-        ))))
+        )))))
     }
 
     fn instance_t<'cx, I: NormalizerInput>(
@@ -1944,7 +1953,7 @@ mod type_converter {
     ) -> Result<ALocTy, Error> {
         fn extends(ty: &ALocTy) -> Result<Vec<ty::GenericT<ALoc>>, Error> {
             match ty.as_ref() {
-                ty::Ty::Generic(g) => Ok(vec![g.clone()]),
+                ty::Ty::Generic(g) => Ok(vec![*g.clone()]),
                 ty::Ty::Inter(t1, t2, ts) => {
                     let mut result = Vec::new();
                     result.extend(extends(t1)?);
@@ -1956,8 +1965,8 @@ mod type_converter {
                 }
                 // Do not contribute to the extends clause
                 // interface {} && interface { (): void }
-                ty::Ty::TypeOf(ty::BuiltinOrSymbol::ObjProto, _)
-                | ty::Ty::TypeOf(ty::BuiltinOrSymbol::FunProto, _) => Ok(Vec::new()),
+                ty::Ty::TypeOf(box (ty::BuiltinOrSymbol::ObjProto, _))
+                | ty::Ty::TypeOf(box (ty::BuiltinOrSymbol::FunProto, _)) => Ok(Vec::new()),
                 // Top-level syntax only allows generics in extends
                 _ => Err(terr(ErrorKind::BadInlineInterfaceExtends, None, None)),
             }
@@ -1988,11 +1997,13 @@ mod type_converter {
             }
             None => None,
         };
-        Ok(Arc::new(ty::Ty::InlineInterface(ty::InterfaceT {
-            if_extends: if_extends.into(),
-            if_props: if_props.into(),
-            if_dict,
-        })))
+        Ok(Arc::new(ty::Ty::InlineInterface(Box::new(
+            ty::InterfaceT {
+                if_extends: if_extends.into(),
+                if_props: if_props.into(),
+                if_dict,
+            },
+        ))))
     }
 
     pub(super) fn convert_component<'cx, I: NormalizerInput>(
@@ -2056,10 +2067,10 @@ mod type_converter {
         match &inst_t.inst.inst_kind {
             InstanceKind::ClassKind | InstanceKind::RecordKind { .. } => {
                 let symbol = reason_utils::instance_symbol(env, reason)?;
-                Ok(Arc::new(ty::Ty::TypeOf(
+                Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                     ty::BuiltinOrSymbol::TSymbol(symbol),
                     None,
-                )))
+                )))))
             }
             InstanceKind::InterfaceKind { .. } => {
                 Err(terr(ErrorKind::BadThisClassT, Some("InterfaceKind"), None))
@@ -2105,7 +2116,7 @@ mod type_converter {
                     let fun_t = fun_ty::<I>(env, state, static_, f, ps)?;
                     Ok(Arc::new(ty::Ty::Fun(Box::new(fun_t))))
                 }
-                DefTInner::ReactAbstractComponentT { .. } => type__::<I>(env, state, None, t_out),
+                DefTInner::ReactAbstractComponentT(_) => type__::<I>(env, state, None, t_out),
                 _ => Err(terr(ErrorKind::BadPoly, None, Some(t_out))),
             },
             _ => Err(terr(ErrorKind::BadPoly, None, Some(t_out))),
@@ -2148,11 +2159,11 @@ mod type_converter {
             } else {
                 converted_targs
             };
-            Ok(Arc::new(ty::Ty::Generic((
+            Ok(Arc::new(ty::Ty::Generic(Box::new((
                 symbol,
                 kind,
                 converted_targs.map(Into::into),
-            ))))
+            )))))
         }
 
         fn instance_app<'cx, I: NormalizerInput>(
@@ -2262,10 +2273,10 @@ mod type_converter {
                             Err(terr(ErrorKind::BadTypeApp, Some(&msg), None))
                         }
                     },
-                    DefTInner::ReactAbstractComponentT {
+                    DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                         component_kind: flow_typing_type::type_::ComponentKind::Nominal(_, name, _),
                         ..
-                    } => {
+                    }) => {
                         let symbol = reason_utils::component_symbol(env, name, r);
                         mk_generic::<I>(
                             env,
@@ -2301,7 +2312,7 @@ mod type_converter {
                 TypeInner::DefT(reason, def_t)
                     if from_value
                         && targs.is_some()
-                        && matches!(def_t.deref(), DefTInner::PolyT { .. }) =>
+                        && matches!(def_t.deref(), DefTInner::PolyT(_)) =>
                 {
                     I::typeapp(
                         env.genv.cx,
@@ -2317,7 +2328,7 @@ mod type_converter {
                     )
                 }
                 TypeInner::DefT(_, def_t) => match def_t.deref() {
-                    DefTInner::PolyT { tparams, t_out, .. } => {
+                    DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) => {
                         singleton_poly::<I>(env, state, targs, tparams, t_out)
                     }
                     DefTInner::ClassT(inner) => match inner.deref() {
@@ -2462,7 +2473,7 @@ mod type_converter {
                 op_kind: None,
                 name: n,
                 ..
-            } => Ok(Arc::new(ty::Ty::Bound(loc, n.to_string()))),
+            } => Ok(Arc::new(ty::Ty::Bound(Box::new((loc, n.to_string()))))),
             SubstNameInner::Synthetic {
                 op_kind: Some(op),
                 ts,
@@ -2496,11 +2507,11 @@ mod type_converter {
                         }
                         _ => ty::ObjKind::ExactObj,
                     };
-                    Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+                    Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
                         obj_def_loc: None,
                         obj_props: obj_props.into(),
                         obj_kind,
-                    })))
+                    }))))
                 }
                 _ => Err(terr(ErrorKind::SyntheticBoundT, None, Some(t))),
             },
@@ -2528,7 +2539,7 @@ mod type_converter {
                 let tp_bound = tp.bound.clone();
                 let symbol = symbol_from_reason(env, &tp_reason, Name::new(tp_name));
                 let bound = param_bound::<I>(env, state, &tp_bound)?;
-                Ok(Arc::new(ty::Ty::Infer(symbol, bound)))
+                Ok(Arc::new(ty::Ty::Infer(Box::new((symbol, bound)))))
             }
             None => subst_name::<I>(env, state, loc, t, bound, name),
         }
@@ -2641,11 +2652,11 @@ mod type_converter {
             } else {
                 ty::ObjKind::InexactObj
             };
-            Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+            Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
                 obj_def_loc: None,
                 obj_props: obj_props.into(),
                 obj_kind,
-            })))
+            }))))
         }
 
         fn spread_operand_slice<'cx, I: NormalizerInput>(
@@ -2671,11 +2682,11 @@ mod type_converter {
                 }
                 None => ty::ObjKind::ExactObj,
             };
-            Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+            Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
                 obj_def_loc: None,
                 obj_props: obj_props.into(),
                 obj_kind,
-            })))
+            }))))
         }
 
         fn spread_operand<'cx, I: NormalizerInput>(
@@ -2799,11 +2810,11 @@ mod type_converter {
         let mut obj_props = spread_of_ty(&ty);
         obj_props.extend(map_props);
         let obj_kind = ty::ObjKind::ExactObj;
-        Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+        Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
             obj_def_loc: None,
             obj_props: obj_props.into(),
             obj_kind,
-        })))
+        }))))
     }
 
     fn mapped_type<'cx, I: NormalizerInput>(
@@ -2819,7 +2830,7 @@ mod type_converter {
 
         let (key_tparam, prop) = match property_type.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::PolyT { tparams, t_out, .. } if tparams.len() == 1 => {
+                DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) if tparams.len() == 1 => {
                     let key_tparam_ty = type_param::<I>(env, state, &tparams[0])?;
                     let property_ty = type__::<I>(env, state, None, t_out)?;
                     (key_tparam_ty, property_ty)
@@ -2867,11 +2878,11 @@ mod type_converter {
             homomorphic: homomorphic_ty,
         };
 
-        Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+        Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
             obj_def_loc: None,
             obj_props: Arc::from(vec![mapped_prop]),
             obj_kind: ty::ObjKind::MappedTypeObj,
-        })))
+        }))))
     }
 
     pub(super) fn type_destructor_unevaluated<'cx, I: NormalizerInput>(
@@ -3180,12 +3191,14 @@ pub mod element_converter {
             Some(t) => Some(type_converter::convert_t::<I>(env, state, false, t)?),
             None => None,
         };
-        Ok(ty::Decl::TypeAliasDecl {
-            import: false,
-            name,
-            tparams: tparams.map(Into::into),
-            type_,
-        })
+        Ok(ty::Decl::TypeAliasDecl(Box::new(
+            ty::DeclTypeAliasDeclData {
+                import: false,
+                name,
+                tparams: tparams.map(Into::into),
+                type_,
+            },
+        )))
     }
 
     fn type_t<'cx, I: NormalizerInput>(
@@ -3207,12 +3220,14 @@ pub mod element_converter {
         ) -> Result<ALocElt, Error> {
             let name = reason_utils::local_type_alias_symbol(env, reason)?;
             let ty = type_converter::convert_t::<I>(env, state, true, t)?;
-            Ok(ty::Elt::Decl(ty::Decl::TypeAliasDecl {
-                import: false,
-                name,
-                tparams: tparams.map(Into::into),
-                type_: Some(ty),
-            }))
+            Ok(ty::Elt::Decl(ty::Decl::TypeAliasDecl(Box::new(
+                ty::DeclTypeAliasDeclData {
+                    import: false,
+                    name,
+                    tparams: tparams.map(Into::into),
+                    type_: Some(ty),
+                },
+            ))))
         }
 
         fn import<'cx, I: NormalizerInput>(
@@ -3224,12 +3239,14 @@ pub mod element_converter {
         ) -> Result<ALocElt, Error> {
             let name = reason_utils::imported_type_alias_symbol(env, reason)?;
             let ty = type_converter::convert_t::<I>(env, state, false, t)?;
-            Ok(ty::Elt::Decl(ty::Decl::TypeAliasDecl {
-                import: true,
-                name,
-                tparams: tparams.map(Into::into),
-                type_: Some(ty),
-            }))
+            Ok(ty::Elt::Decl(ty::Decl::TypeAliasDecl(Box::new(
+                ty::DeclTypeAliasDeclData {
+                    import: true,
+                    name,
+                    tparams: tparams.map(Into::into),
+                    type_: Some(ty),
+                },
+            ))))
         }
 
         fn class_<'cx, I: NormalizerInput>(
@@ -3284,10 +3301,10 @@ pub mod element_converter {
                 match desc {
                     flow_common::reason::VirtualReasonDesc::RType(name) => {
                         let loc = reason.def_loc().clone();
-                        Ok(ty::Elt::Type(Arc::new(ty::Ty::Bound(
+                        Ok(ty::Elt::Type(Arc::new(ty::Ty::Bound(Box::new((
                             loc,
                             name.to_string(),
-                        ))))
+                        ))))))
                     }
                     _ => {
                         let msg =
@@ -3343,10 +3360,10 @@ pub mod element_converter {
             match inst_kind {
                 InstanceKind::InterfaceKind { inline: false } => {
                     let symbol = reason_utils::instance_symbol(env, r)?;
-                    Ok(ty::Elt::Decl(ty::Decl::InterfaceDecl(
+                    Ok(ty::Elt::Decl(ty::Decl::InterfaceDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
-                    )))
+                    )))))
                 }
                 InstanceKind::InterfaceKind { inline: true } => {
                     let ty = type_converter::convert_inline_interface::<I>(
@@ -3361,17 +3378,17 @@ pub mod element_converter {
                 }
                 InstanceKind::ClassKind => {
                     let symbol = reason_utils::instance_symbol(env, r)?;
-                    Ok(ty::Elt::Decl(ty::Decl::ClassDecl(
+                    Ok(ty::Elt::Decl(ty::Decl::ClassDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
-                    )))
+                    )))))
                 }
                 InstanceKind::RecordKind { .. } => {
                     let symbol = reason_utils::instance_symbol(env, r)?;
-                    Ok(ty::Elt::Decl(ty::Decl::RecordDecl(
+                    Ok(ty::Elt::Decl(ty::Decl::RecordDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
-                    )))
+                    )))))
                 }
             }
         }
@@ -3402,14 +3419,16 @@ pub mod element_converter {
             };
             let (props, renders) =
                 type_converter::convert_component::<I>(env, state, config, renders)?;
-            Ok(ty::Elt::Decl(ty::Decl::NominalComponentDecl {
-                name: reason_utils::component_symbol(env, name, reason),
-                tparams: tparams.map(Into::into),
-                targs: targs.map(Into::into),
-                props,
-                renders: renders.map(|t| t.as_ref().clone()),
-                is_type: env.toplevel_is_type_identifier_reference(),
-            }))
+            Ok(ty::Elt::Decl(ty::Decl::NominalComponentDecl(Box::new(
+                ty::DeclNominalComponentDeclData {
+                    name: reason_utils::component_symbol(env, name, reason),
+                    tparams: tparams.map(Into::into),
+                    targs: targs.map(Into::into),
+                    props,
+                    renders: renders.map(|t| t.as_ref().clone()),
+                    is_type: env.toplevel_is_type_identifier_reference(),
+                },
+            ))))
         }
 
         fn enum_decl<'cx>(
@@ -3447,12 +3466,14 @@ pub mod element_converter {
                 } else {
                     (None, false, 0)
                 };
-            Ok(ty::Elt::Decl(ty::Decl::EnumDecl {
-                name: symbol,
-                members,
-                has_unknown_members,
-                truncated_members_count,
-            }))
+            Ok(ty::Elt::Decl(ty::Decl::EnumDecl(Box::new(
+                ty::DeclEnumDeclData {
+                    name: symbol,
+                    members,
+                    has_unknown_members,
+                    truncated_members_count,
+                },
+            ))))
         }
 
         fn singleton_poly<'cx, I: NormalizerInput>(
@@ -3529,12 +3550,12 @@ pub mod element_converter {
                             _ => {}
                         }
                     }
-                    DefTInner::ReactAbstractComponentT {
+                    DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                         component_kind:
                             flow_typing_type::type_::ComponentKind::Nominal(_, name, targs),
                         config,
                         renders,
-                    } => {
+                    }) => {
                         let reason = type_util::reason_of_t(t_out);
                         return component_decl::<I>(
                             env,
@@ -3586,20 +3607,24 @@ pub mod element_converter {
                                     let (exports, default) =
                                         namespace_t::<I>(env, state, obj, ns.types_tmap.dupe())?;
                                     let name = ty_symbol_from_symbol(env, &ns.namespace_symbol);
-                                    return Ok(ty::Elt::Decl(ty::Decl::ModuleDecl {
-                                        name: Some(name),
-                                        exports: exports.into(),
-                                        default: default.map(|t| t.dupe()),
-                                    }));
+                                    return Ok(ty::Elt::Decl(ty::Decl::ModuleDecl(Box::new(
+                                        ty::DeclModuleDeclData {
+                                            name: Some(name),
+                                            exports: exports.into(),
+                                            default: default.map(|t| t.dupe()),
+                                        },
+                                    ))));
                                 }
                                 SymbolKind::SymbolNamespace if !env.keep_only_namespace_name => {
                                     let (exports, _) =
                                         namespace_t::<I>(env, state, obj, ns.types_tmap.dupe())?;
                                     let name = ty_symbol_from_symbol(env, &ns.namespace_symbol);
-                                    return Ok(ty::Elt::Decl(ty::Decl::NamespaceDecl {
-                                        name: Some(name),
-                                        exports: exports.into(),
-                                    }));
+                                    return Ok(ty::Elt::Decl(ty::Decl::NamespaceDecl(Box::new(
+                                        ty::DeclNamespaceDeclData {
+                                            name: Some(name),
+                                            exports: exports.into(),
+                                        },
+                                    ))));
                                 }
                                 _ => {}
                             },
@@ -3614,7 +3639,7 @@ pub mod element_converter {
                 TypeInner::DefT(r, def_t) => {
                     match &**def_t {
                         // Polymorphic variants - see singleton_poly
-                        DefTInner::PolyT { tparams, t_out, .. } => {
+                        DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) => {
                             return singleton_poly::<I>(env, state, orig_t, tparams, t_out);
                         }
                         // Monomorphic Classes/Interfaces
@@ -3685,12 +3710,12 @@ pub mod element_converter {
                         DefTInner::EnumObjectT { enum_info, .. } => {
                             return enum_decl(env, r, Some(enum_info));
                         }
-                        DefTInner::ReactAbstractComponentT {
+                        DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                             component_kind:
                                 flow_typing_type::type_::ComponentKind::Nominal(_, name, targs),
                             config,
                             renders,
-                        } => {
+                        }) => {
                             return component_decl::<I>(
                                 env,
                                 state,
@@ -3702,11 +3727,11 @@ pub mod element_converter {
                                 r,
                             );
                         }
-                        DefTInner::ReactAbstractComponentT {
+                        DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                             component_kind: flow_typing_type::type_::ComponentKind::Structural,
                             config,
                             renders,
-                        } if env.toplevel_is_type_identifier_reference() => {
+                        }) if env.toplevel_is_type_identifier_reference() => {
                             let orig_reason = type_util::reason_of_t(orig_t);
                             match orig_reason.desc(true) {
                                 ReasonDesc::RIdentifier(name) => {
@@ -3817,7 +3842,9 @@ pub mod element_converter {
                 let t = &named_symbol.type_;
                 match toplevel::<I>(env, state, t)? {
                     ty::Elt::Decl(d) => result.push(d),
-                    ty::Elt::Type(t) => result.push(ty::Decl::VariableDecl(x.dupe(), t)),
+                    ty::Elt::Type(t) => {
+                        result.push(ty::Decl::VariableDecl(Box::new((x.dupe(), t))))
+                    }
                 }
             }
             Ok(result)
@@ -3830,11 +3857,11 @@ pub mod element_converter {
         let exports_tmap = value_exports.union(type_exports);
         let exports = from_exports_tmap::<I>(env, state, &exports_tmap)?;
         let default = from_cjs_export::<I>(env, state, &export_types.cjs_export)?;
-        Ok(ty::Decl::ModuleDecl {
+        Ok(ty::Decl::ModuleDecl(Box::new(ty::DeclModuleDeclData {
             name,
             exports: exports.into(),
             default: default.map(|t| t.dupe()),
-        })
+        })))
     }
 
     fn module_of_object<'cx, I: NormalizerInput>(
@@ -3852,7 +3879,7 @@ pub mod element_converter {
 
         for (x, prop) in props.iter() {
             match prop.deref() {
-                PropertyInner::Field { type_, .. } => match toplevel::<I>(env, state, type_)? {
+                PropertyInner::Field(fd) => match toplevel::<I>(env, state, &fd.type_)? {
                     ty::Elt::Type(ref ty) if *x == default_name => match ty.as_ref() {
                         ty::Ty::Obj(_) => {}
                         _ => {
@@ -3860,7 +3887,7 @@ pub mod element_converter {
                         }
                     },
                     ty::Elt::Type(t) => {
-                        decls.push(ty::Decl::VariableDecl(x.dupe(), t));
+                        decls.push(ty::Decl::VariableDecl(Box::new((x.dupe(), t))));
                     }
                     ty::Elt::Decl(d) => {
                         decls.push(d);
@@ -3894,9 +3921,9 @@ pub mod element_converter {
         let type_props = cx.find_props(types_tmap);
         for (x, prop) in type_props.iter() {
             match prop.deref() {
-                PropertyInner::Field { type_, .. } => match toplevel::<I>(env, state, type_)? {
+                PropertyInner::Field(fd) => match toplevel::<I>(env, state, &fd.type_)? {
                     ty::Elt::Type(t) => {
-                        exports.push(ty::Decl::VariableDecl(x.dupe(), t));
+                        exports.push(ty::Decl::VariableDecl(Box::new((x.dupe(), t))));
                     }
                     ty::Elt::Decl(d) => {
                         exports.push(d);
@@ -3956,11 +3983,11 @@ mod expand_members {
     }
 
     fn no_members() -> ALocTy {
-        Arc::new(ty::Ty::Obj(ty::ObjT {
+        Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
             obj_def_loc: None,
             obj_kind: ty::ObjKind::ExactObj,
             obj_props: Arc::from([] as [ty::Prop<ALoc>; 0]),
-        }))
+        })))
     }
 
     fn arr_t<'cx, I: NormalizerInput>(
@@ -4073,11 +4100,11 @@ mod expand_members {
         obj_props.extend(super_props);
         obj_props.extend(proto_ty_props);
         obj_props.extend(own_ty_props);
-        Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+        Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
             obj_def_loc: None,
             obj_kind: ty::ObjKind::InexactObj,
             obj_props: obj_props.into(),
-        })))
+        }))))
     }
 
     fn enum_t<'cx, I: NormalizerInput>(
@@ -4160,11 +4187,11 @@ mod expand_members {
             .collect();
         let mut obj_props = vec![ty::Prop::SpreadProp(proto_ty)];
         obj_props.extend(members_ty);
-        Ok(Arc::new(ty::Ty::Obj(ty::ObjT {
+        Ok(Arc::new(ty::Ty::Obj(Box::new(ty::ObjT {
             obj_def_loc: Some(reason.def_loc().clone()),
             obj_kind: ty::ObjKind::InexactObj,
             obj_props: obj_props.into(),
-        })))
+        }))))
     }
 
     fn obj_t<'cx, I: NormalizerInput>(
@@ -4480,7 +4507,7 @@ mod expand_members {
                         r,
                         o,
                     )?;
-                    Ok(Arc::new(ty::Ty::Obj(obj)))
+                    Ok(Arc::new(ty::Ty::Obj(Box::new(obj))))
                 }
                 DefTInner::ClassT(class_t) => match class_t.deref() {
                     TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -4549,7 +4576,7 @@ mod expand_members {
                     &instance_t_val.implements,
                     &instance_t_val.inst,
                 ),
-                DefTInner::PolyT { t_out, .. } => type__::<I>(
+                DefTInner::PolyT(box PolyTData { t_out, .. }) => type__::<I>(
                     env,
                     state,
                     None,
@@ -4582,7 +4609,7 @@ mod expand_members {
                     allowed_prop_names,
                     inner_t,
                 ),
-                DefTInner::ReactAbstractComponentT { .. } => I::builtin_type(
+                DefTInner::ReactAbstractComponentT(_) => I::builtin_type(
                     env.genv.cx,
                     env,
                     state,
@@ -5070,11 +5097,11 @@ impl<I: NormalizerInput> Normalizer<I> {
         fn def_loc_of_ty(t: &ty::Ty<ALoc>) -> Option<ALoc> {
             match t {
                 ty::Ty::Utility(ty::Utility::Class(inner)) => match inner.as_ref() {
-                    ty::Ty::Generic((sym, _, None)) => Some(sym.sym_def_loc.clone()),
+                    ty::Ty::Generic(box (sym, _, None)) => Some(sym.sym_def_loc.clone()),
                     _ => None,
                 },
                 // This is an acceptable proxy only if the class is not polymorphic
-                ty::Ty::TypeOf(ty::BuiltinOrSymbol::TSymbol(sym), None) => {
+                ty::Ty::TypeOf(box (ty::BuiltinOrSymbol::TSymbol(sym), None)) => {
                     Some(sym.sym_def_loc.clone())
                 }
                 _ => None,
@@ -5083,25 +5110,30 @@ impl<I: NormalizerInput> Normalizer<I> {
 
         fn def_loc_of_decl(d: &ty::Decl<ALoc>) -> Option<ALoc> {
             match d {
-                ty::Decl::TypeAliasDecl {
+                ty::Decl::TypeAliasDecl(box ty::DeclTypeAliasDeclData {
                     import: false,
                     name,
                     ..
-                } => Some(name.sym_def_loc.dupe()),
-                ty::Decl::ClassDecl(sym, _) => Some(sym.sym_def_loc.dupe()),
-                ty::Decl::InterfaceDecl(sym, _) => Some(sym.sym_def_loc.dupe()),
-                ty::Decl::RecordDecl(sym, _) => Some(sym.sym_def_loc.dupe()),
-                ty::Decl::EnumDecl { name, .. } => Some(name.sym_def_loc.dupe()),
-                ty::Decl::NominalComponentDecl { name, .. } => Some(name.sym_def_loc.dupe()),
-                ty::Decl::TypeAliasDecl {
+                }) => Some(name.sym_def_loc.dupe()),
+                ty::Decl::ClassDecl(box (sym, _)) => Some(sym.sym_def_loc.dupe()),
+                ty::Decl::InterfaceDecl(box (sym, _)) => Some(sym.sym_def_loc.dupe()),
+                ty::Decl::RecordDecl(box (sym, _)) => Some(sym.sym_def_loc.dupe()),
+                ty::Decl::EnumDecl(box ty::DeclEnumDeclData { name, .. }) => {
+                    Some(name.sym_def_loc.dupe())
+                }
+                ty::Decl::NominalComponentDecl(box ty::DeclNominalComponentDeclData {
+                    name,
+                    ..
+                }) => Some(name.sym_def_loc.dupe()),
+                ty::Decl::TypeAliasDecl(box ty::DeclTypeAliasDeclData {
                     import: true,
                     type_: Some(t),
                     ..
-                } => def_loc_of_ty(t),
-                ty::Decl::TypeAliasDecl { .. }
-                | ty::Decl::VariableDecl(_, _)
-                | ty::Decl::ModuleDecl { .. }
-                | ty::Decl::NamespaceDecl { .. } => None,
+                }) => def_loc_of_ty(t),
+                ty::Decl::TypeAliasDecl(..)
+                | ty::Decl::VariableDecl(..)
+                | ty::Decl::ModuleDecl(..)
+                | ty::Decl::NamespaceDecl(..) => None,
             }
         }
 

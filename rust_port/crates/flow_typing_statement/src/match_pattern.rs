@@ -26,7 +26,9 @@ use flow_parser::ast::match_pattern::MemberPattern;
 use flow_parser::polymorphic_ast_mapper;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::MatchDuplicateObjectPropertyData;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::MatchInvalidObjectShorthandData;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::MatchObjPatternKind;
 use flow_typing_flow_js::flow_js;
@@ -599,14 +601,14 @@ fn pattern_<'a>(
             let t = on_identifier(EnclosingContext::OtherTestContext, cx, inner, loc.dupe());
             match_pattern::MatchPattern::IdentifierPattern {
                 loc: loc.dupe(),
-                inner: ast::Identifier(
+                inner: Box::new(ast::Identifier(
                     ast::IdentifierInner {
                         loc: (loc.dupe(), t),
                         name: inner.name.dupe(),
                         comments: inner.comments.dupe(),
                     }
                     .into(),
-                ),
+                )),
             }
         }
         match_pattern::MatchPattern::BindingPattern { loc, inner } => {
@@ -666,10 +668,10 @@ fn pattern_<'a>(
         {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     intermediate_error_types::UnsupportedSyntax::MatchInstancePattern,
-                ),
+                ))),
             );
             let mut mapper = ErrorMapper;
             let Ok(typed_ip) = polymorphic_ast_mapper::match_instance_pattern(&mut mapper, inner);
@@ -854,11 +856,13 @@ fn object_properties<'a>(
                     };
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchError(MatchErrorKind::MatchDuplicateObjectProperty {
-                            loc: key_loc,
-                            name: FlowSmolStr::new(&name),
-                            pattern_kind,
-                        }),
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchDuplicateObjectProperty(
+                            Box::new(MatchDuplicateObjectPropertyData {
+                                loc: key_loc,
+                                name: FlowSmolStr::new(&name),
+                                pattern_kind,
+                            }),
+                        )),
                     );
                 }
                 let typed_p = pattern_(
@@ -888,11 +892,13 @@ fn object_properties<'a>(
                 let name = &id.name;
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand {
-                        loc: loc.dupe(),
-                        name: name.dupe(),
-                        pattern_kind,
-                    }),
+                    ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand(
+                        Box::new(MatchInvalidObjectShorthandData {
+                            loc: loc.dupe(),
+                            name: name.dupe(),
+                            pattern_kind,
+                        }),
+                    )),
                 );
                 result.push(match_pattern::object_pattern::Property::InvalidShorthand {
                     loc: loc.dupe(),

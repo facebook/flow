@@ -362,34 +362,34 @@ impl<'ast, 'a, Loc: Clone + Dupe + PartialOrd + Ord + PartialEq + Eq>
 impl<'a, Loc: Clone + Dupe + PartialOrd + Ord + PartialEq + Eq> Checker<'a, Loc> {
     fn add_errors(&mut self) {
         for loc in &self.this_before_super_locs {
-            (self.add_output)(ErrorMessage::EBindingError(
+            (self.add_output)(ErrorMessage::EBindingError(Box::new((
                 BindingError::EReferencedThisSuperBeforeSuperCall,
                 loc.dupe(),
                 Name::new("this"),
                 self.this_def_loc.dupe(),
-            ));
+            ))));
         }
         for loc in &self.super_before_super_call_locs {
-            (self.add_output)(ErrorMessage::EBindingError(
+            (self.add_output)(ErrorMessage::EBindingError(Box::new((
                 BindingError::EReferencedThisSuperBeforeSuperCall,
                 loc.dupe(),
                 Name::new("super"),
                 self.super_def_loc.dupe(),
-            ));
+            ))));
         }
         for loc in &self.duplicate_super_call_locs {
-            (self.add_output)(ErrorMessage::EBindingError(
+            (self.add_output)(ErrorMessage::EBindingError(Box::new((
                 BindingError::ENameAlreadyBound,
                 loc.dupe(),
                 Name::new("this"),
                 self.this_def_loc.dupe(),
-            ));
-            (self.add_output)(ErrorMessage::EBindingError(
+            ))));
+            (self.add_output)(ErrorMessage::EBindingError(Box::new((
                 BindingError::ENameAlreadyBound,
                 loc.dupe(),
                 Name::new("super"),
                 self.super_def_loc.dupe(),
-            ));
+            ))));
         }
     }
 }

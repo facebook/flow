@@ -18,6 +18,11 @@ use crate::ty::BotKind;
 use crate::ty::BuiltinOrSymbol;
 use crate::ty::ComponentProps;
 use crate::ty::Decl;
+use crate::ty::DeclEnumDeclData;
+use crate::ty::DeclModuleDeclData;
+use crate::ty::DeclNamespaceDeclData;
+use crate::ty::DeclNominalComponentDeclData;
+use crate::ty::DeclTypeAliasDeclData;
 use crate::ty::Dict;
 use crate::ty::Elt;
 use crate::ty::FlattenedComponentProp;
@@ -58,7 +63,7 @@ pub fn string_of_polarity(p: Polarity) -> &'static str {
 
 pub fn string_of_ctor_t<L>(t: &Ty<L>) -> &'static str {
     match t {
-        Ty::Bound(_, _) => "Bound",
+        Ty::Bound(_) => "Bound",
         Ty::Generic(_) => "Generic",
         Ty::Any(AnyKind::Annotated(_)) => "Explicit Any",
         Ty::Any(_) => "Implicit Any",
@@ -82,11 +87,11 @@ pub fn string_of_ctor_t<L>(t: &Ty<L>) -> &'static str {
         Ty::Union(_, _, _, _) => "Union",
         Ty::Inter(_, _, _) => "Inter",
         Ty::InlineInterface(_) => "InlineInterface",
-        Ty::TypeOf(_, _) => "Typeof",
+        Ty::TypeOf(_) => "Typeof",
         Ty::Utility(_) => "Utility",
         Ty::IndexedAccess { .. } => "IndexedAccess",
         Ty::Conditional { .. } => "Conditional",
-        Ty::Infer(_, _) => "Infer",
+        Ty::Infer(_) => "Infer",
         Ty::Component { .. } => "Component",
         Ty::Renders(_, _) => "Renders",
     }
@@ -94,15 +99,15 @@ pub fn string_of_ctor_t<L>(t: &Ty<L>) -> &'static str {
 
 pub fn string_of_ctor_decl<L>(d: &Decl<L>) -> &'static str {
     match d {
-        Decl::TypeAliasDecl { .. } => "TypeAlias",
-        Decl::ClassDecl(_, _) => "ClassDecl",
-        Decl::InterfaceDecl(_, _) => "InterfaceDecl",
-        Decl::RecordDecl(_, _) => "RecordDecl",
-        Decl::ModuleDecl { .. } => "Module",
-        Decl::NamespaceDecl { .. } => "NamespaceDecl",
-        Decl::VariableDecl(_, _) => "VariableDecl",
-        Decl::NominalComponentDecl { .. } => "NominalComponentDecl",
-        Decl::EnumDecl { .. } => "EnumDecl",
+        Decl::TypeAliasDecl(..) => "TypeAlias",
+        Decl::ClassDecl(..) => "ClassDecl",
+        Decl::InterfaceDecl(..) => "InterfaceDecl",
+        Decl::RecordDecl(..) => "RecordDecl",
+        Decl::ModuleDecl(..) => "Module",
+        Decl::NamespaceDecl(..) => "NamespaceDecl",
+        Decl::VariableDecl(..) => "VariableDecl",
+        Decl::NominalComponentDecl(..) => "NominalComponentDecl",
+        Decl::EnumDecl(..) => "EnumDecl",
     }
 }
 
@@ -508,7 +513,10 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
     }
     let depth = depth - 1;
     match t {
-        Ty::Bound(_, s) => format!("Bound({})", s),
+        Ty::Bound(data) => {
+            let (_, s) = data.as_ref();
+            format!("Bound({})", s)
+        }
         Ty::Generic(g) => dump_generic(depth, g),
         Ty::Any(kind) => format!("Any ({})", dump_any_kind(kind)),
         Ty::Top => "Top".to_string(),
@@ -556,11 +564,12 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
             let types: Vec<String> = ts.iter().map(|t| dump_t(depth, t)).collect();
             format!("Inter ({})", types.join(", "))
         }
-        Ty::InlineInterface(InterfaceT {
-            if_extends,
-            if_props,
-            if_dict,
-        }) => {
+        Ty::InlineInterface(iface) => {
+            let InterfaceT {
+                if_extends,
+                if_props,
+                if_dict,
+            } = iface.as_ref();
             let dict_str = match if_dict {
                 Some(d) => dump_dict(depth, d),
                 None => String::new(),
@@ -574,11 +583,14 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
                 dict_str
             )
         }
-        Ty::TypeOf(v, ts) => format!(
-            "Typeof ({}, {})",
-            builtin_value(v),
-            dump_generics(depth, ts.as_deref())
-        ),
+        Ty::TypeOf(data) => {
+            let (v, ts) = data.as_ref();
+            format!(
+                "Typeof ({}, {})",
+                builtin_value(v),
+                dump_generics(depth, ts.as_deref())
+            )
+        }
         Ty::Utility(u) => dump_utility(depth, u),
         Ty::IndexedAccess {
             _object,
@@ -602,7 +614,8 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
             dump_t(depth, true_type),
             dump_t(depth, false_type)
         ),
-        Ty::Infer(s, b) => {
+        Ty::Infer(data) => {
+            let (s, b) = data.as_ref();
             let bound_str = match b {
                 Some(t) => dump_t(depth, t),
                 None => "None".to_string(),
@@ -650,15 +663,15 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
 
 fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
     match d {
-        Decl::VariableDecl(name, t) => {
+        Decl::VariableDecl(box (name, t)) => {
             format!("VariableDecl ({}, {})", name.as_str(), dump_t(depth, t))
         }
-        Decl::TypeAliasDecl {
+        Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
             import,
             name,
             tparams,
             type_,
-        } => {
+        }) => {
             let type_str = match type_ {
                 Some(t) => cut_off(&dump_t(depth, t), 1000),
                 None => String::new(),
@@ -671,27 +684,27 @@ fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
                 type_str
             )
         }
-        Decl::ClassDecl(s, ps) => format!(
+        Decl::ClassDecl(box (s, ps)) => format!(
             "ClassDecl ({}) ({})",
             dump_symbol(s),
             dump_type_params(depth, ps.as_deref())
         ),
-        Decl::InterfaceDecl(s, ps) => format!(
+        Decl::InterfaceDecl(box (s, ps)) => format!(
             "InterfaceDecl ({}) ({})",
             dump_symbol(s),
             dump_type_params(depth, ps.as_deref())
         ),
-        Decl::RecordDecl(s, ps) => format!(
+        Decl::RecordDecl(box (s, ps)) => format!(
             "RecordDecl ({}) ({})",
             dump_symbol(s),
             dump_type_params(depth, ps.as_deref())
         ),
-        Decl::EnumDecl {
+        Decl::EnumDecl(box DeclEnumDeclData {
             name,
             members,
             has_unknown_members,
             truncated_members_count,
-        } => {
+        }) => {
             let members_str = match members {
                 None => String::new(),
                 Some(ms) => {
@@ -710,18 +723,18 @@ fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
             };
             format!("Enum({}){}", dump_symbol(name), members_str)
         }
-        Decl::NominalComponentDecl {
+        Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
             name,
             tparams,
             is_type,
             ..
-        } => format!(
+        }) => format!(
             "NominalComponentDecl ({}, {}, {})",
             dump_symbol(name),
             dump_type_params(depth, tparams.as_deref()),
             is_type
         ),
-        Decl::NamespaceDecl { name, exports } => {
+        Decl::NamespaceDecl(box DeclNamespaceDeclData { name, exports }) => {
             let name_str = match name {
                 Some(n) => dump_symbol(n),
                 None => "<no name>".to_string(),
@@ -729,11 +742,11 @@ fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
             let exports_str: Vec<String> = exports.iter().map(|d| dump_decl(depth, d)).collect();
             format!("Namespace({}, {})", name_str, exports_str.join(", "))
         }
-        Decl::ModuleDecl {
+        Decl::ModuleDecl(box DeclModuleDeclData {
             name,
             exports,
             default: _,
-        } => {
+        }) => {
             let name_str = match name {
                 Some(n) => dump_symbol(n),
                 None => "<no name>".to_string(),
@@ -1179,7 +1192,10 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     match t {
-        Ty::Bound(_, name) => vec![("bound".to_string(), Json::String(name.clone()))],
+        Ty::Bound(data) => {
+            let (_, name) = data.as_ref();
+            vec![("bound".to_string(), Json::String(name.clone()))]
+        }
         Ty::Generic(g) => json_of_generic::<L, C>(g, strip_root),
         Ty::Any(AnyKind::Annotated(_)) => {
             vec![("any".to_string(), Json::String("explicit".to_string()))]
@@ -1261,11 +1277,12 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 .collect();
             vec![("types".to_string(), Json::Array(types))]
         }
-        Ty::InlineInterface(InterfaceT {
-            if_extends,
-            if_props,
-            if_dict,
-        }) => {
+        Ty::InlineInterface(iface) => {
+            let InterfaceT {
+                if_extends,
+                if_props,
+                if_dict,
+            } = iface.as_ref();
             let extends: Vec<Json> = if_extends
                 .iter()
                 .map(|g| {
@@ -1290,7 +1307,8 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 ),
             ]
         }
-        Ty::TypeOf(b, targs) => {
+        Ty::TypeOf(data) => {
+            let (b, targs) = data.as_ref();
             let mut result = vec![(
                 "name".to_string(),
                 json_of_builtin_value::<L, C>(b, strip_root),
@@ -1332,7 +1350,8 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 ),
             ]
         }
-        Ty::Infer(s, b) => {
+        Ty::Infer(data) => {
+            let (s, b) = data.as_ref();
             vec![
                 ("name".to_string(), json_of_symbol::<L, C>(s, strip_root)),
                 (
@@ -1465,18 +1484,18 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     match d {
-        Decl::VariableDecl(name, t) => {
+        Decl::VariableDecl(box (name, t)) => {
             vec![
                 ("name".to_string(), Json::String(name.as_str().to_string())),
                 ("type_".to_string(), json_of_t::<L, C>(t, strip_root)),
             ]
         }
-        Decl::TypeAliasDecl {
+        Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
             name,
             tparams,
             type_,
             ..
-        } => {
+        }) => {
             vec![
                 ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
                 (
@@ -1492,15 +1511,15 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 ),
             ]
         }
-        Decl::ClassDecl(s, ps) => json_of_class_decl::<L, C>(s, ps, strip_root),
-        Decl::InterfaceDecl(s, ps) => json_of_interface_decl::<L, C>(s, ps, strip_root),
-        Decl::RecordDecl(s, ps) => json_of_record_decl::<L, C>(s, ps, strip_root),
-        Decl::EnumDecl {
+        Decl::ClassDecl(box (s, ps)) => json_of_class_decl::<L, C>(s, ps, strip_root),
+        Decl::InterfaceDecl(box (s, ps)) => json_of_interface_decl::<L, C>(s, ps, strip_root),
+        Decl::RecordDecl(box (s, ps)) => json_of_record_decl::<L, C>(s, ps, strip_root),
+        Decl::EnumDecl(box DeclEnumDeclData {
             name,
             members,
             has_unknown_members,
             truncated_members_count,
-        } => vec![
+        }) => vec![
             ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
             (
                 "members".to_string(),
@@ -1522,18 +1541,22 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 Json::Number((*truncated_members_count).into()),
             ),
         ],
-        Decl::NominalComponentDecl {
+        Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
             name,
             tparams,
             props,
             renders,
             is_type,
             ..
-        } => json_of_nominal_component_decl::<L, C>(
+        }) => json_of_nominal_component_decl::<L, C>(
             name, tparams, props, renders, *is_type, strip_root,
         ),
-        Decl::NamespaceDecl { name, .. } => json_of_namespace::<L, C>(name, strip_root),
-        Decl::ModuleDecl { name, .. } => json_of_module::<L, C>(name, strip_root),
+        Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => {
+            json_of_namespace::<L, C>(name, strip_root)
+        }
+        Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => {
+            json_of_module::<L, C>(name, strip_root)
+        }
     }
 }
 

@@ -1848,7 +1848,7 @@ fn match_pattern(
         MatchPattern::NullPattern { loc, inner } => literal(
             "MatchLiteralPattern",
             loc,
-            null_literal(offset_table, config, loc, inner.as_ref()),
+            null_literal(offset_table, config, loc, (**inner).as_ref()),
         ),
         MatchPattern::NumberPattern { loc, inner } => literal(
             "MatchLiteralPattern",

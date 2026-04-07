@@ -27,7 +27,7 @@ pub fn error_of_docblock_error(
     docblock_error: &DocblockError,
 ) -> FlowError<ALoc> {
     let DocblockError { loc, kind } = docblock_error;
-    let flow_err = ErrorMessage::EDocblockError(
+    let flow_err = ErrorMessage::EDocblockError(Box::new((
         ALoc::of_loc(loc.dupe()),
         match kind {
             DocblockErrorKind::MultipleFlowAttributes => {
@@ -57,7 +57,7 @@ pub fn error_of_docblock_error(
                 IntermediateDocblockError::DisallowedSupportsPlatform
             }
         },
-    );
+    )));
     flow_error::error_of_msg(source_file, flow_err)
 }
 
@@ -73,7 +73,7 @@ pub fn error_of_parse_error(
     source_file: FileKey,
     (loc, err): (Loc, ParseError),
 ) -> FlowError<ALoc> {
-    let flow_err = ErrorMessage::EParseError(ALoc::of_loc(loc), err);
+    let flow_err = ErrorMessage::EParseError(Box::new((ALoc::of_loc(loc), err)));
     flow_error::error_of_msg(source_file, flow_err)
 }
 
@@ -86,7 +86,8 @@ pub fn error_of_parse_exception(source_file: FileKey, exn: FlowSmolStr) -> FlowE
         source: Some(source_file.dupe()),
         ..LOC_NONE
     });
-    let flow_err = ErrorMessage::EInternal(file_loc, InternalError::ParseJobException(exn));
+    let flow_err =
+        ErrorMessage::EInternal(Box::new((file_loc, InternalError::ParseJobException(exn))));
     flow_error::error_of_msg(source_file, flow_err)
 }
 

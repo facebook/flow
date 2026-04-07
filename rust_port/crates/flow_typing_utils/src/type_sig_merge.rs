@@ -203,43 +203,38 @@ pub type TparamsMap = FlowOrdMap<FlowSmolStr, Type>;
 pub fn def_reason<T>(def: &Def<ALoc, T>) -> Reason {
     use flow_common::reason::VirtualReasonDesc::*;
     match def {
-        Def::TypeAlias { id_loc, name, .. } | Def::OpaqueType { id_loc, name, .. } => {
-            type_::desc_format::type_reason(Name::new(name.dupe()), id_loc.dupe())
+        Def::TypeAlias(_) | Def::OpaqueType(_) => {
+            type_::desc_format::type_reason(Name::new(def.name().dupe()), def.id_loc())
         }
-        Def::Interface { id_loc, name, .. }
-        | Def::ClassBinding { id_loc, name, .. }
-        | Def::DeclareClassBinding { id_loc, name, .. }
-        | Def::RecordBinding { id_loc, name, .. }
-        | Def::DisabledRecordBinding { id_loc, name, .. } => {
-            type_::desc_format::instance_reason(Name::new(name.dupe()), id_loc.dupe())
+        Def::Interface(_)
+        | Def::ClassBinding(_)
+        | Def::DeclareClassBinding(_)
+        | Def::RecordBinding(_)
+        | Def::DisabledRecordBinding(_) => {
+            type_::desc_format::instance_reason(Name::new(def.name().dupe()), def.id_loc())
         }
-        Def::FunBinding {
-            fn_loc,
-            async_,
-            generator,
-            ..
-        } => reason::func_reason(*async_, *generator, fn_loc.dupe()),
-        Def::DeclareFun { id_loc, .. } => reason::mk_reason(RFunctionType, id_loc.dupe()),
-        Def::ComponentBinding { fn_loc, name, .. } => {
-            reason::mk_reason(RComponent(Name::new(name.dupe())), fn_loc.dupe())
+        Def::FunBinding(inner) => {
+            reason::func_reason(inner.async_, inner.generator, inner.fn_loc.dupe())
         }
-        Def::DisabledComponentBinding { id_loc, name } => {
-            reason::mk_reason(RIdentifier(Name::new(name.dupe())), id_loc.dupe())
+        Def::DeclareFun(_) => reason::mk_reason(RFunctionType, def.id_loc()),
+        Def::ComponentBinding(inner) => reason::mk_reason(
+            RComponent(Name::new(inner.name.dupe())),
+            inner.fn_loc.dupe(),
+        ),
+        Def::DisabledComponentBinding(inner) => reason::mk_reason(
+            RIdentifier(Name::new(inner.name.dupe())),
+            inner.id_loc.dupe(),
+        ),
+        Def::Variable(_) | Def::Parameter(_) => {
+            reason::mk_reason(RIdentifier(Name::new(def.name().dupe())), def.id_loc())
         }
-        Def::Variable { id_loc, name, .. } | Def::Parameter { id_loc, name, .. } => {
-            reason::mk_reason(RIdentifier(Name::new(name.dupe())), id_loc.dupe())
-        }
-        Def::DisabledEnumBinding { id_loc, name, .. } | Def::EnumBinding { id_loc, name, .. } => {
-            reason::mk_reason(
-                REnum {
-                    name: Some(name.dupe()),
-                },
-                id_loc.dupe(),
-            )
-        }
-        Def::NamespaceBinding { id_loc, name, .. } => {
-            reason::mk_reason(RNamespace(name.dupe()), id_loc.dupe())
-        }
+        Def::DisabledEnumBinding(_) | Def::EnumBinding(_) => reason::mk_reason(
+            REnum {
+                name: Some(def.name().dupe()),
+            },
+            def.id_loc(),
+        ),
+        Def::NamespaceBinding(_) => reason::mk_reason(RNamespace(def.name().dupe()), def.id_loc()),
     }
 }
 
@@ -425,27 +420,24 @@ fn add_record_constructor<'cx>(
         .iter()
         .map(|(prop_name, prop)| {
             let new_prop = match &**prop {
-                type_::PropertyInner::Field {
-                    preferred_def_locs,
-                    key_loc,
-                    type_,
-                    polarity,
-                } => {
+                type_::PropertyInner::Field(fd) => {
                     if defaulted_props.contains(prop_name) {
-                        let r = type_util::reason_of_t(type_).dupe();
+                        let r = type_util::reason_of_t(&fd.type_).dupe();
                         let optional_reason = r.dupe().update_desc_new(|desc| {
                             reason::VirtualReasonDesc::ROptional(Arc::new(desc))
                         });
-                        type_::Property::new(type_::PropertyInner::Field {
-                            preferred_def_locs: preferred_def_locs.clone(),
-                            key_loc: key_loc.dupe(),
-                            type_: Type::new(type_::TypeInner::OptionalT {
-                                reason: optional_reason,
-                                type_: type_.dupe(),
-                                use_desc: false,
-                            }),
-                            polarity: polarity.clone(),
-                        })
+                        type_::Property::new(type_::PropertyInner::Field(Box::new(
+                            type_::FieldData {
+                                preferred_def_locs: fd.preferred_def_locs.clone(),
+                                key_loc: fd.key_loc.dupe(),
+                                type_: Type::new(type_::TypeInner::OptionalT {
+                                    reason: optional_reason,
+                                    type_: fd.type_.dupe(),
+                                    use_desc: false,
+                                }),
+                                polarity: fd.polarity.clone(),
+                            },
+                        )))
                     } else {
                         prop.dupe()
                     }
@@ -488,13 +480,12 @@ fn add_record_constructor<'cx>(
 fn add_name_field(reason: Reason, props: &mut BTreeMap<Name, type_::Property>) {
     let name_key = Name::new(FlowSmolStr::new("name"));
     props.entry(name_key).or_insert_with(|| {
-        let prop = type_::Property::new(type_::PropertyInner::Field {
+        type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
             preferred_def_locs: None,
             key_loc: None,
             type_: type_::str_module_t::why(reason),
             polarity: Polarity::Neutral,
-        });
-        prop
+        })))
     });
 }
 
@@ -1372,13 +1363,14 @@ fn merge_annot<'cx>(
             let t = merge_impl(env, cx, file, t, false, false);
             type_util::optional(t, None, false)
         }
-        Annot::Maybe(loc, t) => {
+        Annot::Maybe(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let desc = type_util::desc_of_t(&t).clone();
             let reason = reason::mk_annot_reason(RMaybe(Arc::new(desc)), loc.dupe());
             Type::new(type_::TypeInner::MaybeT(reason, t))
         }
-        Annot::Union { loc, t0, t1, ts } => {
+        Annot::Union(inner) => {
+            let AnnotUnion { loc, t0, t1, ts } = inner.as_ref();
             let reason = reason::mk_annot_reason(RUnionType, loc.dupe());
             let t0 = merge_impl(env, cx, file, t0, false, false);
             let t1 = merge_impl(env, cx, file, t1, false, false);
@@ -1398,7 +1390,8 @@ fn merge_annot<'cx>(
                 ),
             ))
         }
-        Annot::Intersection { loc, t0, t1, ts } => {
+        Annot::Intersection(inner) => {
+            let AnnotIntersection { loc, t0, t1, ts } = inner.as_ref();
             let reason = reason::mk_annot_reason(RIntersectionType, loc.dupe());
             let t0 = merge_impl(env, cx, file, t0, false, false);
             let t1 = merge_impl(env, cx, file, t1, false, false);
@@ -1411,15 +1404,16 @@ fn merge_annot<'cx>(
                 type_::inter_rep::make(t0, t1, ts.into()),
             ))
         }
-        Annot::Tuple {
-            loc,
-            elems,
-            inexact,
-        } => {
+        Annot::Tuple(inner) => {
+            let AnnotTuple {
+                loc,
+                elems,
+                inexact,
+            } = inner.as_ref();
             let reason = reason::mk_annot_reason(RTupleType, loc.dupe());
             let unresolved: Vec<type_::UnresolvedParam> = elems
                 .iter()
-                .map(|elem| match elem {
+                .map(|elem: &type_sig::TupleElement<_, _>| match elem {
                     type_sig::TupleElement::TupleElement {
                         loc,
                         name,
@@ -1466,7 +1460,7 @@ fn merge_annot<'cx>(
             flow_js_utils::mk_tuple_type(cx, id, mk_type_destructor, *inexact, reason, unresolved)
                 .unwrap()
         }
-        Annot::Array(loc, t) => {
+        Annot::Array(box (loc, t)) => {
             let reason = reason::mk_annot_reason(RArrayType, loc.dupe());
             let elem_t = merge_impl(env, cx, file, t, false, false);
             Type::new(type_::TypeInner::DefT(
@@ -1478,7 +1472,7 @@ fn merge_annot<'cx>(
                 }))),
             ))
         }
-        Annot::ReadOnlyArray(loc, t) => {
+        Annot::ReadOnlyArray(box (loc, t)) => {
             let reason = reason::mk_annot_reason(RROArrayType, loc.dupe());
             let t = merge_impl(env, cx, file, t, false, false);
             Type::new(type_::TypeInner::DefT(
@@ -1488,7 +1482,7 @@ fn merge_annot<'cx>(
                 )))),
             ))
         }
-        Annot::SingletonString(loc, str) => {
+        Annot::SingletonString(box (loc, str)) => {
             let reason = reason::mk_annot_reason(RStringLit(Name::new(str.dupe())), loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
@@ -1498,7 +1492,7 @@ fn merge_annot<'cx>(
                 }),
             ))
         }
-        Annot::SingletonNumber(loc, num, raw) => {
+        Annot::SingletonNumber(box (loc, num, raw)) => {
             let reason = reason::mk_annot_reason(RNumberLit(raw.dupe()), loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
@@ -1508,7 +1502,7 @@ fn merge_annot<'cx>(
                 }),
             ))
         }
-        Annot::SingletonBigInt(loc, bigint, raw) => {
+        Annot::SingletonBigInt(box (loc, bigint, raw)) => {
             let reason = reason::mk_annot_reason(RBigIntLit(raw.dupe()), loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
@@ -1528,11 +1522,12 @@ fn merge_annot<'cx>(
                 }),
             ))
         }
-        Annot::StringPrefix {
-            loc,
-            prefix,
-            remainder,
-        } => {
+        Annot::StringPrefix(inner) => {
+            let AnnotStringPrefix {
+                loc,
+                prefix,
+                remainder,
+            } = inner.as_ref();
             let reason = reason::mk_reason(
                 RStringPrefix {
                     prefix: prefix.dupe(),
@@ -1548,11 +1543,12 @@ fn merge_annot<'cx>(
                 remainder,
             })
         }
-        Annot::StringSuffix {
-            loc,
-            suffix,
-            remainder,
-        } => {
+        Annot::StringSuffix(inner) => {
+            let AnnotStringSuffix {
+                loc,
+                suffix,
+                remainder,
+            } = inner.as_ref();
             let reason = reason::mk_reason(
                 RStringSuffix {
                     suffix: suffix.dupe(),
@@ -1568,12 +1564,13 @@ fn merge_annot<'cx>(
                 remainder,
             })
         }
-        Annot::Typeof {
-            loc,
-            qname,
-            t,
-            targs,
-        } => {
+        Annot::Typeof(inner) => {
+            let AnnotTypeof {
+                loc,
+                qname,
+                t,
+                targs,
+            } = inner.as_ref();
             let qname_str: FlowSmolStr = qname.join(".").into();
             let reason = reason::mk_reason(RTypeof(qname_str), loc.dupe());
             let t = merge_impl(env, cx, file, t, false, true);
@@ -1584,7 +1581,8 @@ fn merge_annot<'cx>(
             });
             type_util::typeof_annotation(reason, t, targs)
         }
-        Annot::Bound { ref_loc, name } => {
+        Annot::Bound(inner) => {
+            let AnnotBound { ref_loc, name } = inner.as_ref();
             let t = match env.infer_tps.get(name) {
                 Some((name_loc, t)) if name_loc == ref_loc => t.dupe(),
                 _ => {
@@ -1624,7 +1622,8 @@ fn merge_annot<'cx>(
             new_env.in_no_infer = true;
             merge_impl(&new_env, cx, file, t, false, false)
         }
-        Annot::PropertyType { loc, obj, prop } => {
+        Annot::PropertyType(inner) => {
+            let AnnotPropertyType { loc, obj, prop } = inner.as_ref();
             let reason = reason::mk_reason(
                 RType(Name::new(FlowSmolStr::new("$PropertyType"))),
                 loc.dupe(),
@@ -1646,7 +1645,8 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::ElementType { loc, obj, elem } => {
+        Annot::ElementType(inner) => {
+            let AnnotElementType { loc, obj, elem } = inner.as_ref();
             let reason = reason::mk_reason(
                 RType(Name::new(FlowSmolStr::new("$ElementType"))),
                 loc.dupe(),
@@ -1667,7 +1667,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::EnumValue(loc, t) => {
+        Annot::EnumValue(box (loc, t)) => {
             let reason = reason::mk_annot_reason(REnum { name: None }, loc.dupe());
             let representation_t = merge_impl(env, cx, file, t, false, false);
             Type::new(type_::TypeInner::DefT(
@@ -1677,7 +1677,7 @@ fn merge_annot<'cx>(
                 )))),
             ))
         }
-        Annot::Enum(loc, t) => {
+        Annot::Enum(box (loc, t)) => {
             let reason = reason::mk_annot_reason(REnum { name: None }, loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
@@ -1694,7 +1694,8 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::OptionalIndexedAccessNonMaybeType { loc, obj, index } => {
+        Annot::OptionalIndexedAccessNonMaybeType(inner) => {
+            let AnnotOptionalIndexedAccessNonMaybeType { loc, obj, index } = inner.as_ref();
             let reason = reason::mk_reason(RIndexedAccess { optional: true }, loc.dupe());
             let object_type = merge_impl(env, cx, file, obj, false, false);
             let index_type = merge_impl(env, cx, file, index, false, false);
@@ -1708,7 +1709,7 @@ fn merge_annot<'cx>(
             // let index = match index with ...
             let oia_index = match index {
                 Pack::Packed::Annot(annot) => match annot.as_ref() {
-                    Annot::SingletonString(_, str) => {
+                    Annot::SingletonString(box (_, str)) => {
                         type_::OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(
                             Name::new(str.dupe()),
                         )
@@ -1731,11 +1732,12 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::OptionalIndexedAccessResultType {
-            loc,
-            non_maybe_result,
-            void_loc,
-        } => {
+        Annot::OptionalIndexedAccessResultType(inner) => {
+            let AnnotOptionalIndexedAccessResultType {
+                loc,
+                non_maybe_result,
+                void_loc,
+            } = inner.as_ref();
             let reason = reason::mk_reason(RIndexedAccess { optional: true }, loc.dupe());
             let void_reason = reason::mk_reason(RVoid, void_loc.dupe());
             let non_maybe_result_type = merge_impl(env, cx, file, non_maybe_result, false, false);
@@ -1749,7 +1751,7 @@ fn merge_annot<'cx>(
                 id: type_::eval::Id::generate_id(),
             })
         }
-        Annot::NonMaybeType(loc, t) => {
+        Annot::NonMaybeType(box (loc, t)) => {
             let reason = reason::mk_reason(
                 RType(Name::new(FlowSmolStr::new("$NonMaybeType"))),
                 loc.dupe(),
@@ -1769,7 +1771,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::Omit(loc, t1, t2) => {
+        Annot::Omit(box (loc, t1, t2)) => {
             let reason = reason::mk_reason(RType(Name::new(FlowSmolStr::new("Omit"))), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
@@ -1807,7 +1809,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::ReadOnly(loc, t) => {
+        Annot::ReadOnly(box (loc, t)) => {
             let reason = reason::mk_reason(RReadOnlyType, loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
@@ -1824,7 +1826,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::Partial(loc, t) => {
+        Annot::Partial(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let reason = reason::mk_reason(
                 RPartialOf(Arc::new(type_util::desc_of_t(&t).clone())),
@@ -1844,7 +1846,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::Required(loc, t) => {
+        Annot::Required(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let reason = reason::mk_reason(
                 RRequiredOf(Arc::new(type_util::desc_of_t(&t).clone())),
@@ -1864,12 +1866,12 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::Keys(loc, t) => {
+        Annot::Keys(box (loc, t)) => {
             let reason = reason::mk_reason(RKeySet, loc.dupe());
             let t = merge_impl(env, cx, file, t, false, false);
             Type::new(type_::TypeInner::KeysT(reason, t))
         }
-        Annot::Values(loc, t) => {
+        Annot::Values(box (loc, t)) => {
             let reason =
                 reason::mk_reason(RType(Name::new(FlowSmolStr::new("$Values"))), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
@@ -1887,7 +1889,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::Exact(loc, t) => {
+        Annot::Exact(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let desc = type_util::desc_of_t(&t).clone();
             let reason = reason::mk_annot_reason(RExactType(Arc::new(desc)), loc.dupe());
@@ -1906,7 +1908,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::ExportsT(loc, mref) => {
+        Annot::ExportsT(box (loc, mref)) => {
             let reason = reason::mk_annot_reason(
                 reason::VirtualReasonDesc::RModule(mref.dupe()),
                 loc.dupe(),
@@ -1935,15 +1937,16 @@ fn merge_annot<'cx>(
             };
             annotation_inference::cjs_require(cx, reason, symbol, false, false, f)
         }
-        Annot::Conditional {
-            loc,
-            distributive_tparam,
-            infer_tparams,
-            check_type,
-            extends_type,
-            true_type,
-            false_type,
-        } => {
+        Annot::Conditional(inner) => {
+            let AnnotConditional {
+                loc,
+                distributive_tparam,
+                infer_tparams,
+                check_type,
+                extends_type,
+                true_type,
+                false_type,
+            } = inner.as_ref();
             let reason = reason::mk_reason(RConditionalType, loc.dupe());
             let id = eval_id_of_aloc(cx, loc.dupe());
             let convert = |distributive_tparam_name: Option<SubstName>, env: &MergeEnv| {
@@ -2013,7 +2016,8 @@ fn merge_annot<'cx>(
                 Some(tp) => convert(Some(SubstName::name(tp.name.dupe())), env),
             }
         }
-        Annot::ObjKeyMirror { loc, obj } => {
+        Annot::ObjKeyMirror(inner) => {
+            let AnnotObjKeyMirror { loc, obj } = inner.as_ref();
             let reason = reason::mk_reason(RObjectKeyMirror, loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
@@ -2030,7 +2034,7 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::ClassT(loc, t) => {
+        Annot::ClassT(box (loc, t)) => {
             let t = merge_impl(env, cx, file, t, false, false);
             let desc = type_util::desc_of_t(&t).clone();
             let reason = reason::mk_reason(RStatics(Arc::new(desc)), loc.dupe());
@@ -2043,7 +2047,7 @@ fn merge_annot<'cx>(
             let reason = reason::mk_annot_reason(RFunctionPrototype, loc.dupe());
             Type::new(type_::TypeInner::FunProtoBindT(reason))
         }
-        Annot::ReactElementConfig(loc, t) => {
+        Annot::ReactElementConfig(box (loc, t)) => {
             let reason = reason::mk_reason(
                 RType(Name::new(FlowSmolStr::new("React$ElementConfig"))),
                 loc.dupe(),
@@ -2063,7 +2067,8 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::Renders { loc, arg, variant } => {
+        Annot::Renders(inner) => {
+            let AnnotRenders { loc, arg, variant } = inner.as_ref();
             let mut renders_env = env.dupe();
             renders_env.in_renders_arg = true;
             let t = merge_impl(&renders_env, cx, file, arg, false, false);
@@ -2102,22 +2107,23 @@ fn merge_annot<'cx>(
                 ))),
             ))
         }
-        Annot::FunAnnot(loc, def) => {
+        Annot::FunAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RFunctionType, loc.dupe());
             let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
             merge_fun(env, cx, file, reason, def, statics, false, false)
         }
-        Annot::ComponentAnnot(loc, def) => {
+        Annot::ComponentAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RComponentType, loc.dupe());
             merge_component(env, cx, file, reason, true, def, None)
         }
-        Annot::ObjAnnot {
-            loc,
-            obj_kind,
-            props,
-            computed_props,
-            proto,
-        } => {
+        Annot::ObjAnnot(inner) => {
+            let AnnotObjAnnot {
+                loc,
+                obj_kind,
+                props,
+                computed_props,
+                proto,
+            } = inner.as_ref();
             let reason = reason::mk_annot_reason(RObjectType, loc.dupe());
             let obj_kind = match obj_kind {
                 type_sig::ObjKind::ExactObj => type_::ObjKind::Exact,
@@ -2213,7 +2219,8 @@ fn merge_annot<'cx>(
                 }
             }
         }
-        Annot::ObjSpreadAnnot { loc, exact, elems } => {
+        Annot::ObjSpreadAnnot(inner) => {
+            let AnnotObjSpreadAnnot { loc, exact, elems } = inner.as_ref();
             let reason = reason::mk_annot_reason(RObjectType, loc.dupe());
             let target = type_::object::spread::Target::Annot { make_exact: *exact };
             let merge_slice = |dict: &Option<ObjAnnotDict<Pack::Packed<ALoc>>>,
@@ -2308,21 +2315,22 @@ fn merge_annot<'cx>(
                 id,
             })
         }
-        Annot::InlineInterface(loc, def) => {
+        Annot::InlineInterface(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RInterfaceType, loc.dupe());
             let id = cx.make_aloc_id(loc);
             merge_interface(env, cx, file, reason, None, id, def, true, vec![])
         }
-        Annot::MappedTypeAnnot {
-            loc,
-            source_type,
-            property_type,
-            key_tparam,
-            variance,
-            variance_op,
-            optional,
-            inline_keyof,
-        } => {
+        Annot::MappedTypeAnnot(inner) => {
+            let AnnotMappedTypeAnnot {
+                loc,
+                source_type,
+                property_type,
+                key_tparam,
+                variance,
+                variance_op,
+                optional,
+                inline_keyof,
+            } = inner.as_ref();
             let source_type = merge_impl(env, cx, file, source_type, false, false);
             let mut env = env.dupe();
             let (tp, _) = merge_tparam(&mut env, cx, file, key_tparam, false);
@@ -2332,12 +2340,12 @@ fn merge_annot<'cx>(
                 let id = cx.make_source_poly_id(true, loc);
                 Type::new(type_::TypeInner::DefT(
                     prop_reason,
-                    type_::DefT::new(type_::DefTInner::PolyT {
+                    type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
                         tparams_loc: loc.dupe(),
                         tparams: vec![tp].into(),
                         t_out: prop_type,
                         id,
-                    }),
+                    }))),
                 ))
             };
             let optional = {
@@ -2466,19 +2474,20 @@ fn merge_value<'cx>(
     use flow_common::reason::VirtualReasonDesc::*;
     use flow_type_sig::type_sig::Value;
     match value {
-        Value::ClassExpr(loc, def) => {
+        Value::ClassExpr(box (loc, def)) => {
             let name: FlowSmolStr = "<<anonymous class>>".into();
             let reason = type_::desc_format::instance_reason(Name::new(name), loc.dupe());
             let id = cx.make_aloc_id(loc);
             merge_class(env, cx, file, reason, None, id, def)
         }
-        Value::FunExpr {
-            loc,
-            async_,
-            generator,
-            def,
-            statics,
-        } => {
+        Value::FunExpr(inner) => {
+            let ValueFunExpr {
+                loc,
+                async_,
+                generator,
+                def,
+                statics,
+            } = inner.as_ref();
             let reason = reason::func_reason(*async_, *generator, loc.dupe());
             let statics_t = merge_fun_statics(env, cx, file, reason.dupe(), statics);
             merge_fun(env, cx, file, reason, def, statics_t, false, false)
@@ -2490,7 +2499,7 @@ fn merge_value<'cx>(
                 type_::DefT::new(type_::DefTInner::StrGeneralT(type_::Literal::AnyLiteral)),
             ))
         }
-        Value::StringLit(loc, lit) => {
+        Value::StringLit(box (loc, lit)) => {
             if as_const || const_decl {
                 let reason = reason::mk_annot_reason(RStringLit(Name::new(lit.dupe())), loc.dupe());
                 Type::new(type_::TypeInner::DefT(
@@ -2515,7 +2524,7 @@ fn merge_value<'cx>(
                 type_::DefT::new(type_::DefTInner::NumGeneralT(type_::Literal::AnyLiteral)),
             ))
         }
-        Value::NumberLit(loc, num, raw) => {
+        Value::NumberLit(box (loc, num, raw)) => {
             if as_const || const_decl {
                 let reason = reason::mk_annot_reason(RNumberLit(raw.dupe()), loc.dupe());
                 Type::new(type_::TypeInner::DefT(
@@ -2540,7 +2549,7 @@ fn merge_value<'cx>(
                 type_::DefT::new(type_::DefTInner::BigIntGeneralT(type_::Literal::AnyLiteral)),
             ))
         }
-        Value::BigIntLit(loc, bigint, raw) => {
+        Value::BigIntLit(box (loc, bigint, raw)) => {
             if as_const || const_decl {
                 let reason = reason::mk_annot_reason(RBigIntLit(raw.dupe()), loc.dupe());
                 Type::new(type_::TypeInner::DefT(
@@ -2584,47 +2593,35 @@ fn merge_value<'cx>(
             }
         }
         Value::NullLit(loc) => type_::null::at(loc.dupe()),
-        Value::DeclareModuleImplicitlyExportedObject {
-            loc,
-            module_name,
-            props,
-        } => merge_declare_module_implicitly_exported_object(
+        Value::DeclareModuleImplicitlyExportedObject(inner) => {
+            merge_declare_module_implicitly_exported_object(
+                env,
+                cx,
+                file,
+                inner.loc.dupe(),
+                &inner.module_name,
+                &inner.props,
+            )
+        }
+        Value::ObjLit(inner) => merge_object_lit(
             env,
             cx,
             file,
-            loc.dupe(),
-            module_name,
-            props,
-        ),
-        Value::ObjLit {
-            loc,
-            frozen,
-            proto,
-            props,
-        } => merge_object_lit(
-            env,
-            cx,
-            file,
-            loc.dupe(),
-            *frozen,
-            proto,
-            props,
+            inner.loc.dupe(),
+            inner.frozen,
+            &inner.proto,
+            &inner.props,
             false,
             as_const,
         ),
-        Value::ObjSpreadLit {
-            loc,
-            frozen,
-            proto,
-            elems,
-        } => merge_obj_spread_lit(
+        Value::ObjSpreadLit(inner) => merge_obj_spread_lit(
             env,
             cx,
             file,
-            loc.dupe(),
-            *frozen,
-            proto,
-            elems,
+            inner.loc.dupe(),
+            inner.frozen,
+            &inner.proto,
+            &inner.elems,
             false,
             as_const,
         ),
@@ -2643,7 +2640,7 @@ fn merge_value<'cx>(
                 type_::DefT::new(type_::DefTInner::ArrT(Rc::new(arrtype))),
             ))
         }
-        Value::ArrayLit(loc, t, ts) => {
+        Value::ArrayLit(box (loc, t, ts)) => {
             let reason = if as_const {
                 reason::mk_reason(RConstArrayLit, loc.dupe())
             } else {
@@ -2890,12 +2887,12 @@ fn merge_accessor<'cx>(
         Accessor::GetSet(gloc, gt, sloc, st) => {
             let get_type = merge_impl(env, cx, file, gt, false, false);
             let set_type = merge_impl(env, cx, file, st, false, false);
-            type_::Property::new(type_::PropertyInner::GetSet {
+            type_::Property::new(type_::PropertyInner::GetSet(Box::new(type_::GetSetData {
                 get_key_loc: Some(gloc.dupe()),
                 get_type,
                 set_key_loc: Some(sloc.dupe()),
                 set_type,
-            })
+            })))
         }
     }
 }
@@ -2926,19 +2923,23 @@ fn merge_obj_value_prop<'cx>(
                     // If name matches and prop loc is the name as ref loc, it must be shorthand syntax like
                     // module.exports = { foo }.
                     if key == *value_name && id_loc == ref_loc {
-                        type_::Property::new(type_::PropertyInner::Field {
-                            preferred_def_locs: Some(Vec1::new(def_loc)),
-                            key_loc: Some(id_loc),
-                            type_,
-                            polarity,
-                        })
+                        type_::Property::new(type_::PropertyInner::Field(Box::new(
+                            type_::FieldData {
+                                preferred_def_locs: Some(Vec1::new(def_loc)),
+                                key_loc: Some(id_loc),
+                                type_,
+                                polarity,
+                            },
+                        )))
                     } else {
-                        type_::Property::new(type_::PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: Some(id_loc),
-                            type_,
-                            polarity,
-                        })
+                        type_::Property::new(type_::PropertyInner::Field(Box::new(
+                            type_::FieldData {
+                                preferred_def_locs: None,
+                                key_loc: Some(id_loc),
+                                type_,
+                                polarity,
+                            },
+                        )))
                     }
                 },
                 ref_,
@@ -2952,12 +2953,12 @@ fn merge_obj_value_prop<'cx>(
             } else {
                 *polarity
             };
-            type_::Property::new(type_::PropertyInner::Field {
+            type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                 preferred_def_locs: None,
                 key_loc: Some(id_loc.dupe()),
                 type_,
                 polarity,
-            })
+            })))
         }
         ObjValueProp::ObjValueAccess(x) => merge_accessor(env, cx, file, x),
         ObjValueProp::ObjValueMethod {
@@ -2987,12 +2988,12 @@ fn merge_class_prop<'cx>(
     match prop {
         ObjValueProp::ObjValueField(id_loc, t, polarity) => {
             let type_ = merge_impl(env, cx, file, t, false, false);
-            type_::Property::new(type_::PropertyInner::Field {
+            type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                 preferred_def_locs: None,
                 key_loc: Some(id_loc.dupe()),
                 type_,
                 polarity: *polarity,
-            })
+            })))
         }
         ObjValueProp::ObjValueAccess(x) => merge_accessor(env, cx, file, x),
         ObjValueProp::ObjValueMethod {
@@ -3023,12 +3024,12 @@ fn merge_obj_annot_prop<'cx>(
     match prop {
         ObjAnnotProp::ObjAnnotField(id_loc, t, polarity) => {
             let type_ = merge_impl(env, cx, file, t, false, false);
-            type_::Property::new(type_::PropertyInner::Field {
+            type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                 preferred_def_locs: None,
                 key_loc: Some(id_loc.dupe()),
                 type_,
                 polarity: *polarity,
-            })
+            })))
         }
         ObjAnnotProp::ObjAnnotAccess(x) => merge_accessor(env, cx, file, x),
         ObjAnnotProp::ObjAnnotMethod {
@@ -3058,12 +3059,12 @@ fn merge_interface_prop<'cx>(
     match prop {
         InterfaceProp::InterfaceField(id_loc, t, polarity) => {
             let t = merge_impl(env, cx, file, t, false, false);
-            type_::Property::new(type_::PropertyInner::Field {
+            type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
                 preferred_def_locs: None,
                 key_loc: id_loc.dupe(),
                 type_: t,
                 polarity: *polarity,
-            })
+            })))
         }
         InterfaceProp::InterfaceAccess(x) => merge_accessor(env, cx, file, x),
         InterfaceProp::InterfaceMethod(ms) => {
@@ -3140,12 +3141,12 @@ fn merge_tparams_targs<'cx>(
             let id = cx.make_source_poly_id(true, tparams_loc);
             Type::new(type_::TypeInner::DefT(
                 poly_reason,
-                type_::DefT::new(type_::DefTInner::PolyT {
+                type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
                     tparams_loc: tparams_loc.dupe(),
                     tparams: tparams_vec.into(),
                     t_out,
                     id,
-                }),
+                }))),
             ))
         }
     }
@@ -3735,12 +3736,13 @@ fn merge_fun_statics<'cx>(
         .iter()
         .map(|(key, (id_loc, t))| {
             let t = merge_impl(env, cx, file, t, false, false);
-            let prop = type_::Property::new(type_::PropertyInner::Field {
-                preferred_def_locs: None,
-                key_loc: Some(id_loc.dupe()),
-                type_: t,
-                polarity: Polarity::Neutral,
-            });
+            let prop =
+                type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
+                    preferred_def_locs: None,
+                    key_loc: Some(id_loc.dupe()),
+                    type_: t,
+                    polarity: Polarity::Neutral,
+                })));
             (Name::new(key.dupe()), prop)
         })
         .collect();
@@ -3874,75 +3876,79 @@ fn merge_component<'cx>(
     use flow_common::reason::VirtualReasonDesc::*;
     // let t (env, _) =
     let reason2 = reason.dupe();
-    let t =
-        |_cx: &Context<'cx>, env: &MergeEnv, _: Vec<(SubstName, Reason, Type, Polarity)>| -> Type {
-            let pmap: type_::properties::PropertiesMap = def
-                .params
-                .iter()
-                .map(|param| {
-                    let ComponentParam { name, name_loc, t } = param;
-                    let t = merge_impl(env, cx, file, t, false, false);
-                    (
-                        Name::new(name.dupe()),
-                        type_::Property::new(type_::PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: Some(name_loc.dupe()),
-                            type_: t,
-                            polarity: Polarity::Positive,
-                        }),
-                    )
-                })
-                .collect();
-            let config_reason = reason::mk_reason(
-                RPropsOfComponent(Arc::new(reason2.desc(true).clone())),
-                def.params_loc.dupe(),
-            );
-            let rest_t = match &def.rest_param {
-                None => obj_type::mk_with_proto(
-                    cx,
-                    config_reason.dupe(),
-                    type_::ObjKind::Exact,
-                    None,
-                    None,
-                    None,
-                    None,
-                    Type::new(type_::TypeInner::ObjProtoT(config_reason.dupe())),
-                ),
-                Some(ComponentRestParam { t }) => merge_impl(env, cx, file, t, false, false),
-            };
-            let allow_ref_in_spread = match cx.react_ref_as_prop() {
-                flow_common::options::ReactRefAsProp::Legacy => is_annotation,
-                flow_common::options::ReactRefAsProp::FullSupport => true,
-            };
-            let param = Type::new(type_::TypeInner::EvalT {
-                type_: rest_t,
-                defer_use_t: type_::TypeDestructorT::new(type_::TypeDestructorTInner(
-                    type_::unknown_use(),
-                    config_reason,
-                    Rc::new(type_::Destructor::ReactCheckComponentConfig {
-                        props: pmap,
-                        allow_ref_in_spread,
-                    }),
-                )),
-                id: type_::eval::Id::generate_id(),
-            });
-            let renders = merge_impl(env, cx, file, &def.renders, false, false);
-            let component_kind = match id_opt {
-                None => type_::ComponentKind::Structural,
-                Some((loc, name)) => {
-                    let id = cx.make_aloc_id(&loc);
-                    type_::ComponentKind::Nominal(id, name.dupe(), None)
-                }
-            };
-            Type::new(type_::TypeInner::DefT(
-                reason2.dupe(),
-                type_::DefT::new(type_::DefTInner::ReactAbstractComponentT {
+    let t = |_cx: &Context<'cx>,
+             env: &MergeEnv,
+             _: Vec<(SubstName, Reason, Type, Polarity)>|
+     -> Type {
+        let pmap: type_::properties::PropertiesMap = def
+            .params
+            .iter()
+            .map(|param| {
+                let ComponentParam { name, name_loc, t } = param;
+                let t = merge_impl(env, cx, file, t, false, false);
+                (
+                    Name::new(name.dupe()),
+                    type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
+                        preferred_def_locs: None,
+                        key_loc: Some(name_loc.dupe()),
+                        type_: t,
+                        polarity: Polarity::Positive,
+                    }))),
+                )
+            })
+            .collect();
+        let config_reason = reason::mk_reason(
+            RPropsOfComponent(Arc::new(reason2.desc(true).clone())),
+            def.params_loc.dupe(),
+        );
+        let rest_t = match &def.rest_param {
+            None => obj_type::mk_with_proto(
+                cx,
+                config_reason.dupe(),
+                type_::ObjKind::Exact,
+                None,
+                None,
+                None,
+                None,
+                Type::new(type_::TypeInner::ObjProtoT(config_reason.dupe())),
+            ),
+            Some(ComponentRestParam { t }) => merge_impl(env, cx, file, t, false, false),
+        };
+        let allow_ref_in_spread = match cx.react_ref_as_prop() {
+            flow_common::options::ReactRefAsProp::Legacy => is_annotation,
+            flow_common::options::ReactRefAsProp::FullSupport => true,
+        };
+        let param = Type::new(type_::TypeInner::EvalT {
+            type_: rest_t,
+            defer_use_t: type_::TypeDestructorT::new(type_::TypeDestructorTInner(
+                type_::unknown_use(),
+                config_reason,
+                Rc::new(type_::Destructor::ReactCheckComponentConfig {
+                    props: pmap,
+                    allow_ref_in_spread,
+                }),
+            )),
+            id: type_::eval::Id::generate_id(),
+        });
+        let renders = merge_impl(env, cx, file, &def.renders, false, false);
+        let component_kind = match id_opt {
+            None => type_::ComponentKind::Structural,
+            Some((loc, name)) => {
+                let id = cx.make_aloc_id(&loc);
+                type_::ComponentKind::Nominal(id, name.dupe(), None)
+            }
+        };
+        Type::new(type_::TypeInner::DefT(
+            reason2.dupe(),
+            type_::DefT::new(type_::DefTInner::ReactAbstractComponentT(Box::new(
+                type_::ReactAbstractComponentTData {
                     config: param,
                     renders,
                     component_kind,
-                }),
-            ))
-        };
+                },
+            ))),
+        ))
+    };
     merge_tparams_targs(env, cx, file, reason, t, &def.tparams)
 }
 
@@ -4383,50 +4389,37 @@ pub fn merge_def<'cx>(
     const_decl: bool,
 ) -> Type {
     match def {
-        Def::TypeAlias {
-            id_loc: _,
-            custom_error_loc_opt,
-            name,
-            tparams,
-            body,
-        } => merge_type_alias(
+        Def::TypeAlias(inner) => merge_type_alias(
             cx,
             file,
             reason,
-            custom_error_loc_opt.dupe(),
-            name,
-            tparams,
-            body,
+            inner.custom_error_loc_opt.dupe(),
+            &inner.name,
+            &inner.tparams,
+            &inner.body,
         ),
-        Def::OpaqueType {
-            id_loc,
-            name,
-            tparams,
-            body,
-            lower_bound,
-            upper_bound,
-        } => {
-            let id =
-                type_::nominal::Id::UserDefinedOpaqueTypeId(cx.make_aloc_id(id_loc), name.dupe());
+        Def::OpaqueType(inner) => {
+            let id = type_::nominal::Id::UserDefinedOpaqueTypeId(
+                cx.make_aloc_id(&inner.id_loc),
+                inner.name.dupe(),
+            );
             merge_opaque_type(
                 cx,
                 file,
                 reason,
                 id,
-                name,
-                tparams,
-                lower_bound.as_ref(),
-                upper_bound.as_ref(),
-                body.as_ref(),
+                &inner.name,
+                &inner.tparams,
+                inner.lower_bound.as_ref(),
+                inner.upper_bound.as_ref(),
+                inner.body.as_ref(),
             )
         }
-        Def::Interface {
-            id_loc,
-            name,
-            tparams,
-            def,
-        } => {
-            let id = cx.make_aloc_id(id_loc);
+        Def::Interface(inner) => {
+            let id = cx.make_aloc_id(&inner.id_loc);
+            let name = &inner.name;
+            let def = &inner.def;
+            let tparams = &inner.tparams;
             let t = |_cx: &Context<'cx>,
                      env: &MergeEnv,
                      targs: Vec<(SubstName, Reason, Type, Polarity)>| {
@@ -4452,76 +4445,47 @@ pub fn merge_def<'cx>(
                 tparams,
             )
         }
-        Def::ClassBinding { id_loc, name, def } => {
-            let id = cx.make_aloc_id(id_loc);
+        Def::ClassBinding(inner) => {
+            let id = cx.make_aloc_id(&inner.id_loc);
             merge_class(
                 &mk_merge_env(FlowOrdMap::new()),
                 cx,
                 file,
                 reason,
-                Some(name),
+                Some(&inner.name),
                 id,
-                def,
+                &inner.def,
             )
         }
-        Def::DeclareClassBinding {
-            id_loc: _,
-            nominal_id_loc,
-            name,
-            def,
-        } => {
-            let nominal_id = cx.make_aloc_id(nominal_id_loc);
-            merge_declare_class(cx, file, reason, name, nominal_id, def)
+        Def::DeclareClassBinding(inner) => {
+            let nominal_id = cx.make_aloc_id(&inner.nominal_id_loc);
+            merge_declare_class(cx, file, reason, &inner.name, nominal_id, &inner.def)
         }
-        Def::RecordBinding {
-            id_loc,
-            name,
-            def,
-            defaulted_props,
-        } => {
-            let id = cx.make_aloc_id(id_loc);
+        Def::RecordBinding(inner) => {
+            let id = cx.make_aloc_id(&inner.id_loc);
             merge_record(
                 &mk_merge_env(FlowOrdMap::new()),
                 cx,
                 file,
                 reason,
-                Some(name),
+                Some(&inner.name),
                 id,
-                def,
-                defaulted_props,
+                &inner.def,
+                &inner.defaulted_props,
             )
         }
-        Def::FunBinding {
-            id_loc: _,
-            name: _,
-            async_: _,
-            generator: _,
-            fn_loc: _,
-            def,
-            statics,
-        } => {
+        Def::FunBinding(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
-            let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), statics);
-            merge_fun(&env, cx, file, reason, def, statics_t, false, false)
+            let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), &inner.statics);
+            merge_fun(&env, cx, file, reason, &inner.def, statics_t, false, false)
         }
-        Def::DeclareFun {
-            id_loc,
-            fn_loc,
-            name: _,
-            def,
-            tail,
-        } => {
-            let mut all_defs = vec![(id_loc.dupe(), fn_loc.dupe(), def.clone())];
-            all_defs.extend(tail.iter().cloned());
+        Def::DeclareFun(inner) => {
+            let mut all_defs = vec![(inner.id_loc.dupe(), inner.fn_loc.dupe(), inner.def.clone())];
+            all_defs.extend(inner.tail.iter().cloned());
             let defs = Vec1::try_from_vec(all_defs).unwrap();
             merge_declare_fun(cx, file, &defs)
         }
-        Def::ComponentBinding {
-            id_loc,
-            name,
-            fn_loc: _,
-            def,
-        } => {
+        Def::ComponentBinding(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
             merge_component(
                 &env,
@@ -4529,24 +4493,17 @@ pub fn merge_def<'cx>(
                 file,
                 reason,
                 false,
-                def,
-                Some((id_loc.dupe(), name)),
+                &inner.def,
+                Some((inner.id_loc.dupe(), &inner.name)),
             )
         }
-        Def::Variable {
-            id_loc: _,
-            name: _,
-            def,
-        } => {
+        Def::Variable(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
-            merge_impl(&env, cx, file, def, false, const_decl)
+            merge_impl(&env, cx, file, &inner.def, false, const_decl)
         }
-        Def::Parameter {
-            id_loc: _,
-            name: _,
-            def,
-            tparams,
-        } => {
+        Def::Parameter(inner) => {
+            let def = &inner.def;
+            let tparams = &inner.tparams;
             let t = |_cx: &Context<'cx>,
                      env: &MergeEnv,
                      _targs: Vec<(SubstName, Reason, Type, Polarity)>| {
@@ -4561,31 +4518,25 @@ pub fn merge_def<'cx>(
                 tparams,
             )
         }
-        Def::DisabledComponentBinding { .. }
-        | Def::DisabledEnumBinding { .. }
-        | Def::DisabledRecordBinding { .. } => type_::any_t::error(reason),
-        Def::EnumBinding { rep: None, .. } => type_::any_t::error(reason),
-        Def::EnumBinding {
-            id_loc,
-            rep: Some(rep),
-            members,
-            has_unknown_members,
-            name,
-        } => merge_enum(
-            cx,
-            reason,
-            id_loc.dupe(),
-            name,
-            rep,
-            members,
-            *has_unknown_members,
-        ),
-        Def::NamespaceBinding {
-            id_loc,
-            name,
-            values,
-            types,
-        } => {
+        Def::DisabledComponentBinding(_)
+        | Def::DisabledEnumBinding(_)
+        | Def::DisabledRecordBinding(_) => type_::any_t::error(reason),
+        Def::EnumBinding(inner) if inner.rep.is_none() => type_::any_t::error(reason),
+        Def::EnumBinding(inner) => {
+            let rep = inner.rep.as_ref().unwrap();
+            merge_enum(
+                cx,
+                reason,
+                inner.id_loc.dupe(),
+                &inner.name,
+                rep,
+                &inner.members,
+                inner.has_unknown_members,
+            )
+        }
+        Def::NamespaceBinding(inner) => {
+            let (id_loc, name, values, types) =
+                (&inner.id_loc, &inner.name, &inner.values, &inner.types);
             let f = |smap: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>| {
                 let mut result: BTreeMap<Name, type_::NamedSymbol> = BTreeMap::new();
                 for (name, (loc, packed)) in smap {
@@ -4722,45 +4673,35 @@ pub fn merge_cjs_export_t<'cx>(
     // in order to retain the original definition location of exported names
     match packed {
         Pack::Packed::Value(value) => match value.as_ref() {
-            Value::ObjLit {
-                loc,
-                frozen,
-                proto,
-                props,
-            } => {
+            Value::ObjLit(inner) => {
                 let env = mk_merge_env(FlowOrdMap::new());
                 (
-                    Some(loc.dupe()),
+                    Some(inner.loc.dupe()),
                     merge_object_lit(
                         &env,
                         cx,
                         file,
-                        loc.dupe(),
-                        *frozen,
-                        proto,
-                        props,
+                        inner.loc.dupe(),
+                        inner.frozen,
+                        &inner.proto,
+                        &inner.props,
                         true,
                         false,
                     ),
                 )
             }
-            Value::ObjSpreadLit {
-                loc,
-                frozen,
-                proto,
-                elems,
-            } => {
+            Value::ObjSpreadLit(inner) => {
                 let env = mk_merge_env(FlowOrdMap::new());
                 (
-                    Some(loc.dupe()),
+                    Some(inner.loc.dupe()),
                     merge_obj_spread_lit(
                         &env,
                         cx,
                         file,
-                        loc.dupe(),
-                        *frozen,
-                        proto,
-                        elems,
+                        inner.loc.dupe(),
+                        inner.frozen,
+                        &inner.proto,
+                        &inner.elems,
                         true,
                         false,
                     ),

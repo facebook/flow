@@ -155,10 +155,10 @@ pub mod component_declaration_body {
                     None => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            error_message::ErrorMessage::EInternal(
+                            error_message::ErrorMessage::EInternal(Box::new((
                                 body_loc.dupe(),
                                 error_message::InternalError::MissingSwitchExhaustiveCheck,
-                            ),
+                            ))),
                         );
                         (vec![], false)
                     }
@@ -252,11 +252,13 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
     };
     let t = Type::new(type_::TypeInner::DefT(
         reason.dupe(),
-        type_::DefT::new(type_::DefTInner::ReactAbstractComponentT {
-            config,
-            renders: renders_t,
-            component_kind,
-        }),
+        type_::DefT::new(type_::DefTInner::ReactAbstractComponentT(Box::new(
+            type_::ReactAbstractComponentTData {
+                config,
+                renders: renders_t,
+                component_kind,
+            },
+        ))),
     ));
     type_util::poly_type_of_tparams(type_::poly::Id::generate_id(), tparams, t)
 }

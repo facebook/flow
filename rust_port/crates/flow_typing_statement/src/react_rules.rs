@@ -21,8 +21,15 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api;
 use flow_env_builder::env_api::RefinementKind;
 use flow_env_builder::name_def_types;
+use flow_env_builder::name_def_types::AnnotationData;
 use flow_env_builder::name_def_types::Binding;
+use flow_env_builder::name_def_types::ClassDefData;
+use flow_env_builder::name_def_types::ContextualData;
 use flow_env_builder::name_def_types::Def;
+use flow_env_builder::name_def_types::FunctionDefData;
+use flow_env_builder::name_def_types::FunctionValueData;
+use flow_env_builder::name_def_types::MemberAssignData;
+use flow_env_builder::name_def_types::OpAssignData;
 use flow_env_builder::name_def_types::Root;
 use flow_parser::ast;
 use flow_parser::ast::expression::ExpressionInner;
@@ -36,6 +43,7 @@ use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message;
+use flow_typing_errors::error_message::EHookRuleViolationData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RefInRenderKind;
 use flow_typing_errors::intermediate_error_types;
@@ -45,6 +53,7 @@ use flow_typing_type::type_;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::TvarSeenSet;
 use flow_typing_type::type_::Type;
@@ -150,7 +159,7 @@ pub fn check_ref_use<'a>(
                 recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
             }
             TypeInner::DefT(_, def_t)
-                if let DefTInner::PolyT { t_out: inner_t, .. } = def_t.deref() =>
+                if let DefTInner::PolyT(box PolyTData { t_out: inner_t, .. }) = def_t.deref() =>
             {
                 recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
             }
@@ -344,7 +353,7 @@ fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
                 recur_id(cx, seen, inner_t)
             }
             TypeInner::DefT(_, def_t)
-                if let DefTInner::PolyT { t_out: inner_t, .. } = def_t.deref() =>
+                if let DefTInner::PolyT(box PolyTData { t_out: inner_t, .. }) = def_t.deref() =>
             {
                 recur_id(cx, seen, inner_t)
             }
@@ -375,11 +384,11 @@ fn hook_error<'cx>(
     if cx.react_rule_enabled(flow_common::options::ReactRule::RulesOfHooks) {
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::EHookRuleViolation {
+            ErrorMessage::EHookRuleViolation(Box::new(EHookRuleViolationData {
                 hook_rule: kind,
                 callee_loc,
                 call_loc,
-            },
+            })),
         );
     }
 }
@@ -689,12 +698,12 @@ fn downstream_effects<'ev, 'b, 'cx>(
                     None => {
                         flow_js_utils::add_output_non_speculating(
                             ev_cx.cx,
-                            ErrorMessage::EInternal(
+                            ErrorMessage::EInternal(Box::new((
                                 x.loc.dupe(),
                                 error_message::InternalError::EnvInvariant(
                                     env_api::EnvInvariantFailure::NameDefGraphMismatch,
                                 ),
-                            ),
+                            ))),
                         );
                         None
                     }
@@ -703,9 +712,9 @@ fn downstream_effects<'ev, 'b, 'cx>(
             let mut acc = Vec::new();
             for (def, _, _, _) in defs {
                 match def {
-                    Def::ExpressionDef(name_def_types::ExpressionDef { expr, .. })
-                    | Def::MemberAssign { rhs: (_, expr), .. }
-                    | Def::OpAssign { rhs: (_, expr), .. } => {
+                    Def::ExpressionDef(box name_def_types::ExpressionDef { expr, .. })
+                    | Def::MemberAssign(box MemberAssignData { rhs: (_, expr), .. })
+                    | Def::OpAssign(box OpAssignData { rhs: (_, expr), .. }) => {
                         let stripped = strip_use_callback(expr);
                         match stripped.deref() {
                             ExpressionInner::ArrowFunction { inner: func, .. }
@@ -718,17 +727,17 @@ fn downstream_effects<'ev, 'b, 'cx>(
                             _ => {}
                         }
                     }
-                    Def::Function {
+                    Def::Function(box FunctionDefData {
                         function_: func, ..
-                    } => {
+                    }) => {
                         acc.extend(visit_func(ev_cx, seen, &loc, func));
                     }
-                    Def::Component { .. } => {}
-                    Def::Class { class_: cls, .. } => {
+                    Def::Component(_) => {}
+                    Def::Class(box ClassDefData { class_: cls, .. }) => {
                         acc.extend(visit_class(ev_cx, seen, &loc, cls));
                     }
                     // Records don't contain React hooks/rules violation
-                    Def::Record { .. } => {}
+                    Def::Record(_) => {}
                     Def::Binding(bind) => {
                         // let rec handle_binding bind =
                         fn handle_binding<'ev, 'b, 'cx>(
@@ -742,15 +751,16 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                     parent: (_, bind), ..
                                 }
                                 | Binding::Hooklike(bind) => handle_binding(bind, ev_cx, seen, loc),
-                                Binding::Root(Root::Annotation {
+                                Binding::Root(Root::Annotation(box AnnotationData {
                                     concrete: Some(root),
                                     ..
-                                }) => {
+                                })) => {
                                     let root_bind = Binding::Root(*root.clone());
                                     handle_binding(&root_bind, ev_cx, seen, loc)
                                 }
-                                Binding::Root(Root::Value(name_def_types::Value {
-                                    expr, ..
+                                Binding::Root(Root::Value(box name_def_types::Value {
+                                    expr,
+                                    ..
                                 })) => {
                                     let stripped = strip_use_callback(expr);
                                     match stripped.deref() {
@@ -764,10 +774,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                         _ => vec![],
                                     }
                                 }
-                                Binding::Root(Root::Contextual {
+                                Binding::Root(Root::Contextual(box ContextualData {
                                     default_expression: Some((_, expr)),
                                     ..
-                                }) => {
+                                })) => {
                                     let stripped = strip_use_callback(expr);
                                     match stripped.deref() {
                                         ExpressionInner::ArrowFunction { inner: func, .. }
@@ -780,9 +790,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                         _ => vec![],
                                     }
                                 }
-                                Binding::Root(Root::FunctionValue {
-                                    function_: func, ..
-                                }) => visit_func(ev_cx, seen, loc, func),
+                                Binding::Root(Root::FunctionValue(box FunctionValueData {
+                                    function_: func,
+                                    ..
+                                })) => visit_func(ev_cx, seen, loc, func),
                                 _ => vec![],
                             }
                         }
@@ -1522,7 +1533,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                                             t.deref(),
                                             TypeInner::DefT(_, def_t) if matches!(
                                                 def_t.deref(),
-                                                flow_typing_type::type_::DefTInner::ReactAbstractComponentT { .. }
+                                                flow_typing_type::type_::DefTInner::ReactAbstractComponentT(_)
                                             )
                                         ),
                                         Err(_) => false,
@@ -2313,7 +2324,7 @@ pub fn check_react_rules<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, (ALoc,
         if let Some(pair) = lhs.as_ref()
             && let t = get_t(cx, pair)
             && let TypeInner::DefT(_, def_t) = t.deref()
-            && let DefTInner::PolyT { t_out, .. } = def_t.deref()
+            && let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref()
             && let TypeInner::DefT(_, inner_def_t) = t_out.deref()
             && let DefTInner::TypeT(_, inner_t) = inner_def_t.deref()
             && let TypeInner::NominalT { nominal_type, .. } = inner_t.deref()

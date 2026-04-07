@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_typing_errors::error_message::EMethodUnbindingData;
+use flow_typing_errors::error_message::EPropNotFoundInLookupData;
+use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::WriteComputedObjPropCheckTData;
+
 use super::helpers::*;
 use super::*;
 
@@ -70,7 +76,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
                 trace,
                 (
                     &super_t,
-                    &UseT::new(UseTInner::LookupT {
+                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason_op,
                         lookup_kind: Box::new(lookup_kind),
                         try_ts_on_failure: Rc::from([]),
@@ -83,7 +89,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
                         method_accessible,
                         ids: Some(ids),
                         ignore_dicts: false,
-                    }),
+                    }))),
                 ),
             )
         }))
@@ -176,11 +182,11 @@ pub(super) fn get_private_prop<'cx>(
     match scopes {
         [] => flow_js_utils::add_output(
             cx,
-            ErrorMessage::EPrivateLookupFailed(
+            ErrorMessage::EPrivateLookupFailed(Box::new((
                 (reason_op.dupe(), reason_c.dupe()),
                 Name::new(prop_name.dupe()),
                 use_op.dupe(),
-            ),
+            ))),
         ),
         [scope, rest_scopes @ ..] => {
             if scope.class_binding_id != instance.class_id {
@@ -239,11 +245,13 @@ pub(super) fn get_private_prop<'cx>(
                                     if let PropertyInner::Method { type_: t, .. } = p.deref() {
                                         flow_js_utils::add_output(
                                             cx,
-                                            ErrorMessage::EMethodUnbinding {
-                                                use_op: use_op.dupe(),
-                                                reason_op: reason_op.dupe(),
-                                                reason_prop: reason_of_t(t).dupe(),
-                                            },
+                                            ErrorMessage::EMethodUnbinding(Box::new(
+                                                EMethodUnbindingData {
+                                                    use_op: use_op.dupe(),
+                                                    reason_op: reason_op.dupe(),
+                                                    reason_prop: reason_of_t(t).dupe(),
+                                                },
+                                            )),
                                         )?;
                                     }
                                 }
@@ -251,11 +259,11 @@ pub(super) fn get_private_prop<'cx>(
                             }
                             None => flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EPrivateLookupFailed(
+                                ErrorMessage::EPrivateLookupFailed(Box::new((
                                     (reason_op.dupe(), reason_c.dupe()),
                                     name,
                                     use_op.dupe(),
-                                ),
+                                ))),
                             ),
                         }
                     }
@@ -326,13 +334,13 @@ pub(super) fn elem_action_on_obj<'cx>(
             trace,
             (
                 obj,
-                &UseT::new(UseTInner::MethodT(
-                    use_op.dupe(),
-                    reason_call.dupe(),
-                    reason_op.dupe(),
-                    Box::new(propref),
-                    ft.clone(),
-                )),
+                &UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                    use_op: use_op.dupe(),
+                    reason: reason_call.dupe(),
+                    prop_reason: reason_op.dupe(),
+                    propref: Box::new(propref),
+                    method_action: ft.clone(),
+                }))),
             ),
         ),
     }
@@ -416,7 +424,7 @@ pub(super) fn write_obj_prop<'cx>(
                 if obj_type::is_exact(&o.flags.obj_kind) {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotFoundInLookup {
+                        ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: Some(name.dupe()),
                             reason_prop: reason_prop.dupe(),
                             reason_obj: reason_obj.dupe(),
@@ -426,7 +434,7 @@ pub(super) fn write_obj_prop<'cx>(
                                 &[o.props_tmap.dupe()],
                                 name.as_str(),
                             ),
-                        },
+                        })),
                     )
                 } else {
                     rec_flow(
@@ -434,7 +442,7 @@ pub(super) fn write_obj_prop<'cx>(
                         trace,
                         (
                             &o.proto_t,
-                            &UseT::new(UseTInner::LookupT {
+                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
                                 lookup_kind: Box::new(LookupKind::Strict(reason_obj.dupe())),
                                 try_ts_on_failure: Rc::from([]),
@@ -443,7 +451,7 @@ pub(super) fn write_obj_prop<'cx>(
                                 ids: Some([o.props_tmap.dupe()].into_iter().collect()),
                                 method_accessible: true,
                                 ignore_dicts: false,
-                            }),
+                            }))),
                         ),
                     )
                 }
@@ -453,12 +461,14 @@ pub(super) fn write_obj_prop<'cx>(
                 trace,
                 (
                     elem_t,
-                    &UseT::new(UseTInner::WriteComputedObjPropCheckT {
-                        reason: reason_of_t(elem_t).dupe(),
-                        reason_key: None,
-                        value_t: tin.dupe(),
-                        err_on_str_key: Box::new((use_op.dupe(), reason_obj.dupe())),
-                    }),
+                    &UseT::new(UseTInner::WriteComputedObjPropCheckT(Box::new(
+                        WriteComputedObjPropCheckTData {
+                            reason: reason_of_t(elem_t).dupe(),
+                            reason_key: None,
+                            value_t: tin.dupe(),
+                            err_on_str_key: Box::new((use_op.dupe(), reason_obj.dupe())),
+                        },
+                    ))),
                 ),
             ),
         },

@@ -47,6 +47,7 @@ use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::DroType;
+use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
@@ -66,6 +67,13 @@ use crate::intermediate_error_types::DocblockError;
 use crate::intermediate_error_types::ExactnessErrorKind;
 use crate::intermediate_error_types::ExpectedModulePurpose;
 use crate::intermediate_error_types::Explanation;
+use crate::intermediate_error_types::ExplanationAdditionalUnionMembersData;
+use crate::intermediate_error_types::ExplanationConstrainedAssignData;
+use crate::intermediate_error_types::ExplanationCustomErrorData;
+use crate::intermediate_error_types::ExplanationInvariantSubtypingDueToMutableArrayData;
+use crate::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertiesData;
+use crate::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertyData;
+use crate::intermediate_error_types::ExplanationPropertyMissingDueToNeutralOptionalPropertyData;
 use crate::intermediate_error_types::ExplanationWithLazyParts;
 use crate::intermediate_error_types::ExponentialSpreadReasonGroup;
 use crate::intermediate_error_types::IncorrectType;
@@ -76,6 +84,51 @@ use crate::intermediate_error_types::InvalidRenderTypeKind;
 use crate::intermediate_error_types::MatchInvalidCaseSyntax;
 use crate::intermediate_error_types::MatchObjPatternKind;
 use crate::intermediate_error_types::Message;
+use crate::intermediate_error_types::MessageAlreadyExhaustivelyCheckOneEnumMemberData;
+use crate::intermediate_error_types::MessageCannotAccessEnumMemberData;
+use crate::intermediate_error_types::MessageCannotAddComputedPropertyDueToPotentialOverwriteData;
+use crate::intermediate_error_types::MessageCannotCallMaybeReactHookData;
+use crate::intermediate_error_types::MessageCannotCompareData;
+use crate::intermediate_error_types::MessageCannotExhaustivelyCheckAbstractEnumsData;
+use crate::intermediate_error_types::MessageCannotExhaustivelyCheckEnumWithUnknownsData;
+use crate::intermediate_error_types::MessageCannotExportRenamedDefaultData;
+use crate::intermediate_error_types::MessageCannotInstantiateObjectUtilTypeWithEnumData;
+use crate::intermediate_error_types::MessageCannotResolveBuiltinModuleData;
+use crate::intermediate_error_types::MessageCannotSpreadGeneralData;
+use crate::intermediate_error_types::MessageCannotSpreadInexactMayOverwriteIndexerData;
+use crate::intermediate_error_types::MessageCannotUseEnumMemberUsedAsTypeData;
+use crate::intermediate_error_types::MessageCannotUseTypeForAnnotationInferenceData;
+use crate::intermediate_error_types::MessageCannotUseTypeGuardWithFunctionParamHavocedData;
+use crate::intermediate_error_types::MessageCannotUseTypeInValuePositionData;
+use crate::intermediate_error_types::MessageDefinitionInvalidRecursiveData;
+use crate::intermediate_error_types::MessageDuplicateModuleProviderData;
+use crate::intermediate_error_types::MessageEnumDuplicateMemberNameData;
+use crate::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
+use crate::intermediate_error_types::MessageExponentialSpreadData;
+use crate::intermediate_error_types::MessageIncompatibleReactDeepReadOnlyData;
+use crate::intermediate_error_types::MessageIncompatibleTupleArityData;
+use crate::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
+use crate::intermediate_error_types::MessageInvalidEnumMemberCheckData;
+use crate::intermediate_error_types::MessageInvalidKeyPropertyInSpreadData;
+use crate::intermediate_error_types::MessageInvalidRefPropertyInSpreadData;
+use crate::intermediate_error_types::MessageInvalidRendersTypeArgumentData;
+use crate::intermediate_error_types::MessageInvalidSelfReferencingDefaultData;
+use crate::intermediate_error_types::MessageInvalidSelfReferencingTypeAnnotationData;
+use crate::intermediate_error_types::MessageMatchNonExhaustiveObjectPatternData;
+use crate::intermediate_error_types::MessageMatchNonExplicitEnumCheckData;
+use crate::intermediate_error_types::MessageMissingPlatformSupportWithAvailablePlatformsData;
+use crate::intermediate_error_types::MessageNoDefaultExportData;
+use crate::intermediate_error_types::MessageNoNamedExportData;
+use crate::intermediate_error_types::MessageOnlyDefaultExportData;
+use crate::intermediate_error_types::MessageReactIntrinsicOverlapData;
+use crate::intermediate_error_types::MessageRedeclareComponentPropData;
+use crate::intermediate_error_types::MessageShouldAnnotateVariableUsedInGenericContextData;
+use crate::intermediate_error_types::MessageSketchyNullCheckData;
+use crate::intermediate_error_types::MessageTupleElementNotReadableData;
+use crate::intermediate_error_types::MessageTupleElementNotWritableData;
+use crate::intermediate_error_types::MessageTupleIndexOutOfBoundData;
+use crate::intermediate_error_types::MessageTupleNonIntegerIndexData;
+use crate::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use crate::intermediate_error_types::ObjKind;
 use crate::intermediate_error_types::PrimitiveKind;
 use crate::intermediate_error_types::RecordDeclarationInvalidSyntax;
@@ -148,152 +201,263 @@ pub enum EnumKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub member_name: Option<Name>,
+    pub suggestion: Option<FlowSmolStr>,
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub prev_use_loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidObjectFunctionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub case_test_loc: L,
+    pub prev_check_loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+    pub left_to_check: Vec<FlowSmolStr>,
+    pub default_case_loc: Option<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub example_member: Option<FlowSmolStr>,
+    pub from_match: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumMemberUsedAsTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub enum_kind: EnumKind,
+    pub representation_type: Option<FlowSmolStr>,
+    pub casting_syntax: CastingSyntax,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidAbstractUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumNonIdentifierMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumDuplicateMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub prev_use_loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInconsistentMemberValuesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumInvalidMemberInitializerData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumBooleanMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumNumberMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumBigIntMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EnumStringMemberInconsistentlyInitializedData<
+    L: Dupe + PartialOrd + Ord + PartialEq + Eq,
+> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EnumsNotEnabled(L),
     EnumConstNotSupported(L),
-    EnumInvalidMemberAccess {
-        member_name: Option<Name>,
-        suggestion: Option<FlowSmolStr>,
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumModification {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumMemberDuplicateValue {
-        loc: L,
-        prev_use_loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumInvalidObjectUtilType {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumInvalidObjectFunction {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
+    EnumInvalidMemberAccess(Box<EnumInvalidMemberAccessData<L>>),
+    EnumModification(Box<EnumModificationData<L>>),
+    EnumMemberDuplicateValue(Box<EnumMemberDuplicateValueData<L>>),
+    EnumInvalidObjectUtilType(Box<EnumInvalidObjectUtilTypeData<L>>),
+    EnumInvalidObjectFunction(Box<EnumInvalidObjectFunctionData<L>>),
     EnumNotIterable {
         reason: VirtualReason<L>,
         for_in: bool,
     },
-    EnumMemberAlreadyChecked {
-        case_test_loc: L,
-        prev_check_loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: FlowSmolStr,
-    },
-    EnumAllMembersAlreadyChecked {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumNotAllChecked {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-        left_to_check: Vec<FlowSmolStr>,
-        default_case_loc: Option<L>,
-    },
-    EnumUnknownNotChecked {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumInvalidCheck {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        example_member: Option<FlowSmolStr>,
-        from_match: bool,
-    },
-    EnumMemberUsedAsType {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumIncompatible {
-        use_op: VirtualUseOp<L>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        enum_kind: EnumKind,
-        representation_type: Option<FlowSmolStr>,
-        casting_syntax: CastingSyntax,
-    },
-    EnumInvalidAbstractUse {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumInvalidMemberName {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-    EnumNonIdentifierMemberName {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-    EnumDuplicateMemberName {
-        loc: L,
-        prev_use_loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-    EnumInconsistentMemberValues {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-    EnumInvalidMemberInitializer {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
-        member_name: String,
-    },
-    EnumBooleanMemberNotInitialized {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-    EnumNumberMemberNotInitialized {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-    EnumBigIntMemberNotInitialized {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-    EnumStringMemberInconsistentlyInitialized {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-    },
+    EnumMemberAlreadyChecked(Box<EnumMemberAlreadyCheckedData<L>>),
+    EnumAllMembersAlreadyChecked(Box<EnumAllMembersAlreadyCheckedData<L>>),
+    EnumNotAllChecked(Box<EnumNotAllCheckedData<L>>),
+    EnumUnknownNotChecked(Box<EnumUnknownNotCheckedData<L>>),
+    EnumInvalidCheck(Box<EnumInvalidCheckData<L>>),
+    EnumMemberUsedAsType(Box<EnumMemberUsedAsTypeData<L>>),
+    EnumIncompatible(Box<EnumIncompatibleData<L>>),
+    EnumInvalidAbstractUse(Box<EnumInvalidAbstractUseData<L>>),
+    EnumInvalidMemberName(Box<EnumInvalidMemberNameData<L>>),
+    EnumNonIdentifierMemberName(Box<EnumNonIdentifierMemberNameData<L>>),
+    EnumDuplicateMemberName(Box<EnumDuplicateMemberNameData<L>>),
+    EnumInconsistentMemberValues(Box<EnumInconsistentMemberValuesData<L>>),
+    EnumInvalidMemberInitializer(Box<EnumInvalidMemberInitializerData<L>>),
+    EnumBooleanMemberNotInitialized(Box<EnumBooleanMemberNotInitializedData<L>>),
+    EnumNumberMemberNotInitialized(Box<EnumNumberMemberNotInitializedData<L>>),
+    EnumBigIntMemberNotInitialized(Box<EnumBigIntMemberNotInitializedData<L>>),
+    EnumStringMemberInconsistentlyInitialized(
+        Box<EnumStringMemberInconsistentlyInitializedData<L>>,
+    ),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchNotExhaustiveData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
+    pub missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchUnusedPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub already_seen: Option<VirtualReason<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchNonExhaustiveObjectPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub rest: Option<VirtualReason<L>>,
+    pub missing_props: Vec<FlowSmolStr>,
+    pub pattern_kind: MatchObjPatternKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchNonExplicitEnumCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub wildcard_reason: VirtualReason<L>,
+    pub unchecked_members: Vec<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchInvalidIdentOrMemberPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub type_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchDuplicateObjectPropertyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+    pub pattern_kind: MatchObjPatternKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchInvalidPatternReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub binding_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchInvalidObjectShorthandData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+    pub pattern_kind: MatchObjPatternKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct MatchInvalidCaseSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub kind: MatchInvalidCaseSyntax<L>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    MatchNotExhaustive {
-        loc: L,
-        examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
-        missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
-    },
-    MatchUnusedPattern {
-        reason: VirtualReason<L>,
-        already_seen: Option<VirtualReason<L>>,
-    },
-    MatchNonExhaustiveObjectPattern {
-        loc: L,
-        rest: Option<VirtualReason<L>>,
-        missing_props: Vec<FlowSmolStr>,
-        pattern_kind: MatchObjPatternKind,
-    },
-    MatchNonExplicitEnumCheck {
-        loc: L,
-        wildcard_reason: VirtualReason<L>,
-        unchecked_members: Vec<FlowSmolStr>,
-    },
+    MatchNotExhaustive(Box<MatchNotExhaustiveData<L>>),
+    MatchUnusedPattern(Box<MatchUnusedPatternData<L>>),
+    MatchNonExhaustiveObjectPattern(Box<MatchNonExhaustiveObjectPatternData<L>>),
+    MatchNonExplicitEnumCheck(Box<MatchNonExplicitEnumCheckData<L>>),
     MatchInvalidGuardedWildcard(L),
-    MatchInvalidIdentOrMemberPattern {
-        loc: L,
-        type_reason: VirtualReason<L>,
-    },
+    MatchInvalidIdentOrMemberPattern(Box<MatchInvalidIdentOrMemberPatternData<L>>),
     MatchInvalidBindingKind {
         loc: L,
         kind: VariableKind,
@@ -308,33 +472,19 @@ pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     MatchInvalidUnaryPlusBigInt {
         loc: L,
     },
-    MatchDuplicateObjectProperty {
-        loc: L,
-        name: FlowSmolStr,
-        pattern_kind: MatchObjPatternKind,
-    },
+    MatchDuplicateObjectProperty(Box<MatchDuplicateObjectPropertyData<L>>),
     MatchBindingInOrPattern {
         loc: L,
     },
     MatchInvalidAsPattern {
         loc: L,
     },
-    MatchInvalidPatternReference {
-        loc: L,
-        binding_reason: VirtualReason<L>,
-    },
-    MatchInvalidObjectShorthand {
-        loc: L,
-        name: FlowSmolStr,
-        pattern_kind: MatchObjPatternKind,
-    },
+    MatchInvalidPatternReference(Box<MatchInvalidPatternReferenceData<L>>),
+    MatchInvalidObjectShorthand(Box<MatchInvalidObjectShorthandData<L>>),
     MatchStatementInvalidBody {
         loc: L,
     },
-    MatchInvalidCaseSyntax {
-        loc: L,
-        kind: MatchInvalidCaseSyntax<L>,
-    },
+    MatchInvalidCaseSyntax(Box<MatchInvalidCaseSyntaxData<L>>),
     MatchInvalidWildcardSyntax(L),
     MatchInvalidInstancePattern(L),
 }
@@ -361,46 +511,629 @@ pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
 /// Error message types for Flow type errors.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub lower: (VirtualReason<L>, Option<LowerKind>),
+    pub upper: (VirtualReason<L>, UpperKind<L>),
+    pub use_op: Option<VirtualUseOp<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop: Option<Name>,
+    pub reason_prop: VirtualReason<L>,
+    pub reason_obj: VirtualReason<L>,
+    pub special: Option<LowerKind>,
+    pub use_op: Option<VirtualUseOp<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EMissingTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_op: VirtualReason<L>,
+    pub reason_tapp: VirtualReason<L>,
+    pub arity_loc: L,
+    pub min_arity: i32,
+    pub max_arity: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExpectedStringLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExpectedNumberLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExpectedBooleanLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExpectedBigIntLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropNotFoundInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop_name: Option<Name>,
+    pub reason_prop: VirtualReason<L>,
+    pub reason_obj: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub suggestion: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop_name: Option<Name>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub suggestion: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropsNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop_names: Vec1<Name>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop_names: Vec1<Name>,
+    pub reason_l_obj: VirtualReason<L>,
+    pub reason_r_obj: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIndexerCheckFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop_name: Name,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub reason_indexer: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_prop: VirtualReason<L>,
+    pub prop_name: Option<Name>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_prop: VirtualReason<L>,
+    pub prop_name: Option<Name>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub lreason: VirtualReason<L>,
+    pub ureason: VirtualReason<L>,
+    pub props: Vec1<(Option<Name>, (Polarity, Polarity))>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub name: FlowSmolStr,
+    pub expected_polarity: Polarity,
+    pub actual_polarity: Polarity,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EBuiltinNameLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EBuiltinModuleLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+    pub potential_generator: Option<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExpectedModuleLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+    pub expected_module_purpose: ExpectedModulePurpose,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPlatformSpecificImplementationModuleLookupFailedData<
+    L: Dupe + PartialOrd + Ord + PartialEq + Eq,
+> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EComparisonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub r1: VirtualReason<L>,
+    pub r2: VirtualReason<L>,
+    pub loc_opt: Option<L>,
+    pub strict_comparison_opt: Option<StrictComparisonInfo<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub lower_reason: VirtualReason<L>,
+    pub lower_arity: (i32, i32),
+    pub lower_inexact: bool,
+    pub upper_reason: VirtualReason<L>,
+    pub upper_arity: (i32, i32),
+    pub upper_inexact: bool,
+    pub unify: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleOutOfBoundsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub reason: VirtualReason<L>,
+    pub reason_op: VirtualReason<L>,
+    pub inexact: bool,
+    pub length: i32,
+    pub index: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleNonIntegerIndexData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub reason: VirtualReason<L>,
+    pub index: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleElementNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub index: i32,
+    pub name: Option<FlowSmolStr>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleElementNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub index: i32,
+    pub name: Option<FlowSmolStr>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleElementPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub index: i32,
+    pub reason_lower: VirtualReason<L>,
+    pub polarity_lower: Polarity,
+    pub reason_upper: VirtualReason<L>,
+    pub polarity_upper: Polarity,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleRequiredAfterOptionalData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_tuple: VirtualReason<L>,
+    pub reason_required: VirtualReason<L>,
+    pub reason_optional: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETupleInvalidTypeSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_spread: VirtualReason<L>,
+    pub reason_arg: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ECallTypeArityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub call_loc: L,
+    pub is_new: bool,
+    pub reason_arity: VirtualReason<L>,
+    pub expected_arity: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETooManyTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_tapp: VirtualReason<L>,
+    pub arity_loc: L,
+    pub maximum_arity: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETooFewTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_tapp: VirtualReason<L>,
+    pub arity_loc: L,
+    pub minimum_arity: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub is_truthy: bool,
+    pub show_warning: bool,
+    pub constant_condition_kind: ConstantConditionKind,
+    pub reason: Option<VirtualReason<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETypeGuardInvalidParameterData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub type_guard_reason: VirtualReason<L>,
+    pub binding_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETypeGuardFunctionInvalidWritesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub type_guard_reason: VirtualReason<L>,
+    pub write_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETypeGuardFunctionParamHavocedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub type_guard_reason: VirtualReason<L>,
+    pub param_reason: VirtualReason<L>,
+    pub call_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETypeGuardIncompatibleWithFunctionKindData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub kind: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ENegativeTypeGuardConsistencyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub return_reason: VirtualReason<L>,
+    pub type_reason: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETypeParamConstIncompatibilityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExportRenamedDefaultData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: Option<FlowSmolStr>,
+    pub is_reexport: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EInvalidObjectKitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub reason_op: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EObjectComputedPropertyAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_obj: VirtualReason<L>,
+    pub reason_prop: VirtualReason<L>,
+    pub kind: InvalidObjKey,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EObjectComputedPropertyPotentialOverwriteData<
+    L: Dupe + PartialOrd + Ord + PartialEq + Eq,
+> {
+    pub key_loc: L,
+    pub overwritten_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIncompatibleWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub explanation: Option<Explanation<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EInvalidReactCreateElementData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub create_element_loc: L,
+    pub invalid_react: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EDuplicateModuleProviderData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub module_name: FlowSmolStr,
+    pub provider: L,
+    pub conflict: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIncorrectTypeWithReplacementData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub kind: IncorrectType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ESketchyNullLintData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub kind: SketchyNullKind,
+    pub loc: L,
+    pub null_loc: L,
+    pub falsy_loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EPrimitiveAsInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub reason: VirtualReason<L>,
+    pub interface_reason: VirtualReason<L>,
+    pub kind: PrimitiveKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ECannotSpreadInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread_reason: VirtualReason<L>,
+    pub interface_reason: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ECannotSpreadIndexerOnRightData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread_reason: VirtualReason<L>,
+    pub object_reason: VirtualReason<L>,
+    pub key_reason: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EUnableToSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread_reason: VirtualReason<L>,
+    pub object1_reason: VirtualReason<L>,
+    pub object2_reason: VirtualReason<L>,
+    pub propname: Name,
+    pub error_kind: ExactnessErrorKind,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EInexactMayOverwriteIndexerData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread_reason: VirtualReason<L>,
+    pub key_reason: VirtualReason<L>,
+    pub value_reason: VirtualReason<L>,
+    pub object2_reason: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EExponentialSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
+    pub reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EAssignConstLikeBindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub definition: VirtualReason<L>,
+    pub binding_kind: AssignedConstLikeBindingType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EImplicitInstantiationUnderconstrainedErrorData<
+    L: Dupe + PartialOrd + Ord + PartialEq + Eq,
+> {
+    pub reason_call: VirtualReason<L>,
+    pub reason_tparam: VirtualReason<L>,
+    pub bound: FlowSmolStr,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_class: VirtualReason<L>,
+    pub reason_obj: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub kind: ClassKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EMethodUnbindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub reason_prop: VirtualReason<L>,
+    pub reason_op: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EHookIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub lower_is_hook: bool,
+    pub hook_is_annot: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EHookUniqueIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EHookRuleViolationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub hook_rule: HookRule<L>,
+    pub callee_loc: L,
+    pub call_loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIncompatibleReactDeepReadOnlyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub dro_loc: L,
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EComponentThisReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub component_loc: L,
+    pub this_loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EInvalidDeclarationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub declaration: VirtualReason<L>,
+    pub null_write: Option<NullWrite<L>>,
+    pub possible_generic_escape_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ERecursiveDefinitionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub recursion: Vec<L>,
+    pub annot_locs: Vec<AnnotLoc<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EDuplicateClassMemberData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+    pub is_static: bool,
+    pub class_kind: ClassKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ETSSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub kind: TSSyntaxKind,
+    pub loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_out: VirtualReason<L>,
+    pub reason_l: VirtualReason<L>,
+    pub reason_r: VirtualReason<L>,
+    pub kind: flow_typing_type::type_::arith_kind::ArithKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EDuplicateComponentPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread: L,
+    pub duplicates: Vec1<(L, Name, L)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ERefComponentPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread: L,
+    pub loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EKeySpreadPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub spread: L,
+    pub loc: L,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EReactIntrinsicOverlapData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_loc: VirtualReason<L>,
+    pub def: L,
+    pub type_: L,
+    pub mixed: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EInvalidRendersTypeArgumentData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub renders_variant: RendersVariant,
+    pub invalid_render_type_kind: InvalidRenderTypeKind<L>,
+    pub invalid_type_reasons: Vec1<VirtualReason<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EMissingPlatformSupportWithAvailablePlatformsData<
+    L: Dupe + PartialOrd + Ord + PartialEq + Eq,
+> {
+    pub loc: L,
+    pub available_platforms: BTreeSet<FlowSmolStr>,
+    pub required_platforms: BTreeSet<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EMissingPlatformSupportData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub missing_platforms: BTreeSet<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EUnionOptimizationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub kind: OptimizedError<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EUnionOptimizationOnNonUnionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub arg: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EIllegalAssertOperatorData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub op: VirtualReason<L>,
+    pub obj: VirtualReason<L>,
+    pub specialized: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EDevOnlyRefinedLocInfoData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub refined_loc: L,
+    pub refining_locs: Vec<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct EDevOnlyInvalidatedRefinementInfoData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub read_loc: L,
+    pub invalidation_info: Vec<(L, refinement_invalidation::Reason)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    EIncompatible {
-        lower: (VirtualReason<L>, Option<LowerKind>),
-        upper: (VirtualReason<L>, UpperKind<L>),
-        use_op: Option<VirtualUseOp<L>>,
-    },
+    EIncompatible(Box<EIncompatibleData<L>>),
 
     EIncompatibleSpeculation(Box<EIncompatibleSpeculationData<L>>),
 
     EIncompatibleDefs(Box<EIncompatibleDefsData<L>>),
 
-    EIncompatibleProp {
-        prop: Option<Name>,
-        reason_prop: VirtualReason<L>,
-        reason_obj: VirtualReason<L>,
-        special: Option<LowerKind>,
-        use_op: Option<VirtualUseOp<L>>,
-    },
+    EIncompatibleProp(Box<EIncompatiblePropData<L>>),
 
-    EExportValueAsType(VirtualReason<L>, Name),
+    EExportValueAsType(Box<(VirtualReason<L>, Name)>),
 
-    EImportValueAsType(VirtualReason<L>, FlowSmolStr),
+    EImportValueAsType(Box<(VirtualReason<L>, FlowSmolStr)>),
 
-    EImportTypeAsTypeof(VirtualReason<L>, FlowSmolStr),
+    EImportTypeAsTypeof(Box<(VirtualReason<L>, FlowSmolStr)>),
 
-    EImportTypeAsValue(VirtualReason<L>, FlowSmolStr),
+    EImportTypeAsValue(Box<(VirtualReason<L>, FlowSmolStr)>),
 
-    ENoDefaultExport(VirtualReason<L>, Userland, Option<FlowSmolStr>),
+    ENoDefaultExport(Box<(VirtualReason<L>, Userland, Option<FlowSmolStr>)>),
 
-    EOnlyDefaultExport(VirtualReason<L>, Userland, FlowSmolStr),
+    EOnlyDefaultExport(Box<(VirtualReason<L>, Userland, FlowSmolStr)>),
 
-    ENoNamedExport(VirtualReason<L>, Userland, FlowSmolStr, Option<FlowSmolStr>),
+    ENoNamedExport(Box<(VirtualReason<L>, Userland, FlowSmolStr, Option<FlowSmolStr>)>),
 
-    EMissingTypeArgs {
-        reason_op: VirtualReason<L>,
-        reason_tapp: VirtualReason<L>,
-        arity_loc: L,
-        min_arity: i32,
-        max_arity: i32,
-    },
+    EMissingTypeArgs(Box<EMissingTypeArgsData<L>>),
 
     EAnyValueUsedAsType {
         reason_use: VirtualReason<L>,
@@ -410,195 +1143,72 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         reason_use: VirtualReason<L>,
     },
 
-    EExpectedStringLit {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EExpectedStringLit(Box<EExpectedStringLitData<L>>),
 
-    EExpectedNumberLit {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EExpectedNumberLit(Box<EExpectedNumberLitData<L>>),
 
-    EExpectedBooleanLit {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EExpectedBooleanLit(Box<EExpectedBooleanLitData<L>>),
 
-    EExpectedBigIntLit {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EExpectedBigIntLit(Box<EExpectedBigIntLitData<L>>),
 
-    EPropNotFoundInLookup {
-        prop_name: Option<Name>,
-        reason_prop: VirtualReason<L>,
-        reason_obj: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-        suggestion: Option<FlowSmolStr>,
-    },
+    EPropNotFoundInLookup(Box<EPropNotFoundInLookupData<L>>),
 
-    EPropNotFoundInSubtyping {
-        prop_name: Option<Name>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-        suggestion: Option<FlowSmolStr>,
-    },
+    EPropNotFoundInSubtyping(Box<EPropNotFoundInSubtypingData<L>>),
 
-    EPropsNotFoundInSubtyping {
-        prop_names: Vec1<Name>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EPropsNotFoundInSubtyping(Box<EPropsNotFoundInSubtypingData<L>>),
 
     EPropsNotFoundInInvariantSubtyping(Box<EPropsNotFoundInInvariantSubtypingData<L>>),
 
-    EPropsExtraAgainstExactObject {
-        prop_names: Vec1<Name>,
-        reason_l_obj: VirtualReason<L>,
-        reason_r_obj: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EPropsExtraAgainstExactObject(Box<EPropsExtraAgainstExactObjectData<L>>),
 
-    EIndexerCheckFailed {
-        prop_name: Name,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        reason_indexer: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EIndexerCheckFailed(Box<EIndexerCheckFailedData<L>>),
 
-    EPropNotReadable {
-        reason_prop: VirtualReason<L>,
-        prop_name: Option<Name>,
-        use_op: VirtualUseOp<L>,
-    },
+    EPropNotReadable(Box<EPropNotReadableData<L>>),
 
-    EPropNotWritable {
-        reason_prop: VirtualReason<L>,
-        prop_name: Option<Name>,
-        use_op: VirtualUseOp<L>,
-    },
+    EPropNotWritable(Box<EPropNotWritableData<L>>),
 
-    EPropPolarityMismatch {
-        lreason: VirtualReason<L>,
-        ureason: VirtualReason<L>,
-        props: Vec1<(Option<Name>, (Polarity, Polarity))>,
-        use_op: VirtualUseOp<L>,
-    },
+    EPropPolarityMismatch(Box<EPropPolarityMismatchData<L>>),
 
-    EPolarityMismatch {
-        reason: VirtualReason<L>,
-        name: FlowSmolStr,
-        expected_polarity: Polarity,
-        actual_polarity: Polarity,
-    },
+    EPolarityMismatch(Box<EPolarityMismatchData<L>>),
 
-    EBuiltinNameLookupFailed {
-        loc: L,
-        name: FlowSmolStr,
-    },
+    EBuiltinNameLookupFailed(Box<EBuiltinNameLookupFailedData<L>>),
 
-    EBuiltinModuleLookupFailed {
-        loc: L,
-        name: FlowSmolStr,
-        potential_generator: Option<FlowSmolStr>,
-    },
+    EBuiltinModuleLookupFailed(Box<EBuiltinModuleLookupFailedData<L>>),
 
-    EExpectedModuleLookupFailed {
-        loc: L,
-        name: FlowSmolStr,
-        expected_module_purpose: ExpectedModulePurpose,
-    },
+    EExpectedModuleLookupFailed(Box<EExpectedModuleLookupFailedData<L>>),
 
-    EPrivateLookupFailed((VirtualReason<L>, VirtualReason<L>), Name, VirtualUseOp<L>),
+    EPrivateLookupFailed(Box<((VirtualReason<L>, VirtualReason<L>), Name, VirtualUseOp<L>)>),
 
-    EPlatformSpecificImplementationModuleLookupFailed {
-        loc: L,
-        name: FlowSmolStr,
-    },
+    EPlatformSpecificImplementationModuleLookupFailed(
+        Box<EPlatformSpecificImplementationModuleLookupFailedData<L>>,
+    ),
 
-    EComparison {
-        r1: VirtualReason<L>,
-        r2: VirtualReason<L>,
-        loc_opt: Option<L>,
-        strict_comparison_opt: Option<StrictComparisonInfo<L>>,
-    },
+    EComparison(Box<EComparisonData<L>>),
 
-    ENonStrictEqualityComparison(VirtualReason<L>, VirtualReason<L>),
+    ENonStrictEqualityComparison(Box<(VirtualReason<L>, VirtualReason<L>)>),
 
-    ETupleArityMismatch {
-        use_op: VirtualUseOp<L>,
-        lower_reason: VirtualReason<L>,
-        lower_arity: (i32, i32),
-        lower_inexact: bool,
-        upper_reason: VirtualReason<L>,
-        upper_arity: (i32, i32),
-        upper_inexact: bool,
-        unify: bool,
-    },
+    ETupleArityMismatch(Box<ETupleArityMismatchData<L>>),
 
     ENonLitArrayToTuple((VirtualReason<L>, VirtualReason<L>), VirtualUseOp<L>),
 
-    ETupleOutOfBounds {
-        use_op: VirtualUseOp<L>,
-        reason: VirtualReason<L>,
-        reason_op: VirtualReason<L>,
-        inexact: bool,
-        length: i32,
-        index: FlowSmolStr,
-    },
+    ETupleOutOfBounds(Box<ETupleOutOfBoundsData<L>>),
 
-    ETupleNonIntegerIndex {
-        use_op: VirtualUseOp<L>,
-        reason: VirtualReason<L>,
-        index: FlowSmolStr,
-    },
+    ETupleNonIntegerIndex(Box<ETupleNonIntegerIndexData<L>>),
 
     ETupleUnsafeWrite {
         reason: VirtualReason<L>,
         use_op: VirtualUseOp<L>,
     },
 
-    ETupleElementNotReadable {
-        reason: VirtualReason<L>,
-        index: i32,
-        name: Option<FlowSmolStr>,
-        use_op: VirtualUseOp<L>,
-    },
+    ETupleElementNotReadable(Box<ETupleElementNotReadableData<L>>),
 
-    ETupleElementNotWritable {
-        reason: VirtualReason<L>,
-        index: i32,
-        name: Option<FlowSmolStr>,
-        use_op: VirtualUseOp<L>,
-    },
+    ETupleElementNotWritable(Box<ETupleElementNotWritableData<L>>),
 
-    ETupleElementPolarityMismatch {
-        index: i32,
-        reason_lower: VirtualReason<L>,
-        polarity_lower: Polarity,
-        reason_upper: VirtualReason<L>,
-        polarity_upper: Polarity,
-        use_op: VirtualUseOp<L>,
-    },
+    ETupleElementPolarityMismatch(Box<ETupleElementPolarityMismatchData<L>>),
 
-    ETupleRequiredAfterOptional {
-        reason_tuple: VirtualReason<L>,
-        reason_required: VirtualReason<L>,
-        reason_optional: VirtualReason<L>,
-    },
+    ETupleRequiredAfterOptional(Box<ETupleRequiredAfterOptionalData<L>>),
 
-    ETupleInvalidTypeSpread {
-        reason_spread: VirtualReason<L>,
-        reason_arg: VirtualReason<L>,
-    },
+    ETupleInvalidTypeSpread(Box<ETupleInvalidTypeSpreadData<L>>),
 
     ETupleElementAfterInexactSpread(VirtualReason<L>),
 
@@ -614,44 +1224,25 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EFunctionIncompatibleWithIndexer((VirtualReason<L>, VirtualReason<L>), VirtualUseOp<L>),
 
-    EUnsupportedExact(VirtualReason<L>, VirtualReason<L>),
+    EUnsupportedExact(Box<(VirtualReason<L>, VirtualReason<L>)>),
 
     EUnexpectedThisType(L),
 
     ETypeParamArity(L, i32),
 
-    ECallTypeArity {
-        call_loc: L,
-        is_new: bool,
-        reason_arity: VirtualReason<L>,
-        expected_arity: i32,
-    },
+    ECallTypeArity(Box<ECallTypeArityData<L>>),
 
     ETypeParamMinArity(L, i32),
 
-    ETooManyTypeArgs {
-        reason_tapp: VirtualReason<L>,
-        arity_loc: L,
-        maximum_arity: i32,
-    },
+    ETooManyTypeArgs(Box<ETooManyTypeArgsData<L>>),
 
-    ETooFewTypeArgs {
-        reason_tapp: VirtualReason<L>,
-        arity_loc: L,
-        minimum_arity: i32,
-    },
+    ETooFewTypeArgs(Box<ETooFewTypeArgsData<L>>),
 
     EInvalidInfer(L),
 
-    EConstantCondition {
-        loc: L,
-        is_truthy: bool,
-        show_warning: bool,
-        constant_condition_kind: ConstantConditionKind,
-        reason: Option<VirtualReason<L>>,
-    },
+    EConstantCondition(Box<EConstantConditionData<L>>),
 
-    EInvalidTypeArgs(VirtualReason<L>, VirtualReason<L>),
+    EInvalidTypeArgs(Box<(VirtualReason<L>, VirtualReason<L>)>),
 
     EInvalidExtends(VirtualReason<L>),
 
@@ -674,10 +1265,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         reasons: (VirtualReason<L>, VirtualReason<L>),
     },
 
-    ETypeGuardInvalidParameter {
-        type_guard_reason: VirtualReason<L>,
-        binding_reason: VirtualReason<L>,
-    },
+    ETypeGuardInvalidParameter(Box<ETypeGuardInvalidParameterData<L>>),
 
     ETypeGuardIndexMismatch {
         use_op: VirtualUseOp<L>,
@@ -693,40 +1281,21 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETypeGuardThisParam(VirtualReason<L>),
 
-    ETypeGuardFunctionInvalidWrites {
-        reason: VirtualReason<L>,
-        type_guard_reason: VirtualReason<L>,
-        write_locs: Vec<L>,
-    },
+    ETypeGuardFunctionInvalidWrites(Box<ETypeGuardFunctionInvalidWritesData<L>>),
 
-    ETypeGuardFunctionParamHavoced {
-        type_guard_reason: VirtualReason<L>,
-        param_reason: VirtualReason<L>,
-        call_locs: Vec<L>,
-    },
+    ETypeGuardFunctionParamHavoced(Box<ETypeGuardFunctionParamHavocedData<L>>),
 
-    ETypeGuardIncompatibleWithFunctionKind {
-        loc: L,
-        kind: FlowSmolStr,
-    },
+    ETypeGuardIncompatibleWithFunctionKind(Box<ETypeGuardIncompatibleWithFunctionKindData<L>>),
 
-    ENegativeTypeGuardConsistency {
-        reason: VirtualReason<L>,
-        return_reason: VirtualReason<L>,
-        type_reason: VirtualReason<L>,
-    },
+    ENegativeTypeGuardConsistency(Box<ENegativeTypeGuardConsistencyData<L>>),
 
-    ETypeParamConstIncompatibility {
-        use_op: VirtualUseOp<L>,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    ETypeParamConstIncompatibility(Box<ETypeParamConstIncompatibilityData<L>>),
 
     ETypeParamConstInvalidPosition(VirtualReason<L>),
 
-    EInternal(L, InternalError),
+    EInternal(Box<(L, InternalError)>),
 
-    EUnsupportedSyntax(L, UnsupportedSyntax),
+    EUnsupportedSyntax(Box<(L, UnsupportedSyntax)>),
 
     EUseArrayLiteral(L),
 
@@ -736,9 +1305,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         from_generic_function: bool,
     },
 
-    EBindingError(BindingError, L, Name, L),
+    EBindingError(Box<(BindingError, L, Name, L)>),
 
-    ERecursionLimit(VirtualReason<L>, VirtualReason<L>),
+    ERecursionLimit(Box<(VirtualReason<L>, VirtualReason<L>)>),
 
     EUninitializedInstanceProperty(L, PropertyAssignmentKind),
 
@@ -748,37 +1317,29 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EBadExportPosition(L),
 
-    EBadExportContext(FlowSmolStr, L),
+    EBadExportContext(Box<(FlowSmolStr, L)>),
 
-    EBadDefaultImportAccess(L, VirtualReason<L>),
+    EBadDefaultImportAccess(Box<(L, VirtualReason<L>)>),
 
     EBadDefaultImportDestructuring(L),
 
-    EInvalidImportStarUse(L, VirtualReason<L>),
+    EInvalidImportStarUse(Box<(L, VirtualReason<L>)>),
 
-    ENonConstVarExport(L, Option<VirtualReason<L>>),
+    ENonConstVarExport(Box<(L, Option<VirtualReason<L>>)>),
 
     EThisInExportedFunction(L),
 
-    EMixedImportAndRequire(L, VirtualReason<L>),
+    EMixedImportAndRequire(Box<(L, VirtualReason<L>)>),
 
-    EUnsupportedVarianceAnnotation(L, FlowSmolStr),
+    EUnsupportedVarianceAnnotation(Box<(L, FlowSmolStr)>),
 
-    EExportRenamedDefault {
-        loc: L,
-        name: Option<FlowSmolStr>,
-        is_reexport: bool,
-    },
+    EExportRenamedDefault(Box<EExportRenamedDefaultData<L>>),
 
     EUnreachable(L),
 
-    EInvalidObjectKit {
-        reason: VirtualReason<L>,
-        reason_op: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EInvalidObjectKit(Box<EInvalidObjectKitData<L>>),
 
-    EInvalidTypeof(L, FlowSmolStr),
+    EInvalidTypeof(Box<(L, FlowSmolStr)>),
 
     EBinaryInLHS(VirtualReason<L>),
 
@@ -790,27 +1351,17 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInstanceofRHS(VirtualReason<L>),
 
-    EObjectComputedPropertyAccess {
-        reason_obj: VirtualReason<L>,
-        reason_prop: VirtualReason<L>,
-        kind: InvalidObjKey,
-    },
+    EObjectComputedPropertyAccess(Box<EObjectComputedPropertyAccessData<L>>),
 
-    EObjectComputedPropertyAssign(VirtualReason<L>, Option<VirtualReason<L>>, InvalidObjKey),
+    EObjectComputedPropertyAssign(Box<(VirtualReason<L>, Option<VirtualReason<L>>, InvalidObjKey)>),
 
-    EObjectComputedPropertyPotentialOverwrite {
-        key_loc: L,
-        overwritten_locs: Vec<L>,
-    },
+    EObjectComputedPropertyPotentialOverwrite(
+        Box<EObjectComputedPropertyPotentialOverwriteData<L>>,
+    ),
 
     EInvalidLHSInAssignment(L),
 
-    EIncompatibleWithUseOp {
-        use_op: VirtualUseOp<L>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        explanation: Option<Explanation<L>>,
-    },
+    EIncompatibleWithUseOp(Box<EIncompatibleWithUseOpData<L>>),
 
     EInvariantSubtypingWithUseOp(Box<EInvariantSubtypingWithUseOpData<L>>),
 
@@ -821,12 +1372,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         use_op: VirtualUseOp<L>,
     },
 
-    EInvalidReactCreateElement {
-        create_element_loc: L,
-        invalid_react: VirtualReason<L>,
-    },
+    EInvalidReactCreateElement(Box<EInvalidReactCreateElementData<L>>),
 
-    EReactElementFunArity(VirtualReason<L>, FlowSmolStr, i32),
+    EReactElementFunArity(Box<(VirtualReason<L>, FlowSmolStr, i32)>),
 
     EReactRefInRender {
         usage: VirtualReason<L>,
@@ -834,28 +1382,24 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         in_hook: bool,
     },
 
-    EFunctionCallExtraArg(VirtualReason<L>, VirtualReason<L>, i32, VirtualUseOp<L>),
+    EFunctionCallExtraArg(Box<(VirtualReason<L>, VirtualReason<L>, i32, VirtualUseOp<L>)>),
 
     EUnsupportedSetProto(VirtualReason<L>),
 
-    EDuplicateModuleProvider {
-        module_name: FlowSmolStr,
-        provider: L,
-        conflict: L,
-    },
+    EDuplicateModuleProvider(Box<EDuplicateModuleProviderData<L>>),
 
-    EParseError(L, ParseError),
+    EParseError(Box<(L, ParseError)>),
 
-    EDocblockError(L, DocblockError),
+    EDocblockError(Box<(L, DocblockError)>),
 
     EImplicitInexactObject(L),
 
     EAmbiguousObjectType(L),
 
     // The string is either the name of a module or "the module that exports `_`".
-    EUntypedTypeImport(L, Userland),
+    EUntypedTypeImport(Box<(L, Userland)>),
 
-    EUntypedImport(L, Userland),
+    EUntypedImport(Box<(L, Userland)>),
 
     ENonstrictImport(L),
 
@@ -865,10 +1409,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInternalType(L, InternalType),
 
-    EIncorrectTypeWithReplacement {
-        loc: L,
-        kind: IncorrectType,
-    },
+    EIncorrectTypeWithReplacement(Box<EIncorrectTypeWithReplacementData<L>>),
 
     EUnsafeGettersSetters(L),
 
@@ -880,137 +1421,63 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EMalformedCode(L),
 
-    ELintSetting(L, LintParseError),
+    ELintSetting(Box<(L, LintParseError)>),
 
-    ESketchyNullLint {
-        kind: SketchyNullKind,
-        loc: L,
-        null_loc: L,
-        falsy_loc: L,
-    },
+    ESketchyNullLint(Box<ESketchyNullLintData<L>>),
 
     ESketchyNumberLint(SketchyNumberKind, VirtualReason<L>),
 
-    EInvalidPrototype(L, VirtualReason<L>),
+    EInvalidPrototype(Box<(L, VirtualReason<L>)>),
 
-    EUnnecessaryOptionalChain(L, VirtualReason<L>),
+    EUnnecessaryOptionalChain(Box<(L, VirtualReason<L>)>),
 
-    EUnnecessaryInvariant(L, VirtualReason<L>),
+    EUnnecessaryInvariant(Box<(L, VirtualReason<L>)>),
 
     EUnnecessaryDeclareTypeOnlyExport(L),
 
-    ECannotDelete(L, VirtualReason<L>),
+    ECannotDelete(Box<(L, VirtualReason<L>)>),
 
     ESignatureBindingValidation(BindingValidation<L>),
 
     ESignatureVerification(SignatureError<L>),
 
-    EPrimitiveAsInterface {
-        use_op: VirtualUseOp<L>,
-        reason: VirtualReason<L>,
-        interface_reason: VirtualReason<L>,
-        kind: PrimitiveKind,
-    },
+    EPrimitiveAsInterface(Box<EPrimitiveAsInterfaceData<L>>),
 
-    ECannotSpreadInterface {
-        spread_reason: VirtualReason<L>,
-        interface_reason: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    ECannotSpreadInterface(Box<ECannotSpreadInterfaceData<L>>),
 
-    ECannotSpreadIndexerOnRight {
-        spread_reason: VirtualReason<L>,
-        object_reason: VirtualReason<L>,
-        key_reason: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    ECannotSpreadIndexerOnRight(Box<ECannotSpreadIndexerOnRightData<L>>),
 
-    EUnableToSpread {
-        spread_reason: VirtualReason<L>,
-        object1_reason: VirtualReason<L>,
-        object2_reason: VirtualReason<L>,
-        propname: Name,
-        error_kind: ExactnessErrorKind,
-        use_op: VirtualUseOp<L>,
-    },
+    EUnableToSpread(Box<EUnableToSpreadData<L>>),
 
-    EInexactMayOverwriteIndexer {
-        spread_reason: VirtualReason<L>,
-        key_reason: VirtualReason<L>,
-        value_reason: VirtualReason<L>,
-        object2_reason: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    EInexactMayOverwriteIndexer(Box<EInexactMayOverwriteIndexerData<L>>),
 
-    EExponentialSpread {
-        reason: VirtualReason<L>,
-        reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
-        reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
-    },
+    EExponentialSpread(Box<EExponentialSpreadData<L>>),
 
     EComputedPropertyWithUnion(VirtualReason<L>),
 
-    EAssignConstLikeBinding {
-        loc: L,
-        definition: VirtualReason<L>,
-        binding_kind: AssignedConstLikeBindingType,
-    },
+    EAssignConstLikeBinding(Box<EAssignConstLikeBindingData<L>>),
 
-    EImplicitInstantiationUnderconstrainedError {
-        reason_call: VirtualReason<L>,
-        reason_tparam: VirtualReason<L>,
-        bound: FlowSmolStr,
-        use_op: VirtualUseOp<L>,
-    },
+    EImplicitInstantiationUnderconstrainedError(
+        Box<EImplicitInstantiationUnderconstrainedErrorData<L>>,
+    ),
 
-    EClassToObject {
-        reason_class: VirtualReason<L>,
-        reason_obj: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-        kind: ClassKind,
-    },
+    EClassToObject(Box<EClassToObjectData<L>>),
 
-    EMethodUnbinding {
-        use_op: VirtualUseOp<L>,
-        reason_prop: VirtualReason<L>,
-        reason_op: VirtualReason<L>,
-    },
+    EMethodUnbinding(Box<EMethodUnbindingData<L>>),
 
-    EHookIncompatible {
-        use_op: VirtualUseOp<L>,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        lower_is_hook: bool,
-        hook_is_annot: bool,
-    },
+    EHookIncompatible(Box<EHookIncompatibleData<L>>),
 
-    EHookUniqueIncompatible {
-        use_op: VirtualUseOp<L>,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    EHookUniqueIncompatible(Box<EHookUniqueIncompatibleData<L>>),
 
-    EHookRuleViolation {
-        hook_rule: HookRule<L>,
-        callee_loc: L,
-        call_loc: L,
-    },
+    EHookRuleViolation(Box<EHookRuleViolationData<L>>),
 
     EHookNaming(L),
 
-    EIncompatibleReactDeepReadOnly {
-        use_op: VirtualUseOp<L>,
-        dro_loc: L,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
+    EIncompatibleReactDeepReadOnly(Box<EIncompatibleReactDeepReadOnlyData<L>>),
 
-    EObjectThisSuperReference(L, VirtualReason<L>, ThisFinderKind),
+    EObjectThisSuperReference(Box<(L, VirtualReason<L>, ThisFinderKind)>),
 
-    EComponentThisReference {
-        component_loc: L,
-        this_loc: L,
-    },
+    EComponentThisReference(Box<EComponentThisReferenceData<L>>),
 
     EComponentCase(L),
 
@@ -1029,34 +1496,21 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ENestedHook(VirtualReason<L>),
 
-    EInvalidDeclaration {
-        declaration: VirtualReason<L>,
-        null_write: Option<NullWrite<L>>,
-        possible_generic_escape_locs: Vec<L>,
-    },
+    EInvalidDeclaration(Box<EInvalidDeclarationData<L>>),
 
-    EInvalidGraphQL(L, GraphqlError),
+    EInvalidGraphQL(Box<(L, GraphqlError)>),
 
-    EAnnotationInference(L, VirtualReason<L>, VirtualReason<L>, Option<FlowSmolStr>),
+    EAnnotationInference(Box<(L, VirtualReason<L>, VirtualReason<L>, Option<FlowSmolStr>)>),
 
-    ETrivialRecursiveDefinition(L, VirtualReason<L>),
+    ETrivialRecursiveDefinition(Box<(L, VirtualReason<L>)>),
 
     EDefinitionCycle(Vec1<(VirtualReason<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
-    ERecursiveDefinition {
-        reason: VirtualReason<L>,
-        recursion: Vec<L>,
-        annot_locs: Vec<AnnotLoc<L>>,
-    },
+    ERecursiveDefinition(Box<ERecursiveDefinitionData<L>>),
 
-    EReferenceInAnnotation(L, FlowSmolStr, L),
+    EReferenceInAnnotation(Box<(L, FlowSmolStr, L)>),
 
-    EDuplicateClassMember {
-        loc: L,
-        name: FlowSmolStr,
-        is_static: bool,
-        class_kind: ClassKind,
-    },
+    EDuplicateClassMember(Box<EDuplicateClassMemberData<L>>),
 
     EEmptyArrayNoProvider {
         loc: L,
@@ -1076,81 +1530,43 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         ts_utility_syntax: bool,
     },
 
-    ETSSyntax {
-        kind: TSSyntaxKind,
-        loc: L,
-    },
+    ETSSyntax(Box<ETSSyntaxData<L>>),
 
-    EInvalidBinaryArith {
-        reason_out: VirtualReason<L>,
-        reason_l: VirtualReason<L>,
-        reason_r: VirtualReason<L>,
-        kind: flow_typing_type::type_::arith_kind::ArithKind,
-    },
+    EInvalidBinaryArith(Box<EInvalidBinaryArithData<L>>),
 
     EInvalidMappedType {
         loc: L,
         kind: InvalidMappedTypeErrorKind,
     },
 
-    EDuplicateComponentProp {
-        spread: L,
-        duplicates: Vec1<(L, Name, L)>,
-    },
+    EDuplicateComponentProp(Box<EDuplicateComponentPropData<L>>),
 
-    ERefComponentProp {
-        spread: L,
-        loc: L,
-    },
+    ERefComponentProp(Box<ERefComponentPropData<L>>),
 
-    EKeySpreadProp {
-        spread: L,
-        loc: L,
-    },
+    EKeySpreadProp(Box<EKeySpreadPropData<L>>),
 
-    EReactIntrinsicOverlap {
-        use_loc: VirtualReason<L>,
-        def: L,
-        type_: L,
-        mixed: bool,
-    },
+    EReactIntrinsicOverlap(Box<EReactIntrinsicOverlapData<L>>),
 
     EInvalidComponentRestParam(L),
 
-    EInvalidRendersTypeArgument {
-        loc: L,
-        renders_variant: RendersVariant,
-        invalid_render_type_kind: InvalidRenderTypeKind<L>,
-        invalid_type_reasons: Vec1<VirtualReason<L>>,
-    },
+    EInvalidRendersTypeArgument(Box<EInvalidRendersTypeArgumentData<L>>),
 
     EInvalidTypeCastSyntax {
         loc: L,
         enabled_casting_syntax: CastingSyntax,
     },
 
-    EMissingPlatformSupportWithAvailablePlatforms {
-        loc: L,
-        available_platforms: BTreeSet<FlowSmolStr>,
-        required_platforms: BTreeSet<FlowSmolStr>,
-    },
+    EMissingPlatformSupportWithAvailablePlatforms(
+        Box<EMissingPlatformSupportWithAvailablePlatformsData<L>>,
+    ),
 
-    EMissingPlatformSupport {
-        loc: L,
-        missing_platforms: BTreeSet<FlowSmolStr>,
-    },
+    EMissingPlatformSupport(Box<EMissingPlatformSupportData<L>>),
 
     EUnionPartialOptimizationNonUniqueKey(Box<EUnionPartialOptimizationNonUniqueKeyData<L>>),
 
-    EUnionOptimization {
-        loc: L,
-        kind: OptimizedError<L>,
-    },
+    EUnionOptimization(Box<EUnionOptimizationData<L>>),
 
-    EUnionOptimizationOnNonUnion {
-        loc: L,
-        arg: VirtualReason<L>,
-    },
+    EUnionOptimizationOnNonUnion(Box<EUnionOptimizationOnNonUnionData<L>>),
 
     ECannotCallReactComponent {
         reason: VirtualReason<L>,
@@ -1160,32 +1576,22 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ERecordError(RecordErrorKind<L>),
 
-    EReferenceInDefault(L, FlowSmolStr, L),
+    EReferenceInDefault(Box<(L, FlowSmolStr, L)>),
 
     EUndocumentedFeature {
         loc: L,
     },
 
-    EIllegalAssertOperator {
-        op: VirtualReason<L>,
-        obj: VirtualReason<L>,
-        specialized: bool,
-    },
+    EIllegalAssertOperator(Box<EIllegalAssertOperatorData<L>>),
 
     // Dev only
-    EDevOnlyRefinedLocInfo {
-        refined_loc: L,
-        refining_locs: Vec<L>,
-    },
+    EDevOnlyRefinedLocInfo(Box<EDevOnlyRefinedLocInfoData<L>>),
 
-    EDevOnlyInvalidatedRefinementInfo {
-        read_loc: L,
-        invalidation_info: Vec<(L, refinement_invalidation::Reason)>,
-    },
+    EDevOnlyInvalidatedRefinementInfo(Box<EDevOnlyInvalidatedRefinementInfoData<L>>),
 
     // As the name suggest, don't use this for production purposes, but feel free to use it to
     // quickly test out some ideas.
-    ETemporaryHardcodedErrorForPrototyping(VirtualReason<L>, FlowSmolStr),
+    ETemporaryHardcodedErrorForPrototyping(Box<(VirtualReason<L>, FlowSmolStr)>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1465,15 +1871,18 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
         Explanation::ExplanationArrayInvariantTyping => {
             Explanation::ExplanationArrayInvariantTyping
         }
-        Explanation::ExplanationConstrainedAssign {
-            name,
-            declaration,
-            providers,
-        } => Explanation::ExplanationConstrainedAssign {
-            name,
-            declaration: f(&declaration),
-            providers: providers.iter().map(f).collect(),
-        },
+        Explanation::ExplanationConstrainedAssign(data) => {
+            let ExplanationConstrainedAssignData {
+                name,
+                declaration,
+                providers,
+            } = *data;
+            Explanation::ExplanationConstrainedAssign(Box::new(ExplanationConstrainedAssignData {
+                name,
+                declaration: f(&declaration),
+                providers: providers.iter().map(f).collect(),
+            }))
+        }
         Explanation::ExplanationConcreteEnumCasting {
             representation_type,
             casting_syntax,
@@ -1481,78 +1890,101 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
             representation_type,
             casting_syntax,
         },
-        Explanation::ExplanationCustomError {
-            name,
-            custom_error_loc,
-        } => Explanation::ExplanationCustomError {
-            name,
-            custom_error_loc: f(&custom_error_loc),
-        },
+        Explanation::ExplanationCustomError(data) => {
+            let ExplanationCustomErrorData {
+                name,
+                custom_error_loc,
+            } = *data;
+            Explanation::ExplanationCustomError(Box::new(ExplanationCustomErrorData {
+                name,
+                custom_error_loc: f(&custom_error_loc),
+            }))
+        }
         Explanation::ExplanationFunctionsWithStaticsToObject => {
             Explanation::ExplanationFunctionsWithStaticsToObject
         }
-        Explanation::ExplanationInvariantSubtypingDueToMutableArray {
-            lower_array_loc,
-            upper_array_loc,
-            lower_array_desc,
-            upper_array_desc,
-            upper_array_reason,
-        } => Explanation::ExplanationInvariantSubtypingDueToMutableArray {
-            lower_array_loc: f(&lower_array_loc),
-            upper_array_loc: f(&upper_array_loc),
-            lower_array_desc: lower_array_desc.map_err(map_desc),
-            upper_array_desc: upper_array_desc.map_err(map_desc),
-            upper_array_reason: map_reason(upper_array_reason),
-        },
-        Explanation::ExplanationInvariantSubtypingDueToMutableProperty {
-            lower_obj_loc,
-            upper_obj_loc,
-            lower_obj_desc,
-            upper_obj_desc,
-            upper_object_reason,
-            property_name,
-        } => Explanation::ExplanationInvariantSubtypingDueToMutableProperty {
-            lower_obj_loc: f(&lower_obj_loc),
-            upper_obj_loc: f(&upper_obj_loc),
-            lower_obj_desc: lower_obj_desc.map_err(map_desc),
-            upper_obj_desc: upper_obj_desc.map_err(map_desc),
-            upper_object_reason: map_reason(upper_object_reason),
-            property_name,
-        },
-        Explanation::ExplanationInvariantSubtypingDueToMutableProperties {
-            lower_obj_loc,
-            upper_obj_loc,
-            lower_obj_desc,
-            upper_obj_desc,
-            upper_object_reason,
-            properties,
-        } => Explanation::ExplanationInvariantSubtypingDueToMutableProperties {
-            lower_obj_loc: f(&lower_obj_loc),
-            upper_obj_loc: f(&upper_obj_loc),
-            lower_obj_desc: lower_obj_desc.map_err(map_desc),
-            upper_obj_desc: upper_obj_desc.map_err(map_desc),
-            upper_object_reason: map_reason(upper_object_reason),
-            properties,
-        },
+        Explanation::ExplanationInvariantSubtypingDueToMutableArray(data) => {
+            let ExplanationInvariantSubtypingDueToMutableArrayData {
+                lower_array_loc,
+                upper_array_loc,
+                lower_array_desc,
+                upper_array_desc,
+                upper_array_reason,
+            } = *data;
+            Explanation::ExplanationInvariantSubtypingDueToMutableArray(Box::new(
+                ExplanationInvariantSubtypingDueToMutableArrayData {
+                    lower_array_loc: f(&lower_array_loc),
+                    upper_array_loc: f(&upper_array_loc),
+                    lower_array_desc: lower_array_desc.map_err(map_desc),
+                    upper_array_desc: upper_array_desc.map_err(map_desc),
+                    upper_array_reason: map_reason(upper_array_reason),
+                },
+            ))
+        }
+        Explanation::ExplanationInvariantSubtypingDueToMutableProperty(data) => {
+            let ExplanationInvariantSubtypingDueToMutablePropertyData {
+                lower_obj_loc,
+                upper_obj_loc,
+                lower_obj_desc,
+                upper_obj_desc,
+                upper_object_reason,
+                property_name,
+            } = *data;
+            Explanation::ExplanationInvariantSubtypingDueToMutableProperty(Box::new(
+                ExplanationInvariantSubtypingDueToMutablePropertyData {
+                    lower_obj_loc: f(&lower_obj_loc),
+                    upper_obj_loc: f(&upper_obj_loc),
+                    lower_obj_desc: lower_obj_desc.map_err(map_desc),
+                    upper_obj_desc: upper_obj_desc.map_err(map_desc),
+                    upper_object_reason: map_reason(upper_object_reason),
+                    property_name,
+                },
+            ))
+        }
+        Explanation::ExplanationInvariantSubtypingDueToMutableProperties(data) => {
+            let ExplanationInvariantSubtypingDueToMutablePropertiesData {
+                lower_obj_loc,
+                upper_obj_loc,
+                lower_obj_desc,
+                upper_obj_desc,
+                upper_object_reason,
+                properties,
+            } = *data;
+            Explanation::ExplanationInvariantSubtypingDueToMutableProperties(Box::new(
+                ExplanationInvariantSubtypingDueToMutablePropertiesData {
+                    lower_obj_loc: f(&lower_obj_loc),
+                    upper_obj_loc: f(&upper_obj_loc),
+                    lower_obj_desc: lower_obj_desc.map_err(map_desc),
+                    upper_obj_desc: upper_obj_desc.map_err(map_desc),
+                    upper_object_reason: map_reason(upper_object_reason),
+                    properties,
+                },
+            ))
+        }
         Explanation::ExplanationMultiplatform => Explanation::ExplanationMultiplatform,
         Explanation::ExplanationPropertyInvariantTyping => {
             Explanation::ExplanationPropertyInvariantTyping
         }
-        Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty {
-            props_plural,
-            lower_obj_loc,
-            upper_obj_loc,
-            lower_obj_desc,
-            upper_obj_desc,
-            upper_object_reason,
-        } => Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty {
-            props_plural,
-            lower_obj_loc: f(&lower_obj_loc),
-            upper_obj_loc: f(&upper_obj_loc),
-            lower_obj_desc: lower_obj_desc.map_err(map_desc),
-            upper_obj_desc: upper_obj_desc.map_err(map_desc),
-            upper_object_reason: map_reason(upper_object_reason),
-        },
+        Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty(data) => {
+            let ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
+                props_plural,
+                lower_obj_loc,
+                upper_obj_loc,
+                lower_obj_desc,
+                upper_obj_desc,
+                upper_object_reason,
+            } = *data;
+            Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty(Box::new(
+                ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
+                    props_plural,
+                    lower_obj_loc: f(&lower_obj_loc),
+                    upper_obj_loc: f(&upper_obj_loc),
+                    lower_obj_desc: lower_obj_desc.map_err(map_desc),
+                    upper_obj_desc: upper_obj_desc.map_err(map_desc),
+                    upper_object_reason: map_reason(upper_object_reason),
+                },
+            ))
+        }
         Explanation::ExplanationReactComponentPropsDeepReadOnly(loc) => {
             Explanation::ExplanationReactComponentPropsDeepReadOnly(f(&loc))
         }
@@ -1582,17 +2014,22 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
             guard_type: map_reason(guard_type),
             is_return_false_statement,
         },
-        Explanation::ExplanationAdditionalUnionMembers {
-            left,
-            right,
-            members,
-            extra_number,
-        } => Explanation::ExplanationAdditionalUnionMembers {
-            left: map_reason(left),
-            right: map_reason(right),
-            members,
-            extra_number,
-        },
+        Explanation::ExplanationAdditionalUnionMembers(data) => {
+            let ExplanationAdditionalUnionMembersData {
+                left,
+                right,
+                members,
+                extra_number,
+            } = *data;
+            Explanation::ExplanationAdditionalUnionMembers(Box::new(
+                ExplanationAdditionalUnionMembersData {
+                    left: map_reason(left),
+                    right: map_reason(right),
+                    members,
+                    extra_number,
+                },
+            ))
+        }
         Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
             record_name,
             obj_reason,
@@ -1660,15 +2097,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         };
 
         match msg {
-            EIncompatible {
+            EIncompatible(box EIncompatibleData {
                 use_op,
                 lower: (lreason, lkind),
                 upper: (ureason, ukind),
-            } => EIncompatible {
+            }) => EIncompatible(Box::new(EIncompatibleData {
                 use_op: use_op.map(map_use_op),
                 lower: (map_reason(lreason), lkind),
                 upper: (map_reason(ureason), map_upper_kind(ukind)),
-            },
+            })),
 
             EIncompatibleSpeculation(box EIncompatibleSpeculationData {
                 use_op,
@@ -1692,99 +2129,99 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 branches: branches.into_iter().map(map_branch).collect(),
             })),
 
-            EIncompatibleProp {
+            EIncompatibleProp(box EIncompatiblePropData {
                 use_op,
                 prop,
                 reason_prop,
                 reason_obj,
                 special,
-            } => EIncompatibleProp {
+            }) => EIncompatibleProp(Box::new(EIncompatiblePropData {
                 use_op: use_op.map(map_use_op),
                 prop,
                 reason_prop: map_reason(reason_prop),
                 reason_obj: map_reason(reason_obj),
                 special,
-            },
+            })),
 
-            EExpectedStringLit {
+            EExpectedStringLit(box EExpectedStringLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => EExpectedStringLit {
+            }) => EExpectedStringLit(Box::new(EExpectedStringLitData {
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EExpectedNumberLit {
+            EExpectedNumberLit(box EExpectedNumberLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => EExpectedNumberLit {
+            }) => EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EExpectedBooleanLit {
+            EExpectedBooleanLit(box EExpectedBooleanLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => EExpectedBooleanLit {
+            }) => EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EExpectedBigIntLit {
+            EExpectedBigIntLit(box EExpectedBigIntLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => EExpectedBigIntLit {
+            }) => EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EPropNotFoundInLookup {
+            EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
                 reason_prop,
                 reason_obj,
                 use_op,
                 suggestion,
-            } => EPropNotFoundInLookup {
+            }) => EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name,
                 reason_prop: map_reason(reason_prop),
                 reason_obj: map_reason(reason_obj),
                 use_op: map_use_op(use_op),
                 suggestion,
-            },
+            })),
 
-            EPropNotFoundInSubtyping {
+            EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
                 prop_name,
                 reason_lower,
                 reason_upper,
                 use_op,
                 suggestion,
-            } => EPropNotFoundInSubtyping {
+            }) => EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                 prop_name,
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 use_op: map_use_op(use_op),
                 suggestion,
-            },
+            })),
 
-            EPropsNotFoundInSubtyping {
+            EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => EPropsNotFoundInSubtyping {
+            }) => EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names,
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
@@ -1808,97 +2245,104 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )),
 
-            EPropsExtraAgainstExactObject {
+            EPropsExtraAgainstExactObject(box EPropsExtraAgainstExactObjectData {
                 prop_names,
                 reason_l_obj,
                 reason_r_obj,
                 use_op,
-            } => EPropsExtraAgainstExactObject {
+            }) => EPropsExtraAgainstExactObject(Box::new(EPropsExtraAgainstExactObjectData {
                 prop_names,
                 reason_l_obj: map_reason(reason_l_obj),
                 reason_r_obj: map_reason(reason_r_obj),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EIndexerCheckFailed {
+            EIndexerCheckFailed(box EIndexerCheckFailedData {
                 prop_name,
                 reason_lower,
                 reason_upper,
                 reason_indexer,
                 use_op,
-            } => EIndexerCheckFailed {
+            }) => EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
                 prop_name,
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 reason_indexer: map_reason(reason_indexer),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EPropNotReadable {
+            EPropNotReadable(box EPropNotReadableData {
                 reason_prop,
                 prop_name,
                 use_op,
-            } => EPropNotReadable {
+            }) => EPropNotReadable(Box::new(EPropNotReadableData {
                 reason_prop: map_reason(reason_prop),
                 prop_name,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EPropNotWritable {
+            EPropNotWritable(box EPropNotWritableData {
                 reason_prop,
                 prop_name,
                 use_op,
-            } => EPropNotWritable {
+            }) => EPropNotWritable(Box::new(EPropNotWritableData {
                 reason_prop: map_reason(reason_prop),
                 prop_name,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EPropPolarityMismatch {
+            EPropPolarityMismatch(box EPropPolarityMismatchData {
                 lreason,
                 ureason,
                 props,
                 use_op,
-            } => EPropPolarityMismatch {
+            }) => EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
                 lreason: map_reason(lreason),
                 ureason: map_reason(ureason),
                 props,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EBuiltinNameLookupFailed { loc, name } => {
-                EBuiltinNameLookupFailed { loc: f(loc), name }
+            EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { loc, name }) => {
+                EBuiltinNameLookupFailed(Box::new(EBuiltinNameLookupFailedData {
+                    loc: f(loc),
+                    name,
+                }))
             }
 
-            EBuiltinModuleLookupFailed {
+            EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
                 loc,
                 name,
                 potential_generator,
-            } => EBuiltinModuleLookupFailed {
+            }) => EBuiltinModuleLookupFailed(Box::new(EBuiltinModuleLookupFailedData {
                 loc: f(loc),
                 name,
                 potential_generator,
-            },
+            })),
 
-            EExpectedModuleLookupFailed {
+            EExpectedModuleLookupFailed(box EExpectedModuleLookupFailedData {
                 loc,
                 name,
                 expected_module_purpose,
-            } => EExpectedModuleLookupFailed {
+            }) => EExpectedModuleLookupFailed(Box::new(EExpectedModuleLookupFailedData {
                 loc: f(loc),
                 name,
                 expected_module_purpose,
-            },
+            })),
 
-            EPrivateLookupFailed((r1, r2), x, op) => {
-                EPrivateLookupFailed((map_reason(r1), map_reason(r2)), x, map_use_op(op))
-            }
+            EPrivateLookupFailed(box ((r1, r2), x, op)) => EPrivateLookupFailed(Box::new((
+                (map_reason(r1), map_reason(r2)),
+                x,
+                map_use_op(op),
+            ))),
 
-            EPlatformSpecificImplementationModuleLookupFailed { loc, name } => {
-                EPlatformSpecificImplementationModuleLookupFailed { loc: f(loc), name }
-            }
+            EPlatformSpecificImplementationModuleLookupFailed(
+                box EPlatformSpecificImplementationModuleLookupFailedData { loc, name },
+            ) => EPlatformSpecificImplementationModuleLookupFailed(Box::new(
+                EPlatformSpecificImplementationModuleLookupFailedData { loc: f(loc), name },
+            )),
 
-            ETupleArityMismatch {
+            ETupleArityMismatch(box ETupleArityMismatchData {
                 use_op,
                 lower_reason,
                 lower_arity,
@@ -1907,7 +2351,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_arity,
                 upper_inexact,
                 unify,
-            } => ETupleArityMismatch {
+            }) => ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                 use_op: map_use_op(use_op),
                 lower_reason: map_reason(lower_reason),
                 lower_arity,
@@ -1916,100 +2360,100 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_arity,
                 upper_inexact,
                 unify,
-            },
+            })),
 
             ENonLitArrayToTuple((r1, r2), op) => {
                 ENonLitArrayToTuple((map_reason(r1), map_reason(r2)), map_use_op(op))
             }
 
-            ETupleOutOfBounds {
+            ETupleOutOfBounds(box ETupleOutOfBoundsData {
                 use_op,
                 reason,
                 reason_op,
                 inexact,
                 length,
                 index,
-            } => ETupleOutOfBounds {
+            }) => ETupleOutOfBounds(Box::new(ETupleOutOfBoundsData {
                 use_op: map_use_op(use_op),
                 reason: map_reason(reason),
                 reason_op: map_reason(reason_op),
                 inexact,
                 length,
                 index,
-            },
+            })),
 
-            ETupleNonIntegerIndex {
+            ETupleNonIntegerIndex(box ETupleNonIntegerIndexData {
                 use_op,
                 reason,
                 index,
-            } => ETupleNonIntegerIndex {
+            }) => ETupleNonIntegerIndex(Box::new(ETupleNonIntegerIndexData {
                 use_op: map_use_op(use_op),
                 reason: map_reason(reason),
                 index,
-            },
+            })),
 
             ETupleUnsafeWrite { reason, use_op } => ETupleUnsafeWrite {
                 reason: map_reason(reason),
                 use_op: map_use_op(use_op),
             },
 
-            ETupleElementNotReadable {
+            ETupleElementNotReadable(box ETupleElementNotReadableData {
                 reason,
                 index,
                 name,
                 use_op,
-            } => ETupleElementNotReadable {
+            }) => ETupleElementNotReadable(Box::new(ETupleElementNotReadableData {
                 reason: map_reason(reason),
                 index,
                 name,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            ETupleElementNotWritable {
+            ETupleElementNotWritable(box ETupleElementNotWritableData {
                 reason,
                 index,
                 name,
                 use_op,
-            } => ETupleElementNotWritable {
+            }) => ETupleElementNotWritable(Box::new(ETupleElementNotWritableData {
                 reason: map_reason(reason),
                 index,
                 name,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            ETupleElementPolarityMismatch {
+            ETupleElementPolarityMismatch(box ETupleElementPolarityMismatchData {
                 index,
                 reason_lower,
                 polarity_lower,
                 reason_upper,
                 polarity_upper,
                 use_op,
-            } => ETupleElementPolarityMismatch {
+            }) => ETupleElementPolarityMismatch(Box::new(ETupleElementPolarityMismatchData {
                 index,
                 reason_lower: map_reason(reason_lower),
                 polarity_lower,
                 reason_upper: map_reason(reason_upper),
                 polarity_upper,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            ETupleRequiredAfterOptional {
+            ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple,
                 reason_required,
                 reason_optional,
-            } => ETupleRequiredAfterOptional {
+            }) => ETupleRequiredAfterOptional(Box::new(ETupleRequiredAfterOptionalData {
                 reason_tuple: map_reason(reason_tuple),
                 reason_required: map_reason(reason_required),
                 reason_optional: map_reason(reason_optional),
-            },
+            })),
 
-            ETupleInvalidTypeSpread {
+            ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
                 reason_spread,
                 reason_arg,
-            } => ETupleInvalidTypeSpread {
+            }) => ETupleInvalidTypeSpread(Box::new(ETupleInvalidTypeSpreadData {
                 reason_spread: map_reason(reason_spread),
                 reason_arg: map_reason(reason_arg),
-            },
+            })),
 
             ETupleElementAfterInexactSpread(reason) => {
                 ETupleElementAfterInexactSpread(map_reason(reason))
@@ -2042,27 +2486,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidConstructor(r) => EInvalidConstructor(map_reason(r)),
 
-            EInvalidObjectKit {
+            EInvalidObjectKit(box EInvalidObjectKitData {
                 reason,
                 reason_op,
                 use_op,
-            } => EInvalidObjectKit {
+            }) => EInvalidObjectKit(Box::new(EInvalidObjectKitData {
                 reason: map_reason(reason),
                 reason_op: map_reason(reason_op),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EIncompatibleWithUseOp {
+            EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
                 use_op,
                 reason_lower,
                 reason_upper,
                 explanation,
-            } => EIncompatibleWithUseOp {
+            }) => EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                 use_op: map_use_op(use_op),
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
                 explanation: explanation.map(|e| map_loc_of_explanation(&|l: &L| f(l.dupe()), e)),
-            },
+            })),
 
             EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
                 sub_component,
@@ -2088,40 +2532,49 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: map_use_op(use_op),
             },
 
-            EInvalidReactCreateElement {
+            EInvalidReactCreateElement(box EInvalidReactCreateElementData {
                 create_element_loc,
                 invalid_react,
-            } => EInvalidReactCreateElement {
+            }) => EInvalidReactCreateElement(Box::new(EInvalidReactCreateElementData {
                 create_element_loc: f(create_element_loc),
                 invalid_react: map_reason(invalid_react),
-            },
+            })),
 
-            EFunctionCallExtraArg(rl, ru, n, op) => {
-                EFunctionCallExtraArg(map_reason(rl), map_reason(ru), n, map_use_op(op))
+            EFunctionCallExtraArg(box (rl, ru, n, op)) => EFunctionCallExtraArg(Box::new((
+                map_reason(rl),
+                map_reason(ru),
+                n,
+                map_use_op(op),
+            ))),
+
+            EExportValueAsType(box (r, s)) => EExportValueAsType(Box::new((map_reason(r), s))),
+            EImportValueAsType(box (r, s)) => EImportValueAsType(Box::new((map_reason(r), s))),
+            EImportTypeAsTypeof(box (r, s)) => EImportTypeAsTypeof(Box::new((map_reason(r), s))),
+            EImportTypeAsValue(box (r, s)) => EImportTypeAsValue(Box::new((map_reason(r), s))),
+
+            ENoDefaultExport(box (r, s1, s2)) => {
+                ENoDefaultExport(Box::new((map_reason(r), s1, s2)))
+            }
+            EOnlyDefaultExport(box (r, s1, s2)) => {
+                EOnlyDefaultExport(Box::new((map_reason(r), s1, s2)))
+            }
+            ENoNamedExport(box (r, s1, s2, s3)) => {
+                ENoNamedExport(Box::new((map_reason(r), s1, s2, s3)))
             }
 
-            EExportValueAsType(r, s) => EExportValueAsType(map_reason(r), s),
-            EImportValueAsType(r, s) => EImportValueAsType(map_reason(r), s),
-            EImportTypeAsTypeof(r, s) => EImportTypeAsTypeof(map_reason(r), s),
-            EImportTypeAsValue(r, s) => EImportTypeAsValue(map_reason(r), s),
-
-            ENoDefaultExport(r, s1, s2) => ENoDefaultExport(map_reason(r), s1, s2),
-            EOnlyDefaultExport(r, s1, s2) => EOnlyDefaultExport(map_reason(r), s1, s2),
-            ENoNamedExport(r, s1, s2, s3) => ENoNamedExport(map_reason(r), s1, s2, s3),
-
-            EMissingTypeArgs {
+            EMissingTypeArgs(box EMissingTypeArgsData {
                 reason_op,
                 reason_tapp,
                 arity_loc,
                 min_arity,
                 max_arity,
-            } => EMissingTypeArgs {
+            }) => EMissingTypeArgs(Box::new(EMissingTypeArgsData {
                 reason_op: map_reason(reason_op),
                 reason_tapp: map_reason(reason_tapp),
                 arity_loc: f(arity_loc),
                 min_arity,
                 max_arity,
-            },
+            })),
 
             EAnyValueUsedAsType { reason_use } => EAnyValueUsedAsType {
                 reason_use: map_reason(reason_use),
@@ -2131,24 +2584,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_use: map_reason(reason_use),
             },
 
-            EPolarityMismatch {
+            EPolarityMismatch(box EPolarityMismatchData {
                 reason,
                 name,
                 expected_polarity,
                 actual_polarity,
-            } => EPolarityMismatch {
+            }) => EPolarityMismatch(Box::new(EPolarityMismatchData {
                 reason: map_reason(reason),
                 name,
                 expected_polarity,
                 actual_polarity,
-            },
+            })),
 
-            EComparison {
+            EComparison(box EComparisonData {
                 r1,
                 r2,
                 loc_opt,
                 strict_comparison_opt,
-            } => EComparison {
+            }) => EComparison(Box::new(EComparisonData {
                 r1: map_reason(r1),
                 r2: map_reason(r2),
                 loc_opt: loc_opt.map(&f),
@@ -2157,69 +2610,73 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     right_precise_reason: map_reason(sc.right_precise_reason),
                     strict_comparison_kind: sc.strict_comparison_kind,
                 }),
-            },
+            })),
 
-            ENonStrictEqualityComparison(r1, r2) => {
-                ENonStrictEqualityComparison(map_reason(r1), map_reason(r2))
+            ENonStrictEqualityComparison(box (r1, r2)) => {
+                ENonStrictEqualityComparison(Box::new((map_reason(r1), map_reason(r2))))
             }
 
-            EUnsupportedExact(r1, r2) => EUnsupportedExact(map_reason(r1), map_reason(r2)),
+            EUnsupportedExact(box (r1, r2)) => {
+                EUnsupportedExact(Box::new((map_reason(r1), map_reason(r2))))
+            }
 
             EUnexpectedThisType(loc) => EUnexpectedThisType(f(loc)),
 
             ETypeParamArity(loc, i) => ETypeParamArity(f(loc), i),
 
-            ECallTypeArity {
+            ECallTypeArity(box ECallTypeArityData {
                 call_loc,
                 is_new,
                 reason_arity,
                 expected_arity,
-            } => ECallTypeArity {
+            }) => ECallTypeArity(Box::new(ECallTypeArityData {
                 call_loc: f(call_loc),
                 is_new,
                 reason_arity: map_reason(reason_arity),
                 expected_arity,
-            },
+            })),
 
             ETypeParamMinArity(loc, i) => ETypeParamMinArity(f(loc), i),
 
-            ETooManyTypeArgs {
+            ETooManyTypeArgs(box ETooManyTypeArgsData {
                 reason_tapp,
                 arity_loc,
                 maximum_arity,
-            } => ETooManyTypeArgs {
+            }) => ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                 reason_tapp: map_reason(reason_tapp),
                 arity_loc: f(arity_loc),
                 maximum_arity,
-            },
+            })),
 
-            ETooFewTypeArgs {
+            ETooFewTypeArgs(box ETooFewTypeArgsData {
                 reason_tapp,
                 arity_loc,
                 minimum_arity,
-            } => ETooFewTypeArgs {
+            }) => ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                 reason_tapp: map_reason(reason_tapp),
                 arity_loc: f(arity_loc),
                 minimum_arity,
-            },
+            })),
 
-            EInvalidTypeArgs(r1, r2) => EInvalidTypeArgs(map_reason(r1), map_reason(r2)),
+            EInvalidTypeArgs(box (r1, r2)) => {
+                EInvalidTypeArgs(Box::new((map_reason(r1), map_reason(r2))))
+            }
 
             EInvalidInfer(l) => EInvalidInfer(f(l)),
 
-            EConstantCondition {
+            EConstantCondition(box EConstantConditionData {
                 loc,
                 is_truthy,
                 show_warning,
                 constant_condition_kind,
                 reason,
-            } => EConstantCondition {
+            }) => EConstantCondition(Box::new(EConstantConditionData {
                 loc: f(loc),
                 is_truthy,
                 show_warning,
                 constant_condition_kind,
                 reason: reason.map(map_reason),
-            },
+            })),
 
             EInvalidExtends(r) => EInvalidExtends(map_reason(r)),
 
@@ -2247,13 +2704,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reasons: (map_reason(r1), map_reason(r2)),
             },
 
-            ETypeGuardInvalidParameter {
+            ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
                 type_guard_reason,
                 binding_reason,
-            } => ETypeGuardInvalidParameter {
+            }) => ETypeGuardInvalidParameter(Box::new(ETypeGuardInvalidParameterData {
                 type_guard_reason: map_reason(type_guard_reason),
                 binding_reason: map_reason(binding_reason),
-            },
+            })),
 
             ETypeGuardIndexMismatch {
                 use_op,
@@ -2275,56 +2732,58 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ETypeGuardThisParam(reason) => ETypeGuardThisParam(map_reason(reason)),
 
-            ETypeGuardFunctionInvalidWrites {
+            ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
                 reason,
                 type_guard_reason,
                 write_locs,
-            } => ETypeGuardFunctionInvalidWrites {
+            }) => ETypeGuardFunctionInvalidWrites(Box::new(ETypeGuardFunctionInvalidWritesData {
                 reason: map_reason(reason),
                 type_guard_reason: map_reason(type_guard_reason),
                 write_locs: write_locs.into_iter().map(&f).collect(),
-            },
+            })),
 
-            ETypeGuardFunctionParamHavoced {
+            ETypeGuardFunctionParamHavoced(box ETypeGuardFunctionParamHavocedData {
                 type_guard_reason,
                 param_reason,
                 call_locs,
-            } => ETypeGuardFunctionParamHavoced {
+            }) => ETypeGuardFunctionParamHavoced(Box::new(ETypeGuardFunctionParamHavocedData {
                 type_guard_reason: map_reason(type_guard_reason),
                 param_reason: map_reason(param_reason),
                 call_locs: call_locs.into_iter().map(&f).collect(),
-            },
+            })),
 
-            ETypeGuardIncompatibleWithFunctionKind { loc, kind } => {
-                ETypeGuardIncompatibleWithFunctionKind { loc: f(loc), kind }
-            }
+            ETypeGuardIncompatibleWithFunctionKind(
+                box ETypeGuardIncompatibleWithFunctionKindData { loc, kind },
+            ) => ETypeGuardIncompatibleWithFunctionKind(Box::new(
+                ETypeGuardIncompatibleWithFunctionKindData { loc: f(loc), kind },
+            )),
 
-            ENegativeTypeGuardConsistency {
+            ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
                 reason,
                 return_reason,
                 type_reason,
-            } => ENegativeTypeGuardConsistency {
+            }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
                 reason: map_reason(reason),
                 return_reason: map_reason(return_reason),
                 type_reason: map_reason(type_reason),
-            },
+            })),
 
-            ETypeParamConstIncompatibility {
+            ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
                 use_op,
                 lower,
                 upper,
-            } => ETypeParamConstIncompatibility {
+            }) => ETypeParamConstIncompatibility(Box::new(ETypeParamConstIncompatibilityData {
                 use_op: map_use_op(use_op),
                 lower: map_reason(lower),
                 upper: map_reason(upper),
-            },
+            })),
 
             ETypeParamConstInvalidPosition(reason) => {
                 ETypeParamConstInvalidPosition(map_reason(reason))
             }
 
-            EInternal(loc, i) => EInternal(f(loc), i),
-            EUnsupportedSyntax(loc, u) => EUnsupportedSyntax(f(loc), u),
+            EInternal(box (loc, i)) => EInternal(Box::new((f(loc), i))),
+            EUnsupportedSyntax(box (loc, u)) => EUnsupportedSyntax(Box::new((f(loc), u))),
             EUseArrayLiteral(loc) => EUseArrayLiteral(f(loc)),
 
             EMissingLocalAnnotation {
@@ -2337,9 +2796,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 from_generic_function,
             },
 
-            EBindingError(b, loc, s, scope) => EBindingError(b, f(loc), s, f(scope)),
+            EBindingError(box (b, loc, s, scope)) => {
+                EBindingError(Box::new((b, f(loc), s, f(scope))))
+            }
 
-            ERecursionLimit(r1, r2) => ERecursionLimit(map_reason(r1), map_reason(r2)),
+            ERecursionLimit(box (r1, r2)) => {
+                ERecursionLimit(Box::new((map_reason(r1), map_reason(r2))))
+            }
 
             EUninitializedInstanceProperty(loc, e) => EUninitializedInstanceProperty(f(loc), e),
 
@@ -2348,260 +2811,294 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 EEnumError(match enum_error {
                     EnumsNotEnabled(loc) => EnumsNotEnabled(f(loc)),
                     EnumConstNotSupported(loc) => EnumConstNotSupported(f(loc)),
-                    EnumInvalidMemberAccess {
+                    EnumInvalidMemberAccess(box EnumInvalidMemberAccessData {
                         member_name,
                         suggestion,
                         reason,
                         enum_reason,
-                    } => EnumInvalidMemberAccess {
+                    }) => EnumInvalidMemberAccess(Box::new(EnumInvalidMemberAccessData {
                         member_name,
                         suggestion,
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
-                    },
-                    EnumModification { loc, enum_reason } => EnumModification {
-                        loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
-                    },
-                    EnumMemberDuplicateValue {
+                    })),
+                    EnumModification(box EnumModificationData { loc, enum_reason }) => {
+                        EnumModification(Box::new(EnumModificationData {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                        }))
+                    }
+                    EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
                         loc,
                         prev_use_loc,
                         enum_reason,
-                    } => EnumMemberDuplicateValue {
+                    }) => EnumMemberDuplicateValue(Box::new(EnumMemberDuplicateValueData {
                         loc: f(loc),
                         prev_use_loc: f(prev_use_loc),
                         enum_reason: map_reason(enum_reason),
-                    },
-                    EnumInvalidObjectUtilType {
+                    })),
+                    EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
                         reason,
                         enum_reason,
-                    } => EnumInvalidObjectUtilType {
+                    }) => EnumInvalidObjectUtilType(Box::new(EnumInvalidObjectUtilTypeData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
-                    },
-                    EnumInvalidObjectFunction {
+                    })),
+                    EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
                         reason,
                         enum_reason,
-                    } => EnumInvalidObjectFunction {
+                    }) => EnumInvalidObjectFunction(Box::new(EnumInvalidObjectFunctionData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
-                    },
+                    })),
                     EnumNotIterable { reason, for_in } => EnumNotIterable {
                         reason: map_reason(reason),
                         for_in,
                     },
-                    EnumMemberAlreadyChecked {
+                    EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
                         case_test_loc,
                         prev_check_loc,
                         enum_reason,
                         member_name,
-                    } => EnumMemberAlreadyChecked {
+                    }) => EnumMemberAlreadyChecked(Box::new(EnumMemberAlreadyCheckedData {
                         case_test_loc: f(case_test_loc),
                         prev_check_loc: f(prev_check_loc),
                         enum_reason: map_reason(enum_reason),
                         member_name,
-                    },
-                    EnumAllMembersAlreadyChecked { loc, enum_reason } => {
-                        EnumAllMembersAlreadyChecked {
+                    })),
+                    EnumAllMembersAlreadyChecked(box EnumAllMembersAlreadyCheckedData {
+                        loc,
+                        enum_reason,
+                    }) => {
+                        EnumAllMembersAlreadyChecked(Box::new(EnumAllMembersAlreadyCheckedData {
                             loc: f(loc),
                             enum_reason: map_reason(enum_reason),
-                        }
+                        }))
                     }
-                    EnumNotAllChecked {
+                    EnumNotAllChecked(box EnumNotAllCheckedData {
                         reason,
                         enum_reason,
                         left_to_check,
                         default_case_loc,
-                    } => EnumNotAllChecked {
+                    }) => EnumNotAllChecked(Box::new(EnumNotAllCheckedData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
                         left_to_check,
                         default_case_loc: default_case_loc.map(&f),
-                    },
-                    EnumUnknownNotChecked {
+                    })),
+                    EnumUnknownNotChecked(box EnumUnknownNotCheckedData {
                         reason,
                         enum_reason,
-                    } => EnumUnknownNotChecked {
+                    }) => EnumUnknownNotChecked(Box::new(EnumUnknownNotCheckedData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
-                    },
-                    EnumInvalidCheck {
+                    })),
+                    EnumInvalidCheck(box EnumInvalidCheckData {
                         loc,
                         enum_reason,
                         example_member,
                         from_match,
-                    } => EnumInvalidCheck {
+                    }) => EnumInvalidCheck(Box::new(EnumInvalidCheckData {
                         loc: f(loc),
                         enum_reason: map_reason(enum_reason),
                         example_member,
                         from_match,
-                    },
-                    EnumMemberUsedAsType {
+                    })),
+                    EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
                         reason,
                         enum_reason,
-                    } => EnumMemberUsedAsType {
+                    }) => EnumMemberUsedAsType(Box::new(EnumMemberUsedAsTypeData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
-                    },
-                    EnumIncompatible {
+                    })),
+                    EnumIncompatible(box EnumIncompatibleData {
                         use_op,
                         reason_lower,
                         reason_upper,
                         enum_kind,
                         representation_type,
                         casting_syntax,
-                    } => EnumIncompatible {
+                    }) => EnumIncompatible(Box::new(EnumIncompatibleData {
                         use_op: map_use_op(use_op),
                         reason_lower: map_reason(reason_lower),
                         reason_upper: map_reason(reason_upper),
                         enum_kind,
                         representation_type,
                         casting_syntax,
-                    },
-                    EnumInvalidAbstractUse {
+                    })),
+                    EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
                         reason,
                         enum_reason,
-                    } => EnumInvalidAbstractUse {
+                    }) => EnumInvalidAbstractUse(Box::new(EnumInvalidAbstractUseData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
-                    },
-                    EnumInvalidMemberName {
+                    })),
+                    EnumInvalidMemberName(box EnumInvalidMemberNameData {
                         loc,
                         enum_reason,
                         member_name,
-                    } => EnumInvalidMemberName {
+                    }) => EnumInvalidMemberName(Box::new(EnumInvalidMemberNameData {
                         loc: f(loc),
                         enum_reason: map_reason(enum_reason),
                         member_name,
-                    },
-                    EnumNonIdentifierMemberName {
+                    })),
+                    EnumNonIdentifierMemberName(box EnumNonIdentifierMemberNameData {
                         loc,
                         enum_reason,
                         member_name,
-                    } => EnumNonIdentifierMemberName {
+                    }) => EnumNonIdentifierMemberName(Box::new(EnumNonIdentifierMemberNameData {
                         loc: f(loc),
                         enum_reason: map_reason(enum_reason),
                         member_name,
-                    },
-                    EnumDuplicateMemberName {
+                    })),
+                    EnumDuplicateMemberName(box EnumDuplicateMemberNameData {
                         loc,
                         prev_use_loc,
                         enum_reason,
                         member_name,
-                    } => EnumDuplicateMemberName {
+                    }) => EnumDuplicateMemberName(Box::new(EnumDuplicateMemberNameData {
                         loc: f(loc),
                         prev_use_loc: f(prev_use_loc),
                         enum_reason: map_reason(enum_reason),
                         member_name,
-                    },
-                    EnumInconsistentMemberValues { loc, enum_reason } => {
-                        EnumInconsistentMemberValues {
+                    })),
+                    EnumInconsistentMemberValues(box EnumInconsistentMemberValuesData {
+                        loc,
+                        enum_reason,
+                    }) => {
+                        EnumInconsistentMemberValues(Box::new(EnumInconsistentMemberValuesData {
                             loc: f(loc),
                             enum_reason: map_reason(enum_reason),
-                        }
+                        }))
                     }
-                    EnumInvalidMemberInitializer {
+                    EnumInvalidMemberInitializer(box EnumInvalidMemberInitializerData {
                         loc,
                         enum_reason,
                         explicit_type,
                         member_name,
-                    } => EnumInvalidMemberInitializer {
-                        loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
-                        explicit_type,
-                        member_name,
-                    },
-                    EnumBooleanMemberNotInitialized {
-                        loc,
-                        enum_reason,
-                        member_name,
-                    } => EnumBooleanMemberNotInitialized {
-                        loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
-                        member_name,
-                    },
-                    EnumNumberMemberNotInitialized {
-                        loc,
-                        enum_reason,
-                        member_name,
-                    } => EnumNumberMemberNotInitialized {
-                        loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
-                        member_name,
-                    },
-                    EnumBigIntMemberNotInitialized {
-                        loc,
-                        enum_reason,
-                        member_name,
-                    } => EnumBigIntMemberNotInitialized {
-                        loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
-                        member_name,
-                    },
-                    EnumStringMemberInconsistentlyInitialized { loc, enum_reason } => {
-                        EnumStringMemberInconsistentlyInitialized {
+                    }) => {
+                        EnumInvalidMemberInitializer(Box::new(EnumInvalidMemberInitializerData {
                             loc: f(loc),
                             enum_reason: map_reason(enum_reason),
-                        }
+                            explicit_type,
+                            member_name,
+                        }))
                     }
+                    EnumBooleanMemberNotInitialized(box EnumBooleanMemberNotInitializedData {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    }) => EnumBooleanMemberNotInitialized(Box::new(
+                        EnumBooleanMemberNotInitializedData {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                            member_name,
+                        },
+                    )),
+                    EnumNumberMemberNotInitialized(box EnumNumberMemberNotInitializedData {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    }) => EnumNumberMemberNotInitialized(Box::new(
+                        EnumNumberMemberNotInitializedData {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                            member_name,
+                        },
+                    )),
+                    EnumBigIntMemberNotInitialized(box EnumBigIntMemberNotInitializedData {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    }) => EnumBigIntMemberNotInitialized(Box::new(
+                        EnumBigIntMemberNotInitializedData {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                            member_name,
+                        },
+                    )),
+                    EnumStringMemberInconsistentlyInitialized(
+                        box EnumStringMemberInconsistentlyInitializedData { loc, enum_reason },
+                    ) => EnumStringMemberInconsistentlyInitialized(Box::new(
+                        EnumStringMemberInconsistentlyInitializedData {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                        },
+                    )),
                 })
             }
             EIndeterminateModuleType(loc) => EIndeterminateModuleType(f(loc)),
             EBadExportPosition(loc) => EBadExportPosition(f(loc)),
-            EBadExportContext(s, loc) => EBadExportContext(s, f(loc)),
+            EBadExportContext(box (s, loc)) => EBadExportContext(Box::new((s, f(loc)))),
 
-            EBadDefaultImportAccess(loc, r) => EBadDefaultImportAccess(f(loc), map_reason(r)),
+            EBadDefaultImportAccess(box (loc, r)) => {
+                EBadDefaultImportAccess(Box::new((f(loc), map_reason(r))))
+            }
             EBadDefaultImportDestructuring(loc) => EBadDefaultImportDestructuring(f(loc)),
-            EInvalidImportStarUse(loc, r) => EInvalidImportStarUse(f(loc), map_reason(r)),
-            ENonConstVarExport(loc, r) => ENonConstVarExport(f(loc), r.map(map_reason)),
+            EInvalidImportStarUse(box (loc, r)) => {
+                EInvalidImportStarUse(Box::new((f(loc), map_reason(r))))
+            }
+            ENonConstVarExport(box (loc, r)) => {
+                ENonConstVarExport(Box::new((f(loc), r.map(map_reason))))
+            }
             EThisInExportedFunction(loc) => EThisInExportedFunction(f(loc)),
-            EMixedImportAndRequire(loc, r) => EMixedImportAndRequire(f(loc), map_reason(r)),
-            EUnsupportedVarianceAnnotation(loc, k) => EUnsupportedVarianceAnnotation(f(loc), k),
+            EMixedImportAndRequire(box (loc, r)) => {
+                EMixedImportAndRequire(Box::new((f(loc), map_reason(r))))
+            }
+            EUnsupportedVarianceAnnotation(box (loc, k)) => {
+                EUnsupportedVarianceAnnotation(Box::new((f(loc), k)))
+            }
 
-            EExportRenamedDefault {
+            EExportRenamedDefault(box EExportRenamedDefaultData {
                 loc,
                 name,
                 is_reexport,
-            } => EExportRenamedDefault {
+            }) => EExportRenamedDefault(Box::new(EExportRenamedDefaultData {
                 loc: f(loc),
                 name,
                 is_reexport,
-            },
+            })),
 
             EUnreachable(loc) => EUnreachable(f(loc)),
-            EInvalidTypeof(loc, s) => EInvalidTypeof(f(loc), s),
+            EInvalidTypeof(box (loc, s)) => EInvalidTypeof(Box::new((f(loc), s))),
             EBinaryInLHS(r) => EBinaryInLHS(map_reason(r)),
             EBinaryInRHS(r) => EBinaryInRHS(map_reason(r)),
             EArithmeticOperand(r) => EArithmeticOperand(map_reason(r)),
             EForInRHS(r) => EForInRHS(map_reason(r)),
             EInstanceofRHS(r) => EInstanceofRHS(map_reason(r)),
 
-            EObjectComputedPropertyAccess {
+            EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
                 reason_obj,
                 reason_prop,
                 kind,
-            } => EObjectComputedPropertyAccess {
+            }) => EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                 reason_obj: map_reason(reason_obj),
                 reason_prop: map_reason(reason_prop),
                 kind,
-            },
+            })),
 
-            EObjectComputedPropertyAssign(r1, r2, kind) => {
-                EObjectComputedPropertyAssign(map_reason(r1), r2.map(map_reason), kind)
+            EObjectComputedPropertyAssign(box (r1, r2, kind)) => {
+                EObjectComputedPropertyAssign(Box::new((map_reason(r1), r2.map(map_reason), kind)))
             }
 
-            EObjectComputedPropertyPotentialOverwrite {
-                key_loc,
-                overwritten_locs,
-            } => EObjectComputedPropertyPotentialOverwrite {
-                key_loc: f(key_loc),
-                overwritten_locs: overwritten_locs.into_iter().map(&f).collect(),
-            },
+            EObjectComputedPropertyPotentialOverwrite(
+                box EObjectComputedPropertyPotentialOverwriteData {
+                    key_loc,
+                    overwritten_locs,
+                },
+            ) => EObjectComputedPropertyPotentialOverwrite(Box::new(
+                EObjectComputedPropertyPotentialOverwriteData {
+                    key_loc: f(key_loc),
+                    overwritten_locs: overwritten_locs.into_iter().map(&f).collect(),
+                },
+            )),
 
             EInvalidLHSInAssignment(l) => EInvalidLHSInAssignment(f(l)),
             EUnsupportedImplements(r) => EUnsupportedImplements(map_reason(r)),
 
-            EReactElementFunArity(r, s, i) => EReactElementFunArity(map_reason(r), s, i),
+            EReactElementFunArity(box (r, s, i)) => {
+                EReactElementFunArity(Box::new((map_reason(r), s, i)))
+            }
 
             EReactRefInRender {
                 usage,
@@ -2615,55 +3112,62 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUnsupportedSetProto(r) => EUnsupportedSetProto(map_reason(r)),
 
-            EDuplicateModuleProvider {
+            EDuplicateModuleProvider(box EDuplicateModuleProviderData {
                 module_name,
                 provider,
                 conflict,
-            } => EDuplicateModuleProvider {
+            }) => EDuplicateModuleProvider(Box::new(EDuplicateModuleProviderData {
                 module_name,
                 provider: f(provider),
                 conflict: f(conflict),
-            },
+            })),
 
-            EParseError(loc, p) => EParseError(f(loc), p),
-            EDocblockError(loc, e) => EDocblockError(f(loc), e),
+            EParseError(box (loc, p)) => EParseError(Box::new((f(loc), p))),
+            EDocblockError(box (loc, e)) => EDocblockError(Box::new((f(loc), e))),
             EImplicitInexactObject(loc) => EImplicitInexactObject(f(loc)),
             EAmbiguousObjectType(loc) => EAmbiguousObjectType(f(loc)),
-            EUntypedTypeImport(loc, s) => EUntypedTypeImport(f(loc), s),
-            EUntypedImport(loc, s) => EUntypedImport(f(loc), s),
+            EUntypedTypeImport(box (loc, s)) => EUntypedTypeImport(Box::new((f(loc), s))),
+            EUntypedImport(box (loc, s)) => EUntypedImport(Box::new((f(loc), s))),
             ENonstrictImport(loc) => ENonstrictImport(f(loc)),
             EUnclearType(loc) => EUnclearType(f(loc)),
             EDeprecatedBool(loc) => EDeprecatedBool(f(loc)),
             EInternalType(loc, kind) => EInternalType(f(loc), kind),
 
-            EIncorrectTypeWithReplacement { loc, kind } => {
-                EIncorrectTypeWithReplacement { loc: f(loc), kind }
+            EIncorrectTypeWithReplacement(box EIncorrectTypeWithReplacementData { loc, kind }) => {
+                EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                    loc: f(loc),
+                    kind,
+                }))
             }
 
             EUnsafeGettersSetters(loc) => EUnsafeGettersSetters(f(loc)),
             EUnsafeObjectAssign(loc) => EUnsafeObjectAssign(f(loc)),
             EUnusedSuppression(loc) => EUnusedSuppression(f(loc)),
             ECodelessSuppression(loc) => ECodelessSuppression(f(loc)),
-            ELintSetting(loc, err) => ELintSetting(f(loc), err),
+            ELintSetting(box (loc, err)) => ELintSetting(Box::new((f(loc), err))),
 
-            ESketchyNullLint {
+            ESketchyNullLint(box ESketchyNullLintData {
                 kind,
                 loc,
                 null_loc,
                 falsy_loc,
-            } => ESketchyNullLint {
+            }) => ESketchyNullLint(Box::new(ESketchyNullLintData {
                 kind,
                 loc: f(loc),
                 null_loc: f(null_loc),
                 falsy_loc: f(falsy_loc),
-            },
+            })),
 
             ESketchyNumberLint(kind, r) => ESketchyNumberLint(kind, map_reason(r)),
-            EInvalidPrototype(loc, r) => EInvalidPrototype(f(loc), map_reason(r)),
-            EUnnecessaryOptionalChain(loc, r) => EUnnecessaryOptionalChain(f(loc), map_reason(r)),
-            EUnnecessaryInvariant(loc, r) => EUnnecessaryInvariant(f(loc), map_reason(r)),
+            EInvalidPrototype(box (loc, r)) => EInvalidPrototype(Box::new((f(loc), map_reason(r)))),
+            EUnnecessaryOptionalChain(box (loc, r)) => {
+                EUnnecessaryOptionalChain(Box::new((f(loc), map_reason(r))))
+            }
+            EUnnecessaryInvariant(box (loc, r)) => {
+                EUnnecessaryInvariant(Box::new((f(loc), map_reason(r))))
+            }
             EUnnecessaryDeclareTypeOnlyExport(loc) => EUnnecessaryDeclareTypeOnlyExport(f(loc)),
-            ECannotDelete(l1, r1) => ECannotDelete(f(l1), map_reason(r1)),
+            ECannotDelete(box (l1, r1)) => ECannotDelete(Box::new((f(l1), map_reason(r1)))),
 
             ESignatureBindingValidation(sve) => {
                 ESignatureBindingValidation(map_binding_validation(&f, sve))
@@ -2671,75 +3175,75 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ESignatureVerification(sve) => ESignatureVerification(map_signature_error(&f, sve)),
 
-            EPrimitiveAsInterface {
+            EPrimitiveAsInterface(box EPrimitiveAsInterfaceData {
                 use_op,
                 reason,
                 interface_reason,
                 kind,
-            } => EPrimitiveAsInterface {
+            }) => EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                 use_op: map_use_op(use_op),
                 reason: map_reason(reason),
                 interface_reason: map_reason(interface_reason),
                 kind,
-            },
+            })),
 
-            ECannotSpreadInterface {
+            ECannotSpreadInterface(box ECannotSpreadInterfaceData {
                 spread_reason,
                 interface_reason,
                 use_op,
-            } => ECannotSpreadInterface {
+            }) => ECannotSpreadInterface(Box::new(ECannotSpreadInterfaceData {
                 spread_reason: map_reason(spread_reason),
                 interface_reason: map_reason(interface_reason),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            ECannotSpreadIndexerOnRight {
+            ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
                 spread_reason,
                 object_reason,
                 key_reason,
                 use_op,
-            } => ECannotSpreadIndexerOnRight {
+            }) => ECannotSpreadIndexerOnRight(Box::new(ECannotSpreadIndexerOnRightData {
                 spread_reason: map_reason(spread_reason),
                 object_reason: map_reason(object_reason),
                 key_reason: map_reason(key_reason),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EUnableToSpread {
+            EUnableToSpread(box EUnableToSpreadData {
                 spread_reason,
                 object1_reason,
                 object2_reason,
                 propname,
                 error_kind,
                 use_op,
-            } => EUnableToSpread {
+            }) => EUnableToSpread(Box::new(EUnableToSpreadData {
                 spread_reason: map_reason(spread_reason),
                 object1_reason: map_reason(object1_reason),
                 object2_reason: map_reason(object2_reason),
                 propname,
                 error_kind,
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EInexactMayOverwriteIndexer {
+            EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
                 spread_reason,
                 key_reason,
                 value_reason,
                 object2_reason,
                 use_op,
-            } => EInexactMayOverwriteIndexer {
+            }) => EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
                 spread_reason: map_reason(spread_reason),
                 key_reason: map_reason(key_reason),
                 value_reason: map_reason(value_reason),
                 object2_reason: map_reason(object2_reason),
                 use_op: map_use_op(use_op),
-            },
+            })),
 
-            EExponentialSpread {
+            EExponentialSpread(box EExponentialSpreadData {
                 reason,
                 reasons_for_operand1,
                 reasons_for_operand2,
-            } => EExponentialSpread {
+            }) => EExponentialSpread(Box::new(EExponentialSpreadData {
                 reason: map_reason(reason),
                 reasons_for_operand1: map_loc_of_exponential_spread_reason_group(
                     map_reason,
@@ -2749,97 +3253,101 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     map_reason,
                     reasons_for_operand2,
                 ),
-            },
+            })),
 
             EComputedPropertyWithUnion(reason) => EComputedPropertyWithUnion(map_reason(reason)),
 
-            EAssignConstLikeBinding {
+            EAssignConstLikeBinding(box EAssignConstLikeBindingData {
                 loc,
                 definition,
                 binding_kind,
-            } => EAssignConstLikeBinding {
+            }) => EAssignConstLikeBinding(Box::new(EAssignConstLikeBindingData {
                 loc: f(loc),
                 definition: map_reason(definition),
                 binding_kind,
-            },
+            })),
 
             EMalformedCode(loc) => EMalformedCode(f(loc)),
 
-            EImplicitInstantiationUnderconstrainedError {
-                reason_call,
-                reason_tparam,
-                bound,
-                use_op,
-            } => EImplicitInstantiationUnderconstrainedError {
-                reason_call: map_reason(reason_call),
-                reason_tparam: map_reason(reason_tparam),
-                bound,
-                use_op: map_use_op(use_op),
-            },
+            EImplicitInstantiationUnderconstrainedError(
+                box EImplicitInstantiationUnderconstrainedErrorData {
+                    reason_call,
+                    reason_tparam,
+                    bound,
+                    use_op,
+                },
+            ) => EImplicitInstantiationUnderconstrainedError(Box::new(
+                EImplicitInstantiationUnderconstrainedErrorData {
+                    reason_call: map_reason(reason_call),
+                    reason_tparam: map_reason(reason_tparam),
+                    bound,
+                    use_op: map_use_op(use_op),
+                },
+            )),
 
-            EClassToObject {
+            EClassToObject(box EClassToObjectData {
                 reason_class,
                 reason_obj,
                 use_op,
                 kind,
-            } => EClassToObject {
+            }) => EClassToObject(Box::new(EClassToObjectData {
                 reason_class: map_reason(reason_class),
                 reason_obj: map_reason(reason_obj),
                 use_op: map_use_op(use_op),
                 kind,
-            },
+            })),
 
-            EMethodUnbinding {
+            EMethodUnbinding(box EMethodUnbindingData {
                 use_op,
                 reason_op,
                 reason_prop,
-            } => EMethodUnbinding {
+            }) => EMethodUnbinding(Box::new(EMethodUnbindingData {
                 use_op: map_use_op(use_op),
                 reason_op: map_reason(reason_op),
                 reason_prop: map_reason(reason_prop),
-            },
+            })),
 
-            EHookIncompatible {
+            EHookIncompatible(box EHookIncompatibleData {
                 use_op,
                 lower,
                 upper,
                 lower_is_hook,
                 hook_is_annot,
-            } => EHookIncompatible {
+            }) => EHookIncompatible(Box::new(EHookIncompatibleData {
                 use_op: map_use_op(use_op),
                 lower: map_reason(lower),
                 upper: map_reason(upper),
                 lower_is_hook,
                 hook_is_annot,
-            },
+            })),
 
-            EHookUniqueIncompatible {
+            EHookUniqueIncompatible(box EHookUniqueIncompatibleData {
                 use_op,
                 lower,
                 upper,
-            } => EHookUniqueIncompatible {
+            }) => EHookUniqueIncompatible(Box::new(EHookUniqueIncompatibleData {
                 use_op: map_use_op(use_op),
                 lower: map_reason(lower),
                 upper: map_reason(upper),
-            },
+            })),
 
-            EIncompatibleReactDeepReadOnly {
+            EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
                 use_op,
                 lower,
                 upper,
                 dro_loc,
-            } => EIncompatibleReactDeepReadOnly {
+            }) => EIncompatibleReactDeepReadOnly(Box::new(EIncompatibleReactDeepReadOnlyData {
                 use_op: map_use_op(use_op),
                 lower: map_reason(lower),
                 upper: map_reason(upper),
                 dro_loc: f(dro_loc),
-            },
+            })),
 
-            EHookRuleViolation {
+            EHookRuleViolation(box EHookRuleViolationData {
                 callee_loc,
                 call_loc,
                 hook_rule,
-            } => {
+            }) => {
                 let hook_rule = match hook_rule {
                     HookRule::MaybeHook { hooks, non_hooks } => HookRule::MaybeHook {
                         hooks: hooks.into_iter().map(&f).collect(),
@@ -2856,26 +3364,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }
                     HookRule::ConditionalHook => HookRule::ConditionalHook,
                 };
-                EHookRuleViolation {
+                EHookRuleViolation(Box::new(EHookRuleViolationData {
                     callee_loc: f(callee_loc),
                     call_loc: f(call_loc),
                     hook_rule,
-                }
+                }))
             }
 
             EHookNaming(l) => EHookNaming(f(l)),
 
-            EObjectThisSuperReference(loc, r, k) => {
-                EObjectThisSuperReference(f(loc), map_reason(r), k)
+            EObjectThisSuperReference(box (loc, r, k)) => {
+                EObjectThisSuperReference(Box::new((f(loc), map_reason(r), k)))
             }
 
-            EComponentThisReference {
+            EComponentThisReference(box EComponentThisReferenceData {
                 component_loc,
                 this_loc,
-            } => EComponentThisReference {
+            }) => EComponentThisReference(Box::new(EComponentThisReferenceData {
                 component_loc: f(component_loc),
                 this_loc: f(this_loc),
-            },
+            })),
 
             EComponentCase(loc) => EComponentCase(f(loc)),
             EDeclareComponentInvalidParam { loc, kind } => {
@@ -2887,11 +3395,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ENestedComponent(r) => ENestedComponent(map_reason(r)),
             ENestedHook(r) => ENestedHook(map_reason(r)),
 
-            EInvalidDeclaration {
+            EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration,
                 null_write,
                 possible_generic_escape_locs,
-            } => EInvalidDeclaration {
+            }) => EInvalidDeclaration(Box::new(EInvalidDeclarationData {
                 declaration: map_reason(declaration),
                 null_write: null_write.map(|nw| NullWrite {
                     null_loc: f(nw.null_loc),
@@ -2901,16 +3409,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     .into_iter()
                     .map(&f)
                     .collect(),
-            },
+            })),
 
-            EInvalidGraphQL(loc, err) => EInvalidGraphQL(f(loc), err),
+            EInvalidGraphQL(box (loc, err)) => EInvalidGraphQL(Box::new((f(loc), err))),
 
-            EAnnotationInference(loc, r1, r2, suggestion) => {
-                EAnnotationInference(f(loc), map_reason(r1), map_reason(r2), suggestion)
-            }
+            EAnnotationInference(box (loc, r1, r2, suggestion)) => EAnnotationInference(Box::new(
+                (f(loc), map_reason(r1), map_reason(r2), suggestion),
+            )),
 
-            ETrivialRecursiveDefinition(loc, r) => {
-                ETrivialRecursiveDefinition(f(loc), map_reason(r))
+            ETrivialRecursiveDefinition(box (loc, r)) => {
+                ETrivialRecursiveDefinition(Box::new((f(loc), map_reason(r))))
             }
 
             EDefinitionCycle(elts) => EDefinitionCycle(
@@ -2937,11 +3445,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 .unwrap(),
             ),
 
-            ERecursiveDefinition {
+            ERecursiveDefinition(box ERecursiveDefinitionData {
                 reason,
                 recursion,
                 annot_locs,
-            } => ERecursiveDefinition {
+            }) => ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
                 reason: map_reason(reason),
                 recursion: recursion.into_iter().map(&f).collect(),
                 annot_locs: annot_locs
@@ -2954,26 +3462,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         },
                     })
                     .collect(),
-            },
+            })),
 
-            EReferenceInAnnotation(bind_loc, name, loc) => {
-                EReferenceInAnnotation(f(bind_loc), name, f(loc))
+            EReferenceInAnnotation(box (bind_loc, name, loc)) => {
+                EReferenceInAnnotation(Box::new((f(bind_loc), name, f(loc))))
             }
-            EReferenceInDefault(bind_loc, name, loc) => {
-                EReferenceInDefault(f(bind_loc), name, f(loc))
+            EReferenceInDefault(box (bind_loc, name, loc)) => {
+                EReferenceInDefault(Box::new((f(bind_loc), name, f(loc))))
             }
 
-            EDuplicateClassMember {
+            EDuplicateClassMember(box EDuplicateClassMemberData {
                 loc,
                 name,
                 is_static,
                 class_kind,
-            } => EDuplicateClassMember {
+            }) => EDuplicateClassMember(Box::new(EDuplicateClassMemberData {
                 loc: f(loc),
                 name,
                 is_static,
                 class_kind,
-            },
+            })),
 
             EEmptyArrayNoProvider { loc } => EEmptyArrayNoProvider { loc: f(loc) },
             EUnusedPromise { loc, async_ } => EUnusedPromise {
@@ -2981,17 +3489,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 async_,
             },
 
-            EReactIntrinsicOverlap {
+            EReactIntrinsicOverlap(box EReactIntrinsicOverlapData {
                 use_loc: use_reason,
                 def,
                 type_,
                 mixed,
-            } => EReactIntrinsicOverlap {
+            }) => EReactIntrinsicOverlap(Box::new(EReactIntrinsicOverlapData {
                 use_loc: map_reason(use_reason),
                 def: f(def),
                 type_: f(type_),
                 mixed,
-            },
+            })),
 
             EInvalidComponentRestParam(loc) => EInvalidComponentRestParam(f(loc)),
             EBigIntRShift3(r) => EBigIntRShift3(map_reason(r)),
@@ -3005,49 +3513,57 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ts_utility_syntax,
             },
 
-            ETSSyntax { kind, loc } => ETSSyntax { kind, loc: f(loc) },
+            ETSSyntax(box ETSSyntaxData { kind, loc }) => {
+                ETSSyntax(Box::new(ETSSyntaxData { kind, loc: f(loc) }))
+            }
 
-            EInvalidBinaryArith {
+            EInvalidBinaryArith(box EInvalidBinaryArithData {
                 reason_out,
                 reason_l,
                 reason_r,
                 kind,
-            } => EInvalidBinaryArith {
+            }) => EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                 reason_out: map_reason(reason_out),
                 reason_l: map_reason(reason_l),
                 reason_r: map_reason(reason_r),
                 kind,
-            },
+            })),
 
             EInvalidMappedType { loc, kind } => EInvalidMappedType { loc: f(loc), kind },
 
-            EDuplicateComponentProp { spread, duplicates } => EDuplicateComponentProp {
-                spread: f(spread),
-                duplicates: Vec1::try_from_vec(
-                    duplicates
-                        .into_iter()
-                        .map(|(first, name, second)| (f(first), name, f(second)))
-                        .collect(),
-                )
-                .unwrap(),
-            },
+            EDuplicateComponentProp(box EDuplicateComponentPropData { spread, duplicates }) => {
+                EDuplicateComponentProp(Box::new(EDuplicateComponentPropData {
+                    spread: f(spread),
+                    duplicates: Vec1::try_from_vec(
+                        duplicates
+                            .into_iter()
+                            .map(|(first, name, second)| (f(first), name, f(second)))
+                            .collect(),
+                    )
+                    .unwrap(),
+                }))
+            }
 
-            ERefComponentProp { spread, loc } => ERefComponentProp {
-                spread: f(spread),
-                loc: f(loc),
-            },
+            ERefComponentProp(box ERefComponentPropData { spread, loc }) => {
+                ERefComponentProp(Box::new(ERefComponentPropData {
+                    spread: f(spread),
+                    loc: f(loc),
+                }))
+            }
 
-            EKeySpreadProp { spread, loc } => EKeySpreadProp {
-                spread: f(spread),
-                loc: f(loc),
-            },
+            EKeySpreadProp(box EKeySpreadPropData { spread, loc }) => {
+                EKeySpreadProp(Box::new(EKeySpreadPropData {
+                    spread: f(spread),
+                    loc: f(loc),
+                }))
+            }
 
-            EInvalidRendersTypeArgument {
+            EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
                 loc,
                 renders_variant,
                 invalid_render_type_kind,
                 invalid_type_reasons,
-            } => EInvalidRendersTypeArgument {
+            }) => EInvalidRendersTypeArgument(Box::new(EInvalidRendersTypeArgumentData {
                 loc: f(loc),
                 renders_variant,
                 invalid_render_type_kind: map_loc_of_invalid_render_type_kind(
@@ -3058,7 +3574,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     invalid_type_reasons.into_iter().map(map_reason).collect(),
                 )
                 .unwrap(),
-            },
+            })),
 
             EInvalidTypeCastSyntax {
                 loc,
@@ -3068,23 +3584,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 enabled_casting_syntax,
             },
 
-            EMissingPlatformSupportWithAvailablePlatforms {
-                loc,
-                available_platforms,
-                required_platforms,
-            } => EMissingPlatformSupportWithAvailablePlatforms {
-                loc: f(loc),
-                available_platforms,
-                required_platforms,
-            },
+            EMissingPlatformSupportWithAvailablePlatforms(
+                box EMissingPlatformSupportWithAvailablePlatformsData {
+                    loc,
+                    available_platforms,
+                    required_platforms,
+                },
+            ) => EMissingPlatformSupportWithAvailablePlatforms(Box::new(
+                EMissingPlatformSupportWithAvailablePlatformsData {
+                    loc: f(loc),
+                    available_platforms,
+                    required_platforms,
+                },
+            )),
 
-            EMissingPlatformSupport {
+            EMissingPlatformSupport(box EMissingPlatformSupportData {
                 loc,
                 missing_platforms,
-            } => EMissingPlatformSupport {
+            }) => EMissingPlatformSupport(Box::new(EMissingPlatformSupportData {
                 loc: f(loc),
                 missing_platforms,
-            },
+            })),
 
             EUnionPartialOptimizationNonUniqueKey(
                 box EUnionPartialOptimizationNonUniqueKeyData {
@@ -3111,7 +3631,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )),
 
-            EUnionOptimization { loc, kind } => {
+            EUnionOptimization(box EUnionOptimizationData { loc, kind }) => {
                 let kind = match kind {
                     OptimizedError::ContainsUnresolved(r) => {
                         OptimizedError::ContainsUnresolved(map_reason(r))
@@ -3119,34 +3639,36 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     OptimizedError::NoCandidateMembers => OptimizedError::NoCandidateMembers,
                     OptimizedError::NoCommonKeys => OptimizedError::NoCommonKeys,
                 };
-                EUnionOptimization { loc: f(loc), kind }
+                EUnionOptimization(Box::new(EUnionOptimizationData { loc: f(loc), kind }))
             }
 
-            EUnionOptimizationOnNonUnion { loc, arg } => EUnionOptimizationOnNonUnion {
-                loc: f(loc),
-                arg: map_reason(arg),
-            },
+            EUnionOptimizationOnNonUnion(box EUnionOptimizationOnNonUnionData { loc, arg }) => {
+                EUnionOptimizationOnNonUnion(Box::new(EUnionOptimizationOnNonUnionData {
+                    loc: f(loc),
+                    arg: map_reason(arg),
+                }))
+            }
 
             ECannotCallReactComponent { reason } => ECannotCallReactComponent {
                 reason: map_reason(reason),
             },
 
-            EDevOnlyRefinedLocInfo {
+            EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData {
                 refined_loc,
                 refining_locs,
-            } => EDevOnlyRefinedLocInfo {
+            }) => EDevOnlyRefinedLocInfo(Box::new(EDevOnlyRefinedLocInfoData {
                 refined_loc: f(refined_loc),
                 refining_locs: refining_locs.into_iter().map(&f).collect(),
-            },
+            })),
 
             EMatchError(match_error) => {
                 use MatchErrorKind::*;
                 EMatchError(match match_error {
-                    MatchNotExhaustive {
+                    MatchNotExhaustive(box MatchNotExhaustiveData {
                         loc,
                         examples,
                         missing_pattern_asts,
-                    } => MatchNotExhaustive {
+                    }) => MatchNotExhaustive(Box::new(MatchNotExhaustiveData {
                         loc: f(loc),
                         examples: examples
                             .into_iter()
@@ -3155,41 +3677,45 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             })
                             .collect(),
                         missing_pattern_asts,
-                    },
-                    MatchUnusedPattern {
+                    })),
+                    MatchUnusedPattern(box MatchUnusedPatternData {
                         reason,
                         already_seen,
-                    } => MatchUnusedPattern {
+                    }) => MatchUnusedPattern(Box::new(MatchUnusedPatternData {
                         reason: map_reason(reason),
                         already_seen: already_seen.map(map_reason),
-                    },
-                    MatchNonExhaustiveObjectPattern {
+                    })),
+                    MatchNonExhaustiveObjectPattern(box MatchNonExhaustiveObjectPatternData {
                         loc,
                         rest,
                         missing_props,
                         pattern_kind,
-                    } => MatchNonExhaustiveObjectPattern {
-                        loc: f(loc),
-                        rest: rest.map(map_reason),
-                        missing_props,
-                        pattern_kind,
-                    },
-                    MatchNonExplicitEnumCheck {
+                    }) => MatchNonExhaustiveObjectPattern(Box::new(
+                        MatchNonExhaustiveObjectPatternData {
+                            loc: f(loc),
+                            rest: rest.map(map_reason),
+                            missing_props,
+                            pattern_kind,
+                        },
+                    )),
+                    MatchNonExplicitEnumCheck(box MatchNonExplicitEnumCheckData {
                         loc,
                         wildcard_reason,
                         unchecked_members,
-                    } => MatchNonExplicitEnumCheck {
+                    }) => MatchNonExplicitEnumCheck(Box::new(MatchNonExplicitEnumCheckData {
                         loc: f(loc),
                         wildcard_reason: map_reason(wildcard_reason),
                         unchecked_members,
-                    },
+                    })),
                     MatchInvalidGuardedWildcard(loc) => MatchInvalidGuardedWildcard(f(loc)),
-                    MatchInvalidIdentOrMemberPattern { loc, type_reason } => {
-                        MatchInvalidIdentOrMemberPattern {
+                    MatchInvalidIdentOrMemberPattern(
+                        box MatchInvalidIdentOrMemberPatternData { loc, type_reason },
+                    ) => MatchInvalidIdentOrMemberPattern(Box::new(
+                        MatchInvalidIdentOrMemberPatternData {
                             loc: f(loc),
                             type_reason: map_reason(type_reason),
-                        }
-                    }
+                        },
+                    )),
                     MatchInvalidBindingKind { loc, kind } => {
                         MatchInvalidBindingKind { loc: f(loc), kind }
                     }
@@ -3203,35 +3729,39 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     MatchInvalidUnaryPlusBigInt { loc } => {
                         MatchInvalidUnaryPlusBigInt { loc: f(loc) }
                     }
-                    MatchDuplicateObjectProperty {
+                    MatchDuplicateObjectProperty(box MatchDuplicateObjectPropertyData {
                         loc,
                         name,
                         pattern_kind,
-                    } => MatchDuplicateObjectProperty {
-                        loc: f(loc),
-                        name,
-                        pattern_kind,
-                    },
+                    }) => {
+                        MatchDuplicateObjectProperty(Box::new(MatchDuplicateObjectPropertyData {
+                            loc: f(loc),
+                            name,
+                            pattern_kind,
+                        }))
+                    }
                     MatchBindingInOrPattern { loc } => MatchBindingInOrPattern { loc: f(loc) },
                     MatchInvalidAsPattern { loc } => MatchInvalidAsPattern { loc: f(loc) },
-                    MatchInvalidPatternReference {
+                    MatchInvalidPatternReference(box MatchInvalidPatternReferenceData {
                         loc,
                         binding_reason,
-                    } => MatchInvalidPatternReference {
-                        loc: f(loc),
-                        binding_reason: map_reason(binding_reason),
-                    },
-                    MatchInvalidObjectShorthand {
+                    }) => {
+                        MatchInvalidPatternReference(Box::new(MatchInvalidPatternReferenceData {
+                            loc: f(loc),
+                            binding_reason: map_reason(binding_reason),
+                        }))
+                    }
+                    MatchInvalidObjectShorthand(box MatchInvalidObjectShorthandData {
                         loc,
                         name,
                         pattern_kind,
-                    } => MatchInvalidObjectShorthand {
+                    }) => MatchInvalidObjectShorthand(Box::new(MatchInvalidObjectShorthandData {
                         loc: f(loc),
                         name,
                         pattern_kind,
-                    },
+                    })),
                     MatchStatementInvalidBody { loc } => MatchStatementInvalidBody { loc: f(loc) },
-                    MatchInvalidCaseSyntax { loc, kind } => {
+                    MatchInvalidCaseSyntax(box MatchInvalidCaseSyntaxData { loc, kind }) => {
                         use crate::intermediate_error_types::MatchInvalidCaseSyntax as MICS;
                         let kind = match kind {
                             MICS::InvalidMatchCaseMultiple {
@@ -3258,7 +3788,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 MICS::InvalidMatchCaseSuffixSemicolon
                             }
                         };
-                        MatchInvalidCaseSyntax { loc: f(loc), kind }
+                        MatchInvalidCaseSyntax(Box::new(MatchInvalidCaseSyntaxData {
+                            loc: f(loc),
+                            kind,
+                        }))
                     }
                     MatchInvalidWildcardSyntax(loc) => MatchInvalidWildcardSyntax(f(loc)),
                     MatchInvalidInstancePattern(loc) => MatchInvalidInstancePattern(f(loc)),
@@ -3314,29 +3847,31 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUndocumentedFeature { loc } => EUndocumentedFeature { loc: f(loc) },
 
-            EIllegalAssertOperator {
+            EIllegalAssertOperator(box EIllegalAssertOperatorData {
                 op,
                 obj,
                 specialized,
-            } => EIllegalAssertOperator {
+            }) => EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                 op: map_reason(op),
                 obj: map_reason(obj),
                 specialized,
-            },
+            })),
 
-            EDevOnlyInvalidatedRefinementInfo {
+            EDevOnlyInvalidatedRefinementInfo(box EDevOnlyInvalidatedRefinementInfoData {
                 read_loc,
                 invalidation_info,
-            } => EDevOnlyInvalidatedRefinementInfo {
-                read_loc: f(read_loc),
-                invalidation_info: invalidation_info
-                    .into_iter()
-                    .map(|(l, r)| (f(l), r))
-                    .collect(),
-            },
+            }) => {
+                EDevOnlyInvalidatedRefinementInfo(Box::new(EDevOnlyInvalidatedRefinementInfoData {
+                    read_loc: f(read_loc),
+                    invalidation_info: invalidation_info
+                        .into_iter()
+                        .map(|(l, r)| (f(l), r))
+                        .collect(),
+                }))
+            }
 
-            ETemporaryHardcodedErrorForPrototyping(r, s) => {
-                ETemporaryHardcodedErrorForPrototyping(map_reason(r), s)
+            ETemporaryHardcodedErrorForPrototyping(box (r, s)) => {
+                ETemporaryHardcodedErrorForPrototyping(Box::new((map_reason(r), s)))
             }
         }
     }
@@ -3359,32 +3894,36 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 VirtualUseOp::Frame(frame_rc, inner_op)
                     if matches!(
                         frame_rc.as_ref(),
-                        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility { .. }
+                        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(..)
                     ) =>
                 {
                     let (lower, upper, lower_t, upper_t, name, custom_error_loc) =
-                        if let VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility {
-                            lower,
-                            upper,
-                            lower_t,
-                            upper_t,
-                            name,
-                            custom_error_loc,
-                        } = frame_rc.as_ref()
+                        if let VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
+                            box OpaqueTypeCustomErrorCompatibilityData {
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                                name,
+                                custom_error_loc,
+                            },
+                        ) = frame_rc.as_ref()
                         {
                             (lower, upper, lower_t, upper_t, name, custom_error_loc)
                         } else {
                             unreachable!()
                         };
                     VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility {
-                            lower: lower.dupe(),
-                            upper: upper.dupe(),
-                            lower_t: f(lower_t.clone()),
-                            upper_t: f(upper_t.clone()),
-                            name: name.dupe(),
-                            custom_error_loc: custom_error_loc.dupe(),
-                        }),
+                        Arc::new(VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
+                            Box::new(OpaqueTypeCustomErrorCompatibilityData {
+                                lower: lower.dupe(),
+                                upper: upper.dupe(),
+                                lower_t: f(lower_t.clone()),
+                                upper_t: f(upper_t.clone()),
+                                name: name.dupe(),
+                                custom_error_loc: custom_error_loc.dupe(),
+                            }),
+                        )),
                         Arc::new(map_use_op(f, inner_op.as_ref().clone())),
                     )
                 }
@@ -3462,17 +4001,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 explanation: map_explanation(explanation),
             })),
 
-            EIncompatibleWithUseOp {
+            EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
                 use_op,
                 reason_lower,
                 reason_upper,
                 explanation,
-            } => EIncompatibleWithUseOp {
+            }) => EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                 use_op: map_use_op(&f, use_op),
                 reason_lower,
                 reason_upper,
                 explanation,
-            },
+            })),
 
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
@@ -3569,60 +4108,109 @@ where
     F: Fn(&VirtualUseOp<L>) -> T,
 {
     match msg {
-        ErrorMessage::EIncompatible { use_op, .. } => use_op.as_ref().map_or_else(|| nope, util),
+        ErrorMessage::EIncompatible(box EIncompatibleData { use_op, .. }) => {
+            use_op.as_ref().map_or_else(|| nope, util)
+        }
         ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {
             use_op, ..
         }) => use_op.as_ref().map_or_else(|| nope, util),
         ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData { use_op, .. }) => util(use_op),
-        ErrorMessage::EIncompatibleProp { use_op, .. } => {
+        ErrorMessage::EIncompatibleProp(box EIncompatiblePropData { use_op, .. }) => {
             use_op.as_ref().map_or_else(|| nope, util)
         }
-        ErrorMessage::EExpectedStringLit { use_op, .. } => util(use_op),
-        ErrorMessage::EExpectedNumberLit { use_op, .. } => util(use_op),
-        ErrorMessage::EExpectedBooleanLit { use_op, .. } => util(use_op),
-        ErrorMessage::EExpectedBigIntLit { use_op, .. } => util(use_op),
-        ErrorMessage::EPropNotFoundInLookup { use_op, .. } => util(use_op),
-        ErrorMessage::EPropNotFoundInSubtyping { use_op, .. } => util(use_op),
-        ErrorMessage::EPropsNotFoundInSubtyping { use_op, .. } => util(use_op),
+        ErrorMessage::EExpectedStringLit(box EExpectedStringLitData { use_op, .. }) => util(use_op),
+        ErrorMessage::EExpectedNumberLit(box EExpectedNumberLitData { use_op, .. }) => util(use_op),
+        ErrorMessage::EExpectedBooleanLit(box EExpectedBooleanLitData { use_op, .. }) => {
+            util(use_op)
+        }
+        ErrorMessage::EExpectedBigIntLit(box EExpectedBigIntLitData { use_op, .. }) => util(use_op),
+        ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData { use_op, .. }) => {
+            util(use_op)
+        }
+        ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
+            use_op, ..
+        }) => util(use_op),
+        ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
+            use_op,
+            ..
+        }) => util(use_op),
         ErrorMessage::EPropsNotFoundInInvariantSubtyping(
             box EPropsNotFoundInInvariantSubtypingData { use_op, .. },
         ) => util(use_op),
-        ErrorMessage::EPropsExtraAgainstExactObject { use_op, .. } => util(use_op),
-        ErrorMessage::EIndexerCheckFailed { use_op, .. } => util(use_op),
-        ErrorMessage::EPropNotReadable { use_op, .. } => util(use_op),
-        ErrorMessage::EPropNotWritable { use_op, .. } => util(use_op),
-        ErrorMessage::EPropPolarityMismatch { use_op, .. } => util(use_op),
-        ErrorMessage::EPrivateLookupFailed(_, _, use_op) => util(use_op),
-        ErrorMessage::ETupleArityMismatch { use_op, .. } => util(use_op),
+        ErrorMessage::EPropsExtraAgainstExactObject(box EPropsExtraAgainstExactObjectData {
+            use_op,
+            ..
+        }) => util(use_op),
+        ErrorMessage::EIndexerCheckFailed(box EIndexerCheckFailedData { use_op, .. }) => {
+            util(use_op)
+        }
+        ErrorMessage::EPropNotReadable(box EPropNotReadableData { use_op, .. }) => util(use_op),
+        ErrorMessage::EPropNotWritable(box EPropNotWritableData { use_op, .. }) => util(use_op),
+        ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData { use_op, .. }) => {
+            util(use_op)
+        }
+        ErrorMessage::EPrivateLookupFailed(box (_, _, use_op)) => util(use_op),
+        ErrorMessage::ETupleArityMismatch(box ETupleArityMismatchData { use_op, .. }) => {
+            util(use_op)
+        }
         ErrorMessage::ENonLitArrayToTuple(_, use_op) => util(use_op),
-        ErrorMessage::ETupleOutOfBounds { use_op, .. } => util(use_op),
-        ErrorMessage::ETupleNonIntegerIndex { use_op, .. } => util(use_op),
+        ErrorMessage::ETupleOutOfBounds(box ETupleOutOfBoundsData { use_op, .. }) => util(use_op),
+        ErrorMessage::ETupleNonIntegerIndex(box ETupleNonIntegerIndexData { use_op, .. }) => {
+            util(use_op)
+        }
         ErrorMessage::ETupleUnsafeWrite { use_op, .. } => util(use_op),
-        ErrorMessage::ETupleElementNotReadable { use_op, .. } => util(use_op),
-        ErrorMessage::ETupleElementNotWritable { use_op, .. } => util(use_op),
-        ErrorMessage::ETupleElementPolarityMismatch { use_op, .. } => util(use_op),
+        ErrorMessage::ETupleElementNotReadable(box ETupleElementNotReadableData {
+            use_op, ..
+        }) => util(use_op),
+        ErrorMessage::ETupleElementNotWritable(box ETupleElementNotWritableData {
+            use_op, ..
+        }) => util(use_op),
+        ErrorMessage::ETupleElementPolarityMismatch(box ETupleElementPolarityMismatchData {
+            use_op,
+            ..
+        }) => util(use_op),
         ErrorMessage::EROArrayWrite(_, use_op) => util(use_op),
         ErrorMessage::EUnionSpeculationFailed(box EUnionSpeculationFailedData {
             use_op, ..
         }) => util(use_op),
         ErrorMessage::EIncompatibleWithExact(_, use_op, _) => util(use_op),
         ErrorMessage::EFunctionIncompatibleWithIndexer(_, use_op) => util(use_op),
-        ErrorMessage::EInvalidObjectKit { use_op, .. } => util(use_op),
-        ErrorMessage::EIncompatibleWithUseOp { use_op, .. } => util(use_op),
+        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { use_op, .. }) => util(use_op),
+        ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData { use_op, .. }) => {
+            util(use_op)
+        }
         ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
             use_op,
             ..
         }) => util(use_op),
-        ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible { use_op, .. }) => util(use_op),
+        ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(box EnumIncompatibleData {
+            use_op,
+            ..
+        })) => util(use_op),
         ErrorMessage::ENotAReactComponent { use_op, .. } => util(use_op),
-        ErrorMessage::EFunctionCallExtraArg(_, _, _, use_op) => util(use_op),
-        ErrorMessage::EPrimitiveAsInterface { use_op, .. } => util(use_op),
-        ErrorMessage::ECannotSpreadInterface { use_op, .. } => util(use_op),
-        ErrorMessage::ECannotSpreadIndexerOnRight { use_op, .. } => util(use_op),
-        ErrorMessage::EUnableToSpread { use_op, .. } => util(use_op),
-        ErrorMessage::EInexactMayOverwriteIndexer { use_op, .. } => util(use_op),
-        ErrorMessage::EImplicitInstantiationUnderconstrainedError { use_op, .. } => util(use_op),
-        ErrorMessage::EIncompatibleReactDeepReadOnly { use_op, .. } => util(use_op),
+        ErrorMessage::EFunctionCallExtraArg(box (_, _, _, use_op)) => util(use_op),
+        ErrorMessage::EPrimitiveAsInterface(box EPrimitiveAsInterfaceData { use_op, .. }) => {
+            util(use_op)
+        }
+        ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData { use_op, .. }) => {
+            util(use_op)
+        }
+        ErrorMessage::ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
+            use_op,
+            ..
+        }) => util(use_op),
+        ErrorMessage::EUnableToSpread(box EUnableToSpreadData { use_op, .. }) => util(use_op),
+        ErrorMessage::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
+            use_op,
+            ..
+        }) => util(use_op),
+        ErrorMessage::EImplicitInstantiationUnderconstrainedError(
+            box EImplicitInstantiationUnderconstrainedErrorData { use_op, .. },
+        ) => util(use_op),
+        ErrorMessage::EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
+            use_op,
+            ..
+        }) => util(use_op),
         _ => nope,
     }
 }
@@ -3638,122 +4226,154 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             Self::EAnyValueUsedAsType { reason_use, .. }
             | Self::EValueUsedAsType { reason_use, .. } => Some(reason_use.loc.dupe()),
 
-            Self::ENonStrictEqualityComparison(primary, _)
-            | Self::EInvalidTypeArgs(_, primary)
-            | Self::ETooFewTypeArgs {
+            Self::ENonStrictEqualityComparison(box (primary, _))
+            | Self::EInvalidTypeArgs(box (_, primary))
+            | Self::ETooFewTypeArgs(box ETooFewTypeArgsData {
                 reason_tapp: primary,
                 ..
-            }
-            | Self::ETooManyTypeArgs {
+            })
+            | Self::ETooManyTypeArgs(box ETooManyTypeArgsData {
                 reason_tapp: primary,
                 ..
-            } => Some(primary.loc.dupe()),
+            }) => Some(primary.loc.dupe()),
 
-            Self::EComparison { r1, loc_opt, .. } => {
+            Self::EComparison(box EComparisonData { r1, loc_opt, .. }) => {
                 loc_opt.as_ref().or(Some(&r1.loc)).map(|l| l.dupe())
             }
 
             Self::ESketchyNumberLint(_, reason)
             | Self::EInvalidExtends(reason)
             | Self::EUnsupportedSetProto(reason)
-            | Self::EReactElementFunArity(reason, _, _)
+            | Self::EReactElementFunArity(box (reason, _, _))
             | Self::EReactRefInRender { usage: reason, .. }
             | Self::EUnsupportedImplements(reason)
-            | Self::EObjectComputedPropertyAssign(reason, _, _)
-            | Self::EObjectComputedPropertyAccess {
+            | Self::EObjectComputedPropertyAssign(box (reason, _, _))
+            | Self::EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
                 reason_prop: reason,
                 ..
-            }
+            })
             | Self::EForInRHS(reason)
             | Self::EBinaryInRHS(reason)
             | Self::EBinaryInLHS(reason)
             | Self::EInstanceofRHS(reason)
             | Self::EArithmeticOperand(reason)
-            | Self::ERecursionLimit(reason, _)
+            | Self::ERecursionLimit(box (reason, _))
             | Self::EMissingLocalAnnotation { reason, .. }
             | Self::EComponentMissingReturn(reason)
             | Self::ENestedComponent(reason)
             | Self::ENestedHook(reason)
-            | Self::EUnsupportedExact(_, reason)
-            | Self::EPolarityMismatch { reason, .. }
-            | Self::ENoNamedExport(reason, _, _, _)
-            | Self::EOnlyDefaultExport(reason, _, _)
-            | Self::ENoDefaultExport(reason, _, _)
-            | Self::EImportTypeAsValue(reason, _)
-            | Self::EImportTypeAsTypeof(reason, _)
-            | Self::EExportValueAsType(reason, _)
-            | Self::EImportValueAsType(reason, _)
-            | Self::ETemporaryHardcodedErrorForPrototyping(reason, _)
+            | Self::EUnsupportedExact(box (_, reason))
+            | Self::EPolarityMismatch(box EPolarityMismatchData { reason, .. })
+            | Self::ENoNamedExport(box (reason, _, _, _))
+            | Self::EOnlyDefaultExport(box (reason, _, _))
+            | Self::ENoDefaultExport(box (reason, _, _))
+            | Self::EImportTypeAsValue(box (reason, _))
+            | Self::EImportTypeAsTypeof(box (reason, _))
+            | Self::EExportValueAsType(box (reason, _))
+            | Self::EImportValueAsType(box (reason, _))
+            | Self::ETemporaryHardcodedErrorForPrototyping(box (reason, _))
             | Self::EComputedPropertyWithUnion(reason)
             | Self::ETypeParamConstInvalidPosition(reason) => Some(reason.loc.dupe()),
 
-            Self::EObjectComputedPropertyPotentialOverwrite { key_loc, .. } => Some(key_loc.dupe()),
-
-            Self::EEnumError(
-                EnumErrorKind::EnumAllMembersAlreadyChecked { loc: key_loc, .. }
-                | EnumErrorKind::EnumMemberAlreadyChecked {
-                    case_test_loc: key_loc,
-                    ..
-                }
-                | EnumErrorKind::EnumInvalidCheck { loc: key_loc, .. }
-                | EnumErrorKind::EnumInvalidMemberName { loc: key_loc, .. }
-                | EnumErrorKind::EnumNonIdentifierMemberName { loc: key_loc, .. },
+            Self::EObjectComputedPropertyPotentialOverwrite(
+                box EObjectComputedPropertyPotentialOverwriteData { key_loc, .. },
             ) => Some(key_loc.dupe()),
 
             Self::EEnumError(
-                EnumErrorKind::EnumNotAllChecked { reason, .. }
-                | EnumErrorKind::EnumUnknownNotChecked { reason, .. }
-                | EnumErrorKind::EnumInvalidAbstractUse { reason, .. }
-                | EnumErrorKind::EnumMemberUsedAsType { reason, .. }
-                | EnumErrorKind::EnumInvalidMemberAccess { reason, .. }
-                | EnumErrorKind::EnumInvalidObjectUtilType { reason, .. }
-                | EnumErrorKind::EnumInvalidObjectFunction { reason, .. }
+                EnumErrorKind::EnumAllMembersAlreadyChecked(box EnumAllMembersAlreadyCheckedData {
+                    loc: key_loc,
+                    ..
+                })
+                | EnumErrorKind::EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
+                    case_test_loc: key_loc,
+                    ..
+                })
+                | EnumErrorKind::EnumInvalidCheck(box EnumInvalidCheckData { loc: key_loc, .. })
+                | EnumErrorKind::EnumInvalidMemberName(box EnumInvalidMemberNameData {
+                    loc: key_loc,
+                    ..
+                })
+                | EnumErrorKind::EnumNonIdentifierMemberName(box EnumNonIdentifierMemberNameData {
+                    loc: key_loc,
+                    ..
+                }),
+            ) => Some(key_loc.dupe()),
+
+            Self::EEnumError(
+                EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData { reason, .. })
+                | EnumErrorKind::EnumUnknownNotChecked(box EnumUnknownNotCheckedData {
+                    reason, ..
+                })
+                | EnumErrorKind::EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
+                    reason,
+                    ..
+                })
+                | EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
+                    reason, ..
+                })
+                | EnumErrorKind::EnumInvalidMemberAccess(box EnumInvalidMemberAccessData {
+                    reason,
+                    ..
+                })
+                | EnumErrorKind::EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
+                    reason,
+                    ..
+                })
+                | EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
+                    reason,
+                    ..
+                })
                 | EnumErrorKind::EnumNotIterable { reason, .. },
             )
-            | Self::ERecursiveDefinition { reason, .. }
+            | Self::ERecursiveDefinition(box ERecursiveDefinitionData { reason, .. })
             | Self::EInvalidConstructor(reason)
-            | Self::EInvalidDeclaration {
+            | Self::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration: reason,
                 ..
-            }
+            })
             | Self::EBigIntRShift3(reason)
             | Self::EBigIntNumCoerce(reason)
-            | Self::EInvalidBinaryArith {
+            | Self::EInvalidBinaryArith(box EInvalidBinaryArithData {
                 reason_out: reason, ..
-            }
-            | Self::ETupleRequiredAfterOptional {
+            })
+            | Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple: reason,
                 ..
-            }
-            | Self::ETupleInvalidTypeSpread {
+            })
+            | Self::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
                 reason_spread: reason,
                 ..
-            }
+            })
             | Self::ETupleElementAfterInexactSpread(reason)
-            | Self::ETypeGuardInvalidParameter {
+            | Self::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
                 type_guard_reason: reason,
                 ..
-            }
+            })
             | Self::ETypeGuardParamUnbound(reason)
             | Self::ETypeGuardThisParam(reason)
-            | Self::ETypeGuardFunctionInvalidWrites { reason, .. }
-            | Self::ENegativeTypeGuardConsistency {
+            | Self::ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
+                reason,
+                ..
+            })
+            | Self::ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
                 return_reason: reason,
                 ..
-            }
-            | Self::ETypeGuardFunctionParamHavoced {
+            })
+            | Self::ETypeGuardFunctionParamHavoced(box ETypeGuardFunctionParamHavocedData {
                 type_guard_reason: reason,
                 ..
+            })
+            | Self::EIllegalAssertOperator(box EIllegalAssertOperatorData { op: reason, .. }) => {
+                Some(reason.loc.dupe())
             }
-            | Self::EIllegalAssertOperator { op: reason, .. } => Some(reason.loc.dupe()),
 
             Self::EDefinitionCycle(dependencies) => Some(dependencies.first().0.loc.dupe()),
 
-            Self::EExponentialSpread {
+            Self::EExponentialSpread(box EExponentialSpreadData {
                 reasons_for_operand1,
                 reasons_for_operand2,
                 ..
-            } => {
+            }) => {
                 let union_reason = match (
                     &reasons_for_operand1.second_reason,
                     &reasons_for_operand2.second_reason,
@@ -3765,102 +4385,123 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 Some(union_reason.loc.dupe())
             }
 
-            Self::EBindingError(_, loc, _, _) => Some(loc.dupe()),
+            Self::EBindingError(box (_, loc, _, _)) => Some(loc.dupe()),
 
             Self::EComponentCase(loc)
             | Self::EComponentMissingBody(loc)
             | Self::EComponentBodyInAmbientContext(loc)
             | Self::EDeclareComponentInvalidParam { loc, .. }
             | Self::EHookNaming(loc)
-            | Self::EIncorrectTypeWithReplacement { loc, .. }
+            | Self::EIncorrectTypeWithReplacement(box EIncorrectTypeWithReplacementData {
+                loc,
+                ..
+            })
             | Self::EUnsafeGettersSetters(loc)
             | Self::EUnsafeObjectAssign(loc)
-            | Self::ETSSyntax { kind: _, loc } => Some(loc.dupe()),
+            | Self::ETSSyntax(box ETSSyntaxData { kind: _, loc }) => Some(loc.dupe()),
 
-            Self::EInvalidTypeof(loc, _) => Some(loc.dupe()),
-            Self::EReactIntrinsicOverlap { def, .. } => Some(def.dupe()),
+            Self::EInvalidTypeof(box (loc, _)) => Some(loc.dupe()),
+            Self::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { def, .. }) => {
+                Some(def.dupe())
+            }
             Self::EStrUtilTypeNonLiteralArg(loc) => Some(loc.dupe()),
 
-            Self::EInvalidPrototype(loc, _)
-            | Self::EUntypedTypeImport(loc, _)
-            | Self::EUntypedImport(loc, _)
+            Self::EInvalidPrototype(box (loc, _))
+            | Self::EUntypedTypeImport(box (loc, _))
+            | Self::EUntypedImport(box (loc, _))
             | Self::EInvalidInfer(loc)
-            | Self::EConstantCondition { loc, .. }
-            | Self::EInvalidReactCreateElement {
+            | Self::EConstantCondition(box EConstantConditionData { loc, .. })
+            | Self::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
                 create_element_loc: loc,
                 ..
-            }
+            })
             | Self::ENonstrictImport(loc)
             | Self::EUnclearType(loc)
             | Self::EDeprecatedBool(loc)
             | Self::EInternalType(loc, _)
-            | Self::EUnnecessaryOptionalChain(loc, _)
-            | Self::EUnnecessaryInvariant(loc, _)
+            | Self::EUnnecessaryOptionalChain(box (loc, _))
+            | Self::EUnnecessaryInvariant(box (loc, _))
             | Self::EUnnecessaryDeclareTypeOnlyExport(loc)
             | Self::EUnusedSuppression(loc)
             | Self::ECodelessSuppression(loc)
-            | Self::EDocblockError(loc, _)
+            | Self::EDocblockError(box (loc, _))
             | Self::EImplicitInexactObject(loc)
             | Self::EInvalidComponentRestParam(loc)
             | Self::EAmbiguousObjectType(loc)
-            | Self::EParseError(loc, _)
+            | Self::EParseError(box (loc, _))
             | Self::EInvalidLHSInAssignment(loc)
             | Self::EUnreachable(loc)
-            | Self::ECannotDelete(loc, _)
-            | Self::EBadExportContext(_, loc)
+            | Self::ECannotDelete(box (loc, _))
+            | Self::EBadExportContext(box (_, loc))
             | Self::EBadExportPosition(loc)
-            | Self::EBadDefaultImportAccess(loc, _)
+            | Self::EBadDefaultImportAccess(box (loc, _))
             | Self::EBadDefaultImportDestructuring(loc)
-            | Self::EInvalidImportStarUse(loc, _)
-            | Self::ENonConstVarExport(loc, _)
+            | Self::EInvalidImportStarUse(box (loc, _))
+            | Self::ENonConstVarExport(box (loc, _))
             | Self::EThisInExportedFunction(loc)
-            | Self::EMixedImportAndRequire(loc, _)
-            | Self::EUnsupportedVarianceAnnotation(loc, _)
-            | Self::EExportRenamedDefault { loc, .. }
+            | Self::EMixedImportAndRequire(box (loc, _))
+            | Self::EUnsupportedVarianceAnnotation(box (loc, _))
+            | Self::EExportRenamedDefault(box EExportRenamedDefaultData { loc, .. })
             | Self::EIndeterminateModuleType(loc)
             | Self::EEnumError(
                 EnumErrorKind::EnumsNotEnabled(loc) | EnumErrorKind::EnumConstNotSupported(loc),
             )
             | Self::EUninitializedInstanceProperty(loc, _)
             | Self::EUseArrayLiteral(loc)
-            | Self::EUnsupportedSyntax(loc, _)
-            | Self::EInternal(loc, _)
+            | Self::EUnsupportedSyntax(box (loc, _))
+            | Self::EInternal(box (loc, _))
             | Self::EUnsupportedKeyInObject { loc, .. }
             | Self::EAmbiguousNumericKeyWithVariance(loc)
-            | Self::EHookRuleViolation { call_loc: loc, .. }
+            | Self::EHookRuleViolation(box EHookRuleViolationData { call_loc: loc, .. })
             | Self::EExportsAnnot(loc)
             | Self::EUnexpectedThisType(loc)
             | Self::ETypeParamMinArity(loc, _)
-            | Self::EAssignConstLikeBinding { loc, .. }
+            | Self::EAssignConstLikeBinding(box EAssignConstLikeBindingData { loc, .. })
             | Self::EMalformedCode(loc)
-            | Self::EObjectThisSuperReference(loc, _, _)
-            | Self::EComponentThisReference { this_loc: loc, .. }
-            | Self::EInvalidGraphQL(loc, _)
-            | Self::EAnnotationInference(loc, _, _, _)
-            | Self::ETrivialRecursiveDefinition(loc, _)
+            | Self::EObjectThisSuperReference(box (loc, _, _))
+            | Self::EComponentThisReference(box EComponentThisReferenceData {
+                this_loc: loc,
+                ..
+            })
+            | Self::EInvalidGraphQL(box (loc, _))
+            | Self::EAnnotationInference(box (loc, _, _, _))
+            | Self::ETrivialRecursiveDefinition(box (loc, _))
             | Self::EInvalidCatchParameterAnnotation { loc, .. }
             | Self::EInvalidMappedType { loc, .. }
-            | Self::EReferenceInAnnotation(loc, _, _)
-            | Self::EReferenceInDefault(_, _, loc)
-            | Self::EDuplicateComponentProp { spread: loc, .. }
-            | Self::ERefComponentProp { spread: loc, .. }
-            | Self::EKeySpreadProp { spread: loc, .. }
-            | Self::ETypeGuardIncompatibleWithFunctionKind { loc, .. }
-            | Self::EMissingPlatformSupportWithAvailablePlatforms { loc, .. }
-            | Self::EMissingPlatformSupport { loc, .. }
-            | Self::EUnionOptimization { loc, .. }
-            | Self::EUnionOptimizationOnNonUnion { loc, .. }
-            | Self::ELintSetting(loc, _)
+            | Self::EReferenceInAnnotation(box (loc, _, _))
+            | Self::EReferenceInDefault(box (_, _, loc))
+            | Self::EDuplicateComponentProp(box EDuplicateComponentPropData {
+                spread: loc, ..
+            })
+            | Self::ERefComponentProp(box ERefComponentPropData { spread: loc, .. })
+            | Self::EKeySpreadProp(box EKeySpreadPropData { spread: loc, .. })
+            | Self::ETypeGuardIncompatibleWithFunctionKind(
+                box ETypeGuardIncompatibleWithFunctionKindData { loc, .. },
+            )
+            | Self::EMissingPlatformSupportWithAvailablePlatforms(
+                box EMissingPlatformSupportWithAvailablePlatformsData { loc, .. },
+            )
+            | Self::EMissingPlatformSupport(box EMissingPlatformSupportData { loc, .. })
+            | Self::EUnionOptimization(box EUnionOptimizationData { loc, .. })
+            | Self::EUnionOptimizationOnNonUnion(box EUnionOptimizationOnNonUnionData {
+                loc,
+                ..
+            })
+            | Self::ELintSetting(box (loc, _))
             | Self::ETypeParamArity(loc, _)
-            | Self::ESketchyNullLint { loc, .. } => Some(loc.dupe()),
+            | Self::ESketchyNullLint(box ESketchyNullLintData { loc, .. }) => Some(loc.dupe()),
 
             Self::EUnionPartialOptimizationNonUniqueKey(
                 box EUnionPartialOptimizationNonUniqueKeyData { loc, .. },
             ) => Some(loc.dupe()),
 
-            Self::ECallTypeArity { call_loc, .. } => Some(call_loc.dupe()),
-            Self::EMissingTypeArgs { reason_op, .. } => Some(reason_op.loc.dupe()),
-            Self::EInvalidRendersTypeArgument { loc, .. } => Some(loc.dupe()),
+            Self::ECallTypeArity(box ECallTypeArityData { call_loc, .. }) => Some(call_loc.dupe()),
+            Self::EMissingTypeArgs(box EMissingTypeArgsData { reason_op, .. }) => {
+                Some(reason_op.loc.dupe())
+            }
+            Self::EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
+                loc, ..
+            }) => Some(loc.dupe()),
             Self::EInvalidTypeCastSyntax { loc, .. } => Some(loc.dupe()),
 
             Self::ESignatureBindingValidation(e) => match e {
@@ -3888,48 +4529,93 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 | SignatureError::UnexpectedExpression(loc, _) => Some(loc.dupe()),
             },
 
-            Self::EDuplicateModuleProvider { conflict, .. } => Some(conflict.dupe()),
+            Self::EDuplicateModuleProvider(box EDuplicateModuleProviderData {
+                conflict, ..
+            }) => Some(conflict.dupe()),
             Self::EEnumError(
-                EnumErrorKind::EnumModification { loc, .. }
-                | EnumErrorKind::EnumMemberDuplicateValue { loc, .. }
-                | EnumErrorKind::EnumDuplicateMemberName { loc, .. }
-                | EnumErrorKind::EnumInconsistentMemberValues { loc, .. }
-                | EnumErrorKind::EnumInvalidMemberInitializer { loc, .. }
-                | EnumErrorKind::EnumBooleanMemberNotInitialized { loc, .. }
-                | EnumErrorKind::EnumNumberMemberNotInitialized { loc, .. }
-                | EnumErrorKind::EnumBigIntMemberNotInitialized { loc, .. }
-                | EnumErrorKind::EnumStringMemberInconsistentlyInitialized { loc, .. },
+                EnumErrorKind::EnumModification(box EnumModificationData { loc, .. })
+                | EnumErrorKind::EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
+                    loc,
+                    ..
+                })
+                | EnumErrorKind::EnumDuplicateMemberName(box EnumDuplicateMemberNameData {
+                    loc, ..
+                })
+                | EnumErrorKind::EnumInconsistentMemberValues(box EnumInconsistentMemberValuesData {
+                    loc,
+                    ..
+                })
+                | EnumErrorKind::EnumInvalidMemberInitializer(box EnumInvalidMemberInitializerData {
+                    loc,
+                    ..
+                })
+                | EnumErrorKind::EnumBooleanMemberNotInitialized(
+                    box EnumBooleanMemberNotInitializedData { loc, .. },
+                )
+                | EnumErrorKind::EnumNumberMemberNotInitialized(
+                    box EnumNumberMemberNotInitializedData { loc, .. },
+                )
+                | EnumErrorKind::EnumBigIntMemberNotInitialized(
+                    box EnumBigIntMemberNotInitializedData { loc, .. },
+                )
+                | EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
+                    box EnumStringMemberInconsistentlyInitializedData { loc, .. },
+                ),
             )
-            | Self::EBuiltinNameLookupFailed { loc, .. }
-            | Self::EBuiltinModuleLookupFailed { loc, .. }
-            | Self::EExpectedModuleLookupFailed { loc, .. }
-            | Self::EPlatformSpecificImplementationModuleLookupFailed { loc, .. }
-            | Self::EDuplicateClassMember { loc, .. }
+            | Self::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { loc, .. })
+            | Self::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
+                loc, ..
+            })
+            | Self::EExpectedModuleLookupFailed(box EExpectedModuleLookupFailedData {
+                loc, ..
+            })
+            | Self::EPlatformSpecificImplementationModuleLookupFailed(
+                box EPlatformSpecificImplementationModuleLookupFailedData { loc, .. },
+            )
+            | Self::EDuplicateClassMember(box EDuplicateClassMemberData { loc, .. })
             | Self::EEmptyArrayNoProvider { loc }
             | Self::EUnusedPromise { loc, .. } => Some(loc.dupe()),
 
             Self::ECannotCallReactComponent { reason } => Some(reason.loc.dupe()),
 
             Self::EMatchError(e) => match e {
-                MatchErrorKind::MatchNotExhaustive { loc, .. }
-                | MatchErrorKind::MatchNonExhaustiveObjectPattern { loc, .. }
-                | MatchErrorKind::MatchNonExplicitEnumCheck { loc, .. }
+                MatchErrorKind::MatchNotExhaustive(box MatchNotExhaustiveData { loc, .. })
+                | MatchErrorKind::MatchNonExhaustiveObjectPattern(
+                    box MatchNonExhaustiveObjectPatternData { loc, .. },
+                )
+                | MatchErrorKind::MatchNonExplicitEnumCheck(box MatchNonExplicitEnumCheckData {
+                    loc,
+                    ..
+                })
                 | MatchErrorKind::MatchInvalidBindingKind { loc, .. }
                 | MatchErrorKind::MatchInvalidObjectPropertyLiteral { loc, .. }
                 | MatchErrorKind::MatchInvalidUnaryZero { loc }
                 | MatchErrorKind::MatchInvalidUnaryPlusBigInt { loc }
-                | MatchErrorKind::MatchDuplicateObjectProperty { loc, .. }
+                | MatchErrorKind::MatchDuplicateObjectProperty(
+                    box MatchDuplicateObjectPropertyData { loc, .. },
+                )
                 | MatchErrorKind::MatchBindingInOrPattern { loc }
                 | MatchErrorKind::MatchInvalidAsPattern { loc }
-                | MatchErrorKind::MatchInvalidPatternReference { loc, .. }
-                | MatchErrorKind::MatchInvalidObjectShorthand { loc, .. }
+                | MatchErrorKind::MatchInvalidPatternReference(
+                    box MatchInvalidPatternReferenceData { loc, .. },
+                )
+                | MatchErrorKind::MatchInvalidObjectShorthand(
+                    box MatchInvalidObjectShorthandData { loc, .. },
+                )
                 | MatchErrorKind::MatchStatementInvalidBody { loc }
-                | MatchErrorKind::MatchInvalidCaseSyntax { loc, .. }
-                | MatchErrorKind::MatchInvalidIdentOrMemberPattern { loc, .. } => Some(loc.dupe()),
+                | MatchErrorKind::MatchInvalidCaseSyntax(box MatchInvalidCaseSyntaxData {
+                    loc,
+                    ..
+                })
+                | MatchErrorKind::MatchInvalidIdentOrMemberPattern(
+                    box MatchInvalidIdentOrMemberPatternData { loc, .. },
+                ) => Some(loc.dupe()),
                 MatchErrorKind::MatchInvalidWildcardSyntax(loc)
                 | MatchErrorKind::MatchInvalidInstancePattern(loc)
                 | MatchErrorKind::MatchInvalidGuardedWildcard(loc) => Some(loc.dupe()),
-                MatchErrorKind::MatchUnusedPattern { reason, .. } => Some(reason.loc.dupe()),
+                MatchErrorKind::MatchUnusedPattern(box MatchUnusedPatternData {
+                    reason, ..
+                }) => Some(reason.loc.dupe()),
             },
 
             Self::ERecordError(e) => match e {
@@ -3943,60 +4629,76 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             },
 
             Self::EUndocumentedFeature { loc } => Some(loc.dupe()),
-            Self::EDevOnlyRefinedLocInfo { refined_loc, .. } => Some(refined_loc.dupe()),
-            Self::EDevOnlyInvalidatedRefinementInfo { read_loc, .. } => Some(read_loc.dupe()),
+            Self::EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData {
+                refined_loc, ..
+            }) => Some(refined_loc.dupe()),
+            Self::EDevOnlyInvalidatedRefinementInfo(
+                box EDevOnlyInvalidatedRefinementInfoData { read_loc, .. },
+            ) => Some(read_loc.dupe()),
 
-            Self::EUnableToSpread { .. }
-            | Self::ECannotSpreadInterface { .. }
-            | Self::ECannotSpreadIndexerOnRight { .. }
-            | Self::EInexactMayOverwriteIndexer { .. }
+            Self::EUnableToSpread(box EUnableToSpreadData { .. })
+            | Self::ECannotSpreadInterface(box ECannotSpreadInterfaceData { .. })
+            | Self::ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData { .. })
+            | Self::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData { .. })
             | Self::EFunctionCallExtraArg { .. }
             | Self::ENotAReactComponent { .. }
-            | Self::EIncompatibleWithUseOp { .. }
+            | Self::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData { .. })
             | Self::EInvariantSubtypingWithUseOp(..)
-            | Self::EEnumError(EnumErrorKind::EnumIncompatible { .. })
+            | Self::EEnumError(EnumErrorKind::EnumIncompatible(box EnumIncompatibleData {
+                ..
+            }))
             | Self::EIncompatibleDefs(..)
-            | Self::EInvalidObjectKit { .. }
+            | Self::EInvalidObjectKit(box EInvalidObjectKitData { .. })
             | Self::EIncompatibleWithExact { .. }
             | Self::EFunctionIncompatibleWithIndexer { .. }
             | Self::EUnionSpeculationFailed(..)
             | Self::ETupleUnsafeWrite { .. }
             | Self::EROArrayWrite { .. }
-            | Self::ETupleElementNotReadable { .. }
-            | Self::ETupleElementNotWritable { .. }
-            | Self::ETupleElementPolarityMismatch { .. }
-            | Self::ETupleOutOfBounds { .. }
-            | Self::ETupleNonIntegerIndex { .. }
+            | Self::ETupleElementNotReadable(box ETupleElementNotReadableData { .. })
+            | Self::ETupleElementNotWritable(box ETupleElementNotWritableData { .. })
+            | Self::ETupleElementPolarityMismatch(box ETupleElementPolarityMismatchData {
+                ..
+            })
+            | Self::ETupleOutOfBounds(box ETupleOutOfBoundsData { .. })
+            | Self::ETupleNonIntegerIndex(box ETupleNonIntegerIndexData { .. })
             | Self::ENonLitArrayToTuple { .. }
-            | Self::ETupleArityMismatch { .. }
+            | Self::ETupleArityMismatch(box ETupleArityMismatchData { .. })
             | Self::EPrivateLookupFailed { .. }
-            | Self::EPropPolarityMismatch { .. }
-            | Self::EPropNotReadable { .. }
-            | Self::EPropNotWritable { .. }
-            | Self::EPropNotFoundInLookup { .. }
-            | Self::EPropNotFoundInSubtyping { .. }
-            | Self::EPropsNotFoundInSubtyping { .. }
+            | Self::EPropPolarityMismatch(box EPropPolarityMismatchData { .. })
+            | Self::EPropNotReadable(box EPropNotReadableData { .. })
+            | Self::EPropNotWritable(box EPropNotWritableData { .. })
+            | Self::EPropNotFoundInLookup(box EPropNotFoundInLookupData { .. })
+            | Self::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData { .. })
+            | Self::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData { .. })
             | Self::EPropsNotFoundInInvariantSubtyping(..)
-            | Self::EPropsExtraAgainstExactObject { .. }
-            | Self::EIndexerCheckFailed { .. }
-            | Self::EExpectedBooleanLit { .. }
-            | Self::EExpectedNumberLit { .. }
-            | Self::EExpectedStringLit { .. }
-            | Self::EExpectedBigIntLit { .. }
-            | Self::EIncompatibleProp { .. }
-            | Self::EIncompatible { .. }
+            | Self::EPropsExtraAgainstExactObject(box EPropsExtraAgainstExactObjectData {
+                ..
+            })
+            | Self::EIndexerCheckFailed(box EIndexerCheckFailedData { .. })
+            | Self::EExpectedBooleanLit(box EExpectedBooleanLitData { .. })
+            | Self::EExpectedNumberLit(box EExpectedNumberLitData { .. })
+            | Self::EExpectedStringLit(box EExpectedStringLitData { .. })
+            | Self::EExpectedBigIntLit(box EExpectedBigIntLitData { .. })
+            | Self::EIncompatibleProp(box EIncompatiblePropData { .. })
+            | Self::EIncompatible(box EIncompatibleData { .. })
             | Self::EIncompatibleSpeculation(..)
-            | Self::EMethodUnbinding { .. }
-            | Self::EHookIncompatible { .. }
-            | Self::EIncompatibleReactDeepReadOnly { .. }
-            | Self::EHookUniqueIncompatible { .. }
-            | Self::EImplicitInstantiationUnderconstrainedError { .. }
-            | Self::EClassToObject { .. }
-            | Self::EPrimitiveAsInterface { .. }
+            | Self::EMethodUnbinding(box EMethodUnbindingData { .. })
+            | Self::EHookIncompatible(box EHookIncompatibleData { .. })
+            | Self::EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
+                ..
+            })
+            | Self::EHookUniqueIncompatible(box EHookUniqueIncompatibleData { .. })
+            | Self::EImplicitInstantiationUnderconstrainedError(
+                box EImplicitInstantiationUnderconstrainedErrorData { .. },
+            )
+            | Self::EClassToObject(box EClassToObjectData { .. })
+            | Self::EPrimitiveAsInterface(box EPrimitiveAsInterfaceData { .. })
             | Self::ETypeGuardFuncIncompatibility { .. }
             | Self::ETypeGuardIndexMismatch { .. }
             | Self::ETypeGuardImpliesMismatch { .. }
-            | Self::ETypeParamConstIncompatibility { .. } => None,
+            | Self::ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
+                ..
+            }) => None,
         }
     }
 
@@ -4006,39 +4708,49 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
         match self {
             // Lint errors
-            ErrorMessage::EUntypedTypeImport(_, _) => LintError(UntypedTypeImport),
-            ErrorMessage::EUntypedImport(_, _) => LintError(UntypedImport),
+            ErrorMessage::EUntypedTypeImport(box (_, _)) => LintError(UntypedTypeImport),
+            ErrorMessage::EUntypedImport(box (_, _)) => LintError(UntypedImport),
             ErrorMessage::ENonstrictImport(_) => LintError(NonstrictImport),
             ErrorMessage::EInternalType(_, _) => LintError(InternalType),
             ErrorMessage::EUnclearType(_) => LintError(UnclearType),
             ErrorMessage::EDeprecatedBool(_) => LintError(DeprecatedType(DeprecatedTypeKind::Bool)),
             ErrorMessage::EUnsafeGettersSetters(_) => LintError(UnsafeGettersSetters),
             ErrorMessage::EUnsafeObjectAssign(_) => LintError(UnsafeObjectAssign),
-            ErrorMessage::ESketchyNullLint { kind, .. } => LintError(SketchyNull(*kind)),
+            ErrorMessage::ESketchyNullLint(box ESketchyNullLintData { kind, .. }) => {
+                LintError(SketchyNull(*kind))
+            }
             ErrorMessage::ESketchyNumberLint(kind, _) => LintError(SketchyNumber(*kind)),
-            ErrorMessage::EUnnecessaryOptionalChain(_, _) => LintError(UnnecessaryOptionalChain),
-            ErrorMessage::EUnnecessaryInvariant(_, _) => LintError(UnnecessaryInvariant),
+            ErrorMessage::EUnnecessaryOptionalChain(box (_, _)) => {
+                LintError(UnnecessaryOptionalChain)
+            }
+            ErrorMessage::EUnnecessaryInvariant(box (_, _)) => LintError(UnnecessaryInvariant),
             ErrorMessage::EImplicitInexactObject(_) => LintError(ImplicitInexactObject),
             ErrorMessage::EAmbiguousObjectType(_) => LintError(AmbiguousObjectType),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
-                default_case_loc: Some(_),
-                ..
-            }) => LintError(RequireExplicitEnumSwitchCases),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck { .. }) => {
-                LintError(RequireExplicitEnumChecks)
-            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
+                box EnumNotAllCheckedData {
+                    default_case_loc: Some(_),
+                    ..
+                },
+            )) => LintError(RequireExplicitEnumSwitchCases),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
+                box MatchNonExplicitEnumCheckData { .. },
+            )) => LintError(RequireExplicitEnumChecks),
             ErrorMessage::EUninitializedInstanceProperty(_, _) => {
                 LintError(UninitializedInstanceProperty)
             }
-            ErrorMessage::EBadDefaultImportAccess(_, _) => LintError(DefaultImportAccess),
+            ErrorMessage::EBadDefaultImportAccess(box (_, _)) => LintError(DefaultImportAccess),
             ErrorMessage::EBadDefaultImportDestructuring(_) => LintError(DefaultImportAccess),
-            ErrorMessage::EInvalidImportStarUse(_, _) => LintError(InvalidImportStarUse),
-            ErrorMessage::ENonConstVarExport(_, _) => LintError(NonConstVarExport),
+            ErrorMessage::EInvalidImportStarUse(box (_, _)) => LintError(InvalidImportStarUse),
+            ErrorMessage::ENonConstVarExport(box (_, _)) => LintError(NonConstVarExport),
             ErrorMessage::EThisInExportedFunction(_) => LintError(ThisInExportedFunction),
-            ErrorMessage::EMixedImportAndRequire(_, _) => LintError(MixedImportAndRequire),
-            ErrorMessage::EExportRenamedDefault { .. } => LintError(ExportRenamedDefault),
+            ErrorMessage::EMixedImportAndRequire(box (_, _)) => LintError(MixedImportAndRequire),
+            ErrorMessage::EExportRenamedDefault(box EExportRenamedDefaultData { .. }) => {
+                LintError(ExportRenamedDefault)
+            }
             ErrorMessage::EUnusedPromise { .. } => LintError(UnusedPromise),
-            ErrorMessage::EReactIntrinsicOverlap { .. } => LintError(ReactIntrinsicOverlap),
+            ErrorMessage::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { .. }) => {
+                LintError(ReactIntrinsicOverlap)
+            }
             ErrorMessage::ENestedComponent(_) => LintError(NestedComponent),
             ErrorMessage::ENestedHook(_) => LintError(NestedHook),
             ErrorMessage::ESignatureBindingValidation(BindingValidation::ModuleOverride {
@@ -4049,7 +4761,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             }) => LintError(LibdefOverride),
 
             // Infer warnings
-            ErrorMessage::EBadExportPosition(_) | ErrorMessage::EBadExportContext(_, _) => {
+            ErrorMessage::EBadExportPosition(_) | ErrorMessage::EBadExportContext(box (_, _)) => {
                 InferWarning(InferWarningKind::ExportKind)
             }
             ErrorMessage::EEnumError(
@@ -4057,14 +4769,16 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             )
             | ErrorMessage::EIndeterminateModuleType(_)
             | ErrorMessage::EUnreachable(_)
-            | ErrorMessage::EInvalidTypeof(_, _) => InferWarning(InferWarningKind::OtherKind),
+            | ErrorMessage::EInvalidTypeof(box (_, _)) => InferWarning(InferWarningKind::OtherKind),
 
             // Other error kinds
-            ErrorMessage::EInternal(_, _) => InternalError,
-            ErrorMessage::ERecursionLimit(_, _) => RecursionLimitError,
-            ErrorMessage::EDuplicateModuleProvider { .. } => DuplicateProviderError,
-            ErrorMessage::EParseError(_, _) => ParseError,
-            ErrorMessage::EDocblockError(_, _) | ErrorMessage::ELintSetting(_, _) => {
+            ErrorMessage::EInternal(box (_, _)) => InternalError,
+            ErrorMessage::ERecursionLimit(box (_, _)) => RecursionLimitError,
+            ErrorMessage::EDuplicateModuleProvider(box EDuplicateModuleProviderData { .. }) => {
+                DuplicateProviderError
+            }
+            ErrorMessage::EParseError(box (_, _)) => ParseError,
+            ErrorMessage::EDocblockError(box (_, _)) | ErrorMessage::ELintSetting(box (_, _)) => {
                 PseudoParseError
             }
 
@@ -4223,94 +4937,130 @@ pub fn type_casting_examples(
 
 /// Friendly messages are created differently based on the specific error they come from.
 /// We collect the ingredients here and pass them to make_error_printable.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct IncompatibleUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub upper_kind: UpperKind<L>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct SpeculationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub use_op: VirtualUseOp<L>,
+    pub branches: Vec<ErrorMessage<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct IncompatibleSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub explanation: Option<Explanation<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct IncompatibleInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
+    pub lower_loc: L,
+    pub upper_loc: L,
+    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub use_op: VirtualUseOp<L>,
+    pub explanation: Option<Explanation<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct IncompatibleEnumData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub enum_kind: EnumKind,
+    pub representation_type: Option<FlowSmolStr>,
+    pub casting_syntax: CastingSyntax,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropMissingInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub prop: Option<FlowSmolStr>,
+    pub suggestion: Option<FlowSmolStr>,
+    pub reason_obj: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub reason_indexer: Option<VirtualReason<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub prop: Option<FlowSmolStr>,
+    pub suggestion: Option<FlowSmolStr>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub reason_indexer: Option<VirtualReason<L>>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub props: Vec1<FlowSmolStr>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropsMissingInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub props: Vec1<FlowSmolStr>,
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub lower_obj_loc: L,
+    pub upper_obj_loc: L,
+    pub lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub props: Vec1<FlowSmolStr>,
+    pub reason_l_obj: VirtualReason<L>,
+    pub reason_r_obj: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(Debug, Clone)]
+pub struct UseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub message: Message<L>,
+    pub use_op: VirtualUseOp<L>,
+    pub explanation: Option<Explanation<L>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
+    pub use_op: VirtualUseOp<L>,
+}
+
 #[derive(Debug, Clone)]
 pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    IncompatibleUse {
-        loc: L,
-        upper_kind: UpperKind<L>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
-    Speculation {
-        loc: L,
-        use_op: VirtualUseOp<L>,
-        branches: Vec<ErrorMessage<L>>,
-    },
-    IncompatibleSubtyping {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-        explanation: Option<Explanation<L>>,
-    },
-    IncompatibleInvariantSubtyping {
-        sub_component: Option<SubComponentOfInvariantSubtypingError>,
-        lower_loc: L,
-        upper_loc: L,
-        lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        use_op: VirtualUseOp<L>,
-        explanation: Option<Explanation<L>>,
-    },
-    IncompatibleEnum {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-        enum_kind: EnumKind,
-        representation_type: Option<FlowSmolStr>,
-        casting_syntax: CastingSyntax,
-    },
-    PropMissingInLookup {
-        loc: L,
-        prop: Option<FlowSmolStr>,
-        suggestion: Option<FlowSmolStr>,
-        reason_obj: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-        reason_indexer: Option<VirtualReason<L>>,
-    },
-    PropMissingInSubtyping {
-        prop: Option<FlowSmolStr>,
-        suggestion: Option<FlowSmolStr>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        reason_indexer: Option<VirtualReason<L>>,
-        use_op: VirtualUseOp<L>,
-    },
-    PropsMissingInSubtyping {
-        props: Vec1<FlowSmolStr>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
-    PropsMissingInInvariantSubtyping {
-        props: Vec1<FlowSmolStr>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        lower_obj_loc: L,
-        upper_obj_loc: L,
-        lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-        use_op: VirtualUseOp<L>,
-    },
-    PropsExtraAgainstExactObject {
-        props: Vec1<FlowSmolStr>,
-        reason_l_obj: VirtualReason<L>,
-        reason_r_obj: VirtualReason<L>,
-        use_op: VirtualUseOp<L>,
-    },
+    IncompatibleUse(Box<IncompatibleUseData<L>>),
+    Speculation(Box<SpeculationData<L>>),
+    IncompatibleSubtyping(Box<IncompatibleSubtypingData<L>>),
+    IncompatibleInvariantSubtyping(Box<IncompatibleInvariantSubtypingData<L>>),
+    IncompatibleEnum(Box<IncompatibleEnumData<L>>),
+    PropMissingInLookup(Box<PropMissingInLookupData<L>>),
+    PropMissingInSubtyping(Box<PropMissingInSubtypingData<L>>),
+    PropsMissingInSubtyping(Box<PropsMissingInSubtypingData<L>>),
+    PropsMissingInInvariantSubtyping(Box<PropsMissingInInvariantSubtypingData<L>>),
+    PropsExtraAgainstExactObject(Box<PropsExtraAgainstExactObjectData<L>>),
     Normal(Message<L>),
-    UseOp {
-        loc: L,
-        message: Message<L>,
-        use_op: VirtualUseOp<L>,
-        explanation: Option<Explanation<L>>,
-    },
-    PropPolarityMismatch {
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
-        use_op: VirtualUseOp<L>,
-    },
+    UseOp(Box<UseOpData<L>>),
+    PropPolarityMismatch(Box<PropPolarityMismatchData<L>>),
 }
 
 fn expect_type_desc<L: Dupe>(
@@ -4333,31 +5083,31 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         use FriendlyMessageRecipe::*;
 
         match self {
-            ErrorMessage::EIncompatible {
+            ErrorMessage::EIncompatible(box EIncompatibleData {
                 lower: (reason_lower, _),
                 upper: (reason_upper, upper_kind),
                 use_op,
-            } => {
+            }) => {
                 let loc = reason_upper.loc.dupe();
-                IncompatibleUse {
+                IncompatibleUse(Box::new(IncompatibleUseData {
                     loc,
                     upper_kind,
                     reason_lower,
                     reason_upper,
                     use_op: use_op
                         .unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
-                }
+                }))
             }
 
             ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {
                 loc,
                 use_op,
                 branches,
-            }) => Speculation {
+            }) => Speculation(Box::new(SpeculationData {
                 loc,
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
                 branches,
-            },
+            })),
 
             ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
                 use_op,
@@ -4366,35 +5116,35 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 branches,
             }) => {
                 if branches.is_empty() {
-                    IncompatibleSubtyping {
+                    IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
                         reason_lower,
                         reason_upper,
                         use_op,
                         explanation: None,
-                    }
+                    }))
                 } else {
                     let loc = reason_upper.loc.dupe();
-                    Speculation {
+                    Speculation(Box::new(SpeculationData {
                         loc,
                         use_op,
                         branches,
-                    }
+                    }))
                 }
             }
 
-            ErrorMessage::EExportValueAsType(_, export_name) => Normal(
+            ErrorMessage::EExportValueAsType(box (_, export_name)) => Normal(
                 Message::MessageExportValueAsType(export_name.into_smol_str()),
             ),
 
-            ErrorMessage::EImportValueAsType(_, export_name) => {
+            ErrorMessage::EImportValueAsType(box (_, export_name)) => {
                 Normal(Message::MessageImportValueAsType(export_name))
             }
 
-            ErrorMessage::EImportTypeAsTypeof(_, export_name) => {
+            ErrorMessage::EImportTypeAsTypeof(box (_, export_name)) => {
                 Normal(Message::MessageImportTypeAsTypeof(export_name))
             }
 
-            ErrorMessage::EImportTypeAsValue(_, export_name) => {
+            ErrorMessage::EImportTypeAsValue(box (_, export_name)) => {
                 Normal(Message::MessageImportTypeAsValue(export_name))
             }
 
@@ -4404,9 +5154,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotUseAsSuperClass(reason))
             }
 
-            ErrorMessage::EInvalidReactCreateElement { invalid_react, .. } => {
-                Normal(Message::MessageInvalidReactCreateElement(invalid_react))
-            }
+            ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
+                invalid_react,
+                ..
+            }) => Normal(Message::MessageInvalidReactCreateElement(invalid_react)),
 
             ErrorMessage::EAnyValueUsedAsType { reason_use } => {
                 Normal(Message::MessageAnyValueUsedAsType(reason_use.desc.clone()))
@@ -4416,89 +5167,89 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageValueUsedAsType(reason_use.desc.clone()))
             }
 
-            ErrorMessage::EExpectedStringLit {
+            ErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => IncompatibleSubtyping {
-                reason_lower,
-                reason_upper,
-                use_op,
-                explanation: None,
-            },
-
-            ErrorMessage::EExpectedNumberLit {
-                reason_lower,
-                reason_upper,
-                use_op,
-            } => IncompatibleSubtyping {
+            }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 explanation: None,
-            },
+            })),
 
-            ErrorMessage::EExpectedBooleanLit {
+            ErrorMessage::EExpectedNumberLit(box EExpectedNumberLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => IncompatibleSubtyping {
+            }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 explanation: None,
-            },
+            })),
 
-            ErrorMessage::EExpectedBigIntLit {
+            ErrorMessage::EExpectedBooleanLit(box EExpectedBooleanLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => IncompatibleSubtyping {
+            }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 explanation: None,
-            },
+            })),
 
-            ErrorMessage::EPropNotFoundInLookup {
+            ErrorMessage::EExpectedBigIntLit(box EExpectedBigIntLitData {
+                reason_lower,
+                reason_upper,
+                use_op,
+            }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
+                reason_lower,
+                reason_upper,
+                use_op,
+                explanation: None,
+            })),
+
+            ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
                 reason_obj,
                 reason_prop,
                 use_op,
                 suggestion,
-            } => {
+            }) => {
                 let loc = reason_prop.loc.dupe();
-                PropMissingInLookup {
+                PropMissingInLookup(Box::new(PropMissingInLookupData {
                     loc,
                     prop: prop_name.as_ref().map(|n| n.dupe().into_smol_str()),
                     reason_obj,
                     use_op,
                     suggestion,
                     reason_indexer: None,
-                }
+                }))
             }
 
-            ErrorMessage::EPropNotFoundInSubtyping {
+            ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
                 prop_name,
                 suggestion,
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => PropMissingInSubtyping {
+            }) => PropMissingInSubtyping(Box::new(PropMissingInSubtypingData {
                 prop: prop_name.as_ref().map(|n| n.dupe().into_smol_str()),
                 suggestion,
                 reason_lower,
                 reason_upper,
                 reason_indexer: None,
                 use_op,
-            },
+            })),
 
-            ErrorMessage::EPropsNotFoundInSubtyping {
+            ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => PropsMissingInSubtyping {
+            }) => PropsMissingInSubtyping(Box::new(PropsMissingInSubtypingData {
                 props: Vec1::try_from_vec(
                     prop_names
                         .iter()
@@ -4509,14 +5260,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_lower,
                 reason_upper,
                 use_op,
-            },
+            })),
 
-            ErrorMessage::EPropsExtraAgainstExactObject {
-                prop_names,
-                reason_l_obj,
-                reason_r_obj,
-                use_op,
-            } => PropsExtraAgainstExactObject {
+            ErrorMessage::EPropsExtraAgainstExactObject(
+                box EPropsExtraAgainstExactObjectData {
+                    prop_names,
+                    reason_l_obj,
+                    reason_r_obj,
+                    use_op,
+                },
+            ) => PropsExtraAgainstExactObject(Box::new(PropsExtraAgainstExactObjectData {
                 props: Vec1::try_from_vec(
                     prop_names
                         .iter()
@@ -4527,57 +5280,57 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_l_obj,
                 reason_r_obj,
                 use_op,
-            },
+            })),
 
-            ErrorMessage::EIndexerCheckFailed {
+            ErrorMessage::EIndexerCheckFailed(box EIndexerCheckFailedData {
                 prop_name,
                 reason_lower,
                 reason_upper,
                 reason_indexer,
                 use_op,
-            } => PropMissingInSubtyping {
+            }) => PropMissingInSubtyping(Box::new(PropMissingInSubtypingData {
                 prop: Some(prop_name.into_smol_str()),
                 suggestion: None,
                 reason_lower,
                 reason_upper,
                 reason_indexer: Some(reason_indexer),
                 use_op,
-            },
+            })),
 
-            ErrorMessage::EPropNotReadable {
+            ErrorMessage::EPropNotReadable(box EPropNotReadableData {
                 reason_prop,
                 prop_name,
                 use_op,
-            } => {
+            }) => {
                 let loc = reason_prop.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessagePropNotReadable(prop_name),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::EPropNotWritable {
+            ErrorMessage::EPropNotWritable(box EPropNotWritableData {
                 reason_prop,
                 prop_name,
                 use_op,
-            } => {
+            }) => {
                 let loc = reason_prop.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessagePropNotWritable(prop_name),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::EPropPolarityMismatch {
+            ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData {
                 lreason,
                 ureason,
                 props,
                 use_op,
-            } => PropPolarityMismatch {
+            }) => PropPolarityMismatch(Box::new(PropPolarityMismatchData {
                 reason_lower: lreason,
                 reason_upper: ureason,
                 props: props
@@ -4593,7 +5346,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     .try_into()
                     .expect("props is non-empty Vec1"),
                 use_op,
-            },
+            })),
 
             ErrorMessage::EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,
@@ -4602,14 +5355,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ..
             }) => {
                 let loc = reason.loc.dupe();
-                Speculation {
+                Speculation(Box::new(SpeculationData {
                     loc,
                     use_op,
                     branches,
-                }
+                }))
             }
 
-            ErrorMessage::EUnsupportedExact(_, lower) => {
+            ErrorMessage::EUnsupportedExact(box (_, lower)) => {
                 Normal(Message::MessageCannotCreateExactType(lower))
             }
 
@@ -4619,7 +5372,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EUseArrayLiteral(_) => Normal(Message::MessageShouldUseArrayLiteral),
 
-            ErrorMessage::ERecursionLimit(..) => Normal(Message::MessageRecursionLimitExceeded),
+            ErrorMessage::ERecursionLimit(box (..)) => {
+                Normal(Message::MessageRecursionLimitExceeded)
+            }
 
             ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled(_)) => {
                 Normal(Message::MessageEnumsNotEnabled)
@@ -4649,17 +5404,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotAssignToInvalidLHS)
             }
 
-            ErrorMessage::EIncompatibleWithUseOp {
+            ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 explanation,
-            } => IncompatibleSubtyping {
+            }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 explanation,
-            },
+            })),
 
             ErrorMessage::EUnsupportedSetProto(_) => {
                 Normal(Message::MessageCannotMutateThisPrototype)
@@ -4693,15 +5448,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotUseAsConstructor(reason))
             }
 
-            ErrorMessage::EInvalidPrototype(_, reason) => {
+            ErrorMessage::EInvalidPrototype(box (_, reason)) => {
                 Normal(Message::MessageCannotUseAsPrototype(reason))
             }
 
-            ErrorMessage::EUnnecessaryOptionalChain(_, lhs_reason) => {
+            ErrorMessage::EUnnecessaryOptionalChain(box (_, lhs_reason)) => {
                 Normal(Message::MessageUnnecessaryOptionalChain(lhs_reason))
             }
 
-            ErrorMessage::EUnnecessaryInvariant(_, reason) => {
+            ErrorMessage::EUnnecessaryInvariant(box (_, reason)) => {
                 Normal(Message::MessageUnnecessaryInvariant(reason))
             }
 
@@ -4725,21 +5480,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Message::MessageCannotUseInstanceOfOperatorDueToBadRHS(reason),
             ),
 
-            ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(
+                box EnumIncompatibleData {
+                    reason_lower,
+                    reason_upper,
+                    use_op,
+                    enum_kind,
+                    representation_type,
+                    casting_syntax,
+                },
+            )) => IncompatibleEnum(Box::new(IncompatibleEnumData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 enum_kind,
                 representation_type,
                 casting_syntax,
-            }) => IncompatibleEnum {
-                reason_lower,
-                reason_upper,
-                use_op,
-                enum_kind,
-                representation_type,
-                casting_syntax,
-            },
+            })),
 
             ErrorMessage::EMalformedCode(_) => Normal(Message::MessageSuppressionMalformedCode),
 
@@ -4815,257 +5572,318 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUndocumentedFeature)
             }
 
-            ErrorMessage::EFunctionCallExtraArg(unused_reason, def_reason, param_count, use_op) => {
-                UseOp {
-                    loc: unused_reason.loc.dupe(),
-                    message: Message::MessageCannotCallFunctionWithExtraArg {
-                        def_reason,
-                        param_count,
-                    },
-                    explanation: None,
-                    use_op,
-                }
-            }
-            ErrorMessage::EExponentialSpread {
+            ErrorMessage::EFunctionCallExtraArg(box (
+                unused_reason,
+                def_reason,
+                param_count,
+                use_op,
+            )) => UseOp(Box::new(UseOpData {
+                loc: unused_reason.loc.dupe(),
+                message: Message::MessageCannotCallFunctionWithExtraArg {
+                    def_reason,
+                    param_count,
+                },
+                explanation: None,
+                use_op,
+            })),
+            ErrorMessage::EExponentialSpread(box EExponentialSpreadData {
                 reason,
                 reasons_for_operand1,
                 reasons_for_operand2,
-            } => Normal(Message::MessageExponentialSpread {
-                reason,
-                reasons_for_operand1,
-                reasons_for_operand2,
-            }),
+            }) => Normal(Message::MessageExponentialSpread(Box::new(
+                MessageExponentialSpreadData {
+                    reason,
+                    reasons_for_operand1,
+                    reasons_for_operand2,
+                },
+            ))),
             ErrorMessage::EComputedPropertyWithUnion(reason) => {
                 Normal(Message::MessageCannotUseComputedPropertyWithUnion(reason))
             }
 
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess {
-                member_name,
-                suggestion,
-                reason,
-                enum_reason,
-            }) => Normal(Message::MessageCannotAccessEnumMember {
-                member_name,
-                suggestion,
-                description: reason.desc.clone(),
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumModification { enum_reason, .. }) => {
-                Normal(Message::MessageCannotChangeEnumMember(enum_reason))
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
-                prev_use_loc,
-                enum_reason,
-                ..
-            }) => Normal(Message::MessageDuplicateEnumMember {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
+                box EnumInvalidMemberAccessData {
+                    member_name,
+                    suggestion,
+                    reason,
+                    enum_reason,
+                },
+            )) => Normal(Message::MessageCannotAccessEnumMember(Box::new(
+                MessageCannotAccessEnumMemberData {
+                    member_name,
+                    suggestion,
+                    description: reason.desc.clone(),
+                    enum_reason,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumModification(
+                box EnumModificationData { enum_reason, .. },
+            )) => Normal(Message::MessageCannotChangeEnumMember(enum_reason)),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue(
+                box EnumMemberDuplicateValueData {
+                    prev_use_loc,
+                    enum_reason,
+                    ..
+                },
+            )) => Normal(Message::MessageDuplicateEnumMember {
                 prev_use_loc,
                 enum_reason,
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable { reason, for_in }) => {
                 Normal(Message::MessageCannotIterateEnum { reason, for_in })
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked {
-                prev_check_loc,
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageAlreadyExhaustivelyCheckOneEnumMember {
-                prev_check_loc,
-                enum_reason,
-                member_name,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked {
-                enum_reason,
-                ..
-            }) => Normal(Message::MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
-                reason,
-                enum_reason,
-                left_to_check,
-                default_case_loc,
-            }) => Normal(Message::MessageIncompleteExhausiveCheckEnum {
-                description: reason.desc.clone(),
-                enum_reason,
-                left_to_check,
-                default_case_loc,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked {
-                reason,
-                enum_reason,
-            }) => Normal(Message::MessageCannotExhaustivelyCheckEnumWithUnknowns {
-                description: reason.desc.clone(),
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck {
-                enum_reason,
-                example_member,
-                from_match,
-                ..
-            }) => Normal(Message::MessageInvalidEnumMemberCheck {
-                enum_reason,
-                example_member,
-                from_match,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType {
-                reason,
-                enum_reason,
-            }) => Normal(Message::MessageCannotUseEnumMemberUsedAsType {
-                description: reason.desc.clone(),
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse {
-                reason,
-                enum_reason,
-            }) => Normal(Message::MessageCannotExhaustivelyCheckAbstractEnums {
-                description: reason.desc.clone(),
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName {
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageInvalidEnumMemberName {
-                member_name,
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName {
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageEnumNonIdentifierMemberName {
-                member_name,
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName {
-                prev_use_loc,
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageEnumDuplicateMemberName {
-                member_name,
-                prev_use_loc,
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues {
-                enum_reason,
-                ..
-            }) => Normal(Message::MessageEnumInconsistentMemberValues { enum_reason }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer {
-                enum_reason,
-                explicit_type,
-                member_name,
-                ..
-            }) => Normal(Message::MessageEnumInvalidMemberInitializer {
-                member_name,
-                explicit_type,
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized {
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageEnumBooleanMemberNotInitialized {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
+                box EnumMemberAlreadyCheckedData {
+                    prev_check_loc,
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageAlreadyExhaustivelyCheckOneEnumMember(
+                Box::new(MessageAlreadyExhaustivelyCheckOneEnumMemberData {
+                    prev_check_loc,
+                    enum_reason,
+                    member_name,
+                }),
+            )),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(
+                box EnumAllMembersAlreadyCheckedData { enum_reason, .. },
+            )) => Normal(Message::MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
+                box EnumNotAllCheckedData {
+                    reason,
+                    enum_reason,
+                    left_to_check,
+                    default_case_loc,
+                },
+            )) => Normal(Message::MessageIncompleteExhausiveCheckEnum(Box::new(
+                MessageIncompleteExhausiveCheckEnumData {
+                    description: reason.desc.clone(),
+                    enum_reason,
+                    left_to_check,
+                    default_case_loc,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(
+                box EnumUnknownNotCheckedData {
+                    reason,
+                    enum_reason,
+                },
+            )) => Normal(Message::MessageCannotExhaustivelyCheckEnumWithUnknowns(
+                Box::new(MessageCannotExhaustivelyCheckEnumWithUnknownsData {
+                    description: reason.desc.clone(),
+                    enum_reason,
+                }),
+            )),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
+                box EnumInvalidCheckData {
+                    enum_reason,
+                    example_member,
+                    from_match,
+                    ..
+                },
+            )) => Normal(Message::MessageInvalidEnumMemberCheck(Box::new(
+                MessageInvalidEnumMemberCheckData {
+                    enum_reason,
+                    example_member,
+                    from_match,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(
+                box EnumMemberUsedAsTypeData {
+                    reason,
+                    enum_reason,
+                },
+            )) => Normal(Message::MessageCannotUseEnumMemberUsedAsType(Box::new(
+                MessageCannotUseEnumMemberUsedAsTypeData {
+                    description: reason.desc.clone(),
+                    enum_reason,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(
+                box EnumInvalidAbstractUseData {
+                    reason,
+                    enum_reason,
+                },
+            )) => Normal(Message::MessageCannotExhaustivelyCheckAbstractEnums(
+                Box::new(MessageCannotExhaustivelyCheckAbstractEnumsData {
+                    description: reason.desc.clone(),
+                    enum_reason,
+                }),
+            )),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName(
+                box EnumInvalidMemberNameData {
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageInvalidEnumMemberName {
                 member_name,
                 enum_reason,
             }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized {
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageEnumNumberMemberNotInitialized {
-                member_name,
-                enum_reason,
-            }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized {
-                enum_reason,
-                member_name,
-                ..
-            }) => Normal(Message::MessageEnumBigIntMemberNotInitialized {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName(
+                box EnumNonIdentifierMemberNameData {
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageEnumNonIdentifierMemberName {
                 member_name,
                 enum_reason,
             }),
-            ErrorMessage::EEnumError(
-                EnumErrorKind::EnumStringMemberInconsistentlyInitialized { enum_reason, .. },
-            ) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized { enum_reason }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName(
+                box EnumDuplicateMemberNameData {
+                    prev_use_loc,
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageEnumDuplicateMemberName(Box::new(
+                MessageEnumDuplicateMemberNameData {
+                    member_name,
+                    prev_use_loc,
+                    enum_reason,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues(
+                box EnumInconsistentMemberValuesData { enum_reason, .. },
+            )) => Normal(Message::MessageEnumInconsistentMemberValues { enum_reason }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer(
+                box EnumInvalidMemberInitializerData {
+                    enum_reason,
+                    explicit_type,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageEnumInvalidMemberInitializer(Box::new(
+                MessageEnumInvalidMemberInitializerData {
+                    member_name,
+                    explicit_type,
+                    enum_reason,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized(
+                box EnumBooleanMemberNotInitializedData {
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageEnumBooleanMemberNotInitialized {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized(
+                box EnumNumberMemberNotInitializedData {
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageEnumNumberMemberNotInitialized {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized(
+                box EnumBigIntMemberNotInitializedData {
+                    enum_reason,
+                    member_name,
+                    ..
+                },
+            )) => Normal(Message::MessageEnumBigIntMemberNotInitialized {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
+                box EnumStringMemberInconsistentlyInitializedData { enum_reason, .. },
+            )) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized { enum_reason }),
 
-            ErrorMessage::EDuplicateClassMember {
+            ErrorMessage::EDuplicateClassMember(box EDuplicateClassMemberData {
                 name,
                 is_static,
                 class_kind,
                 ..
-            } => Normal(Message::MessageDuplicateClassMember {
+            }) => Normal(Message::MessageDuplicateClassMember {
                 name,
                 static_: is_static,
                 class_kind,
             }),
 
-            ErrorMessage::EInvalidDeclaration {
+            ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration,
                 null_write: None,
                 possible_generic_escape_locs,
-            } if possible_generic_escape_locs.is_empty() => Normal(
+            }) if possible_generic_escape_locs.is_empty() => Normal(
                 Message::MessageVariableNeverInitAssignedAnnotated(declaration),
             ),
-            ErrorMessage::EInvalidDeclaration {
+            ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration,
                 null_write: None,
                 possible_generic_escape_locs,
-            } => Normal(
+            }) => Normal(
                 Message::MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
                     reason: declaration,
                     possible_generic_escape_locs,
                 },
             ),
-            ErrorMessage::EInvalidDeclaration {
+            ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration,
                 null_write: Some(null_write),
                 possible_generic_escape_locs,
-            } if possible_generic_escape_locs.is_empty() => {
+            }) if possible_generic_escape_locs.is_empty() => {
                 let null_loc = if null_write.initialized {
                     None
                 } else {
                     Some(null_write.null_loc)
                 };
-                Normal(Message::MessageVariableOnlyAssignedByNull {
-                    reason: declaration,
-                    null_loc,
-                })
+                Normal(Message::MessageVariableOnlyAssignedByNull(Box::new(
+                    MessageVariableOnlyAssignedByNullData {
+                        reason: declaration,
+                        null_loc,
+                    },
+                )))
             }
-            ErrorMessage::EInvalidDeclaration {
+            ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration,
                 null_write: Some(null_write),
                 possible_generic_escape_locs,
-            } => Normal(Message::MessageShouldAnnotateVariableUsedInGenericContext {
-                reason: declaration,
-                null_loc: null_write.null_loc,
-                initialized: null_write.initialized,
-                possible_generic_escape_locs,
-            }),
+            }) => Normal(Message::MessageShouldAnnotateVariableUsedInGenericContext(
+                Box::new(MessageShouldAnnotateVariableUsedInGenericContextData {
+                    reason: declaration,
+                    null_loc: null_write.null_loc,
+                    initialized: null_write.initialized,
+                    possible_generic_escape_locs,
+                }),
+            )),
 
-            ErrorMessage::EAnnotationInference(_, reason_op, reason, suggestion) => {
-                Normal(Message::MessageCannotUseTypeForAnnotationInference {
-                    reason_op,
-                    reason,
-                    suggestion,
-                })
+            ErrorMessage::EAnnotationInference(box (_, reason_op, reason, suggestion)) => {
+                Normal(Message::MessageCannotUseTypeForAnnotationInference(
+                    Box::new(MessageCannotUseTypeForAnnotationInferenceData {
+                        reason_op,
+                        reason,
+                        suggestion,
+                    }),
+                ))
             }
-            ErrorMessage::ETrivialRecursiveDefinition(_, reason) => Normal(
+            ErrorMessage::ETrivialRecursiveDefinition(box (_, reason)) => Normal(
                 Message::MessageInvalidTrivialRecursiveDefinition(reason.desc.clone()),
             ),
-            ErrorMessage::ERecursiveDefinition {
+            ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData {
                 reason,
                 recursion,
                 annot_locs,
-            } => Normal(Message::MessageDefinitionInvalidRecursive {
-                description: reason.desc.clone(),
-                recursion,
-                annot_locs,
-            }),
+            }) => Normal(Message::MessageDefinitionInvalidRecursive(Box::new(
+                MessageDefinitionInvalidRecursiveData {
+                    description: reason.desc.clone(),
+                    recursion,
+                    annot_locs,
+                },
+            ))),
             ErrorMessage::EDefinitionCycle(dependencies) => {
                 Normal(Message::MessageDefinitionCycle(dependencies))
             }
-            ErrorMessage::EReferenceInAnnotation(_, name, loc) => {
-                Normal(Message::MessageInvalidSelfReferencingTypeAnnotation { name, loc })
+            ErrorMessage::EReferenceInAnnotation(box (_, name, loc)) => {
+                Normal(Message::MessageInvalidSelfReferencingTypeAnnotation(
+                    Box::new(MessageInvalidSelfReferencingTypeAnnotationData { name, loc }),
+                ))
             }
 
             ErrorMessage::EBigIntRShift3(reason) => {
@@ -5100,37 +5918,46 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(msg)
             }
 
-            ErrorMessage::EDuplicateComponentProp { spread, duplicates } => {
-                Normal(Message::MessageRedeclareComponentProp {
+            ErrorMessage::EDuplicateComponentProp(box EDuplicateComponentPropData {
+                spread,
+                duplicates,
+            }) => Normal(Message::MessageRedeclareComponentProp(Box::new(
+                MessageRedeclareComponentPropData {
                     duplicates,
                     spread_loc: spread,
-                })
-            }
-            ErrorMessage::ERefComponentProp {
+                },
+            ))),
+            ErrorMessage::ERefComponentProp(box ERefComponentPropData {
                 spread: spread_loc,
                 loc: ref_loc,
-            } => Normal(Message::MessageInvalidRefPropertyInSpread {
-                ref_loc,
-                spread_loc,
-            }),
-            ErrorMessage::EKeySpreadProp {
+            }) => Normal(Message::MessageInvalidRefPropertyInSpread(Box::new(
+                MessageInvalidRefPropertyInSpreadData {
+                    ref_loc,
+                    spread_loc,
+                },
+            ))),
+            ErrorMessage::EKeySpreadProp(box EKeySpreadPropData {
                 spread: spread_loc,
                 loc: key_loc,
-            } => Normal(Message::MessageInvalidKeyPropertyInSpread {
-                spread_loc,
-                key_loc,
-            }),
+            }) => Normal(Message::MessageInvalidKeyPropertyInSpread(Box::new(
+                MessageInvalidKeyPropertyInSpreadData {
+                    spread_loc,
+                    key_loc,
+                },
+            ))),
 
-            ErrorMessage::EInvalidRendersTypeArgument {
+            ErrorMessage::EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
                 renders_variant,
                 invalid_render_type_kind,
                 invalid_type_reasons,
                 ..
-            } => Normal(Message::MessageInvalidRendersTypeArgument {
-                renders_variant,
-                invalid_render_type_kind,
-                invalid_type_reasons,
-            }),
+            }) => Normal(Message::MessageInvalidRendersTypeArgument(Box::new(
+                MessageInvalidRendersTypeArgumentData {
+                    renders_variant,
+                    invalid_render_type_kind,
+                    invalid_type_reasons,
+                },
+            ))),
 
             ErrorMessage::EInvalidTypeCastSyntax {
                 enabled_casting_syntax,
@@ -5143,38 +5970,47 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotCallReactComponent(reason))
             }
 
-            ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive { examples, .. }) => {
-                Normal(Message::MessageMatchNotExhaustive { examples })
-            }
-            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive(
+                box MatchNotExhaustiveData { examples, .. },
+            )) => Normal(Message::MessageMatchNotExhaustive { examples }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(
+                box MatchUnusedPatternData {
+                    reason,
+                    already_seen,
+                },
+            )) => Normal(Message::MessageMatchUnnecessaryPattern {
                 reason,
                 already_seen,
-            }) => Normal(Message::MessageMatchUnnecessaryPattern {
-                reason,
-                already_seen,
             }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern {
-                rest,
-                missing_props,
-                pattern_kind,
-                ..
-            }) => Normal(Message::MessageMatchNonExhaustiveObjectPattern {
-                rest,
-                missing_props: missing_props.to_vec(),
-                pattern_kind,
-            }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck {
-                wildcard_reason,
-                unchecked_members,
-                ..
-            }) => Normal(Message::MessageMatchNonExplicitEnumCheck {
-                wildcard_reason,
-                unchecked_members: unchecked_members.to_vec(),
-            }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern {
-                type_reason,
-                ..
-            }) => Normal(Message::MessageMatchInvalidIdentOrMemberPattern { type_reason }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(
+                box MatchNonExhaustiveObjectPatternData {
+                    rest,
+                    missing_props,
+                    pattern_kind,
+                    ..
+                },
+            )) => Normal(Message::MessageMatchNonExhaustiveObjectPattern(Box::new(
+                MessageMatchNonExhaustiveObjectPatternData {
+                    rest,
+                    missing_props: missing_props.to_vec(),
+                    pattern_kind,
+                },
+            ))),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
+                box MatchNonExplicitEnumCheckData {
+                    wildcard_reason,
+                    unchecked_members,
+                    ..
+                },
+            )) => Normal(Message::MessageMatchNonExplicitEnumCheck(Box::new(
+                MessageMatchNonExplicitEnumCheckData {
+                    wildcard_reason,
+                    unchecked_members: unchecked_members.to_vec(),
+                },
+            ))),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(
+                box MatchInvalidIdentOrMemberPatternData { type_reason, .. },
+            )) => Normal(Message::MessageMatchInvalidIdentOrMemberPattern { type_reason }),
             ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidBindingKind { kind, .. }) => {
                 Normal(Message::MessageMatchInvalidBindingKind { kind })
             }
@@ -5182,23 +6018,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 pattern_kind,
                 ..
             }) => Normal(Message::MessageMatchInvalidObjectPropertyLiteral { pattern_kind }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchDuplicateObjectProperty {
-                name,
-                pattern_kind,
-                ..
-            }) => Normal(Message::MessageMatchDuplicateObjectProperty { name, pattern_kind }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidPatternReference {
-                binding_reason,
-                ..
-            }) => Normal(Message::MessageMatchInvalidPatternReference { binding_reason }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand {
-                name,
-                pattern_kind,
-                ..
-            }) => Normal(Message::MessageMatchInvalidObjectShorthand { name, pattern_kind }),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax { kind, .. }) => {
-                Normal(Message::MessageMatchInvalidCaseSyntax(kind))
-            }
+            ErrorMessage::EMatchError(MatchErrorKind::MatchDuplicateObjectProperty(
+                box MatchDuplicateObjectPropertyData {
+                    name, pattern_kind, ..
+                },
+            )) => Normal(Message::MessageMatchDuplicateObjectProperty { name, pattern_kind }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidPatternReference(
+                box MatchInvalidPatternReferenceData { binding_reason, .. },
+            )) => Normal(Message::MessageMatchInvalidPatternReference { binding_reason }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand(
+                box MatchInvalidObjectShorthandData {
+                    name, pattern_kind, ..
+                },
+            )) => Normal(Message::MessageMatchInvalidObjectShorthand { name, pattern_kind }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax(
+                box MatchInvalidCaseSyntaxData { kind, .. },
+            )) => Normal(Message::MessageMatchInvalidCaseSyntax(kind)),
 
             ErrorMessage::ERecordError(record_error) => match record_error {
                 RecordErrorKind::RecordBannedTypeUtil {
@@ -5219,115 +6054,122 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
             },
 
-            ErrorMessage::EIllegalAssertOperator {
-                obj, specialized, ..
-            } => Normal(Message::MessageIllegalAssertOperator { obj, specialized }),
+            ErrorMessage::EIllegalAssertOperator(box EIllegalAssertOperatorData {
+                obj,
+                specialized,
+                ..
+            }) => Normal(Message::MessageIllegalAssertOperator { obj, specialized }),
 
-            ErrorMessage::EReferenceInDefault(def_loc, name, ref_loc) => {
-                Normal(Message::MessageInvalidSelfReferencingDefault {
-                    name,
-                    def_loc,
-                    ref_loc,
-                })
+            ErrorMessage::EReferenceInDefault(box (def_loc, name, ref_loc)) => {
+                Normal(Message::MessageInvalidSelfReferencingDefault(Box::new(
+                    MessageInvalidSelfReferencingDefaultData {
+                        name,
+                        def_loc,
+                        ref_loc,
+                    },
+                )))
             }
 
-            ErrorMessage::EIncompatibleProp {
+            ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 prop,
                 reason_prop,
                 reason_obj,
                 use_op,
                 ..
-            } => PropMissingInLookup {
+            }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
                 loc: reason_prop.loc.dupe(),
                 prop: prop.map(|n| n.into_smol_str()),
                 reason_obj,
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
                 suggestion: None,
                 reason_indexer: None,
-            },
+            })),
 
-            ErrorMessage::EDevOnlyRefinedLocInfo { refining_locs, .. } => {
-                Normal(Message::MessageDevOnlyRefinedLocInfo { refining_locs })
-            }
+            ErrorMessage::EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData {
+                refining_locs,
+                ..
+            }) => Normal(Message::MessageDevOnlyRefinedLocInfo { refining_locs }),
 
-            ErrorMessage::EDevOnlyInvalidatedRefinementInfo {
-                invalidation_info, ..
-            } => Normal(Message::MessageDevOnlyInvalidatedRefinementInfo(
+            ErrorMessage::EDevOnlyInvalidatedRefinementInfo(
+                box EDevOnlyInvalidatedRefinementInfoData {
+                    invalidation_info, ..
+                },
+            ) => Normal(Message::MessageDevOnlyInvalidatedRefinementInfo(
                 invalidation_info,
             )),
 
-            ErrorMessage::ETemporaryHardcodedErrorForPrototyping(_, str) => {
+            ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (_, str)) => {
                 Normal(Message::MessagePlainTextReservedForInternalErrorOnly(str))
             }
 
-            ErrorMessage::ENoDefaultExport(_, module_name, suggestion) => {
-                Normal(Message::MessageNoDefaultExport {
+            ErrorMessage::ENoDefaultExport(box (_, module_name, suggestion)) => Normal(
+                Message::MessageNoDefaultExport(Box::new(MessageNoDefaultExportData {
                     module_name: module_name.into_inner(),
                     suggestion,
-                })
-            }
+                })),
+            ),
 
-            ErrorMessage::EOnlyDefaultExport(_, module_name, export_name) => {
-                Normal(Message::MessageOnlyDefaultExport {
+            ErrorMessage::EOnlyDefaultExport(box (_, module_name, export_name)) => Normal(
+                Message::MessageOnlyDefaultExport(Box::new(MessageOnlyDefaultExportData {
                     module_name: module_name.into_inner(),
                     export_name,
-                })
-            }
+                })),
+            ),
 
-            ErrorMessage::ENoNamedExport(_, module_name, export_name, suggestion) => {
-                Normal(Message::MessageNoNamedExport {
+            ErrorMessage::ENoNamedExport(box (_, module_name, export_name, suggestion)) => Normal(
+                Message::MessageNoNamedExport(Box::new(MessageNoNamedExportData {
                     module_name: module_name.into_inner(),
                     export_name,
                     suggestion,
-                })
-            }
+                })),
+            ),
 
-            ErrorMessage::EMissingTypeArgs {
+            ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData {
                 reason_tapp,
                 arity_loc,
                 min_arity,
                 max_arity,
                 ..
-            } => Normal(Message::MessageCannotUseTypeWithoutAnyTypeArgs {
+            }) => Normal(Message::MessageCannotUseTypeWithoutAnyTypeArgs {
                 reason_arity: VirtualReason::new(reason_tapp.desc.clone(), arity_loc),
                 min_arity,
                 max_arity,
             }),
 
-            ErrorMessage::ETooManyTypeArgs {
+            ErrorMessage::ETooManyTypeArgs(box ETooManyTypeArgsData {
                 reason_tapp,
                 arity_loc,
                 maximum_arity,
                 ..
-            } => Normal(Message::MessageCannotUseTypeWithTooManyTypeArgs {
+            }) => Normal(Message::MessageCannotUseTypeWithTooManyTypeArgs {
                 reason_arity: VirtualReason::new(reason_tapp.desc.clone(), arity_loc),
                 n: maximum_arity,
             }),
 
-            ErrorMessage::ETooFewTypeArgs {
+            ErrorMessage::ETooFewTypeArgs(box ETooFewTypeArgsData {
                 reason_tapp,
                 arity_loc,
                 minimum_arity,
                 ..
-            } => Normal(Message::MessageCannotUseTypeWithTooFewTypeArgs {
+            }) => Normal(Message::MessageCannotUseTypeWithTooFewTypeArgs {
                 reason_arity: VirtualReason::new(reason_tapp.desc.clone(), arity_loc),
                 n: minimum_arity,
             }),
 
-            ErrorMessage::EInvalidTypeArgs(reason_main, reason_tapp) => {
+            ErrorMessage::EInvalidTypeArgs(box (reason_main, reason_tapp)) => {
                 Normal(Message::MessageCannotUseTypeWithInvalidTypeArgs {
                     reason_main,
                     reason_tapp,
                 })
             }
 
-            ErrorMessage::EConstantCondition {
+            ErrorMessage::EConstantCondition(box EConstantConditionData {
                 is_truthy,
                 show_warning,
                 constant_condition_kind,
                 reason,
                 ..
-            } => Normal(Message::MessageConstantCondition {
+            }) => Normal(Message::MessageConstantCondition {
                 is_truthy,
                 show_warning,
                 constant_condition_kind,
@@ -5346,23 +6188,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotUseTypeWithoutAtLeastNTypeArgs(n))
             }
 
-            ErrorMessage::ECallTypeArity {
+            ErrorMessage::ECallTypeArity(box ECallTypeArityData {
                 is_new,
                 reason_arity,
                 expected_arity,
                 ..
-            } => Normal(Message::MessageCannotUseNonPolymorphicTypeWithTypeArgs {
+            }) => Normal(Message::MessageCannotUseNonPolymorphicTypeWithTypeArgs {
                 is_new,
                 reason_arity,
                 expected_arity,
             }),
 
-            ErrorMessage::EPolarityMismatch {
+            ErrorMessage::EPolarityMismatch(box EPolarityMismatchData {
                 reason,
                 name,
                 expected_polarity,
                 actual_polarity,
-            } => {
+            }) => {
                 let reason_targ = VirtualReason::new(
                     flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
                     reason.def_loc_opt.as_ref().unwrap_or(&reason.loc).dupe(),
@@ -5374,57 +6216,64 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 })
             }
 
-            ErrorMessage::EBuiltinNameLookupFailed { name, .. } => {
-                Normal(Message::MessageCannotResolveBuiltinName(name))
-            }
+            ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData {
+                name,
+                ..
+            }) => Normal(Message::MessageCannotResolveBuiltinName(name)),
 
-            ErrorMessage::EBuiltinModuleLookupFailed {
+            ErrorMessage::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
                 name,
                 potential_generator,
                 ..
-            } => Normal(Message::MessageCannotResolveBuiltinModule {
-                name,
-                potential_generator,
-            }),
+            }) => Normal(Message::MessageCannotResolveBuiltinModule(Box::new(
+                MessageCannotResolveBuiltinModuleData {
+                    name,
+                    potential_generator,
+                },
+            ))),
 
-            ErrorMessage::EExpectedModuleLookupFailed {
+            ErrorMessage::EExpectedModuleLookupFailed(box EExpectedModuleLookupFailedData {
                 name,
                 expected_module_purpose,
                 ..
-            } => Normal(Message::MessageCannotResolveExpectedModule {
+            }) => Normal(Message::MessageCannotResolveExpectedModule {
                 name,
                 expected_module_purpose,
             }),
 
-            ErrorMessage::EPrivateLookupFailed(reasons, x, use_op) => PropMissingInLookup {
-                loc: reasons.0.loc.dupe(),
-                prop: Some(format!("#{}", x).into()),
-                reason_obj: reasons.1,
-                use_op,
-                suggestion: None,
-                reason_indexer: None,
-            },
-
-            ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed { name, .. } => {
-                Normal(Message::MessagePlatformSpecificImplementationModuleLookupFailed(name))
+            ErrorMessage::EPrivateLookupFailed(box (reasons, x, use_op)) => {
+                PropMissingInLookup(Box::new(PropMissingInLookupData {
+                    loc: reasons.0.loc.dupe(),
+                    prop: Some(format!("#{}", x).into()),
+                    reason_obj: reasons.1,
+                    use_op,
+                    suggestion: None,
+                    reason_indexer: None,
+                }))
             }
 
-            ErrorMessage::EComparison {
+            ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(
+                box EPlatformSpecificImplementationModuleLookupFailedData { name, .. },
+            ) => Normal(Message::MessagePlatformSpecificImplementationModuleLookupFailed(name)),
+
+            ErrorMessage::EComparison(box EComparisonData {
                 r1,
                 r2,
                 strict_comparison_opt,
                 ..
-            } => Normal(Message::MessageCannotCompare {
-                lower: r1,
-                upper: r2,
-                strict_comparison_opt,
-            }),
+            }) => Normal(Message::MessageCannotCompare(Box::new(
+                MessageCannotCompareData {
+                    lower: r1,
+                    upper: r2,
+                    strict_comparison_opt,
+                },
+            ))),
 
-            ErrorMessage::ENonStrictEqualityComparison(lower, upper) => {
+            ErrorMessage::ENonStrictEqualityComparison(box (lower, upper)) => {
                 Normal(Message::MessageCannotCompareNonStrict { lower, upper })
             }
 
-            ErrorMessage::ETupleArityMismatch {
+            ErrorMessage::ETupleArityMismatch(box ETupleArityMismatchData {
                 use_op,
                 lower_reason,
                 lower_arity,
@@ -5433,37 +6282,40 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_arity,
                 upper_inexact,
                 unify,
-            } => {
+            }) => {
                 let loc = lower_reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageIncompatibleTupleArity {
-                        lower_reason,
-                        lower_arity,
-                        lower_inexact,
-                        upper_reason,
-                        upper_arity,
-                        upper_inexact,
-                        unify,
-                    },
+                    message: Message::MessageIncompatibleTupleArity(Box::new(
+                        MessageIncompatibleTupleArityData {
+                            lower_reason,
+                            lower_arity,
+                            lower_inexact,
+                            upper_reason,
+                            upper_arity,
+                            upper_inexact,
+                            unify,
+                        },
+                    )),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::ETupleRequiredAfterOptional {
+            ErrorMessage::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple,
                 reason_required,
                 reason_optional,
-            } => Normal(Message::MessageInvalidTupleRequiredAfterOptional {
+            }) => Normal(Message::MessageInvalidTupleRequiredAfterOptional {
                 reason_tuple,
                 reason_required,
                 reason_optional,
             }),
 
-            ErrorMessage::ETupleInvalidTypeSpread { reason_arg, .. } => {
-                Normal(Message::MessageInvalidTupleTypeSpread(reason_arg))
-            }
+            ErrorMessage::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
+                reason_arg,
+                ..
+            }) => Normal(Message::MessageInvalidTupleTypeSpread(reason_arg)),
 
             ErrorMessage::ETupleElementAfterInexactSpread(_) => {
                 Normal(Message::MessageTupleElementAfterInexactSpread)
@@ -5471,106 +6323,116 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ENonLitArrayToTuple((lower, upper), use_op) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleNonLiteralArrayToTuple { lower, upper },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::ETupleOutOfBounds {
+            ErrorMessage::ETupleOutOfBounds(box ETupleOutOfBoundsData {
                 reason,
                 reason_op,
                 inexact,
                 length,
                 index,
                 use_op,
-            } => UseOp {
+            }) => UseOp(Box::new(UseOpData {
                 loc: reason.loc.dupe(),
-                message: Message::MessageTupleIndexOutOfBound {
-                    reason_op,
-                    inexact,
-                    length,
-                    index,
-                },
+                message: Message::MessageTupleIndexOutOfBound(Box::new(
+                    MessageTupleIndexOutOfBoundData {
+                        reason_op,
+                        inexact,
+                        length,
+                        index,
+                    },
+                )),
                 use_op,
                 explanation: None,
-            },
+            })),
 
-            ErrorMessage::ETupleNonIntegerIndex {
+            ErrorMessage::ETupleNonIntegerIndex(box ETupleNonIntegerIndexData {
                 reason,
                 index,
                 use_op,
-            } => {
+            }) => {
                 let loc = reason.loc.dupe();
                 let index_def_loc = reason.def_loc_opt.as_ref().unwrap_or(&reason.loc).dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageTupleNonIntegerIndex {
-                        index_def_loc,
-                        index,
-                    },
+                    message: Message::MessageTupleNonIntegerIndex(Box::new(
+                        MessageTupleNonIntegerIndexData {
+                            index_def_loc,
+                            index,
+                        },
+                    )),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::ETupleUnsafeWrite { reason, use_op } => UseOp {
+            ErrorMessage::ETupleUnsafeWrite { reason, use_op } => UseOp(Box::new(UseOpData {
                 loc: reason.loc.dupe(),
                 message: Message::MessageTupleNonStaticallyKnownIndex,
                 use_op,
                 explanation: None,
-            },
+            })),
 
-            ErrorMessage::ETupleElementNotReadable {
+            ErrorMessage::ETupleElementNotReadable(box ETupleElementNotReadableData {
                 reason,
                 index,
                 name,
                 use_op,
-            } => {
+            }) => {
                 let loc = reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageTupleElementNotReadable {
-                        reason,
-                        index,
-                        name,
-                    },
+                    message: Message::MessageTupleElementNotReadable(Box::new(
+                        MessageTupleElementNotReadableData {
+                            reason,
+                            index,
+                            name,
+                        },
+                    )),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::ETupleElementNotWritable {
+            ErrorMessage::ETupleElementNotWritable(box ETupleElementNotWritableData {
                 reason,
                 index,
                 name,
                 use_op,
-            } => {
+            }) => {
                 let loc = reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageTupleElementNotWritable {
-                        reason,
-                        index,
-                        name,
-                    },
+                    message: Message::MessageTupleElementNotWritable(Box::new(
+                        MessageTupleElementNotWritableData {
+                            reason,
+                            index,
+                            name,
+                        },
+                    )),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::ETupleElementPolarityMismatch {
-                index,
-                reason_lower,
-                polarity_lower,
-                reason_upper,
-                polarity_upper,
-                use_op,
-            } => {
+            ErrorMessage::ETupleElementPolarityMismatch(
+                box ETupleElementPolarityMismatchData {
+                    index,
+                    reason_lower,
+                    polarity_lower,
+                    reason_upper,
+                    polarity_upper,
+                    use_op,
+                },
+            ) => {
                 let loc = reason_lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageTuplePolarityMismatch {
                         index,
@@ -5581,37 +6443,37 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::EROArrayWrite(reasons, use_op) => {
                 let (lower, _) = reasons;
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc: lower.loc.dupe(),
                     message: Message::MessageReadonlyArraysCannotBeWrittenTo,
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::EIncompatibleWithExact((lower, upper), use_op, kind) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleWithExact { kind, lower, upper },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::EFunctionIncompatibleWithIndexer((lower, upper), use_op) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleWithIndexed { lower, upper },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::EStrUtilTypeNonLiteralArg(_) => {
@@ -5636,18 +6498,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reasons: (lower, upper),
             } => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleNonTypeGuardToTypeGuard { lower, upper },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::ETypeGuardInvalidParameter {
+            ErrorMessage::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
                 type_guard_reason,
                 binding_reason,
-            } => Normal(Message::MessageCannotReferenceTypeGuardParameter {
+            }) => Normal(Message::MessageCannotReferenceTypeGuardParameter {
                 type_guard_reason,
                 binding_reason,
             }),
@@ -5657,12 +6519,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reasons: (lower, upper),
             } => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageTypeGuardIndexMismatch { lower, upper },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::ETypeGuardImpliesMismatch {
@@ -5670,12 +6532,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reasons: (lower, upper),
             } => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageTypeGuardImpliesMismatch { lower, upper },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::ETypeGuardParamUnbound(reason) => {
@@ -5686,32 +6548,38 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageInvalidTypeGuardThisParam(reason))
             }
 
-            ErrorMessage::ETypeGuardFunctionInvalidWrites {
-                type_guard_reason,
-                write_locs,
-                ..
-            } => Normal(Message::MessageInvalidTypeGuardFunctionWritten {
+            ErrorMessage::ETypeGuardFunctionInvalidWrites(
+                box ETypeGuardFunctionInvalidWritesData {
+                    type_guard_reason,
+                    write_locs,
+                    ..
+                },
+            ) => Normal(Message::MessageInvalidTypeGuardFunctionWritten {
                 type_guard_reason,
                 write_locs,
             }),
 
-            ErrorMessage::ENegativeTypeGuardConsistency {
-                reason,
-                return_reason,
-                type_reason,
-            } => Normal(Message::MessageNegativeTypeGuardConsistency {
+            ErrorMessage::ENegativeTypeGuardConsistency(
+                box ENegativeTypeGuardConsistencyData {
+                    reason,
+                    return_reason,
+                    type_reason,
+                },
+            ) => Normal(Message::MessageNegativeTypeGuardConsistency {
                 reason,
                 return_reason,
                 type_reason,
             }),
 
-            ErrorMessage::ETypeParamConstIncompatibility {
-                use_op,
-                lower,
-                upper,
-            } => {
+            ErrorMessage::ETypeParamConstIncompatibility(
+                box ETypeParamConstIncompatibilityData {
+                    use_op,
+                    lower,
+                    upper,
+                },
+            ) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatiblETypeParamConstIncompatibility {
                         lower,
@@ -5719,28 +6587,32 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
             ErrorMessage::ETypeParamConstInvalidPosition(reason) => {
                 Normal(Message::MessageTypeParamConstInvalidPosition(reason))
             }
 
-            ErrorMessage::ETypeGuardFunctionParamHavoced {
-                type_guard_reason,
-                param_reason,
-                call_locs,
-            } => Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced {
-                type_guard_desc: type_guard_reason.desc.clone(),
-                param_reason,
-                call_locs,
-            }),
+            ErrorMessage::ETypeGuardFunctionParamHavoced(
+                box ETypeGuardFunctionParamHavocedData {
+                    type_guard_reason,
+                    param_reason,
+                    call_locs,
+                },
+            ) => Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced(
+                Box::new(MessageCannotUseTypeGuardWithFunctionParamHavocedData {
+                    type_guard_desc: type_guard_reason.desc.clone(),
+                    param_reason,
+                    call_locs,
+                }),
+            )),
 
-            ErrorMessage::ETypeGuardIncompatibleWithFunctionKind { kind, .. } => {
-                Normal(Message::MessageInvalidTypeGuardFunctionKind(kind))
-            }
+            ErrorMessage::ETypeGuardIncompatibleWithFunctionKind(
+                box ETypeGuardIncompatibleWithFunctionKindData { kind, .. },
+            ) => Normal(Message::MessageInvalidTypeGuardFunctionKind(kind)),
 
-            ErrorMessage::EInternal(_, internal_error) => {
+            ErrorMessage::EInternal(box (_, internal_error)) => {
                 let msg = format!(
                     "Internal error: {}",
                     string_of_internal_error(&internal_error)
@@ -5750,7 +6622,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ))
             }
 
-            ErrorMessage::EUnsupportedSyntax(_, unsupported_syntax) => {
+            ErrorMessage::EUnsupportedSyntax(box (_, unsupported_syntax)) => {
                 Normal(Message::MessageUnsupportedSyntax(unsupported_syntax))
             }
 
@@ -5774,7 +6646,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
             }
 
-            ErrorMessage::EBindingError(binding_error, _, x, entry_loc) => {
+            ErrorMessage::EBindingError(box (binding_error, _, x, entry_loc)) => {
                 let x_reason = VirtualReason::new(
                     flow_common::reason::VirtualReasonDesc::RIdentifier(x),
                     entry_loc,
@@ -5805,11 +6677,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         name,
                     } => {
                         let imported_name = if imported { Some(name) } else { None };
-                        Message::MessageCannotUseTypeInValuePosition {
-                            reason: x_reason,
-                            type_only_namespace,
-                            imported_name,
-                        }
+                        Message::MessageCannotUseTypeInValuePosition(Box::new(
+                            MessageCannotUseTypeInValuePositionData {
+                                reason: x_reason,
+                                type_only_namespace,
+                                imported_name,
+                            },
+                        ))
                     }
                     BindingError::EConstReassigned | BindingError::EConstParamReassigned => {
                         Message::MessageCannotReassignConstant(x_reason)
@@ -5832,35 +6706,41 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUninitializedInstanceProperty(err))
             }
 
-            ErrorMessage::EBadExportContext(name, _) => Normal(
+            ErrorMessage::EBadExportContext(box (name, _)) => Normal(
                 Message::MessageCannotUseExportInNonLegalToplevelContext(name),
             ),
 
-            ErrorMessage::EBadDefaultImportAccess(_, import_star_reason) => {
+            ErrorMessage::EBadDefaultImportAccess(box (_, import_star_reason)) => {
                 Normal(Message::MessageInvalidImportStarUse(import_star_reason))
             }
 
-            ErrorMessage::EInvalidImportStarUse(_, import_star_reason) => {
+            ErrorMessage::EInvalidImportStarUse(box (_, import_star_reason)) => {
                 Normal(Message::MessageCannotUseImportStar(import_star_reason))
             }
 
-            ErrorMessage::ENonConstVarExport(_, decl_reason) => {
+            ErrorMessage::ENonConstVarExport(box (_, decl_reason)) => {
                 Normal(Message::MessageNonConstVarExport(decl_reason))
             }
 
-            ErrorMessage::EMixedImportAndRequire(_, import_reason) => Normal(
+            ErrorMessage::EMixedImportAndRequire(box (_, import_reason)) => Normal(
                 Message::MessageCannotUseMixedImportAndRequire(import_reason),
             ),
 
-            ErrorMessage::EUnsupportedVarianceAnnotation(_, kind) => {
+            ErrorMessage::EUnsupportedVarianceAnnotation(box (_, kind)) => {
                 Normal(Message::MessageUnsupportedVarianceAnnotation(kind))
             }
 
-            ErrorMessage::EExportRenamedDefault {
-                name, is_reexport, ..
-            } => Normal(Message::MessageCannotExportRenamedDefault { name, is_reexport }),
+            ErrorMessage::EExportRenamedDefault(box EExportRenamedDefaultData {
+                name,
+                is_reexport,
+                ..
+            }) => Normal(Message::MessageCannotExportRenamedDefault(Box::new(
+                MessageCannotExportRenamedDefaultData { name, is_reexport },
+            ))),
 
-            ErrorMessage::ECannotDelete(_, expr) => Normal(Message::MessageCannotDelete(expr)),
+            ErrorMessage::ECannotDelete(box (_, expr)) => {
+                Normal(Message::MessageCannotDelete(expr))
+            }
 
             ErrorMessage::ESignatureBindingValidation(sve) => {
                 use flow_type_sig::signature_error::BindingValidation as BV;
@@ -5906,52 +6786,62 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotBuildTypedInterface(sve))
             }
 
-            ErrorMessage::EInvalidObjectKit { reason, use_op, .. } => {
+            ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData {
+                reason, use_op, ..
+            }) => {
                 let loc = reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageLowerIsNotObject(reason),
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::EInvalidTypeof(_, typename) => {
+            ErrorMessage::EInvalidTypeof(box (_, typename)) => {
                 Normal(Message::MessageInvalidGenericRef(typename))
             }
 
-            ErrorMessage::EObjectComputedPropertyAccess {
-                reason_obj,
-                reason_prop,
-                kind,
-            } => Normal(Message::MessageCannotAccessObjectWithComputedProp {
+            ErrorMessage::EObjectComputedPropertyAccess(
+                box EObjectComputedPropertyAccessData {
+                    reason_obj,
+                    reason_prop,
+                    kind,
+                },
+            ) => Normal(Message::MessageCannotAccessObjectWithComputedProp {
                 reason_obj,
                 reason_prop,
                 kind,
             }),
 
-            ErrorMessage::EObjectComputedPropertyAssign(reason_prop, Some(reason_key), kind) => {
-                Normal(
-                    Message::MessageCannotAssignToObjectWithComputedPropWithKey {
-                        reason_prop,
-                        reason_key,
-                        kind,
-                    },
-                )
-            }
+            ErrorMessage::EObjectComputedPropertyAssign(box (
+                reason_prop,
+                Some(reason_key),
+                kind,
+            )) => Normal(
+                Message::MessageCannotAssignToObjectWithComputedPropWithKey {
+                    reason_prop,
+                    reason_key,
+                    kind,
+                },
+            ),
 
-            ErrorMessage::EObjectComputedPropertyAssign(reason_prop, None, _) => Normal(
+            ErrorMessage::EObjectComputedPropertyAssign(box (reason_prop, None, _)) => Normal(
                 Message::MessageCannotAssignToObjectWithComputedProp(reason_prop),
             ),
 
-            ErrorMessage::EObjectComputedPropertyPotentialOverwrite {
-                key_loc,
-                overwritten_locs,
-            } => Normal(
-                Message::MessageCannotAddComputedPropertyDueToPotentialOverwrite {
+            ErrorMessage::EObjectComputedPropertyPotentialOverwrite(
+                box EObjectComputedPropertyPotentialOverwriteData {
                     key_loc,
                     overwritten_locs,
                 },
+            ) => Normal(
+                Message::MessageCannotAddComputedPropertyDueToPotentialOverwrite(Box::new(
+                    MessageCannotAddComputedPropertyDueToPotentialOverwriteData {
+                        key_loc,
+                        overwritten_locs,
+                    },
+                )),
             ),
 
             ErrorMessage::EUnsupportedImplements(reason) => Normal(
@@ -5960,15 +6850,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ENotAReactComponent { reason, use_op } => {
                 let loc = reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageLowerIsNotReactComponent(reason),
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::EReactElementFunArity(_, fn_name, n) => {
+            ErrorMessage::EReactElementFunArity(box (_, fn_name, n)) => {
                 Normal(Message::MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name, n })
             }
 
@@ -5988,63 +6878,69 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
             }
 
-            ErrorMessage::EDuplicateModuleProvider {
+            ErrorMessage::EDuplicateModuleProvider(box EDuplicateModuleProviderData {
                 module_name,
                 provider,
                 conflict,
-            } => Normal(Message::MessageDuplicateModuleProvider {
-                module_name,
-                provider,
-                conflict,
-            }),
+            }) => Normal(Message::MessageDuplicateModuleProvider(Box::new(
+                MessageDuplicateModuleProviderData {
+                    module_name,
+                    provider,
+                    conflict,
+                },
+            ))),
 
-            ErrorMessage::EParseError(_, parse_error) => {
+            ErrorMessage::EParseError(box (_, parse_error)) => {
                 Normal(Message::MessageParseError(parse_error))
             }
 
-            ErrorMessage::EDocblockError(_, err) => Normal(Message::MessageDocblockError(err)),
+            ErrorMessage::EDocblockError(box (_, err)) => {
+                Normal(Message::MessageDocblockError(err))
+            }
 
-            ErrorMessage::EUntypedTypeImport(_, module_name) => Normal(
+            ErrorMessage::EUntypedTypeImport(box (_, module_name)) => Normal(
                 Message::MessageUntypedTypeImport(module_name.display().to_string().into()),
             ),
 
-            ErrorMessage::EUntypedImport(_, module_name) => Normal(Message::MessageUntypedImport(
-                module_name.display().to_string().into(),
-            )),
+            ErrorMessage::EUntypedImport(box (_, module_name)) => Normal(
+                Message::MessageUntypedImport(module_name.display().to_string().into()),
+            ),
 
             ErrorMessage::EInternalType(_, kind) => Normal(Message::MessageInternalType(kind)),
 
-            ErrorMessage::EIncorrectTypeWithReplacement { kind, .. } => {
-                Normal(Message::MessageIncorrectType(kind))
-            }
+            ErrorMessage::EIncorrectTypeWithReplacement(
+                box EIncorrectTypeWithReplacementData { kind, .. },
+            ) => Normal(Message::MessageIncorrectType(kind)),
 
-            ErrorMessage::ELintSetting(_, kind) => {
+            ErrorMessage::ELintSetting(box (_, kind)) => {
                 Normal(Message::MessageInvalidLintSettings(kind))
             }
 
-            ErrorMessage::ESketchyNullLint {
+            ErrorMessage::ESketchyNullLint(box ESketchyNullLintData {
                 kind,
                 falsy_loc,
                 null_loc,
                 ..
-            } => Normal(Message::MessageSketchyNullCheck {
-                kind,
-                falsy_loc,
-                null_loc,
-            }),
+            }) => Normal(Message::MessageSketchyNullCheck(Box::new(
+                MessageSketchyNullCheckData {
+                    kind,
+                    falsy_loc,
+                    null_loc,
+                },
+            ))),
 
             ErrorMessage::ESketchyNumberLint(_, reason) => {
                 Normal(Message::MessageSketchyNumber(reason))
             }
 
-            ErrorMessage::EPrimitiveAsInterface {
+            ErrorMessage::EPrimitiveAsInterface(box EPrimitiveAsInterfaceData {
                 use_op,
                 reason,
                 interface_reason,
                 kind,
-            } => {
+            }) => {
                 let loc = reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotUsePrimitiveAsInterface {
                         reason,
@@ -6053,16 +6949,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::ECannotSpreadInterface {
+            ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData {
                 spread_reason,
                 interface_reason,
                 use_op,
-            } => {
+            }) => {
                 let loc = spread_reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotSpreadInterface {
                         spread_reason,
@@ -6070,17 +6966,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::ECannotSpreadIndexerOnRight {
+            ErrorMessage::ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
                 spread_reason,
                 object_reason,
                 key_reason,
                 use_op,
-            } => {
+            }) => {
                 let loc = spread_reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotSpreadDueToPotentialOverwrite {
                         spread_reason,
@@ -6089,79 +6985,89 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::EUnableToSpread {
+            ErrorMessage::EUnableToSpread(box EUnableToSpreadData {
                 spread_reason,
                 object1_reason,
                 object2_reason,
                 propname,
                 error_kind,
                 use_op,
-            } => {
+            }) => {
                 let loc = spread_reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageCannotSpreadGeneral {
-                        spread_reason,
-                        object1_reason,
-                        object2_reason,
-                        propname,
-                        error_kind,
-                    },
+                    message: Message::MessageCannotSpreadGeneral(Box::new(
+                        MessageCannotSpreadGeneralData {
+                            spread_reason,
+                            object1_reason,
+                            object2_reason,
+                            propname,
+                            error_kind,
+                        },
+                    )),
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::EInexactMayOverwriteIndexer {
+            ErrorMessage::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
                 spread_reason,
                 key_reason,
                 value_reason,
                 object2_reason,
                 use_op,
-            } => {
+            }) => {
                 let loc = spread_reason.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageCannotSpreadInexactMayOverwriteIndexer {
-                        spread_reason,
-                        key_reason,
-                        value_reason,
-                        object2_reason,
-                    },
+                    message: Message::MessageCannotSpreadInexactMayOverwriteIndexer(Box::new(
+                        MessageCannotSpreadInexactMayOverwriteIndexerData {
+                            spread_reason,
+                            key_reason,
+                            value_reason,
+                            object2_reason,
+                        },
+                    )),
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(
+                box EnumInvalidObjectUtilTypeData {
+                    reason,
+                    enum_reason,
+                },
+            )) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum(
+                Box::new(MessageCannotInstantiateObjectUtilTypeWithEnumData {
+                    description: reason.desc.clone(),
+                    enum_reason,
+                }),
+            )),
+
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(
+                box EnumInvalidObjectFunctionData {
+                    reason,
+                    enum_reason,
+                },
+            )) => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
                 reason,
-                enum_reason,
-            }) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum {
-                description: reason.desc.clone(),
                 enum_reason,
             }),
 
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction {
-                reason,
-                enum_reason,
-            }) => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
-                reason,
-                enum_reason,
-            }),
-
-            ErrorMessage::EAssignConstLikeBinding {
+            ErrorMessage::EAssignConstLikeBinding(box EAssignConstLikeBindingData {
                 definition,
                 binding_kind,
                 ..
-            } => Normal(Message::MessageCannotReassignConstantLikeBinding {
+            }) => Normal(Message::MessageCannotReassignConstantLikeBinding {
                 definition,
                 binding_kind,
             }),
 
-            ErrorMessage::EObjectThisSuperReference(_, reason, k) => {
+            ErrorMessage::EObjectThisSuperReference(box (_, reason, k)) => {
                 let converted_kind = match k {
                     ThisFinderKind::This => crate::intermediate_error_types::ThisFinderKind::This,
                     ThisFinderKind::Super => crate::intermediate_error_types::ThisFinderKind::Super,
@@ -6169,18 +7075,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageThisSuperInObject(reason, converted_kind))
             }
 
-            ErrorMessage::EComponentThisReference { component_loc, .. } => {
-                Normal(Message::MessageThisInComponent(component_loc))
-            }
-
-            ErrorMessage::EImplicitInstantiationUnderconstrainedError {
-                reason_call,
-                reason_tparam,
-                use_op,
+            ErrorMessage::EComponentThisReference(box EComponentThisReferenceData {
+                component_loc,
                 ..
-            } => {
+            }) => Normal(Message::MessageThisInComponent(component_loc)),
+
+            ErrorMessage::EImplicitInstantiationUnderconstrainedError(
+                box EImplicitInstantiationUnderconstrainedErrorData {
+                    reason_call,
+                    reason_tparam,
+                    use_op,
+                    ..
+                },
+            ) => {
                 let loc = reason_call.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     use_op,
                     message: Message::MessageUnderconstrainedImplicitInstantiaton {
                         reason_call,
@@ -6188,17 +7097,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     loc,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::EClassToObject {
+            ErrorMessage::EClassToObject(box EClassToObjectData {
                 reason_class,
                 reason_obj,
                 use_op,
                 kind,
-            } => {
+            }) => {
                 let loc = reason_class.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleClassToObject {
                         reason_class,
@@ -6207,21 +7116,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     explanation: None,
                     use_op,
-                }
+                }))
             }
 
-            ErrorMessage::EMethodUnbinding {
+            ErrorMessage::EMethodUnbinding(box EMethodUnbindingData {
                 use_op,
                 reason_op,
                 reason_prop,
-            } => {
+            }) => {
                 let loc = reason_op.loc.dupe();
                 let context_loc = reason_prop
                     .def_loc_opt
                     .as_ref()
                     .unwrap_or(&reason_prop.loc)
                     .dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageMethodUnbinding {
                         reason_op,
@@ -6229,18 +7138,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     use_op,
                     explanation: None,
-                }
+                }))
             }
 
-            ErrorMessage::EHookIncompatible {
+            ErrorMessage::EHookIncompatible(box EHookIncompatibleData {
                 use_op,
                 lower,
                 upper,
                 lower_is_hook,
                 hook_is_annot,
-            } => {
+            }) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleReactHooksWithNonReactHook {
                         lower,
@@ -6252,47 +7161,51 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     explanation: Some(
                         Explanation::ExplanationReactHookIncompatibleWithNormalFunctions,
                     ),
-                }
+                }))
             }
 
-            ErrorMessage::EIncompatibleReactDeepReadOnly {
-                use_op,
-                lower,
-                upper,
-                dro_loc,
-            } => {
+            ErrorMessage::EIncompatibleReactDeepReadOnly(
+                box EIncompatibleReactDeepReadOnlyData {
+                    use_op,
+                    lower,
+                    upper,
+                    dro_loc,
+                },
+            ) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageIncompatibleReactDeepReadOnly {
-                        lower,
-                        upper,
-                        dro_loc,
-                    },
+                    message: Message::MessageIncompatibleReactDeepReadOnly(Box::new(
+                        MessageIncompatibleReactDeepReadOnlyData {
+                            lower,
+                            upper,
+                            dro_loc,
+                        },
+                    )),
                     use_op,
                     explanation: Some(Explanation::ExplanationIncompatibleReactDeepReadOnly),
-                }
+                }))
             }
 
-            ErrorMessage::EHookUniqueIncompatible {
+            ErrorMessage::EHookUniqueIncompatible(box EHookUniqueIncompatibleData {
                 use_op,
                 lower,
                 upper,
-            } => {
+            }) => {
                 let loc = lower.loc.dupe();
-                UseOp {
+                UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleReactHooksDueToUniqueness { lower, upper },
                     use_op,
                     explanation: Some(Explanation::ExplanationReactHookIncompatibleWithEachOther),
-                }
+                }))
             }
 
-            ErrorMessage::EHookRuleViolation {
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 callee_loc,
                 hook_rule,
                 ..
-            } => {
+            }) => {
                 use crate::error_message::HookRule;
                 match hook_rule {
                     HookRule::ConditionalHook => {
@@ -6302,11 +7215,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         Normal(Message::MessageCannotCallReactHookWithIllegalName(callee_loc))
                     }
                     HookRule::MaybeHook { hooks, non_hooks } => {
-                        Normal(Message::MessageCannotCallMaybeReactHook {
+                        Normal(Message::MessageCannotCallMaybeReactHook(Box::new(MessageCannotCallMaybeReactHookData {
                             callee_loc,
                             hooks,
                             non_hooks,
-                        })
+                        })))
                     }
                     HookRule::NotHookSyntaxHook => {
                         Normal(Message::MessageCannotCallNonHookSyntaxHook(callee_loc))
@@ -6329,45 +7242,54 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
             }
 
-            ErrorMessage::EInvalidGraphQL(_, err) => Normal(Message::MessageInvalidGraphQL(err)),
+            ErrorMessage::EInvalidGraphQL(box (_, err)) => {
+                Normal(Message::MessageInvalidGraphQL(err))
+            }
 
-            ErrorMessage::EReactIntrinsicOverlap {
+            ErrorMessage::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData {
                 use_loc: use_reason,
                 def,
                 type_,
                 mixed,
-            } => Normal(Message::MessageReactIntrinsicOverlap {
-                use_: use_reason,
-                def,
-                type_,
-                mixed,
-            }),
-
-            ErrorMessage::EInvalidBinaryArith {
-                reason_l,
-                reason_r,
-                kind,
-                ..
-            } => Normal(Message::MessageCannotPerformBinaryArith {
-                kind,
-                reason_l,
-                reason_r,
-            }),
-
-            ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms {
-                available_platforms,
-                required_platforms,
-                ..
-            } => Normal(
-                Message::MessageMissingPlatformSupportWithAvailablePlatforms {
-                    available_platforms: available_platforms.clone(),
-                    required_platforms: required_platforms.clone(),
+            }) => Normal(Message::MessageReactIntrinsicOverlap(Box::new(
+                MessageReactIntrinsicOverlapData {
+                    use_: use_reason,
+                    def,
+                    type_,
+                    mixed,
                 },
+            ))),
+
+            ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData {
+                reason_l,
+                reason_r,
+                kind,
+                ..
+            }) => Normal(Message::MessageCannotPerformBinaryArith {
+                kind,
+                reason_l,
+                reason_r,
+            }),
+
+            ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms(
+                box EMissingPlatformSupportWithAvailablePlatformsData {
+                    available_platforms,
+                    required_platforms,
+                    ..
+                },
+            ) => Normal(
+                Message::MessageMissingPlatformSupportWithAvailablePlatforms(Box::new(
+                    MessageMissingPlatformSupportWithAvailablePlatformsData {
+                        available_platforms: available_platforms.clone(),
+                        required_platforms: required_platforms.clone(),
+                    },
+                )),
             ),
 
-            ErrorMessage::EMissingPlatformSupport {
-                missing_platforms, ..
-            } => Normal(Message::MessageMissingPlatformSupport {
+            ErrorMessage::EMissingPlatformSupport(box EMissingPlatformSupportData {
+                missing_platforms,
+                ..
+            }) => Normal(Message::MessageMissingPlatformSupport {
                 missing_platforms: missing_platforms.clone(),
             }),
 
@@ -6379,13 +7301,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 non_unique_keys,
             )),
 
-            ErrorMessage::EUnionOptimization { kind, .. } => {
+            ErrorMessage::EUnionOptimization(box EUnionOptimizationData { kind, .. }) => {
                 Normal(Message::MessageCannotOptimizeUnionInternally(kind))
             }
 
-            ErrorMessage::EUnionOptimizationOnNonUnion { arg, .. } => {
-                Normal(Message::MessageInvalidUseOfFlowEnforceOptimized(arg))
-            }
+            ErrorMessage::EUnionOptimizationOnNonUnion(box EUnionOptimizationOnNonUnionData {
+                arg,
+                ..
+            }) => Normal(Message::MessageInvalidUseOfFlowEnforceOptimized(arg)),
 
             ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
                 sub_component,
@@ -6405,13 +7328,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             lower_array_desc,
                             upper_array_desc,
                             upper_array_reason,
-                        } => Explanation::ExplanationInvariantSubtypingDueToMutableArray {
+                        } => Explanation::ExplanationInvariantSubtypingDueToMutableArray(Box::new(ExplanationInvariantSubtypingDueToMutableArrayData {
                             lower_array_loc: lower_array_loc.dupe(),
                             upper_array_loc: upper_array_loc.dupe(),
                             lower_array_desc: expect_type_desc(lower_array_desc.clone()),
                             upper_array_desc: expect_type_desc(upper_array_desc.clone()),
                             upper_array_reason: upper_array_reason.dupe(),
-                        },
+                        })),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                             lower_obj_loc,
                             upper_obj_loc,
@@ -6419,14 +7342,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             upper_obj_desc,
                             upper_object_reason,
                             property_name,
-                        } => Explanation::ExplanationInvariantSubtypingDueToMutableProperty {
+                        } => Explanation::ExplanationInvariantSubtypingDueToMutableProperty(Box::new(ExplanationInvariantSubtypingDueToMutablePropertyData {
                             lower_obj_loc: lower_obj_loc.dupe(),
                             upper_obj_loc: upper_obj_loc.dupe(),
                             lower_obj_desc: expect_type_desc(lower_obj_desc.clone()),
                             upper_obj_desc: expect_type_desc(upper_obj_desc.clone()),
                             upper_object_reason: upper_object_reason.dupe(),
                             property_name: property_name.dupe(),
-                        },
+                        })),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
                             lower_obj_loc,
                             upper_obj_loc,
@@ -6434,17 +7357,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             upper_obj_desc,
                             upper_object_reason,
                             properties,
-                        } => Explanation::ExplanationInvariantSubtypingDueToMutableProperties {
+                        } => Explanation::ExplanationInvariantSubtypingDueToMutableProperties(Box::new(ExplanationInvariantSubtypingDueToMutablePropertiesData {
                             lower_obj_loc: lower_obj_loc.dupe(),
                             upper_obj_loc: upper_obj_loc.dupe(),
                             lower_obj_desc: expect_type_desc(lower_obj_desc.clone()),
                             upper_obj_desc: expect_type_desc(upper_obj_desc.clone()),
                             upper_object_reason: upper_object_reason.dupe(),
                             properties: properties.clone(),
-                        },
+                        })),
                     }
                 });
-                IncompatibleInvariantSubtyping {
+                IncompatibleInvariantSubtyping(Box::new(IncompatibleInvariantSubtypingData {
                     sub_component,
                     lower_loc,
                     upper_loc,
@@ -6452,7 +7375,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     upper_desc: expect_type_desc(upper_desc),
                     use_op,
                     explanation,
-                }
+                }))
             }
 
             ErrorMessage::EPropsNotFoundInInvariantSubtyping(
@@ -6466,7 +7389,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     upper_obj_desc,
                     use_op,
                 },
-            ) => PropsMissingInInvariantSubtyping {
+            ) => PropsMissingInInvariantSubtyping(Box::new(PropsMissingInInvariantSubtypingData {
                 props: Vec1::try_from_vec(
                     prop_names
                         .iter()
@@ -6481,9 +7404,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_obj_desc: expect_type_desc(lower_obj_desc),
                 upper_obj_desc: expect_type_desc(upper_obj_desc),
                 use_op,
-            },
+            })),
 
-            ErrorMessage::ETSSyntax { kind, .. } => {
+            ErrorMessage::ETSSyntax(box ETSSyntaxData { kind, .. }) => {
                 use crate::intermediate_error_types::Message;
                 let msg = match kind {
                     TSSyntaxKind::TSUnknown => Message::MessageTSUnknownType,
@@ -6528,42 +7451,46 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
     pub fn defered_in_speculation(&self) -> bool {
         match self {
-            Self::EUntypedTypeImport(_, _)
-            | Self::EMethodUnbinding { .. }
-            | Self::EUntypedImport(_, _)
+            Self::EUntypedTypeImport(box (_, _))
+            | Self::EMethodUnbinding(box EMethodUnbindingData { .. })
+            | Self::EUntypedImport(box (_, _))
             | Self::ENonstrictImport(_)
             | Self::EUnclearType(_)
             | Self::EDeprecatedBool(_)
             | Self::EInternalType(_, _)
             | Self::EUnsafeGettersSetters(_)
             | Self::EUnsafeObjectAssign(_)
-            | Self::ESketchyNullLint { .. }
+            | Self::ESketchyNullLint(box ESketchyNullLintData { .. })
             | Self::ESketchyNumberLint(_, _)
-            | Self::EUnnecessaryOptionalChain(_, _)
-            | Self::EUnnecessaryInvariant(_, _)
+            | Self::EUnnecessaryOptionalChain(box (_, _))
+            | Self::EUnnecessaryInvariant(box (_, _))
             | Self::EUnnecessaryDeclareTypeOnlyExport(_)
             | Self::EImplicitInexactObject(_)
             | Self::EAmbiguousObjectType(_)
-            | Self::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck { .. })
+            | Self::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
+                box MatchNonExplicitEnumCheckData { .. },
+            ))
             | Self::EUninitializedInstanceProperty(_, _)
-            | Self::ETrivialRecursiveDefinition(_, _)
+            | Self::ETrivialRecursiveDefinition(box (_, _))
             | Self::EAnyValueUsedAsType { .. }
             | Self::EValueUsedAsType { .. }
             | Self::EUnusedPromise { .. }
-            | Self::EImplicitInstantiationUnderconstrainedError { .. }
-            | Self::EDuplicateComponentProp { .. }
-            | Self::ERefComponentProp { .. }
-            | Self::EConstantCondition { .. }
-            | Self::EBuiltinNameLookupFailed { .. } => true,
+            | Self::EImplicitInstantiationUnderconstrainedError(
+                box EImplicitInstantiationUnderconstrainedErrorData { .. },
+            )
+            | Self::EDuplicateComponentProp(box EDuplicateComponentPropData { .. })
+            | Self::ERefComponentProp(box ERefComponentPropData { .. })
+            | Self::EConstantCondition(box EConstantConditionData { .. })
+            | Self::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { .. }) => true,
 
-            Self::EBindingError(BindingError::EReferencedBeforeDeclaration, _, _, _) => true,
+            Self::EBindingError(box (BindingError::EReferencedBeforeDeclaration, _, _, _)) => true,
 
-            Self::EEnumError(EnumErrorKind::EnumNotAllChecked {
+            Self::EEnumError(EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {
                 default_case_loc: Some(_),
                 ..
-            }) => true,
+            })) => true,
 
-            Self::EPropNotReadable { use_op, .. } => {
+            Self::EPropNotReadable(box EPropNotReadableData { use_op, .. }) => {
                 matches!(
                     use_op,
                     VirtualUseOp::Frame(frame, _) if matches!(frame.as_ref(), VirtualFrameUseOp::ReactDeepReadOnly(_, _))
@@ -6611,14 +7538,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             match root {
                 VirtualRootUseOp::Cast { .. }
                 | VirtualRootUseOp::ClassExtendsCheck { .. }
-                | VirtualRootUseOp::FunCall { .. }
-                | VirtualRootUseOp::FunCallMethod { .. }
+                | VirtualRootUseOp::FunCall(..)
+                | VirtualRootUseOp::FunCallMethod(..)
                 | VirtualRootUseOp::FunReturnStatement { .. }
                 | VirtualRootUseOp::FunImplicitReturn { .. } => Some(IncompatibleType),
                 VirtualRootUseOp::TypeGuardIncompatibility { .. }
-                | VirtualRootUseOp::PositiveTypeGuardConsistency { .. } => {
-                    Some(IncompatibleTypeGuard)
-                }
+                | VirtualRootUseOp::PositiveTypeGuardConsistency(..) => Some(IncompatibleTypeGuard),
                 _ => None,
             }
         }
@@ -6630,7 +7555,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             use flow_common_errors::error_codes::ErrorCode::*;
             match (&acc, frame) {
                 (Some(_), _) => acc,
-                (_, VirtualFrameUseOp::TypeArgCompatibility { .. })
+                (_, VirtualFrameUseOp::TypeArgCompatibility(..))
                 | (_, VirtualFrameUseOp::TypeParamBound { .. }) => Some(IncompatibleType),
                 (None, _) => None,
             }
@@ -6668,18 +7593,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         match self {
             ErrorMessage::EArithmeticOperand { .. } => Some(UnsafeArith),
 
-            // | EInvalidBinaryArith { kind = (_, op); _ } -> begin
+            // | EInvalidBinaryArith(Box::new(EInvalidBinaryArithData { kind = (_, op); _ })) -> begin
             //     match op with
             //     | Type.ArithKind.Plus -> Some UnsafeAddition
             //     | _ -> Some UnsafeArith
             //   end
-            ErrorMessage::EInvalidBinaryArith { kind, .. } => match kind.1 {
-                flow_typing_type::type_::arith_kind::ArithKindInner::Plus => Some(UnsafeAddition),
-                _ => Some(UnsafeArith),
-            },
+            ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData { kind, .. }) => {
+                match kind.1 {
+                    flow_typing_type::type_::arith_kind::ArithKindInner::Plus => {
+                        Some(UnsafeAddition)
+                    }
+                    _ => Some(UnsafeArith),
+                }
+            }
 
-            ErrorMessage::EAssignConstLikeBinding { .. } => Some(CannotReassignConstLike),
-            ErrorMessage::EBadExportContext(_, _) => Some(InvalidExport),
+            ErrorMessage::EAssignConstLikeBinding(box EAssignConstLikeBindingData { .. }) => {
+                Some(CannotReassignConstLike)
+            }
+            ErrorMessage::EBadExportContext(box (_, _)) => Some(InvalidExport),
             ErrorMessage::EBadExportPosition(_) => Some(InvalidExport),
             ErrorMessage::EBadDefaultImportAccess { .. } => Some(DefaultImportAccess),
             ErrorMessage::EBadDefaultImportDestructuring(_) => Some(DefaultImportAccess),
@@ -6687,7 +7618,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EBinaryInLHS { .. } => Some(InvalidInLhs),
             ErrorMessage::EBinaryInRHS { .. } => Some(InvalidInRhs),
 
-            ErrorMessage::EBindingError(binding_error, _, _, _) => match binding_error {
+            ErrorMessage::EBindingError(box (binding_error, _, _, _)) => match binding_error {
                 EGlobalAlreadyDeclared => Some(NameAlreadyBound),
                 ENameAlreadyBound => Some(NameAlreadyBound),
                 ENameAlreadyBoundInCoreJs => Some(NameAlreadyBound),
@@ -6701,31 +7632,45 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 EReservedKeyword { .. } => Some(ReservedKeyword),
             },
 
-            ErrorMessage::EBuiltinNameLookupFailed { .. } => Some(CannotResolveName),
-            ErrorMessage::EBuiltinModuleLookupFailed { .. } => Some(CannotResolveModule),
-            ErrorMessage::EExpectedModuleLookupFailed { .. } => Some(CannotResolveModule),
-            ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed { .. } => {
-                Some(CannotResolveModule)
+            ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { .. }) => {
+                Some(CannotResolveName)
             }
-            ErrorMessage::ECallTypeArity { .. } => Some(NonpolymorphicTypeArg),
+            ErrorMessage::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
+                ..
+            }) => Some(CannotResolveModule),
+            ErrorMessage::EExpectedModuleLookupFailed(box EExpectedModuleLookupFailedData {
+                ..
+            }) => Some(CannotResolveModule),
+            ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(
+                box EPlatformSpecificImplementationModuleLookupFailedData { .. },
+            ) => Some(CannotResolveModule),
+            ErrorMessage::ECallTypeArity(box ECallTypeArityData { .. }) => {
+                Some(NonpolymorphicTypeArg)
+            }
             ErrorMessage::ECannotDelete { .. } => Some(CannotDelete),
-            ErrorMessage::ECannotSpreadIndexerOnRight { .. } => Some(CannotSpreadIndexer),
-            ErrorMessage::ECannotSpreadInterface { .. } => Some(CannotSpreadInterface),
+            ErrorMessage::ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
+                ..
+            }) => Some(CannotSpreadIndexer),
+            ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData { .. }) => {
+                Some(CannotSpreadInterface)
+            }
             ErrorMessage::ECodelessSuppression(_) => None,
             ErrorMessage::ENonStrictEqualityComparison { .. }
-            | ErrorMessage::EComparison { .. } => Some(InvalidCompare),
+            | ErrorMessage::EComparison(box EComparisonData { .. }) => Some(InvalidCompare),
 
             ErrorMessage::EComputedPropertyWithUnion { .. } => Some(InvalidComputedProp),
-            ErrorMessage::EDevOnlyRefinedLocInfo { .. } => None,
-            ErrorMessage::EDevOnlyInvalidatedRefinementInfo { .. } => None,
-            ErrorMessage::ETemporaryHardcodedErrorForPrototyping(_, _) => None,
-            ErrorMessage::EIncorrectTypeWithReplacement { kind, .. } => {
-                match kind.error_type_of_kind() {
-                    IncorrectTypeErrorType::DeprecatedUtility => Some(DeprecatedUtility),
-                    IncorrectTypeErrorType::TSType => Some(UnsupportedSyntax),
-                }
-            }
-            ErrorMessage::EDocblockError(_, err) => match err {
+            ErrorMessage::EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData { .. }) => None,
+            ErrorMessage::EDevOnlyInvalidatedRefinementInfo(
+                box EDevOnlyInvalidatedRefinementInfoData { .. },
+            ) => None,
+            ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (_, _)) => None,
+            ErrorMessage::EIncorrectTypeWithReplacement(
+                box EIncorrectTypeWithReplacementData { kind, .. },
+            ) => match kind.error_type_of_kind() {
+                IncorrectTypeErrorType::DeprecatedUtility => Some(DeprecatedUtility),
+                IncorrectTypeErrorType::TSType => Some(UnsupportedSyntax),
+            },
+            ErrorMessage::EDocblockError(box (_, err)) => match err {
                 DocblockError::MultipleFlowAttributes => Some(DuplicateFlowDecl),
                 DocblockError::InvalidFlowMode(_) => Some(InvalidFlowModeDecl),
                 DocblockError::MultipleJSXAttributes => Some(DuplicateJsxDecl),
@@ -6735,69 +7680,77 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 DocblockError::InvalidSupportsPlatform(_) => Some(InvalidSupportsPlatformDecl),
                 DocblockError::DisallowedSupportsPlatform => Some(InvalidSupportsPlatformDecl),
             },
-            ErrorMessage::EDuplicateModuleProvider { .. } => Some(DuplicateModule),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked { .. }) => {
-                Some(InvalidExhaustiveCheck)
+            ErrorMessage::EDuplicateModuleProvider(box EDuplicateModuleProviderData { .. }) => {
+                Some(DuplicateModule)
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse { .. }) => {
-                Some(InvalidExhaustiveCheck)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName { .. }) => {
-                Some(InvalidEnumMemberName)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName { .. }) => {
-                Some(InvalidEnumMemberName)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck { from_match, .. }) => {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(
+                box EnumAllMembersAlreadyCheckedData { .. },
+            )) => Some(InvalidExhaustiveCheck),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(
+                box EnumInvalidAbstractUseData { .. },
+            )) => Some(InvalidExhaustiveCheck),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName(
+                box EnumInvalidMemberNameData { .. },
+            )) => Some(InvalidEnumMemberName),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName(
+                box EnumNonIdentifierMemberNameData { .. },
+            )) => Some(InvalidEnumMemberName),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
+                box EnumInvalidCheckData { from_match, .. },
+            )) => {
                 if *from_match {
                     Some(MatchInvalidPattern)
                 } else {
                     Some(InvalidExhaustiveCheck)
                 }
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess { .. }) => {
-                Some(InvalidEnumAccess)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType { .. }) => {
-                Some(NotAnObject)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction { .. }) => {
-                Some(NotAnObject)
-            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
+                box EnumInvalidMemberAccessData { .. },
+            )) => Some(InvalidEnumAccess),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(
+                box EnumInvalidObjectUtilTypeData { .. },
+            )) => Some(NotAnObject),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(
+                box EnumInvalidObjectFunctionData { .. },
+            )) => Some(NotAnObject),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable { .. }) => Some(NotIterable),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked { .. }) => {
-                Some(InvalidExhaustiveCheck)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue { .. }) => {
-                Some(DuplicateEnumInit)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType { .. }) => {
-                Some(EnumValueAsType)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumModification { .. }) => {
-                Some(CannotWriteEnum)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
-                default_case_loc: None,
-                ..
-            }) => Some(InvalidExhaustiveCheck),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
-                default_case_loc: Some(_),
-                ..
-            }) => Some(RequireExplicitEnumSwitchCases),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked { .. }) => {
-                Some(InvalidExhaustiveCheck)
-            }
-            ErrorMessage::EExpectedBooleanLit { use_op, .. } => {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
+                box EnumMemberAlreadyCheckedData { .. },
+            )) => Some(InvalidExhaustiveCheck),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue(
+                box EnumMemberDuplicateValueData { .. },
+            )) => Some(DuplicateEnumInit),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(
+                box EnumMemberUsedAsTypeData { .. },
+            )) => Some(EnumValueAsType),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumModification(
+                box EnumModificationData { .. },
+            )) => Some(CannotWriteEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
+                box EnumNotAllCheckedData {
+                    default_case_loc: None,
+                    ..
+                },
+            )) => Some(InvalidExhaustiveCheck),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
+                box EnumNotAllCheckedData {
+                    default_case_loc: Some(_),
+                    ..
+                },
+            )) => Some(RequireExplicitEnumSwitchCases),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(
+                box EnumUnknownNotCheckedData { .. },
+            )) => Some(InvalidExhaustiveCheck),
+            ErrorMessage::EExpectedBooleanLit(box EExpectedBooleanLitData { use_op, .. }) => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EExpectedNumberLit { use_op, .. } => {
+            ErrorMessage::EExpectedNumberLit(box EExpectedNumberLitData { use_op, .. }) => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EExpectedStringLit { use_op, .. } => {
+            ErrorMessage::EExpectedStringLit(box EExpectedStringLitData { use_op, .. }) => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EExpectedBigIntLit { use_op, .. } => {
+            ErrorMessage::EExpectedBigIntLit(box EExpectedBigIntLitData { use_op, .. }) => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
             ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled { .. }) => {
@@ -6806,54 +7759,66 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported { .. }) => {
                 Some(UnsupportedSyntax)
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName { .. }) => {
-                Some(InvalidEnum)
+            ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName(
+                box EnumDuplicateMemberNameData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues(
+                box EnumInconsistentMemberValuesData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer(
+                box EnumInvalidMemberInitializerData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized(
+                box EnumBooleanMemberNotInitializedData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized(
+                box EnumNumberMemberNotInitializedData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized(
+                box EnumBigIntMemberNotInitializedData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
+                box EnumStringMemberInconsistentlyInitializedData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EExponentialSpread(box EExponentialSpreadData { .. }) => {
+                Some(ExponentialSpread)
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues { .. }) => {
-                Some(InvalidEnum)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer { .. }) => {
-                Some(InvalidEnum)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized { .. }) => {
-                Some(InvalidEnum)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized { .. }) => {
-                Some(InvalidEnum)
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized { .. }) => {
-                Some(InvalidEnum)
-            }
-            ErrorMessage::EEnumError(
-                EnumErrorKind::EnumStringMemberInconsistentlyInitialized { .. },
-            ) => Some(InvalidEnum),
-            ErrorMessage::EExponentialSpread { .. } => Some(ExponentialSpread),
             ErrorMessage::EExportsAnnot { .. } => Some(InvalidExportsTypeArg),
-            ErrorMessage::EExportValueAsType(_, _) => Some(ExportValueAsType),
+            ErrorMessage::EExportValueAsType(box (_, _)) => Some(ExportValueAsType),
             ErrorMessage::EForInRHS { .. } => Some(InvalidInRhs),
             ErrorMessage::EInstanceofRHS { .. } => Some(InvalidInRhs),
             ErrorMessage::EFunctionCallExtraArg { .. } => Some(ExtraArg),
             ErrorMessage::ETypeGuardFuncIncompatibility { .. }
-            | ErrorMessage::ETypeGuardInvalidParameter { .. }
+            | ErrorMessage::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
+                ..
+            })
             | ErrorMessage::ETypeGuardIndexMismatch { .. }
             | ErrorMessage::ETypeGuardImpliesMismatch { .. }
             | ErrorMessage::ETypeGuardParamUnbound { .. }
             | ErrorMessage::ETypeGuardThisParam { .. }
-            | ErrorMessage::ETypeGuardFunctionInvalidWrites { .. }
-            | ErrorMessage::ETypeGuardFunctionParamHavoced { .. }
-            | ErrorMessage::ETypeGuardIncompatibleWithFunctionKind { .. } => {
-                Some(FunctionPredicate)
-            }
-            ErrorMessage::ENegativeTypeGuardConsistency { .. } => Some(IncompatibleTypeGuard),
-            ErrorMessage::ETypeParamConstIncompatibility { .. }
+            | ErrorMessage::ETypeGuardFunctionInvalidWrites(
+                box ETypeGuardFunctionInvalidWritesData { .. },
+            )
+            | ErrorMessage::ETypeGuardFunctionParamHavoced(
+                box ETypeGuardFunctionParamHavocedData { .. },
+            )
+            | ErrorMessage::ETypeGuardIncompatibleWithFunctionKind(
+                box ETypeGuardIncompatibleWithFunctionKindData { .. },
+            ) => Some(FunctionPredicate),
+            ErrorMessage::ENegativeTypeGuardConsistency(
+                box ENegativeTypeGuardConsistencyData { .. },
+            ) => Some(IncompatibleTypeGuard),
+            ErrorMessage::ETypeParamConstIncompatibility(
+                box ETypeParamConstIncompatibilityData { .. },
+            )
             | ErrorMessage::ETypeParamConstInvalidPosition { .. } => Some(TypeParamConstCode),
-            ErrorMessage::EImportTypeAsTypeof(_, _) => Some(InvalidImportType),
-            ErrorMessage::EImportTypeAsValue(_, _) => Some(ImportTypeAsValue),
-            ErrorMessage::EImportValueAsType(_, _) => Some(ImportValueAsType),
-            ErrorMessage::EIncompatible {
+            ErrorMessage::EImportTypeAsTypeof(box (_, _)) => Some(InvalidImportType),
+            ErrorMessage::EImportTypeAsValue(box (_, _)) => Some(ImportTypeAsValue),
+            ErrorMessage::EImportValueAsType(box (_, _)) => Some(ImportValueAsType),
+            ErrorMessage::EIncompatible(box EIncompatibleData {
                 upper: (_, upper_kind),
                 ..
-            } => Self::error_code_of_upper_kind(upper_kind),
+            }) => Self::error_code_of_upper_kind(upper_kind),
             ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {
                 use_op: Some(use_op),
                 ..
@@ -6862,11 +7827,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData { use_op, .. }) => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EIncompatibleProp {
+            ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 use_op: Some(use_op),
                 ..
-            } => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
-            ErrorMessage::EIncompatibleProp { use_op: None, .. } => Some(IncompatibleType),
+            }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
+            ErrorMessage::EIncompatibleProp(box EIncompatiblePropData { use_op: None, .. }) => {
+                Some(IncompatibleType)
+            }
             ErrorMessage::EIncompatibleWithExact(_, _, ExactnessErrorKind::UnexpectedInexact) => {
                 Some(IncompatibleExact)
             }
@@ -6876,54 +7843,70 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EFunctionIncompatibleWithIndexer { .. } => {
                 Some(IncompatibleFunctionIndexer)
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible { use_op, .. })
-            | ErrorMessage::EIncompatibleWithUseOp { use_op, .. } => {
-                Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
-            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(
+                box EnumIncompatibleData { use_op, .. },
+            ))
+            | ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
+                use_op, ..
+            }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
             ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
                 use_op,
                 ..
             }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
             ErrorMessage::EIndeterminateModuleType { .. } => Some(ModuleTypeConflict),
-            ErrorMessage::EInexactMayOverwriteIndexer { .. } => Some(CannotSpreadInexact),
-            ErrorMessage::EInternal(_, _) => None,
+            ErrorMessage::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
+                ..
+            }) => Some(CannotSpreadInexact),
+            ErrorMessage::EInternal(box (_, _)) => None,
             ErrorMessage::EInvalidConstructor { .. } => Some(InvalidConstructor),
             ErrorMessage::EInvalidLHSInAssignment { .. } => Some(InvalidLhs),
-            ErrorMessage::EInvalidObjectKit { .. } => Some(NotAnObject),
+            ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { .. }) => Some(NotAnObject),
             ErrorMessage::EInvalidPrototype { .. } => Some(NotAnObject),
-            ErrorMessage::EInvalidReactCreateElement { .. } => Some(InvalidReactCreateElement),
-            ErrorMessage::EInvalidTypeArgs(_, _) => Some(InvalidTypeArg),
+            ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
+                ..
+            }) => Some(InvalidReactCreateElement),
+            ErrorMessage::EInvalidTypeArgs(box (_, _)) => Some(InvalidTypeArg),
             ErrorMessage::EInvalidTypeof { .. } => Some(IllegalTypeof),
             ErrorMessage::EInvalidInfer { .. } => Some(InvalidInfer),
-            ErrorMessage::EConstantCondition { .. } => Some(ConstantCondition),
+            ErrorMessage::EConstantCondition(box EConstantConditionData { .. }) => {
+                Some(ConstantCondition)
+            }
             ErrorMessage::EInvalidExtends { .. } => Some(InvalidExtends),
             ErrorMessage::ELintSetting { .. } => Some(LintSetting),
             ErrorMessage::EMissingLocalAnnotation { reason, .. } => match &reason.desc {
                 flow_common::reason::VirtualReasonDesc::RImplicitThis(_) => Some(MissingThisAnnot),
                 _ => Some(MissingLocalAnnot),
             },
-            ErrorMessage::EMissingTypeArgs { .. } => Some(MissingTypeArg),
+            ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData { .. }) => Some(MissingTypeArg),
             ErrorMessage::EMixedImportAndRequire { .. } => Some(MixedImportAndRequire),
             ErrorMessage::EUnsupportedVarianceAnnotation { .. } => {
                 Some(UnsupportedVarianceAnnotation)
             }
-            ErrorMessage::ENoDefaultExport(_, _, _) => Some(MissingExport),
-            ErrorMessage::ENoNamedExport(_, _, _, _) => Some(MissingExport),
+            ErrorMessage::ENoDefaultExport(box (_, _, _)) => Some(MissingExport),
+            ErrorMessage::ENoNamedExport(box (_, _, _, _)) => Some(MissingExport),
             ErrorMessage::ENonConstVarExport { .. } => Some(NonConstVarExport),
             ErrorMessage::ENonLitArrayToTuple { .. } => Some(InvalidTupleArity),
             ErrorMessage::ENotAReactComponent { .. } => Some(NotAComponent),
-            ErrorMessage::EObjectComputedPropertyAccess { .. } => Some(InvalidComputedProp),
+            ErrorMessage::EObjectComputedPropertyAccess(
+                box EObjectComputedPropertyAccessData { .. },
+            ) => Some(InvalidComputedProp),
             ErrorMessage::EObjectComputedPropertyAssign { .. } => Some(InvalidComputedProp),
-            ErrorMessage::EObjectComputedPropertyPotentialOverwrite { .. } => {
-                Some(InvalidComputedProp)
+            ErrorMessage::EObjectComputedPropertyPotentialOverwrite(
+                box EObjectComputedPropertyPotentialOverwriteData { .. },
+            ) => Some(InvalidComputedProp),
+            ErrorMessage::EOnlyDefaultExport(box (_, _, _)) => Some(MissingExport),
+            ErrorMessage::EParseError(box (_, _)) => None,
+            ErrorMessage::EPolarityMismatch(box EPolarityMismatchData { .. }) => {
+                Some(IncompatibleVariance)
             }
-            ErrorMessage::EOnlyDefaultExport(_, _, _) => Some(MissingExport),
-            ErrorMessage::EParseError(_, _) => None,
-            ErrorMessage::EPolarityMismatch { .. } => Some(IncompatibleVariance),
-            ErrorMessage::EPrimitiveAsInterface { .. } => Some(IncompatibleType),
+            ErrorMessage::EPrimitiveAsInterface(box EPrimitiveAsInterfaceData { .. }) => {
+                Some(IncompatibleType)
+            }
             ErrorMessage::EPrivateLookupFailed { .. } => Some(PropMissing),
             ErrorMessage::EStrUtilTypeNonLiteralArg { .. } => Some(InvalidTypeArg),
-            ErrorMessage::EPropNotFoundInLookup { use_op, .. } => {
+            ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
+                use_op, ..
+            }) => {
                 let default = match use_op {
                     VirtualUseOp::Op(root)
                         if matches!(root.as_ref(), VirtualRootUseOp::GetExport(_)) =>
@@ -6934,27 +7917,35 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 };
                 Self::react_rule_of_use_op(&Some(use_op.dupe()), default)
             }
-            ErrorMessage::EPropNotFoundInSubtyping { use_op, .. }
-            | ErrorMessage::EPropsNotFoundInSubtyping { use_op, .. }
-            | ErrorMessage::EPropsExtraAgainstExactObject { use_op, .. } => {
-                Self::react_rule_of_use_op(&Some(use_op.dupe()), IncompatibleType)
-            }
+            ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
+                use_op,
+                ..
+            })
+            | ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
+                use_op,
+                ..
+            })
+            | ErrorMessage::EPropsExtraAgainstExactObject(
+                box EPropsExtraAgainstExactObjectData { use_op, .. },
+            ) => Self::react_rule_of_use_op(&Some(use_op.dupe()), IncompatibleType),
             ErrorMessage::EPropsNotFoundInInvariantSubtyping(
                 box EPropsNotFoundInInvariantSubtypingData { use_op, .. },
             ) => Self::react_rule_of_use_op(&Some(use_op.dupe()), IncompatibleType),
-            ErrorMessage::EIndexerCheckFailed { use_op, .. } => {
+            ErrorMessage::EIndexerCheckFailed(box EIndexerCheckFailedData { use_op, .. }) => {
                 Self::react_rule_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EPropNotReadable { use_op, .. } => {
+            ErrorMessage::EPropNotReadable(box EPropNotReadableData { use_op, .. }) => {
                 Self::react_rule_of_use_op(&Some(use_op.dupe()), CannotRead)
             }
-            ErrorMessage::EPropNotWritable { use_op, .. } => {
+            ErrorMessage::EPropNotWritable(box EPropNotWritableData { use_op, .. }) => {
                 Self::react_rule_of_use_op(&Some(use_op.dupe()), CannotWrite)
             }
-            ErrorMessage::EPropPolarityMismatch { .. } => Some(IncompatibleVariance),
-            ErrorMessage::EReactElementFunArity(_, _, _) => Some(MissingArg),
+            ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData { .. }) => {
+                Some(IncompatibleVariance)
+            }
+            ErrorMessage::EReactElementFunArity(box (_, _, _)) => Some(MissingArg),
             ErrorMessage::EReactRefInRender { .. } => Some(ReactRuleRef),
-            ErrorMessage::ERecursionLimit(_, _) => None,
+            ErrorMessage::ERecursionLimit(box (_, _)) => None,
             ErrorMessage::EROArrayWrite(_, use_op) => {
                 Self::react_rule_of_use_op(&Some(use_op.dupe()), CannotWrite)
             }
@@ -6971,44 +7962,66 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ) => Some(SignatureVerificationFailure),
             ErrorMessage::ESignatureVerification { .. } => Some(SignatureVerificationFailure),
             ErrorMessage::EThisInExportedFunction { .. } => Some(ThisInExportedFunction),
-            ErrorMessage::EExportRenamedDefault { .. } => Some(ExportRenamedDefault),
-            ErrorMessage::ETooFewTypeArgs { .. } => Some(MissingTypeArg),
-            ErrorMessage::ETooManyTypeArgs { .. } => Some(ExtraTypeArg),
-            ErrorMessage::ETupleArityMismatch { .. } => Some(InvalidTupleArity),
-            ErrorMessage::ETupleRequiredAfterOptional { .. } => Some(TupleRequiredAfterOptional),
-            ErrorMessage::ETupleInvalidTypeSpread { .. } => Some(TupleInvalidTypeSpread),
+            ErrorMessage::EExportRenamedDefault(box EExportRenamedDefaultData { .. }) => {
+                Some(ExportRenamedDefault)
+            }
+            ErrorMessage::ETooFewTypeArgs(box ETooFewTypeArgsData { .. }) => Some(MissingTypeArg),
+            ErrorMessage::ETooManyTypeArgs(box ETooManyTypeArgsData { .. }) => Some(ExtraTypeArg),
+            ErrorMessage::ETupleArityMismatch(box ETupleArityMismatchData { .. }) => {
+                Some(InvalidTupleArity)
+            }
+            ErrorMessage::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
+                ..
+            }) => Some(TupleRequiredAfterOptional),
+            ErrorMessage::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData { .. }) => {
+                Some(TupleInvalidTypeSpread)
+            }
             ErrorMessage::ETupleElementAfterInexactSpread { .. } => {
                 Some(ElementAfterInexactTupleSpread)
             }
-            ErrorMessage::ETupleElementNotReadable { .. } => Some(CannotRead),
-            ErrorMessage::ETupleElementNotWritable { .. } => Some(CannotWrite),
-            ErrorMessage::ETupleElementPolarityMismatch { .. } => Some(IncompatibleVariance),
-            ErrorMessage::ETupleNonIntegerIndex { .. } => Some(InvalidTupleIndex),
-            ErrorMessage::ETupleOutOfBounds { .. } => Some(InvalidTupleIndex),
+            ErrorMessage::ETupleElementNotReadable(box ETupleElementNotReadableData { .. }) => {
+                Some(CannotRead)
+            }
+            ErrorMessage::ETupleElementNotWritable(box ETupleElementNotWritableData { .. }) => {
+                Some(CannotWrite)
+            }
+            ErrorMessage::ETupleElementPolarityMismatch(
+                box ETupleElementPolarityMismatchData { .. },
+            ) => Some(IncompatibleVariance),
+            ErrorMessage::ETupleNonIntegerIndex(box ETupleNonIntegerIndexData { .. }) => {
+                Some(InvalidTupleIndex)
+            }
+            ErrorMessage::ETupleOutOfBounds(box ETupleOutOfBoundsData { .. }) => {
+                Some(InvalidTupleIndex)
+            }
             ErrorMessage::ETupleUnsafeWrite { .. } => Some(InvalidTupleIndex),
             ErrorMessage::ETypeParamArity(_, _) => Some(NonpolymorphicTypeApp),
             ErrorMessage::ETypeParamMinArity(_, _) => Some(MissingTypeArg),
-            ErrorMessage::EUnableToSpread { error_kind, .. } => match error_kind {
-                ExactnessErrorKind::UnexpectedInexact => Some(CannotSpreadInexact),
-                ExactnessErrorKind::UnexpectedIndexer => Some(CannotSpreadIndexer),
-            },
+            ErrorMessage::EUnableToSpread(box EUnableToSpreadData { error_kind, .. }) => {
+                match error_kind {
+                    ExactnessErrorKind::UnexpectedInexact => Some(CannotSpreadInexact),
+                    ExactnessErrorKind::UnexpectedIndexer => Some(CannotSpreadIndexer),
+                }
+            }
             ErrorMessage::EUnexpectedThisType { .. } => Some(IllegalThis),
             ErrorMessage::EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,
                 ..
             }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
             ErrorMessage::EUnreachable { .. } => Some(UnreachableCode),
-            ErrorMessage::EUnsupportedExact(_, _) => Some(InvalidExact),
+            ErrorMessage::EUnsupportedExact(box (_, _)) => Some(InvalidExact),
             ErrorMessage::EUnsupportedImplements { .. } => Some(CannotImplement),
             ErrorMessage::EUnsupportedKeyInObject { .. } => Some(IllegalKey),
             ErrorMessage::EAmbiguousNumericKeyWithVariance { .. } => Some(IllegalKey),
             ErrorMessage::EUnsupportedSetProto { .. } => Some(CannotWrite),
-            ErrorMessage::EUnsupportedSyntax(_, _) => Some(UnsupportedSyntax),
-            ErrorMessage::EImplicitInstantiationUnderconstrainedError { .. } => {
-                Some(UnderconstrainedImplicitInstantiation)
-            }
+            ErrorMessage::EUnsupportedSyntax(box (_, _)) => Some(UnsupportedSyntax),
+            ErrorMessage::EImplicitInstantiationUnderconstrainedError(
+                box EImplicitInstantiationUnderconstrainedErrorData { .. },
+            ) => Some(UnderconstrainedImplicitInstantiation),
             ErrorMessage::EObjectThisSuperReference { .. } => Some(ObjectThisReference),
-            ErrorMessage::EComponentThisReference { .. } => Some(ComponentThisReference),
+            ErrorMessage::EComponentThisReference(box EComponentThisReferenceData { .. }) => {
+                Some(ComponentThisReference)
+            }
             ErrorMessage::EComponentCase { .. } => Some(ComponentCase),
             ErrorMessage::EDeclareComponentInvalidParam { .. } => Some(InvalidComponentProp),
             ErrorMessage::EComponentMissingReturn { .. } => Some(ComponentMissingReturn),
@@ -7016,66 +8029,82 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EComponentBodyInAmbientContext { .. } => {
                 Some(ComponentBodyInAmbientContext)
             }
-            ErrorMessage::EInvalidDeclaration { .. } => Some(InvalidDeclaration),
+            ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData { .. }) => {
+                Some(InvalidDeclaration)
+            }
             ErrorMessage::EInvalidMappedType { .. } => Some(InvalidMappedType),
-            ErrorMessage::EDuplicateComponentProp { .. } => Some(InvalidComponentProp),
-            ErrorMessage::ERefComponentProp { .. } => Some(InvalidComponentProp),
-            ErrorMessage::EKeySpreadProp { .. } => Some(InvalidSpreadProp),
+            ErrorMessage::EDuplicateComponentProp(box EDuplicateComponentPropData { .. }) => {
+                Some(InvalidComponentProp)
+            }
+            ErrorMessage::ERefComponentProp(box ERefComponentPropData { .. }) => {
+                Some(InvalidComponentProp)
+            }
+            ErrorMessage::EKeySpreadProp(box EKeySpreadPropData { .. }) => Some(InvalidSpreadProp),
             ErrorMessage::EInvalidComponentRestParam { .. } => Some(InvalidComponentProp),
             ErrorMessage::EMalformedCode { .. } | ErrorMessage::EUnusedSuppression { .. } => None,
             ErrorMessage::EUseArrayLiteral { .. } => Some(IllegalNewArray),
             ErrorMessage::EAnyValueUsedAsType { .. } | ErrorMessage::EValueUsedAsType { .. } => {
                 Some(ValueAsType)
             }
-            ErrorMessage::EClassToObject { .. } => Some(ClassObject),
-            ErrorMessage::EMethodUnbinding { .. } => Some(MethodUnbinding),
-            ErrorMessage::EHookIncompatible { .. }
-            | ErrorMessage::EHookUniqueIncompatible { .. } => Some(ReactRuleHookIncompatible),
-            ErrorMessage::EIncompatibleReactDeepReadOnly { .. } => {
-                Some(ReactRuleImmutableIncompatible)
+            ErrorMessage::EClassToObject(box EClassToObjectData { .. }) => Some(ClassObject),
+            ErrorMessage::EMethodUnbinding(box EMethodUnbindingData { .. }) => {
+                Some(MethodUnbinding)
             }
+            ErrorMessage::EHookIncompatible(box EHookIncompatibleData { .. })
+            | ErrorMessage::EHookUniqueIncompatible(box EHookUniqueIncompatibleData { .. }) => {
+                Some(ReactRuleHookIncompatible)
+            }
+            ErrorMessage::EIncompatibleReactDeepReadOnly(
+                box EIncompatibleReactDeepReadOnlyData { .. },
+            ) => Some(ReactRuleImmutableIncompatible),
             ErrorMessage::EHookNaming { .. } => Some(ReactRuleHookNamingConvention),
-            ErrorMessage::EHookRuleViolation {
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule: HookRule::ConditionalHook,
                 ..
-            } => Some(ReactRuleHookConditional),
-            ErrorMessage::EHookRuleViolation {
+            }) => Some(ReactRuleHookConditional),
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule: HookRule::HookHasIllegalName,
                 ..
-            } => Some(ReactRuleHookNamingConvention),
-            ErrorMessage::EHookRuleViolation {
+            }) => Some(ReactRuleHookNamingConvention),
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule: HookRule::HookDefinitelyNotInComponentOrHook,
                 ..
-            } => Some(ReactRuleHookDefinitelyNotInComponentOrHook),
-            ErrorMessage::EHookRuleViolation {
+            }) => Some(ReactRuleHookDefinitelyNotInComponentOrHook),
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule: HookRule::MaybeHook { .. },
                 ..
-            } => Some(ReactRuleHookMixedWithNonHoook),
-            ErrorMessage::EHookRuleViolation {
+            }) => Some(ReactRuleHookMixedWithNonHoook),
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule: HookRule::NotHookSyntaxHook,
                 ..
-            } => Some(ReactRuleHookNonHookSyntax),
-            ErrorMessage::EHookRuleViolation {
+            }) => Some(ReactRuleHookNonHookSyntax),
+            ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule:
                     HookRule::HookInUnknownContext
                     | HookRule::HookNotInComponentSyntaxComponentOrHookSyntaxHook,
                 ..
-            } => Some(ReactRuleHook),
+            }) => Some(ReactRuleHook),
             ErrorMessage::EInvalidGraphQL { .. } => Some(InvalidGraphQL),
             ErrorMessage::EAnnotationInference { .. } => Some(InvalidExportedAnnotation),
             ErrorMessage::ETrivialRecursiveDefinition { .. } => Some(RecursiveDefinition),
             ErrorMessage::EDefinitionCycle { .. } => Some(DefinitionCycle),
-            ErrorMessage::ERecursiveDefinition { .. } => Some(RecursiveDefinition),
+            ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData { .. }) => {
+                Some(RecursiveDefinition)
+            }
             ErrorMessage::EReferenceInAnnotation { .. } => Some(RecursiveDefinition),
             ErrorMessage::EReferenceInDefault { .. } => Some(RecursiveDefinition),
-            ErrorMessage::EDuplicateClassMember { .. } => Some(DuplicateClassMember),
+            ErrorMessage::EDuplicateClassMember(box EDuplicateClassMemberData { .. }) => {
+                Some(DuplicateClassMember)
+            }
             ErrorMessage::EEmptyArrayNoProvider { .. } => Some(EmptyArrayNoAnnot),
             ErrorMessage::EBigIntRShift3 { .. } => Some(BigIntRShift3),
             ErrorMessage::EBigIntNumCoerce { .. } => Some(BigIntNumCoerce),
             ErrorMessage::EInvalidCatchParameterAnnotation { .. } => {
                 Some(InvalidCatchParameterAnnotation)
             }
-            ErrorMessage::EInvalidRendersTypeArgument { .. } => Some(InvalidRendersTypeArgument),
+            ErrorMessage::EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
+                ..
+            }) => Some(InvalidRendersTypeArgument),
             ErrorMessage::EUnnecessaryDeclareTypeOnlyExport { .. } => {
                 Some(UnnecessaryDeclareTypeOnlyExport)
             }
@@ -7087,13 +8116,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | ErrorMessage::EDeprecatedBool { .. }
             | ErrorMessage::EUnsafeObjectAssign { .. }
             | ErrorMessage::EUnsafeGettersSetters { .. }
-            | ErrorMessage::ESketchyNullLint { .. }
+            | ErrorMessage::ESketchyNullLint(box ESketchyNullLintData { .. })
             | ErrorMessage::ESketchyNumberLint { .. }
             | ErrorMessage::EUnnecessaryOptionalChain { .. }
             | ErrorMessage::EUnnecessaryInvariant { .. }
             | ErrorMessage::EImplicitInexactObject { .. }
             | ErrorMessage::EAmbiguousObjectType { .. }
-            | ErrorMessage::EReactIntrinsicOverlap { .. }
+            | ErrorMessage::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { .. })
             | ErrorMessage::EUninitializedInstanceProperty { .. }
             | ErrorMessage::ENestedComponent { .. }
             | ErrorMessage::ENestedHook { .. }
@@ -7103,47 +8132,63 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
                 _ => None,
             },
-            ErrorMessage::ETSSyntax { .. } => Some(UnsupportedSyntax),
+            ErrorMessage::ETSSyntax(box ETSSyntaxData { .. }) => Some(UnsupportedSyntax),
             ErrorMessage::EInvalidTypeCastSyntax { .. } => Some(InvalidTypeCastSyntax),
-            ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms { .. } => {
+            ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms(
+                box EMissingPlatformSupportWithAvailablePlatformsData { .. },
+            ) => Some(MissingPlatformSupport),
+            ErrorMessage::EMissingPlatformSupport(box EMissingPlatformSupportData { .. }) => {
                 Some(MissingPlatformSupport)
             }
-            ErrorMessage::EMissingPlatformSupport { .. } => Some(MissingPlatformSupport),
             ErrorMessage::EUnionPartialOptimizationNonUniqueKey(..) => {
                 Some(UnionPartiallyOptimizableNonUniqueKeys)
             }
-            ErrorMessage::EUnionOptimization { .. } => Some(UnionUnoptimizable),
-            ErrorMessage::EUnionOptimizationOnNonUnion { .. } => Some(UnionUnoptimizable),
+            ErrorMessage::EUnionOptimization(box EUnionOptimizationData { .. }) => {
+                Some(UnionUnoptimizable)
+            }
+            ErrorMessage::EUnionOptimizationOnNonUnion(box EUnionOptimizationOnNonUnionData {
+                ..
+            }) => Some(UnionUnoptimizable),
             ErrorMessage::ECannotCallReactComponent { .. } => Some(ReactRuleCallComponent),
             ErrorMessage::EMatchError(
-                MatchErrorKind::MatchNotExhaustive { .. }
-                | MatchErrorKind::MatchNonExhaustiveObjectPattern { .. }
+                MatchErrorKind::MatchNotExhaustive(box MatchNotExhaustiveData { .. })
+                | MatchErrorKind::MatchNonExhaustiveObjectPattern(
+                    box MatchNonExhaustiveObjectPatternData { .. },
+                )
                 | MatchErrorKind::MatchInvalidGuardedWildcard(_),
             ) => Some(MatchNotExhaustive),
-            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck { .. }) => {
-                Some(RequireExplicitEnumChecks)
-            }
-            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern { .. }) => {
-                Some(MatchUnusedPattern)
-            }
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
+                box MatchNonExplicitEnumCheckData { .. },
+            )) => Some(RequireExplicitEnumChecks),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(
+                box MatchUnusedPatternData { .. },
+            )) => Some(MatchUnusedPattern),
             ErrorMessage::EMatchError(
-                MatchErrorKind::MatchInvalidIdentOrMemberPattern { .. }
+                MatchErrorKind::MatchInvalidIdentOrMemberPattern(
+                    box MatchInvalidIdentOrMemberPatternData { .. },
+                )
                 | MatchErrorKind::MatchInvalidBindingKind { .. }
                 | MatchErrorKind::MatchInvalidObjectPropertyLiteral { .. }
                 | MatchErrorKind::MatchInvalidUnaryZero { .. }
                 | MatchErrorKind::MatchInvalidUnaryPlusBigInt { .. }
-                | MatchErrorKind::MatchDuplicateObjectProperty { .. }
+                | MatchErrorKind::MatchDuplicateObjectProperty(
+                    box MatchDuplicateObjectPropertyData { .. },
+                )
                 | MatchErrorKind::MatchBindingInOrPattern { .. }
                 | MatchErrorKind::MatchInvalidAsPattern { .. }
-                | MatchErrorKind::MatchInvalidPatternReference { .. }
-                | MatchErrorKind::MatchInvalidObjectShorthand { .. }
+                | MatchErrorKind::MatchInvalidPatternReference(
+                    box MatchInvalidPatternReferenceData { .. },
+                )
+                | MatchErrorKind::MatchInvalidObjectShorthand(box MatchInvalidObjectShorthandData {
+                    ..
+                })
                 | MatchErrorKind::MatchInvalidInstancePattern(_),
             ) => Some(MatchInvalidPattern),
             ErrorMessage::EMatchError(MatchErrorKind::MatchStatementInvalidBody { .. }) => {
                 Some(MatchStatementInvalidBody)
             }
             ErrorMessage::EMatchError(
-                MatchErrorKind::MatchInvalidCaseSyntax { .. }
+                MatchErrorKind::MatchInvalidCaseSyntax(box MatchInvalidCaseSyntaxData { .. })
                 | MatchErrorKind::MatchInvalidWildcardSyntax(_),
             ) => Some(UnsupportedSyntax),
             ErrorMessage::ERecordError(e) => match e {
@@ -7153,7 +8198,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 RecordErrorKind::RecordDeclarationInvalidSyntax { .. } => Some(RecordInvalidSyntax),
             },
             ErrorMessage::EUndocumentedFeature { .. } => Some(UndocumentedFeature),
-            ErrorMessage::EIllegalAssertOperator { .. } => Some(IllegalAssertOperator),
+            ErrorMessage::EIllegalAssertOperator(box EIllegalAssertOperatorData { .. }) => {
+                Some(IllegalAssertOperator)
+            }
         }
     }
 }

@@ -28,13 +28,34 @@ use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser_utils::signature_utils;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
+use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EInvalidBinaryArithData;
+use flow_typing_errors::error_message::EMethodUnbindingData;
+use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_errors::error_message::EPropNotReadableData;
+use flow_typing_errors::error_message::ETupleElementNotReadableData;
+use flow_typing_errors::error_message::ETupleElementNotWritableData;
+use flow_typing_errors::error_message::ETupleNonIntegerIndexData;
+use flow_typing_errors::error_message::ETupleOutOfBoundsData;
+use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
+use flow_typing_type::type_::ElemTData;
 use flow_typing_type::type_::ExportKind;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::GetElemTData;
+use flow_typing_type::type_::HasOwnPropTData;
+use flow_typing_type::type_::MapTypeTData;
+use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NamedSymbol;
+use flow_typing_type::type_::ResolveUnionTData;
+use flow_typing_type::type_::SetElemTData;
+use flow_typing_type::type_::SpecializeTData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -263,7 +284,7 @@ pub mod invalid_cyclic_type_validation {
                         DefTInner::FunT(_, _)
                         | DefTInner::ArrT(_)
                         | DefTInner::InstanceT(_)
-                        | DefTInner::ReactAbstractComponentT { .. }
+                        | DefTInner::ReactAbstractComponentT(_)
                         | DefTInner::RendersT(_)
                         | DefTInner::EnumValueT(_)
                         | DefTInner::EnumObjectT { .. } => acc,
@@ -286,7 +307,7 @@ pub mod invalid_cyclic_type_validation {
                         | DefTInner::SingletonBigIntT { .. }
                         | DefTInner::ClassT(_)
                         | DefTInner::TypeT(_, _)
-                        | DefTInner::PolyT { .. } => type_default(self, cx, pole, acc, t),
+                        | DefTInner::PolyT(_) => type_default(self, cx, pole, acc, t),
                     }
                 }
                 TypeInner::GenericT(..)
@@ -347,7 +368,7 @@ pub mod invalid_cyclic_type_validation {
                             // Inline error_recursive: create ETrivialRecursiveDefinition
                             // error and report it via add_annot_inference_error.
                             let loc = reason.loc().dupe();
-                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(loc, reason.dupe());
+                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc, reason.dupe())));
                             super::add_annot_inference_error(tied_cx, dst_cx, msg);
                             flow_typing_type::type_::any_t::error(reason.dupe())
                         });
@@ -565,9 +586,9 @@ pub fn object_like_op<CX>(u: &UseT<CX>) -> bool {
     match u.deref() {
         UseTInner::SetPropT(..)
         | UseTInner::GetPropT(..)
-        | UseTInner::TestPropT { .. }
+        | UseTInner::TestPropT(..)
         | UseTInner::MethodT(..)
-        | UseTInner::LookupT { .. }
+        | UseTInner::LookupT(..)
         | UseTInner::GetProtoT(_, _)
         | UseTInner::SetProtoT(_, _)
         | UseTInner::SuperT(..)
@@ -577,7 +598,7 @@ pub fn object_like_op<CX>(u: &UseT<CX>) -> bool {
         | UseTInner::GetDictValuesT(_, _)
         | UseTInner::ObjRestT(..)
         | UseTInner::SetElemT(..)
-        | UseTInner::GetElemT { .. } => true,
+        | UseTInner::GetElemT(..) => true,
         UseTInner::UseT(_, t) => matches!(t.deref(), TypeInner::AnyT(_, _)),
         _ => false,
     }
@@ -585,7 +606,7 @@ pub fn object_like_op<CX>(u: &UseT<CX>) -> bool {
 
 pub fn function_like_op(u: &UseT) -> bool {
     match u.deref() {
-        UseTInner::CallT { .. } => true,
+        UseTInner::CallT(..) => true,
         UseTInner::ConstructorT(..) => true,
         UseTInner::UseT(_, t) => matches!(t.deref(), TypeInner::AnyT(_, _)),
         _ => object_like_op(u),
@@ -808,21 +829,23 @@ pub fn error_message_kind_of_upper<CX>(
             PropRef::Computed(t) => UpperKind::IncompatibleSetPropT(loc_of_t(t).dupe(), None),
         },
         UseTInner::SetPrivatePropT(..) => UpperKind::IncompatibleSetPrivatePropT,
-        UseTInner::MethodT(_, _, _, propref, _) => match propref.as_ref() {
+        UseTInner::MethodT(box MethodTData { propref, .. }) => match propref.as_ref() {
             PropRef::Named { reason, name, .. } => {
                 UpperKind::IncompatibleMethodT(reason.loc().dupe(), Some(name.dupe()))
             }
             PropRef::Computed(t) => UpperKind::IncompatibleMethodT(loc_of_t(t).dupe(), None),
         },
-        UseTInner::CallT { .. } => UpperKind::IncompatibleCallT,
-        UseTInner::GetElemT { key_t, .. } => {
+        UseTInner::CallT(..) => UpperKind::IncompatibleCallT,
+        UseTInner::GetElemT(box GetElemTData { key_t, .. }) => {
             UpperKind::IncompatibleGetElemT(loc_of_t(key_t).dupe())
         }
-        UseTInner::SetElemT(_, _, t, _, _, _) => {
+        UseTInner::SetElemT(box SetElemTData { key_t: t, .. }) => {
             UpperKind::IncompatibleSetElemT(loc_of_t(t).dupe())
         }
-        UseTInner::CallElemT(_, _, _, t, _) => UpperKind::IncompatibleCallElemT(loc_of_t(t).dupe()),
-        UseTInner::ElemT { obj, .. } => {
+        UseTInner::CallElemT(box CallElemTData { key_t: t, .. }) => {
+            UpperKind::IncompatibleCallElemT(loc_of_t(t).dupe())
+        }
+        UseTInner::ElemT(box ElemTData { obj, .. }) => {
             if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)))
             {
                 UpperKind::IncompatibleElemTOfArrT
@@ -834,7 +857,7 @@ pub fn error_message_kind_of_upper<CX>(
         UseTInner::ArrRestT(..) => UpperKind::IncompatibleArrRestT,
         UseTInner::SuperT(..) => UpperKind::IncompatibleSuperT,
         UseTInner::MixinT(..) => UpperKind::IncompatibleMixinT,
-        UseTInner::SpecializeT(use_op, _, _, _, _) => {
+        UseTInner::SpecializeT(box SpecializeTData { use_op, .. }) => {
             if matches!(
                 use_op,
                 flow_typing_type::type_::VirtualUseOp::Op(inner)
@@ -848,7 +871,11 @@ pub fn error_message_kind_of_upper<CX>(
         UseTInner::ConcretizeTypeAppsT(..) => UpperKind::IncompatibleSpecializeT,
         UseTInner::ThisSpecializeT(..) => UpperKind::IncompatibleThisSpecializeT,
         UseTInner::GetKeysT(..) => UpperKind::IncompatibleGetKeysT,
-        UseTInner::HasOwnPropT(_, r, t) => {
+        UseTInner::HasOwnPropT(box HasOwnPropTData {
+            reason: r,
+            type_: t,
+            ..
+        }) => {
             let name = match t.deref() {
                 TypeInner::DefT(_, def_t) => {
                     if let DefTInner::SingletonStrT { value, .. } = def_t.deref() {
@@ -873,7 +900,7 @@ pub fn error_message_kind_of_upper<CX>(
         }
         UseTInner::GetValuesT(..) => UpperKind::IncompatibleGetValuesT,
         UseTInner::GetDictValuesT(..) => UpperKind::IncompatibleGetValuesT,
-        UseTInner::MapTypeT(_, _, kind, _) => {
+        UseTInner::MapTypeT(box MapTypeTData { type_map: kind, .. }) => {
             if matches!(kind, flow_typing_type::type_::TypeMap::ObjectKeyMirror) {
                 UpperKind::IncompatibleMapTypeTObject
             } else {
@@ -1373,13 +1400,13 @@ where
         rep.members_iter().duped().partition(is_union_resolvable);
 
     if let Some((first, unresolved)) = evals.split_first() {
-        let resolve_union_t = UseT::new(UseTInner::ResolveUnionT {
+        let resolve_union_t = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
             reason: reason.dupe(),
             resolved: resolved.into(),
             unresolved: Rc::from(unresolved),
             upper: Box::new(upper),
             id: mk_id() as i32,
-        });
+        })));
         f(cx, trace, (first.dupe(), resolve_union_t))?;
     }
     Ok(())
@@ -1554,8 +1581,8 @@ pub fn quick_error_fun_as_obj<'cx>(
             let mut props_not_found = BTreeMap::new();
             for (x, p) in props.iter() {
                 let optional = match p.deref() {
-                    PropertyInner::Field { type_, .. } => {
-                        matches!(type_.deref(), TypeInner::OptionalT { .. })
+                    PropertyInner::Field(fd) => {
+                        matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
                     }
                     _ => false,
                 };
@@ -1567,23 +1594,26 @@ pub fn quick_error_fun_as_obj<'cx>(
             if props_not_found.is_empty() {
                 Ok(false)
             } else if statics_own_props.is_empty() && !props.is_empty() {
-                let error_message = ErrorMessage::EIncompatibleWithUseOp {
-                    reason_lower: reason.dupe(),
-                    reason_upper: reason_o.dupe(),
-                    use_op: use_op.dupe(),
-                    explanation: Some(Explanation::ExplanationFunctionsWithStaticsToObject),
-                };
+                let error_message =
+                    ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
+                        reason_lower: reason.dupe(),
+                        reason_upper: reason_o.dupe(),
+                        use_op: use_op.dupe(),
+                        explanation: Some(Explanation::ExplanationFunctionsWithStaticsToObject),
+                    }));
                 add_output(cx, error_message)?;
                 Ok(true)
             } else {
                 for (x, _) in props_not_found.iter() {
-                    let err = ErrorMessage::EPropNotFoundInSubtyping {
-                        prop_name: Some(x.dupe()),
-                        reason_lower: reason.dupe(),
-                        reason_upper: reason_o.dupe(),
-                        use_op: use_op.dupe(),
-                        suggestion: None,
-                    };
+                    let err = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                        EPropNotFoundInSubtypingData {
+                            prop_name: Some(x.dupe()),
+                            reason_lower: reason.dupe(),
+                            reason_upper: reason_o.dupe(),
+                            use_op: use_op.dupe(),
+                            suggestion: None,
+                        },
+                    ));
                     add_output(cx, err)?;
                 }
                 Ok(true)
@@ -1638,15 +1668,18 @@ pub fn emit_cacheable_env_error<'cx>(
 
     let msg = match err {
         CacheableEnvError::ReferencedBeforeDeclaration { name, def_loc } => {
-            ErrorMessage::EBindingError(
+            ErrorMessage::EBindingError(Box::new((
                 BindingError::EReferencedBeforeDeclaration,
                 loc,
                 Name::new(name),
                 def_loc,
-            )
+            )))
         }
         CacheableEnvError::BuiltinNameLookupFailed(name) => {
-            ErrorMessage::EBuiltinNameLookupFailed { loc, name }
+            ErrorMessage::EBuiltinNameLookupFailed(Box::new(EBuiltinNameLookupFailedData {
+                loc,
+                name,
+            }))
         }
     };
     add_output(cx, msg).unwrap()
@@ -1669,11 +1702,11 @@ pub fn lookup_builtin_module_error<'cx>(
 
     add_output(
         cx,
-        ErrorMessage::EBuiltinModuleLookupFailed {
+        ErrorMessage::EBuiltinModuleLookupFailed(Box::new(EBuiltinModuleLookupFailedData {
             loc: loc.dupe(),
             potential_generator,
             name: module_name_str,
-        },
+        })),
     )?;
 
     let reason = Reason::new(VirtualReasonDesc::RAnyImplicit, loc);
@@ -1793,6 +1826,7 @@ pub fn lookup_builtin_typeapp<'cx>(
 
 pub fn builtin_promise_class_id<'cx>(cx: &Context<'cx>) -> Option<flow_aloc::ALocId> {
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
 
     let (_, t) = cx.builtin_value_opt("Promise")?;
     if let TypeInner::OpenT(tvar) = t.deref() {
@@ -1801,7 +1835,7 @@ pub fn builtin_promise_class_id<'cx>(cx: &Context<'cx>) -> Option<flow_aloc::ALo
         if let Constraints::FullyResolved(s) = &constraints {
             let forced = cx.force_fully_resolved_tvar(s);
             if let TypeInner::DefT(_, def_t) = forced.deref() {
-                if let DefTInner::PolyT { t_out, .. } = def_t.deref() {
+                if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() {
                     if let TypeInner::DefT(_, inner_def_t) = t_out.deref() {
                         if let DefTInner::ClassT(class_t) = inner_def_t.deref() {
                             if let TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -1826,6 +1860,7 @@ pub fn is_builtin_class_id<'cx>(
     cx: &Context<'cx>,
 ) -> bool {
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
 
     match cx.builtin_type_opt(class_ref) {
         Some((_, t)) => {
@@ -1836,7 +1871,7 @@ pub fn is_builtin_class_id<'cx>(
                     let forced = cx.force_fully_resolved_tvar(s);
                     if let TypeInner::DefT(_, def_t) = forced.deref() {
                         match def_t.deref() {
-                            DefTInner::PolyT { t_out, .. } => {
+                            DefTInner::PolyT(box PolyTData { t_out, .. }) => {
                                 if let TypeInner::DefT(_, inner_def_t) = t_out.deref() {
                                     if let DefTInner::ClassT(class_inner) = inner_def_t.deref() {
                                         let ref_class_id = match class_inner.deref() {
@@ -1899,6 +1934,7 @@ pub fn builtin_react_element_nominal_id<'cx>(
     cx: &Context<'cx>,
 ) -> Option<flow_typing_type::type_::nominal::Id> {
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::TypeTKind;
 
     match cx.builtin_type_opt("ExactReactElement_DEPRECATED") {
@@ -1909,7 +1945,7 @@ pub fn builtin_react_element_nominal_id<'cx>(
                 if let Constraints::FullyResolved(s) = &constraints {
                     let forced = cx.force_fully_resolved_tvar(s);
                     if let TypeInner::DefT(_, def_t) = forced.deref() {
-                        if let DefTInner::PolyT { t_out, .. } = def_t.deref() {
+                        if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() {
                             if let TypeInner::DefT(_, inner_def_t) = t_out.deref() {
                                 if let DefTInner::TypeT(TypeTKind::OpaqueKind, inner_type) =
                                     inner_def_t.deref()
@@ -1935,6 +1971,7 @@ pub fn builtin_react_renders_exactly_nominal_id<'cx>(
     cx: &Context<'cx>,
 ) -> Option<flow_typing_type::type_::nominal::Id> {
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::TypeTKind;
 
     match cx.builtin_type_opt("React$RendersExactly") {
@@ -1945,7 +1982,7 @@ pub fn builtin_react_renders_exactly_nominal_id<'cx>(
                 if let Constraints::FullyResolved(s) = &constraints {
                     let forced = cx.force_fully_resolved_tvar(s);
                     if let TypeInner::DefT(_, def_t) = forced.deref() {
-                        if let DefTInner::PolyT { t_out, .. } = def_t.deref() {
+                        if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() {
                             if let TypeInner::DefT(_, inner_def_t) = t_out.deref() {
                                 if let DefTInner::TypeT(TypeTKind::OpaqueKind, inner_type) =
                                     inner_def_t.deref()
@@ -2000,6 +2037,7 @@ pub fn obj_key_mirror<'cx>(
     reason_op: &Reason,
 ) -> Type {
     use flow_typing_type::type_::DefT;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::Flags;
     use flow_typing_type::type_::ObjKind;
     use flow_typing_type::type_::ObjType;
@@ -2033,21 +2071,16 @@ pub fn obj_key_mirror<'cx>(
     let mut new_props = BTreeMap::new();
     for (name, prop) in props.iter() {
         match prop.deref() {
-            PropertyInner::Field {
-                preferred_def_locs,
-                key_loc,
-                type_,
-                polarity,
-            } => {
-                let new_type = map_field(name, type_);
+            PropertyInner::Field(fd) => {
+                let new_type = map_field(name, &fd.type_);
                 new_props.insert(
                     name.dupe(),
-                    Property::new(PropertyInner::Field {
-                        preferred_def_locs: preferred_def_locs.clone(),
-                        key_loc: key_loc.dupe(),
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
                         type_: new_type,
-                        polarity: *polarity,
-                    }),
+                        polarity: fd.polarity,
+                    }))),
                 );
             }
             _ => {
@@ -2098,6 +2131,7 @@ pub fn namespace_type<'cx>(
     types: &std::collections::BTreeMap<Name, flow_typing_type::type_::NamedSymbol>,
 ) -> Type {
     use flow_common::polarity::Polarity;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::NamespaceType;
     use flow_typing_type::type_::ObjKind;
     use flow_typing_type::type_::Property;
@@ -2105,12 +2139,12 @@ pub fn namespace_type<'cx>(
     use flow_typing_type::type_::properties::PropertiesMap;
 
     let mk_prop = |symbol: &flow_typing_type::type_::NamedSymbol| -> Property {
-        Property::new(PropertyInner::Field {
+        Property::new(PropertyInner::Field(Box::new(FieldData {
             preferred_def_locs: symbol.preferred_def_locs.clone(),
             key_loc: symbol.name_loc.dupe(),
             type_: symbol.type_.dupe(),
             polarity: Polarity::Positive,
-        })
+        })))
     };
 
     let props: PropertiesMap = values
@@ -2266,6 +2300,8 @@ pub mod instantiation_kit {
     use flow_common::subst_name::SubstName;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_typing_context::Context;
+    use flow_typing_errors::error_message::ETooFewTypeArgsData;
+    use flow_typing_errors::error_message::ETooManyTypeArgsData;
     use flow_typing_type::type_::DepthTrace;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
@@ -2306,11 +2342,11 @@ pub mod instantiation_kit {
         if (ts.len() as i32) > maximum_arity {
             add_output(
                 cx,
-                ErrorMessage::ETooManyTypeArgs {
+                ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                     reason_tapp: reason_tapp.dupe(),
                     arity_loc: arity_loc.dupe(),
                     maximum_arity,
-                },
+                })),
             )?;
             if let Some(errs) = errs_ref.as_mut() {
                 errs.push(SubstCacheErr::ETooManyTypeArgs(
@@ -2344,11 +2380,11 @@ pub mod instantiation_kit {
                         // fewer arguments than params but no default
                         add_output(
                             cx,
-                            ErrorMessage::ETooFewTypeArgs {
+                            ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                                 reason_tapp: reason_tapp.dupe(),
                                 arity_loc: arity_loc.dupe(),
                                 minimum_arity,
-                            },
+                            })),
                         )?;
                         if let Some(errs) = errs_ref.as_mut() {
                             errs.push(SubstCacheErr::ETooFewTypeArgs(
@@ -2430,21 +2466,21 @@ pub mod instantiation_kit {
                     SubstCacheErr::ETooManyTypeArgs(arity_loc, maximum_arity) => {
                         add_output(
                             cx,
-                            ErrorMessage::ETooManyTypeArgs {
+                            ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                                 reason_tapp: reason_tapp.dupe(),
                                 arity_loc: arity_loc.dupe(),
                                 maximum_arity: *maximum_arity,
-                            },
+                            })),
                         )?;
                     }
                     SubstCacheErr::ETooFewTypeArgs(arity_loc, minimum_arity) => {
                         add_output(
                             cx,
-                            ErrorMessage::ETooFewTypeArgs {
+                            ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                                 reason_tapp: reason_tapp.dupe(),
                                 arity_loc: arity_loc.dupe(),
                                 minimum_arity: *minimum_arity,
-                            },
+                            })),
                         )?;
                     }
                 }
@@ -2613,8 +2649,11 @@ pub mod value_to_type_reference_transform {
     use dupe::Dupe;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_errors::error_message::EMissingTypeArgsData;
+    use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
     use flow_typing_type::type_::AnyErrorKind;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::ThisInstanceTData;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
@@ -2664,12 +2703,12 @@ pub mod value_to_type_reference_transform {
 
         match t.deref() {
             TypeInner::DefT(reason, def_t) => match def_t.deref() {
-                DefTInner::PolyT { tparams, t_out, .. }
+                DefTInner::PolyT(box PolyTData { tparams, t_out, .. })
                     if kind == TypeTKind::RenderTypeKind
                         && matches!(
                             t_out.deref(),
                             TypeInner::DefT(_, inner)
-                                if matches!(inner.deref(), DefTInner::ReactAbstractComponentT { .. })
+                                if matches!(inner.deref(), DefTInner::ReactAbstractComponentT(_))
                         ) =>
                 {
                     let mut subst_map = FlowOrdMap::default();
@@ -2701,23 +2740,23 @@ pub mod value_to_type_reference_transform {
                     ))
                 }
 
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams: ids,
                     ..
-                } => {
+                }) => {
                     let tparams_loc = tparams_loc.dupe();
 
                     let min_arity = ids.iter().filter(|tp| tp.default.is_none()).count() as i32;
                     add_output(
                         cx,
-                        ErrorMessage::EMissingTypeArgs {
+                        ErrorMessage::EMissingTypeArgs(Box::new(EMissingTypeArgsData {
                             reason_op: reason_op.dupe(),
                             reason_tapp: reason.dupe(),
                             arity_loc: tparams_loc,
                             min_arity,
                             max_arity: ids.len() as i32,
-                        },
+                        })),
                     )?;
 
                     Ok(Type::new(TypeInner::AnyT(
@@ -2752,10 +2791,12 @@ pub mod value_to_type_reference_transform {
                 DefTInner::EnumValueT(_) => {
                     add_output(
                         cx,
-                        ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType {
-                            reason: reason_op.dupe(),
-                            enum_reason: reason.dupe(),
-                        }),
+                        ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(Box::new(
+                            EnumMemberUsedAsTypeData {
+                                reason: reason_op.dupe(),
+                                enum_reason: reason.dupe(),
+                            },
+                        ))),
                     )?;
                     Ok(Type::new(TypeInner::AnyT(
                         reason_op.dupe(),
@@ -2763,7 +2804,7 @@ pub mod value_to_type_reference_transform {
                     )))
                 }
 
-                DefTInner::ReactAbstractComponentT { .. } => {
+                DefTInner::ReactAbstractComponentT(_) => {
                     Ok(run_on_abstract_component(cx, reason, reason_op, t.dupe()))
                 }
 
@@ -2936,6 +2977,7 @@ pub mod import_type_t_kit {
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::ThisInstanceTData;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
@@ -2983,12 +3025,12 @@ pub mod import_type_t_kit {
 
                 // delay fixing a polymorphic this-abstracted class until it is specialized,
                 // by transforming the instance type to a type application
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams: typeparams,
                     t_out,
                     id,
-                } => match t_out.deref() {
+                }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def) => match inner_def.deref() {
                         DefTInner::ClassT(inst) => match inst.deref() {
                             TypeInner::ThisInstanceT(..) => {
@@ -3019,7 +3061,7 @@ pub mod import_type_t_kit {
                             }
                         },
                         DefTInner::TypeT(_, _) => Some(t.dupe()),
-                        DefTInner::ReactAbstractComponentT { .. } => Some(t.dupe()),
+                        DefTInner::ReactAbstractComponentT(_) => Some(t.dupe()),
                         _ => None,
                     },
                     _ => None,
@@ -3032,7 +3074,7 @@ pub mod import_type_t_kit {
                         enum_value_t.dupe(),
                     )),
                 ))),
-                DefTInner::ReactAbstractComponentT { .. } => Some(t.dupe()),
+                DefTInner::ReactAbstractComponentT(_) => Some(t.dupe()),
                 DefTInner::TypeT(_, _) => Some(t.dupe()),
                 _ => None,
             },
@@ -3061,7 +3103,10 @@ pub mod import_type_t_kit {
             None => {
                 add_output(
                     cx,
-                    ErrorMessage::EImportValueAsType(reason.dupe(), FlowSmolStr::new(export_name)),
+                    ErrorMessage::EImportValueAsType(Box::new((
+                        reason.dupe(),
+                        FlowSmolStr::new(export_name),
+                    ))),
                 )?;
                 Ok(Type::new(TypeInner::AnyT(
                     reason,
@@ -3088,6 +3133,7 @@ pub mod import_typeof_t_kit {
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::TypeTKind;
@@ -3104,12 +3150,12 @@ pub mod import_typeof_t_kit {
     ) -> Result<Type, FlowJsException> {
         match l.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams: typeparams,
                     t_out,
                     ..
-                } => match t_out.deref() {
+                }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def) => match inner_def.deref() {
                         DefTInner::ClassT(inst)
                             if matches!(inst.deref(), TypeInner::ThisInstanceT(..)) =>
@@ -3123,7 +3169,7 @@ pub mod import_typeof_t_kit {
                         }
                         DefTInner::ClassT(_)
                         | DefTInner::FunT(_, _)
-                        | DefTInner::ReactAbstractComponentT { .. } => {
+                        | DefTInner::ReactAbstractComponentT(_) => {
                             let typeof_t =
                                 type_util::typeof_annotation(reason.dupe(), t_out.dupe(), None);
                             let new_id = flow_typing_type::type_::poly::Id::generate_id();
@@ -3143,10 +3189,10 @@ pub mod import_typeof_t_kit {
                         DefTInner::TypeT(_, _) => {
                             add_output(
                                 cx,
-                                ErrorMessage::EImportTypeAsTypeof(
+                                ErrorMessage::EImportTypeAsTypeof(Box::new((
                                     reason.dupe(),
                                     FlowSmolStr::new(export_name),
-                                ),
+                                ))),
                             )?;
                             Ok(Type::new(TypeInner::AnyT(
                                 reason,
@@ -3174,10 +3220,10 @@ pub mod import_typeof_t_kit {
                 DefTInner::TypeT(_, _) => {
                     add_output(
                         cx,
-                        ErrorMessage::EImportTypeAsTypeof(
+                        ErrorMessage::EImportTypeAsTypeof(Box::new((
                             reason.dupe(),
                             FlowSmolStr::new(export_name),
-                        ),
+                        ))),
                     )?;
                     Ok(Type::new(TypeInner::AnyT(
                         reason,
@@ -3216,6 +3262,7 @@ pub mod cjs_require_t_kit {
     use flow_common::reason::Reason;
     use flow_common::reason::is_lib_reason_def;
     use flow_typing_context::Context;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::ModuleType;
     use flow_typing_type::type_::ModuleTypeInner;
     use flow_typing_type::type_::NamedSymbol;
@@ -3271,12 +3318,12 @@ pub mod cjs_require_t_kit {
                     let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
 
                     let named_symbol_to_field = |ns: &NamedSymbol| -> PropertyInner {
-                        PropertyInner::Field {
+                        PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: ns.preferred_def_locs.clone(),
                             key_loc: ns.name_loc.dupe(),
                             type_: ns.type_.dupe(),
                             polarity: Polarity::Positive,
-                        }
+                        }))
                     };
 
                     let value_props: PropertiesMap = value_exports_tmap
@@ -3372,6 +3419,7 @@ pub mod import_module_ns_t_kit {
     use flow_typing_context::Context;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DictType;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::ModuleType;
     use flow_typing_type::type_::ModuleTypeInner;
     use flow_typing_type::type_::NamedSymbol;
@@ -3415,12 +3463,12 @@ pub mod import_module_ns_t_kit {
         let type_exports_tmap = cx.find_exports(exports.type_exports_tmap);
 
         let named_symbol_to_field = |ns: &NamedSymbol| -> Property {
-            Property::new(PropertyInner::Field {
+            Property::new(PropertyInner::Field(Box::new(FieldData {
                 preferred_def_locs: ns.preferred_def_locs.clone(),
                 key_loc: ns.name_loc.dupe(),
                 type_: ns.type_.dupe(),
                 polarity: Polarity::Positive,
-            })
+            })))
         };
         let default_entry = if !cx.facebook_module_interop() {
             exports.cjs_export.as_ref().map(|(def_loc_opt, type_)| {
@@ -3428,12 +3476,12 @@ pub mod import_module_ns_t_kit {
                     None => type_util::def_loc_of_t(type_).dupe(),
                     Some(l) => l.dupe(),
                 });
-                let p = Property::new(PropertyInner::Field {
+                let p = Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc,
                     type_: type_.dupe(),
                     polarity: Polarity::Positive,
-                });
+                })));
                 (Name::new("default"), p)
             })
         } else {
@@ -3556,11 +3604,11 @@ pub mod import_default_t_kit {
                         let suggestion = typo_suggestion(&known_exports, local_name);
                         add_output(
                             cx,
-                            ErrorMessage::ENoDefaultExport(
+                            ErrorMessage::ENoDefaultExport(Box::new((
                                 reason.dupe(),
                                 module_name.dupe(),
                                 suggestion,
-                            ),
+                            ))),
                         )?;
                         (
                             None,
@@ -3743,7 +3791,10 @@ pub mod import_named_t_kit {
             (ImportKind::ImportValue, None) if type_exports_tmap.contains_key(&export_name_key) => {
                 add_output(
                     cx,
-                    ErrorMessage::EImportTypeAsValue(reason.dupe(), FlowSmolStr::new(export_name)),
+                    ErrorMessage::EImportTypeAsValue(Box::new((
+                        reason.dupe(),
+                        FlowSmolStr::new(export_name),
+                    ))),
                 )?;
                 Ok((
                     None,
@@ -3764,22 +3815,22 @@ pub mod import_named_t_kit {
                 let num_exports = combined_exports.len();
                 let has_default_export = combined_exports.contains_key(&Name::new("default"));
                 let msg = if num_exports == 1 && has_default_export {
-                    ErrorMessage::EOnlyDefaultExport(
+                    ErrorMessage::EOnlyDefaultExport(Box::new((
                         reason.dupe(),
                         module_name.dupe(),
                         FlowSmolStr::new(export_name),
-                    )
+                    )))
                 } else {
                     // TODO consider filtering to OrdinaryNames only
                     let known_exports: Vec<&FlowSmolStr> =
                         combined_exports.keys().map(|n| n.as_smol_str()).collect();
                     let suggestion = typo_suggestion(&known_exports, export_name);
-                    ErrorMessage::ENoNamedExport(
+                    ErrorMessage::ENoNamedExport(Box::new((
                         reason.dupe(),
                         module_name.dupe(),
                         FlowSmolStr::new(export_name),
                         suggestion,
-                    )
+                    )))
                 };
                 add_output(cx, msg)?;
                 Ok((
@@ -3929,6 +3980,7 @@ pub mod assert_export_is_type_t_kit {
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_util::reason_of_t;
@@ -3942,7 +3994,7 @@ pub mod assert_export_is_type_t_kit {
                 DefTInner::ClassT(_) | DefTInner::EnumObjectT { .. } | DefTInner::TypeT(_, _) => {
                     true
                 }
-                DefTInner::PolyT { t_out, .. } => is_type(t_out),
+                DefTInner::PolyT(box PolyTData { t_out, .. }) => is_type(t_out),
                 _ => false,
             },
             TypeInner::NamespaceT { .. } => true,
@@ -3960,7 +4012,10 @@ pub mod assert_export_is_type_t_kit {
             Ok(l)
         } else {
             let reason = reason_of_t(&l).dupe();
-            add_output(cx, ErrorMessage::EExportValueAsType(reason.dupe(), name))?;
+            add_output(
+                cx,
+                ErrorMessage::EExportValueAsType(Box::new((reason.dupe(), name))),
+            )?;
             Ok(Type::new(TypeInner::AnyT(
                 reason,
                 AnySource::AnyError(None),
@@ -4255,6 +4310,8 @@ pub mod import_export_utils {
     use flow_parser::ast::statement::ImportKind as AstImportKind;
     use flow_typing_context::Context;
     use flow_typing_context::ResolvedRequire;
+    use flow_typing_errors::error_message::EExpectedModuleLookupFailedData;
+    use flow_typing_errors::error_message::EMissingPlatformSupportWithAvailablePlatformsData;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
     use flow_typing_type::type_::AnySource;
@@ -4293,11 +4350,13 @@ pub mod import_export_utils {
                     .cloned()
                     .collect();
                 if !missing_platforms.is_empty() {
-                    let message = ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms {
-                        loc: error_loc,
-                        available_platforms,
-                        required_platforms,
-                    };
+                    let message = ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms(
+                        Box::new(EMissingPlatformSupportWithAvailablePlatformsData {
+                            loc: error_loc,
+                            available_platforms,
+                            required_platforms,
+                        }),
+                    );
                     add_output(cx, message)?;
                 }
                 Ok(())
@@ -4351,35 +4410,39 @@ pub mod import_export_utils {
                 }
             }
         } else {
-            let module_type_or_any = match cx
-                .find_require(&FlowImportSpecifier::Userland(mref.dupe()))
-            {
-                ResolvedRequire::TypedModule(f) => f(cx, cx),
-                ResolvedRequire::UncheckedModule(module_def_loc) => {
-                    if let Some(import_kind) = &import_kind_for_untyped_import_validation {
-                        match import_kind {
-                            ImportKind::ImportType | ImportKind::ImportTypeof => {
-                                let message =
-                                    ErrorMessage::EUntypedTypeImport(loc.dupe(), mref.dupe());
-                                add_output(cx, message)?;
-                            }
-                            ImportKind::ImportValue => {
-                                let message = ErrorMessage::EUntypedImport(loc.dupe(), mref.dupe());
-                                add_output(cx, message)?;
+            let module_type_or_any =
+                match cx.find_require(&FlowImportSpecifier::Userland(mref.dupe())) {
+                    ResolvedRequire::TypedModule(f) => f(cx, cx),
+                    ResolvedRequire::UncheckedModule(module_def_loc) => {
+                        if let Some(import_kind) = &import_kind_for_untyped_import_validation {
+                            match import_kind {
+                                ImportKind::ImportType | ImportKind::ImportTypeof => {
+                                    let message = ErrorMessage::EUntypedTypeImport(Box::new((
+                                        loc.dupe(),
+                                        mref.dupe(),
+                                    )));
+                                    add_output(cx, message)?;
+                                }
+                                ImportKind::ImportValue => {
+                                    let message = ErrorMessage::EUntypedImport(Box::new((
+                                        loc.dupe(),
+                                        mref.dupe(),
+                                    )));
+                                    add_output(cx, message)?;
+                                }
                             }
                         }
+                        Err(any_t::why(
+                            AnySource::Untyped,
+                            mk_reason(VirtualReasonDesc::RModule(mref.dupe()), module_def_loc),
+                        ))
                     }
-                    Err(any_t::why(
-                        AnySource::Untyped,
-                        mk_reason(VirtualReasonDesc::RModule(mref.dupe()), module_def_loc),
-                    ))
-                }
-                ResolvedRequire::MissingModule => Err(lookup_builtin_module_error(
-                    cx,
-                    &FlowSmolStr::new(mref.as_str()),
-                    loc.dupe(),
-                )?),
-            };
+                    ResolvedRequire::MissingModule => Err(lookup_builtin_module_error(
+                        cx,
+                        &FlowSmolStr::new(mref.as_str()),
+                        loc.dupe(),
+                    )?),
+                };
             let need_platform_validation = perform_platform_validation
                 && !cx.is_projects_strict_boundary_import_pattern_opt_outs(&mref)
                 && cx.file_options().multi_platform;
@@ -4633,11 +4696,13 @@ pub mod import_export_utils {
                 );
                 add_output(
                     cx,
-                    ErrorMessage::EExpectedModuleLookupFailed {
-                        loc: loc.dupe(),
-                        name: FlowSmolStr::new("react"),
-                        expected_module_purpose: purpose.clone(),
-                    },
+                    ErrorMessage::EExpectedModuleLookupFailed(Box::new(
+                        EExpectedModuleLookupFailedData {
+                            loc: loc.dupe(),
+                            name: FlowSmolStr::new("react"),
+                            expected_module_purpose: purpose.clone(),
+                        },
+                    )),
                 )?;
                 Err(any_t::error(reason))
             }
@@ -4773,11 +4838,11 @@ pub fn check_method_unbinding<'cx>(
                     let reason_op_from_propref = reason_of_propref(propref);
                     add_output(
                         cx,
-                        ErrorMessage::EMethodUnbinding {
+                        ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
                             use_op: use_op.dupe(),
                             reason_op: reason_op_from_propref.dupe(),
                             reason_prop: reason_of_t(t).dupe(),
-                        },
+                        })),
                     )?;
                     Ok(flow_typing_type::type_::Property::new(
                         PropertyInner::Method {
@@ -4935,11 +5000,15 @@ pub mod get_prop_t_kit {
     use flow_data_structure_wrapper::ord_set::FlowOrdSet;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_typing_context::Context;
+    use flow_typing_errors::error_message::EObjectComputedPropertyAccessData;
+    use flow_typing_errors::error_message::EPropNotReadableData;
+    use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
     use flow_typing_type::type_;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::DepthTrace;
     use flow_typing_type::type_::DictType;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::GenericTData;
     use flow_typing_type::type_::InstType;
     use flow_typing_type::type_::LookupKind;
@@ -5014,11 +5083,13 @@ pub mod get_prop_t_kit {
                     } => (reason.dupe(), None),
                     PropRef::Computed(t) => (reason_of_t(t).dupe(), None),
                 };
-                let msg = flow_typing_errors::error_message::ErrorMessage::EPropNotReadable {
-                    reason_prop,
-                    prop_name,
-                    use_op,
-                };
+                let msg = flow_typing_errors::error_message::ErrorMessage::EPropNotReadable(
+                    Box::new(EPropNotReadableData {
+                        reason_prop,
+                        prop_name,
+                        use_op,
+                    }),
+                );
                 add_output(cx, msg)?;
                 F::error_type(cx, *trace, ureason.dupe())
             }
@@ -5069,12 +5140,12 @@ pub mod get_prop_t_kit {
                     (&type_of_key_name(cx, name.dupe(), reason_op), key),
                 )?;
                 Ok(Some((
-                    Property::new(PropertyInner::Field {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: None,
                         key_loc: None,
                         type_: value.dupe(),
                         polarity: *dict_polarity,
-                    }),
+                    }))),
                     PropertySource::IndexerProperty,
                 )))
             }
@@ -5090,12 +5161,12 @@ pub mod get_prop_t_kit {
             ) if !ignore_dicts => {
                 F::dict_read_check(cx, *trace, use_op, (k, key))?;
                 Ok(Some((
-                    Property::new(PropertyInner::Field {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: None,
                         key_loc: None,
                         type_: value.dupe(),
                         polarity: *dict_polarity,
-                    }),
+                    }))),
                     PropertySource::IndexerProperty,
                 )))
             }
@@ -5194,12 +5265,14 @@ pub mod get_prop_t_kit {
                 add_output(
                     cx,
                     flow_typing_errors::error_message::ErrorMessage::EEnumError(
-                        flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess {
-                            member_name: Some(member_name.dupe()),
-                            suggestion,
-                            reason: member_reason,
-                            enum_reason: enum_reason.dupe(),
-                        },
+                        flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess(
+                            Box::new(EnumInvalidMemberAccessData {
+                                member_name: Some(member_name.dupe()),
+                                suggestion,
+                                reason: member_reason,
+                                enum_reason: enum_reason.dupe(),
+                            }),
+                        ),
                     ),
                 )?;
                 F::return_(
@@ -5472,10 +5545,10 @@ pub mod get_prop_t_kit {
                         let loc = type_util::loc_of_t(elem_t).dupe();
                         add_output(
                                     cx,
-                                    flow_typing_errors::error_message::ErrorMessage::EInternal(
+                                    flow_typing_errors::error_message::ErrorMessage::EInternal(Box::new((
                                         loc,
                                         flow_typing_errors::error_message::InternalError::PropRefComputedOpen,
-                                    ),
+                                    ))),
                                 )?;
                         F::error_type(cx, *trace, reason_op)
                     }
@@ -5484,10 +5557,10 @@ pub mod get_prop_t_kit {
                         let loc = type_util::loc_of_t(elem_t).dupe();
                         add_output(
                                     cx,
-                                    flow_typing_errors::error_message::ErrorMessage::EInternal(
+                                    flow_typing_errors::error_message::ErrorMessage::EInternal(Box::new((
                                         loc,
                                         flow_typing_errors::error_message::InternalError::PropRefComputedLiteral,
-                                    ),
+                                    ))),
                                 )?;
                         F::error_type(cx, *trace, reason_op)
                     }
@@ -5497,10 +5570,10 @@ pub mod get_prop_t_kit {
                         let loc = type_util::loc_of_t(elem_t).dupe();
                         add_output(
                                     cx,
-                                    flow_typing_errors::error_message::ErrorMessage::EInternal(
+                                    flow_typing_errors::error_message::ErrorMessage::EInternal(Box::new((
                                         loc,
                                         flow_typing_errors::error_message::InternalError::PropRefComputedLiteral,
-                                    ),
+                                    ))),
                                 )?;
                         F::error_type(cx, *trace, reason_op)
                     }
@@ -5520,11 +5593,11 @@ pub mod get_prop_t_kit {
                         let kind = flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(value);
                         add_output(
                                     cx,
-                                    flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess {
+                                    flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                                         reason_obj: reason_obj.dupe(),
                                         reason_prop,
                                         kind,
-                                    },
+                                    })),
                                 )?;
                         F::error_type(cx, *trace, reason_op)
                     }
@@ -5542,11 +5615,11 @@ pub mod get_prop_t_kit {
                         let kind = flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(value);
                         add_output(
                                     cx,
-                                    flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess {
+                                    flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                                         reason_obj: reason_obj.dupe(),
                                         reason_prop,
                                         kind,
-                                    },
+                                    })),
                                 )?;
                         F::error_type(cx, *trace, reason_op)
                     }
@@ -5557,11 +5630,11 @@ pub mod get_prop_t_kit {
                         let reason_prop = reason_of_t(elem_t).dupe();
                         add_output(
                                     cx,
-                                    flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess {
+                                    flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                                         reason_obj: reason_obj.dupe(),
                                         reason_prop,
                                         kind: flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
-                                    },
+                                    })),
                                 )?;
                         F::error_type(cx, *trace, reason_op)
                     }
@@ -5689,24 +5762,28 @@ pub fn array_elem_check<'cx>(
                                         {
                                             add_output(
                                                 cx,
-                                                ErrorMessage::ETupleElementNotWritable {
-                                                    use_op: use_op.dupe(),
-                                                    reason: reason.dupe(),
-                                                    index: index as i32,
-                                                    name: name.dupe(),
-                                                },
+                                                ErrorMessage::ETupleElementNotWritable(Box::new(
+                                                    ETupleElementNotWritableData {
+                                                        use_op: use_op.dupe(),
+                                                        reason: reason.dupe(),
+                                                        index: index as i32,
+                                                        name: name.dupe(),
+                                                    },
+                                                )),
                                             )?;
                                         } else if !write_action
                                             && !Polarity::compat(*polarity, Polarity::Positive)
                                         {
                                             add_output(
                                                 cx,
-                                                ErrorMessage::ETupleElementNotReadable {
-                                                    use_op: use_op.dupe(),
-                                                    reason: reason.dupe(),
-                                                    index: index as i32,
-                                                    name: name.dupe(),
-                                                },
+                                                ErrorMessage::ETupleElementNotReadable(Box::new(
+                                                    ETupleElementNotReadableData {
+                                                        use_op: use_op.dupe(),
+                                                        reason: reason.dupe(),
+                                                        index: index as i32,
+                                                        name: name.dupe(),
+                                                    },
+                                                )),
                                             )?;
                                         }
 
@@ -5744,14 +5821,16 @@ pub fn array_elem_check<'cx>(
                                         if is_tuple {
                                             add_output(
                                                 cx,
-                                                ErrorMessage::ETupleOutOfBounds {
-                                                    use_op: use_op.dupe(),
-                                                    reason: reason.dupe(),
-                                                    reason_op: reason_tup.dupe(),
-                                                    inexact: tuple_is_inexact,
-                                                    length: elements.len() as i32,
-                                                    index: index_string.clone().into(),
-                                                },
+                                                ErrorMessage::ETupleOutOfBounds(Box::new(
+                                                    ETupleOutOfBoundsData {
+                                                        use_op: use_op.dupe(),
+                                                        reason: reason.dupe(),
+                                                        reason_op: reason_tup.dupe(),
+                                                        inexact: tuple_is_inexact,
+                                                        length: elements.len() as i32,
+                                                        index: index_string.clone().into(),
+                                                    },
+                                                )),
                                             )?;
                                             let error_reason = Reason::new(
                                                 VirtualReasonDesc::RTupleOutOfBoundsAccess(
@@ -5771,11 +5850,13 @@ pub fn array_elem_check<'cx>(
                                 if is_tuple {
                                     add_output(
                                         cx,
-                                        ErrorMessage::ETupleNonIntegerIndex {
-                                            use_op: use_op.dupe(),
-                                            reason: index_reason.dupe(),
-                                            index: index_string.into(),
-                                        },
+                                        ErrorMessage::ETupleNonIntegerIndex(Box::new(
+                                            ETupleNonIntegerIndexData {
+                                                use_op: use_op.dupe(),
+                                                reason: index_reason.dupe(),
+                                                index: index_string.into(),
+                                            },
+                                        )),
                                     )?;
                                     (true, any_t::error(reason.dupe()), use_op)
                                 } else {
@@ -5967,6 +6048,7 @@ pub fn objt_to_obj_rest<'cx>(
     use flow_common::polarity::Polarity;
     use flow_common::reason::Name;
     use flow_typing_errors::error_message::ErrorMessage;
+    use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::Property;
     use flow_typing_type::type_::PropertyInner;
     use flow_typing_type::type_::VirtualRootUseOp;
@@ -5985,37 +6067,32 @@ pub fn objt_to_obj_rest<'cx>(
         let mut new_props = BTreeMap::new();
         for (name, p) in props.iter() {
             let new_prop = match p.deref() {
-                PropertyInner::Field {
-                    preferred_def_locs,
-                    key_loc,
-                    type_,
-                    polarity,
-                } => {
-                    if !Polarity::compat(*polarity, Polarity::Positive) {
+                PropertyInner::Field(fd) => {
+                    if !Polarity::compat(fd.polarity, Polarity::Positive) {
                         add_output(
                             cx,
-                            ErrorMessage::EPropNotReadable {
-                                reason_prop: reason_of_t(type_).dupe(),
+                            ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
+                                reason_prop: reason_of_t(&fd.type_).dupe(),
                                 prop_name: Some(name.dupe()),
                                 use_op: use_op.dupe(),
-                            },
+                            })),
                         )?;
                     }
-                    Property::new(PropertyInner::Field {
-                        preferred_def_locs: preferred_def_locs.clone(),
-                        key_loc: key_loc.dupe(),
-                        type_: type_.dupe(),
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
+                        type_: fd.type_.dupe(),
                         polarity: Polarity::Neutral,
-                    })
+                    })))
                 }
                 PropertyInner::Set { key_loc: _, type_ } => {
                     add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: reason_of_t(type_).dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: use_op.dupe(),
-                        },
+                        })),
                     )?;
                     p.dupe()
                 }
@@ -6335,12 +6412,12 @@ pub fn flow_arith<'cx>(
         _ => {
             add_output(
                 cx,
-                ErrorMessage::EInvalidBinaryArith {
+                ErrorMessage::EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                     reason_out: reason.dupe(),
                     reason_l: reason_of_t(l).dupe(),
                     reason_r: reason_of_t(r).dupe(),
                     kind,
-                },
+                })),
             )?;
             Ok(any_t::error(reason))
         }
@@ -6381,6 +6458,7 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
     ) -> bool {
         use flow_typing_type::type_::DefTInner;
         use flow_typing_type::type_::Destructor;
+        use flow_typing_type::type_::PolyTData;
         use flow_typing_type::type_::constraint::Constraints;
 
         match t.deref() {
@@ -6435,7 +6513,9 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
             } if matches!(defer_use_t.2.deref(), Destructor::MappedType { .. }) => true,
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::TypeT(_, inner_t) => loop_inner(cx, inner_t, seen_open_id, seen_eval_id),
-                DefTInner::PolyT { t_out, .. } => loop_inner(cx, t_out, seen_open_id, seen_eval_id),
+                DefTInner::PolyT(box PolyTData { t_out, .. }) => {
+                    loop_inner(cx, t_out, seen_open_id, seen_eval_id)
+                }
                 _ => false,
             },
             TypeInner::OpenT(tvar) => {
@@ -6506,11 +6586,13 @@ pub fn validate_tuple_elements<'cx>(
                     if error_on_req_after_opt {
                         add_output(
                             cx,
-                            ErrorMessage::ETupleRequiredAfterOptional {
-                                reason_tuple: reason_tuple.dupe(),
-                                reason_required: reason_element.dupe(),
-                                reason_optional: reason_optional.dupe(),
-                            },
+                            ErrorMessage::ETupleRequiredAfterOptional(Box::new(
+                                ETupleRequiredAfterOptionalData {
+                                    reason_tuple: reason_tuple.dupe(),
+                                    reason_required: reason_element.dupe(),
+                                    reason_optional: reason_optional.dupe(),
+                                },
+                            )),
                         )?;
                     }
                     false
@@ -6646,6 +6728,7 @@ pub mod render_types {
     use flow_common::reason::mk_reason;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_typing_context::Context;
+    use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_errors::intermediate_error_types::InvalidRenderTypeKind;
     use flow_typing_type::type_::CanonicalRendersForm;
@@ -6653,6 +6736,8 @@ pub mod render_types {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::GenericTData;
+    use flow_typing_type::type_::PolyTData;
+    use flow_typing_type::type_::ReactAbstractComponentTData;
     use flow_typing_type::type_::RendersVariant;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
@@ -6795,15 +6880,17 @@ pub mod render_types {
                                 .add(any_t::error(normalization_cx.result_reason.dupe()));
                             merge_error_acc_with_normal_error(
                                 normalization_cx,
-                                ErrorMessage::EInvalidRendersTypeArgument {
-                                    loc: normalization_cx.arg_loc.dupe(),
-                                    renders_variant: ast_render_variant_of_render_variant(
-                                        &normalization_cx.renders_variant,
-                                    ),
-                                    invalid_render_type_kind:
-                                        InvalidRenderTypeKind::UncategorizedInvalidRenders,
-                                    invalid_type_reasons: Vec1::new(r.dupe()),
-                                },
+                                ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                                    EInvalidRendersTypeArgumentData {
+                                        loc: normalization_cx.arg_loc.dupe(),
+                                        renders_variant: ast_render_variant_of_render_variant(
+                                            &normalization_cx.renders_variant,
+                                        ),
+                                        invalid_render_type_kind:
+                                            InvalidRenderTypeKind::UncategorizedInvalidRenders,
+                                        invalid_type_reasons: Vec1::new(r.dupe()),
+                                    },
+                                )),
                             );
                         }
                         return;
@@ -6814,15 +6901,17 @@ pub mod render_types {
                             .add(any_t::error(normalization_cx.result_reason.dupe()));
                         merge_error_acc_with_normal_error(
                             normalization_cx,
-                            ErrorMessage::EInvalidRendersTypeArgument {
-                                loc: normalization_cx.arg_loc.dupe(),
-                                renders_variant: ast_render_variant_of_render_variant(
-                                    &normalization_cx.renders_variant,
-                                ),
-                                invalid_render_type_kind:
-                                    InvalidRenderTypeKind::UncategorizedInvalidRenders,
-                                invalid_type_reasons: Vec1::new(r.dupe()),
-                            },
+                            ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                                EInvalidRendersTypeArgumentData {
+                                    loc: normalization_cx.arg_loc.dupe(),
+                                    renders_variant: ast_render_variant_of_render_variant(
+                                        &normalization_cx.renders_variant,
+                                    ),
+                                    invalid_render_type_kind:
+                                        InvalidRenderTypeKind::UncategorizedInvalidRenders,
+                                    invalid_type_reasons: Vec1::new(r.dupe()),
+                                },
+                            )),
                         );
                         return;
                     }
@@ -6837,7 +6926,7 @@ pub mod render_types {
             .add(any_t::error(normalization_cx.result_reason.dupe()));
         merge_error_acc_with_normal_error(
             normalization_cx,
-            ErrorMessage::EInvalidRendersTypeArgument {
+            ErrorMessage::EInvalidRendersTypeArgument(Box::new(EInvalidRendersTypeArgumentData {
                 loc: normalization_cx.arg_loc.dupe(),
                 renders_variant: ast_render_variant_of_render_variant(
                     &normalization_cx.renders_variant,
@@ -6846,7 +6935,7 @@ pub mod render_types {
                     reason_of_t(&t).dupe(),
                 ),
                 invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
-            },
+            })),
         );
     }
 
@@ -6860,12 +6949,12 @@ pub mod render_types {
     {
         match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams,
                     t_out,
                     ..
-                } => {
+                }) => {
                     let mut subst_map = FlowOrdMap::new();
                     for tparam in tparams.iter() {
                         subst_map.insert(
@@ -6890,11 +6979,11 @@ pub mod render_types {
                         ),
                     );
                 }
-                DefTInner::ReactAbstractComponentT {
+                DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind: ComponentKind::Nominal(renders_id, renders_name, _),
                     renders: renders_super,
                     ..
-                } => {
+                }) => {
                     let reason = mk_reason(
                         VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
                             Name::new(renders_name.dupe()),
@@ -6913,11 +7002,11 @@ pub mod render_types {
                     ));
                     normalization_cx.type_collector.add(new_t);
                 }
-                DefTInner::ReactAbstractComponentT {
+                DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind: ComponentKind::Structural,
                     renders: render_type,
                     ..
-                } => {
+                }) => {
                     for concretized in (normalization_cx.concretize)(render_type) {
                         on_concretized_renders_normalization(
                             normalization_cx,
@@ -6932,7 +7021,30 @@ pub mod render_types {
                         .add(any_t::error(normalization_cx.result_reason.dupe()));
                     merge_error_acc_with_normal_error(
                         normalization_cx,
-                        ErrorMessage::EInvalidRendersTypeArgument {
+                        ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                            EInvalidRendersTypeArgumentData {
+                                loc: normalization_cx.arg_loc.dupe(),
+                                renders_variant: ast_render_variant_of_render_variant(
+                                    &normalization_cx.renders_variant,
+                                ),
+                                invalid_render_type_kind:
+                                    InvalidRenderTypeKind::InvalidRendersNonNominalElement(
+                                        reason_of_t(&t).dupe(),
+                                    ),
+                                invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
+                            },
+                        )),
+                    );
+                }
+            },
+            _ => {
+                normalization_cx
+                    .type_collector
+                    .add(any_t::error(normalization_cx.result_reason.dupe()));
+                merge_error_acc_with_normal_error(
+                    normalization_cx,
+                    ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                        EInvalidRendersTypeArgumentData {
                             loc: normalization_cx.arg_loc.dupe(),
                             renders_variant: ast_render_variant_of_render_variant(
                                 &normalization_cx.renders_variant,
@@ -6943,26 +7055,7 @@ pub mod render_types {
                                 ),
                             invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
                         },
-                    );
-                }
-            },
-            _ => {
-                normalization_cx
-                    .type_collector
-                    .add(any_t::error(normalization_cx.result_reason.dupe()));
-                merge_error_acc_with_normal_error(
-                    normalization_cx,
-                    ErrorMessage::EInvalidRendersTypeArgument {
-                        loc: normalization_cx.arg_loc.dupe(),
-                        renders_variant: ast_render_variant_of_render_variant(
-                            &normalization_cx.renders_variant,
-                        ),
-                        invalid_render_type_kind:
-                            InvalidRenderTypeKind::InvalidRendersNonNominalElement(
-                                reason_of_t(&t).dupe(),
-                            ),
-                        invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
-                    },
+                    )),
                 );
             }
         }
@@ -7021,15 +7114,17 @@ pub mod render_types {
                 } else {
                     merge_error_acc_with_normal_error(
                         normalization_cx,
-                        ErrorMessage::EInvalidRendersTypeArgument {
-                            loc: normalization_cx.arg_loc.dupe(),
-                            renders_variant: ast_render_variant_of_render_variant(
-                                &normalization_cx.renders_variant,
-                            ),
-                            invalid_render_type_kind:
-                                InvalidRenderTypeKind::UncategorizedInvalidRenders,
-                            invalid_type_reasons: Vec1::new(reason_of_t(&t).dupe()),
-                        },
+                        ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                            EInvalidRendersTypeArgumentData {
+                                loc: normalization_cx.arg_loc.dupe(),
+                                renders_variant: ast_render_variant_of_render_variant(
+                                    &normalization_cx.renders_variant,
+                                ),
+                                invalid_render_type_kind:
+                                    InvalidRenderTypeKind::UncategorizedInvalidRenders,
+                                invalid_type_reasons: Vec1::new(reason_of_t(&t).dupe()),
+                            },
+                        )),
                     );
                 }
             }
@@ -7050,14 +7145,16 @@ pub mod render_types {
                     .add(any_t::error(normalization_cx.result_reason.dupe()));
                 merge_error_acc_with_normal_error(
                     normalization_cx,
-                    ErrorMessage::EInvalidRendersTypeArgument {
-                        loc: normalization_cx.arg_loc.dupe(),
-                        renders_variant: ast_render_variant_of_render_variant(
-                            &normalization_cx.renders_variant,
-                        ),
-                        invalid_render_type_kind: InvalidRenderTypeKind::InvalidRendersGenericT,
-                        invalid_type_reasons: Vec1::new(reason.dupe()),
-                    },
+                    ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                        EInvalidRendersTypeArgumentData {
+                            loc: normalization_cx.arg_loc.dupe(),
+                            renders_variant: ast_render_variant_of_render_variant(
+                                &normalization_cx.renders_variant,
+                            ),
+                            invalid_render_type_kind: InvalidRenderTypeKind::InvalidRendersGenericT,
+                            invalid_type_reasons: Vec1::new(reason.dupe()),
+                        },
+                    )),
                 );
             }
             TypeInner::DefT(reason, def_t) => {
@@ -7168,21 +7265,23 @@ pub mod render_types {
             invalid_type_reasons.reverse();
             add_output_non_speculating(
                 cx,
-                ErrorMessage::EInvalidRendersTypeArgument {
-                    loc: arg_loc.dupe(),
-                    renders_variant: ast_render_variant_of_render_variant(
-                        &normalization_cx.renders_variant,
-                    ),
-                    invalid_render_type_kind: match kind {
-                        PotentialFixableErrorKind::InvalidRendersNullVoidFalse => {
-                            InvalidRenderTypeKind::InvalidRendersNullVoidFalse
-                        }
-                        PotentialFixableErrorKind::InvalidRendersIterable => {
-                            InvalidRenderTypeKind::InvalidRendersIterable
-                        }
+                ErrorMessage::EInvalidRendersTypeArgument(Box::new(
+                    EInvalidRendersTypeArgumentData {
+                        loc: arg_loc.dupe(),
+                        renders_variant: ast_render_variant_of_render_variant(
+                            &normalization_cx.renders_variant,
+                        ),
+                        invalid_render_type_kind: match kind {
+                            PotentialFixableErrorKind::InvalidRendersNullVoidFalse => {
+                                InvalidRenderTypeKind::InvalidRendersNullVoidFalse
+                            }
+                            PotentialFixableErrorKind::InvalidRendersIterable => {
+                                InvalidRenderTypeKind::InvalidRendersIterable
+                            }
+                        },
+                        invalid_type_reasons,
                     },
-                    invalid_type_reasons,
-                },
+                )),
             );
         }
         for e in error_acc.normal_errors {
@@ -7246,6 +7345,7 @@ pub mod callee_recorder {
     use dupe::Dupe;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_type::type_::CallTData;
     use flow_typing_type::type_::SpecializedCallee;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::UseT;
@@ -7324,7 +7424,7 @@ pub mod callee_recorder {
     pub fn add_callee_use<'cx, CX>(cx: &Context<'cx>, kind: Kind, l: Type, u: &UseT<CX>) {
         use flow_typing_type::type_::UseTInner;
         match &**u {
-            UseTInner::CallT { call_action, .. } => match call_action.as_ref() {
+            UseTInner::CallT(box CallTData { call_action, .. }) => match call_action.as_ref() {
                 flow_typing_type::type_::CallAction::Funcalltype(
                     flow_typing_type::type_::FuncallType {
                         call_specialized_callee,

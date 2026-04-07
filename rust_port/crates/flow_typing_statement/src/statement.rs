@@ -51,10 +51,30 @@ use flow_parser::polymorphic_ast_mapper;
 use flow_parser::polymorphic_ast_mapper::LocMapper;
 use flow_parser_utils::graphql;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::ECallTypeArityData;
+use flow_typing_errors::error_message::EComponentThisReferenceData;
+use flow_typing_errors::error_message::EDuplicateClassMemberData;
+use flow_typing_errors::error_message::EIllegalAssertOperatorData;
+use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EInvalidReactCreateElementData;
+use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwriteData;
+use flow_typing_errors::error_message::ETSSyntaxData;
+use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
+use flow_typing_errors::error_message::EnumBigIntMemberNotInitializedData;
+use flow_typing_errors::error_message::EnumBooleanMemberNotInitializedData;
+use flow_typing_errors::error_message::EnumDuplicateMemberNameData;
 use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::EnumInconsistentMemberValuesData;
+use flow_typing_errors::error_message::EnumInvalidMemberInitializerData;
+use flow_typing_errors::error_message::EnumInvalidMemberNameData;
+use flow_typing_errors::error_message::EnumMemberDuplicateValueData;
+use flow_typing_errors::error_message::EnumNonIdentifierMemberNameData;
+use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
+use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
 use flow_typing_errors::intermediate_error_types;
@@ -388,10 +408,12 @@ pub mod object_expression_acc {
                             .collect();
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EObjectComputedPropertyPotentialOverwrite {
-                                key_loc,
-                                overwritten_locs,
-                            },
+                            ErrorMessage::EObjectComputedPropertyPotentialOverwrite(Box::new(
+                                EObjectComputedPropertyPotentialOverwriteData {
+                                    key_loc,
+                                    overwritten_locs,
+                                },
+                            )),
                         );
                         self
                     }
@@ -515,6 +537,7 @@ pub mod object_expression_acc {
                                     .collect();
                                 (t, ts, None)
                             }
+                            //   | (Slice { slice_pmap = prop_map; computed_props }, Spread t :: ts) ->
                             (
                                 Element::Slice {
                                     slice_pmap: prop_map,
@@ -564,6 +587,7 @@ pub mod object_expression_acc {
                                             .collect();
                                         (t, ts, Some(head_slice))
                                     }
+                                    //   | _ -> failwith "Invariant Violation: spread list has two slices in a row"
                                     _ => panic!(
                                         "Invariant Violation: spread list has two slices in a row"
                                     ),
@@ -813,7 +837,7 @@ fn error_on_this_uses_in_object_methods<'a>(
                     };
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EObjectThisSuperReference(
+                        ErrorMessage::EObjectThisSuperReference(Box::new((
                             loc.dupe(),
                             reason,
                             match kind {
@@ -824,7 +848,7 @@ fn error_on_this_uses_in_object_methods<'a>(
                                     flow_typing_errors::error_message::ThisFinderKind::Super
                                 }
                             },
-                        ),
+                        ))),
                     );
                 }
             }
@@ -855,10 +879,10 @@ fn error_on_this_uses_in_components<'a>(
             flow_parser_utils::this_finder::Kind::This => {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EComponentThisReference {
+                    ErrorMessage::EComponentThisReference(Box::new(EComponentThisReferenceData {
                         component_loc: sig_loc.dupe(),
                         this_loc: this_loc.dupe(),
-                    },
+                    })),
                 );
             }
         }
@@ -954,6 +978,13 @@ fn syntactically_unhandled_promises<'a>(
     }
 }
 
+// (* In positions where an annotation may be present or an annotation can be pushed down,
+//  * we should prefer the annotation over the pushed-down annotation. *)
+// let mk_inference_target_with_annots ~has_hint annot_or_inferred =
+//   match (annot_or_inferred, has_hint) with
+//   | (Annotated _, _) -> annot_or_inferred
+//   | (_, true) -> Annotated (type_t_of_annotated_or_inferred annot_or_inferred)
+//   | _ -> annot_or_inferred
 // In positions where an annotation may be present or an annotation can be pushed down,
 // we should prefer the annotation over the pushed-down annotation.
 fn mk_inference_target_with_annots(
@@ -1010,6 +1041,13 @@ fn new_call<'a>(
     (t, ctor_t)
 }
 
+// let func_call_opt_use
+//     cx loc reason ~use_op ?(call_strict_arity = true) targts argts specialized_callee =
+//   let opt_app =
+//     mk_opt_functioncalltype reason targts argts call_strict_arity specialized_callee
+//   in
+//   let return_hint = Type_env.get_hint cx loc in
+//   OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
 fn func_call_opt_use<'a>(
     cx: &Context<'a>,
     loc: ALoc,
@@ -1036,6 +1074,13 @@ fn func_call_opt_use<'a>(
     }
 }
 
+// let func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts t_callee =
+//   let opt_use =
+//     func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts t_callee
+//   in
+//   Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
+//       Flow.flow cx (func_t, apply_opt_use opt_use t)
+//   )
 fn func_call<'a>(
     cx: &Context<'a>,
     loc: ALoc,
@@ -1154,7 +1199,9 @@ fn method_call<'a>(
     argts: Vec<CallArg>,
 ) -> (Type, Type) {
     let expr_loc = expr.loc().dupe();
+    // match Refinement.get ~allow_optional:true cx expr (loc_of_reason reason) with
     match refinement::get(true, cx, expr, reason.loc().dupe()) {
+        // | Some f ->
         Some(f) => {
             // Note: the current state of affairs is that we understand
             // member expressions as having refined types, rather than
@@ -1174,12 +1221,12 @@ fn method_call<'a>(
                         call_strict_arity,
                         tvar,
                     );
-                    let use_t = UseT::new(UseTInner::CallT {
+                    let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         call_action: Box::new(type_::CallAction::Funcalltype(app)),
                         return_hint: type_::hint_unavailable(),
-                    });
+                    })));
                     flow_js::flow_non_speculating(cx, (&f, &use_t));
                 },
             );
@@ -1206,17 +1253,17 @@ fn method_call<'a>(
                         tvar,
                     );
                     let propref = mk_named_prop(reason_prop.dupe(), false, name.dupe());
-                    let use_t = UseT::new(UseTInner::MethodT(
-                        use_op.dupe(),
-                        reason.dupe(),
-                        reason_expr,
-                        Box::new(propref),
-                        Box::new(type_::MethodAction::CallM {
+                    let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                        use_op: use_op.dupe(),
+                        reason: reason.dupe(),
+                        prop_reason: reason_expr,
+                        propref: Box::new(propref),
+                        method_action: Box::new(type_::MethodAction::CallM {
                             methodcalltype,
                             return_hint: type_::hint_unavailable(),
                             specialized_callee: Some(specialized_callee.clone()),
                         }),
-                    ));
+                    })));
                     flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
                 },
             );
@@ -1317,6 +1364,9 @@ fn identifier_<'a>(
     }
 }
 
+// let identifier cx syntactic_flags { Ast.Identifier.name; comments = _ } loc =
+//   let t = identifier_ cx syntactic_flags name loc in
+//   t
 fn identifier_inner<'a>(
     cx: &Context<'a>,
     syntactic_flags: &SyntacticFlags<'a>,
@@ -1332,6 +1382,7 @@ fn string_literal_value<'a>(
     loc: ALoc,
     value: &FlowSmolStr,
 ) -> Type {
+    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1390,6 +1441,7 @@ fn boolean_literal_inner<'a>(
     loc: ALoc,
     lit: &ast::BooleanLiteral<ALoc>,
 ) -> Type {
+    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1436,6 +1488,7 @@ fn number_literal_inner<'a>(
 ) -> Type {
     let value = lit.value;
     let raw = lit.raw.dupe();
+    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1483,6 +1536,7 @@ fn bigint_literal_inner<'a>(
 ) -> Type {
     let value = lit.value;
     let raw = lit.raw.dupe();
+    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1607,7 +1661,10 @@ fn check_const_assertion<'a>(cx: &Context<'a>, expr: &expression::Expression<ALo
         let loc = expr.loc();
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EUnsupportedSyntax(loc.0.dupe(), UnsupportedSyntax::AsConstOnNonLiteral),
+            ErrorMessage::EUnsupportedSyntax(Box::new((
+                loc.0.dupe(),
+                UnsupportedSyntax::AsConstOnNonLiteral,
+            ))),
         );
     }
 }
@@ -1649,19 +1706,19 @@ pub fn opaque_type<'a>(
                 if let Some(lb) = &otype.lower_bound {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             lb.loc().dupe(),
                             UnsupportedSyntax::OpaqueTypeSuperBound,
-                        ),
+                        ))),
                     );
                 }
                 if let Some(ub) = &otype.upper_bound {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             ub.loc().dupe(),
                             UnsupportedSyntax::OpaqueTypeExtendsBound,
-                        ),
+                        ))),
                     );
                 }
             }
@@ -1897,6 +1954,7 @@ fn export_specifiers<'a>(
                         source.expect("source must be present for ExportBatchSpecifier with id");
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
+                    //   let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
                     let reason = mk_reason(
                         VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                         id_loc.dupe(),
@@ -1994,12 +2052,12 @@ fn statement_<'a>(
                 if kind == ast::VariableKind::Const && decl.init.is_none() && !cx.tslib_syntax() {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             decl.loc.dupe(),
                             UnsupportedSyntax::TSLibSyntax(
                                 TsLibSyntaxKind::DeclarationWithoutDeclare,
                             ),
-                        ),
+                        ))),
                     );
                 }
                 let (id, init) = variable(cx, kind, None, &decl.id, decl.init.as_ref())?;
@@ -2126,10 +2184,10 @@ fn statement_<'a>(
                         let loc = p.loc();
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 loc.dupe(),
                                 UnsupportedSyntax::CatchParameterDeclaration,
-                            ),
+                            ))),
                         );
                         let mut mapper = typed_ast_utils::ErrorMapper;
                         statement::try_::CatchClause {
@@ -2221,6 +2279,7 @@ fn statement_<'a>(
                                   loc: ALoc,
                                   f: &statement::DeclareFunction<ALoc, ALoc>|
      -> statement::DeclareFunction<ALoc, (ALoc, Type)> {
+        // let { id = (id_loc, id_name); annot; predicate; comments; implicit_declare } = f in
         let statement::DeclareFunction {
             id: id_name,
             annot,
@@ -2237,10 +2296,10 @@ fn statement_<'a>(
         let predicate = predicate.as_ref().map(|p| {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     p.loc.dupe(),
                     UnsupportedSyntax::PredicateFunction,
-                ),
+                ))),
             );
             let Ok(v) = polymorphic_ast_mapper::predicate(&mut typed_ast_utils::ErrorMapper, p);
             v
@@ -2248,10 +2307,10 @@ fn statement_<'a>(
         if *implicit_declare && !cx.tslib_syntax() {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::DeclarationWithoutDeclare),
-                ),
+                ))),
             );
         }
         match id_name {
@@ -2380,7 +2439,7 @@ fn statement_<'a>(
         StatementInner::With { .. } => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(loc.dupe(), UnsupportedSyntax::WithStatement),
+                ErrorMessage::EUnsupportedSyntax(Box::new((loc.dupe(), UnsupportedSyntax::WithStatement))),
             );
             let Ok(v) = polymorphic_ast_mapper::statement(&mut typed_ast_utils::ErrorMapper, stmt);
             v
@@ -2417,7 +2476,7 @@ fn statement_<'a>(
             if !cx.enable_pattern_matching() {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(loc.dupe(), UnsupportedSyntax::MatchStatement),
+                    ErrorMessage::EUnsupportedSyntax(Box::new((loc.dupe(), UnsupportedSyntax::MatchStatement))),
                 );
                 return Ok({
                     let Ok(v) =
@@ -2584,12 +2643,12 @@ fn statement_<'a>(
                 cx,
                 (
                     discriminant_t,
-                    &UseT::new(UseTInner::EnumExhaustiveCheckT {
+                    &UseT::new(UseTInner::EnumExhaustiveCheckT(Box::new(EnumExhaustiveCheckTData {
                         reason: reason_of_t(discriminant_t).dupe(),
                         check: Box::new(enum_exhaustive_check),
                         incomplete_out: exhaustive_check_incomplete_out.dupe(),
                         discriminant_after_check,
-                    }),
+                    }))),
                 ),
             );
             // We need to fully resolve all types attached to AST,
@@ -2834,7 +2893,7 @@ fn statement_<'a>(
                     let right_ast = eval_right()?;
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EInternal(loc.dupe(), InternalError::ForInLHS),
+                        ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::ForInLHS))),
                     );
                     {
                         let Ok(v) = polymorphic_ast_mapper::for_in_statement_lhs(
@@ -2980,7 +3039,7 @@ fn statement_<'a>(
                     let (_, right_ast) = eval_right()?;
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EInternal(loc.dupe(), InternalError::ForOfLHS),
+                        ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::ForOfLHS))),
                     );
                     let left_ast = match &inner.left {
                         statement::for_of::Left::LeftDeclaration((dloc, decl)) => {
@@ -3061,12 +3120,12 @@ fn statement_<'a>(
                         if !cx.tslib_syntax() {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     loc.dupe(),
                                     UnsupportedSyntax::TSLibSyntax(
                                         TsLibSyntaxKind::DeclarationWithoutDeclare,
                                     ),
-                                ),
+                                ))),
                             );
                         }
                     }
@@ -3103,10 +3162,10 @@ fn statement_<'a>(
             } else {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::ComponentSyntax,
-                    ),
+                    ))),
                 );
                 statement::Statement::new(StatementInner::ComponentDeclaration {
                     loc,
@@ -3202,7 +3261,7 @@ fn statement_<'a>(
             if !cx.enable_records() {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(loc.dupe(), UnsupportedSyntax::Records),
+                    ErrorMessage::EUnsupportedSyntax(Box::new((loc.dupe(), UnsupportedSyntax::Records))),
                 );
                 statement::Statement::new(StatementInner::RecordDeclaration {
                     loc,
@@ -3359,12 +3418,12 @@ fn statement_<'a>(
                             if f.id.is_none() && !cx.tslib_syntax() {
                                 flow_js::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EUnsupportedSyntax(
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                         d_loc.dupe(),
                                         UnsupportedSyntax::TSLibSyntax(
                                             TsLibSyntaxKind::AnonymousDefaultExportFunction,
                                         ),
-                                    ),
+                                    ))),
                                 );
                                 D::Function {
                                     loc: d_loc.dupe(),
@@ -3468,12 +3527,12 @@ fn statement_<'a>(
                             if !cx.tslib_syntax() {
                                 flow_js::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EUnsupportedSyntax(
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                         d_loc.dupe(),
                                         UnsupportedSyntax::TSLibSyntax(
                                             TsLibSyntaxKind::DeclareExportNamespace,
                                         ),
-                                    ),
+                                    ))),
                                 );
                             }
                             let (_, ns_ast) = declare_namespace(cx, d_loc.dupe(), ns);
@@ -3559,10 +3618,10 @@ fn statement_<'a>(
             if !cx.tslib_syntax() {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::ExportAssignment),
-                    ),
+                    ))),
                 );
                 {
                     let Ok(v) =
@@ -3584,10 +3643,10 @@ fn statement_<'a>(
         StatementInner::NamespaceExportDeclaration { .. } => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::NamespaceExportDeclaration),
-                ),
+                ))),
             );
             {
                 let Ok(v) =
@@ -3607,19 +3666,19 @@ fn statement_<'a>(
             if has_type_specifier && !cx.tslib_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::ExportTypeSpecifier),
-                    ),
+                    ))),
                 );
             }
             if has_type_specifier && inner.export_kind == statement::ExportKind::ExportType {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::ExportTypeSpecifierInExportType,
-                    ),
+                    ))),
                 );
             }
             let declaration = inner
@@ -3965,10 +4024,10 @@ fn statement_<'a>(
             if !cx.tslib_syntax() {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::ImportEqualsDeclaration),
-                    ),
+                    ))),
                 );
                 {
                     let Ok(v) =
@@ -4059,12 +4118,12 @@ fn statement_<'a>(
                     statement::import_equals_declaration::ModuleReference::Identifier(_) => {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 loc.dupe(),
                                 UnsupportedSyntax::TSLibSyntax(
                                     TsLibSyntaxKind::ImportEqualsQualifiedName,
                                 ),
-                            ),
+                            ))),
                         );
                         {
                             let Ok(v) = polymorphic_ast_mapper::statement(
@@ -4126,6 +4185,7 @@ pub fn type_alias<'a>(
     let id = &alias.id;
     let name = &id.name;
     let cache = cx.node_cache();
+    // | Some info ->
     if let Some(info) = cache.get_alias(&loc) {
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec![format!("Alias cache hit at {}", loc.debug_to_string(false))]
@@ -4290,12 +4350,12 @@ fn declare_variable<'a>(
         if declarations.len() > 1 {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::TSLibSyntax(
                         TsLibSyntaxKind::DeclareVariableMultipleDeclarators,
                     ),
-                ),
+                ))),
             );
         }
         for d in declarations.iter() {
@@ -4303,12 +4363,12 @@ fn declare_variable<'a>(
                 Some(init_expr) => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             init_expr.loc().dupe(),
                             UnsupportedSyntax::TSLibSyntax(
                                 TsLibSyntaxKind::DeclareVariableLiteralInit,
                             ),
-                        ),
+                        ))),
                     );
                 }
                 None => {}
@@ -4389,10 +4449,10 @@ fn declare_variable<'a>(
                                 _ => {
                                     flow_js::add_output_non_speculating(
                                         cx,
-                                        ErrorMessage::EUnsupportedSyntax(
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
                                             init_expr.loc().dupe(),
                                             UnsupportedSyntax::DeclareVariableNonLiteralInit,
-                                        ),
+                                        ))),
                                     );
                                     let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
                                         &mut typed_ast_utils::ErrorMapper,
@@ -4406,10 +4466,10 @@ fn declare_variable<'a>(
                         (ast::types::AnnotationOrHint::Available(_), Some(init_expr)) => {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     init_expr.loc().dupe(),
                                     UnsupportedSyntax::DeclareVariableAnnotationAndInit,
-                                ),
+                                ))),
                             );
                             let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
                                 &mut typed_ast_utils::ErrorMapper,
@@ -4421,10 +4481,10 @@ fn declare_variable<'a>(
                         (ast::types::AnnotationOrHint::Missing(_), None) => {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     id_loc.dupe(),
                                     UnsupportedSyntax::DeclareVariableMissingAnnotationOrInit,
-                                ),
+                                ))),
                             );
                             let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
                                 &mut typed_ast_utils::ErrorMapper,
@@ -4438,10 +4498,10 @@ fn declare_variable<'a>(
                 _ => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             id.loc().dupe(),
                             UnsupportedSyntax::DeclareVariableDestructuring,
-                        ),
+                        ))),
                     );
                     let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
                         &mut typed_ast_utils::ErrorMapper,
@@ -4482,10 +4542,10 @@ pub fn declare_class<'a>(
     if abstract_ {
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::ETSSyntax {
+            ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                 kind: TSSyntaxKind::AbstractClass,
                 loc: loc.dupe(),
-            },
+            })),
         );
     }
     let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
@@ -4605,12 +4665,12 @@ fn declare_module<'a>(
     if !(cx.file().is_lib_file() && type_env::in_global_scope(cx)) {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EUnsupportedSyntax(
+            ErrorMessage::EUnsupportedSyntax(Box::new((
                 id_loc.dupe(),
                 UnsupportedSyntax::ContextDependentUnsupportedStatement(
                     ContextDependentUnsupportedStatement::NonLibdefToplevelDeclareModule,
                 ),
-            ),
+            ))),
         );
     }
     let (body_loc, body_block) = &decl.body;
@@ -4620,6 +4680,7 @@ fn declare_module<'a>(
         cx,
         flow_env_builder::name_def_types::ScopeKind::DeclareModule,
     );
+    //   let elements_ast = statement_list cx elements in
     let elements_ast = statement_list(cx, elements);
     for stmt in elements_ast.iter() {
         let loc = stmt.loc();
@@ -4628,14 +4689,14 @@ fn declare_module<'a>(
             Err(kind) => {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::ContextDependentUnsupportedStatement(
                             ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareModule(
                                 FlowSmolStr::new(kind),
                             ),
                         ),
-                    ),
+                    ))),
                 );
             }
         }
@@ -4687,10 +4748,10 @@ pub fn declare_namespace<'a>(
     if *implicit_declare && !cx.tslib_syntax() {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EUnsupportedSyntax(
+            ErrorMessage::EUnsupportedSyntax(Box::new((
                 loc.dupe(),
                 UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::DeclarationWithoutDeclare),
-            ),
+            ))),
         );
     }
     let node_cache = cx.node_cache();
@@ -4729,7 +4790,10 @@ pub fn declare_namespace<'a>(
             );
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(name_loc.dupe(), UnsupportedSyntax::DeclareGlobal),
+                ErrorMessage::EUnsupportedSyntax(Box::new((
+                    name_loc.dupe(),
+                    UnsupportedSyntax::DeclareGlobal,
+                ))),
             );
             flow_js::add_output_non_speculating(
                 cx,
@@ -4877,12 +4941,14 @@ fn object_prop<'a>(
                             let acc = acc.add_prop(|mut pmap| {
                                 pmap.insert(
                                     Name::new(name.dupe()),
-                                    type_::Property::new(type_::PropertyInner::Field {
-                                        preferred_def_locs: None,
-                                        key_loc: Some(loc.dupe()),
-                                        type_: t_clone,
-                                        polarity,
-                                    }),
+                                    type_::Property::new(type_::PropertyInner::Field(Box::new(
+                                        FieldData {
+                                            preferred_def_locs: None,
+                                            key_loc: Some(loc.dupe()),
+                                            type_: t_clone,
+                                            polarity,
+                                        },
+                                    ))),
                                 );
                                 pmap
                             });
@@ -4978,10 +5044,10 @@ fn object_prop<'a>(
                 Key::Computed(_) => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             prop_loc.dupe(),
                             UnsupportedSyntax::ObjectPropertyComputedGetSet,
-                        ),
+                        ))),
                     );
                     let Ok(mapped) = polymorphic_ast_mapper::object_property_or_spread_property(
                         &mut typed_ast_utils::ErrorMapper,
@@ -5018,12 +5084,14 @@ fn object_prop<'a>(
                             Some(type_::PropertyInner::Set {
                                 key_loc: set_key_loc,
                                 type_: set_type,
-                            }) => type_::Property::new(type_::PropertyInner::GetSet {
-                                get_key_loc: Some(id_loc.dupe()),
-                                get_type: return_t_clone,
-                                set_key_loc: set_key_loc.dupe(),
-                                set_type: set_type.dupe(),
-                            }),
+                            }) => type_::Property::new(type_::PropertyInner::GetSet(Box::new(
+                                GetSetData {
+                                    get_key_loc: Some(id_loc.dupe()),
+                                    get_type: return_t_clone,
+                                    set_key_loc: set_key_loc.dupe(),
+                                    set_type: set_type.dupe(),
+                                },
+                            ))),
                             _ => type_::Property::new(type_::PropertyInner::Get {
                                 key_loc: Some(id_loc.dupe()),
                                 type_: return_t_clone,
@@ -5060,10 +5128,10 @@ fn object_prop<'a>(
                 Key::Computed(_) => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             prop_loc.dupe(),
                             UnsupportedSyntax::ObjectPropertyComputedGetSet,
-                        ),
+                        ))),
                     );
                     let Ok(mapped) = polymorphic_ast_mapper::object_property_or_spread_property(
                         &mut typed_ast_utils::ErrorMapper,
@@ -5100,12 +5168,14 @@ fn object_prop<'a>(
                             Some(type_::PropertyInner::Get {
                                 key_loc: get_key_loc,
                                 type_: get_type,
-                            }) => type_::Property::new(type_::PropertyInner::GetSet {
-                                get_key_loc: get_key_loc.dupe(),
-                                get_type: get_type.dupe(),
-                                set_key_loc: Some(id_loc.dupe()),
-                                set_type: param_t_clone,
-                            }),
+                            }) => type_::Property::new(type_::PropertyInner::GetSet(Box::new(
+                                GetSetData {
+                                    get_key_loc: get_key_loc.dupe(),
+                                    get_type: get_type.dupe(),
+                                    set_key_loc: Some(id_loc.dupe()),
+                                    set_type: param_t_clone,
+                                },
+                            ))),
                             _ => type_::Property::new(type_::PropertyInner::Set {
                                 key_loc: Some(id_loc.dupe()),
                                 type_: param_t_clone,
@@ -5226,11 +5296,11 @@ fn create_computed_prop<'a>(
                             let r = reason_of_t(&key).dupe();
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EObjectComputedPropertyAssign(
+                                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                                     r,
                                     Some(reason_key.dupe()),
                                     intermediate_error_types::InvalidObjKey::Other,
-                                ),
+                                ))),
                             );
                             object_expression_acc::ComputedProp::IgnoredInvalidNonLiteralKey
                         }
@@ -5253,11 +5323,11 @@ fn create_computed_prop<'a>(
                             let r = reason_of_t(&key).dupe();
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EObjectComputedPropertyAssign(
+                                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                                     r,
                                     Some(reason_key.dupe()),
                                     intermediate_error_types::InvalidObjKey::Other,
-                                ),
+                                ))),
                             );
                             object_expression_acc::ComputedProp::IgnoredInvalidNonLiteralKey
                         }
@@ -5285,11 +5355,11 @@ fn create_computed_prop<'a>(
                             );
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EObjectComputedPropertyAssign(
+                                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                                     reason.dupe(),
                                     Some(singleton_reason.dupe()),
                                     kind,
-                                ),
+                                ))),
                             );
                             object_expression_acc::ComputedProp::IgnoredInvalidNonLiteralKey
                         }
@@ -5297,11 +5367,11 @@ fn create_computed_prop<'a>(
                             let r = reason_of_t(&key).dupe();
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EObjectComputedPropertyAssign(
+                                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                                     r,
                                     Some(reason_key.dupe()),
                                     intermediate_error_types::InvalidObjKey::Other,
-                                ),
+                                ))),
                             );
                             object_expression_acc::ComputedProp::IgnoredInvalidNonLiteralKey
                         }
@@ -5309,12 +5379,12 @@ fn create_computed_prop<'a>(
                 }
             }
             PropRef::Named { name, .. } => {
-                let prop = Property::new(PropertyInner::Field {
+                let prop = Property::new(PropertyInner::Field(Box::new(FieldData {
                     preferred_def_locs: None,
                     key_loc: Some(key_loc.dupe()),
                     type_: value.1.clone(),
                     polarity: Polarity::object_literal_polarity(as_const || frozen),
-                });
+                })));
                 object_expression_acc::ComputedProp::Named { name, prop }
             }
         }
@@ -6211,10 +6281,10 @@ fn expression_<'a>(
         ExpressionInner::TSSatisfies { inner, .. } => {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::ETSSyntax {
+                ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                     kind: TSSyntaxKind::TSSatisfiesType(cx.casting_syntax()),
                     loc: loc.dupe(),
-                },
+                })),
             );
             let t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
             let Ok(mapped) =
@@ -6228,10 +6298,10 @@ fn expression_<'a>(
             if !cx.enable_pattern_matching() {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::MatchExpression,
-                    ),
+                    ))),
                 );
                 {
                     let Ok(v) =
@@ -6363,7 +6433,10 @@ fn expression_<'a>(
             if !cx.enable_records() {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(loc.dupe(), UnsupportedSyntax::Records),
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        UnsupportedSyntax::Records,
+                    ))),
                 );
                 {
                     let Ok(v) =
@@ -6387,11 +6460,13 @@ fn expression_<'a>(
                     &|r: Reason| r.replace_desc(VirtualReasonDesc::RRecordProperties),
                     &props_t,
                 );
-                let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::RecordCreate {
-                    op: mk_expression_reason(&ex),
-                    constructor: mk_expression_reason(&inner.constructor),
-                    properties: props_loc.dupe(),
-                }));
+                let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::RecordCreate(Box::new(
+                    RecordCreateData {
+                        op: mk_expression_reason(&ex),
+                        constructor: mk_expression_reason(&inner.constructor),
+                        properties: props_loc.dupe(),
+                    },
+                ))));
                 let reason = reason_of_t(&constructor_t).dupe();
                 let (t, ctor_t) = new_call(
                     cx,
@@ -6554,6 +6629,16 @@ fn expression_<'a>(
                 }
             }
         }
+        //   | New
+        //       {
+        //         New.callee =
+        //           ( callee_loc,
+        //             Identifier (id_loc, ({ Ast.Identifier.name = "Function"; comments = _ } as name))
+        //           );
+        //         targs;
+        //         arguments;
+        //         comments;
+        //       } ->
         ExpressionInner::New { inner, .. }
             if let ExpressionInner::Identifier {
                 loc: callee_loc,
@@ -6628,14 +6713,14 @@ fn expression_<'a>(
                 Some((_, targs_ast)) => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ECallTypeArity {
+                        ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                             call_loc: loc.dupe(),
                             is_new: true,
                             reason_arity: locationless_reason(VirtualReasonDesc::RType(Name::new(
                                 FlowSmolStr::new("Function"),
                             ))),
                             expected_arity: 0,
-                        },
+                        })),
                     );
                     let t = any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                     expression::Expression::new(ExpressionInner::New {
@@ -6658,6 +6743,16 @@ fn expression_<'a>(
                 }
             }
         }
+        //   | New
+        //       {
+        //         New.callee =
+        //           ( callee_loc,
+        //             Identifier (id_loc, ({ Ast.Identifier.name = "Array" as n; comments = _ } as name))
+        //           );
+        //         targs;
+        //         arguments;
+        //         comments;
+        //       } ->
         ExpressionInner::New { inner, .. }
             if let ExpressionInner::Identifier {
                 loc: callee_loc,
@@ -6695,14 +6790,14 @@ fn expression_<'a>(
                 }
                 (None, [argt]) if let CallArgInner::Arg(t) = argt.deref() => Ok((None, t.dupe())),
                 (None, _) => Err(ErrorMessage::EUseArrayLiteral(loc.dupe())),
-                (Some(_), _) => Err(ErrorMessage::ECallTypeArity {
+                (Some(_), _) => Err(ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: true,
                     reason_arity: locationless_reason(VirtualReasonDesc::RType(Name::new(
                         n.dupe(),
                     ))),
                     expected_arity: 1,
-                }),
+                }))),
             };
             match result {
                 Ok((targ_t, arg_t)) => {
@@ -6734,12 +6829,13 @@ fn expression_<'a>(
                         VirtualReasonDesc::RConstructorCall(Arc::new(desc_of_t(&id_t).clone())),
                         loc.dupe(),
                     );
-                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall {
-                        op: reason.dupe(),
-                        fn_: reason_of_t(&id_t).dupe(),
-                        args: vec![reason_of_t(&arg_t).dupe()].into(),
-                        local: true,
-                    }));
+                    let use_op =
+                        UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
+                            op: reason.dupe(),
+                            fn_: reason_of_t(&id_t).dupe(),
+                            args: vec![reason_of_t(&arg_t).dupe()].into(),
+                            local: true,
+                        }))));
                     let (t, ctor_t) = new_call(
                         cx,
                         loc.dupe(),
@@ -6796,12 +6892,12 @@ fn expression_<'a>(
                 VirtualReasonDesc::RConstructorCall(Arc::new(desc_of_t(&class_).clone())),
                 loc.dupe(),
             );
-            let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall {
+            let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
                 op: mk_expression_reason(&ex),
                 fn_: mk_expression_reason(&inner.callee),
                 args: args_reasons.into(),
                 local: true,
-            }));
+            }))));
             let (t, ctor_t) = new_call(cx, loc.dupe(), reason, use_op, class_, targts, argts);
             cx.set_ctor_callee(loc.dupe(), ctor_t);
             // Check if using new Record({...}) and emit error suggesting record expression syntax
@@ -7034,6 +7130,7 @@ fn expression_<'a>(
         {
             let module_prefix = cx.relay_integration_module_prefix();
             let t = match graphql::extract_module_name(&inner.quasi.1, module_prefix.as_deref()) {
+                //       | Ok module_name ->
                 Ok(module_name) => {
                     let module_name_smol = FlowSmolStr::from(module_name.as_str());
                     let module_name_userland =
@@ -7097,7 +7194,7 @@ fn expression_<'a>(
                 Err(err) => {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EInvalidGraphQL(loc.dupe(), err),
+                        ErrorMessage::EInvalidGraphQL(Box::new((loc.dupe(), err))),
                     );
                     let reason = mk_reason(VirtualReasonDesc::RAnyImplicit, loc.dupe());
                     any_t::error(reason)
@@ -7134,10 +7231,10 @@ fn expression_<'a>(
         {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::GenericTaggedTemplate),
-                ),
+                ))),
             );
             {
                 let Ok(v) =
@@ -7176,19 +7273,19 @@ fn expression_<'a>(
                 true,
                 ret_tvar.dupe(),
             );
-            let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall {
+            let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
                 op: mk_expression_reason(&ex),
                 fn_: mk_expression_reason(&inner.tag),
                 args: vec![].into(),
                 local: true,
-            }));
+            }))));
             // tag`a${b}c${d}` -> tag(['a', 'c'], b, d)
-            let call_t = UseT::new(UseTInner::CallT {
+            let call_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason.dupe(),
                 call_action: Box::new(type_::CallAction::Funcalltype(ft)),
                 return_hint: type_env::get_hint(cx, loc.dupe()),
-            });
+            })));
             flow_js::flow_non_speculating(cx, (&t, &call_t));
             let result_t = Type::new(TypeInner::OpenT(ret_tvar));
             expression::Expression::new(ExpressionInner::TaggedTemplate {
@@ -7466,10 +7563,10 @@ fn expression_<'a>(
         ExpressionInner::MetaProperty { .. } => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(
+                ErrorMessage::EUnsupportedSyntax(Box::new((
                     loc.dupe(),
                     UnsupportedSyntax::MetaPropertyExpression,
-                ),
+                ))),
             );
             {
                 let Ok(v) =
@@ -7565,10 +7662,10 @@ fn expression_<'a>(
                     if !ignore_non_literals {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 loc.dupe(),
                                 UnsupportedSyntax::ImportDynamicArgument,
-                            ),
+                            ))),
                         );
                         {
                             let Ok(v) = polymorphic_ast_mapper::expression(
@@ -7652,10 +7749,10 @@ pub fn optional_chain<'a>(
                         if !cx.assert_operator_enabled() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     factored_loc.dupe(),
                                     UnsupportedSyntax::NonnullAssertion,
-                                ),
+                                ))),
                             );
                         }
                         OptState::AssertChain
@@ -7681,10 +7778,10 @@ pub fn optional_chain<'a>(
                         if !cx.assert_operator_enabled() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     factored_loc.dupe(),
                                     UnsupportedSyntax::NonnullAssertion,
-                                ),
+                                ))),
                             );
                         }
                         OptState::AssertChain
@@ -7903,14 +8000,14 @@ pub fn optional_chain<'a>(
                         arg_list(cx, &inner.arguments)?;
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::ECallTypeArity {
+                            ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                                 call_loc: loc.dupe(),
                                 is_new: false,
                                 reason_arity: locationless_reason(VirtualReasonDesc::RFunction(
                                     ReasonDescFunction::RNormal,
                                 )),
                                 expected_arity: 0,
-                            },
+                            })),
                         );
                         let t = any_t::at(AnySource::AnyError(None), loc.dupe());
                         (t, {
@@ -7927,10 +8024,10 @@ pub fn optional_chain<'a>(
                         if !ignore_non_literals {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     loc.dupe(),
                                     UnsupportedSyntax::RequireDynamicArgument,
-                                ),
+                                ))),
                             );
                         }
                         let t = any_t::at(AnySource::AnyError(None), loc.dupe());
@@ -8066,25 +8163,27 @@ pub fn optional_chain<'a>(
                             true,
                             tvar,
                         );
-                        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod {
-                            op: mk_expression_reason(ex),
-                            fn_: mk_expression_reason(&inner.callee),
-                            prop: reason_prop.dupe(),
-                            args: mk_initial_arguments_reason(&inner.arguments).into(),
-                            local: true,
-                        }));
+                        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(
+                            Box::new(FunCallMethodData {
+                                op: mk_expression_reason(ex),
+                                fn_: mk_expression_reason(&inner.callee),
+                                prop: reason_prop.dupe(),
+                                args: mk_initial_arguments_reason(&inner.arguments).into(),
+                                local: true,
+                            }),
+                        )));
                         let propref = mk_named_prop(reason_prop.dupe(), false, name.dupe());
-                        let use_t = UseT::new(UseTInner::MethodT(
+                        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
                             use_op,
-                            reason.dupe(),
-                            reason_lookup.dupe(),
-                            Box::new(propref),
-                            Box::new(type_::MethodAction::CallM {
+                            reason: reason.dupe(),
+                            prop_reason: reason_lookup.dupe(),
+                            propref: Box::new(propref),
+                            method_action: Box::new(type_::MethodAction::CallM {
                                 methodcalltype,
                                 return_hint: type_env::get_hint(cx, loc.dupe()),
                                 specialized_callee: Some(specialized_callee.clone()),
                             }),
-                        ));
+                        })));
                         flow_js::flow_non_speculating(cx, (&super_t, &use_t));
                     },
                 );
@@ -8154,23 +8253,24 @@ pub fn optional_chain<'a>(
                             false,
                             Name::new(FlowSmolStr::new_inline("constructor")),
                         );
-                        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall {
-                            op: mk_expression_reason(ex),
-                            fn_: mk_expression_reason(&inner.callee),
-                            args: mk_initial_arguments_reason(&inner.arguments).into(),
-                            local: true,
-                        }));
-                        let use_t = UseT::new(UseTInner::MethodT(
+                        let use_op =
+                            UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
+                                op: mk_expression_reason(ex),
+                                fn_: mk_expression_reason(&inner.callee),
+                                args: mk_initial_arguments_reason(&inner.arguments).into(),
+                                local: true,
+                            }))));
+                        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
                             use_op,
-                            reason.dupe(),
-                            super_reason.dupe(),
-                            Box::new(propref),
-                            Box::new(type_::MethodAction::CallM {
+                            reason: reason.dupe(),
+                            prop_reason: super_reason.dupe(),
+                            propref: Box::new(propref),
+                            method_action: Box::new(type_::MethodAction::CallM {
                                 methodcalltype,
                                 return_hint: type_::hint_unavailable(),
                                 specialized_callee: None,
                             }),
-                        ));
+                        })));
                         flow_js::flow_non_speculating(cx, (&super_t, &use_t));
                     },
                 );
@@ -8377,10 +8477,10 @@ pub fn optional_chain<'a>(
                                     {
                                         flow_js::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EUnnecessaryInvariant(
+                                            ErrorMessage::EUnnecessaryInvariant(Box::new((
                                                 loc.dupe(),
                                                 reason_of_t(&concretized_cond_t).dupe(),
-                                            ),
+                                            ))),
                                         );
                                     }
                                     _ => {}
@@ -8404,10 +8504,10 @@ pub fn optional_chain<'a>(
                         arg_list(cx, &inner.arguments)?;
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 loc.dupe(),
                                 UnsupportedSyntax::InvariantSpreadArgument,
-                            ),
+                            ))),
                         );
                         let t = any_t::at(AnySource::AnyError(None), loc.dupe());
                         (t, {
@@ -8422,14 +8522,14 @@ pub fn optional_chain<'a>(
                         arg_list(cx, &inner.arguments)?;
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::ECallTypeArity {
+                            ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                                 call_loc: loc.dupe(),
                                 is_new: false,
                                 reason_arity: locationless_reason(VirtualReasonDesc::RFunction(
                                     ReasonDescFunction::RNormal,
                                 )),
                                 expected_arity: 0,
-                            },
+                            })),
                         );
                         let t = any_t::at(AnySource::AnyError(None), loc.dupe());
                         (t, {
@@ -8489,6 +8589,7 @@ pub fn optional_chain<'a>(
                         )
                     }
                 };
+                //     let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
                 let property = expression::member::Property::PropertyIdentifier(
                     ast::Identifier::new(ast::IdentifierInner {
                         loc: (ploc.dupe(), lhs_t.dupe()),
@@ -8762,6 +8863,7 @@ pub fn optional_chain<'a>(
         AbnormalControlFlow,
     > {
         match opt {
+            //   | NonOptional ->
             OptState::NonOptional => {
                 let ChainingConf {
                     refinement_action,
@@ -8861,6 +8963,7 @@ pub fn optional_chain<'a>(
         } else {
             // If the type of the callee has been specialized (due to implicit
             // instantiation or overload resolution) then use that type.
+            let _callee_aloc = callee.loc().0.dupe();
             let t_init = callee.loc().1.dupe();
             let t = union_of_ts(reason_of_t(&t_init).dupe(), finalized.clone(), None);
             flow_parser::ast_utils::push_toplevel_type(t, callee)
@@ -8950,10 +9053,10 @@ pub fn optional_chain<'a>(
                     if !cx.assert_operator_enabled() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 callee_loc.dupe(),
                                 UnsupportedSyntax::NonnullAssertion,
-                            ),
+                            ))),
                         );
                     }
                     OptState::AssertChain
@@ -9316,13 +9419,15 @@ pub fn optional_chain<'a>(
                     let reason_call = mk_reason(RMethodCall(Some(name_str.dupe())), loc.dupe());
                     let prop_name = Name::new(name_str.dupe());
                     let reason_prop = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
-                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod {
-                        op: expr_reason.dupe(),
-                        fn_: mk_expression_reason(orig_receiver),
-                        prop: reason_prop.dupe(),
-                        args: mk_initial_arguments_reason(arguments).into(),
-                        local: true,
-                    }));
+                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
+                        FunCallMethodData {
+                            op: expr_reason.dupe(),
+                            fn_: mk_expression_reason(orig_receiver),
+                            prop: reason_prop.dupe(),
+                            args: mk_initial_arguments_reason(arguments).into(),
+                            local: true,
+                        },
+                    ))));
                     let prop_t = flow_typing_tvar::mk(cx, reason_prop.dupe());
                     let call_voided_out_collector = TypeCollector::create();
                     let get_opt_use: Rc<
@@ -9388,12 +9493,13 @@ pub fn optional_chain<'a>(
                                         tvar.dupe(),
                                     );
                                     flow_js::unify_non_speculating(cx, None, &f, &prop_t);
-                                    let call_use = UseT::new(UseTInner::CallT {
-                                        use_op: use_op.dupe(),
-                                        reason: reason_call.dupe(),
-                                        call_action: Box::new(CallAction::Funcalltype(app)),
-                                        return_hint: type_env::get_hint(cx, loc.dupe()),
-                                    });
+                                    let call_use =
+                                        UseT::new(UseTInner::CallT(Box::new(CallTData {
+                                            use_op: use_op.dupe(),
+                                            reason: reason_call.dupe(),
+                                            call_action: Box::new(CallAction::Funcalltype(app)),
+                                            return_hint: type_env::get_hint(cx, loc.dupe()),
+                                        })));
                                     match opt_state {
                                         OptState::AssertChain | OptState::NewChain => {
                                             let (chain_reason, voided_out_collector_opt) =
@@ -9522,13 +9628,15 @@ pub fn optional_chain<'a>(
                 expression::member::Property::PropertyExpression(prop_expr) => {
                     let reason_call = mk_reason(RMethodCall(None), loc.dupe());
                     let reason_lookup = mk_reason(RProperty(None), lookup_loc.dupe());
-                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod {
-                        op: expr_reason.dupe(),
-                        fn_: mk_expression_reason(orig_receiver),
-                        prop: mk_expression_reason(prop_expr),
-                        args: mk_initial_arguments_reason(arguments).into(),
-                        local: true,
-                    }));
+                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
+                        FunCallMethodData {
+                            op: expr_reason.dupe(),
+                            fn_: mk_expression_reason(orig_receiver),
+                            prop: mk_expression_reason(prop_expr),
+                            args: mk_initial_arguments_reason(arguments).into(),
+                            local: true,
+                        },
+                    ))));
                     let call_voided_out_collector = TypeCollector::create();
                     let prop_t = flow_typing_tvar::mk(cx, reason_lookup.dupe());
                     let get_opt_use: Rc<
@@ -9704,12 +9812,12 @@ pub fn optional_chain<'a>(
             let arguments = &inner.arguments;
             let comments = &inner.comments;
             let (targts, typed_targs) = convert_call_targs_opt(cx, targs.as_ref());
-            let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall {
+            let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
                 op: mk_expression_reason(ex),
                 fn_: mk_expression_reason(callee),
                 args: mk_initial_arguments_reason(arguments).into(),
                 local: true,
-            }));
+            }))));
             let spec_callee = cx.new_specialized_callee();
             let get_opt_use: Rc<
                 dyn Fn(&Context<'a>, &Vec<CallArg>, Reason) -> type_::OptUseT<Context<'a>>,
@@ -10061,10 +10169,10 @@ fn unary<'a>(
             if !cx.assert_operator_enabled() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc.dupe(),
                         UnsupportedSyntax::NonnullAssertion,
-                    ),
+                    ))),
                 );
             }
             let argument = expression_inner(
@@ -10470,7 +10578,9 @@ fn logical<'a>(
     // If the LHS does not throw, and the RHS does throw, then we cannot say that the
     // entire expression throws, because we only evaluate the RHS depending on the value of the LHS.
     // Thus, we catch abnormal control flow exceptions on the RHS and do not rethrow them.
+    //   let (t, op) = match operator with
     let (t, op) = match expr.operator {
+        // | Or ->
         LogicalOperator::Or => {
             check_default_pattern(cx, expr.left.loc().dupe(), &expr.right);
             let left = condition(
@@ -10675,10 +10785,10 @@ pub fn assignment_lhs<'a>(
             if assertion && !cx.assert_operator_enabled() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         pat_loc.dupe(),
                         UnsupportedSyntax::NonnullAssertion,
-                    ),
+                    ))),
                 );
             }
             match expr.deref() {
@@ -10802,6 +10912,7 @@ fn assign_member<'a>(
                     // the nullable output for the optional chain.
                     optional_chain::run(cx, lhs_type, &reason, lhs_reason, &use_t, &None).unwrap();
                 }
+                //     | _ -> Flow.flow cx (lhs, use_t)
                 _ => {
                     flow_js::flow_non_speculating(cx, (lhs_type, &use_t));
                 }
@@ -11064,7 +11175,14 @@ fn assign_member<'a>(
             run_maybe_optional_chain(
                 &o,
                 &lhs_reason,
-                UseT::new(UseTInner::SetElemT(use_op, reason, i, mode, t.dupe(), None)),
+                UseT::new(UseTInner::SetElemT(Box::new(SetElemTData {
+                    use_op,
+                    reason,
+                    key_t: i,
+                    set_mode: mode,
+                    tin: t.dupe(),
+                    tout: None,
+                }))),
             );
             // types involved in the assignment itself are computed
             // in pre-havoc environment. it's the assignment itself
@@ -11113,20 +11231,22 @@ fn simple_assignment<'a>(
                 if !cx.assert_operator_enabled() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             expr_loc.dupe(),
                             UnsupportedSyntax::NonnullAssertion,
-                        ),
+                        ))),
                     );
                 }
                 if cx.assert_operator_specialized() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EIllegalAssertOperator {
-                            op: mk_reason(RNonnullAssert, lhs_loc.dupe()),
-                            obj: mk_expression_reason(unwrapped_expr),
-                            specialized: true,
-                        },
+                        ErrorMessage::EIllegalAssertOperator(Box::new(
+                            EIllegalAssertOperatorData {
+                                op: mk_reason(RNonnullAssert, lhs_loc.dupe()),
+                                obj: mk_expression_reason(unwrapped_expr),
+                                specialized: true,
+                            },
+                        )),
                     );
                 }
             }
@@ -11452,6 +11572,7 @@ fn op_assignment<'a>(
                         update_env(&result_t)?;
                         (lhs_t, lhs_pattern_ast, rhs_ast)
                     }
+                    //   | _ -> assert_false "Unexpected operator"
                     _ => panic!("Unexpected operator"),
                 },
             }
@@ -11552,10 +11673,10 @@ fn delete<'a>(
                     if !cx.assert_operator_enabled() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                 lhs_loc.dupe(),
                                 UnsupportedSyntax::NonnullAssertion,
-                            ),
+                            ))),
                         );
                     }
                     OptState::AssertChain
@@ -11597,7 +11718,7 @@ fn delete<'a>(
             let t = target_ast.loc().1.dupe();
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ECannotDelete(loc.dupe(), reason_of_t(&t).dupe()),
+                ErrorMessage::ECannotDelete(Box::new((loc.dupe(), reason_of_t(&t).dupe()))),
             );
             Ok(target_ast)
         }
@@ -11736,12 +11857,12 @@ fn jsx_fragment<'a>(
                 let reason_props = mk_reason(VirtualReasonDesc::RReactProps, loc_children.dupe());
                 let props_map = properties::PropertiesMap::from_btree_map(BTreeMap::from([(
                     Name::new(FlowSmolStr::from("children")),
-                    type_::Property::new(type_::PropertyInner::Field {
+                    type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: None,
                         key_loc: None,
                         type_: fragment_children_prop,
                         polarity: Polarity::Neutral,
-                    }),
+                    }))),
                 )]));
                 let proto = type_::obj_proto::make(reason_props.dupe());
                 obj_type::mk_with_proto(
@@ -11797,6 +11918,7 @@ fn jsx_title<'a>(
     AbnormalControlFlow,
 > {
     let (loc_element, loc_opening, loc_children) = locs;
+    //   let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
     let ast::jsx::Opening {
         loc,
         name,
@@ -12433,12 +12555,12 @@ pub fn jsx_mk_props<'a>(
                     true,
                     tout_tvar,
                 );
-                let use_t = UseT::new(UseTInner::CallT {
+                let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                     use_op: use_op_clone2.dupe(),
                     reason: call_reason_clone.dupe(),
                     call_action: Box::new(type_::CallAction::Funcalltype(app)),
                     return_hint: type_::hint_unavailable(),
-                });
+                })));
                 flow_js::flow_non_speculating(cx, (&stylex_props_t_clone, &use_t));
             },
         );
@@ -12495,12 +12617,14 @@ pub fn jsx_mk_props<'a>(
                             acc.add_prop(|mut pmap| {
                                 pmap.insert(
                                     Name::new(aname_clone),
-                                    type_::Property::new(type_::PropertyInner::Field {
-                                        preferred_def_locs: None,
-                                        key_loc: Some(id_loc_clone),
-                                        type_: atype_clone,
-                                        polarity: Polarity::Neutral,
-                                    }),
+                                    type_::Property::new(type_::PropertyInner::Field(Box::new(
+                                        FieldData {
+                                            preferred_def_locs: None,
+                                            key_loc: Some(id_loc_clone),
+                                            type_: atype_clone,
+                                            polarity: Polarity::Neutral,
+                                        },
+                                    ))),
                                 );
                                 pmap
                             })
@@ -12547,8 +12671,11 @@ pub fn jsx_mk_props<'a>(
         },
     )?;
     let attributes = atts;
+    //   let (unresolved_params, ((loc_children, _) as children)) = collapse_children cx children in
     let (unresolved_params, children) = collapse_children(cx, children)?;
     let loc_children = children.0.dupe();
+    //   let acc =
+    //     match unresolved_params with
     let acc = match unresolved_params.as_slice() {
         [] => acc,
         // We add children to the React.createElement() call for React. Not to the
@@ -12559,12 +12686,12 @@ pub fn jsx_mk_props<'a>(
                 Some(children_prop) => acc.add_prop(|mut pmap| {
                     pmap.insert(
                         Name::new(FlowSmolStr::from("children")),
-                        type_::Property::new(type_::PropertyInner::Field {
+                        type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc: None,
                             type_: children_prop,
                             polarity: Polarity::Neutral,
-                        }),
+                        }))),
                     );
                     pmap
                 }),
@@ -12588,10 +12715,10 @@ fn jsx_normalize_children_prop<'a>(
             type_::UnresolvedParam::UnresolvedSpreadArg(a) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EUnsupportedSyntax(
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
                         loc_children.dupe(),
                         UnsupportedSyntax::SpreadArgument,
-                    ),
+                    ))),
                 );
                 any_t::error(reason_of_t(&a).dupe())
             }
@@ -12642,11 +12769,13 @@ fn react_jsx_desugar<'a>(
         )
     };
     let reason_c = reason_of_t(&component_t).dupe();
-    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::ReactCreateElementCall {
-        op: reason_jsx.dupe(),
-        component: reason_c.dupe(),
-        children: loc_children.dupe(),
-    }));
+    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::ReactCreateElementCall(
+        Box::new(ReactCreateElementCallData {
+            op: reason_jsx.dupe(),
+            component: reason_c.dupe(),
+            children: loc_children.dupe(),
+        }),
+    )));
     let (tout, instantiated_component, use_op) = if cx.react_custom_jsx_typing() {
         let tout_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
         let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
@@ -12675,12 +12804,12 @@ fn react_jsx_desugar<'a>(
             cx,
             (
                 &custom_jsx_factory_type,
-                &UseT::new(UseTInner::CallT {
+                &UseT::new(UseTInner::CallT(Box::new(CallTData {
                     use_op: use_op.dupe(),
                     reason: reason.dupe(),
                     call_action: Box::new(type_::CallAction::Funcalltype(funcalltype)),
                     return_hint: return_hint.clone(),
-                }),
+                }))),
             ),
         );
         (tout, None, use_op)
@@ -12693,10 +12822,10 @@ fn react_jsx_desugar<'a>(
             cx,
             (
                 &component_t,
-                &UseT::new(UseTInner::ReactKitT(
-                    use_op.dupe(),
-                    reason.dupe(),
-                    Box::new(type_::react::Tool::CreateElement {
+                &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                    use_op: use_op.dupe(),
+                    reason: reason.dupe(),
+                    tool: Box::new(type_::react::Tool::CreateElement {
                         component: component_t.dupe(),
                         jsx_props: props.dupe(),
                         tout: tout_tvar,
@@ -12707,7 +12836,7 @@ fn react_jsx_desugar<'a>(
                         inferred_targs: None,
                         specialized_component: Some(specialized_component.clone()),
                     }),
-                )),
+                }))),
             ),
         );
         let specialized_component_t =
@@ -12767,10 +12896,12 @@ fn react_jsx_desugar<'a>(
             {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EInvalidReactCreateElement {
-                        create_element_loc: loc_element.dupe(),
-                        invalid_react: reason_of_t(&react_t).dupe(),
-                    },
+                    ErrorMessage::EInvalidReactCreateElement(Box::new(
+                        EInvalidReactCreateElementData {
+                            create_element_loc: loc_element.dupe(),
+                            invalid_react: reason_of_t(&react_t).dupe(),
+                        },
+                    )),
                 );
             }
         }
@@ -12951,7 +13082,7 @@ fn jsx_body<'a>(
                     )?;
                     let e_loc = typed_e.loc().0.dupe();
                     let e_t = typed_e.loc().1.dupe();
-                    let reason = mk_reason(VirtualReasonDesc::RJSXChild, e_loc.dupe());
+                    let reason = mk_reason(VirtualReasonDesc::RJSXChild, e_loc);
                     (
                         Some(type_::UnresolvedParam::UnresolvedArg(
                             mk_tuple_element(reason, e_t.dupe(), None, false, Polarity::Neutral),
@@ -13266,13 +13397,15 @@ fn static_method_call_object<'a>(
 > {
     use ast::expression::ExpressionOrSpread;
     let reason = mk_reason(RCustom(format!("`Object.{}`", m).into()), loc.dupe());
-    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod {
-        op: reason.dupe(),
-        fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
-        prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
-        args: mk_initial_arguments_reason(args).into(),
-        local: true,
-    }));
+    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
+        FunCallMethodData {
+            op: reason.dupe(),
+            fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
+            prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
+            args: mk_initial_arguments_reason(args).into(),
+            local: true,
+        },
+    ))));
     let get_keys = |arr_reason: Reason, obj_t: &Type| -> Type {
         let reason_clone = reason.dupe();
         let use_op_clone = use_op.dupe();
@@ -13323,12 +13456,12 @@ fn static_method_call_object<'a>(
             );
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
                     reason_lower: reason.dupe(),
                     reason_upper: reason.dupe(),
                     use_op,
                     explanation: None,
-                },
+                })),
             );
             let t = any_t::error(reason);
             (
@@ -13355,7 +13488,10 @@ fn static_method_call_object<'a>(
                     let loc = loc_of_t(arr).dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(loc, UnsupportedSyntax::SpreadArgument),
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                            loc,
+                            UnsupportedSyntax::SpreadArgument,
+                        ))),
                     );
                     any_t::error(reason)
                 }
@@ -13478,10 +13614,10 @@ fn static_method_call_object<'a>(
                         // can only ever contain neutral fields, this should not happen.
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EInternal(
+                            ErrorMessage::EInternal(Box::new((
                                 prop_loc.dupe(),
                                 InternalError::PropertyDescriptorPropertyCannotBeRead,
-                            ),
+                            ))),
                         );
                     }
                     Some(spec) => {
@@ -13509,12 +13645,12 @@ fn static_method_call_object<'a>(
                                 );
                             },
                         );
-                        let prop = Property::new(PropertyInner::Field {
+                        let prop = Property::new(PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc,
                             type_: t,
                             polarity: Polarity::Neutral,
-                        });
+                        })));
                         props_entries.insert(x.dupe(), prop);
                     }
                 }
@@ -13683,6 +13819,7 @@ fn static_method_call_object<'a>(
                     Some(call_targs) => {
                         let [expression::CallTypeArg::Explicit(targ)] = &*call_targs.arguments
                         else {
+                            //   | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
                             panic!(
                                 "unexpected type argument to Object.defineProperty, match guard failed"
                             )
@@ -13769,10 +13906,10 @@ fn static_method_call_object<'a>(
                         // can only ever contain neutral fields, this should not happen.
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EInternal(
+                            ErrorMessage::EInternal(Box::new((
                                 prop_loc.dupe(),
                                 InternalError::PropertyDescriptorPropertyCannotBeRead,
-                            ),
+                            ))),
                         );
                     }
                     Some(spec) => {
@@ -13909,12 +14046,12 @@ fn static_method_call_object<'a>(
             };
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::ECallTypeArity {
+                ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: false,
                     reason_arity: locationless_reason(RFunction(ReasonDescFunction::RNormal)),
                     expected_arity: arity,
-                },
+                })),
             );
             (
                 any_t::at(AnySource::AnyError(None), loc),
@@ -13927,13 +14064,15 @@ fn static_method_call_object<'a>(
             let (targts, targ_asts) = convert_call_targs_opt(cx, targs);
             let (argts, arg_asts) = arg_list(cx, args)?;
             let method_reason = mk_reason(RMethodCall(Some(m.dupe())), loc.dupe());
-            let default_use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod {
-                op: method_reason.dupe(),
-                fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
-                prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
-                args: mk_initial_arguments_reason(args).into(),
-                local: true,
-            }));
+            let default_use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
+                FunCallMethodData {
+                    op: method_reason.dupe(),
+                    fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
+                    prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
+                    args: mk_initial_arguments_reason(args).into(),
+                    local: true,
+                },
+            ))));
             let (_, result_t) = method_call(
                 cx,
                 method_reason,
@@ -14012,12 +14151,12 @@ fn check_duplicate_class_member<'a>(
             _ => {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EDuplicateClassMember {
+                    ErrorMessage::EDuplicateClassMember(Box::new(EDuplicateClassMemberData {
                         loc,
                         name: name_key,
                         is_static: static_,
                         class_kind,
-                    },
+                    })),
                 );
             }
         },
@@ -14721,12 +14860,12 @@ pub fn mk_class_sig<'a>(
                                         {
                                             flow_js::add_output_non_speculating(
                                                 cx,
-                                                ErrorMessage::EUnsupportedSyntax(
+                                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                                     loc.dupe(),
                                                     UnsupportedSyntax::TSLibSyntax(
                                                         TsLibSyntaxKind::ImplementsDottedPath,
                                                     ),
-                                                ),
+                                                ))),
                                             );
                                         }
                                         _ => {}
@@ -14877,12 +15016,12 @@ pub fn mk_class_sig<'a>(
                                         };
                                         Some((
                                             Name::new(name.dupe()),
-                                            type_::Property::new(type_::PropertyInner::Field {
+                                            type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
                                                 preferred_def_locs: None,
                                                 key_loc: Some(id_loc.dupe()),
                                                 type_: prop_t,
                                                 polarity: Polarity::Positive,
-                                            }),
+                                            }))),
                                         ))
                                     }
                                     _ => None,
@@ -14982,6 +15121,9 @@ pub fn mk_class_sig<'a>(
                     InstanceKind::RecordKind { .. } => intermediate_error_types::ClassKind::Record,
                 };
 
+                // let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
+                //   check_duplicate_class_member cx public_seen_names member_loc name ~static ~private_ kind class_kind
+                // in
                 let check_duplicate_name =
                     |public_seen_names: &mut SeenNames,
                      member_loc: ALoc,
@@ -15009,10 +15151,10 @@ pub fn mk_class_sig<'a>(
                         if let Some(ts_acc) = ts_accessibility {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::ETSSyntax {
+                                ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                                     kind: TSSyntaxKind::TSClassAccessibility(ts_acc.kind),
                                     loc: ts_acc.loc.dupe(),
-                                },
+                                })),
                             );
                         }
                     }
@@ -15021,10 +15163,10 @@ pub fn mk_class_sig<'a>(
                 if abstract_ {
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ETSSyntax {
+                        ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                             kind: TSSyntaxKind::AbstractClass,
                             loc: class_loc.dupe(),
-                        },
+                        })),
                     );
                 }
 
@@ -15309,12 +15451,12 @@ pub fn mk_class_sig<'a>(
                                     if override_ {
                                         flow_js::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EUnsupportedSyntax(
+                                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                                 method_loc.dupe(),
                                                 UnsupportedSyntax::TSLibSyntax(
                                                     TsLibSyntaxKind::OverrideModifier,
                                                 ),
-                                            ),
+                                            ))),
                                         );
                                     }
                                     let id_loc_c = id_loc.dupe();
@@ -15363,12 +15505,12 @@ pub fn mk_class_sig<'a>(
                                     if override_ {
                                         flow_js::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EUnsupportedSyntax(
+                                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                                 method_loc.dupe(),
                                                 UnsupportedSyntax::TSLibSyntax(
                                                     TsLibSyntaxKind::OverrideModifier,
                                                 ),
-                                            ),
+                                            ))),
                                         );
                                     }
 
@@ -15410,10 +15552,10 @@ pub fn mk_class_sig<'a>(
                                     let loc = &method.loc;
                                     flow_js::add_output_non_speculating(
                                         cx,
-                                        ErrorMessage::EUnsupportedSyntax(
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
                                             loc.dupe(),
                                             UnsupportedSyntax::ClassPropertyLiteral,
-                                        ),
+                                        ))),
                                     );
                                     let elem_c = elem.clone();
                                     rev_elements.push(Box::new(move |_cx| {
@@ -15446,12 +15588,12 @@ pub fn mk_class_sig<'a>(
                                         if override_ {
                                             flow_js::add_output_non_speculating(
                                                 cx,
-                                                ErrorMessage::EUnsupportedSyntax(
+                                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                                     method_loc.dupe(),
                                                     UnsupportedSyntax::TSLibSyntax(
                                                         TsLibSyntaxKind::OverrideModifier,
                                                     ),
-                                                ),
+                                                ))),
                                             );
                                         }
 
@@ -15500,10 +15642,10 @@ pub fn mk_class_sig<'a>(
                                         let loc = &method.loc;
                                         flow_js::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EUnsupportedSyntax(
+                                            ErrorMessage::EUnsupportedSyntax(Box::new((
                                                 loc.dupe(),
                                                 UnsupportedSyntax::ClassPropertyComputed,
-                                            ),
+                                            ))),
                                         );
                                         let elem_c = elem.clone();
                                         rev_elements.push(Box::new(move |_cx| {
@@ -15517,79 +15659,83 @@ pub fn mk_class_sig<'a>(
                                 }
                             }
                         }
-                        BodyElement::Property(prop) => match &prop.key {
-                            Key::PrivateName(_) => {
-                                panic!("Internal Error: Found non-private field with private name");
-                            }
-                            Key::Identifier(id_pair) => {
-                                let loc = &prop.loc;
-                                let id_loc = &id_pair.loc;
-                                let name = &id_pair.name;
-                                let annot = &prop.annot;
-                                let value = &prop.value;
-                                let static_ = prop.static_;
-                                let override_ = prop.override_;
-                                let optional = prop.optional;
-                                let variance = &prop.variance;
-                                let ts_accessibility = &prop.ts_accessibility;
-                                let decorators = &prop.decorators;
-                                let prop_comments = &prop.comments;
+                        BodyElement::Property(prop) => {
+                            match &prop.key {
+                                Key::PrivateName(_) => {
+                                    panic!(
+                                        "Internal Error: Found non-private field with private name"
+                                    );
+                                }
+                                Key::Identifier(id_pair) => {
+                                    let loc = &prop.loc;
+                                    let id_loc = &id_pair.loc;
+                                    let name = &id_pair.name;
+                                    let annot = &prop.annot;
+                                    let value = &prop.value;
+                                    let static_ = prop.static_;
+                                    let override_ = prop.override_;
+                                    let optional = prop.optional;
+                                    let variance = &prop.variance;
+                                    let ts_accessibility = &prop.ts_accessibility;
+                                    let decorators = &prop.decorators;
+                                    let prop_comments = &prop.comments;
 
-                                check_ts_accessibility(cx, ts_accessibility);
-                                if override_ {
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(
-                                            loc.dupe(),
-                                            UnsupportedSyntax::TSLibSyntax(
-                                                TsLibSyntaxKind::OverrideModifier,
-                                            ),
-                                        ),
-                                    );
-                                }
-                                if optional && !cx.tslib_syntax() {
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(
-                                            loc.dupe(),
-                                            UnsupportedSyntax::TSLibSyntax(
-                                                TsLibSyntaxKind::OptionalClassProperty,
-                                            ),
-                                        ),
-                                    );
-                                }
-                                let field_reason = mk_reason(
-                                    VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
-                                    loc.dupe(),
-                                );
-                                let polarity = type_annotation::polarity(cx, variance.as_ref());
-                                let decorators_ast: Vec<_> = decorators
-                                    .iter()
-                                    .map(|d| {
-                                        let Ok(v) = polymorphic_ast_mapper::class_decorator(
-                                            &mut typed_ast_utils::ErrorMapper,
-                                            d,
+                                    check_ts_accessibility(cx, ts_accessibility);
+                                    if override_ {
+                                        flow_js::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                                loc.dupe(),
+                                                UnsupportedSyntax::TSLibSyntax(
+                                                    TsLibSyntaxKind::OverrideModifier,
+                                                ),
+                                            ))),
                                         );
-                                        v
-                                    })
-                                    .collect();
-                                let (field, annot_t, annot_ast, get_value) = mk_field(
-                                    cx,
-                                    &tparams_map_with_this,
-                                    field_reason,
-                                    annot,
-                                    value,
-                                )?;
-                                let loc_c = loc.dupe();
-                                let annot_t_c = annot_t.dupe();
-                                let id_loc_c = id_loc.dupe();
-                                let id_pair_c = id_pair.clone();
-                                let static_c = static_;
-                                let override_c = override_;
-                                let variance_c = variance.clone();
-                                let ts_accessibility_c = ts_accessibility.clone();
-                                let prop_comments_c = prop_comments.clone();
-                                let get_element =
+                                    }
+                                    if optional && !cx.tslib_syntax() {
+                                        flow_js::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                                loc.dupe(),
+                                                UnsupportedSyntax::TSLibSyntax(
+                                                    TsLibSyntaxKind::OptionalClassProperty,
+                                                ),
+                                            ))),
+                                        );
+                                    }
+                                    let field_reason = mk_reason(
+                                        VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
+                                        loc.dupe(),
+                                    );
+                                    let polarity = type_annotation::polarity(cx, variance.as_ref());
+                                    //   let decorators = ...
+                                    let decorators_ast: Vec<_> = decorators
+                                        .iter()
+                                        .map(|d| {
+                                            let Ok(v) = polymorphic_ast_mapper::class_decorator(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                d,
+                                            );
+                                            v
+                                        })
+                                        .collect();
+                                    let (field, annot_t, annot_ast, get_value) = mk_field(
+                                        cx,
+                                        &tparams_map_with_this,
+                                        field_reason,
+                                        annot,
+                                        value,
+                                    )?;
+                                    let loc_c = loc.dupe();
+                                    let annot_t_c = annot_t.dupe();
+                                    let id_loc_c = id_loc.dupe();
+                                    let id_pair_c = id_pair.clone();
+                                    let static_c = static_;
+                                    let override_c = override_;
+                                    let variance_c = variance.clone();
+                                    let ts_accessibility_c = ts_accessibility.clone();
+                                    let prop_comments_c = prop_comments.clone();
+                                    let get_element =
                                         Box::new(
                                             move |_cx: &Context<'_>| -> ast::class::BodyElement<
                                                 ALoc,
@@ -15618,63 +15764,64 @@ pub fn mk_class_sig<'a>(
                                                 })
                                             },
                                         );
-                                check_duplicate_name(
-                                    &mut public_seen_names,
-                                    id_loc.dupe(),
-                                    name,
-                                    static_,
-                                    false,
-                                    ClassMemberKind::ClassMemberField,
-                                );
-                                class_sig::add_field(
-                                    static_,
-                                    name.dupe(),
-                                    id_loc.dupe(),
-                                    polarity,
-                                    field,
-                                    &mut class_sig,
-                                );
-                                rev_elements.push(get_element);
-                            }
-                            Key::StringLiteral(_)
-                            | Key::NumberLiteral(_)
-                            | Key::BigIntLiteral(_) => {
-                                let loc = &prop.loc;
-                                flow_js::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::EUnsupportedSyntax(
-                                        loc.dupe(),
-                                        UnsupportedSyntax::ClassPropertyLiteral,
-                                    ),
-                                );
-                                let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
-                                    let Ok(v) = polymorphic_ast_mapper::class_element(
-                                        &mut typed_ast_utils::ErrorMapper,
-                                        &elem_c,
+                                    check_duplicate_name(
+                                        &mut public_seen_names,
+                                        id_loc.dupe(),
+                                        name,
+                                        static_,
+                                        false,
+                                        ClassMemberKind::ClassMemberField,
                                     );
-                                    v
-                                }));
-                            }
-                            Key::Computed(_) => {
-                                let loc = &prop.loc;
-                                flow_js::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::EUnsupportedSyntax(
-                                        loc.dupe(),
-                                        UnsupportedSyntax::ClassPropertyComputed,
-                                    ),
-                                );
-                                let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
-                                    let Ok(v) = polymorphic_ast_mapper::class_element(
-                                        &mut typed_ast_utils::ErrorMapper,
-                                        &elem_c,
+                                    class_sig::add_field(
+                                        static_,
+                                        name.dupe(),
+                                        id_loc.dupe(),
+                                        polarity,
+                                        field,
+                                        &mut class_sig,
                                     );
-                                    v
-                                }));
+                                    rev_elements.push(get_element);
+                                }
+                                Key::StringLiteral(_)
+                                | Key::NumberLiteral(_)
+                                | Key::BigIntLiteral(_) => {
+                                    let loc = &prop.loc;
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                                            loc.dupe(),
+                                            UnsupportedSyntax::ClassPropertyLiteral,
+                                        ))),
+                                    );
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move |_cx| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        v
+                                    }));
+                                }
+                                Key::Computed(_) => {
+                                    let loc = &prop.loc;
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                                            loc.dupe(),
+                                            UnsupportedSyntax::ClassPropertyComputed,
+                                        ))),
+                                    );
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move |_cx| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        v
+                                    }));
+                                }
                             }
-                        },
+                        }
 
                         // fields
                         BodyElement::PrivateField(pf) => {
@@ -15695,23 +15842,23 @@ pub fn mk_class_sig<'a>(
                             if override_ {
                                 flow_js::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EUnsupportedSyntax(
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                         loc.dupe(),
                                         UnsupportedSyntax::TSLibSyntax(
                                             TsLibSyntaxKind::OverrideModifier,
                                         ),
-                                    ),
+                                    ))),
                                 );
                             }
                             if optional && !cx.tslib_syntax() {
                                 flow_js::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EUnsupportedSyntax(
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                         loc.dupe(),
                                         UnsupportedSyntax::TSLibSyntax(
                                             TsLibSyntaxKind::OptionalClassProperty,
                                         ),
-                                    ),
+                                    ))),
                                 );
                             }
                             let field_reason = mk_reason(
@@ -15784,10 +15931,10 @@ pub fn mk_class_sig<'a>(
                             let loc = &_sb.loc;
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     loc.dupe(),
                                     UnsupportedSyntax::ClassStaticBlock,
-                                ),
+                                ))),
                             );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
@@ -15802,10 +15949,10 @@ pub fn mk_class_sig<'a>(
                             let loc = &_dm.loc;
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EUnsupportedSyntax(
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
                                     loc.dupe(),
                                     UnsupportedSyntax::ClassDeclareMethod,
-                                ),
+                                ))),
                             );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
@@ -15820,10 +15967,10 @@ pub fn mk_class_sig<'a>(
                             let loc = &_am.loc;
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::ETSSyntax {
+                                ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                                     kind: TSSyntaxKind::AbstractMethod,
                                     loc: loc.dupe(),
-                                },
+                                })),
                             );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
@@ -15838,10 +15985,10 @@ pub fn mk_class_sig<'a>(
                             let loc = &_ap.loc;
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::ETSSyntax {
+                                ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                                     kind: TSSyntaxKind::AbstractMethod,
                                     loc: loc.dupe(),
-                                },
+                                })),
                             );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
@@ -15857,10 +16004,10 @@ pub fn mk_class_sig<'a>(
                             if !(cx.tslib_syntax() && cx.under_declaration_context()) {
                                 flow_js::add_output_non_speculating(
                                     cx,
-                                    ErrorMessage::EUnsupportedSyntax(
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                         loc.dupe(),
                                         UnsupportedSyntax::ClassIndexSignature,
-                                    ),
+                                    ))),
                                 );
                                 let elem_c = elem.clone();
                                 rev_elements.push(Box::new(move |_cx| {
@@ -15875,10 +16022,10 @@ pub fn mk_class_sig<'a>(
                                 if class_sig::has_indexer(static_, &class_sig) {
                                     flow_js_utils::add_output_non_speculating(
                                         cx,
-                                        ErrorMessage::EUnsupportedSyntax(
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
                                             loc.dupe(),
                                             UnsupportedSyntax::MultipleIndexers,
-                                        ),
+                                        ))),
                                     );
                                     let elem_c = elem.clone();
                                     rev_elements.push(Box::new(move |_cx| {
@@ -15960,51 +16107,32 @@ pub fn mk_class_sig<'a>(
                         >,
                     >,
                 > = Rc::new(RefCell::new(Some(extends_ast_f)));
-                // In OCaml, the element and extends closures are regular closures that
-                // can be called multiple times. In Rust they are FnOnce. We evaluate
-                // them on the first call and cache the computed body and extends, so
-                // that subsequent calls (which occur in practice) can reuse them.
-                let cached_body: Rc<
-                    RefCell<Option<Arc<[ast::class::BodyElement<ALoc, (ALoc, Type)>]>>>,
-                > = Rc::new(RefCell::new(None));
-                let cached_extends: Rc<
-                    RefCell<Option<Option<ast::class::Extends<ALoc, (ALoc, Type)>>>>,
-                > = Rc::new(RefCell::new(None));
+                // In OCaml, closures are reusable (Fn), so the reconstruct
+                // function can be called multiple times and returns the same
+                // result. In Rust, the element closures are FnOnce. We cache
+                // the result of the first call so subsequent calls return the
+                // same value, preserving OCaml semantics.
+                let cached_class_ast: Rc<RefCell<Option<ast::class::Class<ALoc, (ALoc, Type)>>>> =
+                    Rc::new(RefCell::new(None));
                 let reconstruct: Rc<
                     dyn Fn(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a,
                 > = Rc::new(move |cx, class_t: Type| {
-                    //   body = Base.List.map ~f:(fun f -> f ()) elements;
-                    let body = {
-                        let mut cached = cached_body.borrow_mut();
-                        if let Some(b) = cached.as_ref() {
-                            b.clone()
-                        } else {
-                            let elements = elements_cell
-                                .borrow_mut()
-                                .take()
-                                .expect("elements already consumed without caching");
-                            let b: Arc<[ast::class::BodyElement<ALoc, (ALoc, Type)>]> =
-                                elements.into_iter().map(|f| f(cx)).collect();
-                            *cached = Some(b.clone());
-                            b
-                        }
-                    };
-                    //   extends = extends_ast_f ();
-                    let extends = {
-                        let mut cached = cached_extends.borrow_mut();
-                        if let Some(e) = cached.as_ref() {
-                            e.clone()
-                        } else {
-                            let extends_fn = extends_ast_f_cell
-                                .borrow_mut()
-                                .take()
-                                .expect("extends_ast_f already consumed without caching");
-                            let e = extends_fn(cx).unwrap_or(None);
-                            *cached = Some(e.clone());
-                            e
-                        }
-                    };
-                    ast::class::Class {
+                    if let Some(ref cached) = *cached_class_ast.borrow() {
+                        return cached.clone();
+                    }
+                    let elements = elements_cell
+                        .borrow_mut()
+                        .take()
+                        .expect("class reconstruct: elements missing on first call");
+                    let body: Vec<ast::class::BodyElement<ALoc, (ALoc, Type)>> =
+                        elements.into_iter().map(|f| f(cx)).collect();
+                    //     extends = extends_ast_f ();
+                    let extends_fn = extends_ast_f_cell
+                        .borrow_mut()
+                        .take()
+                        .expect("class reconstruct: extends_ast_f missing on first call");
+                    let extends = extends_fn(cx).unwrap_or(None);
+                    let result = ast::class::Class {
                         id: id_c.as_ref().map(|ident| {
                             ast::Identifier::new(ast::IdentifierInner {
                                 loc: (ident.loc.dupe(), class_t.dupe()),
@@ -16014,7 +16142,7 @@ pub fn mk_class_sig<'a>(
                         }),
                         body: ast::class::Body {
                             loc: body_loc_c.dupe(),
-                            body,
+                            body: body.into(),
                             comments: body_comments_c.clone(),
                         },
                         tparams: tparams_ast_c.clone(),
@@ -16023,7 +16151,9 @@ pub fn mk_class_sig<'a>(
                         class_decorators: class_decorators_ast_c.clone().into(),
                         comments: comments_c.clone(),
                         abstract_,
-                    }
+                    };
+                    *cached_class_ast.borrow_mut() = Some(result.clone());
+                    result
                 });
 
                 Ok((class_t, class_t_internal, class_sig, reconstruct))
@@ -16297,12 +16427,12 @@ pub fn mk_record_sig<'a>(
                                             {
                                                 flow_js::add_output_non_speculating(
                                                     cx,
-                                                    ErrorMessage::EUnsupportedSyntax(
+                                                    ErrorMessage::EUnsupportedSyntax(Box::new((
                                                         loc.dupe(),
                                                         UnsupportedSyntax::TSLibSyntax(
                                                             TsLibSyntaxKind::ImplementsDottedPath,
                                                         ),
-                                                    ),
+                                                    ))),
                                                 );
                                             }
                                             _ => {}
@@ -16434,12 +16564,12 @@ pub fn mk_record_sig<'a>(
                                         };
                                         Some((
                                             Name::new(name),
-                                            type_::Property::new(type_::PropertyInner::Field {
+                                            type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
                                                 preferred_def_locs: None,
                                                 key_loc: Some(key_loc),
                                                 type_: prop_t,
                                                 polarity: Polarity::Positive,
-                                            }),
+                                            }))),
                                         ))
                                     }
                                     _ => None,
@@ -17465,10 +17595,10 @@ pub fn mk_func_sig<'a>(
                 let loc = loc.dupe();
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ETSSyntax {
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
                         kind: TSSyntaxKind::TSParameterProperty,
                         loc: loc.dupe(),
-                    },
+                    })),
                 );
                 func_stmt_config_types::Param {
                     t: any_t::make(
@@ -17585,10 +17715,10 @@ pub fn mk_func_sig<'a>(
             | ast::pattern::Pattern::Array { .. }
             | ast::pattern::Pattern::Expression { .. } => {
                 // this should be a parse error, unrepresentable AST
-                Err(Box::new(ErrorMessage::EInternal(
+                Err(Box::new(ErrorMessage::EInternal(Box::new((
                     ploc,
                     InternalError::RestParameterNotIdentifierPattern,
-                )))
+                )))))
             }
         }
     }
@@ -17739,10 +17869,12 @@ pub fn mk_func_sig<'a>(
             );
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::ETypeGuardIncompatibleWithFunctionKind {
-                    loc: guard_loc,
-                    kind: FlowSmolStr::new(incompat_kind),
-                },
+                ErrorMessage::ETypeGuardIncompatibleWithFunctionKind(Box::new(
+                    ETypeGuardIncompatibleWithFunctionKindData {
+                        loc: guard_loc,
+                        kind: FlowSmolStr::new(incompat_kind),
+                    },
+                )),
             );
             (AnnotatedOrInferred::Annotated(return_t), return_ast, None)
         }
@@ -17869,10 +18001,10 @@ pub fn mk_func_sig<'a>(
                     let error_loc = t_ast.guard.loc.dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EUnsupportedSyntax(
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
                             error_loc.dupe(),
                             UnsupportedSyntax::UserDefinedTypeGuards { kind: guard_kind },
-                        ),
+                        ))),
                     );
                     (
                         AnnotatedOrInferred::Annotated(any_t::at(
@@ -17896,7 +18028,10 @@ pub fn mk_func_sig<'a>(
             let pred_loc = pred.loc.dupe();
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EUnsupportedSyntax(pred_loc, UnsupportedSyntax::PredicateFunction),
+                ErrorMessage::EUnsupportedSyntax(Box::new((
+                    pred_loc,
+                    UnsupportedSyntax::PredicateFunction,
+                ))),
             );
             let Ok(mapped_pred) =
                 polymorphic_ast_mapper::predicate(&mut typed_ast_utils::ErrorMapper, pred);
@@ -17936,12 +18071,13 @@ pub fn mk_func_sig<'a>(
                         env_key.loc.dupe(),
                     ),
                 );
-                let field = type_::Property::new(type_::PropertyInner::Field {
-                    preferred_def_locs: None,
-                    key_loc: Some(env_key.loc.dupe()),
-                    type_: expr_t,
-                    polarity: Polarity::Neutral,
-                });
+                let field =
+                    type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: None,
+                        key_loc: Some(env_key.loc.dupe()),
+                        type_: expr_t,
+                        polarity: Polarity::Neutral,
+                    })));
                 (Name::new(name.dupe()), field)
             })
             .collect();
@@ -18404,85 +18540,101 @@ pub fn mk_enum<'a>(
                 loc,
                 prev_use_loc,
                 member_name,
-            } => EnumErrorKind::EnumDuplicateMemberName {
+            } => EnumErrorKind::EnumDuplicateMemberName(Box::new(EnumDuplicateMemberNameData {
                 loc: loc.dupe(),
                 prev_use_loc: prev_use_loc.dupe(),
                 enum_reason: enum_reason.dupe(),
                 member_name: member_name.clone(),
-            },
+            })),
             enum_validate::ValidationError::InconsistentMemberValues { loc } => {
-                EnumErrorKind::EnumInconsistentMemberValues {
-                    loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }
+                EnumErrorKind::EnumInconsistentMemberValues(Box::new(
+                    EnumInconsistentMemberValuesData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))
             }
             enum_validate::ValidationError::InvalidMemberInitializer {
                 loc,
                 explicit_type,
                 member_name,
-            } => EnumErrorKind::EnumInvalidMemberInitializer {
-                loc: loc.dupe(),
-                enum_reason: enum_reason.dupe(),
-                explicit_type: *explicit_type,
-                member_name: member_name.clone(),
-            },
-            enum_validate::ValidationError::BooleanMemberNotInitialized { loc, member_name } => {
-                EnumErrorKind::EnumBooleanMemberNotInitialized {
+            } => EnumErrorKind::EnumInvalidMemberInitializer(Box::new(
+                EnumInvalidMemberInitializerData {
                     loc: loc.dupe(),
                     enum_reason: enum_reason.dupe(),
+                    explicit_type: *explicit_type,
                     member_name: member_name.clone(),
-                }
+                },
+            )),
+            enum_validate::ValidationError::BooleanMemberNotInitialized { loc, member_name } => {
+                EnumErrorKind::EnumBooleanMemberNotInitialized(Box::new(
+                    EnumBooleanMemberNotInitializedData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        member_name: member_name.clone(),
+                    },
+                ))
             }
             enum_validate::ValidationError::NumberMemberNotInitialized { loc, member_name } => {
-                EnumErrorKind::EnumNumberMemberNotInitialized {
-                    loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                    member_name: member_name.clone(),
-                }
+                EnumErrorKind::EnumNumberMemberNotInitialized(Box::new(
+                    EnumNumberMemberNotInitializedData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        member_name: member_name.clone(),
+                    },
+                ))
             }
             enum_validate::ValidationError::BigIntMemberNotInitialized { loc, member_name } => {
-                EnumErrorKind::EnumBigIntMemberNotInitialized {
-                    loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                    member_name: member_name.clone(),
-                }
+                EnumErrorKind::EnumBigIntMemberNotInitialized(Box::new(
+                    EnumBigIntMemberNotInitializedData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        member_name: member_name.clone(),
+                    },
+                ))
             }
             enum_validate::ValidationError::StringMemberInconsistentlyInitialized { loc } => {
-                EnumErrorKind::EnumStringMemberInconsistentlyInitialized {
-                    loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                }
+                EnumErrorKind::EnumStringMemberInconsistentlyInitialized(Box::new(
+                    EnumStringMemberInconsistentlyInitializedData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))
             }
             enum_validate::ValidationError::SymbolMemberWithInitializer { loc, member_name } => {
-                EnumErrorKind::EnumInvalidMemberInitializer {
-                    loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                    explicit_type: Some(
-                        flow_parser::ast::statement::enum_declaration::ExplicitType::Symbol,
-                    ),
-                    member_name: member_name.clone(),
-                }
+                EnumErrorKind::EnumInvalidMemberInitializer(Box::new(
+                    EnumInvalidMemberInitializerData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        explicit_type: Some(
+                            flow_parser::ast::statement::enum_declaration::ExplicitType::Symbol,
+                        ),
+                        member_name: member_name.clone(),
+                    },
+                ))
             }
             enum_validate::ValidationError::DuplicateMemberValue { loc, prev_use_loc } => {
-                EnumErrorKind::EnumMemberDuplicateValue {
+                EnumErrorKind::EnumMemberDuplicateValue(Box::new(EnumMemberDuplicateValueData {
                     loc: loc.dupe(),
                     prev_use_loc: prev_use_loc.dupe(),
                     enum_reason: enum_reason.dupe(),
-                }
+                }))
             }
             enum_validate::ValidationError::InvalidMemberName { loc, member_name } => {
-                EnumErrorKind::EnumInvalidMemberName {
+                EnumErrorKind::EnumInvalidMemberName(Box::new(EnumInvalidMemberNameData {
                     loc: loc.dupe(),
                     enum_reason: enum_reason.dupe(),
                     member_name: member_name.clone(),
-                }
+                }))
             }
             enum_validate::ValidationError::NonIdentifierMemberName { loc, member_name } => {
-                EnumErrorKind::EnumNonIdentifierMemberName {
-                    loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                    member_name: member_name.clone(),
-                }
+                EnumErrorKind::EnumNonIdentifierMemberName(Box::new(
+                    EnumNonIdentifierMemberNameData {
+                        loc: loc.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        member_name: member_name.clone(),
+                    },
+                ))
             }
         };
         flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EEnumError(error));
@@ -18653,41 +18805,49 @@ fn error_on_match_case_invalid_syntax<'a>(
         ([loc], [], []) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
-                    loc: loc.dupe(),
-                    kind: MatchInvalidCaseSyntax::InvalidMatchCasePrefixCase,
-                }),
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax(Box::new(
+                    MatchInvalidCaseSyntaxData {
+                        loc: loc.dupe(),
+                        kind: MatchInvalidCaseSyntax::InvalidMatchCasePrefixCase,
+                    },
+                ))),
             );
         }
         ([], [loc], []) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
-                    loc: loc.dupe(),
-                    kind: MatchInvalidCaseSyntax::InvalidMatchCaseInfixColon,
-                }),
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax(Box::new(
+                    MatchInvalidCaseSyntaxData {
+                        loc: loc.dupe(),
+                        kind: MatchInvalidCaseSyntax::InvalidMatchCaseInfixColon,
+                    },
+                ))),
             );
         }
         ([], [], [loc]) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
-                    loc: loc.dupe(),
-                    kind: MatchInvalidCaseSyntax::InvalidMatchCaseSuffixSemicolon,
-                }),
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax(Box::new(
+                    MatchInvalidCaseSyntaxData {
+                        loc: loc.dupe(),
+                        kind: MatchInvalidCaseSyntax::InvalidMatchCaseSuffixSemicolon,
+                    },
+                ))),
             );
         }
         _ => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
-                    loc: match_keyword_loc,
-                    kind: MatchInvalidCaseSyntax::InvalidMatchCaseMultiple {
-                        invalid_prefix_case_locs: prefix_acc,
-                        invalid_infix_colon_locs: infix_acc,
-                        invalid_suffix_semicolon_locs: suffix_acc,
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax(Box::new(
+                    MatchInvalidCaseSyntaxData {
+                        loc: match_keyword_loc,
+                        kind: MatchInvalidCaseSyntax::InvalidMatchCaseMultiple {
+                            invalid_prefix_case_locs: prefix_acc,
+                            invalid_infix_colon_locs: infix_acc,
+                            invalid_suffix_semicolon_locs: suffix_acc,
+                        },
                     },
-                }),
+                ))),
             );
         }
     }

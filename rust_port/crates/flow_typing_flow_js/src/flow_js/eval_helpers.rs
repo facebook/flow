@@ -7,7 +7,18 @@
 
 use std::rc::Rc;
 
+use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::ConditionalTData;
+use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::GetElemTData;
+use flow_typing_type::type_::GetEnumTData;
+use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::MapTypeTData;
+use flow_typing_type::type_::OptionalIndexedAccessTData;
+use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::TypeAppTData;
 
 // Disambiguate helpers vs mod re-exports
@@ -70,7 +81,7 @@ pub(super) fn eval_selector<'cx>(
                     )),
                     None,
                 );
-                Ok(UseT::new(UseTInner::LookupT {
+                Ok(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason.dupe(),
                     lookup_kind: Box::new(lookup_kind),
                     try_ts_on_failure: Rc::from([]),
@@ -79,7 +90,7 @@ pub(super) fn eval_selector<'cx>(
                     method_accessible: false,
                     ids: Some(FlowOrdSet::new()),
                     ignore_dicts: false,
-                }))
+                }))))
             };
             let getprop_ub = || -> UseT<Context<'cx>> {
                 UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
@@ -117,7 +128,7 @@ pub(super) fn eval_selector<'cx>(
                 getprop_ub()
             }
         }
-        Selector::Elem(key_t) => UseT::new(UseTInner::GetElemT {
+        Selector::Elem(key_t) => UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
             use_op: unknown_use(),
             reason: reason.dupe(),
             id: None,
@@ -126,19 +137,19 @@ pub(super) fn eval_selector<'cx>(
             access_iterables: false,
             key_t: key_t.dupe(),
             tout: Box::new(tvar.dupe()),
-        }),
+        }))),
         Selector::ObjRest(xs) => UseT::new(UseTInner::ObjRestT(
             reason.dupe(),
             xs.iter().map(|x| x.to_string()).collect(),
             Type::new(TypeInner::OpenT(tvar.dupe())),
             id,
         )),
-        Selector::ArrRest(i) => UseT::new(UseTInner::ArrRestT(
-            unknown_use(),
-            reason.dupe(),
-            *i,
-            Type::new(TypeInner::OpenT(tvar.dupe())),
-        )),
+        Selector::ArrRest(i) => UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+            use_op: unknown_use(),
+            reason: reason.dupe(),
+            index: *i,
+            tout: Type::new(TypeInner::OpenT(tvar.dupe())),
+        }))),
         Selector::Default => UseT::new(UseTInner::FilterOptionalT(
             unknown_use(),
             Type::new(TypeInner::OpenT(tvar.dupe())),
@@ -161,7 +172,7 @@ pub(super) fn evaluate_type_destructor<'cx>(
         Err(FlowJsException::LimitExceeded) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::ERecursionLimit(reason.dupe(), reason.dupe()),
+                ErrorMessage::ERecursionLimit(Box::new((reason.dupe(), reason.dupe()))),
             )?;
             rec_flow_t(
                 cx,
@@ -192,13 +203,15 @@ fn evaluate_type_destructor_<'cx>(
     match t.deref() {
         // | OpenT _
         TypeInner::OpenT(_) => {
-            let x = UseT::new(UseTInner::EvalTypeDestructorT {
-                destructor_use_op: use_op,
-                reason: reason.dupe(),
-                repos: None,
-                destructor: Box::new(d.clone()),
-                tout: Box::new(tvar.dupe()),
-            });
+            let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
+                EvalTypeDestructorTData {
+                    destructor_use_op: use_op,
+                    reason: reason.dupe(),
+                    repos: None,
+                    destructor: Box::new(d.clone()),
+                    tout: Box::new(tvar.dupe()),
+                },
+            )));
             rec_flow(cx, trace, (&t, &x))
         }
         // | GenericT { bound = OpenT _; _ } ->
@@ -209,13 +222,15 @@ fn evaluate_type_destructor_<'cx>(
             id,
             no_infer,
         }) if matches!(bound.deref(), TypeInner::OpenT(_)) => {
-            let x = UseT::new(UseTInner::EvalTypeDestructorT {
-                destructor_use_op: use_op,
-                reason: reason.dupe(),
-                repos: None,
-                destructor: Box::new(d.clone()),
-                tout: Box::new(tvar.dupe()),
-            });
+            let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
+                EvalTypeDestructorTData {
+                    destructor_use_op: use_op,
+                    reason: reason.dupe(),
+                    repos: None,
+                    destructor: Box::new(d.clone()),
+                    tout: Box::new(tvar.dupe()),
+                },
+            )));
             rec_flow(cx, trace, (&t, &x))
         }
         TypeInner::GenericT(box GenericTData {
@@ -226,13 +241,15 @@ fn evaluate_type_destructor_<'cx>(
             no_infer,
         }) => {
             if let TypeInner::AnnotT(r, inner_t, use_desc) = bound.deref() {
-                let x = UseT::new(UseTInner::EvalTypeDestructorT {
-                    destructor_use_op: use_op,
-                    reason: g_reason.dupe(),
-                    repos: Some((r.dupe(), *use_desc)),
-                    destructor: Box::new(d.clone()),
-                    tout: Box::new(tvar.dupe()),
-                });
+                let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
+                    EvalTypeDestructorTData {
+                        destructor_use_op: use_op,
+                        reason: g_reason.dupe(),
+                        repos: Some((r.dupe(), *use_desc)),
+                        destructor: Box::new(d.clone()),
+                        tout: Box::new(tvar.dupe()),
+                    },
+                )));
                 let generic_t = Type::new(TypeInner::GenericT(Box::new(GenericTData {
                     reason: g_reason.dupe(),
                     name: name.dupe(),
@@ -246,23 +263,27 @@ fn evaluate_type_destructor_<'cx>(
             }
         }
         TypeInner::EvalT { .. } => {
-            let x = UseT::new(UseTInner::EvalTypeDestructorT {
-                destructor_use_op: use_op,
-                reason: reason.dupe(),
-                repos: None,
-                destructor: Box::new(d.clone()),
-                tout: Box::new(tvar.dupe()),
-            });
+            let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
+                EvalTypeDestructorTData {
+                    destructor_use_op: use_op,
+                    reason: reason.dupe(),
+                    repos: None,
+                    destructor: Box::new(d.clone()),
+                    tout: Box::new(tvar.dupe()),
+                },
+            )));
             rec_flow(cx, trace, (&t, &x))
         }
         TypeInner::AnnotT(r, inner_t, use_desc) => {
-            let x = UseT::new(UseTInner::EvalTypeDestructorT {
-                destructor_use_op: use_op,
-                reason: reason.dupe(),
-                repos: Some((r.dupe(), *use_desc)),
-                destructor: Box::new(d.clone()),
-                tout: Box::new(tvar.dupe()),
-            });
+            let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
+                EvalTypeDestructorTData {
+                    destructor_use_op: use_op,
+                    reason: reason.dupe(),
+                    repos: Some((r.dupe(), *use_desc)),
+                    destructor: Box::new(d.clone()),
+                    tout: Box::new(tvar.dupe()),
+                },
+            )));
             rec_flow(cx, trace, (inner_t, &x))
         }
         _ => eval_destructor(cx, trace, use_op, reason, &t, d, tvar),
@@ -438,13 +459,13 @@ pub(super) fn eval_destructor<'cx>(
             .map(|t| flow_cache::eval::id(cx, f(t), destructor.dupe()))
             .collect();
         let first = unresolved.remove(0);
-        let u = UseT::new(UseTInner::ResolveUnionT {
+        let u = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
             reason: r,
             unresolved: unresolved.into(),
             resolved: Rc::from([]),
             upper: Box::new(upper),
             id: flow_common::reason::mk_id() as i32,
-        });
+        })));
         rec_flow(cx, trace, (&first, &u))
     };
 
@@ -955,7 +976,7 @@ pub(super) fn eval_destructor<'cx>(
                     rec_flow(cx, trace, (t, &u))
                 }
                 Destructor::ElementType { index_type } => {
-                    let u = UseT::new(UseTInner::GetElemT {
+                    let u = UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         id: None,
@@ -964,7 +985,7 @@ pub(super) fn eval_destructor<'cx>(
                         access_iterables: false,
                         key_t: index_type.dupe(),
                         tout: Box::new(tout.dupe()),
-                    });
+                    })));
                     rec_flow(cx, trace, (t, &u))
                 }
                 Destructor::OptionalIndexedAccessNonMaybeType { index } => rec_flow(
@@ -972,17 +993,19 @@ pub(super) fn eval_destructor<'cx>(
                     trace,
                     (
                         t,
-                        &UseT::new(UseTInner::OptionalIndexedAccessT {
-                            use_op: use_op.dupe(),
-                            reason: reason.dupe(),
-                            index: index.dupe(),
-                            tout_tvar: Box::new(tout.dupe()),
-                        }),
+                        &UseT::new(UseTInner::OptionalIndexedAccessT(Box::new(
+                            OptionalIndexedAccessTData {
+                                use_op: use_op.dupe(),
+                                reason: reason.dupe(),
+                                index: index.dupe(),
+                                tout_tvar: Box::new(tout.dupe()),
+                            },
+                        ))),
                     ),
                 ),
                 Destructor::OptionalIndexedAccessResultType { void_reason } => {
                     let void = void::why(void_reason.dupe());
-                    let u = UseT::new(UseTInner::ResolveUnionT {
+                    let u = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
                         reason: reason.dupe(),
                         resolved: vec![void].into(),
                         unresolved: Rc::from([]),
@@ -991,7 +1014,7 @@ pub(super) fn eval_destructor<'cx>(
                             Type::new(TypeInner::OpenT(tout.dupe())),
                         ))),
                         id: flow_common::reason::mk_id() as i32,
-                    });
+                    })));
                     rec_flow(cx, trace, (t, &u))
                 }
                 Destructor::SpreadType(options, todo_rev, head_slice) => {
@@ -1025,10 +1048,10 @@ pub(super) fn eval_destructor<'cx>(
                     unresolved,
                 } => {
                     let elem_t = flow_typing_tvar::mk(cx, reason_tuple.dupe());
-                    let u = UseT::new(UseTInner::ResolveSpreadT(
-                        use_op.dupe(),
-                        reason_tuple.dupe(),
-                        Box::new(ResolveSpreadType {
+                    let u = UseT::new(UseTInner::ResolveSpreadT(Box::new(ResolveSpreadTData {
+                        use_op: use_op.dupe(),
+                        reason: reason_tuple.dupe(),
+                        resolve_spread_type: Box::new(ResolveSpreadType {
                             rrt_resolved: resolved_rev.clone(),
                             rrt_unresolved: unresolved.clone(),
                             rrt_resolve_to: SpreadResolve::ResolveSpreadsToTupleType {
@@ -1038,7 +1061,7 @@ pub(super) fn eval_destructor<'cx>(
                                 tout: Type::new(TypeInner::OpenT(tout.dupe())),
                             },
                         }),
-                    ));
+                    })));
                     rec_flow(cx, trace, (t, &u))
                 }
                 Destructor::ReactCheckComponentConfig {
@@ -1169,7 +1192,7 @@ pub(super) fn eval_destructor<'cx>(
                     true_t,
                     false_t,
                 } => {
-                    let u = UseT::new(UseTInner::ConditionalT {
+                    let u = UseT::new(UseTInner::ConditionalT(Box::new(ConditionalTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         distributive_tparam_name: distributive_tparam_name.clone(),
@@ -1178,7 +1201,7 @@ pub(super) fn eval_destructor<'cx>(
                         true_t: true_t.dupe(),
                         false_t: false_t.dupe(),
                         tout: Box::new(tout.dupe()),
-                    });
+                    })));
                     rec_flow(cx, trace, (t, &u))
                 }
                 Destructor::TypeMap(tmap) => rec_flow(
@@ -1186,12 +1209,12 @@ pub(super) fn eval_destructor<'cx>(
                     trace,
                     (
                         t,
-                        &UseT::new(UseTInner::MapTypeT(
-                            use_op.dupe(),
-                            reason.dupe(),
-                            *tmap,
-                            Type::new(TypeInner::OpenT(tout.dupe())),
-                        )),
+                        &UseT::new(UseTInner::MapTypeT(Box::new(MapTypeTData {
+                            use_op: use_op.dupe(),
+                            reason: reason.dupe(),
+                            type_map: *tmap,
+                            tout: Type::new(TypeInner::OpenT(tout.dupe())),
+                        }))),
                     ),
                 ),
                 Destructor::ReactElementConfigType => rec_flow(
@@ -1199,13 +1222,13 @@ pub(super) fn eval_destructor<'cx>(
                     trace,
                     (
                         t,
-                        &UseT::new(UseTInner::ReactKitT(
-                            use_op.dupe(),
-                            reason.dupe(),
-                            Box::new(react::Tool::<Context<'cx>>::GetConfig {
+                        &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                            use_op: use_op.dupe(),
+                            reason: reason.dupe(),
+                            tool: Box::new(react::Tool::<Context<'cx>>::GetConfig {
                                 tout: Type::new(TypeInner::OpenT(tout.dupe())),
                             }),
-                        )),
+                        }))),
                     ),
                 ),
                 Destructor::MappedType {
@@ -1242,13 +1265,13 @@ pub(super) fn eval_destructor<'cx>(
                     rec_flow(cx, trace, (t, &u))
                 }
                 Destructor::EnumType => {
-                    let u = UseT::new(UseTInner::GetEnumT {
+                    let u = UseT::new(UseTInner::GetEnumT(Box::new(GetEnumTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
                         orig_t: Some(t.dupe()),
                         kind: GetEnumKind::GetEnumObject,
                         tout: Type::new(TypeInner::OpenT(tout.dupe())),
-                    });
+                    })));
                     rec_flow(cx, trace, (t, &u))
                 }
             }

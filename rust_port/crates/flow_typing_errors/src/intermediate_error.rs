@@ -28,7 +28,21 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
+use flow_typing_type::type_::ClassOwnProtoCheckData;
+use flow_typing_type::type_::ConformToCommonInterfaceData;
+use flow_typing_type::type_::ConstrainedAssignmentData;
 use flow_typing_type::type_::DroType;
+use flow_typing_type::type_::FunCallData;
+use flow_typing_type::type_::FunCallMethodData;
+use flow_typing_type::type_::FunParamData;
+use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
+use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
+use flow_typing_type::type_::PropertyCompatibilityData;
+use flow_typing_type::type_::ReactCreateElementCallData;
+use flow_typing_type::type_::RecordCreateData;
+use flow_typing_type::type_::SwitchRefinementCheckData;
+use flow_typing_type::type_::TupleElementCompatibilityData;
+use flow_typing_type::type_::TypeArgCompatibilityData;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
@@ -47,11 +61,90 @@ use super::flow_error::FlowError;
 use super::intermediate_error_types::AccessChainSegment;
 use super::intermediate_error_types::ErrorMessage;
 use super::intermediate_error_types::Explanation;
+use super::intermediate_error_types::ExplanationAdditionalUnionMembersData;
+use super::intermediate_error_types::ExplanationConstrainedAssignData;
+use super::intermediate_error_types::ExplanationCustomErrorData;
+use super::intermediate_error_types::ExplanationInvariantSubtypingDueToMutableArrayData;
+use super::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertiesData;
+use super::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertyData;
+use super::intermediate_error_types::ExplanationPropertyMissingDueToNeutralOptionalPropertyData;
 use super::intermediate_error_types::Frame as ErrorFrame;
 use super::intermediate_error_types::IntermediateError;
 use super::intermediate_error_types::Message;
+use super::intermediate_error_types::MessageAlreadyExhaustivelyCheckOneEnumMemberData;
+use super::intermediate_error_types::MessageCannotAccessEnumMemberData;
+use super::intermediate_error_types::MessageCannotAddComputedPropertyDueToPotentialOverwriteData;
+use super::intermediate_error_types::MessageCannotCallMaybeReactHookData;
+use super::intermediate_error_types::MessageCannotCompareData;
+use super::intermediate_error_types::MessageCannotExhaustivelyCheckAbstractEnumsData;
+use super::intermediate_error_types::MessageCannotExhaustivelyCheckEnumWithUnknownsData;
+use super::intermediate_error_types::MessageCannotExportRenamedDefaultData;
+use super::intermediate_error_types::MessageCannotInstantiateObjectUtilTypeWithEnumData;
+use super::intermediate_error_types::MessageCannotResolveBuiltinModuleData;
+use super::intermediate_error_types::MessageCannotSpreadGeneralData;
+use super::intermediate_error_types::MessageCannotSpreadInexactMayOverwriteIndexerData;
+use super::intermediate_error_types::MessageCannotUseEnumMemberUsedAsTypeData;
+use super::intermediate_error_types::MessageCannotUseTypeForAnnotationInferenceData;
+use super::intermediate_error_types::MessageCannotUseTypeGuardWithFunctionParamHavocedData;
+use super::intermediate_error_types::MessageCannotUseTypeInValuePositionData;
+use super::intermediate_error_types::MessageDefinitionInvalidRecursiveData;
+use super::intermediate_error_types::MessageDuplicateModuleProviderData;
+use super::intermediate_error_types::MessageEnumDuplicateMemberNameData;
+use super::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
+use super::intermediate_error_types::MessageExponentialSpreadData;
+use super::intermediate_error_types::MessageIncompatibleDueToInvariantSubtypingData;
+use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
+use super::intermediate_error_types::MessageIncompatibleImplicitReturnData;
+use super::intermediate_error_types::MessageIncompatibleReactDeepReadOnlyData;
+use super::intermediate_error_types::MessageIncompatibleTupleArityData;
+use super::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
+use super::intermediate_error_types::MessageInvalidEnumMemberCheckData;
+use super::intermediate_error_types::MessageInvalidKeyPropertyInSpreadData;
+use super::intermediate_error_types::MessageInvalidRefPropertyInSpreadData;
+use super::intermediate_error_types::MessageInvalidRendersTypeArgumentData;
+use super::intermediate_error_types::MessageInvalidSelfReferencingDefaultData;
+use super::intermediate_error_types::MessageInvalidSelfReferencingTypeAnnotationData;
+use super::intermediate_error_types::MessageMatchNonExhaustiveObjectPatternData;
+use super::intermediate_error_types::MessageMatchNonExplicitEnumCheckData;
+use super::intermediate_error_types::MessageMissingPlatformSupportWithAvailablePlatformsData;
+use super::intermediate_error_types::MessageNoDefaultExportData;
+use super::intermediate_error_types::MessageNoNamedExportData;
+use super::intermediate_error_types::MessageOnlyDefaultExportData;
+use super::intermediate_error_types::MessagePropExtraAgainstExactObjectData;
+use super::intermediate_error_types::MessagePropMissingData;
+use super::intermediate_error_types::MessagePropPolarityMismatchData;
+use super::intermediate_error_types::MessagePropsMissingData;
+use super::intermediate_error_types::MessageReactIntrinsicOverlapData;
+use super::intermediate_error_types::MessageRedeclareComponentPropData;
+use super::intermediate_error_types::MessageShouldAnnotateVariableUsedInGenericContextData;
+use super::intermediate_error_types::MessageSketchyNullCheckData;
+use super::intermediate_error_types::MessageTupleElementNotReadableData;
+use super::intermediate_error_types::MessageTupleElementNotWritableData;
+use super::intermediate_error_types::MessageTupleIndexOutOfBoundData;
+use super::intermediate_error_types::MessageTupleNonIntegerIndexData;
+use super::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use super::intermediate_error_types::RootMessage;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
+use crate::error_message::EExpectedBigIntLitData;
+use crate::error_message::EExpectedBooleanLitData;
+use crate::error_message::EExpectedNumberLitData;
+use crate::error_message::EExpectedStringLitData;
+use crate::error_message::EIncompatiblePropData;
+use crate::error_message::EIncompatibleWithUseOpData;
+use crate::error_message::EPropNotFoundInLookupData;
+use crate::error_message::EnumIncompatibleData;
+use crate::error_message::IncompatibleEnumData;
+use crate::error_message::IncompatibleInvariantSubtypingData;
+use crate::error_message::IncompatibleSubtypingData;
+use crate::error_message::IncompatibleUseData;
+use crate::error_message::PropMissingInLookupData;
+use crate::error_message::PropMissingInSubtypingData;
+use crate::error_message::PropPolarityMismatchData;
+use crate::error_message::PropsExtraAgainstExactObjectData;
+use crate::error_message::PropsMissingInInvariantSubtypingData;
+use crate::error_message::PropsMissingInSubtypingData;
+use crate::error_message::SpeculationData;
+use crate::error_message::UseOpData;
 
 /// Rank scores for signals of different strength on an x^2 scale so that
 /// greater signals dominate lesser signals.
@@ -95,7 +188,7 @@ fn score_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(use_op: &Virtual
                 // then FunParam after adding n.
                 //
                 // We do _not_ add n to the score if this use_op was added to an implicit type parameter.
-                VirtualFrameUseOp::FunParam { n, .. } => FRAME_SCORE + *n,
+                VirtualFrameUseOp::FunParam(box FunParamData { n, .. }) => FRAME_SCORE + *n,
                 VirtualFrameUseOp::FunRestParam { .. } => FRAME_SCORE + FRAME_SCORE - 1,
                 // FunCompatibility is generally followed by another use_op. So let's not
                 // count FunCompatibility.
@@ -103,15 +196,15 @@ fn score_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(use_op: &Virtual
                 // FunMissingArg means the error is *less* likely to be correct.
                 VirtualFrameUseOp::FunMissingArg { .. } => 0,
                 // Higher signal then PropertyCompatibility, for example.
-                VirtualFrameUseOp::TypeArgCompatibility { .. } => TYPE_ARG_FRAME_SCORE,
+                VirtualFrameUseOp::TypeArgCompatibility(..) => TYPE_ARG_FRAME_SCORE,
                 VirtualFrameUseOp::ArrayElementCompatibility { .. } => TYPE_ARG_FRAME_SCORE,
                 // Higher signal then TypeArgCompatibility.
-                VirtualFrameUseOp::TupleElementCompatibility { .. } => TUPLE_ELEMENT_FRAME_SCORE,
+                VirtualFrameUseOp::TupleElementCompatibility(..) => TUPLE_ELEMENT_FRAME_SCORE,
                 // ImplicitTypeParam is an internal marker use_op that doesn't get
                 // rendered in error messages. So it doesn't necessarily signal anything
                 // about the user's intent.
                 VirtualFrameUseOp::ImplicitTypeParam => 0,
-                VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility { .. } => 0,
+                VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(..) => 0,
                 _ => FRAME_SCORE,
             }
         },
@@ -165,26 +258,23 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
     // the right types.
     let score = score
         + match msg {
-            FlowErrorMessage::EIncompatibleProp {
+            FlowErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 use_op: Some(use_op),
                 ..
-            } => match use_op {
+            }) => match use_op {
                 VirtualUseOp::Frame(frame, _)
-                    if matches!(
-                        frame.as_ref(),
-                        VirtualFrameUseOp::PropertyCompatibility { .. }
-                    ) =>
+                    if matches!(frame.as_ref(), VirtualFrameUseOp::PropertyCompatibility(..)) =>
                 {
                     -FRAME_SCORE
                 }
                 _ => 0,
             },
-            FlowErrorMessage::EPropNotFoundInLookup { use_op, .. } => match use_op {
+            FlowErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
+                use_op,
+                ..
+            }) => match use_op {
                 VirtualUseOp::Frame(frame, _)
-                    if matches!(
-                        frame.as_ref(),
-                        VirtualFrameUseOp::PropertyCompatibility { .. }
-                    ) =>
+                    if matches!(frame.as_ref(), VirtualFrameUseOp::PropertyCompatibility(..)) =>
                 {
                     -FRAME_SCORE
                 }
@@ -206,11 +296,11 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
                 branches,
                 ..
             }) if branches.is_empty() => Some((rl, ru)),
-            FlowErrorMessage::EIncompatibleWithUseOp {
+            FlowErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
                 reason_lower: rl,
                 reason_upper: ru,
                 ..
-            } => Some((rl, ru)),
+            }) => Some((rl, ru)),
             FlowErrorMessage::EIncompatibleWithExact((rl, ru), _, _) => Some((rl, ru)),
             _ => None,
         };
@@ -256,17 +346,17 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             lower: upper,
             upper: lower,
         },
-        FunParam {
+        FunParam(box FunParamData {
             n,
             name,
             lower,
             upper,
-        } => FunParam {
+        }) => FunParam(Box::new(FunParamData {
             n,
             name,
             lower: upper,
             upper: lower,
-        },
+        })),
         FunRestParam { lower, upper } => FunRestParam {
             lower: upper,
             upper: lower,
@@ -287,38 +377,40 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             lower: upper,
             upper: lower,
         },
-        PropertyCompatibility { prop, lower, upper } => PropertyCompatibility {
-            prop,
-            lower: upper,
-            upper: lower,
-        },
+        PropertyCompatibility(box PropertyCompatibilityData { prop, lower, upper }) => {
+            PropertyCompatibility(Box::new(PropertyCompatibilityData {
+                prop,
+                lower: upper,
+                upper: lower,
+            }))
+        }
         ReactConfigCheck => ReactConfigCheck,
-        TupleElementCompatibility {
+        TupleElementCompatibility(box TupleElementCompatibilityData {
             n,
             lower,
             upper,
             lower_optional,
             upper_optional,
-        } => TupleElementCompatibility {
+        }) => TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
             n,
             lower: upper,
             upper: lower,
             lower_optional: upper_optional,
             upper_optional: lower_optional,
-        },
-        TypeArgCompatibility {
+        })),
+        TypeArgCompatibility(box TypeArgCompatibilityData {
             name,
             targ,
             lower,
             upper,
             polarity,
-        } => TypeArgCompatibility {
+        }) => TypeArgCompatibility(Box::new(TypeArgCompatibilityData {
             name,
             targ,
             lower: upper,
             upper: lower,
             polarity,
-        },
+        })),
         EnumRepresentationTypeCompatibility { lower, upper } => {
             EnumRepresentationTypeCompatibility {
                 lower: upper,
@@ -332,9 +424,9 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         | FunMissingArg { .. }
         | ImplicitTypeParam
         | ReactGetConfig { .. }
-        | OpaqueTypeCustomErrorCompatibility { .. }
+        | OpaqueTypeCustomErrorCompatibility(..)
         | UnifyFlip
-        | ConstrainedAssignment { .. }
+        | ConstrainedAssignment(..)
         | MappedTypeKeyCompatibility { .. }
         | TypeGuardCompatibility
         | RendersCompatibility
@@ -436,117 +528,131 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                         },
                     )))
             }
-            FlowErrorMessage::EExpectedStringLit {
+            FlowErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
                 reason_lower,
                 reason_upper,
                 use_op,
-            } => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EExpectedStringLit {
-                        reason_lower: reason_lower_new,
-                        reason_upper: reason_upper_new,
-                        use_op: use_op_new,
-                    })
-            }
-            FlowErrorMessage::EExpectedNumberLit {
-                reason_lower,
-                reason_upper,
-                use_op,
-            } => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EExpectedNumberLit {
-                        reason_lower: reason_lower_new,
-                        reason_upper: reason_upper_new,
-                        use_op: use_op_new,
-                    })
-            }
-            FlowErrorMessage::EExpectedBooleanLit {
-                reason_lower,
-                reason_upper,
-                use_op,
-            } => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EExpectedBooleanLit {
-                        reason_lower: reason_lower_new,
-                        reason_upper: reason_upper_new,
-                        use_op: use_op_new,
-                    })
-            }
-            FlowErrorMessage::EExpectedBigIntLit {
-                reason_lower,
-                reason_upper,
-                use_op,
-            } => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EExpectedBigIntLit {
-                        reason_lower: reason_lower_new,
-                        reason_upper: reason_upper_new,
-                        use_op: use_op_new,
-                    })
-            }
-            FlowErrorMessage::EIncompatibleWithUseOp {
-                use_op,
-                reason_lower,
-                reason_upper,
-                explanation,
-            } => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EIncompatibleWithUseOp {
-                        use_op: use_op_new,
-                        reason_lower: reason_lower_new,
-                        reason_upper: reason_upper_new,
-                        explanation: explanation.clone(),
-                    })
-            }
-            FlowErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible {
-                use_op,
-                reason_lower,
-                reason_upper,
-                enum_kind,
-                representation_type,
-                casting_syntax,
             }) => {
                 let ((reason_lower_new, reason_upper_new), use_op_new) =
                     dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
                 reason_lower == &reason_lower_new
+                    || is_not_duplicate(FlowErrorMessage::EExpectedStringLit(Box::new(
+                        EExpectedStringLitData {
+                            reason_lower: reason_lower_new,
+                            reason_upper: reason_upper_new,
+                            use_op: use_op_new,
+                        },
+                    )))
+            }
+            FlowErrorMessage::EExpectedNumberLit(box EExpectedNumberLitData {
+                reason_lower,
+                reason_upper,
+                use_op,
+            }) => {
+                let ((reason_lower_new, reason_upper_new), use_op_new) =
+                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
+                reason_lower == &reason_lower_new
+                    || is_not_duplicate(FlowErrorMessage::EExpectedNumberLit(Box::new(
+                        EExpectedNumberLitData {
+                            reason_lower: reason_lower_new,
+                            reason_upper: reason_upper_new,
+                            use_op: use_op_new,
+                        },
+                    )))
+            }
+            FlowErrorMessage::EExpectedBooleanLit(box EExpectedBooleanLitData {
+                reason_lower,
+                reason_upper,
+                use_op,
+            }) => {
+                let ((reason_lower_new, reason_upper_new), use_op_new) =
+                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
+                reason_lower == &reason_lower_new
+                    || is_not_duplicate(FlowErrorMessage::EExpectedBooleanLit(Box::new(
+                        EExpectedBooleanLitData {
+                            reason_lower: reason_lower_new,
+                            reason_upper: reason_upper_new,
+                            use_op: use_op_new,
+                        },
+                    )))
+            }
+            FlowErrorMessage::EExpectedBigIntLit(box EExpectedBigIntLitData {
+                reason_lower,
+                reason_upper,
+                use_op,
+            }) => {
+                let ((reason_lower_new, reason_upper_new), use_op_new) =
+                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
+                reason_lower == &reason_lower_new
+                    || is_not_duplicate(FlowErrorMessage::EExpectedBigIntLit(Box::new(
+                        EExpectedBigIntLitData {
+                            reason_lower: reason_lower_new,
+                            reason_upper: reason_upper_new,
+                            use_op: use_op_new,
+                        },
+                    )))
+            }
+            FlowErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
+                use_op,
+                reason_lower,
+                reason_upper,
+                explanation,
+            }) => {
+                let ((reason_lower_new, reason_upper_new), use_op_new) =
+                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
+                reason_lower == &reason_lower_new
+                    || is_not_duplicate(FlowErrorMessage::EIncompatibleWithUseOp(Box::new(
+                        EIncompatibleWithUseOpData {
+                            use_op: use_op_new,
+                            reason_lower: reason_lower_new,
+                            reason_upper: reason_upper_new,
+                            explanation: explanation.clone(),
+                        },
+                    )))
+            }
+            FlowErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(
+                box EnumIncompatibleData {
+                    use_op,
+                    reason_lower,
+                    reason_upper,
+                    enum_kind,
+                    representation_type,
+                    casting_syntax,
+                },
+            )) => {
+                let ((reason_lower_new, reason_upper_new), use_op_new) =
+                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
+                reason_lower == &reason_lower_new
                     || is_not_duplicate(FlowErrorMessage::EEnumError(
-                        EnumErrorKind::EnumIncompatible {
+                        EnumErrorKind::EnumIncompatible(Box::new(EnumIncompatibleData {
                             use_op: use_op_new,
                             reason_lower: reason_lower_new,
                             reason_upper: reason_upper_new,
                             enum_kind: enum_kind.clone(),
                             representation_type: representation_type.clone(),
                             casting_syntax: *casting_syntax,
-                        },
+                        })),
                     ))
             }
-            FlowErrorMessage::EPropNotFoundInLookup {
+            FlowErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
                 reason_obj,
                 reason_prop,
                 use_op,
                 suggestion,
-            } => {
+            }) => {
                 // PropNotFound error will always display the missing vs existing prop in the same order
                 let use_op_new = remove_unify_flip(use_op.clone());
                 use_op == &use_op_new
-                    || is_not_duplicate(FlowErrorMessage::EPropNotFoundInLookup {
-                        prop_name: prop_name.clone(),
-                        reason_obj: reason_obj.dupe(),
-                        reason_prop: reason_prop.dupe(),
-                        use_op: use_op_new,
-                        suggestion: suggestion.clone(),
-                    })
+                    || is_not_duplicate(FlowErrorMessage::EPropNotFoundInLookup(Box::new(
+                        EPropNotFoundInLookupData {
+                            prop_name: prop_name.clone(),
+                            reason_obj: reason_obj.dupe(),
+                            reason_prop: reason_prop.dupe(),
+                            use_op: use_op_new,
+                            suggestion: suggestion.clone(),
+                        },
+                    )))
             }
             _ => true,
         }
@@ -773,7 +879,7 @@ where
             use VirtualFrameUseOp::*;
 
             match (frame, use_op) {
-                (FunParam { .. }, VirtualUseOp::Frame(f, _))
+                (FunParam(box FunParamData { .. }), VirtualUseOp::Frame(f, _))
                     if matches!(f.as_ref(), FunCompatibility { .. }) =>
                 {
                     (true, true)
@@ -790,10 +896,10 @@ where
                     _,
                 ) => (true, false),
                 (
-                    TypeArgCompatibility {
+                    TypeArgCompatibility(box TypeArgCompatibilityData {
                         polarity: Polarity::Negative,
                         ..
-                    },
+                    }),
                     _,
                 ) => (true, false),
                 _ => (false, false),
@@ -967,11 +1073,13 @@ where
                 match use_op {
                     VirtualUseOp::Frame(frame_rc, inner) => {
                         match frame_rc.as_ref() {
-                            VirtualFrameUseOp::PropertyCompatibility {
-                                prop: Some(prop),
-                                lower,
-                                upper,
-                            } if prop.as_str() != "$call"
+                            VirtualFrameUseOp::PropertyCompatibility(
+                                box PropertyCompatibilityData {
+                                    prop: Some(prop),
+                                    lower,
+                                    upper,
+                                },
+                            ) if prop.as_str() != "$call"
                                 && opt_incompatibility_pair(
                                     &inner,
                                     &(lower.dupe(), upper.dupe()),
@@ -1006,12 +1114,11 @@ where
                                 (final_loc, props, final_use_op)
                             }
 
-                            VirtualFrameUseOp::TupleElementCompatibility {
-                                n,
-                                lower,
-                                upper,
-                                ..
-                            } if opt_incompatibility_pair(
+                            VirtualFrameUseOp::TupleElementCompatibility(
+                                box TupleElementCompatibilityData {
+                                    n, lower, upper, ..
+                                },
+                            ) if opt_incompatibility_pair(
                                 &inner,
                                 &(lower.dupe(), upper.dupe()),
                             )
@@ -1328,11 +1435,11 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::ClassOwnProtoCheck {
+                            VirtualRootUseOp::ClassOwnProtoCheck(box ClassOwnProtoCheckData {
                                 prop,
                                 own_loc,
                                 proto_loc,
-                            } => {
+                            }) => {
                                 use flow_common::reason::VirtualReasonDesc::RProperty;
                                 match (own_loc, proto_loc) {
                                     (None, None) => {
@@ -1404,11 +1511,13 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::ConformToCommonInterface {
-                                self_sig_loc,
-                                self_module_loc,
-                                originate_from_import,
-                            } => {
+                            VirtualRootUseOp::ConformToCommonInterface(
+                                box ConformToCommonInterfaceData {
+                                    self_sig_loc,
+                                    self_module_loc,
+                                    originate_from_import,
+                                },
+                            ) => {
                                 let (all_frames, mut explanations) = frames;
                                 explanations.insert(0, Explanation::ExplanationMultiplatform);
                                 let frames = (all_frames, explanations);
@@ -1445,7 +1554,7 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::FunCall { op, fn_, .. } => {
+                            VirtualRootUseOp::FunCall(box FunCallData { op, fn_, .. }) => {
                                 let root_loc = loc_of_aloc(&op.loc);
                                 let specific_loc = loc_of_aloc(&fn_.loc);
 
@@ -1465,7 +1574,12 @@ where
                                 )
                             }
 
-                            VirtualRootUseOp::FunCallMethod { op, fn_, prop, .. } => {
+                            VirtualRootUseOp::FunCallMethod(box FunCallMethodData {
+                                op,
+                                fn_,
+                                prop,
+                                ..
+                            }) => {
                                 let root_loc = loc_of_aloc(&op.loc);
                                 let specific_loc = loc_of_aloc(&prop.loc);
 
@@ -1575,7 +1689,9 @@ where
                             }
 
                             VirtualRootUseOp::JSXCreateElement { op, component, .. }
-                            | VirtualRootUseOp::ReactCreateElementCall { op, component, .. } => {
+                            | VirtualRootUseOp::ReactCreateElementCall(
+                                box ReactCreateElementCallData { op, component, .. },
+                            ) => {
                                 let root_loc = loc_of_aloc(&op.loc);
                                 let specific_loc = loc_of_aloc(&component.loc);
 
@@ -1608,9 +1724,11 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::RecordCreate {
-                                op, constructor, ..
-                            } => {
+                            VirtualRootUseOp::RecordCreate(box RecordCreateData {
+                                op,
+                                constructor,
+                                ..
+                            }) => {
                                 let root_loc = loc_of_aloc(&op.loc);
                                 let specific_loc = loc_of_aloc(&constructor.loc);
 
@@ -1690,7 +1808,9 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::SwitchRefinementCheck { test, discriminant } => {
+                            VirtualRootUseOp::SwitchRefinementCheck(
+                                box SwitchRefinementCheckData { test, discriminant },
+                            ) => {
                                 let root_loc = loc_of_aloc(test);
                                 let specific_loc = root_loc.dupe();
 
@@ -1742,13 +1862,15 @@ where
                                 (None, custom_error_message, loc, all_frames, explanations)
                             }
 
-                            VirtualRootUseOp::PositiveTypeGuardConsistency {
-                                return_reason,
-                                param_reason,
-                                guard_type_reason,
-                                is_return_false_statement,
-                                ..
-                            } => {
+                            VirtualRootUseOp::PositiveTypeGuardConsistency(
+                                box PositiveTypeGuardConsistencyData {
+                                    return_reason,
+                                    param_reason,
+                                    guard_type_reason,
+                                    is_return_false_statement,
+                                    ..
+                                },
+                            ) => {
                                 let (all_frames, mut explanations) = frames;
                                 explanations.insert(
                                     0,
@@ -1771,7 +1893,7 @@ where
                     }
 
                     VirtualUseOp::Frame(frame_rc, inner_use_op)
-                        if matches!(frame_rc.as_ref(), VirtualFrameUseOp::FunParam { .. })
+                        if matches!(frame_rc.as_ref(), VirtualFrameUseOp::FunParam(..))
                             && matches!(
                                 inner_use_op.as_ref(),
                                 VirtualUseOp::Op(spec_rc) if matches!(
@@ -1780,8 +1902,8 @@ where
                                         spec2_rc.as_ref(),
                                         VirtualUseOp::Op(inner_rc) if matches!(
                                             inner_rc.as_ref(),
-                                            VirtualRootUseOp::FunCall { .. }
-                                                | VirtualRootUseOp::FunCallMethod { .. }
+                                            VirtualRootUseOp::FunCall(..)
+                                                | VirtualRootUseOp::FunCallMethod(..)
                                                 | VirtualRootUseOp::JSXCreateElement { .. }
                                         )
                                     )
@@ -1802,24 +1924,28 @@ where
                     }
 
                     VirtualUseOp::Frame(ref frame_rc, ref inner_use_op)
-                        if let VirtualFrameUseOp::FunParam {
+                        if let VirtualFrameUseOp::FunParam(box FunParamData {
                             n,
                             name,
                             lower: lower_prime,
                             ..
-                        } = frame_rc.as_ref()
+                        }) = frame_rc.as_ref()
                             && let VirtualUseOp::Op(op_rc) = inner_use_op.as_ref()
                             && matches!(
                                 op_rc.as_ref(),
-                                VirtualRootUseOp::FunCall { .. }
-                                    | VirtualRootUseOp::FunCallMethod { .. }
+                                VirtualRootUseOp::FunCall(..)
+                                    | VirtualRootUseOp::FunCallMethod(..)
                                     | VirtualRootUseOp::JSXCreateElement { .. }
-                                    | VirtualRootUseOp::RecordCreate { .. }
+                                    | VirtualRootUseOp::RecordCreate(..)
                             ) =>
                     {
                         match op_rc.as_ref() {
-                            VirtualRootUseOp::FunCall { args, fn_, .. }
-                            | VirtualRootUseOp::FunCallMethod { args, fn_, .. } => {
+                            VirtualRootUseOp::FunCall(box FunCallData { args, fn_, .. })
+                            | VirtualRootUseOp::FunCallMethod(box FunCallMethodData {
+                                args,
+                                fn_,
+                                ..
+                            }) => {
                                 // Get the actual argument at position n-1, or fallback to lower_prime
                                 let lower = if (*n as usize) <= args.len() {
                                     &args[(*n as usize) - 1]
@@ -1865,9 +1991,11 @@ where
                                     explanations,
                                 )
                             }
-                            VirtualRootUseOp::RecordCreate {
-                                op, constructor, ..
-                            } => {
+                            VirtualRootUseOp::RecordCreate(box RecordCreateData {
+                                op,
+                                constructor,
+                                ..
+                            }) => {
                                 let root_loc = loc_of_aloc(&op.loc);
                                 let specific_loc = loc_of_aloc(&constructor.loc);
 
@@ -1933,7 +2061,7 @@ where
                                     )
                                 } else if matches!(
                                     inner_frame.as_ref(),
-                                    VirtualFrameUseOp::PropertyCompatibility { .. }
+                                    VirtualFrameUseOp::PropertyCompatibility(..)
                                 ) {
                                     let (all_frames, mut explanations) = frames;
                                     explanations
@@ -2155,19 +2283,23 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::ConstrainedAssignment {
-                            name,
-                            declaration,
-                            providers,
-                        } => {
+                        VirtualFrameUseOp::ConstrainedAssignment(
+                            box ConstrainedAssignmentData {
+                                name,
+                                declaration,
+                                providers,
+                            },
+                        ) => {
                             let (all_frames, mut explanations) = frames;
                             explanations.insert(
                                 0,
-                                Explanation::ExplanationConstrainedAssign {
-                                    name: name.clone(),
-                                    declaration: declaration.dupe(),
-                                    providers: providers.clone(),
-                                },
+                                Explanation::ExplanationConstrainedAssign(Box::new(
+                                    ExplanationConstrainedAssignData {
+                                        name: name.clone(),
+                                        declaration: declaration.dupe(),
+                                        providers: providers.clone(),
+                                    },
+                                )),
                             );
                             loop_impl(
                                 loc,
@@ -2266,7 +2398,11 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::TypeArgCompatibility { targ, lower, .. } => {
+                        VirtualFrameUseOp::TypeArgCompatibility(box TypeArgCompatibilityData {
+                            targ,
+                            lower,
+                            ..
+                        }) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2314,12 +2450,12 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::FunParam {
+                        VirtualFrameUseOp::FunParam(box FunParamData {
                             n,
                             lower,
                             upper,
                             name,
-                        } if matches!(
+                        }) if matches!(
                             inner.as_ref(),
                             VirtualUseOp::Frame(f_rc, _) if matches!(
                                 f_rc.as_ref(),
@@ -2365,12 +2501,12 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::FunParam {
+                        VirtualFrameUseOp::FunParam(box FunParamData {
                             n,
                             lower,
                             upper,
                             name,
-                        } => {
+                        }) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2409,11 +2545,13 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::PropertyCompatibility {
-                            prop: None,
-                            lower,
-                            upper,
-                        } => {
+                        VirtualFrameUseOp::PropertyCompatibility(
+                            box PropertyCompatibilityData {
+                                prop: None,
+                                lower,
+                                upper,
+                            },
+                        ) => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2446,11 +2584,13 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::PropertyCompatibility {
-                            prop: Some(name),
-                            lower,
-                            upper,
-                        } if name.as_str() == "$call" => {
+                        VirtualFrameUseOp::PropertyCompatibility(
+                            box PropertyCompatibilityData {
+                                prop: Some(name),
+                                lower,
+                                upper,
+                            },
+                        ) if name.as_str() == "$call" => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2507,14 +2647,16 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility {
-                            lower,
-                            upper,
-                            lower_t,
-                            upper_t,
-                            name,
-                            custom_error_loc,
-                        } => {
+                        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility(
+                            box OpaqueTypeCustomErrorCompatibilityData {
+                                lower,
+                                upper,
+                                lower_t,
+                                upper_t,
+                                name,
+                                custom_error_loc,
+                            },
+                        ) => {
                             let lower_desc = match lower_t {
                                 TypeOrTypeDescT::Type(_) => Err(lower.desc.clone()),
                                 TypeOrTypeDescT::TypeDesc(d) => d.clone(),
@@ -2526,20 +2668,24 @@ where
 
                             // Keep as Message since we're in the generic context
                             let custom_error_message =
-                                Some(Message::MessageIncompatibleGeneralWithPrintedTypes {
-                                    lower_loc: lower.loc.dupe(),
-                                    upper_loc: upper.loc.dupe(),
-                                    lower_desc,
-                                    upper_desc,
-                                });
+                                Some(Message::MessageIncompatibleGeneralWithPrintedTypes(
+                                    Box::new(MessageIncompatibleGeneralWithPrintedTypesData {
+                                        lower_loc: lower.loc.dupe(),
+                                        upper_loc: upper.loc.dupe(),
+                                        lower_desc,
+                                        upper_desc,
+                                    }),
+                                ));
 
                             // Keep as Explanation
                             let frames = (
                                 vec![],
-                                vec![Explanation::ExplanationCustomError {
-                                    name: name.clone(),
-                                    custom_error_loc: custom_error_loc.dupe(),
-                                }],
+                                vec![Explanation::ExplanationCustomError(Box::new(
+                                    ExplanationCustomErrorData {
+                                        name: name.clone(),
+                                        custom_error_loc: custom_error_loc.dupe(),
+                                    },
+                                ))],
                             );
 
                             let loc = loc_of_aloc(&lower.loc);
@@ -2563,11 +2709,13 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::PropertyCompatibility {
-                            prop: Some(prop),
-                            lower,
-                            upper,
-                        } => {
+                        VirtualFrameUseOp::PropertyCompatibility(
+                            box PropertyCompatibilityData {
+                                prop: Some(prop),
+                                lower,
+                                upper,
+                            },
+                        ) => {
                             let lower_loc =
                                 loc_of_prop_compatibility_reason(loc.dupe(), lower, &inner);
 
@@ -2613,9 +2761,11 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::TupleElementCompatibility {
-                            n, lower, upper, ..
-                        } => {
+                        VirtualFrameUseOp::TupleElementCompatibility(
+                            box TupleElementCompatibilityData {
+                                n, lower, upper, ..
+                            },
+                        ) => {
                             let lower_loc = loc_of_aloc(&lower.loc);
 
                             let (lower_loc, props, use_op) =
@@ -2731,13 +2881,13 @@ where
             loc,
             use_op,
             None,
-            Message::MessagePropMissing {
+            Message::MessagePropMissing(Box::new(MessagePropMissingData {
                 lower,
                 upper: None,
                 prop,
                 suggestion,
                 reason_indexer,
-            },
+            })),
         )
     };
 
@@ -2754,13 +2904,13 @@ where
             loc,
             use_op,
             None,
-            Message::MessagePropMissing {
+            Message::MessagePropMissing(Box::new(MessagePropMissingData {
                 lower,
                 upper: Some(upper),
                 prop,
                 suggestion,
                 reason_indexer,
-            },
+            })),
         )
     };
 
@@ -2775,11 +2925,11 @@ where
             loc,
             use_op,
             None,
-            Message::MessagePropsMissing {
+            Message::MessagePropsMissing(Box::new(MessagePropsMissingData {
                 lower,
                 upper,
                 props,
-            },
+            })),
         )
     };
 
@@ -2791,7 +2941,10 @@ where
          -> IntermediateError<L> {
             let use_op = match &use_op {
                 VirtualUseOp::Frame(frame_rc, inner_use_op) => match frame_rc.as_ref() {
-                    VirtualFrameUseOp::PropertyCompatibility { prop, .. } => {
+                    VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
+                        prop,
+                        ..
+                    }) => {
                         let prop_str: Option<FlowSmolStr> =
                             prop.as_ref().map(|n| n.as_str().into());
                         if props.iter().any(|(p, _, _)| p == &prop_str) {
@@ -2809,11 +2962,11 @@ where
                 &lower,
                 use_op,
                 None,
-                Message::MessagePropPolarityMismatch {
+                Message::MessagePropPolarityMismatch(Box::new(MessagePropPolarityMismatchData {
                     lower: lower.dupe(),
                     upper: upper.dupe(),
                     props,
-                },
+                })),
             )
         };
 
@@ -2830,13 +2983,15 @@ where
                 loc_of_aloc(&lower_loc),
                 use_op,
                 additional_explanation,
-                Message::MessageIncompatibleDueToInvariantSubtyping {
-                    sub_component,
-                    lower_loc,
-                    upper_loc,
-                    lower_desc,
-                    upper_desc,
-                },
+                Message::MessageIncompatibleDueToInvariantSubtyping(Box::new(
+                    MessageIncompatibleDueToInvariantSubtypingData {
+                        sub_component,
+                        lower_loc,
+                        upper_loc,
+                        lower_desc,
+                        upper_desc,
+                    },
+                )),
             )
         };
 
@@ -2853,24 +3008,26 @@ where
             let reason_lower = mod_lower_reason_according_to_use_ops(reason_lower.dupe(), &use_op);
             let props_plural = props.len() > 1;
             let explanation = Some(
-                Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty {
-                    props_plural,
-                    lower_obj_loc,
-                    upper_obj_loc,
-                    lower_obj_desc,
-                    upper_obj_desc,
-                    upper_object_reason: reason_upper.dupe(),
-                },
+                Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty(Box::new(
+                    ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
+                        props_plural,
+                        lower_obj_loc,
+                        upper_obj_loc,
+                        lower_obj_desc,
+                        upper_obj_desc,
+                        upper_object_reason: reason_upper.dupe(),
+                    },
+                )),
             );
             mk_use_op_error(
                 loc_of_aloc(&reason_lower.loc),
                 use_op,
                 explanation,
-                Message::MessagePropsMissing {
+                Message::MessagePropsMissing(Box::new(MessagePropsMissingData {
                     lower: reason_lower,
                     upper: reason_upper,
                     props,
-                },
+                })),
             )
         };
 
@@ -2982,10 +3139,12 @@ where
                                 let upper_desc = upper.desc(is_scalar_reason(&upper)).clone();
                                 make_error(
                                     &lower,
-                                    Message::MessageIncompatibleImplicitReturn {
-                                        lower: lower.dupe(),
-                                        upper: upper_desc,
-                                    },
+                                    Message::MessageIncompatibleImplicitReturn(Box::new(
+                                        MessageIncompatibleImplicitReturnData {
+                                            lower: lower.dupe(),
+                                            upper: upper_desc,
+                                        },
+                                    )),
                                 )
                             } else {
                                 make_error(
@@ -3015,12 +3174,13 @@ where
             },
 
             VirtualUseOp::Frame(frame, inner_use_op) => match frame.as_ref() {
-                VirtualFrameUseOp::TupleElementCompatibility { upper_optional, .. }
-                    if *upper_optional
-                        && matches!(
-                            lower.desc(is_scalar_reason(&lower)),
-                            VirtualReasonDesc::RVoid
-                        ) =>
+                VirtualFrameUseOp::TupleElementCompatibility(
+                    box TupleElementCompatibilityData { upper_optional, .. },
+                ) if *upper_optional
+                    && matches!(
+                        lower.desc(is_scalar_reason(&lower)),
+                        VirtualReasonDesc::RVoid
+                    ) =>
                 {
                     let upper_loc = upper.loc().dupe();
                     let new_upper =
@@ -3056,8 +3216,7 @@ where
                 VirtualFrameUseOp::FunMissingArg { def, op, .. } => {
                     let message = match inner_use_op.as_ref() {
                         VirtualUseOp::Op(inner_root) => match inner_root.as_ref() {
-                            VirtualRootUseOp::FunCall { .. }
-                            | VirtualRootUseOp::FunCallMethod { .. } => {
+                            VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..) => {
                                 let new_def = def.dupe().update_desc(|desc| match desc {
                                     VirtualReasonDesc::RFunctionType => {
                                         VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal)
@@ -3117,10 +3276,12 @@ where
                                 let upper_desc = upper.desc(is_scalar_reason(&upper)).clone();
                                 make_error(
                                     &lower,
-                                    Message::MessageIncompatibleImplicitReturn {
-                                        lower: lower.dupe(),
-                                        upper: upper_desc,
-                                    },
+                                    Message::MessageIncompatibleImplicitReturn(Box::new(
+                                        MessageIncompatibleImplicitReturnData {
+                                            lower: lower.dupe(),
+                                            upper: upper_desc,
+                                        },
+                                    )),
                                 )
                             } else {
                                 make_error(
@@ -3310,24 +3471,24 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::UseOp {
+            FriendlyMessageRecipe::UseOp(box UseOpData {
                 loc,
                 message,
                 use_op,
                 explanation,
-            },
+            }),
         ) => mk_use_op_error(loc_of_aloc(&loc), use_op, explanation, message),
 
         (
             None,
-            FriendlyMessageRecipe::PropMissingInLookup {
+            FriendlyMessageRecipe::PropMissingInLookup(box PropMissingInLookupData {
                 loc,
                 prop,
                 reason_obj,
                 use_op,
                 suggestion,
                 reason_indexer,
-            },
+            }),
         ) => mk_prop_missing_in_lookup_error(
             loc_of_aloc(&loc),
             prop.dupe(),
@@ -3339,14 +3500,14 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::PropMissingInSubtyping {
+            FriendlyMessageRecipe::PropMissingInSubtyping(box PropMissingInSubtypingData {
                 prop,
                 reason_lower,
                 reason_upper,
                 reason_indexer,
                 suggestion,
                 use_op,
-            },
+            }),
         ) => mk_prop_missing_in_subtyping_error(
             prop.dupe(),
             suggestion.dupe(),
@@ -3358,12 +3519,12 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::PropsMissingInSubtyping {
+            FriendlyMessageRecipe::PropsMissingInSubtyping(box PropsMissingInSubtypingData {
                 props,
                 reason_lower,
                 reason_upper,
                 use_op,
-            },
+            }),
         ) => mk_props_missing_in_subtyping_error(
             Vec1::try_from_vec(props.iter().map(|s| FlowSmolStr::new(s.as_str())).collect())
                 .unwrap(),
@@ -3374,16 +3535,18 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::PropsMissingInInvariantSubtyping {
-                props,
-                reason_lower,
-                reason_upper,
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc,
-                upper_obj_desc,
-                use_op,
-            },
+            FriendlyMessageRecipe::PropsMissingInInvariantSubtyping(
+                box PropsMissingInInvariantSubtypingData {
+                    props,
+                    reason_lower,
+                    reason_upper,
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    lower_obj_desc,
+                    upper_obj_desc,
+                    use_op,
+                },
+            ),
         ) => mk_props_missing_in_invariant_subtyping_error(
             Vec1::try_from_vec(props.to_vec()).unwrap(),
             reason_lower,
@@ -3397,34 +3560,38 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::PropsExtraAgainstExactObject {
-                props,
-                reason_l_obj,
-                reason_r_obj,
-                use_op,
-            },
+            FriendlyMessageRecipe::PropsExtraAgainstExactObject(
+                box PropsExtraAgainstExactObjectData {
+                    props,
+                    reason_l_obj,
+                    reason_r_obj,
+                    use_op,
+                },
+            ),
         ) => mk_use_op_error(
             loc_of_aloc(&reason_l_obj.loc),
             use_op,
             None,
-            Message::MessagePropExtraAgainstExactObject {
-                lower: reason_l_obj,
-                upper: reason_r_obj,
-                props: Vec1::try_from_vec(
-                    props.iter().map(|s| FlowSmolStr::new(s.as_str())).collect(),
-                )
-                .unwrap(),
-            },
+            Message::MessagePropExtraAgainstExactObject(Box::new(
+                MessagePropExtraAgainstExactObjectData {
+                    lower: reason_l_obj,
+                    upper: reason_r_obj,
+                    props: Vec1::try_from_vec(
+                        props.iter().map(|s| FlowSmolStr::new(s.as_str())).collect(),
+                    )
+                    .unwrap(),
+                },
+            )),
         ),
 
         (
             None,
-            FriendlyMessageRecipe::PropPolarityMismatch {
+            FriendlyMessageRecipe::PropPolarityMismatch(box PropPolarityMismatchData {
                 reason_lower,
                 reason_upper,
                 props,
                 use_op,
-            },
+            }),
         ) => mk_prop_polarity_mismatch_error(
             reason_lower,
             reason_upper,
@@ -3440,13 +3607,13 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::IncompatibleUse {
+            FriendlyMessageRecipe::IncompatibleUse(box IncompatibleUseData {
                 loc,
                 upper_kind,
                 reason_lower,
                 reason_upper,
                 use_op,
-            },
+            }),
         ) => mk_incompatible_use_error(
             loc_of_aloc(&loc),
             upper_kind,
@@ -3457,25 +3624,27 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::IncompatibleSubtyping {
+            FriendlyMessageRecipe::IncompatibleSubtyping(box IncompatibleSubtypingData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 explanation,
-            },
+            }),
         ) => mk_incompatible_error(explanation, reason_lower, reason_upper, use_op),
 
         (
             None,
-            FriendlyMessageRecipe::IncompatibleInvariantSubtyping {
-                sub_component,
-                lower_loc,
-                upper_loc,
-                lower_desc,
-                upper_desc,
-                use_op,
-                explanation,
-            },
+            FriendlyMessageRecipe::IncompatibleInvariantSubtyping(
+                box IncompatibleInvariantSubtypingData {
+                    sub_component,
+                    lower_loc,
+                    upper_loc,
+                    lower_desc,
+                    upper_desc,
+                    use_op,
+                    explanation,
+                },
+            ),
         ) => mk_incompatible_invariant_subtyping_error(
             explanation,
             sub_component,
@@ -3488,14 +3657,14 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::IncompatibleEnum {
+            FriendlyMessageRecipe::IncompatibleEnum(box IncompatibleEnumData {
                 reason_lower,
                 reason_upper,
                 use_op,
                 enum_kind,
                 representation_type,
                 casting_syntax,
-            },
+            }),
         ) => {
             use super::error_message::EnumKind;
 
@@ -3516,11 +3685,11 @@ where
 
         (
             None,
-            FriendlyMessageRecipe::Speculation {
+            FriendlyMessageRecipe::Speculation(box SpeculationData {
                 loc,
                 use_op,
                 branches,
-            },
+            }),
         ) => mk_use_op_speculation_error(loc, use_op, branches),
 
         (None, FriendlyMessageRecipe::Normal(_)) | (Some(_), _) => {
@@ -3688,11 +3857,13 @@ where
                 }
                 friendly::Message(features)
             }
-            ExplanationConstrainedAssign {
-                name,
-                declaration,
-                providers,
-            } => {
+            ExplanationConstrainedAssign(data) => {
+                let ExplanationConstrainedAssignData {
+                    name,
+                    declaration,
+                    providers,
+                } = data.as_ref();
+
                 use flow_common::reason::Name as ReasonName;
                 use flow_common::reason::VirtualReasonDesc::RIdentifier;
                 use flow_common::reason::mk_reason;
@@ -3754,10 +3925,11 @@ where
                     code(&example),
                 ])
             }
-            ExplanationCustomError {
-                name,
-                custom_error_loc,
-            } => {
+            ExplanationCustomError(data) => {
+                let ExplanationCustomErrorData {
+                    name,
+                    custom_error_loc,
+                } = data.as_ref();
                 let loc = loc_of_aloc(custom_error_loc);
                 let custom_docs = loc
                     .source
@@ -3824,12 +3996,13 @@ where
                     ]),
                 }
             }
-            ExplanationAdditionalUnionMembers {
-                left,
-                right,
-                members,
-                extra_number,
-            } => {
+            ExplanationAdditionalUnionMembers(data) => {
+                let ExplanationAdditionalUnionMembersData {
+                    left,
+                    right,
+                    members,
+                    extra_number,
+                } = data.as_ref();
                 let mut features = vec![text("Type "), ref_(left), text(" includes members ")];
                 for (i, member) in members.iter().enumerate() {
                     if i > 0 {
@@ -3855,14 +4028,15 @@ where
                 text(", e.g. "),
                 code(&format!("{} {{...}}", record_name)),
             ]),
-            ExplanationPropertyMissingDueToNeutralOptionalProperty {
-                props_plural,
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc,
-                upper_obj_desc,
-                upper_object_reason,
-            } => {
+            ExplanationPropertyMissingDueToNeutralOptionalProperty(data) => {
+                let ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
+                    props_plural,
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    lower_obj_desc,
+                    upper_obj_desc,
+                    upper_object_reason,
+                } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
 
                 let prefix = if *props_plural {
@@ -3935,13 +4109,14 @@ where
                 ));
                 friendly::Message(features)
             }
-            ExplanationInvariantSubtypingDueToMutableArray {
-                lower_array_loc,
-                upper_array_loc,
-                lower_array_desc,
-                upper_array_desc,
-                upper_array_reason,
-            } => {
+            ExplanationInvariantSubtypingDueToMutableArray(data) => {
+                let ExplanationInvariantSubtypingDueToMutableArrayData {
+                    lower_array_loc,
+                    upper_array_loc,
+                    lower_array_desc,
+                    upper_array_desc,
+                    upper_array_reason,
+                } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
@@ -4004,14 +4179,15 @@ where
                 ));
                 friendly::Message(features)
             }
-            ExplanationInvariantSubtypingDueToMutableProperty {
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc,
-                upper_obj_desc,
-                upper_object_reason,
-                property_name,
-            } => {
+            ExplanationInvariantSubtypingDueToMutableProperty(data) => {
+                let ExplanationInvariantSubtypingDueToMutablePropertyData {
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    lower_obj_desc,
+                    upper_obj_desc,
+                    upper_object_reason,
+                    property_name,
+                } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
 
                 let prop: Vec<friendly::MessageFeature<Loc>> = match property_name {
@@ -4078,14 +4254,15 @@ where
                 ));
                 friendly::Message(features)
             }
-            ExplanationInvariantSubtypingDueToMutableProperties {
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc,
-                upper_obj_desc,
-                upper_object_reason,
-                properties,
-            } => {
+            ExplanationInvariantSubtypingDueToMutableProperties(data) => {
+                let ExplanationInvariantSubtypingDueToMutablePropertiesData {
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    lower_obj_desc,
+                    upper_obj_desc,
+                    upper_object_reason,
+                    properties,
+                } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
 
                 let prop_codes: Vec<friendly::Message<Loc>> = properties
@@ -4646,11 +4823,13 @@ where
 
         match message {
             MessagePlainTextReservedForInternalErrorOnly(s) => friendly::Message(vec![text(s)]),
-            MessageAlreadyExhaustivelyCheckOneEnumMember {
-                prev_check_loc,
-                enum_reason,
-                member_name,
-            } => friendly::Message(vec![
+            MessageAlreadyExhaustivelyCheckOneEnumMember(
+                box MessageAlreadyExhaustivelyCheckOneEnumMemberData {
+                    prev_check_loc,
+                    enum_reason,
+                    member_name,
+                },
+            ) => friendly::Message(vec![
                 text("Invalid exhaustive check: "),
                 text("case checks for enum member "),
                 code(member_name),
@@ -4711,12 +4890,12 @@ where
                 ref_(x),
                 text(". Overriding in library definitions can lead to surprising behaviors."),
             ]),
-            MessageCannotAccessEnumMember {
+            MessageCannotAccessEnumMember(box MessageCannotAccessEnumMemberData {
                 member_name,
                 suggestion,
                 description,
                 enum_reason,
-            } => {
+            }) => {
                 let mut features = vec![
                     text("Cannot access "),
                     friendly::desc_of_reason_desc(description),
@@ -4823,7 +5002,10 @@ where
                 text(", is incompatible with "),
                 ref_(upper),
             ]),
-            MessageIncompatibleImplicitReturn { lower, upper } => friendly::Message(vec![
+            MessageIncompatibleImplicitReturn(box MessageIncompatibleImplicitReturnData {
+                lower,
+                upper,
+            }) => friendly::Message(vec![
                 ref_(lower),
                 text(" is incompatible with "),
                 text("implicitly-returned "),
@@ -4893,10 +5075,12 @@ where
                 features.extend(suffix);
                 friendly::Message(features)
             }
-            MessageCannotAddComputedPropertyDueToPotentialOverwrite {
-                key_loc,
-                overwritten_locs,
-            } => {
+            MessageCannotAddComputedPropertyDueToPotentialOverwrite(
+                box MessageCannotAddComputedPropertyDueToPotentialOverwriteData {
+                    key_loc,
+                    overwritten_locs,
+                },
+            ) => {
                 let mut features = vec![
                     text("Cannot add computed property because the indexer"),
                     friendly::no_desc_ref(&loc_of_aloc(key_loc)),
@@ -4954,11 +5138,11 @@ where
                 result.extend(features);
                 friendly::Message(result)
             }
-            MessageCannotCallMaybeReactHook {
+            MessageCannotCallMaybeReactHook(box MessageCannotCallMaybeReactHookData {
                 callee_loc,
                 hooks,
                 non_hooks,
-            } => {
+            }) => {
                 let hook_blame = if hooks.is_empty() {
                     vec![text("React hook")]
                 } else {
@@ -5100,11 +5284,11 @@ where
                 ref_(enum_reason),
                 text(" because enums are frozen."),
             ]),
-            MessageCannotCompare {
+            MessageCannotCompare(box MessageCannotCompareData {
                 lower,
                 upper,
                 strict_comparison_opt,
-            } => {
+            }) => {
                 let mut features = vec![
                     text("Cannot compare "),
                     ref_(lower),
@@ -5229,7 +5413,10 @@ where
                 text(" are used in the "),
                 text("same module!"),
             ]),
-            MessageCannotExportRenamedDefault { name, is_reexport } => {
+            MessageCannotExportRenamedDefault(box MessageCannotExportRenamedDefaultData {
+                name,
+                is_reexport,
+            }) => {
                 let reexport_msg = vec![
                     text("If you intended to set the default export please "),
                     code("import"),
@@ -5269,20 +5456,24 @@ where
                     ]),
                 }
             }
-            MessageCannotExhaustivelyCheckAbstractEnums {
-                description,
-                enum_reason,
-            } => friendly::Message(vec![
+            MessageCannotExhaustivelyCheckAbstractEnums(
+                box MessageCannotExhaustivelyCheckAbstractEnumsData {
+                    description,
+                    enum_reason,
+                },
+            ) => friendly::Message(vec![
                 text("Cannot exhaustively check "),
                 friendly::desc_of_reason_desc(description),
                 text(" because "),
                 ref_(enum_reason),
                 text(" is an abstract enum value, so has no members."),
             ]),
-            MessageCannotExhaustivelyCheckEnumWithUnknowns {
-                description,
-                enum_reason,
-            } => friendly::Message(vec![
+            MessageCannotExhaustivelyCheckEnumWithUnknowns(
+                box MessageCannotExhaustivelyCheckEnumWithUnknownsData {
+                    description,
+                    enum_reason,
+                },
+            ) => friendly::Message(vec![
                 text("Missing "),
                 code("default"),
                 text(" case in the check of "),
@@ -5300,10 +5491,12 @@ where
                 friendly::desc_of_reason_desc(i),
                 text(" because it is not an interface."),
             ]),
-            MessageCannotInstantiateObjectUtilTypeWithEnum {
-                description,
-                enum_reason,
-            } => {
+            MessageCannotInstantiateObjectUtilTypeWithEnum(
+                box MessageCannotInstantiateObjectUtilTypeWithEnumData {
+                    description,
+                    enum_reason,
+                },
+            ) => {
                 use super::error_message::enum_name_of_reason;
                 let suggestion = match enum_name_of_reason(enum_reason) {
                     Some(enum_name) => vec![
@@ -5533,10 +5726,10 @@ where
             MessageCannotResolveBuiltinName(name) => {
                 friendly::Message(vec![text("Cannot resolve name "), code(name), text(".")])
             }
-            MessageCannotResolveBuiltinModule {
+            MessageCannotResolveBuiltinModule(box MessageCannotResolveBuiltinModuleData {
                 name,
                 potential_generator,
-            } => {
+            }) => {
                 let mut features = vec![text("Cannot resolve module "), code(name), text(".")];
                 if let Some(generator) = potential_generator {
                     features.extend(vec![
@@ -5614,13 +5807,13 @@ where
                 ref_(object_reason),
                 text(" first or remove the indexer"),
             ]),
-            MessageCannotSpreadGeneral {
+            MessageCannotSpreadGeneral(box MessageCannotSpreadGeneralData {
                 spread_reason,
                 object1_reason,
                 object2_reason,
                 propname,
                 error_kind,
-            } => {
+            }) => {
                 use super::intermediate_error_types::ExactnessErrorKind;
                 let (error_reason, fix_suggestion) = match error_kind {
                     ExactnessErrorKind::UnexpectedInexact => (
@@ -5656,12 +5849,14 @@ where
                 features.extend(fix_suggestion);
                 friendly::Message(features)
             }
-            MessageCannotSpreadInexactMayOverwriteIndexer {
-                spread_reason,
-                key_reason,
-                value_reason,
-                object2_reason,
-            } => friendly::Message(vec![
+            MessageCannotSpreadInexactMayOverwriteIndexer(
+                box MessageCannotSpreadInexactMayOverwriteIndexerData {
+                    spread_reason,
+                    key_reason,
+                    value_reason,
+                    object2_reason,
+                },
+            ) => friendly::Message(vec![
                 text("Flow cannot determine a type for "),
                 ref_(spread_reason),
                 text(". "),
@@ -5738,10 +5933,12 @@ where
                 text(" because the first type "),
                 text("argument must be a string literal."),
             ]),
-            MessageCannotUseEnumMemberUsedAsType {
-                description,
-                enum_reason,
-            } => friendly::Message(vec![
+            MessageCannotUseEnumMemberUsedAsType(
+                box MessageCannotUseEnumMemberUsedAsTypeData {
+                    description,
+                    enum_reason,
+                },
+            ) => friendly::Message(vec![
                 text("Cannot use "),
                 friendly::desc_of_reason_desc(description),
                 text(" as a type. "),
@@ -5861,11 +6058,13 @@ where
                     text(&format!("{} positions.", expected)),
                 ])
             }
-            MessageCannotUseTypeForAnnotationInference {
-                reason_op,
-                reason,
-                suggestion,
-            } => {
+            MessageCannotUseTypeForAnnotationInference(
+                box MessageCannotUseTypeForAnnotationInferenceData {
+                    reason_op,
+                    reason,
+                    suggestion,
+                },
+            ) => {
                 let unwrapped_reason = reason.dupe().replace_desc(reason.desc(true).clone());
                 let mut features = vec![
                     text("Cannot use "),
@@ -5886,11 +6085,13 @@ where
                 }
                 friendly::Message(features)
             }
-            MessageCannotUseTypeGuardWithFunctionParamHavoced {
-                type_guard_desc,
-                param_reason,
-                call_locs,
-            } => {
+            MessageCannotUseTypeGuardWithFunctionParamHavoced(
+                box MessageCannotUseTypeGuardWithFunctionParamHavocedData {
+                    type_guard_desc,
+                    param_reason,
+                    call_locs,
+                },
+            ) => {
                 let loc_str: Vec<_> = if call_locs.is_empty() {
                     vec![text("in this function")]
                 } else if call_locs.len() == 1 {
@@ -5916,11 +6117,11 @@ where
                 features.push(text("."));
                 friendly::Message(features)
             }
-            MessageCannotUseTypeInValuePosition {
+            MessageCannotUseTypeInValuePosition(box MessageCannotUseTypeInValuePositionData {
                 reason,
                 type_only_namespace,
                 imported_name,
-            } => {
+            }) => {
                 let base = if *type_only_namespace {
                     vec![
                         text("Cannot use type-only namespace "),
@@ -6143,11 +6344,11 @@ where
                 }
                 friendly::Message(features)
             }
-            MessageDefinitionInvalidRecursive {
+            MessageDefinitionInvalidRecursive(box MessageDefinitionInvalidRecursiveData {
                 description,
                 recursion,
                 annot_locs,
-            } => {
+            }) => {
                 use flow_env_builder::env_api::AnnotLoc;
                 let (itself, tl_recur): (
                     friendly::MessageFeature<Loc>,
@@ -6387,11 +6588,11 @@ where
                 ref_(enum_reason),
                 text("."),
             ]),
-            MessageDuplicateModuleProvider {
+            MessageDuplicateModuleProvider(box MessageDuplicateModuleProviderData {
                 module_name,
                 provider,
                 conflict,
-            } => {
+            }) => {
                 let provider_file = loc_of_aloc(provider).source.clone();
                 let conflict_file = loc_of_aloc(conflict).source.clone();
                 match (&provider_file, &conflict_file) {
@@ -6471,11 +6672,11 @@ where
                     text("."),
                 ])
             }
-            MessageEnumDuplicateMemberName {
+            MessageEnumDuplicateMemberName(box MessageEnumDuplicateMemberNameData {
                 member_name,
                 prev_use_loc,
                 enum_reason,
-            } => friendly::Message(vec![
+            }) => friendly::Message(vec![
                 text("Enum member names need to be unique, but the name "),
                 code(member_name),
                 text(" has already been used for a "),
@@ -6490,11 +6691,11 @@ where
                     " has been specified with inconsistent member initializers. All members need to consistently either use no initializer, or have a literal (boolean, number, bigint, or string) initializer.",
                 ),
             ]),
-            MessageEnumInvalidMemberInitializer {
+            MessageEnumInvalidMemberInitializer(box MessageEnumInvalidMemberInitializerData {
                 member_name,
                 explicit_type,
                 enum_reason,
-            } => {
+            }) => {
                 use flow_parser::ast::statement::enum_declaration::ExplicitType;
                 match explicit_type {
                     Some(ExplicitType::Symbol) => friendly::Message(vec![
@@ -6578,11 +6779,11 @@ where
                     ),
                 ])
             }
-            MessageExponentialSpread {
+            MessageExponentialSpread(box MessageExponentialSpreadData {
                 reason,
                 reasons_for_operand1,
                 reasons_for_operand2,
-            } => {
+            }) => {
                 use super::intermediate_error_types::ExponentialSpreadReasonGroup;
                 let format_reason_group =
                     |ExponentialSpreadReasonGroup {
@@ -6685,12 +6886,14 @@ where
                 text(" of "),
                 ref_(upper),
             ]),
-            MessageIncompatibleGeneralWithPrintedTypes {
-                lower_loc,
-                upper_loc,
-                lower_desc,
-                upper_desc,
-            } => friendly::Message(vec![
+            MessageIncompatibleGeneralWithPrintedTypes(
+                box MessageIncompatibleGeneralWithPrintedTypesData {
+                    lower_loc,
+                    upper_loc,
+                    lower_desc,
+                    upper_desc,
+                },
+            ) => friendly::Message(vec![
                 ref_of_ty_or_desc(lower_loc, lower_desc),
                 text(" is incompatible with "),
                 ref_of_ty_or_desc(upper_loc, upper_desc),
@@ -6705,7 +6908,7 @@ where
                 text(", so it cannot be used to generate keys for "),
                 ref_(mapped_type),
             ]),
-            MessageIncompatibleTupleArity {
+            MessageIncompatibleTupleArity(box MessageIncompatibleTupleArityData {
                 lower_reason,
                 lower_arity,
                 lower_inexact,
@@ -6713,7 +6916,7 @@ where
                 upper_arity,
                 upper_inexact,
                 ..
-            } => {
+            }) => {
                 let str_of_arity = |inexact: bool, (num_req, num_total): &(i32, i32)| {
                     let suffix = if inexact {
                         "or more elements (inexact tuple)"
@@ -6772,7 +6975,9 @@ where
                 ref_(upper),
                 text(", which is a type-guard function"),
             ]),
-            MessageIncompatibleReactDeepReadOnly { lower, upper, .. } => friendly::Message(vec![
+            MessageIncompatibleReactDeepReadOnly(
+                box MessageIncompatibleReactDeepReadOnlyData { lower, upper, .. },
+            ) => friendly::Message(vec![
                 ref_(lower),
                 text(" is managed by the React runtime and cannot be mutated, while "),
                 ref_(upper),
@@ -6791,12 +6996,12 @@ where
                 text(" is incompatible with indexed "),
                 ref_(upper),
             ]),
-            MessageIncompleteExhausiveCheckEnum {
+            MessageIncompleteExhausiveCheckEnum(box MessageIncompleteExhausiveCheckEnumData {
                 description,
                 enum_reason,
                 left_to_check,
                 default_case_loc,
-            } => {
+            }) => {
                 let left_to_check_features: Vec<friendly::MessageFeature<Loc>> =
                     if left_to_check.len() == 1 {
                         vec![
@@ -6946,11 +7151,11 @@ where
                 code("typeof"),
                 text(" return value."),
             ]),
-            MessageInvalidEnumMemberCheck {
+            MessageInvalidEnumMemberCheck(box MessageInvalidEnumMemberCheckData {
                 enum_reason,
                 example_member,
                 from_match,
-            } => {
+            }) => {
                 use super::error_message::enum_name_of_reason;
                 let suggestion = match enum_name_of_reason(enum_reason) {
                     Some(enum_name) => {
@@ -7073,36 +7278,40 @@ where
                 ref_(invalid_react),
                 text(" identifier in scope to ensure it is the right one."),
             ]),
-            MessageInvalidRefPropertyInSpread {
+            MessageInvalidRefPropertyInSpread(box MessageInvalidRefPropertyInSpreadData {
                 ref_loc,
                 spread_loc,
-            } => friendly::Message(vec![
+            }) => friendly::Message(vec![
                 text("Components do not support "),
                 friendly::hardcoded_string_desc_ref("ref properties", loc_of_aloc(ref_loc)),
                 text(" within "),
                 friendly::hardcoded_string_desc_ref("spreads", loc_of_aloc(spread_loc)),
             ]),
-            MessageInvalidKeyPropertyInSpread {
+            MessageInvalidKeyPropertyInSpread(box MessageInvalidKeyPropertyInSpreadData {
                 key_loc,
                 spread_loc,
-            } => friendly::Message(vec![
+            }) => friendly::Message(vec![
                 text("Cannot "),
                 friendly::hardcoded_string_desc_ref("spread", loc_of_aloc(spread_loc)),
                 text(" an object that contains a "),
                 friendly::hardcoded_string_desc_ref("`key` property", loc_of_aloc(key_loc)),
             ]),
-            MessageInvalidSelfReferencingTypeAnnotation { name, loc } => friendly::Message(vec![
+            MessageInvalidSelfReferencingTypeAnnotation(
+                box MessageInvalidSelfReferencingTypeAnnotationData { name, loc },
+            ) => friendly::Message(vec![
                 text("Invalid type annotation for "),
                 code(name.as_str()),
                 text(". It contains a "),
                 friendly::hardcoded_string_desc_ref("reference", loc_of_aloc(loc)),
                 text(" to the binding being declared."),
             ]),
-            MessageInvalidSelfReferencingDefault {
-                name,
-                def_loc,
-                ref_loc,
-            } => friendly::Message(vec![
+            MessageInvalidSelfReferencingDefault(
+                box MessageInvalidSelfReferencingDefaultData {
+                    name,
+                    def_loc,
+                    ref_loc,
+                },
+            ) => friendly::Message(vec![
                 text("Invalid default expression for parameter "),
                 friendly::hardcoded_string_desc_ref(name.as_str(), loc_of_aloc(def_loc)),
                 text(". It contains a "),
@@ -7135,11 +7344,11 @@ where
             MessageTupleElementAfterInexactSpread => friendly::Message(vec![text(
                 "Cannot have element after spread of inexact tuple.",
             )]),
-            MessageInvalidRendersTypeArgument {
+            MessageInvalidRendersTypeArgument(box MessageInvalidRendersTypeArgumentData {
                 renders_variant,
                 invalid_render_type_kind,
                 invalid_type_reasons,
-            } => {
+            }) => {
                 use flow_parser::ast::types::RendersVariant;
 
                 use super::intermediate_error_types::InvalidRenderTypeKind;
@@ -7392,10 +7601,10 @@ where
                 features.push(text(" is missing."));
                 friendly::Message(features)
             }
-            MessageNoDefaultExport {
+            MessageNoDefaultExport(box MessageNoDefaultExportData {
                 module_name,
                 suggestion,
-            } => {
+            }) => {
                 let mut features = vec![
                     text("Cannot import a default export because there is no default export "),
                     text("in "),
@@ -7412,11 +7621,11 @@ where
                 }
                 friendly::Message(features)
             }
-            MessageNoNamedExport {
+            MessageNoNamedExport(box MessageNoNamedExportData {
                 module_name,
                 export_name,
                 suggestion,
-            } => {
+            }) => {
                 let mut features = vec![
                     text("Cannot import "),
                     code(export_name),
@@ -7461,10 +7670,10 @@ where
             MessageNonToplevelExport => {
                 friendly::Message(vec![text("Exports can only appear at the top level")])
             }
-            MessageOnlyDefaultExport {
+            MessageOnlyDefaultExport(box MessageOnlyDefaultExportData {
                 module_name,
                 export_name,
-            } => friendly::Message(vec![
+            }) => friendly::Message(vec![
                 text("Cannot import "),
                 code(export_name),
                 text(" because "),
@@ -7486,13 +7695,13 @@ where
                     text("https://flow.org/en/docs/react/multiplatform"),
                 ])
             }
-            MessagePropMissing {
+            MessagePropMissing(box MessagePropMissingData {
                 lower,
                 upper,
                 prop,
                 suggestion,
                 reason_indexer,
-            } => {
+            }) => {
                 use super::error_message::mk_prop_message;
                 // If we were subtyping that add to the error message so our user knows what
                 // object required the missing property.
@@ -7532,11 +7741,11 @@ where
                     }
                 }
             }
-            MessagePropsMissing {
+            MessagePropsMissing(box MessagePropsMissingData {
                 lower,
                 upper,
                 props,
-            } => {
+            }) => {
                 let (first_prop, rest_props) = props.clone().split_off_first();
                 if rest_props.is_empty() {
                     friendly::Message(vec![
@@ -7566,11 +7775,11 @@ where
                     friendly::Message(features)
                 }
             }
-            MessagePropPolarityMismatch {
+            MessagePropPolarityMismatch(box MessagePropPolarityMismatchData {
                 lower,
                 upper,
                 props,
-            } => {
+            }) => {
                 use super::error_message::mk_prop_message;
                 use super::error_message::polarity_explanation;
                 let (first_prop, rest_props) = props.clone().split_off_first();
@@ -7642,12 +7851,12 @@ where
                 features.push(text(" is not writable"));
                 friendly::Message(features)
             }
-            MessageReactIntrinsicOverlap {
+            MessageReactIntrinsicOverlap(box MessageReactIntrinsicOverlapData {
                 use_,
                 def,
                 type_,
                 mixed,
-            } => friendly::Message(vec![
+            }) => friendly::Message(vec![
                 text("The name of intrinsic element "),
                 ref_(use_),
                 text(" overlaps with a "),
@@ -7666,10 +7875,10 @@ where
             MessageRecursionLimitExceeded => {
                 friendly::Message(vec![text("*** Recursion limit exceeded ***")])
             }
-            MessageRedeclareComponentProp {
+            MessageRedeclareComponentProp(box MessageRedeclareComponentPropData {
                 duplicates,
                 spread_loc,
-            } => {
+            }) => {
                 let ((first_loc, name, second_loc), rest) = duplicates.clone().split_off_first();
                 if rest.is_empty() {
                     let first = mk_reason(
@@ -7739,12 +7948,14 @@ where
                 }
                 friendly::Message(features)
             }
-            MessageShouldAnnotateVariableUsedInGenericContext {
-                reason,
-                null_loc,
-                initialized,
-                possible_generic_escape_locs,
-            } => {
+            MessageShouldAnnotateVariableUsedInGenericContext(
+                box MessageShouldAnnotateVariableUsedInGenericContextData {
+                    reason,
+                    null_loc,
+                    initialized,
+                    possible_generic_escape_locs,
+                },
+            ) => {
                 let null_ref = if *initialized {
                     code("null")
                 } else {
@@ -7791,11 +8002,11 @@ where
                 ),
                 text("explicit default instead."),
             ]),
-            MessageSketchyNullCheck {
+            MessageSketchyNullCheck(box MessageSketchyNullCheckData {
                 kind,
                 falsy_loc,
                 null_loc,
-            } => {
+            }) => {
                 use flow_lint_settings::lints::SketchyNullKind;
                 let (type_str, value_str) = match kind {
                     SketchyNullKind::Bool => ("boolean", "false"),
@@ -8094,11 +8305,11 @@ where
                 features.extend(explanation);
                 friendly::Message(features)
             }
-            MessageTupleElementNotReadable {
+            MessageTupleElementNotReadable(box MessageTupleElementNotReadableData {
                 reason,
                 index,
                 name,
-            } => {
+            }) => {
                 let index_ref = friendly::MessageFeature::Reference(
                     vec![friendly::MessageInline::Code(format!("{}", index))],
                     loc_of_aloc(reason.def_loc()),
@@ -8112,11 +8323,11 @@ where
                 features.push(text(" is not readable"));
                 friendly::Message(features)
             }
-            MessageTupleElementNotWritable {
+            MessageTupleElementNotWritable(box MessageTupleElementNotWritableData {
                 reason,
                 index,
                 name,
-            } => {
+            }) => {
                 let index_ref = friendly::MessageFeature::Reference(
                     vec![friendly::MessageInline::Code(format!("{}", index))],
                     loc_of_aloc(reason.def_loc()),
@@ -8130,12 +8341,12 @@ where
                 features.push(text(" is not writable"));
                 friendly::Message(features)
             }
-            MessageTupleIndexOutOfBound {
+            MessageTupleIndexOutOfBound(box MessageTupleIndexOutOfBoundData {
                 reason_op,
                 inexact,
                 length,
                 index,
-            } => {
+            }) => {
                 let plural = if *length == 1 { "" } else { "s" };
                 let explicit = if *inexact { " explicitly defined" } else { "" };
                 let bounds_msg = if *inexact {
@@ -8151,10 +8362,10 @@ where
                     )),
                 ])
             }
-            MessageTupleNonIntegerIndex {
+            MessageTupleNonIntegerIndex(box MessageTupleNonIntegerIndexData {
                 index_def_loc,
                 index,
-            } => friendly::Message(vec![
+            }) => friendly::Message(vec![
                 text("the index into a tuple must be an integer, but "),
                 friendly::MessageFeature::Reference(
                     vec![friendly::MessageInline::Code(index.to_string())],
@@ -8384,7 +8595,10 @@ where
                 ref_(reason),
                 text(" is never initialized, annotated, or assigned to."),
             ]),
-            MessageVariableOnlyAssignedByNull { reason, null_loc } => {
+            MessageVariableOnlyAssignedByNull(box MessageVariableOnlyAssignedByNullData {
+                reason,
+                null_loc,
+            }) => {
                 let null_ref = match null_loc {
                     Some(loc) => ref_(&mk_reason(
                         VirtualReasonDesc::RCode("null".into()),
@@ -8806,11 +9020,13 @@ where
                 ));
                 friendly::Message(msg)
             }
-            MessageMatchNonExhaustiveObjectPattern {
-                rest,
-                missing_props,
-                pattern_kind,
-            } => {
+            MessageMatchNonExhaustiveObjectPattern(
+                box MessageMatchNonExhaustiveObjectPatternData {
+                    rest,
+                    missing_props,
+                    pattern_kind,
+                },
+            ) => {
                 let pattern_kind_str = pattern_kind.to_string();
                 let prefix = vec![
                     text("This "),
@@ -8885,10 +9101,10 @@ where
                 ));
                 friendly::Message(msg)
             }
-            MessageMatchNonExplicitEnumCheck {
+            MessageMatchNonExplicitEnumCheck(box MessageMatchNonExplicitEnumCheckData {
                 wildcard_reason,
                 unchecked_members,
-            } => {
+            }) => {
                 let member_msgs: Vec<friendly::Message<Loc>> = unchecked_members
                     .iter()
                     .map(|member| friendly::Message(vec![code(member)]))
@@ -9386,10 +9602,12 @@ where
                 features.extend(concat_result);
                 friendly::Message(features)
             }
-            MessageMissingPlatformSupportWithAvailablePlatforms {
-                available_platforms,
-                required_platforms,
-            } => {
+            MessageMissingPlatformSupportWithAvailablePlatforms(
+                box MessageMissingPlatformSupportWithAvailablePlatformsData {
+                    available_platforms,
+                    required_platforms,
+                },
+            ) => {
                 let missing_platforms: Vec<_> = required_platforms
                     .difference(available_platforms)
                     .cloned()
@@ -9463,13 +9681,15 @@ where
                     " as a component rest param. Component rest params must use an object type and cannot be optional",
                 ),
             ]),
-            MessageIncompatibleDueToInvariantSubtyping {
-                sub_component,
-                lower_loc,
-                upper_loc,
-                lower_desc,
-                upper_desc,
-            } => match sub_component {
+            MessageIncompatibleDueToInvariantSubtyping(
+                box MessageIncompatibleDueToInvariantSubtypingData {
+                    sub_component,
+                    lower_loc,
+                    upper_loc,
+                    lower_desc,
+                    upper_desc,
+                },
+            ) => match sub_component {
                 None => friendly::Message(vec![
                     ref_of_ty_or_desc(lower_loc, lower_desc),
                     text(" is not exactly the same as "),
@@ -9489,11 +9709,11 @@ where
                     friendly::Message(features)
                 }
             },
-            MessagePropExtraAgainstExactObject {
+            MessagePropExtraAgainstExactObject(box MessagePropExtraAgainstExactObjectData {
                 lower,
                 upper,
                 props,
-            } => {
+            }) => {
                 let number_to_check = props.len();
                 let prop_message: Vec<friendly::MessageFeature<Loc>> = if number_to_check > 5 {
                     let max_display_amount = 4;

@@ -23,6 +23,7 @@ use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_typing_context::Context;
 use flow_typing_context::Metadata;
+use flow_typing_errors::error_message::EExportRenamedDefaultData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_js::flow_js;
 
@@ -316,10 +317,10 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
     ) {
         let import_star_reason = self.import_star_reason(import_star);
-        self.add_error(ErrorMessage::EBadDefaultImportAccess(
+        self.add_error(ErrorMessage::EBadDefaultImportAccess(Box::new((
             loc,
             import_star_reason,
-        ))
+        ))))
     }
 
     fn add_bad_default_import_destructuring_error(&self, loc: ALoc) {
@@ -332,7 +333,10 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
     ) {
         let import_star_reason = self.import_star_reason(import_star);
-        self.add_error(ErrorMessage::EInvalidImportStarUse(loc, import_star_reason))
+        self.add_error(ErrorMessage::EInvalidImportStarUse(Box::new((
+            loc,
+            import_star_reason,
+        ))))
     }
 
     fn add_non_const_var_export_error(
@@ -342,7 +346,10 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
     ) {
         let decl_reason = decl_info
             .map(|(decl_loc, name)| mk_reason(VirtualReasonDesc::RIdentifier(name), decl_loc));
-        self.add_error(ErrorMessage::ENonConstVarExport(loc, decl_reason))
+        self.add_error(ErrorMessage::ENonConstVarExport(Box::new((
+            loc,
+            decl_reason,
+        ))))
     }
 
     fn add_this_in_exported_function_error(&self, loc: ALoc) {
@@ -355,11 +362,13 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         name: Option<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
         is_reexport: bool,
     ) {
-        self.add_error(ErrorMessage::EExportRenamedDefault {
-            loc,
-            name,
-            is_reexport,
-        })
+        self.add_error(ErrorMessage::EExportRenamedDefault(Box::new(
+            EExportRenamedDefaultData {
+                loc,
+                name,
+                is_reexport,
+            },
+        )))
     }
 
     fn import_star_from_use(&self, use_loc: &ALoc) -> Option<&(ALoc, ast::Identifier<ALoc, ALoc>)> {
@@ -819,7 +828,10 @@ fn detect_mixed_import_and_require_error<'cx>(cx: &Context<'cx>, declarations: &
             );
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMixedImportAndRequire(first_require_loc.dupe(), import_reason),
+                ErrorMessage::EMixedImportAndRequire(Box::new((
+                    first_require_loc.dupe(),
+                    import_reason,
+                ))),
             )
         }
         _ => (),

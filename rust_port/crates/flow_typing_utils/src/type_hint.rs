@@ -45,17 +45,20 @@ use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::implicit_instantiation;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
+use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::BinaryTest;
 use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CallArgInner;
+use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::FunType;
 use flow_typing_type::type_::FuncallType;
+use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetPrivatePropTData;
 use flow_typing_type::type_::GetPropTData;
 use flow_typing_type::type_::HintEvalResult;
@@ -63,11 +66,13 @@ use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::ObjKind;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::PrivateMethodTData;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::ReactEffectType;
+use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::ThisInstanceTData;
@@ -263,12 +268,12 @@ fn synthesis_speculation_call<'cx>(
         call_speculation_hint_state: Some(call_speculation_hint_state.dupe()),
         call_specialized_callee: None,
     }));
-    let use_t = UseT::new(UseTInner::CallT {
+    let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
         use_op,
         reason: call_reason.dupe(),
         call_action,
         return_hint: hint_unavailable(),
-    });
+    })));
     flow_js::flow(cx, (&intersection, &use_t))?;
     match &*call_speculation_hint_state.borrow() {
         SpeculationHintState::SpeculationHintUnset
@@ -303,12 +308,12 @@ fn simplify_callee<'cx>(
         move |cx, r, id| {
             let call_action =
                 Box::new(CallAction::ConcretizeCallee(Tvar::new(r.dupe(), id as u32)));
-            let use_t = UseT::new(UseTInner::CallT {
+            let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason2,
                 call_action,
                 return_hint: hint_unavailable(),
-            });
+            })));
             flow_js::flow(cx, (&func_t, &use_t))?;
             Ok::<(), SpeculativeError>(())
         },
@@ -455,12 +460,12 @@ fn instantiate_callee<'cx>(
                         &resolved,
                     )
                 }
-                DefTInner::PolyT {
+                DefTInner::PolyT(box PolyTData {
                     tparams_loc,
                     tparams,
                     t_out,
                     id: _,
-                } => {
+                }) => {
                     if let Some((class_r, inst_r, i, this, this_name)) =
                         if let TypeInner::DefT(class_r, inner_def) = t_out.deref()
                             && let DefTInner::ClassT(class_inner) = inner_def.deref()
@@ -660,12 +665,12 @@ fn instantiate_component<'cx>(
     let component_resolved = get_t(cx, component.dupe());
     match component_resolved.deref() {
         TypeInner::DefT(_, def) => match def.deref() {
-            DefTInner::PolyT {
+            DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams,
                 t_out,
                 id: _,
-            } if *cx.jsx() == JsxMode::JsxReact => {
+            }) if *cx.jsx() == JsxMode::JsxReact => {
                 let reason = &instantiation_hint.jsx_reason;
                 let jsx_targs = &instantiation_hint.jsx_targs;
                 let jsx_props_and_children = &instantiation_hint.jsx_props_and_children;
@@ -727,7 +732,7 @@ fn instantiate_component<'cx>(
                     TypeInner::DefT(_, inner_def)
                         if matches!(
                             inner_def.deref(),
-                            DefTInner::PolyT { t_out, .. }
+                            DefTInner::PolyT(box PolyTData { t_out, .. })
                                 if matches!(
                                     t_out.deref(),
                                     TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(..))
@@ -851,12 +856,12 @@ fn type_of_hint_decomposition<'cx>(
             }
         };
         if let TypeInner::DefT(_, def) = get_t(cx, t.dupe()).deref()
-            && let DefTInner::PolyT {
+            && let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams,
                 t_out: instance_type,
                 id: _,
-            } = def.deref()
+            }) = def.deref()
         {
             let ctor_method = get_constructor_method_type(instance_type)?;
             let tparams_loc = tparams_loc.dupe();
@@ -866,35 +871,35 @@ fn type_of_hint_decomposition<'cx>(
                 &ctor_method,
                 &|t_inner: &Type| -> Result<Type, SandboxError> {
                     if let TypeInner::DefT(_, inner_def) = t_inner.deref()
-                        && let DefTInner::PolyT {
+                        && let DefTInner::PolyT(box PolyTData {
                             tparams_loc: tparams_loc2,
                             tparams: tparams2,
                             t_out,
                             id: _,
-                        } = inner_def.deref()
+                        }) = inner_def.deref()
                     {
                         let t_out = mod_ctor_return(&instance_type, t_out);
                         let mut combined_tparams: Vec<_> = tparams.to_vec();
                         combined_tparams.extend(tparams2.iter().cloned());
                         Ok(Type::new(TypeInner::DefT(
                             reason.dupe(),
-                            DefT::new(DefTInner::PolyT {
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc2.dupe(),
                                 tparams: combined_tparams.into(),
                                 t_out,
                                 id: poly::Id::generate_id(),
-                            }),
+                            }))),
                         )))
                     } else {
                         let t_out = mod_ctor_return(&instance_type, t_inner);
                         Ok(Type::new(TypeInner::DefT(
                             reason.dupe(),
-                            DefT::new(DefTInner::PolyT {
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out,
                                 id: poly::Id::generate_id(),
-                            }),
+                            }))),
                         )))
                     }
                 },
@@ -930,7 +935,7 @@ fn type_of_hint_decomposition<'cx>(
                     reason.dupe(),
                     move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
-                        let use_t = UseT::new(UseTInner::GetElemT {
+                        let use_t = UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
                             use_op: unknown_use(),
                             reason: reason2.dupe(),
                             id: None,
@@ -942,7 +947,7 @@ fn type_of_hint_decomposition<'cx>(
                                 DefT::new(num.clone()),
                             )),
                             tout: Box::new(tout),
-                        });
+                        })));
                         speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
                         Ok::<(), FlowJsException>(())
                     },
@@ -957,12 +962,12 @@ fn type_of_hint_decomposition<'cx>(
                     reason.dupe(),
                     move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
-                        let use_t = UseT::new(UseTInner::ArrRestT(
-                            unknown_use(),
-                            reason2.dupe(),
-                            i,
-                            Type::new(TypeInner::OpenT(tout)),
-                        ));
+                        let use_t = UseT::new(UseTInner::ArrRestT(Box::new(ArrRestTData {
+                            use_op: unknown_use(),
+                            reason: reason2.dupe(),
+                            index: i,
+                            tout: Type::new(TypeInner::OpenT(tout)),
+                        })));
                         speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
                         Ok::<(), FlowJsException>(())
                     },
@@ -1051,19 +1056,19 @@ fn type_of_hint_decomposition<'cx>(
                 };
                 let this_t = match get_t(cx, t.dupe()).deref() {
                     TypeInner::DefT(poly_reason, def) => match def.deref() {
-                        DefTInner::PolyT {
+                        DefTInner::PolyT(box PolyTData {
                             tparams_loc,
                             tparams,
                             t_out,
                             id: _,
-                        } => Type::new(TypeInner::DefT(
+                        }) => Type::new(TypeInner::DefT(
                             poly_reason.dupe(),
-                            DefT::new(DefTInner::PolyT {
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc.dupe(),
                                 tparams: tparams.dupe(),
                                 t_out: get_this_t(t_out)?,
                                 id: poly::Id::generate_id(),
-                            }),
+                            }))),
                         )),
                         _ => get_this_t(&get_t(cx, t))?,
                     },
@@ -1202,13 +1207,13 @@ fn type_of_hint_decomposition<'cx>(
                     reason.dupe(),
                     move |cx, r, id| {
                         let props_t = Tvar::new(r.dupe(), id as u32);
-                        let use_t = UseT::new(UseTInner::ReactKitT(
-                            unknown_use(),
-                            reason2.dupe(),
-                            Box::new(react::Tool::GetConfig {
+                        let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                            use_op: unknown_use(),
+                            reason: reason2.dupe(),
+                            tool: Box::new(react::Tool::GetConfig {
                                 tout: Type::new(TypeInner::OpenT(props_t)),
                             }),
-                        ));
+                        })));
                         speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
                         Ok::<(), FlowJsException>(())
                     },
@@ -1302,7 +1307,7 @@ fn type_of_hint_decomposition<'cx>(
                     comp_reason.dupe(),
                     move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
-                        let use_t = UseT::new(UseTInner::GetElemT {
+                        let use_t = UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
                             use_op: unknown_use(),
                             reason: comp_reason2.dupe(),
                             id: None,
@@ -1311,7 +1316,7 @@ fn type_of_hint_decomposition<'cx>(
                             access_iterables: false,
                             key_t,
                             tout: Box::new(tout),
-                        });
+                        })));
                         speculation_flow::resolved_lower_flow_unsafe(
                             cx,
                             &comp_reason2,

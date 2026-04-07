@@ -13,6 +13,7 @@ use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::Decl;
+use flow_common_ty::ty::DeclModuleDeclData;
 use flow_common_ty::ty::Elt;
 use flow_common_ty::ty::TypeAtPosResult;
 use flow_common_ty::ty::symbols_of_elt;
@@ -97,11 +98,11 @@ pub fn type_at_pos_type<'a>(
                 sym_anonymous: false,
                 sym_def_loc: ALoc::of_loc(loc.dupe()),
             };
-            let unevaluated = Elt::Decl(Decl::ModuleDecl {
+            let unevaluated = Elt::Decl(Decl::ModuleDecl(Box::new(DeclModuleDeclData {
                 name: Some(module_symbol),
                 exports: Arc::from([]),
                 default: None,
-            });
+            })));
             QueryResult::Success(
                 loc,
                 TypeAtPosResult {

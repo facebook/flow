@@ -22,6 +22,9 @@ use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErrorData;
+use flow_typing_errors::error_message::ETooFewTypeArgsData;
+use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_common::flow_js_utils;
@@ -31,26 +34,38 @@ use flow_typing_flow_common::obj_type;
 use flow_typing_flow_common::type_subst;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::ConstructorTData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::EvalTypeDestructorTData;
+use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::FuncallType;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumKind;
+use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::ReactAbstractComponentTData;
+use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ReposUseTData;
+use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::ResolvedParam;
 use flow_typing_type::type_::SpreadResolve;
 use flow_typing_type::type_::Targ;
@@ -267,9 +282,9 @@ impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)>
             }
             // We remove any tparam names from the map when entering a PolyT to avoid naming conflicts.
             TypeInner::DefT(_, def_t) => {
-                if let DefTInner::PolyT {
+                if let DefTInner::PolyT(box PolyTData {
                     tparams, t_out: t, ..
-                } = def_t.deref()
+                }) = def_t.deref()
                 {
                     let mut tparam_names_prime = tparam_names.clone();
                     for tp in tparams.iter() {
@@ -330,8 +345,8 @@ impl ImplicitInstantiationVisitor<'_, '_> {
         let resolved = get_t(cx, type_);
         match resolved.deref() {
             TypeInner::AnnotT(_, t, _) => self.typeapp(targs, cx, pole, acc, t),
-            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
-                if let DefTInner::PolyT { tparams, .. } = def_t.deref() {
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::PolyT(_)) => {
+                if let DefTInner::PolyT(box PolyTData { tparams, .. }) = def_t.deref() {
                     loop_(self, cx, pole, acc, Some(tparams), targs)
                 } else {
                     unreachable!()
@@ -393,12 +408,12 @@ fn t_of_use_t<'cx>(
             merge_upper_bounds(cx, seen, t)
         }
         UseTInner::UseT(_, t) => Ok(UseTResult::UpperT(t.dupe())),
-        UseTInner::EvalTypeDestructorT {
+        UseTInner::EvalTypeDestructorT(box EvalTypeDestructorTData {
             reason: r,
             destructor,
             tout,
             ..
-        } => {
+        }) => {
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             match destructor {
                 box Destructor::PropertyType { .. }
@@ -421,13 +436,13 @@ fn t_of_use_t<'cx>(
                             |cx, _reason, t_prime_id| {
                                 let t_prime_tvar = Tvar::new(r.dupe(), t_prime_id as u32);
                                 let open_t_prime = Type::new(TypeInner::OpenT(t_prime_tvar));
-                                let u_inner = UseTInner::GetEnumT {
+                                let u_inner = UseTInner::GetEnumT(Box::new(GetEnumTData {
                                     use_op: unknown_use(),
                                     reason: r.dupe(),
                                     orig_t: None,
                                     kind: GetEnumKind::GetEnumValue,
                                     tout: open_t_prime,
-                                };
+                                }));
                                 FlowJs::flow(cx, &tout_val, &UseT::new(u_inner))?;
                                 Ok::<(), FlowJsException>(())
                             },
@@ -447,11 +462,13 @@ fn t_of_use_t<'cx>(
                         )?;
                         Ok(UseTResult::UpperT(Type::new(TypeInner::DefT(
                             r.dupe(),
-                            DefT::new(DefTInner::ReactAbstractComponentT {
-                                config,
-                                renders: react_node,
-                                component_kind: ComponentKind::Structural,
-                            }),
+                            DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
+                                ReactAbstractComponentTData {
+                                    config,
+                                    renders: react_node,
+                                    component_kind: ComponentKind::Structural,
+                                },
+                            ))),
                         ))))
                     })
                 }
@@ -526,12 +543,12 @@ fn t_of_use_t<'cx>(
                                     cx,
                                     reason_spread.dupe(),
                                     |cx, t_prime| {
-                                        let u_inner = UseTInner::ArrRestT(
-                                            unknown_use(),
-                                            reason_spread.dupe(),
-                                            n,
-                                            t_prime.dupe(),
-                                        );
+                                        let u_inner = UseTInner::ArrRestT(Box::new(ArrRestTData {
+                                            use_op: unknown_use(),
+                                            reason: reason_spread.dupe(),
+                                            index: n,
+                                            tout: t_prime.dupe(),
+                                        }));
                                         FlowJs::flow(cx, &t, &UseT::new(u_inner))?;
                                         Ok::<(), FlowJsException>(())
                                     },
@@ -544,7 +561,7 @@ fn t_of_use_t<'cx>(
                 }
             }
         }
-        UseTInner::ArrRestT(_, _, i, tout) => {
+        UseTInner::ArrRestT(box ArrRestTData { index: i, tout, .. }) => {
             if let TypeInner::DefT(_, def_t) = get_t(cx, tout).deref()
                 && let DefTInner::ArrT(arr_t) = def_t.deref()
             {
@@ -572,8 +589,8 @@ fn t_of_use_t<'cx>(
         // Get/set-prop related upper bounds are ignored
         // because there is not enough info to reverse.
         UseTInner::BindT(..)
-        | UseTInner::CallT { .. }
-        | UseTInner::ConditionalT { .. }
+        | UseTInner::CallT(..)
+        | UseTInner::ConditionalT(..)
         | UseTInner::MethodT(..)
         | UseTInner::PrivateMethodT(..)
         | UseTInner::ConstructorT(..)
@@ -604,8 +621,8 @@ fn t_of_use_t<'cx>(
         | UseTInner::ExtendsUseT(..)
         | UseTInner::ObjTestT(..)
         | UseTInner::TypeCastT(..)
-        | UseTInner::EnumCastT { .. }
-        | UseTInner::EnumExhaustiveCheckT { .. }
+        | UseTInner::EnumCastT(..)
+        | UseTInner::EnumExhaustiveCheckT(..)
         | UseTInner::GetEnumT { .. }
         | UseTInner::CondT(..)
         | UseTInner::CheckUnusedPromiseT { .. }
@@ -618,9 +635,9 @@ fn t_of_use_t<'cx>(
         | UseTInner::ThisSpecializeT(..)
         | UseTInner::ConcretizeTypeAppsT(..)
         | UseTInner::ObjRestT(..)
-        | UseTInner::ElemT { .. }
+        | UseTInner::ElemT(..)
         | UseTInner::ReactKitT(..)
-        | UseTInner::ConcretizeT { .. }
+        | UseTInner::ConcretizeT(..)
         | UseTInner::FilterOptionalT(..)
         | UseTInner::FilterMaybeT(..)
         | UseTInner::SealGenericT { .. } => Ok(UseTResult::UpperNonT(u.dupe())),
@@ -633,13 +650,15 @@ fn t_of_use_t<'cx>(
             identity_reverse_upper_bound(cx, seen, tvar, &tout)
         }
         UseTInner::ReposLowerT { use_t, .. } => t_of_use_t(cx, seen, tvar, use_t),
-        UseTInner::ReposUseT(_, _, _, t) => {
+        UseTInner::ReposUseT(box ReposUseTData { type_: t, .. }) => {
             FlowJs::flow_t(cx, t, tvar)?;
             Ok(UseTResult::UpperT(t.dupe()))
         }
-        UseTInner::ResolveSpreadT(_, reason, resolve_spread_type)
-            if resolve_spread_type.rrt_unresolved.is_empty() =>
-        {
+        UseTInner::ResolveSpreadT(box ResolveSpreadTData {
+            reason,
+            resolve_spread_type,
+            ..
+        }) if resolve_spread_type.rrt_unresolved.is_empty() => {
             match &resolve_spread_type.rrt_resolve_to {
                 SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(_, funtype) => {
                     match reverse_resolve_spread_multiflow_subtype_full_partial_resolution(
@@ -664,7 +683,9 @@ fn t_of_use_t<'cx>(
             }
         }
         UseTInner::ResolveSpreadT(..) => Ok(UseTResult::UpperNonT(u.dupe())),
-        UseTInner::ResolveUnionT { upper, .. } => t_of_use_t(cx, seen, tvar, upper),
+        UseTInner::ResolveUnionT(box ResolveUnionTData { upper, .. }) => {
+            t_of_use_t(cx, seen, tvar, upper)
+        }
         UseTInner::ObjKitT(_, r, _, box tool, tout) => match tool {
             object::Tool::MakeExact
             | object::Tool::ReadOnly
@@ -686,12 +707,12 @@ fn t_of_use_t<'cx>(
                     UseTResult::UpperT(t) => {
                         let pmap = properties::PropertiesMap::from_btree_map(BTreeMap::from([(
                             flow_common::reason::Name::new("ref"),
-                            Property::new(PropertyInner::Field {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
                                 preferred_def_locs: None,
                                 key_loc: None,
                                 type_: ref_t.dupe(),
                                 polarity: Polarity::Neutral,
-                            }),
+                            }))),
                         )]));
                         let reversed = reverse_component_check_config(cx, r, &pmap, &t)?;
                         match merge_lower_bounds(cx, &reversed)? {
@@ -810,12 +831,12 @@ fn reverse_obj_spread<'cx>(
             .map(|(k, prop)| {
                 (
                     k.dupe(),
-                    Property::new(PropertyInner::Field {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: None,
                         key_loc: prop.key_loc.dupe(),
                         type_: prop.prop_t.dupe(),
                         polarity: Polarity::Neutral,
-                    }),
+                    }))),
                 )
             })
             .collect();
@@ -1005,7 +1026,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
             let rest_elem_t =
                 flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |cx, _r, tout_id| {
                     let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
-                    let u_inner = UseTInner::GetElemT {
+                    let u_inner = UseTInner::GetElemT(Box::new(GetElemTData {
                         use_op: unknown_use(),
                         reason: reason.dupe(),
                         id: None,
@@ -1014,7 +1035,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                         access_iterables: false,
                         key_t: num_module_t::make(reason.dupe()),
                         tout: Box::new(tout_tvar),
-                    };
+                    }));
                     FlowJs::flow(cx, rest_param_t, &UseT::new(u_inner))?;
                     Ok::<(), FlowJsException>(())
                 })?;
@@ -1185,7 +1206,9 @@ fn merge_lower_bounds<'cx>(cx: &Context<'cx>, t: &Type) -> Result<Option<Type>, 
                 constraint::Constraints::Unresolved(bounds) => {
                     let upper = bounds.borrow().upper.clone();
                     for (key, _) in upper.iter() {
-                        if let UseTInner::ReposUseT(_, _, _, ref l) = *key.use_t {
+                        if let UseTInner::ReposUseT(box ReposUseTData { type_: ref l, .. }) =
+                            *key.use_t
+                        {
                             FlowJs::flow_t(cx, l, t)?;
                         }
                     }
@@ -1365,11 +1388,11 @@ fn check_instantiation<'cx, Obs: Observer>(
                 if explicit_targs.len() > maximum_arity {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::ETooManyTypeArgs {
+                        ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                             reason_tapp: reason_tapp.dupe(),
                             arity_loc: arity_loc.dupe(),
                             maximum_arity: maximum_arity as i32,
-                        },
+                        })),
                     )?;
                 }
 
@@ -1392,11 +1415,11 @@ fn check_instantiation<'cx, Obs: Observer>(
                             if tparam.default.is_none() {
                                 flow_js_utils::add_output(
                                     cx,
-                                    ErrorMessage::ETooFewTypeArgs {
+                                    ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                                         reason_tapp: reason_tapp.dupe(),
                                         arity_loc: arity_loc.dupe(),
                                         minimum_arity: minimum_arity as i32,
-                                    },
+                                    })),
                                 )?;
                             }
                             targs.push(Targ::ExplicitArg(targ.dupe()));
@@ -1461,7 +1484,7 @@ fn check_instantiation<'cx, Obs: Observer>(
         flow_typing_implicit_instantiation_check::Operation::Call(calltype) => {
             let new_tout = flow_typing_tvar::mk_no_wrap(cx, reason_op);
             let (call_targs, inferred_targ_list) = merge_targs(&calltype.call_targs)?;
-            let call_t = UseT::new(UseTInner::CallT {
+            let call_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
                 call_action: Box::new(CallAction::Funcalltype(FuncallType {
@@ -1470,7 +1493,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                     ..calltype.clone()
                 })),
                 return_hint: hint_unavailable(),
-            });
+            })));
             (
                 inferred_targ_list,
                 check.lhs.dupe(),
@@ -1537,10 +1560,10 @@ fn check_instantiation<'cx, Obs: Observer>(
             let targs_rc: Option<Rc<[Targ]>> = targs.dupe();
             let (_, inferred_targ_list) = merge_targs(&targs_rc)?;
             let new_tout_tvar = open_tvar(&new_tout).dupe();
-            let react_kit_t = UseT::new(UseTInner::ReactKitT(
-                use_op.dupe(),
-                reason_op.dupe(),
-                Box::new(react::Tool::<Context<'cx>>::CreateElement {
+            let react_kit_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                use_op: use_op.dupe(),
+                reason: reason_op.dupe(),
+                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement {
                     component: component.dupe(),
                     jsx_props: jsx_props.dupe(),
                     targs: None,
@@ -1551,7 +1574,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                     inferred_targs: None,
                     specialized_component: None,
                 }),
-            ));
+            })));
             let lower = FlowJs::mk_typeapp_instance_annot(
                 cx,
                 None,
@@ -1893,7 +1916,7 @@ fn implicitly_instantiate<'cx, Obs: Observer>(
         return Ok((Vec::new(), Marked::new(), tparams_map, None));
     };
     let (inferred_targ_list, marked_tparams, tout) = match (def_t.deref(), op) {
-        (DefTInner::ReactAbstractComponentT { config, .. }, _) => {
+        (DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData { config, .. }), _) => {
             check_react_fun::<Obs>(cx, &tparams_list, &tparams_map, Some(config), check)?
         }
         (
@@ -1941,12 +1964,12 @@ pub mod pin_types {
         ) -> Result<InferredTarg, FlowJsException> {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EInternal(
+                ErrorMessage::EInternal(Box::new((
                     tparam.reason.loc().dupe(),
                     flow_typing_errors::error_message::InternalError::ImplicitInstantiationInvariant(
                         "Constant tparam is unsupported.".into(),
                     ),
-                ),
+                ))),
             )?;
             Ok(InferredTarg {
                 tparam: tparam.dupe(),
@@ -2111,12 +2134,14 @@ pub mod instantiation_solver {
                     } else {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::EImplicitInstantiationUnderconstrainedError {
-                                bound: tparam.name.string_of_subst_name().dupe(),
-                                reason_call: instantiation_reason.dupe(),
-                                reason_tparam: tparam_binder_reason.dupe(),
-                                use_op: use_op.dupe(),
-                            },
+                            ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
+                                EImplicitInstantiationUnderconstrainedErrorData {
+                                    bound: tparam.name.string_of_subst_name().dupe(),
+                                    reason_call: instantiation_reason.dupe(),
+                                    reason_tparam: tparam_binder_reason.dupe(),
+                                    use_op: use_op.dupe(),
+                                },
+                            )),
                         )?;
                         Ok(InferredTarg {
                             tparam: tparam.dupe(),
@@ -2155,12 +2180,14 @@ pub mod instantiation_solver {
                 });
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EImplicitInstantiationUnderconstrainedError {
-                        bound: tparam.name.string_of_subst_name().dupe(),
-                        reason_call: instantiation_reason.dupe(),
-                        reason_tparam: tparam_binder_reason.dupe(),
-                        use_op: use_op.dupe(),
-                    },
+                    ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
+                        EImplicitInstantiationUnderconstrainedErrorData {
+                            bound: tparam.name.string_of_subst_name().dupe(),
+                            reason_call: instantiation_reason.dupe(),
+                            reason_tparam: tparam_binder_reason.dupe(),
+                            use_op: use_op.dupe(),
+                        },
+                    )),
                 )?;
                 Ok(InferredTarg {
                     tparam: tparam.dupe(),
@@ -2317,8 +2344,8 @@ pub mod instantiation_solver {
                 // to pinning types, eg. [underconstrained-implicit-instantiation].
                 matches!(
                     error.msg,
-                    ErrorMessage::EImplicitInstantiationUnderconstrainedError { .. }
-                        | ErrorMessage::EInternal(_, _)
+                    ErrorMessage::EImplicitInstantiationUnderconstrainedError(box EImplicitInstantiationUnderconstrainedErrorData { .. })
+                        | ErrorMessage::EInternal(box (_, _))
                 )
             });
             cx.reset_errors(init_errors.union(&implicit_instantiation_errors));
@@ -2616,11 +2643,13 @@ pub mod kit {
         let result = cx.run_in_implicit_instantiation_mode(|| {
             let extends_t = Type::new(TypeInner::DefT(
                 reason.dupe(),
-                DefT::new(DefTInner::ReactAbstractComponentT {
-                    config: empty_t::why(reason.dupe()),
-                    renders: generic_t.dupe(),
-                    component_kind: ComponentKind::Structural,
-                }),
+                DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
+                    ReactAbstractComponentTData {
+                        config: empty_t::why(reason.dupe()),
+                        renders: generic_t.dupe(),
+                        component_kind: ComponentKind::Structural,
+                    },
+                ))),
             ));
             solve_conditional_type_targs(
                 cx,

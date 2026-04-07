@@ -180,7 +180,10 @@ fn type_impl<L: Dupe>(
     let depth = depth + 1;
 
     match t {
-        Ty::Bound(_, name) => LayoutNode::atom(name.to_string()),
+        Ty::Bound(data) => {
+            let (_, name) = data.as_ref();
+            LayoutNode::atom(name.to_string())
+        }
         Ty::Any(kind) => any(opts, depth, kind),
         Ty::Top => LayoutNode::atom("mixed".to_string()),
         Ty::Bot(_) => LayoutNode::atom("empty".to_string()),
@@ -276,12 +279,15 @@ fn type_impl<L: Dupe>(
             size,
         ),
 
-        Ty::TypeOf(pv, targs) => layout::fuse(vec![
-            LayoutNode::atom("typeof".to_string()),
-            layout::space(),
-            builtin_value(pv),
-            option(|args| type_args(opts, depth, args, size), targs),
-        ]),
+        Ty::TypeOf(data) => {
+            let (pv, targs) = data.as_ref();
+            layout::fuse(vec![
+                LayoutNode::atom("typeof".to_string()),
+                layout::space(),
+                builtin_value(pv),
+                option(|args| type_args(opts, depth, args, size), targs),
+            ])
+        }
 
         Ty::Conditional {
             check_type,
@@ -306,24 +312,27 @@ fn type_impl<L: Dupe>(
             ])),
         ])]),
 
-        Ty::Infer(symbol, bound) => layout::fuse(vec![
-            LayoutNode::atom("infer".to_string()),
-            layout::space(),
+        Ty::Infer(data) => {
+            let (symbol, bound) = data.as_ref();
             layout::fuse(vec![
-                identifier(&symbol.sym_name),
-                option(
-                    |t| {
-                        layout::fuse(vec![
-                            layout::space(),
-                            LayoutNode::atom("extends".to_string()),
-                            layout::space(),
-                            type_impl(opts, depth, t.as_ref(), size),
-                        ])
-                    },
-                    bound,
-                ),
-            ]),
-        ]),
+                LayoutNode::atom("infer".to_string()),
+                layout::space(),
+                layout::fuse(vec![
+                    identifier(&symbol.sym_name),
+                    option(
+                        |t| {
+                            layout::fuse(vec![
+                                layout::space(),
+                                LayoutNode::atom("extends".to_string()),
+                                layout::space(),
+                                type_impl(opts, depth, t.as_ref(), size),
+                            ])
+                        },
+                        bound,
+                    ),
+                ]),
+            ])
+        }
 
         Ty::Component {
             regular_props,
@@ -1466,37 +1475,37 @@ fn module_<L: Dupe>(name: &Option<Symbol<L>>) -> LayoutNode {
 
 fn decl<L: Dupe>(_opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNode {
     match d {
-        Decl::VariableDecl(name, t) => variable_decl(depth, name, t),
-        Decl::TypeAliasDecl {
+        Decl::VariableDecl(box (name, t)) => variable_decl(depth, name, t),
+        Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
             name,
             tparams,
             type_,
             ..
-        } => type_alias(depth, name, tparams, type_),
-        Decl::ClassDecl(s, ps) => class_decl(depth, s, ps),
-        Decl::InterfaceDecl(s, ps) => interface_decl(depth, s, ps),
-        Decl::RecordDecl(s, ps) => record_decl(depth, s, ps),
-        Decl::EnumDecl {
+        }) => type_alias(depth, name, tparams, type_),
+        Decl::ClassDecl(box (s, ps)) => class_decl(depth, s, ps),
+        Decl::InterfaceDecl(box (s, ps)) => interface_decl(depth, s, ps),
+        Decl::RecordDecl(box (s, ps)) => record_decl(depth, s, ps),
+        Decl::EnumDecl(box DeclEnumDeclData {
             name,
             members,
             has_unknown_members,
             truncated_members_count,
-        } => enum_decl(
+        }) => enum_decl(
             name,
             members,
             *has_unknown_members,
             *truncated_members_count,
         ),
-        Decl::NominalComponentDecl {
+        Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
             name,
             tparams,
             targs,
             props,
             renders,
             is_type,
-        } => nominal_component_decl(depth, name, tparams, targs, props, renders, *is_type),
-        Decl::NamespaceDecl { name, .. } => namespace(name),
-        Decl::ModuleDecl { name, .. } => module_(name),
+        }) => nominal_component_decl(depth, name, tparams, targs, props, renders, *is_type),
+        Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => namespace(name),
+        Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => module_(name),
     }
 }
 
@@ -1588,7 +1597,10 @@ fn layout_of_type_at_pos_types<L: Dupe + PartialEq>(
         (_, Some(evaluated_elt)) => {
             // Unwrap TypeAliasDecl to show the underlying type
             let evaluated_to_print = match evaluated_elt {
-                Elt::Decl(Decl::TypeAliasDecl { type_: Some(t), .. }) => Elt::Type(t.clone()),
+                Elt::Decl(Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
+                    type_: Some(t),
+                    ..
+                })) => Elt::Type(t.clone()),
                 x => x.clone(),
             };
 

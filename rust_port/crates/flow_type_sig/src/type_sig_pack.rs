@@ -708,11 +708,11 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 let parsed = def.as_already_forced();
                 pack_parsed(cx, parsed)
             };
-            Def::Variable {
+            Def::Variable(Box::new(DefVariable {
                 id_loc,
                 name: name.dupe(),
                 def,
-            }
+            }))
         }
         parse::LocalBinding::LetConstBinding { id_loc, name, def } => {
             let id_loc = pack_loc(id_loc);
@@ -720,11 +720,11 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 let parsed = def.as_already_forced();
                 pack_parsed(cx, parsed)
             };
-            Def::Variable {
+            Def::Variable(Box::new(DefVariable {
                 id_loc,
                 name: name.dupe(),
                 def,
-            }
+            }))
         }
         parse::LocalBinding::ParamBinding {
             id_loc,
@@ -738,21 +738,21 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 pack_parsed(cx, parsed)
             };
             let tparams = pack_tparams(cx, tparams);
-            Def::Parameter {
+            Def::Parameter(Box::new(DefParameter {
                 id_loc,
                 name: name.dupe(),
                 def,
                 tparams,
-            }
+            }))
         }
         parse::LocalBinding::ConstRefBinding { id_loc, name, ref_ } => {
             let id_loc = pack_loc(id_loc);
             let def = Packed::Ref(pack_ref(false, ref_));
-            Def::Variable {
+            Def::Variable(Box::new(DefVariable {
                 id_loc,
                 name: name.dupe(),
                 def,
-            }
+            }))
         }
         parse::LocalBinding::ConstFunBinding {
             id_loc,
@@ -777,18 +777,18 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                     (k.dupe(), (id_loc, t))
                 })
                 .collect();
-            let def = Packed::Value(Box::new(Value::FunExpr {
+            let def = Packed::Value(Box::new(Value::FunExpr(Box::new(ValueFunExpr {
                 loc,
                 async_: *async_,
                 generator: *generator,
                 def,
                 statics,
-            }));
-            Def::Variable {
+            }))));
+            Def::Variable(Box::new(DefVariable {
                 id_loc,
                 name: name.dupe(),
                 def,
-            }
+            }))
         }
         parse::LocalBinding::ClassBinding { id_loc, name, def } => {
             let id_loc = pack_loc(id_loc);
@@ -796,11 +796,11 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 let parsed = def.as_already_forced();
                 pack_class(cx, parsed)
             };
-            Def::ClassBinding {
+            Def::ClassBinding(Box::new(DefClassBinding {
                 id_loc,
                 name: name.dupe(),
                 def,
-            }
+            }))
         }
         parse::LocalBinding::DeclareClassBinding {
             id_loc,
@@ -814,12 +814,12 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 let parsed = def.as_already_forced();
                 pack_declare_class(cx, parsed)
             };
-            Def::DeclareClassBinding {
+            Def::DeclareClassBinding(Box::new(DefDeclareClassBinding {
                 id_loc,
                 nominal_id_loc,
                 name: name.dupe(),
                 def,
-            }
+            }))
         }
         parse::LocalBinding::RecordBinding {
             id_loc,
@@ -834,17 +834,17 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                         let parsed = def.as_already_forced();
                         pack_class(cx, parsed)
                     };
-                    Def::RecordBinding {
+                    Def::RecordBinding(Box::new(DefRecordBinding {
                         id_loc,
                         name: name.dupe(),
                         def,
                         defaulted_props: defaulted_props.clone(),
-                    }
+                    }))
                 }
-                None => Def::DisabledRecordBinding {
+                None => Def::DisabledRecordBinding(Box::new(DefDisabledRecordBinding {
                     id_loc,
                     name: name.dupe(),
-                },
+                })),
             }
         }
         parse::LocalBinding::FunBinding {
@@ -870,7 +870,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                     (k.dupe(), (id_loc, t))
                 })
                 .collect();
-            Def::FunBinding {
+            Def::FunBinding(Box::new(DefFunBinding {
                 id_loc,
                 name: name.dupe(),
                 async_: *async_,
@@ -878,7 +878,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 fn_loc,
                 def,
                 statics,
-            }
+            }))
         }
         parse::LocalBinding::ComponentBinding {
             id_loc,
@@ -894,17 +894,17 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                         let parsed = def.as_already_forced();
                         pack_component(cx, parsed)
                     };
-                    Def::ComponentBinding {
+                    Def::ComponentBinding(Box::new(DefComponentBinding {
                         id_loc,
                         name: name.dupe(),
                         fn_loc,
                         def,
-                    }
+                    }))
                 }
-                None => Def::DisabledComponentBinding {
+                None => Def::DisabledComponentBinding(Box::new(DefDisabledComponentBinding {
                     id_loc,
                     name: name.dupe(),
-                },
+                })),
             }
         }
         parse::LocalBinding::DeclareFunBinding { name, defs } => {
@@ -921,34 +921,34 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 })
                 .collect();
             let (id_loc, fn_loc, def) = packed_defs.remove(0);
-            Def::DeclareFun {
+            Def::DeclareFun(Box::new(DefDeclareFun {
                 id_loc,
                 name: name.dupe(),
                 fn_loc,
                 def,
                 tail: packed_defs,
-            }
+            }))
         }
         parse::LocalBinding::EnumBinding { id_loc, name, def } => {
             let id_loc = pack_loc(id_loc);
             match def {
-                None => Def::DisabledEnumBinding {
+                None => Def::DisabledEnumBinding(Box::new(DefDisabledEnumBinding {
                     id_loc,
                     name: name.dupe(),
-                },
+                })),
                 Some(def) => {
                     let (rep, members, has_unknown_members) = def.as_already_forced();
                     let members = members
                         .iter()
                         .map(|(k, loc)| (k.dupe(), pack_loc(loc)))
                         .collect();
-                    Def::EnumBinding {
+                    Def::EnumBinding(Box::new(DefEnumBinding {
                         id_loc,
                         name: name.dupe(),
                         rep: *rep,
                         members,
                         has_unknown_members: *has_unknown_members,
-                    }
+                    }))
                 }
             }
         }
@@ -967,12 +967,12 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 .iter()
                 .map(|(k, (loc, parsed))| (k.dupe(), (pack_loc(loc), pack_parsed(cx, parsed))))
                 .collect();
-            Def::NamespaceBinding {
+            Def::NamespaceBinding(Box::new(DefNamespaceBinding {
                 id_loc,
                 name: name.dupe(),
                 values,
                 types,
-            }
+            }))
         }
     }
 }
@@ -1173,12 +1173,14 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                     )
                 })
                 .collect();
-            let exports = Some(Packed::Value(Box::new(Value::ObjLit {
-                loc: file_loc,
-                frozen: true,
-                proto: None,
-                props,
-            })));
+            let exports = Some(Packed::Value(Box::new(Value::ObjLit(Box::new(
+                ValueObjLit {
+                    loc: file_loc,
+                    frozen: true,
+                    proto: None,
+                    props,
+                },
+            )))));
             let info = CJSModuleInfo {
                 type_export_keys,
                 type_stars,
@@ -1208,11 +1210,15 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                 })
                 .collect();
             let exports = Some(Packed::Value(Box::new(
-                Value::DeclareModuleImplicitlyExportedObject {
-                    loc: file_loc,
-                    module_name: flow_import_specifier::Userland::from_smol_str(module_name.dupe()),
-                    props,
-                },
+                Value::DeclareModuleImplicitlyExportedObject(Box::new(
+                    ValueDeclareModuleImplicitlyExportedObject {
+                        loc: file_loc,
+                        module_name: flow_import_specifier::Userland::from_smol_str(
+                            module_name.dupe(),
+                        ),
+                        props,
+                    },
+                )),
             )));
             let info = CJSModuleInfo {
                 type_export_keys,

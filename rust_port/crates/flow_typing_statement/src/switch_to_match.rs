@@ -30,37 +30,37 @@ fn pattern_of_expression<M: Dupe>(
         expression::ExpressionInner::NumberLiteral { loc, inner } => {
             Ok(match_pattern::MatchPattern::NumberPattern {
                 loc: loc.dupe(),
-                inner: inner.as_ref().clone(),
+                inner: Box::new(inner.as_ref().clone()),
             })
         }
         expression::ExpressionInner::BigIntLiteral { loc, inner } => {
             Ok(match_pattern::MatchPattern::BigIntPattern {
                 loc: loc.dupe(),
-                inner: inner.as_ref().clone(),
+                inner: Box::new(inner.as_ref().clone()),
             })
         }
         expression::ExpressionInner::StringLiteral { loc, inner } => {
             Ok(match_pattern::MatchPattern::StringPattern {
                 loc: loc.dupe(),
-                inner: inner.as_ref().clone(),
+                inner: Box::new(inner.as_ref().clone()),
             })
         }
         expression::ExpressionInner::BooleanLiteral { loc, inner } => {
             Ok(match_pattern::MatchPattern::BooleanPattern {
                 loc: loc.dupe(),
-                inner: inner.as_ref().clone(),
+                inner: Box::new(inner.as_ref().clone()),
             })
         }
         expression::ExpressionInner::NullLiteral { loc, inner } => {
             Ok(match_pattern::MatchPattern::NullPattern {
                 loc: loc.dupe(),
-                inner: (**inner).clone(),
+                inner: Box::new((**inner).clone()),
             })
         }
         expression::ExpressionInner::Identifier { loc, inner } => {
             Ok(match_pattern::MatchPattern::IdentifierPattern {
                 loc: loc.dupe(),
-                inner: inner.dupe(),
+                inner: Box::new(inner.dupe()),
             })
         }
         expression::ExpressionInner::Unary { inner, .. } => {
@@ -242,10 +242,10 @@ fn convert_switch_inner<M: Dupe>(
             None if !last_case => return Err(UnableToConvertSwitch),
             None => match_pattern::MatchPattern::WildcardPattern {
                 loc: placeholder_loc.dupe(),
-                inner: match_pattern::WildcardPattern {
+                inner: Box::new(match_pattern::WildcardPattern {
                     comments: case_comments.dupe(),
                     invalid_syntax_default_keyword: false,
-                },
+                }),
             },
             Some(expr) => pattern_of_expression(placeholder_loc, expr)?,
         };

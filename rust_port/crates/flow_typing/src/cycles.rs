@@ -15,6 +15,7 @@ use flow_env_builder_resolver::name_def_ordering::Blame;
 use flow_env_builder_resolver::name_def_ordering::Element;
 use flow_env_builder_resolver::name_def_ordering::OrderingResult;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::ERecursiveDefinitionData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::flow_js_utils;
 use vec1::Vec1;
@@ -30,11 +31,11 @@ fn handle_element(cx: &Context, elt: &Element) -> bool {
         }) => {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::ERecursiveDefinition {
+                ErrorMessage::ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
                     reason: reason.dupe(),
                     recursion: recursion.clone(),
                     annot_locs: annot_locs.clone(),
-                },
+                })),
             );
             true
         }

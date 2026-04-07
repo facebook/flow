@@ -17,9 +17,13 @@ use flow_type_sig::compact_table::Index;
 use flow_type_sig::compact_table::Table;
 use flow_type_sig::packed_type_sig::Builtins;
 use flow_type_sig::packed_type_sig::Module;
+use flow_type_sig::type_sig::AnnotObjAnnot;
+use flow_type_sig::type_sig::AnnotTypeof;
 use flow_type_sig::type_sig::Def;
 use flow_type_sig::type_sig::ObjValueProp;
 use flow_type_sig::type_sig::Op;
+use flow_type_sig::type_sig::ValueDeclareModuleImplicitlyExportedObject;
+use flow_type_sig::type_sig::ValueObjLit;
 use flow_type_sig::type_sig_pack::CJSModuleInfo;
 use flow_type_sig::type_sig_pack::ESModuleInfo;
 use flow_type_sig::type_sig_pack::Export as TypeSigExport;
@@ -282,28 +286,24 @@ mod eval {
         d: &'a PackedDef<Index<Loc>>,
     ) -> Evaled<'a, Loc> {
         match d {
-            Def::Variable { def, name, .. } => packed(export_sig, seen, Some(name), def),
-            Def::Parameter { def, name, .. } => packed(export_sig, seen, Some(name), def),
-            Def::TypeAlias { body, name, .. } => packed(export_sig, seen, Some(name), body),
-            Def::ClassBinding { name, .. } | Def::DeclareClassBinding { name, .. } => {
-                Evaled::ClassDecl(name)
-            }
-            Def::EnumBinding { name, .. } | Def::DisabledEnumBinding { name, .. } => {
-                Evaled::EnumDecl(name)
-            }
-            Def::ComponentBinding { name, .. } | Def::DisabledComponentBinding { name, .. } => {
-                Evaled::ComponentDecl(name)
-            }
-            Def::RecordBinding { name, .. } | Def::DisabledRecordBinding { name, .. } => {
-                Evaled::ClassDecl(name)
-            }
+            Def::Variable(inner) => packed(export_sig, seen, Some(&inner.name), &inner.def),
+            Def::Parameter(inner) => packed(export_sig, seen, Some(&inner.name), &inner.def),
+            Def::TypeAlias(inner) => packed(export_sig, seen, Some(&inner.name), &inner.body),
+            Def::ClassBinding(inner) => Evaled::ClassDecl(&inner.name),
+            Def::DeclareClassBinding(inner) => Evaled::ClassDecl(&inner.name),
+            Def::EnumBinding(inner) => Evaled::EnumDecl(&inner.name),
+            Def::DisabledEnumBinding(inner) => Evaled::EnumDecl(&inner.name),
+            Def::ComponentBinding(inner) => Evaled::ComponentDecl(&inner.name),
+            Def::DisabledComponentBinding(inner) => Evaled::ComponentDecl(&inner.name),
+            Def::RecordBinding(inner) => Evaled::ClassDecl(&inner.name),
+            Def::DisabledRecordBinding(inner) => Evaled::ClassDecl(&inner.name),
             // None of these contain anything that can be imported separately. For example,
             // you can't `import {someMethod} ...` from an exported class.
-            Def::Interface { .. }
-            | Def::FunBinding { .. }
-            | Def::DeclareFun { .. }
-            | Def::NamespaceBinding { .. }
-            | Def::OpaqueType { .. } => Evaled::Nothing,
+            Def::Interface(_)
+            | Def::FunBinding(_)
+            | Def::DeclareFun(_)
+            | Def::NamespaceBinding(_)
+            | Def::OpaqueType(_) => Evaled::Nothing,
         }
     }
 
@@ -315,11 +315,13 @@ mod eval {
     ) -> Evaled<'a, Loc> {
         match p {
             Packed::Value(box x) => Evaled::Value(x, name),
-            Packed::Annot(box a @ PackedAnnot::Typeof { qname, .. }) if qname.len() == 1 => {
+            Packed::Annot(box a @ PackedAnnot::Typeof(box AnnotTypeof { qname, .. }))
+                if qname.len() == 1 =>
+            {
                 let typeof_name = &qname[0];
                 Evaled::Annot(a, Some(name.unwrap_or(typeof_name)))
             }
-            Packed::Annot(box PackedAnnot::ComponentAnnot(..)) if name.is_some() => {
+            Packed::Annot(box PackedAnnot::ComponentAnnot(_)) if name.is_some() => {
                 Evaled::ComponentDecl(name.unwrap())
             }
             Packed::Annot(box x) => Evaled::Annot(x, name),
@@ -372,20 +374,23 @@ mod eval {
         evaled: &Evaled<'a, Loc>,
     ) -> Evaled<'a, Loc> {
         match evaled {
-            Evaled::Value(PackedValue::ObjLit { props, .. }, _)
-            | Evaled::Value(PackedValue::DeclareModuleImplicitlyExportedObject { props, .. }, _) => {
-                match field_of_obj_props(name, props) {
-                    Some(p) => packed(export_sig, seen, None, p),
-                    None => Evaled::Nothing,
-                }
-            }
+            Evaled::Value(PackedValue::ObjLit(box ValueObjLit { props, .. }), _)
+            | Evaled::Value(
+                PackedValue::DeclareModuleImplicitlyExportedObject(
+                    box ValueDeclareModuleImplicitlyExportedObject { props, .. },
+                ),
+                _,
+            ) => match field_of_obj_props(name, props) {
+                Some(p) => packed(export_sig, seen, None, p),
+                None => Evaled::Nothing,
+            },
             // TODO
-            Evaled::Value(PackedValue::ObjSpreadLit { .. }, _) => Evaled::Nothing,
+            Evaled::Value(PackedValue::ObjSpreadLit(_), _) => Evaled::Nothing,
             // TODO?
             Evaled::Annot(_, _) => Evaled::Nothing,
             Evaled::Value(
-                PackedValue::ClassExpr { .. }
-                | PackedValue::FunExpr { .. }
+                PackedValue::ClassExpr(_)
+                | PackedValue::FunExpr(_)
                 | PackedValue::StringVal(_)
                 | PackedValue::StringLit(..)
                 | PackedValue::NumberVal(_)
@@ -547,8 +552,10 @@ mod cjs {
         value: &PackedValue<Index<Loc>>,
     ) {
         match value {
-            PackedValue::ObjLit { props, .. }
-            | PackedValue::DeclareModuleImplicitlyExportedObject { props, .. } => {
+            PackedValue::ObjLit(box ValueObjLit { props, .. })
+            | PackedValue::DeclareModuleImplicitlyExportedObject(
+                box ValueDeclareModuleImplicitlyExportedObject { props, .. },
+            ) => {
                 // only property names that are valid identifier names can currently be
                 // imported: `module.exports = { "Foo Bar": true }` cannot be imported
                 // as `import { "Foo Bar" as Foo_bar } ...` yet. This will be allowed by
@@ -559,7 +566,7 @@ mod cjs {
                         match obj_value {
                             ObjValueProp::ObjValueField(
                                 _,
-                                Packed::Value(box PackedValue::ClassExpr { .. }),
+                                Packed::Value(box PackedValue::ClassExpr(_)),
                                 _,
                             ) => {
                                 acc.0.push(Export::NamedType(name.dupe()));
@@ -582,7 +589,7 @@ mod cjs {
 
     fn exports_of_annot<Loc>(acc: &mut Exports, annot: &PackedAnnot<Index<Loc>>) {
         match annot {
-            PackedAnnot::ObjAnnot { props, .. } => {
+            PackedAnnot::ObjAnnot(box AnnotObjAnnot { props, .. }) => {
                 for name in props.keys() {
                     acc.0.push(Export::Named(name.dupe()));
                 }
@@ -692,26 +699,26 @@ fn add_global<Loc>(
 
     let def = local_def_of_index(global_sig, index);
     match def {
-        Def::Variable { .. } | Def::Parameter { .. } => {
+        Def::Variable(_) | Def::Parameter(_) => {
             let mut seen = empty_seen();
             let evaled = eval::def(global_sig, &mut seen, def);
             add_named_type(acc, name, &evaled);
             add_named(acc, name);
         }
-        Def::FunBinding { .. }
-        | Def::DeclareFun { .. }
-        | Def::ComponentBinding { .. }
-        | Def::DisabledComponentBinding { .. }
-        | Def::NamespaceBinding { .. } => add_named(acc, name),
-        Def::TypeAlias { .. } | Def::Interface { .. } | Def::OpaqueType { .. } => {
+        Def::FunBinding(_)
+        | Def::DeclareFun(_)
+        | Def::ComponentBinding(_)
+        | Def::DisabledComponentBinding(_)
+        | Def::NamespaceBinding(_) => add_named(acc, name),
+        Def::TypeAlias(_) | Def::Interface(_) | Def::OpaqueType(_) => {
             acc.0.push(Export::NamedType(name.dupe()));
         }
-        Def::ClassBinding { .. }
-        | Def::DeclareClassBinding { .. }
-        | Def::RecordBinding { .. }
-        | Def::DisabledRecordBinding { .. }
-        | Def::EnumBinding { .. }
-        | Def::DisabledEnumBinding { .. } => {
+        Def::ClassBinding(_)
+        | Def::DeclareClassBinding(_)
+        | Def::RecordBinding(_)
+        | Def::DisabledRecordBinding(_)
+        | Def::EnumBinding(_)
+        | Def::DisabledEnumBinding(_) => {
             acc.0.push(Export::NamedType(name.dupe()));
             add_named(acc, name);
         }

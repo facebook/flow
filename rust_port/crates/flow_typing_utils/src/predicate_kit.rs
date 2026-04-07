@@ -20,6 +20,8 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EPropNotReadableData;
+use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -38,6 +40,7 @@ use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::NumberLiteral;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateConcretetizerVariant;
 use flow_typing_type::type_::PredicateInner;
@@ -999,12 +1002,12 @@ fn call_latent_pred<'cx>(
                             );
                         }
                     }
-                    DefTInner::PolyT {
+                    DefTInner::PolyT(box PolyTData {
                         tparams_loc,
                         tparams: ids,
                         t_out: t_out_inner,
                         id: _,
-                    } => {
+                    }) => {
                         let reason_tapp = r;
                         let fun_t_c = t.dupe();
                         let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
@@ -1475,8 +1478,8 @@ fn has_prop<'cx>(
             .iter()
             .map(|props| match cx.get_prop(props.dupe(), key) {
                 Some(prop) => match prop.deref() {
-                    PropertyInner::Field { type_, .. }
-                        if flow_typing_flow_js::slice_utils::is_prop_optional(type_) =>
+                    PropertyInner::Field(fd)
+                        if flow_typing_flow_js::slice_utils::is_prop_optional(&fd.type_) =>
                     {
                         None
                     }
@@ -1666,11 +1669,13 @@ fn prop_exists_test_generic<'cx>(
                                     );
                                     flow_js_utils::add_output(
                                         cx,
-                                        ErrorMessage::EPropNotReadable {
-                                            reason_prop: reason.dupe(),
-                                            prop_name: Some(Name::new(key)),
-                                            use_op: unknown_use(),
-                                        },
+                                        ErrorMessage::EPropNotReadable(Box::new(
+                                            EPropNotReadableData {
+                                                reason_prop: reason.dupe(),
+                                                prop_name: Some(Name::new(key)),
+                                                use_op: unknown_use(),
+                                            },
+                                        )),
                                     )?;
                                 }
                             }
@@ -1723,12 +1728,14 @@ fn prop_exists_test_generic<'cx>(
                                 );
                                 flow_js_utils::add_output(
                                     cx,
-                                    ErrorMessage::ETupleElementNotReadable {
-                                        use_op: unknown_use(),
-                                        reason: reason.dupe(),
-                                        index: i as i32,
-                                        name: name.as_ref().map(|n| n.dupe()),
-                                    },
+                                    ErrorMessage::ETupleElementNotReadable(Box::new(
+                                        ETupleElementNotReadableData {
+                                            use_op: unknown_use(),
+                                            reason: reason.dupe(),
+                                            index: i as i32,
+                                            name: name.as_ref().map(|n| n.dupe()),
+                                        },
+                                    )),
                                 )?;
                             }
                         }
@@ -2146,11 +2153,11 @@ fn sentinel_prop_test_generic<'cx>(
                 None => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EPropNotReadable {
+                        ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             reason_prop: reason_of_t(obj).dupe(),
                             prop_name: Some(Name::new(key)),
                             use_op: unknown_use(),
-                        },
+                        })),
                     )?;
                 }
             },
@@ -2204,12 +2211,14 @@ fn sentinel_prop_test_generic<'cx>(
                 } else {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::ETupleElementNotReadable {
-                            use_op: unknown_use(),
-                            reason: reason_of_t(tuple).dupe(),
-                            index: i as i32,
-                            name: name.as_ref().map(|n| n.dupe()),
-                        },
+                        ErrorMessage::ETupleElementNotReadable(Box::new(
+                            ETupleElementNotReadableData {
+                                use_op: unknown_use(),
+                                reason: reason_of_t(tuple).dupe(),
+                                index: i as i32,
+                                name: name.as_ref().map(|n| n.dupe()),
+                            },
+                        )),
                     )?;
                 }
             }

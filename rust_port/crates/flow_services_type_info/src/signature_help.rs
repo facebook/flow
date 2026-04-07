@@ -34,9 +34,12 @@ use flow_typing_context::Context;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -273,7 +276,7 @@ pub mod callee_finder {
     pub fn simplify_fun_t(cx: &Context, func_t: &Type) -> Type {
         let reason = type_util::reason_of_t(func_t).dupe();
         flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |_cx, _reason, t| {
-            let u = UseT::new(UseTInner::CallT {
+            let u = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: unknown_use(),
                 reason: reason.dupe(),
                 call_action: Box::new(CallAction::ConcretizeCallee(Tvar::new(
@@ -281,7 +284,7 @@ pub mod callee_finder {
                     t as u32,
                 ))),
                 return_hint: hint_unavailable(),
-            });
+            })));
             flow_js::flow_non_speculating(cx, (func_t, &u));
         })
     }
@@ -306,7 +309,7 @@ pub mod callee_finder {
                 vec![fix_reason_of_t(t)]
             }
             TypeInner::DefT(_, def)
-                if let DefTInner::PolyT { t_out, .. } = &**def
+                if let DefTInner::PolyT(box PolyTData { t_out, .. }) = &**def
                     && matches!(t_out.deref(), TypeInner::DefT(_, d) if matches!(&**d, DefTInner::FunT(..))) =>
             {
                 vec![fix_reason_of_t(t)]
@@ -624,15 +627,17 @@ pub mod callee_finder {
                                 false,
                                 Name::new("constructor"),
                             );
-                            let use_t = UseT::new(UseTInner::MethodT(
-                                unknown_use(),
-                                ctor_reason.dupe(),
-                                ctor_reason.dupe(),
-                                Box::new(propref),
-                                Box::new(flow_typing_type::type_::MethodAction::NoMethodAction(
-                                    t_out.dupe(),
-                                )),
-                            ));
+                            let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                                use_op: unknown_use(),
+                                reason: ctor_reason.dupe(),
+                                prop_reason: ctor_reason.dupe(),
+                                propref: Box::new(propref),
+                                method_action: Box::new(
+                                    flow_typing_type::type_::MethodAction::NoMethodAction(
+                                        t_out.dupe(),
+                                    ),
+                                ),
+                            })));
                             flow_js::flow_non_speculating(cx, (&instance, &use_t));
                         })
                     };

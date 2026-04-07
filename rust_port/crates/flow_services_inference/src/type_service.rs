@@ -319,7 +319,7 @@ fn error_set_of_internal_error(
     file: FileKey,
     (loc, internal_error): (ALoc, InternalError),
 ) -> ErrorSet {
-    let msg = ErrorMessage::EInternal(loc, internal_error);
+    let msg = ErrorMessage::EInternal(Box::new((loc, internal_error)));
     let err = flow_error::error_of_msg(file, msg);
     ErrorSet::singleton(err)
 }

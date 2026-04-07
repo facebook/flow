@@ -818,10 +818,10 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                         None => {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                error_message::ErrorMessage::EInternal(
+                                error_message::ErrorMessage::EInternal(Box::new((
                                     loc.dupe(),
                                     error_message::InternalError::MissingSwitchExhaustiveCheck,
-                                ),
+                                ))),
                             );
                             (vec![], false)
                         }
