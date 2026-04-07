@@ -1,2 +1,3 @@
 cmd: annotate-exports
 skip_rust_port: true
+skip_windows: true

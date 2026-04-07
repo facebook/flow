@@ -181,6 +181,9 @@ async function runOneTest(opts: {
     if ((process.env.FLOW_RUST_PORT || '0') === '1' && config.skip_rust_port) {
       return {status: RUNTEST_SKIP, name};
     }
+    if (process.platform === 'win32' && config.skip_windows) {
+      return {status: RUNTEST_SKIP, name};
+    }
     if (checkOnly && config.cmd.trim() !== 'full-check') {
       return {status: RUNTEST_SKIP, name};
     }

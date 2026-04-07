@@ -9,7 +9,7 @@
  */
 
 const fs = require('fs');
-const {join, relative} = require('path');
+const {join, relative, sep} = require('path');
 const {diffLines} = require('diff');
 
 const {execFilePromise, splitShellArgs} = require('./checkExecFilePromise');
@@ -36,7 +36,8 @@ async function findFiles(
           if (stat.isDirectory()) {
             results.push(...(await findFiles(fullPath, patterns, baseDir)));
           } else if (stat.isFile()) {
-            const relPath = './' + relative(baseDir, fullPath);
+            const relPath =
+              './' + relative(baseDir, fullPath).split(sep).join('/');
             if (patterns.some(p => p.test(relPath))) {
               results.push(relPath);
             }
@@ -227,9 +228,9 @@ async function runAnnotateExports(opts: {
       'utf8',
     );
     const current = await fs.promises.readFile(join(testDir, file), 'utf8');
-    if (orig !== current) {
+    if (orig.replace(/\r/g, '') !== current.replace(/\r/g, '')) {
       output += '>>> ' + file + '\n';
-      output += current + '\n';
+      output += current.replace(/\r/g, '') + '\n';
     }
   }
 
@@ -321,9 +322,9 @@ async function runAnnotateExports(opts: {
       join(testDir, file + '.autofix'),
       'utf8',
     );
-    if (orig !== autofix) {
+    if (orig.replace(/\r/g, '') !== autofix.replace(/\r/g, '')) {
       output += '>>> ' + file + '\n';
-      output += autofix + '\n';
+      output += autofix.replace(/\r/g, '') + '\n';
     }
   }
 
@@ -340,7 +341,7 @@ async function runAnnotateExports(opts: {
       join(testDir, file + '.autofix'),
       'utf8',
     );
-    if (codemod !== autofix) {
+    if (codemod.replace(/\r/g, '') !== autofix.replace(/\r/g, '')) {
       const patch = normalDiff(codemod, autofix);
       output += '>>> ' + file + '\n' + patch + '\n\n';
     }

@@ -1,2 +1,4 @@
 auto_start: false
 shell: test.sh
+
+skip_windows: true
