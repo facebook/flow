@@ -1,0 +1,6 @@
+[libs]
+libs
+
+[options]
+all=true
+lazy_mode=true
