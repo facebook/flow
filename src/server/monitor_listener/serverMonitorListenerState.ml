@@ -130,7 +130,7 @@ type recheck_workload = {
     )
     option;
   metadata: MonitorProt.file_watcher_metadata;
-  require_full_check_reinit: bool;
+  incompatible_lib_change: bool;
 }
 
 type priority =
@@ -148,7 +148,7 @@ let empty_recheck_workload =
     files_to_force = CheckedSet.empty;
     find_ref_command = None;
     metadata = MonitorProt.empty_file_watcher_metadata;
-    require_full_check_reinit = false;
+    incompatible_lib_change = false;
   }
 
 let recheck_acc = ref empty_recheck_workload
@@ -222,7 +222,7 @@ let update
   (workload, orig_workload != workload)
 
 let update_to_require_reinit (workload, changed) =
-  if workload.require_full_check_reinit then
+  if workload.incompatible_lib_change then
     (workload, changed)
   else
     ( {
@@ -231,7 +231,7 @@ let update_to_require_reinit (workload, changed) =
         files_to_force = workload.files_to_force;
         find_ref_command = workload.find_ref_command;
         metadata = workload.metadata;
-        require_full_check_reinit = true;
+        incompatible_lib_change = true;
       },
       true
     )
@@ -368,15 +368,14 @@ let requeue_workload workload =
         | (r, _) ->
           r);
       metadata = MonitorProt.merge_file_watcher_metadata prev.metadata workload.metadata;
-      require_full_check_reinit =
-        prev.require_full_check_reinit || workload.require_full_check_reinit;
+      incompatible_lib_change = prev.incompatible_lib_change || workload.incompatible_lib_change;
     }
   in
-  if prev.require_full_check_reinit || workload.require_full_check_reinit then
+  if prev.incompatible_lib_change || workload.incompatible_lib_change then
     Hh_logger.info
       "Previous recheck requires restart: %b; new workload requires restart: %b"
-      prev.require_full_check_reinit
-      workload.require_full_check_reinit;
+      prev.incompatible_lib_change
+      workload.incompatible_lib_change;
 
   recheck_acc := next
 

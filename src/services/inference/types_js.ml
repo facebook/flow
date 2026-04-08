@@ -2698,13 +2698,13 @@ let recheck
     ~updates
     ~find_ref_request
     ~files_to_force
-    ~require_full_check_reinit
+    ~incompatible_lib_change
     ~changed_mergebase
     ~missed_changes
     ~will_be_checked_files
     env =
   let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
-  if require_full_check_reinit then
+  if incompatible_lib_change then
     reinit_full_check
       ~profiling
       ~workers

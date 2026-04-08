@@ -56,7 +56,7 @@ type recheck_workload = {
     )
     option;
   metadata: MonitorProt.file_watcher_metadata;
-  require_full_check_reinit: bool;
+  incompatible_lib_change: bool;
 }
 
 type workload_changes = {
