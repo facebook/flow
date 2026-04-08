@@ -2584,19 +2584,30 @@ let init ~profiling ~workers options =
   in
   Lwt.return (libs_ok, env)
 
-let reinit ~reason ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
-    =
+let reinit
+    ~allow_fallback
+    ~reason
+    ~profiling
+    ~workers
+    ~options
+    ~updates
+    ~files_to_force
+    ~will_be_checked_files
+    env =
   match%lwt load_saved_state ~profiling ~workers options with
   | Error msg ->
     (* Either there is no saved state or we failed to load it for some reason *)
     Hh_logger.info "Failed to load saved state: %s" msg;
+    if allow_fallback then
+      Lwt.return_none
+    else begin
+      (* TODO: fully re-initializing from scratch doesn't make sense. instead, we should
+         recrawl to find the files that changed (since the file watcher can't tell us)
+         and recheck all of that.
 
-    (* TODO: fully re-initializing from scratch doesn't make sense. instead, we should
-       recrawl to find the files that changed (since the file watcher can't tell us)
-       and recheck all of that.
-
-       for now, we exit and get restarted from scratch like we've done historically. *)
-    Exit.exit ~msg Exit.File_watcher_missed_changes
+         for now, we exit and get restarted from scratch like we've done historically. *)
+      Exit.exit ~msg Exit.File_watcher_missed_changes
+    end
   | Ok (saved_state, updates_since_saved_state) ->
     (* We loaded a saved state successfully! We are awesome! *)
     Hh_logger.info "Reinitializing from saved state";
@@ -2640,7 +2651,7 @@ let reinit ~reason ~profiling ~workers ~options ~updates ~files_to_force ~will_b
     let recheck_stats =
       { LspProt.dependent_file_count = 0; changed_file_count = 0; top_cycle = None }
     in
-    Lwt.return (log_recheck_event, recheck_stats, Ok [], env)
+    Lwt.return_some (log_recheck_event, recheck_stats, Ok [], env)
 
 let reinit_full_check
     ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env =
@@ -2704,6 +2715,22 @@ let recheck
     ~will_be_checked_files
     env =
   let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
+  let reinit_no_fallback ~reason =
+    let%lwt result =
+      reinit
+        ~allow_fallback:false
+        ~reason
+        ~profiling
+        ~workers
+        ~options
+        ~updates
+        ~files_to_force
+        ~will_be_checked_files
+        env
+    in
+    (* allow_fallback is false, so reinit exits on error and always returns Some *)
+    Lwt.return (Base.Option.value_exn result)
+  in
   if incompatible_lib_change then
     reinit_full_check
       ~profiling
@@ -2717,15 +2744,7 @@ let recheck
     (* Reinitialize the server. This should be just like starting up a new server,
        except that the existing server stays running and can answer requests
        using committed data until the re-init is complete. *)
-    reinit
-      ~reason:"missed_changes"
-      ~profiling
-      ~workers
-      ~options
-      ~updates
-      ~files_to_force
-      ~will_be_checked_files
-      env
+    reinit_no_fallback ~reason:"missed_changes"
   else
     try%lwt
       recheck_impl
@@ -2739,16 +2758,7 @@ let recheck
         ~will_be_checked_files
         env
     with
-    | Recheck_too_slow ->
-      reinit
-        ~reason:"recheck_too_slow"
-        ~profiling
-        ~workers
-        ~options
-        ~updates
-        ~files_to_force
-        ~will_be_checked_files
-        env
+    | Recheck_too_slow -> reinit_no_fallback ~reason:"recheck_too_slow"
 
 let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~message env =
   let { ServerEnv.dependency_info; errors; collated_errors; _ } = env in
