@@ -15,7 +15,7 @@
 # Saved state A: lib declares myGlobal: string
 echo "" > .flow.saved_state_file_changes
 "$FLOW" stop 2>/dev/null
-"$FLOW" start --saved-state-fetcher none --wait
+start_flow . --saved-state-fetcher none
 "$FLOW" save-state --out .flow.saved_state_A >> /dev/null
 "$FLOW" stop
 
@@ -25,7 +25,7 @@ cat > libs/lib.js <<'LIBEOF'
 declare var myGlobal: number;
 LIBEOF
 echo "" > .flow.saved_state_file_changes
-"$FLOW" start --saved-state-fetcher none --wait
+start_flow . --saved-state-fetcher none
 "$FLOW" save-state --out .flow.saved_state_B >> /dev/null
 "$FLOW" stop
 
@@ -40,7 +40,7 @@ declare var myGlobal: string;
 LIBEOF
 cp .flow.saved_state_A .flow.saved_state
 echo "" > .flow.saved_state_file_changes
-"$FLOW" start --saved-state-fetcher local --wait
+start_flow . --saved-state-fetcher local
 
 echo "Scenario 1: upstream libdef change"
 echo "Before recheck:"
@@ -82,7 +82,7 @@ declare var myGlobal: string;
 LIBEOF
 cp .flow.saved_state_A .flow.saved_state
 echo "" > .flow.saved_state_file_changes
-"$FLOW" start --saved-state-fetcher local --wait
+start_flow . --saved-state-fetcher local
 
 echo "Scenario 2: local libdef change"
 echo "Before recheck:"
