@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Merge service - drives the type merging process
-
 use std::cell::Cell;
 use std::cell::LazyCell;
 use std::cell::OnceCell;
@@ -91,13 +89,9 @@ pub fn sig_hash(
     type ComponentRec = Rc<OnceCell<Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>>>>;
 
     fn hash_file_key(file_key: &FileKey) -> u64 {
-        // Use suffix directly — it's already the relative path, avoiding a
-        // to_string (root concat) followed by relative_path (root strip).
         xx::hash(file_key.as_str().as_bytes(), 0)
     }
 
-    // The module type of a resource dependency only depends on the file
-    // extension. See Type_sig_merge.merge_resource_module_t
     let resource_dep = |f: &FileKey| -> Dependency {
         let ext = std::path::Path::new(f.as_str())
             .extension()
@@ -107,23 +101,10 @@ pub fn sig_hash(
         Dependency::Resource(Box::new(move || hash))
     };
 
-    // A dependency which is not part of the cycle has already been merged and its
-    // hashes are stored in shared memory. We can create a checked_dep record
-    // containing accessors to those hashes.
-    //
-    // In OCaml, cycle_hash writes computed hashes back into the mutable binary
-    // type_sig buffer. acyclic_dep then reads those stored hashes. In Rust,
-    // we store them in MergeHashes on TypedParse and read them here.
-    //
-    // It might be useful to cache this for re-use across files in a component or
-    // components in a merge batch, but this performs well enough without caching
-    // for now.
     let acyclic_dep = |dep_key: &FileKey, dep_parse: &TypedParse| -> CheckedDep<ReadHash> {
         let filename_hash = hash_file_key(dep_key);
         let filename: ReadHash = Box::new(move || filename_hash);
 
-        // Read the stored merge hashes computed by cycle_hash during the
-        // dependency's merge. These incorporate transitive dependency info.
         match dep_parse.get_merge_hashes() {
             Some(MergeHashes::CJS {
                 type_export_hashes,
@@ -179,9 +160,6 @@ pub fn sig_hash(
                 }
             }
             None => {
-                // Fallback: no merge hashes stored yet (shouldn't happen for
-                // acyclic deps since they're merged before their dependents,
-                // but handle gracefully). Use structural hashes.
                 fn structural_hash<T: std::hash::Hash>(item: &T) -> ReadHash {
                     let hash = content_hash_of(item);
                     Box::new(move || hash)
@@ -238,7 +216,6 @@ pub fn sig_hash(
         }
     };
 
-    // Create a Type_sig_hash.checked_dep record for a file in the merged component.
     let cyclic_dep = |file_key: &FileKey,
                       parse: &TypedParse,
                       file: &Rc<type_sig_hash::File>|
@@ -456,7 +433,6 @@ pub fn sig_hash(
         }
     };
 
-    // Create a Type_sig_hash.file record for a file in the merged component.
     let component_file = |component_rec: &ComponentRec,
                           component_map: &BTreeMap<FileKey, usize>,
                           file_key: &FileKey,
@@ -579,7 +555,7 @@ pub fn sig_hash(
             pattern_defs,
             patterns,
         });
-        file_cell.set(file.dupe()).ok();
+        assert!(file_cell.set(file.dupe()).is_ok(), "Should be initialized");
 
         Rc::new(cyclic_dep(file_key, parse, &file))
     };
@@ -593,25 +569,19 @@ pub fn sig_hash(
         return 0u64;
     }
 
-    // Built a reverse lookup to detect in-cycle dependencies.
     let component_map: BTreeMap<FileKey, usize> = component_vec
         .iter()
         .enumerate()
         .map(|(i, (f, _))| (f.dupe(), i))
         .collect();
 
-    // Create array of Type_sig_hash.checked_dep records, which we can use to
-    // traverse the graph of signature dependencies.
     let component_rec: ComponentRec = Rc::new(OnceCell::new());
     let files: Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>> = component_vec
         .iter()
         .map(|(file_key, parse)| component_file(&component_rec, &component_map, file_key, parse))
         .collect();
-    component_rec.set(files).ok();
+    assert!(component_rec.set(files).is_ok(), "Should be initialized");
 
-    // Compute component hash by visiting graph starting at namespace root of
-    // each file. The component hash is an unordered combination of each file's
-    // hash.
     let cx = cycle_hash::create_cx();
     let mut component_hash = 0u64;
 
@@ -625,10 +595,6 @@ pub fn sig_hash(
         }
     }
 
-    // After cycle_hash has run, extract per-element hashes and store them in
-    // SharedMem so that acyclic_dep can read them for subsequent components.
-    // This mirrors OCaml's approach where cycle_hash writes hashes back into
-    // the mutable binary buffer that acyclic_dep later reads from.
     for (i, checked_dep) in component_rec.get().unwrap().iter().enumerate() {
         let (file_key, parse) = &component_vec[i];
         let merge_hashes = match checked_dep.as_ref() {
@@ -669,7 +635,6 @@ pub fn sig_hash(
     component_hash
 }
 
-// Entry point for merging a component
 fn merge_component(
     shared_mem: &SharedMem,
     options: &Options,
@@ -721,19 +686,14 @@ fn merge_component(
 }
 
 pub type CheckFileResult = (
-    // (cx, type_sig, file_sig, typed_ast)
     (
         Context<'static>,
         Arc<flow_type_sig::packed_type_sig::Module<Loc>>,
         Arc<FileSig>,
         ast::Program<ALoc, (ALoc, Type)>,
     ),
-    // (errors, warnings, suppressions, coverage, duration)
     (ErrorSet, ErrorSet, ErrorSuppressions, FileCoverage, f64),
 );
-// WARNING: The Context in CheckFileResult has already had post_inference_cleanup()
-// called on it. It must NOT be used for type inference or find_require() calls.
-// The caller (job_helper) immediately discards it: Ok(Some((_, acc))).
 
 fn mk_check_file(
     shared_mem: Arc<SharedMem>,
@@ -808,15 +768,9 @@ fn mk_check_file(
         let aloc_tables: HashMap<FileKey, flow_aloc::LazyALocTable> = cx.aloc_tables().clone();
         let (errors, warnings) =
             suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
-        // Break Rc reference cycles in Context to prevent memory leaks.
-        // cx is returned but immediately dropped by job_helper (line 41: Ok(Some((_, acc)))).
         cx.post_inference_cleanup();
         #[cfg(debug_assertions)]
         {
-            // After cleanup, the only strong references to this Context should be:
-            // 1. The local `cx` binding in this closure
-            // 2. The `cx` in the return tuple (about to be dropped by job_helper)
-            // If strong_count > 2, some cycle or retention path was missed.
             let count = cx.strong_count();
             if count > 2 {
                 eprintln!(
@@ -838,20 +792,6 @@ fn mk_check_file(
     (check_file_fn, cache_ref)
 }
 
-// This cache is used in check_contents_context below. When we check the
-// contents of a file, we create types from the signatures of dependencies.
-//
-// Note that this cache needs to be invaliated when files change. We can use the
-// set of changed files (determined by the merge stream's signature hashing) to
-// invalidate file-by-file when a recheck transaction commits.
-//
-// This cache also needs to be cleared when we compact the shared heap. The
-// values in this cache can contain lazy thunks which close over shared heap
-// addresses. In the event of a compaction, these addresses can become invalid.
-//
-// Any state derived from the values in this cache also needs to be reset in the
-// event of a compaction, which can be done in the SharedMem.on_compact
-// callback.
 thread_local! {
     static CHECK_CONTENTS_CACHE: Rc<std::cell::RefCell<CheckCache<'static>>> =
         Rc::new(std::cell::RefCell::new(CheckCache::create(10_000)));
@@ -861,12 +801,6 @@ pub fn check_contents_cache() -> Rc<std::cell::RefCell<CheckCache<'static>>> {
     CHECK_CONTENTS_CACHE.with(|cache| cache.dupe())
 }
 
-// Variation of merge_context where requires may not have already been
-// resolved. This is used by commands that make up a context on the fly.
-//
-// IMPORTANT: The returned Context contains Rc reference cycles. The caller
-// must call `cx.post_inference_cleanup()` when done using the Context to
-// prevent memory leaks.
 pub fn check_contents_context(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
@@ -877,22 +811,6 @@ pub fn check_contents_context(
     file_sig: Arc<FileSig>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> (Context<'static>, ast::Program<ALoc, (ALoc, Type)>) {
-    // Loading an aloc_table is unusual for check contents! During check, we use
-    // this aloc table for two purposes: (1) to compare concrete and keyed alocs
-    // which might be equivalent and (2) to create ALoc.id values which always
-    // have the same representation for equivalent locations.
-    //
-    // If this file is in a cycle, an aloc table will exist and we will
-    // successfully fetch it for use in cases (1) and (2). However, in the common
-    // case of no cycles, an aloc table may not exist yet, which will cause an
-    // exception in the (2) case. The (1) case, where a concrete and keyed
-    // location are equivalent, will not occur.
-    //
-    // Catching the exception provides reasonable behavior, but is not the true
-    // fix. Instead, if check-contents needs to deal with cycles, the cyclic
-    // dependency on `file` should come from the freshly parsed type sig data, not
-    // whatever data is in the heap, and the aloc table should also come from the
-    // fresh parse.
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
         let shared_mem_for_aloc = shared_mem.dupe();
@@ -950,9 +868,6 @@ pub fn check_contents_context(
     (cx, typed_ast)
 }
 
-// IMPORTANT: The returned Context contains Rc reference cycles. The caller
-// must call `cx.post_inference_cleanup()` when done using the Context to
-// prevent memory leaks.
 pub fn compute_env_of_contents(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
@@ -1063,7 +978,6 @@ where
 
     let shared_mem_clone = shared_mem.dupe();
 
-    // Process components in parallel, collecting job results
     let results: Vec<A> = flow_utils_concurrency::map_reduce::call(
         pool,
         move || stream_ref.next(),
@@ -1130,9 +1044,6 @@ pub fn mk_check(
         match result {
             Ok(ok) => Ok(ok),
             Err(panic_payload) => {
-                // SpeculativeError panics are expected: they simulate OCaml's exception
-                // unwinding from add_output during speculation. These should be caught
-                // and treated as non-critical errors, not re-panicked.
                 let is_speculative_error = panic_payload
                     .downcast_ref::<flow_typing_flow_common::flow_js_utils::SpeculativeError>()
                     .is_some();
@@ -1152,7 +1063,6 @@ pub fn mk_check(
                     std::panic::resume_unwind(panic_payload);
                 }
 
-                // A catch all suppression is probably a bad idea...
                 let exn_str: String = if is_speculative_error {
                     format!("{}: <SpeculativeError>", file.as_str())
                 } else if let Some(s) = panic_payload.downcast_ref::<String>() {
@@ -1163,20 +1073,12 @@ pub fn mk_check(
                     format!("{}: <unknown panic>", file.as_str())
                 };
 
-                // In the OCaml codebase, various exceptions (Env_invariant,
-                // SpeculativeError, etc.) are used for control flow and caught by the
-                // per-file handler. In Rust, these become panics. We log them and
-                // continue rather than re-panicking.
-                // TODO(rust_port): Convert panics to proper Result types.
                 eprintln!("({}) check_job THROWS: {}", std::process::id(), exn_str);
 
                 let file_loc = ALoc::of_loc(Loc {
                     source: Some(file.dupe()),
                     ..LOC_NONE
                 });
-                // We can't pattern match on the exception type once it's marshalled
-                // back to the master process, so we pattern match on it here to create
-                // an error result.
                 if let Some(s) = panic_payload.downcast_ref::<String>() {
                     if s.starts_with("ECheckTimeout:") {
                         let duration_str = s.trim_start_matches("ECheckTimeout:").trim();

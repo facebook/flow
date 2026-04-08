@@ -141,6 +141,50 @@ pub fn error_code(status: FlowExitStatus) -> i32 {
     }
 }
 
+pub fn to_string(status: FlowExitStatus) -> &'static str {
+    use FlowExitStatus::*;
+    match status {
+        Interrupted => "Interrupted",
+        NoError => "Ok",
+        WindowsKilledByTaskManager => "Windows_killed_by_task_manager",
+        TypeError => "Type_error",
+        OutOfTime => "Out_of_time",
+        KillError => "Kill_error",
+        UnusedServer => "Unused_server",
+        NoServerRunning => "No_server_running",
+        OutOfRetries => "Out_of_retries",
+        InvalidFlowconfig => "Invalid_flowconfig",
+        PathIsNotAFile => "Path_is_not_a_file",
+        BuildIdMismatch => "Build_id_mismatch",
+        InputError => "Input_error",
+        LockStolen => "Lock_stolen",
+        CouldNotFindFlowconfig => "Could_not_find_flowconfig",
+        CouldNotExtractFlowlibs => "Could_not_extract_flowlibs",
+        ServerOutOfDate => "Server_out_of_date",
+        OutOfSharedMemory => "Out_of_shared_memory",
+        FlowconfigChanged => "Flowconfig_changed",
+        CommandlineUsageError => "Commandline_usage_error",
+        NoInput => "No_input",
+        ServerStartFailed => "Server_start_failed",
+        MissingFlowlib => "Missing_flowlib",
+        Autostop => "Autostop",
+        KilledByMonitor => "Killed_by_monitor",
+        InvalidSavedState => "Invalid_saved_state",
+        Restart => "Restart",
+        SocketError => "Socket_error",
+        DfindDied => "Dfind_died",
+        WatchmanError => "Watchman_error",
+        WatchmanFailed => "Watchman_failed",
+        FileWatcherMissedChanges => "File_watcher_missed_changes",
+        HashTableFull => "Hash_table_full",
+        HeapFull => "Heap_full",
+        EventLoggerRestartOutOfRetries => "EventLogger_restart_out_of_retries",
+        UnknownError => "Unknown_error",
+        EdenfsWatcherFailed => "Edenfs_watcher_failed",
+        EdenfsWatcherLostChanges => "Edenfs_watcher_lost_changes",
+    }
+}
+
 pub fn exit(status: FlowExitStatus) -> ! {
     std::process::exit(error_code(status))
 }

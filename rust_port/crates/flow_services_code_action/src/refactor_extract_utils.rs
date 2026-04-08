@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/refactor_extract_utils.ml`
-
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
@@ -68,7 +66,6 @@ pub mod information_collectors {
             type_
         }
 
-        // Do not recurse down into nested classes.
         fn class_(
             &mut self,
             _loc: &'ast Loc,
@@ -83,7 +80,6 @@ pub mod information_collectors {
             f: &'ast ast::function::Function<Loc, Loc>,
         ) -> Result<(), !> {
             if f.async_ {
-                // Do not recurse down to look for await if the function is async.
                 Ok(())
             } else {
                 ast_visitor::function_declaration_default(self, loc, f)
@@ -119,7 +115,6 @@ pub mod information_collectors {
             loc: &'ast Loc,
             f: &'ast ast::function::Function<Loc, Loc>,
         ) -> Result<(), !> {
-            // Do not recurse down to look for await if the arrow function is async.
             if f.async_ {
                 Ok(())
             } else {
@@ -842,10 +837,7 @@ pub mod variable_analysis {
 
     #[derive(Debug, Clone)]
     pub struct RelevantDefs {
-        /// All the definitions that are used by the extracted statements, along with their scopes.  
         pub defs_with_scopes_of_local_uses: Vec<(scope_api::Def<Loc>, scope_api::Scope<Loc>)>,
-        /// All the variables that have been reassigned within the extracted statements that
-        /// would be shadowed after refactor.  
         pub vars_with_shadowed_local_reassignments: Vec<(FlowSmolStr, Loc)>,
     }
 
@@ -862,39 +854,8 @@ pub mod variable_analysis {
                 if Loc::contains(extracted_loc, use_loc) {
                     used_defs.insert(def.clone());
                 } else {
-                    // We do not need to worry about a local reassignment if the variable is only used
-                    // within extracted statements, since all uses will still read the correct modified
-                    // value within extracted statements.
-                    //
-                    // e.g. We have
-                    //
-                    // ```
-                    // // extracted statements start
-                    // let a = 3;
-                    // a = 4;
-                    // console.log(a);
-                    // // extracted statements end
-                    // // no more uses of `a`
-                    // ```
-                    //
-                    // Then refactor it into
-                    //
-                    // ```
-                    // newFunction();
-                    //
-                    // function newFunction() {
-                    //   let a = 3;
-                    //   a = 4;
-                    //   console.log(a);
-                    // }
-                    // ```
-                    //
-                    // does not change the semantics.
                     let def_loc = def.locs.first();
                     if !Loc::contains(extracted_loc, def_loc) {
-                        // Find whether there is a local write within the selected statements,
-                        // while there is already a def outside of them.
-                        // If there is a local write, we know the variable has been mutated locally.
                         let has_local_reassignment = match ssa_values.get(use_loc) {
                             None => false,
                             Some(writes) => writes.iter().any(|w| match w {
@@ -958,19 +919,8 @@ pub mod variable_analysis {
                 let def_loc = def.locs.first();
                 let actual_name = &def.actual_name;
                 if Loc::contains(extracted_loc, def_loc) {
-                    // Variables defined inside the extracted statements are locally defined.
                     None
                 } else {
-                    // If a definition is completely nested within the scope of the function to put `newFunction`
-                    // definition, then the definition will be unusable when the statements are moving to this
-                    // higher function scope that does not have the definition.
-                    // This is the indicator that the variable will be undefined.
-                    //
-                    // Some of the nodes like functions might have two scopes, one for name and one for body with
-                    // the relation name scope > body scope.
-                    // We must check using `all` instead of `any`, since a def might be exactly
-                    // in the body scope, and checking with name_scope body_scope will be
-                    // true, which incorrectly decides that a variable is undefined.
                     let all_within = new_function_target_scopes
                         .iter()
                         .all(|function_scope| scope_info.scope_within(*function_scope, def_scope));
@@ -990,10 +940,7 @@ pub mod variable_analysis {
 
     #[derive(Debug, Clone)]
     pub struct EscapingDefinitions {
-        /// A list of variable names that are defined inside the extracted statements,
-        /// but have uses outside of them.
         pub escaping_variables: Vec<(FlowSmolStr, Loc)>,
-        /// Whether any of the escaping variables has another write outside of extracted statements.
         pub has_external_writes: bool,
     }
 
@@ -1014,20 +961,15 @@ pub mod variable_analysis {
                     escaping_vars.insert(def.actual_name.dupe(), def_loc.dupe());
                     has_external_writes = has_external_writes
                         || match ssa_values.get(use_loc) {
-                            // use is a write. Since we already know the use is outside of extracted statements,
-                            // we know this is an external write.
                             None => true,
 
-                            Some(write_locs) => {
-                                // use is a read. Find writes pointed to by the read, modulo initialization.
-                                write_locs.iter().any(|w| match w {
-                                    ssa_api::WriteLoc::Uninitialized => false,
-                                    ssa_api::WriteLoc::Write(reason) => {
-                                        let write_loc = reason.loc();
-                                        !Loc::contains(extracted_statements_loc, write_loc)
-                                    }
-                                })
-                            }
+                            Some(write_locs) => write_locs.iter().any(|w| match w {
+                                ssa_api::WriteLoc::Uninitialized => false,
+                                ssa_api::WriteLoc::Write(reason) => {
+                                    let write_loc = reason.loc();
+                                    !Loc::contains(extracted_statements_loc, write_loc)
+                                }
+                            }),
                         };
                 }
             }
@@ -1088,12 +1030,6 @@ pub mod type_synthesizer {
                 collector.type_(cx, Polarity::Neutral, acc, t)
             };
         let mut appeared_generic_names = collect_used_generic_names(type_, BTreeSet::new());
-        // It's not enough to only collect used generic names from the type, but also the generic
-        // parameters themselves, since constraints on generic parameter may cause them to refer
-        // to each other. e.g. <A, B: A, C: A = B>.
-        //
-        // The following fold starts from the end and folds to the first, adding in names
-        // used in the constraints along the way.
         let mut tparams = Vec::new();
         for tparam in tparams_rev {
             if appeared_generic_names.contains(&tparam.name) {
@@ -1329,10 +1265,10 @@ pub mod type_synthesizer {
         let file_options = cx.file_options();
         let remote_converter = Rc::new(RefCell::new(
             insert_type_imports::imports_helper::RemoteConverter::new(
-                loc_of_aloc,
+                Box::new(|aloc| loc_of_aloc(aloc)),
                 file_options,
-                get_haste_module_info,
-                get_type_sig,
+                Box::new(|fk| get_haste_module_info(fk)),
+                Box::new(|fk| get_type_sig(fk)),
                 0,
                 file,
                 BTreeSet::new(),

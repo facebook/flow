@@ -50,7 +50,7 @@ fn sort_and_dedup(refs: FindRefsFound) -> FindRefsFound {
 pub fn local_refs_of_find_ref_request<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &AstInfo,
-    cx: &'cx Context<'cx>,
+    cx: &Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &FileKey,
@@ -153,7 +153,7 @@ pub fn find_local_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file_key: &FileKey,
     ast_info: &AstInfo,
-    cx: &'cx Context<'cx>,
+    cx: &Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     kind: Kind,

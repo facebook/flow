@@ -43,7 +43,7 @@ mod command_utils;
 mod config_command;
 mod env_builder_debug_command;
 mod flow_server;
-mod flowconfig;
+
 mod force_recheck_command;
 mod ls_command;
 mod server_command;
@@ -107,15 +107,15 @@ pub(crate) fn get_options_with_root_and_flowconfig_name(
 ) -> Arc<Options> {
     let flowconfig_path = root.join(flowconfig_name);
     let flowconfig_path_str = flowconfig_path.to_string_lossy();
-    let (flowconfig, warnings, flowconfig_hash) = match flowconfig::get(&flowconfig_path_str) {
+    let (flowconfig, warnings, flowconfig_hash) = match flow_config::get(&flowconfig_path_str) {
         Ok(r) => r,
-        Err(flowconfig::Error(line, message)) => {
+        Err(flow_config::Error(line, message)) => {
             eprintln!(".flowconfig:{} {}", line, message);
             std::process::exit(1);
         }
     };
     if !ignore_version && !warnings.is_empty() {
-        for flowconfig::Warning(line, message) in &warnings {
+        for flow_config::Warning(line, message) in &warnings {
             eprintln!(".flowconfig:{} {}", line, message);
         }
         std::process::exit(1);

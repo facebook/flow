@@ -21,7 +21,7 @@ pub struct LintSettings<T: Copy> {
     default_value: T,
     // Values for lints that have been explicitly set
     // The Loc is for settings defined in comments, and is used to find unused lint
-    // suppressions. The Loc.t is set to None for settings coming from the flowconfig or --lints.
+    // suppressions. The location is set to None for settings coming from the flowconfig or --lints.
     explicit_values: BTreeMap<LintKind, (T, Option<Loc>)>,
 }
 
@@ -132,6 +132,12 @@ impl<T: Copy> LintSettings<T> {
 enum ParseResult {
     AllSetting(LintSettings<Severity>),
     EntryList(Vec<LintKind>, (Severity, Option<Loc>)),
+}
+
+impl Default for LintSettings<Severity> {
+    fn default() -> Self {
+        Self::empty_severities()
+    }
 }
 
 impl LintSettings<Severity> {
@@ -292,8 +298,6 @@ impl LintSettings<Severity> {
                 break;
             }
             let trimmed = line.trim();
-            // OCaml: Str.string_match all_regex (String.trim line) 0
-            // This checks if the trimmed line starts with "all", not equals "all"
             if !used_locs.contains(art_loc) && !trimmed.starts_with("all") {
                 first_unused = Some(*label);
             }

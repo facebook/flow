@@ -56,7 +56,6 @@ fn json_data_of_loc(
     loc: &Loc,
     mut acc: Vec<(String, serde_json::Value)>,
 ) -> Vec<(String, serde_json::Value)> {
-    // ("loc", Reason.json_of_loc ~offset_table:None loc) :: acc
     acc.push((
         "loc".to_string(),
         flow_common::reason::json_of_loc(None, false, None, loc),
@@ -104,9 +103,9 @@ fn json_data_of_locs_opt(
 }
 
 pub fn type_at_pos<'a>(
-    cx: &'a Context<'a>,
+    cx: &Context<'a>,
     file_sig: Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     omit_targ_defaults: bool,
     max_depth: u32,
     verbose_normalizer: bool,
@@ -219,9 +218,9 @@ static BATCHED_TYPE_AT_POS_SPECIAL_COMMENT_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^ *\^\?$").unwrap());
 
 pub fn batched_type_at_pos_from_special_comments<'a>(
-    cx: &'a Context<'a>,
+    cx: &Context<'a>,
     file_sig: Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     omit_targ_defaults: bool,
     max_depth: u32,
     verbose_normalizer: bool,
@@ -294,9 +293,9 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
 pub fn dump_types<'a>(
     evaluate_type_destructors: EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
-    cx: &'a Context<'a>,
+    cx: &Context<'a>,
     file_sig: Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Vec<(Loc, String)> {
     // Print type using Flow type syntax
     match for_tool {

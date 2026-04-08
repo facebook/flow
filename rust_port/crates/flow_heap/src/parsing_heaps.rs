@@ -47,6 +47,12 @@ pub struct SharedMem {
     reader_cache: ReaderCache,
 }
 
+pub struct HashStats {
+    pub nonempty_slots: i32,
+    pub used_slots: i32,
+    pub slots: i32,
+}
+
 impl SharedMem {
     pub fn new() -> Self {
         Self {
@@ -54,6 +60,21 @@ impl SharedMem {
             haste_module_heap: LockedMap::new(),
             reader_cache: ReaderCache::new(),
         }
+    }
+
+    pub fn hash_stats(&self) -> HashStats {
+        let file_count = self.file_heap.len() as i32;
+        let haste_count = self.haste_module_heap.len() as i32;
+        let used_slots = file_count + haste_count;
+        HashStats {
+            nonempty_slots: used_slots,
+            used_slots,
+            slots: used_slots,
+        }
+    }
+
+    pub fn heap_size(&self) -> i32 {
+        (self.file_heap.len() + self.haste_module_heap.len()) as i32
     }
 
     pub fn get_haste_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {

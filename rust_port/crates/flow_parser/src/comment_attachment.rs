@@ -820,6 +820,7 @@ pub(super) fn object_key_remove_trailing(
     }
 }
 
+#[allow(dead_code)]
 pub(super) fn generic_type_remove_trailing(
     env: &mut ParserEnv,
     node: &mut ast::types::Generic<Loc, Loc>,

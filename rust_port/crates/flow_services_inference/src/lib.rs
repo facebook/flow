@@ -21,4 +21,3 @@ pub mod recheck_stats;
 pub mod transaction;
 pub mod type_contents;
 pub mod type_service;
-pub mod types_js_types;

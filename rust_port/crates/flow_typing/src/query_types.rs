@@ -84,7 +84,7 @@ pub fn type_at_pos_type<'a>(
     omit_targ_defaults: bool,
     verbose_normalizer: bool,
     max_depth: u32,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     no_typed_ast_for_imports: bool,
     include_refs: Option<&dyn Fn(&ALoc) -> Loc>,
     loc: Loc,
@@ -205,7 +205,7 @@ pub fn dump_types<'a>(
     evaluate_type_destructors: EvaluateTypeDestructorsMode,
     cx: &Context<'a>,
     file_sig: Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> Vec<(Loc, String)> {
     let options = Options {
         evaluate_type_destructors,
@@ -262,19 +262,14 @@ pub fn insert_type_normalize<'a, 'cx>(
     cx: &'a Context<'cx>,
     file_sig: Arc<FileSig>,
     omit_targ_defaults: bool,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
     t: &Type,
 ) -> QueryResult<ALocElt> {
     let options = Options {
         expand_internal_types: false,
         expand_enum_members: false,
-        // Utility types won't are not serialized so it may be worth evaluating them away
-        // if we find them in the resulting Ty.t. The trade off is that types might get
-        // larger.
         evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateNone,
-        // Optimize types is false because Insert_types manually calls the simplifier with
-        // a custom comparison operation
         optimize_types: false,
         omit_targ_defaults_option: omit_targ_defaults,
         merge_bot_and_any_kinds: true,

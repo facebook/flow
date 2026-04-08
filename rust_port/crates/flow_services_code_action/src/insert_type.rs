@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/insert_type.ml`
-
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -68,7 +66,6 @@ pub enum Errors {
     Expected(Expected),
 }
 
-// In Rust, we model OCaml exceptions as Result types.
 pub type InsertTypeResult<T> = Result<T, Errors>;
 
 fn expected(err: Expected) -> Errors {
@@ -102,11 +99,11 @@ fn serialize(
         get_ast_from_shared_mem,
         file_sig,
         typed_ast,
-        &empty_severities, // lint_severities:LintSettings.empty_severities
-        false,             // allow_dollar_flowfixme
-        true,              // generalize_maybe
-        true,              // generalize_react_mixed_element
-        &|_, _| (),        // add_warning:(fun _ _ -> ())
+        &empty_severities,
+        false,
+        true,
+        true,
+        &|_, _| (),
     );
     let ty = mapper.on_t(&loc, ty);
     let ty = simplify(ty);
@@ -128,12 +125,8 @@ pub struct Mapper<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expect
     casting_syntax: CastingSyntax,
     target: Loc,
     target_is_point: bool,
-    // Mutable state for AstVisitor-based traversal:
-    // Stores the first error encountered during traversal (OCaml uses exceptions)
     error: Option<Errors>,
-    // Tracks whether any modification was made (for the p == p' check)
     changed: bool,
-    // Tracks the current variable declaration kind during traversal
     current_kind: ast::VariableKind,
 }
 
@@ -459,9 +452,6 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
         }
     }
 
-    // OCaml uses `raise` to propagate errors through the mapper.
-    // AstVisitor's map_* methods return plain AST nodes (not Result), so we store
-    // the first error in a field and short-circuit subsequent map_* calls.
     fn store_error(&mut self, err: Errors) {
         if self.error.is_none() {
             self.error = Some(err);
@@ -474,7 +464,6 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
     ) -> Result<ast::Program<Loc, Loc>, Errors> {
         use flow_parser::ast_visitor::AstVisitor;
         let p_prime = self.map_program(p);
-        // If an error was stored during traversal, return it
         if let Some(err) = self.error.take() {
             return Err(err);
         }
@@ -487,9 +476,6 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
     }
 }
 
-// AstVisitor implementation for Mapper.
-// In OCaml, this class inherits Flow_ast_contains_mapper.mapper (which prunes
-// based on location containment) and overrides several methods.
 impl<'ast, F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
     flow_parser::ast_visitor::AstVisitor<'ast, Loc> for Mapper<F>
 {
@@ -571,7 +557,6 @@ impl<'ast, F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
         if self.error.is_some() {
             return hint.clone();
         }
-        // update_type_annotation_hint sets self.changed = true when it synthesizes a new annotation
         match self.update_type_annotation_hint(None, true, hint.clone()) {
             Ok(result) => result,
             Err(err) => {
@@ -645,8 +630,6 @@ impl<'ast, F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
         }
     }
 
-    // We override map_variable_declaration to store the kind, then let the default
-    // call map_variable_declarator for each declarator.
     fn map_variable_declaration(
         &mut self,
         loc: &'ast Loc,
@@ -704,7 +687,7 @@ pub fn type_lookup_at_location(
 pub fn normalize<'a, 'cx>(
     cx: &'a Context<'cx>,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
     loc: Loc,
     t: &flow_typing_type::type_::Type,
@@ -733,7 +716,7 @@ pub fn synth_type<'a, 'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
     remote_converter: &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
     type_loc: Loc,
@@ -946,10 +929,10 @@ pub fn insert_type_custom_synth_type<'a>(
         Some(rc) => (rc, false),
         None => {
             owned_rc = insert_type_imports::imports_helper::RemoteConverter::new(
-                loc_of_aloc,
+                Box::new(|aloc| loc_of_aloc(aloc)),
                 cx.file_options(),
-                get_haste_module_info,
-                get_type_sig,
+                Box::new(|fk| get_haste_module_info(fk)),
+                Box::new(|fk| get_type_sig(fk)),
                 0, // iteration
                 file,
                 std::collections::BTreeSet::new(), // reserved_names:SSet.empty
@@ -957,7 +940,6 @@ pub fn insert_type_custom_synth_type<'a>(
             (&mut owned_rc, true)
         }
     };
-    // Use RefCell to allow Fn closure to call synth_type which takes &mut RemoteConverter
     let casting_syntax = cx.casting_syntax();
     let rc_cell = std::cell::RefCell::new(rc);
     let synth_type_bound = |loc: Loc| -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
@@ -990,7 +972,7 @@ pub fn insert_type_<'a, 'b>(
         >,
     >,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
     strict: bool,
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'b>>,
@@ -1001,7 +983,6 @@ pub fn insert_type_<'a, 'b>(
     let synth_type_fn = |rc: &mut insert_type_imports::imports_helper::RemoteConverter<'_>,
                          location: Loc|
      -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
-        // loc_to_type may fail (in OCaml it raises an exception)
         let t = loc_to_type(location.dupe()).map_err(|e| match e {
             Errors::Expected(e) => e,
             Errors::Unexpected(u) => Expected::FailedToNormalize(location.dupe(), format!("{u:?}")),
@@ -1045,7 +1026,7 @@ pub fn insert_type<'a, 'b>(
         >,
     >,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
     strict: bool,
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'b>>,
@@ -1085,7 +1066,7 @@ pub fn insert_type_t<'a, 'b>(
         >,
     >,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
     strict: bool,
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'b>>,

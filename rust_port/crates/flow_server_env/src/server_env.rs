@@ -13,6 +13,7 @@ use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_heap::parsing_heaps::SharedMem;
 use flow_parser::file_key::FileKey;
 use flow_services_coverage::FileCoverage;
 use flow_services_export::export_search::ExportSearch;
@@ -26,34 +27,32 @@ use crate::collated_errors::CollatedErrors;
 use crate::dependency_info::DependencyInfo;
 use crate::persistent_connection::PersistentConnection;
 
-// *******************************************************************
-// The "static" environment, initialized first and then doesn't change
-// *******************************************************************
+// The "static" environment, initialized first and then unchanged.
 
 pub struct Genv {
     pub options: Arc<Options>,
     pub workers: Option<ThreadPool>,
+    pub shared_mem: Arc<SharedMem>,
+    pub node_modules_containers: Arc<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>,
 }
 
-// ***************************************************
-// The environment constantly maintained by the server
-// ***************************************************
+// The environment constantly maintained by the server.
 
-// Do not change these to contain `Loc.t`s. Because these errors are stored between rechecks, it
-// is critical that they contain `ALoc.t`s, so that we can update the concrete locations when we
+// Do not change these to contain `Loc`s. Because these errors are stored between rechecks, it is
+// critical that they contain `ALoc`s, so that we can update the concrete locations when we
 // render the errors, without having to retypecheck the files that generated those errors.
 pub struct Errors {
     /// errors are stored in a map from file path to error set, so that the errors
-    /// from checking particular files can be cleared during recheck. *)
+    /// from checking particular files can be cleared during recheck.
     pub local_errors: BTreeMap<FileKey, ErrorSet>,
     /// duplicate providers found during commit_modules are stored separately so
     /// they can be cleared easily
     pub duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     /// errors encountered during merge have to be stored separately so
-    /// dependencies can be cleared during merge. *)
+    /// dependencies can be cleared during merge.
     pub merge_errors: BTreeMap<FileKey, ErrorSet>,
     /// warnings are stored in a map from file path to error set, so that the warnings
-    /// from checking particular files can be cleared during recheck. *)
+    /// from checking particular files can be cleared during recheck.
     pub warnings: BTreeMap<FileKey, ErrorSet>,
     /// error suppressions in the code
     pub suppressions: ErrorSuppressions,

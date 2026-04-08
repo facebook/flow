@@ -23,9 +23,9 @@ use crate::autofix_imports;
 use crate::code_action_text_edits::CodeActionTextEdits;
 use crate::module_system_info::LspModuleSystemInfo;
 
-pub fn is_available_autoimport_result<'a>(
-    cx: &'a Context<'_>,
-) -> impl Fn(&str, &export_index::Source) -> bool + 'a {
+pub fn is_available_autoimport_result(
+    cx: &Context<'_>,
+) -> impl Fn(&str, &export_index::Source) -> bool + 'static {
     let available_globals = cx.builtins().builtin_ordinary_name_set();
     let available_modules = cx.builtins().builtin_modules_set();
     move |name: &str, source: &export_index::Source| match source {
@@ -64,14 +64,11 @@ fn main_of_package(
     }
 }
 
-// [find_ancestor_rev a_parts b_parts], where [a_parts] and [b_parts] are two paths split
-// into segments (see [Files.split_path]), returns [(ancestor_parts, a_relative, b_relative)],
-// where [ancestor_parts] are the common prefix parts **reversed**, [a_relative] is the
-// remaining parts from the ancestor to [a_parts], and [b_relative] is the remaining parts
-// from the ancestor to [b_parts].
+// Given two paths split into segments, returns the common prefix parts in reverse order,
+// plus the remaining suffixes for each path.
 //
-// for example, [find_ancestor_rev ["/a"; "b"; "c"; "d"] ["/a"; "b"; "e"; "f"]] returns
-// [(["b"; "/a"], ["c"; "d"], ["e"; "f"])]
+// For example, `["/a", "b", "c", "d"]` and `["/a", "b", "e", "f"]` produce
+// `(["b", "/a"], ["c", "d"], ["e", "f"])`.
 fn find_ancestor_rev(
     a_parts: &[String],
     b_parts: &[String],
@@ -86,8 +83,7 @@ fn find_ancestor_rev(
     (acc, a_parts[i..].to_vec(), b_parts[i..].to_vec())
 }
 
-// [path_matches expected actual] returns true if [actual] is the same as [expected], ignoring
-// a potential leading [./] on [actual].
+// Returns true if `actual` matches `expected`, ignoring a possible leading `./` on `actual`.
 fn path_matches(expected: &str, actual: &str) -> bool {
     expected == actual || Path::new(actual).is_relative() && actual == format!("./{expected}")
 }
@@ -178,19 +174,16 @@ fn chop_prefix_opt(root_parts: &[String], require_path: &[String]) -> Option<Vec
     }
 }
 
-// [node_path ~node_resolver_dirnames ~reader src_dir require_path] converts absolute path
-// [require_path] into a Node-compatible "require" path relative to [src_dir], taking into
-// account node's hierarchical search for [node_modules].
+// Converts an absolute path into a Node-compatible import path relative to `src_dir`,
+// taking node's hierarchical `node_modules` lookup into account.
 //
-// That is, if [require_path] is within a [node_modules] folder in [src_dir] or one of
-// [src_dir]'s parents, then the [node_modules] prefix is removed. If the package's
-// [package.json] has a [main] field, that suffix is also removed.
+// If `require_path` is within a `node_modules` folder in `src_dir` or one of its
+// parents, the `node_modules` prefix is removed. If the package's `package.json`
+// has a `main` field, that suffix is also removed.
 //
-// If not part of [node_modules], then [require_path] is relativized with respect to
-// [src_dir].
+// Otherwise, `require_path` is relativized against `src_dir`.
 //
-// Lastly, if the path ends with [index.js] or [.js], those default suffixes are also
-// removed.
+// Trailing `index.js` and `.js` suffixes are also removed.
 fn node_path(
     node_resolver_dirnames: &[String],
     node_resolver_root_relative_dirnames: &[(Option<String>, String)],
@@ -332,9 +325,8 @@ fn node_path(
     string_of_path_parts(&parts)
 }
 
-// [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
-// suitable for importing [t] from a file in [src_dir]. that is, if it is a
-// filename, returns the path relative to [src_dir].
+// Converts a module name into a string suitable for importing it from a file in
+// `src_dir`. For filename-based modules, this returns the path relative to `src_dir`.
 fn path_of_modulename(
     node_resolver_dirnames: &[String],
     node_resolver_root_relative_dirnames: &[(Option<String>, String)],

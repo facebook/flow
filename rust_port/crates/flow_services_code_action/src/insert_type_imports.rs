@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/insert_type_imports.ml`
-
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -44,8 +42,6 @@ pub enum UseMode {
 pub mod modules {
     use super::*;
 
-    // The OSS stub (flow/src/stubs/hardcoded_module_fixes.ml) returns [],
-    // so an empty BTreeMap is correct for the open-source version.
     pub fn paths() -> BTreeMap<String, String> {
         BTreeMap::new()
     }
@@ -127,7 +123,6 @@ pub mod ast_helper {
             ast_utils::ident_of_source(None, dummy_loc.dupe(), FlowSmolStr::new(remote_name));
         let local_id =
             ast_utils::ident_of_source(None, dummy_loc.dupe(), FlowSmolStr::new(local_name));
-        // (Printf.sprintf "%S" produces OCaml escaped string literal representation)
         let raw_from_string = |s: &str| -> FlowSmolStr {
             FlowSmolStr::new(format!(
                 "\"{}\"",
@@ -477,8 +472,6 @@ pub mod imports_helper {
         }
     }
 
-    // We use BTreeMap<Name, Vec<import_info::T>> to represent this.
-    // Each key maps to a non-empty list of ImportInfo.
     type ImportedNameMap = BTreeMap<flow_common::reason::Name, Vec<import_info::T>>;
 
     type SymbolWithUseModeMap = BTreeMap<
@@ -531,28 +524,26 @@ pub mod imports_helper {
         acc
     }
 
-    // We model this as a Result-based error propagation.
-
     pub struct RemoteConverter<'a> {
-        // Configuration
-        loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
+        loc_of_aloc: Box<dyn Fn(&ALoc) -> Loc + 'a>,
         file_options: Arc<flow_common::files::FileOptions>,
-        get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<HasteModuleInfo>,
-        get_type_sig: &'a dyn Fn(&FileKey) -> Option<packed_type_sig::Module<Index<ALoc>>>,
+        get_haste_module_info: Box<dyn Fn(&FileKey) -> Option<HasteModuleInfo> + 'a>,
+        get_type_sig: Box<dyn Fn(&FileKey) -> Option<packed_type_sig::Module<Index<ALoc>>> + 'a>,
         iteration: usize,
         file: FileKey,
         reserved_names: std::collections::BTreeSet<String>,
-        // Mutable state
         name_map: RefCell<ImportedNameMap>,
         symbol_cache: RefCell<SymbolWithUseModeMap>,
     }
 
     impl<'a> RemoteConverter<'a> {
         pub fn new(
-            loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
+            loc_of_aloc: Box<dyn Fn(&ALoc) -> Loc + 'a>,
             file_options: Arc<flow_common::files::FileOptions>,
-            get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<HasteModuleInfo>,
-            get_type_sig: &'a dyn Fn(&FileKey) -> Option<packed_type_sig::Module<Index<ALoc>>>,
+            get_haste_module_info: Box<dyn Fn(&FileKey) -> Option<HasteModuleInfo> + 'a>,
+            get_type_sig: Box<
+                dyn Fn(&FileKey) -> Option<packed_type_sig::Module<Index<ALoc>>> + 'a,
+            >,
             iteration: usize,
             file: FileKey,
             reserved_names: std::collections::BTreeSet<String>,
@@ -599,8 +590,8 @@ pub mod imports_helper {
             };
             let remote_name_str = remote_name.as_str();
             let export_info = exports_helper::resolve(
-                self.loc_of_aloc,
-                self.get_type_sig,
+                &*self.loc_of_aloc,
+                &*self.get_type_sig,
                 use_mode,
                 sym_def_loc.dupe(),
                 remote_name_str,
@@ -620,7 +611,6 @@ pub mod imports_helper {
                 use_mode,
                 remote_name_str,
             );
-            // AstHelper.mk_import_stmt ~import_kind ~default ~remote_name ~local_name ~source
             Ok(ast_helper::mk_import_stmt(
                 import_kind,
                 default,
@@ -685,25 +675,6 @@ pub mod imports_helper {
             let old_name_map = self.name_map.borrow().clone();
             let old_symbol_cache = self.symbol_cache.borrow().clone();
 
-            // The OCaml code uses endo_ty visitor with on_t and on_symbol overrides.
-            // We implement the visitor logic manually by walking the type tree.
-            // The visitor does:
-            //   on_t: matches TypeOf(TSymbol(Remote{imported_as=None|Some(_,_,TypeMode)}),None)
-            //         -> convert_symbol ValueUseMode, return Generic(local,ClassKind,None)
-            //   on_t: matches TypeOf(TSymbol(Remote{imported_as=Some(_,name,TypeofMode)}),None)
-            //         -> return Generic(Local{sym_name=OrdinaryName name},ClassKind,None)
-            //   on_t: _ -> super#on_t (default traversal)
-            //   on_symbol: matches Remote{imported_as=None}, !anonymous -> convert_symbol TypeUseMode
-            //   on_symbol: matches Remote{imported_as=Some(_,local_name,_)}, !anonymous -> Local
-            //   on_symbol: matches Library{imported_as=None}, !anonymous, react-redux -> convert_symbol TypeUseMode
-            //   on_symbol: matches Library{imported_as=Some(_,local_name,_)}, !anonymous, react-redux -> Local
-            //   on_symbol: _ -> super#on_symbol (identity)
-
-            // OCaml uses an inline anonymous Ty.endo_ty object with lexical access to
-            // self#convert_symbol. Rust uses a named ConvertTyVisitor struct with a reference
-            // to RemoteConverter and an error field for exception simulation, since Rust lacks
-            // anonymous objects with lexical capture.
-
             struct ConvertTyVisitor<'a> {
                 converter: &'a RemoteConverter<'a>,
                 error: Option<error::ImportError>,
@@ -714,7 +685,6 @@ pub mod imports_helper {
                     if self.error.is_some() {
                         return s;
                     }
-                    // OCaml equivalent: self#convert_symbol (direct method call on enclosing class)
                     let converter = self.converter;
                     match &s {
                         Symbol {
@@ -742,7 +712,6 @@ pub mod imports_helper {
                             sym_name: flow_common::reason::Name::new(local_name.as_str()),
                             sym_def_loc: sym_def_loc.dupe(),
                         },
-                        // react-redux
                         Symbol {
                             sym_provenance: Provenance::Library(RemoteInfo { imported_as: None }),
                             sym_anonymous: false,
@@ -781,7 +750,6 @@ pub mod imports_helper {
                     if self.error.is_some() {
                         return t;
                     }
-                    // OCaml equivalent: self#convert_symbol (direct method call on enclosing class)
                     let converter = self.converter;
                     match t.as_ref() {
                         ty::Ty::TypeOf(box (ty::BuiltinOrSymbol::TSymbol(s), None))

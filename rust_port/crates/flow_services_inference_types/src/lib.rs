@@ -27,6 +27,7 @@ use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::properties;
 
+#[derive(Clone)]
 pub struct ParseArtifacts {
     pub docblock: Docblock,
     pub docblock_errors: Vec<DocblockError>,
@@ -37,6 +38,7 @@ pub struct ParseArtifacts {
     pub parse_errors: Vec<(Loc, ParseError)>,
 }
 
+#[derive(Clone)]
 pub struct TypecheckArtifacts<'cx> {
     pub cx: Context<'cx>,
     pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,

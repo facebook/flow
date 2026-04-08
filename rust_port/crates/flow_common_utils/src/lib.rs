@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+pub mod cache;
 pub mod checked_set;
+pub mod filename_cache;
 pub mod graph;
 pub mod line;
 pub mod utils_js;

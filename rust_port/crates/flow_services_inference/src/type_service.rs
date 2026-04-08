@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Type checking service - drives the type checker
-//!
-//! This module is ported from OCaml's services/inference/types_js.ml
-
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -42,7 +38,7 @@ use flow_parsing::parsing_service;
 use flow_server_env::collated_errors::CollatedErrors;
 use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::error_collator;
-use flow_server_env::persistent_connection::PersistentConnection;
+use flow_server_env::persistent_connection;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_env::Errors;
 use flow_server_env::server_monitor_listener_state;
@@ -66,11 +62,6 @@ use crate::pure_dep_graph_operations;
 use crate::recheck_stats;
 use crate::transaction;
 
-// (****************** typecheck job helpers *********************)
-
-// In OCaml, Unexpected_file_changes is caught and converted to Lwt.Canceled,
-// which propagates up through recheck_impl and recheck. Recheck_too_slow is
-// caught separately by recheck and handled via reinit.
 #[derive(Debug)]
 pub enum RecheckError {
     TooSlow,
@@ -169,7 +160,6 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         package_json,
         dirty_modules,
     } = parse_results;
-    // No one who is calling collate_parse_results is skipping files with hash mismatches
     assert!(changed.is_empty());
     let local_errors =
         failed
@@ -263,10 +253,6 @@ fn commit_modules(
     BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
 ) {
     with_memory_timer(options, "CommitModules", || {
-        // (* Clear duplicate provider errors for all dirty modules. *)
-        // (* Avoid iterating over dirty modules when there are no duplicate
-        // providers. This is most useful on init, when all modules are dirty,
-        // but should also be true for most rechecks. *)
         if !duplicate_providers.is_empty() {
             for m in dirty_modules.iter() {
                 match m {
@@ -346,16 +332,7 @@ pub fn calc_deps(
     })
 }
 
-/// The input passed in basically tells us what the caller wants to typecheck.
-/// However, due to laziness, it's possible that certain dependents or dependencies have not been
-/// checked yet. So we need to calculate all the transitive dependents and transitive dependencies
-/// and add them to input, unless they're already checked and in unchanged_checked
-///
-/// Note that we do not want to add all_dependent_files to input directly! We only want to
-/// pass the dependencies, and later add dependent files as needed. This is important for recheck
-/// optimizations. We create the recheck map which indicates whether a given file needs to be
-/// rechecked. Dependent files only need to be rechecked if their dependencies change.
-pub(crate) fn include_dependencies_and_dependents(
+pub fn include_dependencies_and_dependents(
     options: &Options,
     input: CheckedSet,
     unchanged_checked: CheckedSet,
@@ -368,30 +345,17 @@ pub(crate) fn include_dependencies_and_dependents(
     Vec<Vec1<FileKey>>,
     FlowOrdSet<FileKey>,
 ) {
-    // We need to run the check phase on the entire input set as well as all_dependent_files.
-    // We'll calculate the set of files we need to merge based on this.
     with_memory_timer(options, "PruneDeps", || {
         let mut to_check = input.dupe();
         to_check.add(None, Some(all_dependent_files.dupe()), None);
 
         let to_check_all = to_check.dupe().all();
 
-        // We need to make sure that signatures are available for the dependencies of the files we
-        // are going to check. To accomplish this, we start by finding the direct *implementation*
-        // dependencies of all the files we will check. Just the signature dependencies won't do,
-        // since we need signatures available for all the files imported by the bodies of the files
-        // we are going to check.
         let preliminary_dependencies = pure_dep_graph_operations::calc_direct_dependencies(
             implementation_dependency_graph,
             &to_check_all,
         );
 
-        // So we want to prune our dependencies to only the dependencies which changed. However, two
-        // dependencies A and B might be in a cycle. If A changed and B did not, we still need to
-        // merge B. Likewise, a dependent A and a dependency B might be in a cycle. So we need to
-        // calculate components before we can prune.
-        // (* Grab the subgraph containing all our dependencies and sort it into the strongly
-        // connected cycles *)
         let components = topsort(
             preliminary_dependencies.iter().map(|f| f.dupe()),
             sig_dependency_graph,
@@ -404,27 +368,18 @@ pub(crate) fn include_dependencies_and_dependents(
                 .all(|filename| unchanged_checked.mem(filename));
 
             if !all_in_unchanged_checked {
-                // If some member of the component is not unchanged, then keep the component
                 for file in component {
                     dependencies.insert(file.dupe());
                 }
             }
-            // If every element is unchanged, drop the component
         }
 
-        // Definitely recheck input and dependencies. As merging proceeds, dependents may or may not be
-        // rechecked.
         let mut definitely_to_merge = input.dupe();
         definitely_to_merge.add(None, None, Some(dependencies.dupe()));
 
         let mut to_merge = definitely_to_merge.dupe();
         to_merge.add(None, Some(all_dependent_files), None);
 
-        // NOTE: An important invariant here is that if we recompute Sort_js.topsort with
-        // to_merge on sig_dependency_graph, we would get exactly the same components. Later, we
-        // will filter sig_dependency_graph to just to_merge, and correspondingly filter
-        // components as well. This will work out because every component is either entirely
-        // inside to_merge or entirely outside. *)
         let recheck_set = definitely_to_merge.all();
 
         (to_merge, to_check, components, recheck_set)
@@ -581,9 +536,6 @@ fn run_merge_service(
     })
 }
 
-/// This function does some last minute preparation and then calls into the merge service, which
-/// typechecks the code. By the time this function is called, we know exactly what we want to merge
-/// (though we may later decline to typecheck some files due to recheck optimizations)
 fn merge(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
@@ -595,11 +547,6 @@ fn merge(
     sig_dependency_graph: &Graph<FileKey>,
     suppressions: ErrorSuppressions,
 ) -> MergeResult {
-    // to_merge is the union of inferred (newly inferred files) and the
-    // transitive closure of all dependents.
-    //
-    // recheck_set maps each file in to_merge to whether it should be rechecked
-    // initially.
     eprintln!("Calculating dependencies");
     let files_to_merge = to_merge.dupe().all();
     let calc_deps_start = Instant::now();
@@ -609,7 +556,6 @@ fn merge(
     eprintln!("Merging");
     let merge_start = Instant::now();
 
-    // (* compute the largest cycle, for logging *)
     let top_cycle = components
         .iter()
         .filter(|c: &&Vec1<FileKey>| c.len() > 1)
@@ -673,7 +619,6 @@ mod check_files {
             let merged_dependents = to_check.dependents();
             let mut skipped_count = 0;
             let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
-            // skip dependents whenever none of their dependencies have new or changed signatures
             let dependents_to_check = merged_dependents
                 .iter()
                 .filter_map(|file| {
@@ -694,9 +639,6 @@ mod check_files {
             eprintln!(
                 "Check will skip {} of {} files",
                 skipped_count,
-                // We can just add these counts without worrying about files which are in both sets. We
-                // got these both from a CheckedSet. CheckedSet's representation ensures that a single
-                // file cannot have more than one kind.
                 focused_to_check.len() + merged_dependents.len()
             );
             let mut files = focused_to_check.dupe();
@@ -715,17 +657,6 @@ mod check_files {
                 num_workers,
                 files.iter().map(|f| f.dupe()).collect(),
             );
-            // The code here looks very simple, but a lot of tricky details are left unexplained.
-            // Once `job` is evaluated, we will have a closure that contains notably two structures
-            // 1. check cache
-            // 2. builtin types partially evaluated (in Merge_js.mk_builtins)
-            //
-            // Both structures will be sent to the workers serialized:
-            // 1. the check cache sent to the worker will be empty, so it's effectively the same as
-            //    creating a new cache per batch.
-            // 2. the partially evaluated builtin types are sent to the worker in full. This is quite
-            //    critical for perf. Recomputing these builtins from scratch per batch will be
-            //    extremely expensive.
             type CheckFn = Box<
                 dyn FnMut(
                     FileKey,
@@ -746,9 +677,6 @@ mod check_files {
                     merge_service::mk_check(shared_mem.dupe(), options.dupe(), master_cx.as_ref())
                 })
             };
-            // Create per-worker deques for intra-batch work stealing.
-            // When a worker hits a slow file, idle workers can steal remaining
-            // files from its deque instead of waiting for the next batch.
             let num_workers = pool.num_workers();
             let (deque_slots, stealers) = {
                 let deques: Vec<crossbeam::deque::Worker<FileKey>> = (0..num_workers)
@@ -775,19 +703,13 @@ mod check_files {
             let ret = flow_utils_concurrency::map_reduce::call_with_stealing(
                 pool,
                 next,
-                // job: push batch files onto the worker's stealable deque, process via mk_job_stealing
                 move |acc: &mut Vec<_>, batch| {
                     WORKER_CHECK.with(|cell: &RefCell<Option<WorkerState>>| {
                         let mut opt = cell.borrow_mut();
                         if opt.is_none() {
                             *opt = Some(mk_check());
                         }
-                        // It is important to have a fresh check cache per batch. Otherwise the cache
-                        // will be extremely large.
                         let (check, cache) = opt.as_mut().unwrap();
-                        // Clear cached files, breaking Rc cycles and freeing entries.
-                        // Reuses existing HashMap/LinkedHashMap allocations instead of
-                        // creating a brand new cache each batch.
                         cache.borrow_mut().clear();
 
                         WORKER_DEQUE.with(|deque_cell| {
@@ -798,33 +720,20 @@ mod check_files {
                             }
                             let deque = deque_opt.as_ref().unwrap();
 
-                            // Push batch files onto the stealable deque
                             for file in batch {
                                 deque.push(file);
                             }
 
-                            // Process files from deque — other workers can steal the rest.
-                            // On timeout, remaining files stay on the deque for idle
-                            // workers to steal via the work-stealing mechanism.
                             let results = job_utils::mk_job_stealing(&mut **check, &options, deque);
                             mk_next_merge(acc, results);
                         });
 
-                        // Break Rc cycles AND free cached dependency files after each batch.
-                        // Without this, the last batch's cached files (each containing a
-                        // Context with full type graph, property maps, export maps, etc.)
-                        // persist in the WORKER_CHECK thread-local indefinitely.
-                        // clear() calls cleanup_all_files() then drops all entries.
                         cache.borrow_mut().clear();
                     });
                 },
-                // merge: same as before
                 |a: &mut Vec<_>, b: Vec<_>| {
                     a.extend(b);
                 },
-                // steal: called when this worker is idle (between batches).
-                // Steals files left on other workers' deques (including files
-                // that remained after a timeout) and processes them directly.
                 move |acc: &mut Vec<_>| -> bool {
                     for stealer in stealers_for_steal.iter() {
                         if let crossbeam::deque::Steal::Success(file) = stealer.steal() {
@@ -842,8 +751,6 @@ mod check_files {
                                 };
                                 acc.push((file, mapped));
                             });
-                            // Increment shared counter so mk_next knows this
-                            // file has been completed (for termination detection).
                             files_completed.fetch_add(1, std::sync::atomic::Ordering::Release);
                             return true;
                         }
@@ -851,10 +758,6 @@ mod check_files {
                     false
                 },
             );
-            // Drop WorkerState on all worker threads to reclaim memory.
-            // Each worker accumulated Context objects in its thread-local
-            // across all batches. Dropping the WorkerState allows the
-            // next recheck cycle to start fresh.
             pool.broadcast(move |_| {
                 WORKER_CHECK.with(|cell| {
                     *cell.borrow_mut() = None;
@@ -942,10 +845,6 @@ fn ensure_parsed(
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), UnexpectedFileChanges> {
     with_memory_timer(options, "EnsureParsed", || {
-        // The set of files that we expected to parse, but were skipped, either because they had
-        // changed since the last recheck or no longer exist on disk. This is in contrast to files
-        // that were skipped intentionally because they are not @flow, or because they are resource
-        // files.
         let parse_unexpected_skips =
             parsing_service::ensure_parsed(pool, shared_mem, options, files);
         if parse_unexpected_skips.is_empty() {
@@ -966,7 +865,6 @@ pub fn ensure_parsed_or_trigger_recheck(
     match ensure_parsed(pool, shared_mem, options, files) {
         Ok(()) => Ok(()),
         Err(UnexpectedFileChanges(changed_files)) => {
-            // In OCaml, handle_unexpected_file_changes raises Lwt.Canceled
             Err(handle_unexpected_file_changes(changed_files))
         }
     }
@@ -984,8 +882,8 @@ fn init_libs(
     BTreeMap<FileKey, ErrorSet>, // local_errors
     BTreeMap<FileKey, ErrorSet>, // warnings
     ErrorSuppressions,           // suppressions
-    (),                          // exports (placeholder)
-    Arc<MasterContext>,          // master_cx
+    (),
+    Arc<MasterContext>, // master_cx
 ) {
     with_memory_timer(options, "InitLibs", || {
         let init::InitResult {
@@ -1004,8 +902,6 @@ fn init_libs(
     })
 }
 
-/// Given a set of focused files and a dependency graph, calculates the recursive dependents and
-/// returns a CheckedSet containing both the focused and dependent files.
 pub(crate) fn focused_files_to_infer(
     implementation_dependency_graph: &Graph<FileKey>,
     sig_dependency_graph: &Graph<FileKey>,
@@ -1016,9 +912,6 @@ pub(crate) fn focused_files_to_infer(
         implementation_dependency_graph,
         &focused,
     );
-    // [roots] is the set of all focused files and all dependent files.
-    // CheckedSet will ignore the focused files in [dependents] since they are
-    // also passed via [focused] and duplicates take the highest priority.
     let dependents = roots;
     let mut checked_set = CheckedSet::empty();
     checked_set.add(Some(focused), Some(dependents), None);
@@ -1042,13 +935,6 @@ fn filter_out_node_modules(options: &Options, files: &FlowOrdSet<FileKey>) -> Fl
     result
 }
 
-/// Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
-/// the repo. In both cases, we never want node_modules to appear in the focused sets,
-/// unless node_modules_errors is enabled.
-///
-/// There are no expected invariants for the input sets. The returned set has the following invariants
-/// 1. Node modules will only appear in the dependency set (unless node_modules_errors is enabled).
-/// 2. Dependent files are empty.
 pub(crate) fn unfocused_files_to_infer(
     options: &Options,
     input_focused: &FlowOrdSet<FileKey>,
@@ -1060,42 +946,24 @@ pub(crate) fn unfocused_files_to_infer(
     checked_set
 }
 
-/// Called on initialization in non-lazy mode, with optional focus targets.
-///
-/// When focus targets are not provided, the result is a checked set focusing on parsed files minus
-/// node modules, plus no dependents (because effectively any dependent is already focused), plus all
-/// their dependencies (minus those that are already focused). The set of dependencies might contain
-/// node modules.
-///
-/// When focus targets are provided, we remove any unparsed (e.g. syntax error) targets, and then
-/// the result is a checked set focusing on those files, plus their dependents, plus all their
-/// combined dependencies. All these sets might contain node modules.
-///
-/// In either case, we can consider the result to be "closed" in terms of expected invariants. *)
 pub(crate) fn files_to_infer(
     options: &Options,
     focus_targets: Option<FlowOrdSet<FileKey>>,
     parsed: FlowOrdSet<FileKey>,
     dependency_info: &DependencyInfo,
 ) -> CheckedSet {
-    with_memory_timer(options, "FilesToInfer", || {
-        match focus_targets {
-            None => unfocused_files_to_infer(options, &parsed, FlowOrdSet::new()),
-            Some(input_focused) => {
-                let implementation_dependency_graph =
-                    dependency_info.implementation_dependency_graph();
-                let sig_dependency_graph = dependency_info.sig_dependency_graph();
-                // Only focus files that parsed successfully. Parsed files are also
-                // necessarily checked because we only parse checked files, so this also
-                // serves to filter the input to checked files.
-                let input_focused =
-                    FlowOrdSet::from(input_focused.into_inner().intersection(parsed.into_inner()));
-                focused_files_to_infer(
-                    implementation_dependency_graph,
-                    sig_dependency_graph,
-                    input_focused,
-                )
-            }
+    with_memory_timer(options, "FilesToInfer", || match focus_targets {
+        None => unfocused_files_to_infer(options, &parsed, FlowOrdSet::new()),
+        Some(input_focused) => {
+            let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
+            let sig_dependency_graph = dependency_info.sig_dependency_graph();
+            let input_focused =
+                FlowOrdSet::from(input_focused.into_inner().intersection(parsed.into_inner()));
+            focused_files_to_infer(
+                implementation_dependency_graph,
+                sig_dependency_graph,
+                input_focused,
+            )
         }
     })
 }
@@ -1105,21 +973,6 @@ pub(crate) fn restart_if_faster_than_recheck(
     env: &Env,
     to_merge: &CheckedSet,
 ) -> Result<(), RecheckError> {
-    // TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
-    // would we check". Currently we're looking at the number of already checked files. But a
-    // better way would be to
-    //
-    // 1. When watchman notices the mergebase changing, also record the files which have changed
-    //    since the mergebase
-    // 2. Send these files to the server
-    // 3. Calculate the fanout of these files (we should have an updated dependency graph by now)
-    // 4. That should actually be the right number, instead of just an estimate. But it costs
-    //    a little to compute the fanout
-    //
-    // This also treats dependencies, which are only merged, equally with focused/dependent
-    // files which are also checked. So, doing a priority update, which merges but doesn't
-    // check, throws off the estimate by making it seem like files get checked as quickly
-    // as they get merged. This makes us underestimate how long it will take to recheck.
     let files_already_checked = env.checked_files.cardinal();
     let files_about_to_recheck = to_merge.cardinal();
     eprintln!(
@@ -1195,13 +1048,6 @@ pub(crate) mod recheck {
         pub unchanged_files_to_upgrade: CheckedSet,
     }
 
-    // This is the first part of the recheck. It parses the files and updates the dependency graph. It
-    // does NOT figure out which files to merge or merge them.
-    //
-    // It returns an updated env and a bunch of intermediate values which `recheck_merge` can use to
-    // calculate the to_merge and perform the merge.
-    //
-    // Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing.
     pub(crate) fn recheck_parse_and_update_dependency_info(
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,
@@ -1228,27 +1074,11 @@ pub(crate) mod recheck {
             },
         );
         let collated_errors = std::mem::replace(&mut env.collated_errors, CollatedErrors::empty());
-        // files_to_force is a request to promote certain files to be checked as a dependency, dependent,
-        // or focused file. We can ignore a request if the file is already checked at the desired level
-        // or at a more important level
         let mut files_to_force = files_to_force;
         files_to_force.diff(&env.checked_files);
 
         eprintln!("Parsing");
 
-        // Reparse updates. Parsing splits the updates into the following
-        // disjoint collections:
-        //
-        // parsed: files which should be typechecked and were successfully parsed
-        // unparsed: files which either should not be parsed (resource files) or
-        //           checked (not @flow), or which failed to parse
-        // unchanged: files which have not actually changed since we last parsed
-        //            them, and therefore do not need to be rechecked
-        // deleted: files which could not be found on disk, for which we may have
-        //          data that needs to be invalidated
-        //
-        // Parsing also gives us new local_errors, including parse errors, docblock
-        // errors, etc.
         let modified_set = updates.dupe().all();
         let modified_files: Vec<FileKey> = modified_set.iter().map(|f| f.dupe()).collect();
         let modified_next: parsing_service::Next = {
@@ -1265,14 +1095,11 @@ pub(crate) mod recheck {
             package_json: _,
         } = reparse(pool, shared_mem, options, def_info, modified_next);
 
-        // parsed + unparsed = new or changed files
         let new_or_changed = parsed_set.dupe().union(unparsed_set.dupe());
         let new_or_changed_or_deleted = new_or_changed.dupe().union(deleted.dupe());
 
-        // turn [parsed_set] into a CheckedSet with the same priorities as they came in from [updates]
         let freshparsed = updates.filter(|file, _kind| parsed_set.contains(file));
 
-        // clear errors for new, changed and deleted files
         let Errors {
             local_errors,
             duplicate_providers,
@@ -1281,7 +1108,6 @@ pub(crate) mod recheck {
             suppressions,
         } = clear_errors(&new_or_changed_or_deleted, errors);
 
-        // clear collated errors for new, changed and deleted files
         let mut collated_errors = collated_errors;
         {
             collated_errors.clear_all(&new_or_changed_or_deleted);
@@ -1300,16 +1126,13 @@ pub(crate) mod recheck {
             );
         }
 
-        // clear stale coverage info
         let mut coverage = env.coverage;
         for file in &new_or_changed_or_deleted {
             coverage.remove(file);
         }
 
-        // record reparse errors
         let local_errors = merge_error_maps(new_local_errors, local_errors);
 
-        // get old (unchanged, undeleted) files that were parsed successfully
         let old_parsed = env.files;
         let old_parsed_count = old_parsed.len();
         let unchanged = FlowOrdSet::from(
@@ -1318,7 +1141,6 @@ pub(crate) mod recheck {
                 .difference(new_or_changed_or_deleted.into_inner()),
         );
 
-        // log modified and deleted files
         let deleted_count = deleted.len();
         let modified_count = new_or_changed.len();
         if deleted_count + modified_count > 0 {
@@ -1346,8 +1168,6 @@ pub(crate) mod recheck {
             }
         }
 
-        // old_parsed and unchanged sets are large and `cardinal` is O(n), so avoid
-        // this call unless we are in debug mode.
         eprintln!(
             "recheck: old = {}, del = {}, fresh = {}, unmod = {}",
             old_parsed_count,
@@ -1356,128 +1176,14 @@ pub(crate) mod recheck {
             unchanged.len(),
         );
 
-        // "updates" is a CheckedSet where "focused" updates come from file system events.
-        // When a file changes, [reparse] notices and includes it in [new_or_changed], and
-        // that makes it get rechecked.
-        //
-        // Sometimes, we notice that a dependency changed before the file system event
-        // (via [ensure_parsed]); in that case, we have a "dependency" update, where we only
-        // want to update the dependency graph and merge, but not check.
-        //
-        // When we get the delayed file system event, it appears unchanged since we already
-        // reparsed it. We still want to check it and its dependents, since we skipped that
-        // before. We can detect this when a "focused" update is unchanged but was previously
-        // only a "dependency".
-
-        // file is unchanged, should now be checked, and was previously merged but not checked
         let unchanged_files_to_upgrade = updates.filter(|file, kind| {
             !CheckedSet::is_dependency(kind)
                 && unchanged_parse.contains(file)
                 && env.checked_files.mem_dependency(file)
         });
 
-        // Here's where the interesting part of rechecking begins. Before diving into
-        // code, let's think through the problem independently.
-        //
-        // Note that changing a file can be conceptually thought of as deleting the
-        // file and then adding it back as a new file. While such a reduction might
-        // miss optimization opportunities (so we don't actually implement it), it
-        // simplifies thinking about correctness.
-        //
-        // We focus on dependency management. Specifically, we discuss how to
-        // correctly update InfoHeap and NameHeap, and calculate the set of unchanged
-        // files whose imports might resolve to different files. (With these results,
-        // the remaining part of rechecking is relatively simple.)
-        //
-        // Recall that InfoHeap maps file names in FS to module names in MS, where
-        // each file name in FS must exist, different file names may map to the same
-        // module name, and every module name in MS is mapped to by at least one file
-        // name; and NameHeap maps module names in MS to file names in FS, where the
-        // file name mapped to by a module name must map back to the same module name
-        // in InfoHeap. A file's imports might resolve to different files if the
-        // corresponding modules map to different files in NameHeap.
-        //
-        // Deleting a file
-        // ===============
-        //
-        // Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
-        // NameHeap.
-        //
-        // Remove D |-> m from InfoHeap.
-        //
-        // If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
-        // importing m will be affected. If other files map to m in InfoHeap, map m
-        // to one of those files in NameHeap.
-        //
-        // Adding a file
-        // =============
-        //
-        // Suppose that a new file N is added.
-        //
-        // Map N to some module name, say m, in InfoHeap. If m is not mapped to any
-        // file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
-        // decide whether to replace the existing mapping to m |-> N in NameHeap, and
-        // pessimistically assuming it might be, mark m "dirty."
-        //
-        // Changing a file
-        // =============
-        //
-        // What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
-        // and m |-> F in NameHeap.
-        //
-        // Optimistically, C continues to map to m in InfoHeap and we do nothing.
-        //
-        // However, let's pessimistically assume that C maps to a different m' in
-        // InfoHeap. Considering C deleted and added back as new, we must remove C
-        // |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
-        // |-> F from NameHeap and mark m "dirty." If other files map to m in
-        // InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
-        // any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
-        // Otherwise, decide whether to replace the existing mapping to m' |-> C in
-        // NameHeap, and mark m' "dirty."
-        //
-        // Summary
-        // =======
-        //
-        // Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
-        // InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
-        // a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
-        //
-        // Ideally, any module name that does not map to a different file in NameHeap
-        // should not be considered "dirty."
-        //
-        // In terms of implementation:
-        //
-        // Deleted file: Say it pointed to module OLD_M
-        // 1. need to repick a provider for OLD_M *if OLD_M's current provider is this file*
-        // 2. files that depend on OLD_M need to be rechecked if:
-        //   a. the provider for OLD_M is **replaced** or **removed**; or
-        //   b. the provider for OLD_M is **unchanged**, but is a _changed file_
-        //
-        // New file: Say it points to module NEW_M
-        // 1. need to repick a provider for NEW_M
-        // 2. files that depend on NEW_M need to be rechecked if:
-        //   a. the provider for NEW_M is **added** or **replaced**; or
-        //   b. the provider for NEW_M is **unchanged**, but is a _changed file_
-        //
-        // Changed file: Say it pointed to module OLD_M, now points to module NEW_M
-        // * Is OLD_M different from NEW_M? (= delete the file, then add it back)
-        // 1. need to repick providers for OLD_M *if OLD_M's current provider is this file*.
-        // 2. files that depend on OLD_M need to be rechecked if:
-        //   a. the provider for OLD_M is **replaced** or **removed**; or
-        //   b. the provider for OLD_M is **unchanged**, but is a _changed file_
-        // 3. need to repick a provider for NEW_M
-        // 4. files that depend on NEW_M need to be rechecked if:
-        //   a. the provider for NEW_M is **added** or **replaced**; or
-        //   b. the provider for NEW_M is **unchanged**, but is a _changed file_
-        //
-        // * TODO: Is OLD_M the same as NEW_M?
-        // 1. *don't repick a provider!*
-        // 2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
-        //    is a _changed file_
-        //)
+        // TODO: Is OLD_M the same as NEW_M?
 
-        // remember old modules
         let new_or_changed_or_deleted_for_remove = parsed_set
             .dupe()
             .union(unparsed_set.dupe())
@@ -1485,13 +1191,9 @@ pub(crate) mod recheck {
         let mut unchanged_checked = env.checked_files.dupe();
         unchanged_checked.remove(&new_or_changed_or_deleted_for_remove);
 
-        // We may be forcing a recheck on some unchanged files
         let unchanged_files_to_force =
             files_to_force.filter(|file, _kind| unchanged.contains(file));
 
-        // changed_modules are modules which have a different provider for this
-        // recheck. This does *not* include modules whose provider file is the same,
-        // even if the file itself is changed.
         let dirty_modules_ordered: flow_common_modulename::ModulenameSet =
             dirty_modules.into_iter().collect();
         let (changed_modules, duplicate_providers) = commit_modules(
@@ -1510,44 +1212,6 @@ pub(crate) mod recheck {
             set
         };
 
-        // dirty_direct_dependents are unchanged files which directly depend on
-        // changed modules. These files need to be re-resolved and can not be
-        // skipped.
-        //
-        // The dependents included fall into some separate categories:
-        //
-        //   A. Dependents of phantom modules which received initial providers.
-        //   These modules were phantom dependencies, and the dependents' resolved
-        //   requires will now change.
-        //
-        //   B. Dependents of modules which no longer have a provider. These modules
-        //   will now become phantom dependents, and their dependents' resolved
-        //   requires will change.
-        //
-        //   C. Dependents of modules which have different provider file. For
-        //   example, if a haste module used to be provided by foo.js and is now
-        //   provided by bar.js.
-        //
-        //   D. Dependents of modules whose provider is the same file, but the file
-        //   changed from untyped to typed.
-        //
-        //   E. Dependents of modules whose provider is the same file, but the file
-        //   changed from typed to untyped.
-        //
-        // These dependents are used for 3 different purposes:
-        //
-        //   1. Re-resolving requires. For this we only care about (A) and (B),
-        //   because resolved requires are edges from file to module, so even if the
-        //   module's provider changes, the resolved requires will not change.
-        //
-        //   2. Recalculating the server env dependency graph. For this we care
-        //   about the all categories (A-E). This is because the server env
-        //   dependency graph only stores edges between typed files.
-        //
-        //   3. Ensuring dependents are not skipped. For this we only care about
-        //   (B), (C), and (E). To skip a file, we check if any of its typed
-        //   dependencies are in sig_new_or_changed, which only contains typed
-        //   files.
         let dirty_direct_dependents: FlowOrdSet<FileKey> =
             with_memory_timer(options, "DirectDependentFiles", || {
                 let dirty_direct_dependents_btree =
@@ -1584,10 +1248,6 @@ pub(crate) mod recheck {
             )
         });
 
-        // Here's how to update unparsed:
-        // 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
-        // 2. Remove the deleted files. This removes any previously unparsed file which was deleted
-        // 3. Add the newly unparsed files. This adds new unparsed files or files which became unparsed *)
         let to_remove = parsed.dupe().union(deleted);
         let unparsed =
             FlowOrdSet::from(env.unparsed.into_inner().difference(to_remove.into_inner()))
@@ -1631,7 +1291,6 @@ pub(crate) mod recheck {
         Ok((env, intermediate_values))
     }
 
-    // Exposed only for testing purposes. Not meant for general consumption.
     pub(crate) fn determine_what_to_recheck(
         options: &Options,
         sig_dependency_graph: &Graph<FileKey>,
@@ -1649,15 +1308,6 @@ pub(crate) mod recheck {
             .dependencies()
             .dupe()
             .union(unchanged_files_to_force.dependencies().dupe());
-        // we will need the signature dependents and implementation dependents to compute the fanout
-        // from the changed files ([input_focused] + [input_dependencies]) to all of the files that
-        // could be impacted by those changes.
-        //
-        // [all_dependent_files] is the set of files which may be possibly affected by incremental
-        // changes. We can precisely compute this set based on (a) input focused and (b) dirty direct
-        // dependent files. First, we take (c) the transitive signature dependents of union(a,b). Then,
-        // we take (d) the direct implementation dependents of union(a,b,c). Finally, the set of
-        // dependent files is union(c,d).
         let all_dependent_files = with_memory_timer(options, "AllDependentFiles", || {
             let roots = input_focused.dupe().union(dirty_direct_dependents.dupe());
             let all_dependent_files = pure_dep_graph_operations::calc_all_dependents(
@@ -1665,7 +1315,6 @@ pub(crate) mod recheck {
                 implementation_dependency_graph,
                 &roots,
             );
-            // Prevent files in node_modules from being added to the checked set.
             filter_out_node_modules(options, &all_dependent_files)
         });
         let input = unfocused_files_to_infer(options, &input_focused, input_dependencies);
@@ -1687,9 +1336,6 @@ pub(crate) mod recheck {
         }
     }
 
-    // This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
-    // of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
-    // merge. Then it merges them.
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn recheck_merge(
         pool: &ThreadPool,
@@ -1742,22 +1388,15 @@ pub(crate) mod recheck {
             &unchanged_files_to_force,
             &dirty_direct_dependents,
         );
-        // This is a much better estimate of what checked_files will be after the merge finishes. We now
-        // include the dependencies and dependents that are being implicitly included in the recheck.
         will_be_checked_files.union(to_merge.dupe());
 
         match changed_mergebase {
             Some(true) if options.lazy_mode && options.estimate_recheck_time => {
                 restart_if_faster_than_recheck(options, &env, &to_merge)?;
             }
-            _ => {
-                // We will do a full recheck, but it might still be faster to reinit
-                // from saved state even in non-lazy mode. TODO
-            }
+            _ => {}
         }
-        // No need to call MonitorRPC.status_update here. ensure_parsed will update it to parsing.
         ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
-        // recheck
         if dependent_file_count > 0 {
             eprintln!("recheck {} dependent files:", dependent_file_count);
         }
@@ -1794,10 +1433,6 @@ pub(crate) mod recheck {
             }
         };
 
-        // include all files that were previously rechecked as "dependency" updates and are now
-        // being rechecked normally. their signatures are unchanged because we already saw them
-        // when they were rechecked as dependencies, but since we skipped checking their dependents
-        // before, we need to include them now.
         let sig_new_or_changed = sig_new_or_changed.union(unchanged_files_to_upgrade.dupe().all());
         let (
             errors,
@@ -1835,7 +1470,6 @@ pub(crate) mod recheck {
         checked_files.union(to_merge.dupe());
         eprintln!("Checked set: {}", checked_files.debug_counts_to_string());
 
-        // NOTE: unused fields are left in their initial empty state
         Ok((
             Env {
                 checked_files,
@@ -1863,13 +1497,6 @@ pub(crate) mod recheck {
         ))
     }
 
-    // We maintain the following invariant across rechecks: The set of `files` contains files that
-    // parsed successfully in the previous phase (which could be the init phase or a previous recheck
-    // phase).
-    //
-    // This function has been split into two parts. This is because lazy saved state init needs to
-    // update the dependency graph for files which have changed since the saved state was generated, but
-    // doesn't want to merge those files yet.
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn full(
         pool: &ThreadPool,
@@ -1958,12 +1585,7 @@ pub(crate) mod recheck {
 }
 
 fn clear_caches() {
-    // We have to clear this at the end of the transaction, because it could
-    // have been populated with now-out-of-date data in the middle of the
-    // transaction by parallelizable requests.
-    // TODO: Persistent_connection.clear_type_parse_artifacts_caches() - not yet ported
-    // Similarly, check_contents_cache contains type information for
-    // dependencies which may have been invalidated on commit.
+    persistent_connection::clear_type_parse_artifacts_caches();
     merge_service::check_contents_cache().borrow_mut().clear();
 }
 
@@ -2011,8 +1633,6 @@ pub(crate) fn recheck_impl(
             )
         })?;
 
-    // Commit entity values so read_committed() returns the current values
-    // in subsequent transactions. Matches OCaml's hh_commit_transaction.
     shared_mem.commit_entities();
 
     let recheck::RecheckResult {
@@ -2028,7 +1648,6 @@ pub(crate) fn recheck_impl(
         num_slow_files: _num_slow_files,
     } = stats;
 
-    //  Collate errors after transaction has completed.
     let (collated_errors, _error_resolution_stat) =
         with_memory_timer(options, "CollateErrors", || {
             let focused_to_check = to_check.focused().dupe();
@@ -2084,7 +1703,6 @@ pub(crate) fn recheck_impl(
     };
 
     let log_recheck_event: Box<dyn FnOnce()> = Box::new(move || {
-        // TODO: FlowEventLogger.recheck - not yet ported
         record_recheck_time();
     });
 
@@ -2098,15 +1716,12 @@ pub(crate) fn recheck_impl(
     Ok((log_recheck_event, recheck_stats, find_ref_results, env))
 }
 
-// NOTE: RecheckStats corresponds to LspProt.recheck_stats in OCaml, defined in a different module.
-// Temporarily placed here until LspProt is ported.
 pub struct RecheckStats {
     pub dependent_file_count: usize,
     pub changed_file_count: usize,
     pub top_cycle: Option<(FileKey, usize)>,
 }
 
-/// creates a closure that lists all files in the given root, returned in chunks
 pub fn make_next_files(
     root: &Path,
     file_options: Arc<FileOptions>,
@@ -2167,53 +1782,67 @@ fn mk_env(
         errors,
         coverage: BTreeMap::new(),
         collated_errors,
-        connections: PersistentConnection::empty(),
+        connections: flow_server_env::persistent_connection::empty(),
         exports,
         master_cx,
     }
 }
 
-/// Verify that the hash in shared memory matches what's on disk.
-/// Used to verify saved state.
 #[allow(dead_code)]
-fn verify_hash(_shared_mem: &Arc<SharedMem>, _file_key: &FileKey) -> bool {
-    // TODO: saved state not yet ported
-    panic!("saved state not yet ported")
+fn verify_hash(shared_mem: &Arc<SharedMem>, file_key: &FileKey) -> bool {
+    let filename_string = file_key.as_str();
+    let content = match std::fs::read_to_string(filename_string) {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+    parsing_service::does_content_match_file_hash(shared_mem, file_key, &content)
 }
 
 #[allow(dead_code)]
-fn assert_valid_hashes(_updates: &CheckedSet, _invalid_hashes: Vec<FileKey>) {
-    // TODO: saved state not yet ported
-    panic!("saved state not yet ported")
+fn assert_valid_hashes(updates: &CheckedSet, invalid_hashes: Vec<FileKey>) {
+    let invalid_hashes: Vec<FileKey> = invalid_hashes
+        .into_iter()
+        .filter(|file| !updates.mem(file))
+        .collect();
+    if invalid_hashes.is_empty() {
+        log::info!("Saved state verification succeeded");
+    } else {
+        let files_str: String = invalid_hashes
+            .iter()
+            .map(|f| f.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        eprintln!(
+            "The following files do not match their hashes in saved state:\n{}",
+            files_str
+        );
+        log::error!("Saved state verification failed");
+        flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::InvalidSavedState);
+    }
 }
 
 #[allow(dead_code)]
 fn init_with_initial_state() {
-    // TODO: saved state not yet ported
     panic!("saved state not yet ported")
 }
 
 #[allow(dead_code)]
 fn init_from_legacy_saved_state() {
-    // TODO: saved state not yet ported
     panic!("saved state not yet ported")
 }
 
 #[allow(dead_code)]
 fn init_from_direct_saved_state() {
-    // TODO: saved state not yet ported
     panic!("saved state not yet ported")
 }
 
 #[allow(dead_code)]
 fn init_from_saved_state() {
-    // TODO: saved state not yet ported
     panic!("saved state not yet ported")
 }
 
 #[allow(dead_code)]
 fn handle_updates_since_saved_state() {
-    // TODO: saved state not yet ported
     panic!("saved state not yet ported")
 }
 
@@ -2231,17 +1860,6 @@ pub fn init_from_scratch(
         let (ordered_libs, all_unordered_libs) =
             files::ordered_and_unordered_lib_paths(&options.file_options);
 
-        // TODO - explicitly order the libs.
-        //
-        // Should we let the filesystem dictate the order that we merge libs? Are we sheep? No! We are
-        // totally humans and we should deterministically order our library definitions. The order that
-        // they are merged determines priority. We should be able to guarantee
-        //
-        // flowlibs are merged first (therefore have the lowest priority)
-        // other libs are merged second (and therefore have the highest priority)
-        //
-        // However making this change is likely going to be a breaking change for people with conflicting
-        // libraries
         let all_unordered_libs = Arc::new(all_unordered_libs);
         let all_unordered_libs_set: BTreeSet<FlowSmolStr> = all_unordered_libs
             .iter()
@@ -2290,12 +1908,8 @@ pub fn init_from_scratch(
         handle.join().unwrap();
         let parse_time = parse_start.elapsed();
 
-        // assert (FilenameSet.is_empty unchanged);
         assert!(unchanged.is_empty());
 
-        // Filter parsed_set to only files that have typed parses. Some files may parse
-        // successfully (get an AST) but fail type sig extraction. Without this filter,
-        // dep_service::calc_dependency_info panics calling get_type_sig_unsafe on those files.
         let parsed_set: FlowOrdSet<FileKey> = parsed_set
             .iter()
             .filter(|f| shared_mem.get_typed_parse(f).is_some())
@@ -2305,7 +1919,6 @@ pub fn init_from_scratch(
         let dirty_modules_ordered: flow_common_modulename::ModulenameSet =
             dirty_modules.into_iter().collect();
 
-        // Parsing won't raise warnings
         let warnings = BTreeMap::new();
         let package_errors = package_json_files_list
             .iter()
@@ -2356,7 +1969,6 @@ pub fn init_from_scratch(
             eprintln!("Duplicate providers: {}", duplicate_providers.len());
         }
 
-        // Resolve requires stage
         let resolve_start = Instant::now();
         resolve_requires(
             pool,
@@ -2437,8 +2049,6 @@ pub fn init_from_scratch(
         eprintln!("Resolve requires:   {:6.2}s", resolve_time.as_secs_f64());
         eprintln!("Calc dependencies:  {:6.2}s", dep_time.as_secs_f64());
 
-        // Commit entity values so read_committed() returns the current values
-        // in subsequent transactions. Matches OCaml's hh_commit_transaction.
         shared_mem.commit_entities();
 
         (env, libs_ok, node_modules_containers)
@@ -2456,10 +2066,8 @@ pub fn exit_if_no_fallback(msg: Option<&str>, options: &Options) {
     }
 }
 
-/// Does a best-effort job to load a saved state. If it fails, returns None
 #[allow(dead_code)]
 pub fn load_saved_state(_options: &Arc<Options>) -> Result<(), String> {
-    // TODO: saved state not yet ported
     panic!("saved state not yet ported")
 }
 
@@ -2479,7 +2087,6 @@ pub fn reinit(
     Result<Vec<()>, String>,
     Env,
 ) {
-    // TODO: reinit: saved state not yet ported
     panic!("reinit: saved state not yet ported")
 }
 
@@ -2500,7 +2107,6 @@ pub fn reinit_full_check(
     Env,
 ) {
     eprintln!("Reiniting with a full check.");
-    // TODO: init_with_initial_state depends on saved state; env passed through unchanged for now
     let env = env;
 
     let mut all_checked_set = CheckedSet::empty();
@@ -2515,9 +2121,7 @@ pub fn reinit_full_check(
         Some(all_checked_set),
     );
 
-    let log_recheck_event: Box<dyn FnOnce()> = Box::new(|| {
-        // TODO: FlowEventLogger.reinit_full_check not yet ported
-    });
+    let log_recheck_event: Box<dyn FnOnce()> = Box::new(|| {});
     let recheck_stats = RecheckStats {
         dependent_file_count: 0,
         changed_file_count: 0,
@@ -2561,9 +2165,6 @@ pub fn recheck(
             env,
         ))
     } else if missed_changes && did_change_mergebase {
-        // Reinitialize the server. This should be just like starting up a new server, *)
-        // except that the existing server stays running and can answer requests *)
-        // using committed data until the re-init is complete.
         Ok(reinit(
             pool,
             shared_mem,
@@ -2588,10 +2189,8 @@ pub fn recheck(
         ) {
             Ok(result) => Ok(result),
             Err(RecheckError::TooSlow) => {
-                // TODO: reinit after Recheck_too_slow: saved state not yet ported
                 panic!("reinit after Recheck_too_slow: saved state not yet ported")
             }
-            // In OCaml, Lwt.Canceled is NOT caught here — it propagates up.
             Err(RecheckError::Canceled) => Err(RecheckError::Canceled),
         }
     }
@@ -2623,7 +2222,6 @@ pub fn check_files_for_init(
             exports,
         } = env;
 
-        // Files to infer stage
         let infer_start = Instant::now();
         let to_infer = files_to_infer(options, focus_targets, parsed, &dependency_info);
         let infer_time = infer_start.elapsed();
@@ -2635,7 +2233,6 @@ pub fn check_files_for_init(
             to_infer.dependencies_cardinal()
         );
 
-        // Include dependencies and dependents stage
         let deps_start = Instant::now();
         let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
         let sig_dependency_graph = dependency_info.sig_dependency_graph();
@@ -2656,14 +2253,10 @@ pub fn check_files_for_init(
             recheck_set.len()
         );
 
-        // (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
-        //  * is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
-        //  * of calling include_dependencies_and_dependents is to compute components. *)
         let ensure_start = Instant::now();
         ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
         let ensure_time = ensure_start.elapsed();
 
-        // Merge stage
         eprintln!("Merging {} components...", components.len());
         let merge_result = merge(
             pool,
@@ -2718,7 +2311,6 @@ pub fn check_files_for_init(
             eprintln!("{}", msg);
         }
 
-        // Update collated errors
         let mut collated_errors = env_collated_errors;
         {
             let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
@@ -2771,8 +2363,6 @@ pub fn check_files_for_init(
             master_cx,
         };
 
-        // Commit entity values so read_committed() returns the current values
-        // in subsequent transactions. Matches OCaml's hh_commit_transaction.
         shared_mem.commit_entities();
 
         Ok((env, check_internal_error))
@@ -2788,7 +2378,6 @@ pub fn libdef_check_for_lazy_init(
     let parsed: FlowOrdSet<FileKey> = env
         .all_unordered_libs
         .iter()
-        // File_key.lib_file_of_absolute name
         .map(|n| FileKey::lib_file_of_absolute(n))
         .collect();
     check_files_for_init(
@@ -2821,10 +2410,6 @@ pub fn full_check_for_init(
     )
 }
 
-/// Performs a single full check from scratch: initializes the environment,
-/// combines init_from_scratch + full_check_for_init into a single call that
-/// runs type checking (optionally focused on specific files), and returns
-/// errors and warnings.
 pub fn check_once(
     options: Arc<Options>,
     pool: &ThreadPool,

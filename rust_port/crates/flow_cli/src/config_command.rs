@@ -9,7 +9,6 @@ use std::path::Path;
 
 use crate::command_spec;
 use crate::command_utils;
-use crate::flowconfig;
 
 fn config_file(flowconfig_name: &str, root: &Path) -> String {
     root.join(flowconfig_name).to_string_lossy().to_string()
@@ -130,9 +129,13 @@ fn check_main(args: &command_spec::Values) {
     .unwrap();
 
     let (file, _root) = find_flowconfig(&flowconfig_name, root.as_deref(), file.as_deref());
-    match flowconfig::get(&file) {
-        Ok((_config, warnings, _hash)) if warnings.is_empty() => if !ignore_version {},
-        Ok((_config, warnings, _hash)) => {
+    match flow_config::get(&file) {
+        Ok((config, warnings, _hash)) if warnings.is_empty() => {
+            if !ignore_version {
+                command_utils::assert_version(&config);
+            }
+        }
+        Ok((config, warnings, _hash)) => {
             if ignore_version {
                 if json || pretty {
                     let json = serde_json::json!({});
@@ -142,23 +145,28 @@ fn check_main(args: &command_spec::Values) {
                         println!("{}", serde_json::to_string(&json).unwrap());
                     }
                 }
-            } else if json || pretty {
-                let json = serde_json::Value::Array(
-                    warnings
-                        .iter()
-                        .map(|flowconfig::Warning(line, msg)| json_of_issue("warning", *line, msg))
-                        .collect(),
-                );
-                exit_with_json(pretty, json);
             } else {
-                let errors = warnings
-                    .iter()
-                    .map(|flowconfig::Warning(line, msg)| (*line, msg.clone()))
-                    .collect::<Vec<_>>();
-                flowconfig_multi_error(&errors);
+                command_utils::assert_version(&config);
+                if json || pretty {
+                    let json = serde_json::Value::Array(
+                        warnings
+                            .iter()
+                            .map(|flow_config::Warning(line, msg)| {
+                                json_of_issue("warning", *line, msg)
+                            })
+                            .collect(),
+                    );
+                    exit_with_json(pretty, json);
+                } else {
+                    let errors = warnings
+                        .iter()
+                        .map(|flow_config::Warning(line, msg)| (*line, msg.clone()))
+                        .collect::<Vec<_>>();
+                    flowconfig_multi_error(&errors);
+                }
             }
         }
-        Err(flowconfig::Error(line, msg)) => {
+        Err(flow_config::Error(line, msg)) => {
             if json || pretty {
                 let json = serde_json::Value::Array(vec![json_of_issue("error", line, &msg)]);
                 exit_with_json(pretty, json);

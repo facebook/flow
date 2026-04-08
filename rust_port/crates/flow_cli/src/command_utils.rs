@@ -21,15 +21,14 @@ use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
 use flow_common::path_matcher::PathMatcher;
 use flow_common_exit_status::FlowExitStatus;
+use flow_config::FlowConfig;
+use flow_config::LazyMode;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_flowlib::LibDir as FlowlibDir;
 use regex::Regex;
 
 use crate::command_spec;
 use crate::command_spec::Command;
-use crate::flowconfig;
-use crate::flowconfig::FlowConfig;
-use crate::flowconfig::LazyMode;
 
 fn remove_exclusion(pattern: &str) -> &str {
     pattern.strip_prefix('!').unwrap_or(pattern)
@@ -103,7 +102,7 @@ pub(super) fn make_options(
         lint_severities,
         strict_mode,
         options:
-            flowconfig::opts::Opts {
+            flow_config::opts::Opts {
                 abstract_classes,
                 all,
                 autoimports,
@@ -250,9 +249,10 @@ pub(super) fn make_options(
     let babel_loose_array_spread = babel_loose_array_spread.unwrap_or(false);
     let ban_spread_key_props = ban_spread_key_props.unwrap_or(false);
     let casting_syntax = casting_syntax.unwrap_or(CastingSyntax::Both);
+    let llm_context_include_imports = false;
     let channel_mode = match channel_mode {
-        Some(flowconfig::ChannelMode::Pipe) => options::ChannelMode::Pipe,
-        Some(flowconfig::ChannelMode::Socket) => options::ChannelMode::Socket,
+        Some(flow_config::ChannelMode::Pipe) => options::ChannelMode::Pipe,
+        Some(flow_config::ChannelMode::Socket) => options::ChannelMode::Socket,
         None => options::ChannelMode::Pipe,
     };
     let enable_const_params = enable_const_params.unwrap_or(false);
@@ -584,6 +584,7 @@ pub(super) fn make_options(
         include_warnings,
         instance_t_objkit_fix,
         lazy_mode,
+        llm_context_include_imports,
         lint_severities,
         log_file: Arc::new(log_file),
         log_saving,
@@ -753,6 +754,40 @@ pub(super) fn print_version() {
         "Flow, a static type checker for JavaScript, version {}",
         flow_common::flow_version::VERSION
     );
+}
+
+pub(super) fn check_version(required_version: &Option<String>) -> Result<(), String> {
+    match required_version {
+        None => Ok(()),
+        Some(version_constraint) => {
+            match flow_common_semver::semver::satisfies(
+                Some(true),
+                version_constraint,
+                flow_common::flow_version::VERSION,
+            ) {
+                Ok(true) => Ok(()),
+                _ => {
+                    let msg = format!(
+                        "Wrong version of Flow. The config specifies version {} but this is version {}",
+                        version_constraint,
+                        flow_common::flow_version::VERSION
+                    );
+                    Err(msg)
+                }
+            }
+        }
+    }
+}
+
+pub(super) fn assert_version(flowconfig: &FlowConfig) {
+    let required_version = &flowconfig.version;
+    match check_version(required_version) {
+        Ok(()) => {}
+        Err(msg) => {
+            eprintln!("{}", msg);
+            flow_common_exit_status::exit(FlowExitStatus::InvalidFlowconfig);
+        }
+    }
 }
 
 pub(super) fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path::PathBuf {

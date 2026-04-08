@@ -158,7 +158,6 @@ pub struct AcOptions {
 
 type DocumentationAndTags = (Option<String>, Option<Vec<LspCompletionItemTag>>);
 
-// Helper function to create printer options
 fn printer_options(
     prefer_single_quotes: bool,
     exact_by_default: bool,
@@ -255,8 +254,6 @@ fn text_edit(
     }
 }
 
-//   (* [detail] is rendered immediately after the name, with no space.
-//      We add a [:] so it renders like an annotation *)
 fn detail_of_ty(
     exact_by_default: bool,
     optional: bool,
@@ -271,10 +268,6 @@ fn detail_of_ty(
     (Some(type_), Some(detail))
 }
 
-//     (* this is rendered immediately after the name, with no space.
-//        for most of these, there's nothing to show because the "kind" icon
-//        captures whether it's a class, enum, interface, etc. *)
-//       (* TODO: the "signature" of a type alias arguably includes type params,
 fn detail_of_ty_decl(
     exact_by_default: bool,
     ts_syntax: bool,
@@ -424,7 +417,7 @@ fn ty_normalizer_options() -> flow_typing_ty_normalizer::env::Options {
     }
 }
 
-pub struct Typing<'a> {
+pub struct Typing<'a, 'cx: 'a> {
     pub layout_options: &'a flow_parser_utils_output::js_layout_generator::Opts,
     pub loc_of_aloc: Box<dyn Fn(&ALoc) -> Loc + 'a>,
     pub get_ast_from_shared_mem: Box<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>> + 'a>,
@@ -433,21 +426,21 @@ pub struct Typing<'a> {
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
     pub search_exported_types:
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
-    pub cx: &'a Context<'a>,
+    pub cx: &'a Context<'cx>,
     pub file_sig: Arc<FileSig>,
     pub ast: ast::Program<Loc, Loc>,
     pub aloc_ast: ast::Program<ALoc, ALoc>,
     pub canonical: Option<&'a autocomplete_sigil::canonical::Token>,
 }
 
-impl<'a> Typing<'a> {
-    fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'_, 'a> {
+impl<'a, 'cx: 'a> Typing<'a, 'cx> {
+    fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'_, 'cx> {
         ty_normalizer_flow::mk_genv(ty_normalizer_options(), self.cx, None, self.file_sig.dupe())
     }
 }
 
 fn search_with_filtered_auto_import_results<'a>(
-    cx: &'a Context<'a>,
+    cx: &Context<'_>,
     f: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
 ) -> Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a> {
     let is_available_autoimport_result = lsp_import_edits::is_available_autoimport_result(cx);
@@ -469,19 +462,19 @@ fn search_with_filtered_auto_import_results<'a>(
     })
 }
 
-pub fn mk_typing_artifacts<'a>(
+pub fn mk_typing_artifacts<'a, 'cx: 'a>(
     layout_options: &'a flow_parser_utils_output::js_layout_generator::Opts,
     loc_of_aloc: Box<dyn Fn(&ALoc) -> Loc + 'a>,
     get_ast_from_shared_mem: Box<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>> + 'a>,
     module_system_info: &'a LspModuleSystemInfo,
     search_exported_values: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
     search_exported_types: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
-    cx: &'a Context<'a>,
+    cx: &'a Context<'cx>,
     file_sig: Arc<FileSig>,
     ast: ast::Program<Loc, Loc>,
     aloc_ast: ast::Program<ALoc, ALoc>,
     canonical: Option<&'a autocomplete_sigil::canonical::Token>,
-) -> Typing<'a> {
+) -> Typing<'a, 'cx> {
     Typing {
         layout_options,
         loc_of_aloc,
@@ -513,13 +506,13 @@ pub enum AutocompleteServiceResultGeneric<R> {
 
 pub type AutocompleteServiceResult = AutocompleteServiceResultGeneric<ac_completion::T>;
 
-fn jsdoc_of_def_loc(typing: &Typing<'_>, def_loc: &ALoc) -> Option<flow_parser::jsdoc::Jsdoc> {
+fn jsdoc_of_def_loc(typing: &Typing<'_, '_>, def_loc: &ALoc) -> Option<flow_parser::jsdoc::Jsdoc> {
     let def_loc = (typing.loc_of_aloc)(def_loc);
     find_documentation::jsdoc_of_getdef_loc(&typing.ast, &*typing.get_ast_from_shared_mem, def_loc)
 }
 
 fn jsdoc_of_member(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     info: &ty_members::MemberInfo<Arc<Ty<ALoc>>>,
 ) -> Option<flow_parser::jsdoc::Jsdoc> {
     match info.def_locs.as_slice() {
@@ -528,7 +521,7 @@ fn jsdoc_of_member(
     }
 }
 
-fn jsdoc_of_loc(typing: &Typing<'_>, loc: &Loc) -> Option<flow_parser::jsdoc::Jsdoc> {
+fn jsdoc_of_loc(typing: &Typing<'_, '_>, loc: &Loc) -> Option<flow_parser::jsdoc::Jsdoc> {
     match get_def_js::get_def(
         &*typing.loc_of_aloc,
         typing.cx,
@@ -560,7 +553,7 @@ fn documentation_and_tags_of_jsdoc(jsdoc: &flow_parser::jsdoc::Jsdoc) -> Documen
 }
 
 fn documentation_and_tags_of_member(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     info: &ty_members::MemberInfo<Arc<Ty<ALoc>>>,
 ) -> DocumentationAndTags {
     jsdoc_of_member(typing, info)
@@ -569,23 +562,25 @@ fn documentation_and_tags_of_member(
         .unwrap_or_else(ac_completion::empty_documentation_and_tags)
 }
 
-fn documentation_and_tags_of_loc(typing: &Typing<'_>, loc: &Loc) -> DocumentationAndTags {
+fn documentation_and_tags_of_loc(typing: &Typing<'_, '_>, loc: &Loc) -> DocumentationAndTags {
     jsdoc_of_loc(typing, loc)
         .as_ref()
         .map(documentation_and_tags_of_jsdoc)
         .unwrap_or_else(ac_completion::empty_documentation_and_tags)
 }
 
-fn documentation_and_tags_of_def_loc(typing: &Typing<'_>, def_loc: &ALoc) -> DocumentationAndTags {
+fn documentation_and_tags_of_def_loc(
+    typing: &Typing<'_, '_>,
+    def_loc: &ALoc,
+) -> DocumentationAndTags {
     jsdoc_of_def_loc(typing, def_loc)
         .as_ref()
         .map(documentation_and_tags_of_jsdoc)
         .unwrap_or_else(ac_completion::empty_documentation_and_tags)
 }
 
-//     t =
 fn members_of_type(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     exclude_proto_members: bool,
     force_instance: bool,
     include_interface_members: bool,
@@ -635,7 +630,6 @@ fn members_of_type(
     Ok((members, errors))
 }
 
-// (* Internal type to track whether a local value is a record type or not *)
 pub enum AcIdType {
     AcIdTypeNormal,
     AcIdTypeRecord {
@@ -645,7 +639,7 @@ pub enum AcIdType {
 }
 
 fn extract_record_fields(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     defaulted_props: &BTreeSet<String>,
     record_type: &Type,
 ) -> Result<Vec<String>, String> {
@@ -663,7 +657,7 @@ fn extract_record_fields(
 }
 
 fn autocomplete_record(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     documentation_and_tags: DocumentationAndTags,
     record_name: &str,
@@ -706,7 +700,7 @@ fn autocomplete_record(
 }
 
 fn local_value_identifiers(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_loc: &Loc,
 ) -> Vec<(
     (String, DocumentationAndTags, AcIdType),
@@ -791,8 +785,6 @@ fn local_value_identifiers(
     ty_normalizer_flow::from_types(None, &typing.norm_genv(), identifiers)
 }
 
-// (* Roughly collects upper bounds of a type.
-//  * This logic will be changed or made unnecessary once we have contextual typing *)
 fn expected_concrete_type_of_t(cx: &Context, lb_type: &Type) -> Type {
     fn unwrap(cx: &Context, seen: &mut BTreeSet<u32>, t: &Type) -> Option<Type> {
         match &**t {
@@ -856,8 +848,6 @@ fn quote_kind(token: &str) -> Option<QuoteKind> {
     }
 }
 
-// (* Use the given token to tweak the edit range to respect existing quotations
-//  * and avoid overridding existing quotations *)
 fn autocomplete_create_string_literal_edit_controls(
     prefer_single_quotes: bool,
     edit_locs: &(Loc, Loc),
@@ -941,7 +931,7 @@ fn flow_text_edit_of_lsp_text_edit(source: Option<&FileKey>, edit: &LspTextEdit)
 }
 
 fn completion_item_of_autoimport(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     src_dir: Option<&str>,
     edit_locs: &(Loc, Loc),
     ranking_info: Option<String>,
@@ -1175,7 +1165,7 @@ fn filter_by_token_and_sort_rev(
 }
 
 fn append_completion_items_of_autoimports(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_loc: &Loc,
     locals: &HashSet<String>,
     edit_locs: &(Loc, Loc),
@@ -1243,7 +1233,7 @@ fn append_completion_items_of_autoimports(
 }
 
 fn autocomplete_id(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_loc: &Loc,
     include_keywords: bool,
     include_super: bool,
@@ -1847,7 +1837,7 @@ fn make_type_param(edit_locs: &(Loc, Loc), name: &str) -> ac_completion::Complet
 }
 
 fn local_type_identifiers(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
 ) -> Vec<(
     (String, ALoc),
     Result<Elt<ALoc>, flow_typing_ty_normalizer::normalizer::Error>,
@@ -1864,7 +1854,7 @@ fn local_type_identifiers(
 }
 
 fn autocomplete_unqualified_type(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_options: &AcOptions,
     tparams_rev: &[String],
     ac_loc: &Loc,
@@ -2180,7 +2170,7 @@ fn autocomplete_create_result_method(
 }
 
 fn autocomplete_member(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_options: &AcOptions,
     edit_locs: &(Loc, Loc),
     token: &str,
@@ -2414,7 +2404,7 @@ fn should_autoimport_react(cx: &Context, imports: bool, file_sig: &FileSig) -> b
 }
 
 fn autocomplete_jsx_intrinsic(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_loc: &Loc,
     edit_locs: &(Loc, Loc),
 ) -> AcResult<ac_completion::T> {
@@ -2463,7 +2453,7 @@ fn autocomplete_jsx_intrinsic(
 }
 
 fn autocomplete_jsx_element(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_loc: &Loc,
     ac_options: &AcOptions,
     edit_locs: &(Loc, Loc),
@@ -2529,7 +2519,7 @@ fn autocomplete_jsx_element(
 }
 
 fn autocomplete_record_field(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     used_field_names: &BTreeSet<String>,
     edit_locs: &(Loc, Loc),
     token: &str,
@@ -2570,7 +2560,7 @@ fn autocomplete_record_field(
 }
 
 fn autocomplete_jsx_attribute(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     used_attr_names: &BTreeSet<String>,
     has_value: bool,
     edit_locs: &(Loc, Loc),
@@ -2638,7 +2628,7 @@ enum ModuleTypeOrType {
 }
 
 fn autocomplete_module_exports(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     token: &str,
     kind: ModuleExportKind,
@@ -2696,7 +2686,7 @@ fn autocomplete_module_exports(
 }
 
 fn unused_super_methods(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     exclude_keys: &BTreeSet<String>,
     enclosing_class_t: &Type,
@@ -2732,7 +2722,7 @@ fn unused_super_methods(
 }
 
 fn autocomplete_class_key(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     token: &str,
     edit_locs: &(Loc, Loc),
     enclosing_class_t: Option<Type>,
@@ -2777,7 +2767,7 @@ fn autocomplete_class_key(
 }
 
 fn autocomplete_object_key(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     token: &str,
     used_keys: &BTreeSet<String>,
@@ -2978,7 +2968,7 @@ fn autocomplete_jsdoc(
 }
 
 fn autocomplete_comment(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     edit_locs: &(Loc, Loc),
     trigger_character: Option<&str>,
     token: &str,
@@ -3039,9 +3029,8 @@ trait Pipe: Sized {
 
 impl<T> Pipe for T {}
 
-// Main public API function for getting autocomplete results
 pub fn autocomplete_get_results(
-    typing: &Typing<'_>,
+    typing: &Typing<'_, '_>,
     ac_options: &AcOptions,
     trigger_character: Option<&str>,
     cursor: &Loc,

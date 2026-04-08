@@ -22,8 +22,9 @@ use crate::flow_projects::ProjectsOptions;
 use crate::slow_to_check_logging::SlowToCheckLogging;
 use crate::verbose::Verbose;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ModuleSystem {
+    #[default]
     Node,
     Haste,
 }
@@ -43,24 +44,27 @@ pub enum JsxMode {
     JsxPragma(String, flow_parser::ast::expression::Expression<ALoc, ALoc>),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SavedStateFetcher {
+    #[default]
     DummyFetcher,
     LocalFetcher,
     ScmFetcher,
     FbFetcher,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ReactRefAsProp {
     /// Only in component syntax: ban ref prop in spread
+    #[default]
     Legacy,
     /// Implement full React 19 behavior
     FullSupport,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ReactRuntime {
+    #[default]
     Automatic,
     Classic,
 }
@@ -73,10 +77,11 @@ pub enum ReactRule {
     RulesOfHooks,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AssertOperator {
     Enabled,
     Specialized,
+    #[default]
     Disabled,
     Unparsed,
 }
@@ -106,25 +111,27 @@ impl AssertOperator {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum CastingSyntax {
+    #[default]
     As,
     Both,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ChannelMode {
+    #[default]
     Pipe,
     Socket,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Format {
     pub bracket_spacing: bool,
     pub single_quotes: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct GcControl {
     pub minor_heap_size: Option<u32>,
     pub major_heap_increment: Option<u32>,
@@ -143,7 +150,7 @@ pub struct LogSaving {
 }
 
 /// Main options structure containing all Flow configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Options {
     pub abstract_classes: bool,
     pub all: bool,
@@ -193,6 +200,7 @@ pub struct Options {
     pub include_warnings: bool,
     pub instance_t_objkit_fix: bool,
     pub lazy_mode: bool,
+    pub llm_context_include_imports: bool,
     pub lint_severities: LintSettings<Severity>,
     pub log_file: Arc<PathBuf>,
     pub log_saving: Arc<BTreeMap<String, LogSaving>>,

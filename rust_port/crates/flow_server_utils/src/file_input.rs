@@ -30,7 +30,8 @@ impl FileInput {
 
     pub fn content_of_file_input_unsafe(&self) -> String {
         match self {
-            FileInput::FileName(f) => std::fs::read_to_string(f).unwrap(),
+            FileInput::FileName(f) => std::fs::read_to_string(f)
+                .expect("content_of_file_input_unsafe: failed to read file"),
             FileInput::FileContent(_, content) => content.clone(),
         }
     }

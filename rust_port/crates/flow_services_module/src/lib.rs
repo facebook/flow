@@ -51,25 +51,18 @@ fn choose_provider_and_warn_about_duplicates(
         providers.into_iter().partition(files::has_flow_ext);
 
     if implementations.is_empty() && definitions.is_empty() {
-        // If there are no definitions or implementations, use the fallback
         fallback()
     } else if definitions.is_empty() {
-        // Else if there are no definitions, use the first implementation
         let impl_ = implementations.remove(0);
         let duplicates = implementations;
         warn_duplicate_providers(m, &impl_, duplicates, errmap);
         Some(impl_)
     } else if implementations.is_empty() {
-        // Else use the first definition
         let defn = definitions.remove(0);
         let duplicates = definitions;
         warn_duplicate_providers(m, &defn, duplicates, errmap);
         Some(defn)
     } else {
-        // If both a definition and an implementation exist, choose between them. A
-        // definition only shadows the implementation with the same path, otherwise
-        // they are considered distinct providers.
-
         let impl_ = implementations.remove(0);
         let dup_impls = implementations;
         let defn = definitions.remove(0);
@@ -80,19 +73,14 @@ fn choose_provider_and_warn_about_duplicates(
         let impl_with_platform_suffix_chopped =
             files::chop_platform_suffix_for_file(file_options, &impl_);
 
-        // Allow pair of A.js.flow & A.ios.js
         if def_with_flow_ext_chopped != impl_with_platform_suffix_chopped {
-            // Additionally allow pair of A.ios.js.flow & A.ios.js
             if files::chop_platform_suffix_for_file(file_options, &def_with_flow_ext_chopped)
                 != impl_with_platform_suffix_chopped
             {
-                // For illegal shadow errors, we error on the pair .js.flow and .js
                 warn_duplicate_providers(m, &defn, vec![impl_.dupe()], errmap);
             }
         }
 
-        // For duplicate provider errors, we error on either two implementation files
-        // or on two declaration files
         warn_duplicate_providers(m, &impl_, dup_impls, errmap);
         warn_duplicate_providers(m, &defn, dup_defns, errmap);
 
@@ -100,14 +88,6 @@ fn choose_provider_and_warn_about_duplicates(
     }
 }
 
-/// A set of module.name_mapper config entry allows users to specify regexp
-/// matcher strings each with a template string in order to map the names of a
-/// dependency in a JS file to another name before trying to resolve it.
-///
-/// The user can specify any number of these mappers, but the one that gets
-/// applied to any given module name is the first one whose name matches the
-/// regexp string. For the node module system, we go a step further and only
-/// choose candidates that match the string *and* are a valid, resolvable path.
 fn module_name_candidates(options: &Options, name: &str) -> Vec1<String> {
     fn map_name(
         name: &str,
@@ -116,9 +96,7 @@ fn module_name_candidates(options: &Options, name: &str) -> Vec1<String> {
         (regexp, template): &(Regex, String),
     ) {
         let new_name = {
-            // First we apply the mapper
             let result = regexp.replace_all(name, template.as_str());
-            // Then we replace the PROJECT_ROOT placeholder.
             expand_project_root_token(&result)
         };
 
@@ -141,19 +119,12 @@ fn module_name_candidates(options: &Options, name: &str) -> Vec1<String> {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PackageIncompatibleReason {
-    /// Didn't exist before, now it exists
     New,
-    /// Was valid, now is invalid
     BecameInvalid,
-    /// Was invalid, now is valid
     BecameValid,
-    /// The `name` property changed from the former to the latter
     NameChanged(Option<FlowSmolStr>, Option<FlowSmolStr>),
-    /// The `main` property changed from the former to the latter
     MainChanged(Option<FlowSmolStr>, Option<FlowSmolStr>),
-    /// The `haste_commonjs` property changed to this value
     HasteCommonjsChanged(bool),
-    /// The `exports` property changed
     ExportsChanged,
     Unknown,
 }
@@ -204,17 +175,12 @@ pub fn package_incompatible(
     new_package: Result<PackageJson, ()>,
 ) -> PackageIncompatibleReturn {
     match (old_package, new_package) {
-        // didn't exist before, found a new one
         (None, Ok(_)) => PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::New),
-        // didn't exist before, new one is invalid
         (None, Err(_)) => PackageIncompatibleReturn::Compatible,
-        // was invalid before, still invalid
         (Some(Err(())), Err(_)) => PackageIncompatibleReturn::Compatible,
-        // was invalid before, new one is valid
         (Some(Err(())), Ok(_)) => {
             PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::BecameValid)
         }
-        // existed before, new one is invalid
         (Some(Ok(_)), Err(_)) => {
             PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::BecameInvalid)
         }
@@ -251,7 +217,6 @@ pub fn package_incompatible(
             } else if old_exports != new_exports {
                 PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::ExportsChanged)
             } else {
-                // This shouldn't happen -- if it does, it probably means we need to add cases above
                 PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::Unknown)
             }
         }
@@ -270,7 +235,14 @@ impl PackageInfo {
     }
 }
 
+#[derive(Default)]
 pub struct PhantomAcc(BTreeMap<Modulename, Option<Dependency>>);
+
+impl PhantomAcc {
+    pub fn keys(&self) -> impl Iterator<Item = &Modulename> {
+        self.0.keys()
+    }
+}
 
 lazy_static! {
     static ref CURRENT_DIR_NAME: Regex = Regex::new(r"^\.").unwrap();
@@ -305,19 +277,13 @@ fn record_phantom_dependency(
     }
 }
 
-// Specification of a module system. Currently this signature is sufficient to
-// model both Haste and Node, but should be further generalized.
 trait ModuleSystemSig {
-    // Given a file and docblock info, make the name of the module it exports.
     fn exported_module(
         options: &Options,
         file: &FileKey,
         package_info: &PackageInfo,
     ) -> Option<HasteModuleInfo>;
 
-    // Given a file (importing_file) and a reference in it to an imported module (import_specifier),
-    // make the name of the module it refers to. If given an optional reference to an accumulator,
-    // record paths that were looked up but not found during resolution.
     fn imported_module(
         options: &Options,
         shared_mem: &SharedMem,
@@ -327,9 +293,6 @@ trait ModuleSystemSig {
         import_specifier: &FlowImportSpecifier,
     ) -> Result<Dependency, Option<FlowImportSpecifier>>;
 
-    // for a given module name, choose a provider from among a set of
-    // files with that exported name. also check for duplicates and
-    // generate warnings, as dictated by module system rules.
     fn choose_provider(
         options: &Options,
         m: &str,
@@ -338,8 +301,6 @@ trait ModuleSystemSig {
         fallback: impl FnOnce() -> Option<FileKey>,
     ) -> Option<FileKey>;
 }
-
-/****************** Node module system *********************/
 
 mod node {
     use std::collections::BTreeSet;
@@ -591,8 +552,6 @@ mod node {
         )
         .map(|ps| ps.to_platform_string_set(file_options))?;
 
-        // For .ios.js files, we will try .ios platform import.
-        // If .native contains .ios, we will try .native imports as well.
         let single_platform = if available_platform_set.len() == 1 {
             vec![available_platform_set.first().unwrap().clone()]
         } else {
@@ -617,11 +576,7 @@ mod node {
             .into_iter()
             .chain(grouped_platform)
             .collect();
-        if result.is_empty() {
-            None
-        } else {
-            Some(result)
-        }
+        Some(result)
     }
 
     pub(super) fn resolve_relative(
@@ -640,8 +595,6 @@ mod node {
             .map(|s| files::normalize_path(&package_path, s))
             .unwrap_or_else(|| package_path.clone());
 
-        // We do not try resource file extensions here. So while you can write
-        // require('foo') to require foo.js, it should never resolve to foo.css
         let file_exts = &file_options.module_file_exts;
 
         match ordered_allowed_implicit_platform_specific_import(
@@ -650,78 +603,64 @@ mod node {
             importing_file.as_str(),
             None,
         ) {
-            None => {
-                // Try <path> import directly. Needed for `import './foo.js'`
-                path_if_exists(
+            None => path_if_exists(
+                shared_mem,
+                file_options,
+                phantom_acc.as_deref_mut(),
+                &full_path,
+            )
+            .or_else(|| {
+                path_if_exists_with_file_exts(
                     shared_mem,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     &full_path,
+                    file_exts,
                 )
-                // Try <path>.js import. Needed for `import './foo'`
-                .or_else(|| {
-                    path_if_exists_with_file_exts(
+            })
+            .or_else(|| {
+                resolve_package(
+                    options,
+                    shared_mem,
+                    phantom_acc.as_deref_mut(),
+                    subpath,
+                    &package_path,
+                )
+            }),
+            Some(ordered_platforms) => path_if_exists(
+                shared_mem,
+                file_options,
+                phantom_acc.as_deref_mut(),
+                &full_path,
+            )
+            .or_else(|| {
+                for platform in &ordered_platforms {
+                    let platform_path = format!("{}.{}", full_path, platform);
+                    if let Some(result) = path_if_exists_with_file_exts(
                         shared_mem,
                         file_options,
                         phantom_acc.as_deref_mut(),
-                        &full_path,
+                        &platform_path,
                         file_exts,
-                    )
-                })
-                .or_else(|| {
-                    resolve_package(
-                        options,
-                        shared_mem,
-                        phantom_acc.as_deref_mut(),
-                        subpath,
-                        &package_path,
-                    )
-                })
-            }
-            Some(ordered_platforms) => {
-                // Try <path> import directly. Needed for `import './foo.js'`
-                path_if_exists(
-                    shared_mem,
-                    file_options,
-                    phantom_acc.as_deref_mut(),
-                    &full_path,
-                )
-                .or_else(|| {
-                    // Try <path>.<platform>.js import.
-                    // Needed so that `import './foo'` resolves to foo.android.js in android.js files
-                    for platform in &ordered_platforms {
-                        let platform_path = format!("{}.{}", full_path, platform);
-                        if let Some(result) = path_if_exists_with_file_exts(
-                            shared_mem,
-                            file_options,
-                            phantom_acc.as_deref_mut(),
-                            &platform_path,
-                            file_exts,
-                        ) {
-                            return Some(result);
-                        }
+                    ) {
+                        return Some(result);
                     }
-                    None
-                })
-                // Try <path>.js import. Needed for `import './foo'`
-                .or_else(|| {
-                    path_if_exists_with_file_exts(
-                        shared_mem,
-                        file_options,
-                        phantom_acc.as_deref_mut(),
-                        &full_path,
-                        file_exts,
-                    )
-                })
-                .or_else(|| {
-                    resolve_package(options, shared_mem, phantom_acc, subpath, &package_path)
-                })
-            }
+                }
+                None
+            })
+            .or_else(|| {
+                path_if_exists_with_file_exts(
+                    shared_mem,
+                    file_options,
+                    phantom_acc.as_deref_mut(),
+                    &full_path,
+                    file_exts,
+                )
+            })
+            .or_else(|| resolve_package(options, shared_mem, phantom_acc, subpath, &package_path)),
         }
     }
 
-    // Parses a package import specifier into a package name and subpath,
-    // accounting for things such as scoped packages
     fn parse_package_name(specifier: &str) -> (String, String) {
         if specifier.is_empty() {
             return (String::new(), ".".to_string());
@@ -735,7 +674,6 @@ mod node {
         let separator_index = if initial_char == '@'
             && let Some(first_separator_index) = first_separator_index
         {
-            // For scoped packages, find second separator
             specifier[first_separator_index + 1..]
                 .find(dir_sep)
                 .map(|i| first_separator_index + 1 + i)
@@ -830,10 +768,6 @@ mod node {
         None
     }
 
-    // The flowconfig option `module.system.node.allow_root_relative` tells Flow
-    // to resolve requires like `require('foo/bar.js')` relative to the project
-    // root directory. This is something bundlers like Webpack can be configured
-    // to do.
     pub(super) fn resolve_root_relative(
         options: &Options,
         shared_mem: &SharedMem,
@@ -955,24 +889,12 @@ mod node {
                     }
                 }
 
-                // For the Node module system, we always use the original unmapped name in
-                // error messages, so we never need to store a mapped name.
-                //
-                // TODO: This means that name mappers can not force a mapped module name
-                // to resolve to a libdef, since we try to resolve to libdef modules
-                // during check in the `Error _` case.
                 Err(None)
             }
-            FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => {
-                // We should never find Haste modules under Node.
-                Err(None)
-            }
+            FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => Err(None),
         }
     }
 
-    // in node, file names are module names, as guaranteed by
-    // our implementation of exported_name, so anything but a
-    // singleton provider set is craziness.
     fn choose_provider_impl(
         options: &Options,
         m: &str,
@@ -984,8 +906,6 @@ mod node {
         super::choose_provider_and_warn_about_duplicates(options, &m, errmap, files, fallback)
     }
 }
-
-/****************** Haste module system *********************/
 
 mod haste {
     use std::path::Path;
@@ -1161,8 +1081,6 @@ mod haste {
                         &package_dir,
                     ),
                     (Some(package_dir), _) => {
-                        // add a phantom dep on the package name, so we re-resolve the subpath
-                        // if the package gets a new provider
                         record_phantom_dependency(
                             mname.clone(),
                             dependency.clone(),
@@ -1183,11 +1101,6 @@ mod haste {
                     }
                     (None, []) => dependency,
                     (None, _) => {
-                        // if r = foo/bar and foo is a regular module, don't resolve.
-                        // TODO: could we provide a better error than just failing to resolve?
-                        //
-                        // we do need to add a phantom dep on the module, so we re-resolve
-                        // if the provider changes to a package.
                         record_phantom_dependency(mname, dependency, phantom_acc.as_deref_mut());
                         None
                     }
@@ -1275,10 +1188,6 @@ mod haste {
                         .any(|ext| module_name.ends_with(ext.as_str()));
 
                     if is_platform_specific {
-                        // If we don't allow an import to resolve a platform specific import, but we did find one,
-                        // we should fail to resolve. This restriction only applies to Haste modules because Metro
-                        // cannot resolve them.
-                        // TODO: could we provide a better error than just failing to resolve?
                         if let Dependency::HasteModule(mname) = dep {
                             record_phantom_dependency(
                                 mname.clone(),
@@ -1477,9 +1386,6 @@ mod haste {
     ) -> Result<Dependency, Option<FlowImportSpecifier>> {
         match import_specifier {
             FlowImportSpecifier::Userland(userland) => {
-                // For historical reasons, the Haste module system always picks the first
-                // matching candidate, unlike the Node module system which picks the first
-                // "valid" matching candidate.
                 let candidates = super::module_name_candidates(options, userland.as_str());
                 let first_candidate = candidates.first();
 
@@ -1494,9 +1400,6 @@ mod haste {
                     return Ok(m);
                 }
 
-                // If the candidates list is a singleton, then no name mappers applied,
-                // and we failed to resolve the unmapped name. Otherwise, `r` is the
-                // chosen mapped name and we store it for error reporting.
                 let mapped_name = if candidates.len() > 1 {
                     Some(FlowImportSpecifier::userland(FlowSmolStr::new(
                         first_candidate,
@@ -1590,12 +1493,6 @@ mod haste {
         }
     }
 
-    // in haste, many files may provide the same module. here we're also
-    // supporting the notion of mock modules - allowed duplicates used as
-    // fallbacks. we prefer the non-mock if it exists, otherwise choose an
-    // arbitrary mock, if any exist. if multiple non-mock providers exist,
-    // we pick one arbitrarily and issue duplicate module warnings for the
-    // rest.
     fn choose_provider_impl(
         options: &Options,
         m: &str,
@@ -1624,10 +1521,6 @@ mod haste {
     }
 }
 
-/****************** Module system dispatch API *********************/
-
-/// Type alias for error map used in choose_provider
-/// OCaml: (File_key.t * File_key.t Nel.t) SMap.t (ordered string map)
 pub type ErrorMap = BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>;
 
 pub fn exported_module(
@@ -1734,64 +1627,6 @@ pub fn add_parsed_resolved_requires(
     Ok(())
 }
 
-// Repick providers for modules that are exported by new and changed files, or
-// were provided by changed and deleted files.
-//
-// For deleted files, their exported modules, if in old modules, will pick a
-// new provider, or be left with no provider.
-//
-// For changed files, their exported modules, if in old modules, may pick
-// the same provider (i.e., the changed file) or a new provider (a different
-// file). If not in old modules, they may pick a new provider (i.e., the
-// changed file) or the same provider (a different file).
-//
-// For new files, their exported modules may pick a new provider (i.e., the new
-// file) or the same provider (a different file).
-//
-// Suppose that:
-// new_or_changed is a list of parsed / unparsed file names.
-// old_modules is a set of removed module names.
-//
-// Modules provided by parsed / unparsed files may or may not have a
-// provider. Modules named in old_modules definitely do not have a
-// provider. Together, they are considered "dirty" modules. Providers for dirty
-// modules must be repicked.
-//
-// Files that depend on the subset of dirty modules that either have changed
-// providers or are provided by changed files will be rechecked.
-//
-// Preconditions:
-// 1. all files in new_or_changed have entries in InfoHeap (true if
-// we're properly calling add_parsed_info and add_unparsed_info for every
-// parsed / unparsed file before calling commit_modules)
-// 2. all modules not mentioned in old_modules, but provided by one or more
-// files in InfoHeap, have some provider registered in NameHeap.
-// (However, the current provider may not be the one we now want,
-// given newly parsed / unparsed files.)
-// 3. conversely all modules in old_modules lack a provider in NameHeap.
-//
-// Postconditions:
-// 1. all modules provided by at least 1 file in InfoHeap have a provider
-// registered in NameHeap, and it's the provider we want according to our
-// precedence and scoping rules.
-//
-// We make use of a shadow map in the master process which maintains
-// a view of what's going on in NameHeap and InfoHeap, mapping module
-// names to sets of filenames of providers.
-// TODO: this shadow map is probably a perf bottleneck, get rid of it.
-//
-// Algorithm here:
-//
-// 1. Calculate repick set:
-// (a) add all removed modules to the set of modules to repick a provider for.
-// (b) add the modules provided by all parsed / unparsed files to the repick set.
-//
-// 2. Commit providers for dirty modules:
-// (a) For each module in the repick set, pick a winner from its available
-// providers. if it's different than the current provider, or if there is no
-// current provider, add the new provider to the list to be registered.
-// (b) remove the unregistered modules from NameHeap
-// (c) register the new providers in NameHeap
 pub fn commit_modules(
     pool: &flow_utils_concurrency::thread_pool::ThreadPool,
     options: &Options,
@@ -1826,22 +1661,12 @@ pub fn commit_modules(
 
         match (&old_provider, &new_provider) {
             (_, None) => {
-                // TODO: Clean up modules which have no providers and no dependents. At
-                // this point we don't have enough information to remove a module because
-                // we might gain new dependents in the resolve require step after commit
-                // modules.
-                //
-                // X-ref update revdeps in parsing heaps, where a module can lose its last
-                // dependent.
                 if debug {
                     eprintln!("no remaining providers: {}", name);
                 }
                 haste_module.set_provider(None);
             }
             (None, Some(p)) => {
-                // When can this happen? Either m pointed to a file that used to
-                // provide m and changed or got deleted (causing m to be in
-                // old_modules), or m didn't have a provider before.
                 if debug {
                     eprintln!("initial provider {} -> {}", name, p.as_str());
                 }
@@ -1849,22 +1674,9 @@ pub fn commit_modules(
             }
             (Some(old_p), Some(new_p)) => {
                 if old_p == new_p {
-                    // When can this happen? Say m pointed to f before, a different file
-                    // f' that provides m changed (so m is not in old_modules), but f
-                    // continues to be the chosen provider = p (winning over f').
                     if debug {
                         eprintln!("unchanged provider: {} -> {}", name, new_p.as_str());
                     }
-                    // Even if the module has the same provider file, we might need to
-                    // treat this module as changed. Remember that we use changed modules
-                    // to get the set of dirty direct dependents -- dependents which can
-                    // not be found through the server env's dependency graph.
-                    //
-                    // Specifically, we care about parsed<->unparsed transitions.
-                    // 1. Providers which were unparsed, now parsed, which had dependents
-                    // 2. Providers which were parsed, now unparsed, which have dependents
-                    //
-                    // These dependents are not included in the server env dep graph.
                     let old_typed = shared_mem.get_typed_parse_committed(new_p);
                     let new_typed = shared_mem.get_typed_parse(new_p);
 
@@ -1875,9 +1687,6 @@ pub fn commit_modules(
                         }
                     }
                 } else {
-                    // When can this happen? Say m pointed to f before, a different file
-                    // f' that provides m changed (so m is not in old_modules), and
-                    // now f' becomes the chosen provider = p (winning over f).
                     if debug {
                         eprintln!(
                             "new provider: {} -> {} replaces {}",
@@ -1921,17 +1730,9 @@ pub fn commit_modules(
             (None, Some(_), _, _)
             | (Some(_), None, _, _)
             | (None, None, Some(_), None)
-            | (None, None, None, Some(_)) => {
-                // If the provider file was created or deleted, then we need to track any
-                // dependents, because phantom edges are not in the server env dependency
-                // graph, but any phantom dependents need to be rechecked.
-            }
+            | (None, None, None, Some(_)) => {}
             (Some(old_parse), Some(new_parse), _, _)
             | (None, None, Some(old_parse), Some(new_parse)) => {
-                // If the provider file did a parse<->unparsed transition, we need to
-                // track any dependents, because edges involving unparsed files are not in
-                // the server env dependency graph, but any dependents need to be
-                // rechecked.
                 let old_typed = matches!(old_parse, Parse::Typed(_));
                 let new_typed = matches!(new_parse, Parse::Typed(_));
 

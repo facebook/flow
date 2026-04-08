@@ -178,7 +178,10 @@ pub mod text_document_diagnostics {
 }
 
 pub mod ping {
-    pub type Result = ();
+    #[derive(Debug, Clone)]
+    pub struct Result {
+        pub start_server_status: Option<String>,
+    }
 }
 
 pub mod rage {
@@ -398,7 +401,6 @@ pub struct T {
     pub of_auto_close_jsx_result: Box<dyn Fn(&T, auto_close_jsx::Result) -> auto_close_jsx::Result>,
     pub of_cancel_request_params: Box<dyn Fn(&T, CancelParams) -> CancelParams>,
     pub of_code_action: Box<dyn Fn(&T, CodeAction) -> CodeAction>,
-    //   of_code_action_context:
     pub of_code_action_context: Box<dyn Fn(&T, CodeActionContext) -> CodeActionContext>,
     pub of_code_action_request_params: Box<dyn Fn(&T, CodeActionParams) -> CodeActionParams>,
     pub of_code_action_result:
@@ -417,15 +419,12 @@ pub struct T {
     pub of_definition_params: Box<dyn Fn(&T, GotoDefinitionParams) -> GotoDefinitionParams>,
     pub of_definition_result: Box<dyn Fn(&T, Vec<Location>) -> Vec<Location>>,
     pub of_diagnostic: Box<dyn Fn(&T, Diagnostic) -> Diagnostic>,
-    //   of_did_change_configuration_params:
     pub of_did_change_configuration_params:
         Box<dyn Fn(&T, DidChangeConfigurationParams) -> DidChangeConfigurationParams>,
-    //   of_did_change_content_change_event:
     pub of_did_change_content_change_event:
         Box<dyn Fn(&T, TextDocumentContentChangeEvent) -> TextDocumentContentChangeEvent>,
     pub of_did_change_params:
         Box<dyn Fn(&T, DidChangeTextDocumentParams) -> DidChangeTextDocumentParams>,
-    //   of_did_change_watched_files_params:
     pub of_did_change_watched_files_params:
         Box<dyn Fn(&T, DidChangeWatchedFilesParams) -> DidChangeWatchedFilesParams>,
     pub of_did_close_params:
@@ -441,21 +440,15 @@ pub struct T {
         Box<dyn Fn(&T, DocumentHighlightParams) -> DocumentHighlightParams>,
     pub of_document_highlight_result:
         Box<dyn Fn(&T, Vec<DocumentHighlight>) -> Vec<DocumentHighlight>>,
-    //   of_document_on_type_formatting_params:
     pub of_document_on_type_formatting_params:
         Box<dyn Fn(&T, DocumentOnTypeFormattingParams) -> DocumentOnTypeFormattingParams>,
-    //   of_document_on_type_formatting_result:
     pub of_document_on_type_formatting_result: Box<dyn Fn(&T, Vec<TextEdit>) -> Vec<TextEdit>>,
-    //   of_document_paste_prepare_params:
     pub of_document_paste_prepare_params:
         Box<dyn Fn(&T, document_paste::PrepareParams) -> document_paste::PrepareParams>,
-    //   of_document_paste_provide_params:
     pub of_document_paste_provide_params:
         Box<dyn Fn(&T, document_paste::ProvideParams) -> document_paste::ProvideParams>,
-    //   of_document_range_formatting_params:
     pub of_document_range_formatting_params:
         Box<dyn Fn(&T, DocumentRangeFormattingParams) -> DocumentRangeFormattingParams>,
-    //   of_document_range_formatting_result:
     pub of_document_range_formatting_result: Box<dyn Fn(&T, Vec<TextEdit>) -> Vec<TextEdit>>,
     pub of_document_symbol_params: Box<dyn Fn(&T, DocumentSymbolParams) -> DocumentSymbolParams>,
     pub of_document_symbol_result:
@@ -505,10 +498,8 @@ pub struct T {
     pub of_selection_range_result: Box<dyn Fn(&T, Vec<SelectionRange>) -> Vec<SelectionRange>>,
     pub of_signature_help_params: Box<dyn Fn(&T, SignatureHelpParams) -> SignatureHelpParams>,
     pub of_signature_help_result: Box<dyn Fn(&T, Option<SignatureHelp>) -> Option<SignatureHelp>>,
-    //   of_text_document_diagnostics_params:
     pub of_text_document_diagnostics_params:
         Box<dyn Fn(&T, text_document_diagnostics::Params) -> text_document_diagnostics::Params>,
-    //   of_text_document_diagnostics_result:
     pub of_text_document_diagnostics_result:
         Box<dyn Fn(&T, text_document_diagnostics::Result) -> text_document_diagnostics::Result>,
     pub of_show_message_params: Box<dyn Fn(&T, ShowMessageParams) -> ShowMessageParams>,
@@ -519,24 +510,20 @@ pub struct T {
     pub of_show_status_params: Box<dyn Fn(&T, show_status::Params) -> show_status::Params>,
     pub of_show_status_result: Box<dyn Fn(&T, show_status::Result) -> show_status::Result>,
     pub of_symbol_information: Box<dyn Fn(&T, SymbolInformation) -> SymbolInformation>,
-    //   of_workspace_symbol_information:
     pub of_workspace_symbol_information:
         Box<dyn Fn(&T, workspace_symbol_information::T) -> workspace_symbol_information::T>,
     pub of_text_document_identifier:
         Box<dyn Fn(&T, TextDocumentIdentifier) -> TextDocumentIdentifier>,
     pub of_text_document_item: Box<dyn Fn(&T, TextDocumentItem) -> TextDocumentItem>,
-    //   of_text_document_position_params:
     pub of_text_document_position_params:
         Box<dyn Fn(&T, TextDocumentPositionParams) -> TextDocumentPositionParams>,
     pub of_text_edit: Box<dyn Fn(&T, TextEdit) -> TextEdit>,
-    //   of_text_edit_or_insert_replace_edit:
     pub of_text_edit_or_insert_replace_edit:
         Box<dyn Fn(&T, TextEditOrInsertReplaceEdit) -> TextEditOrInsertReplaceEdit>,
     pub of_type_coverage_params: Box<dyn Fn(&T, type_coverage::Params) -> type_coverage::Params>,
     pub of_type_coverage_result: Box<dyn Fn(&T, type_coverage::Result) -> type_coverage::Result>,
     pub of_type_definition_params: Box<dyn Fn(&T, GotoDefinitionParams) -> GotoDefinitionParams>,
     pub of_type_definition_result: Box<dyn Fn(&T, Vec<Location>) -> Vec<Location>>,
-    //   of_versioned_text_document_identifier:
     pub of_versioned_text_document_identifier:
         Box<dyn Fn(&T, VersionedTextDocumentIdentifier) -> VersionedTextDocumentIdentifier>,
     pub of_will_rename_files_params:
@@ -547,7 +534,6 @@ pub struct T {
     pub of_workspace_symbol_params: Box<dyn Fn(&T, WorkspaceSymbolParams) -> WorkspaceSymbolParams>,
     pub of_workspace_symbol_result:
         Box<dyn Fn(&T, workspace_symbol_result::T) -> workspace_symbol_result::T>,
-    // }
 }
 
 pub fn default_mapper() -> T {

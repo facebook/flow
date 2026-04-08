@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/type_of_name/type_of_name.ml`
-
 use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -39,9 +37,9 @@ use flow_services_export::export_index;
 use flow_services_export::export_search;
 use flow_services_export::export_search_types;
 use flow_services_inference::type_contents;
-use flow_services_inference::types_js_types::FileArtifacts;
-use flow_services_inference::types_js_types::ParseArtifacts;
-use flow_services_inference::types_js_types::TypecheckArtifacts;
+use flow_services_inference_types::FileArtifacts;
+use flow_services_inference_types::ParseArtifacts;
+use flow_services_inference_types::TypecheckArtifacts;
 use flow_typing::ty_members;
 use flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode;
 use flow_typing_ty_normalizer::env::Genv;
@@ -148,7 +146,7 @@ fn extract_prop_docs(
     if docs.is_empty() { None } else { Some(docs) }
 }
 
-// Member lookup: find a member's type and def_locs from a Ty.elt
+// Looks up a member's type and definition locations from an element.
 fn lookup_member_in_component_props<L: Dupe>(
     member_name: &str,
     props: &[ty::FlattenedComponentProp<L>],
@@ -225,7 +223,7 @@ fn lookup_member_in_elt<L: Dupe>(
     }
 }
 
-// Generate a type summary string from a Ty.t for ref expansion
+// Generates a type summary string for ref expansion.
 fn summarize_ty<L: Dupe>(t: &Ty<L>) -> Option<String> {
     let opts = PrinterOptions {
         exact_by_default: true,

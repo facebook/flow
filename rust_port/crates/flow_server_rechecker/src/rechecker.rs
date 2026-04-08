@@ -1,0 +1,343 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::sync::Arc;
+use std::sync::RwLock;
+use std::time::Instant;
+
+use dupe::Dupe;
+use flow_common::options::Options;
+use flow_common_utils::checked_set::CheckedSet;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_heap::parsing_heaps::SharedMem;
+use flow_server_env::error_collator;
+use flow_server_env::lsp_prot;
+use flow_server_env::monitor_prot;
+use flow_server_env::monitor_rpc;
+use flow_server_env::persistent_connection;
+use flow_server_env::server_env;
+use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_monitor_listener_state::Priority;
+use flow_server_env::server_monitor_listener_state::Updates;
+use flow_server_env::server_prot;
+use flow_server_env::server_status;
+use flow_services_inference::type_service;
+use flow_services_references::find_refs_types;
+
+use crate::recheck_updates;
+
+pub struct ProfilingFinished {
+    pub duration: f64,
+}
+
+impl ProfilingFinished {
+    pub fn get_profiling_duration(&self) -> f64 {
+        self.duration
+    }
+}
+// The wait_for_cancel thread itself is NOT cancelable
+// Allow this stop function to be called multiple times for the same loop
+// Tell the loop to cancel at its earliest convinience
+// Wait for the loop to finish
+fn start_parallelizable_workloads(
+    _genv: &server_env::Genv,
+    _env: &server_env::Env,
+) -> Box<dyn FnOnce()> {
+    Box::new(|| {})
+}
+
+pub fn get_lazy_stats(
+    options: &Options,
+    env: &server_env::Env,
+) -> server_prot::response::LazyStats {
+    let checked_files = env.checked_files.cardinal() as i32;
+    let total_files = env.files.len() as i32;
+    server_prot::response::LazyStats {
+        lazy_mode: options.lazy_mode,
+        checked_files,
+        total_files,
+    }
+}
+
+pub fn process_updates(
+    skip_incompatible: bool,
+    options: &Options,
+    env: &server_env::Env,
+    shared_mem: &SharedMem,
+    updates: &BTreeSet<String>,
+) -> Updates {
+    match recheck_updates::process_updates(
+        skip_incompatible,
+        options,
+        &env.all_unordered_libs,
+        shared_mem,
+        updates,
+    ) {
+        Ok(updates) => Updates::NormalUpdates(updates),
+        Err(recheck_updates::Error::RecoverableShouldReinitNonLazily { msg, updates }) => {
+            eprintln!("{}", msg);
+            Updates::RequiredFullCheckReinit(updates)
+        }
+        Err(recheck_updates::Error::Unrecoverable { msg, exit_status }) => {
+            eprintln!("{}", msg);
+            flow_common_exit_status::exit(exit_status);
+        }
+    }
+}
+
+fn send_start_recheck(env: &server_env::Env) {
+    monitor_rpc::status_update(server_status::Event::RecheckStart);
+    persistent_connection::send_start_recheck(&env.connections);
+}
+
+// We must send "end_recheck" prior to sending errors+warnings so the client
+// knows that this set of errors+warnings are final ones, not incremental.
+fn send_end_recheck(options: &Options, env: &server_env::Env) {
+    let lazy_stats = get_lazy_stats(options, env);
+    persistent_connection::send_end_recheck(lazy_stats, &env.connections);
+
+    persistent_connection::update_clients(
+        &env.connections,
+        lsp_prot::ErrorsReason::EndOfRecheck,
+        || {
+            let (errors, warnings) = error_collator::get_with_separate_warnings(env);
+            (errors, warnings.clone())
+        },
+    );
+
+    monitor_rpc::status_update(server_status::Event::FinishingUp);
+}
+
+fn recheck(
+    genv: &server_env::Genv,
+    env: server_env::Env,
+    files_to_force: CheckedSet,
+    find_ref_command: Option<server_monitor_listener_state::FindRefCommand>,
+    require_full_check_reinit: bool,
+    changed_mergebase: Option<bool>,
+    missed_changes: bool,
+    will_be_checked_files: &mut CheckedSet,
+    updates: CheckedSet,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+) -> (ProfilingFinished, server_env::Env) {
+    let options = &genv.options;
+    let workers = genv.workers.as_ref().unwrap();
+
+    let find_ref_request = find_refs_types::empty_request();
+    let _find_ref_command = find_ref_command;
+
+    let _should_print_summary = options.profile;
+    let recheck_start = Instant::now();
+
+    send_start_recheck(&env);
+
+    let recheck_result = type_service::recheck(
+        workers,
+        &genv.shared_mem,
+        options,
+        &updates,
+        &find_ref_request.def_info,
+        files_to_force,
+        require_full_check_reinit,
+        changed_mergebase,
+        missed_changes,
+        node_modules_containers,
+        will_be_checked_files,
+        env,
+    );
+    let (log_recheck_event, recheck_stats, _find_ref_results, env) = match recheck_result {
+        Ok((log_event, stats, results, env)) => (log_event, stats, results, env),
+        Err(type_service::RecheckError::Canceled) => {
+            log::error!("Recheck was canceled (unexpected without async runtime)");
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError);
+        }
+        Err(type_service::RecheckError::TooSlow) => {
+            unreachable!("TooSlow is handled inside type_service::recheck");
+        }
+    };
+
+    if let Some(command) = _find_ref_command {
+        command.run();
+    }
+
+    send_end_recheck(options, &env);
+
+    let duration = recheck_start.elapsed().as_secs_f64();
+    let profiling = ProfilingFinished { duration };
+
+    log_recheck_event();
+
+    let lsp_stats = lsp_prot::RecheckStats {
+        dependent_file_count: recheck_stats.dependent_file_count as i32,
+        changed_file_count: recheck_stats.changed_file_count as i32,
+        top_cycle: recheck_stats.top_cycle.map(|(f, s)| (f, s as i32)),
+    };
+    monitor_rpc::send_telemetry(lsp_prot::TelemetryFromServer::RecheckSummary {
+        duration: profiling.get_profiling_duration(),
+        stats: lsp_stats,
+    });
+
+    (profiling, env)
+}
+
+// We don't want to start running f until we're in the try block
+fn run_but_cancel_on_file_changes<T>(
+    _options: &Options,
+    _shared_mem: &SharedMem,
+    _get_forced: &dyn Fn() -> CheckedSet,
+    _priority: Priority,
+    f: impl FnOnce() -> T,
+    _pre_cancel: impl FnOnce(),
+    _post_cancel: impl FnOnce() -> T,
+) -> T {
+    f()
+}
+
+pub(crate) enum RecheckOutcome {
+    NothingToDo(server_env::Env),
+    CompletedRecheck {
+        profiling: ProfilingFinished,
+        env: server_env::Env,
+        recheck_count: usize,
+    },
+}
+
+// This ref is an estimate of the files which will be checked by the time the recheck is done.
+// As the recheck progresses, the estimate will get better. We use this estimate to prevent
+// canceling the recheck to force a file which we were already going to check.
+// This early estimate is not a very good estimate, since it's missing new dependents and
+// dependencies. However it should be good enough to prevent rechecks continuously restarting as
+// the server gets spammed with autocomplete requests.
+pub(crate) fn recheck_single(
+    recheck_count: usize,
+    genv: &server_env::Genv,
+    env: server_env::Env,
+    shared_mem: &SharedMem,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+) -> RecheckOutcome {
+    let env = server_monitor_listener_state::update_env(env);
+    let options = &genv.options;
+    let process_updates_fn = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
+        process_updates(skip_incompatible, options, &env, shared_mem, updates)
+    };
+
+    let mut will_be_checked_files = env.checked_files.clone();
+
+    let (priority, workload) =
+        server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates_fn, &|| {
+            will_be_checked_files.clone()
+        });
+
+    let server_monitor_listener_state::RecheckWorkload {
+        metadata:
+            monitor_prot::FileWatcherMetadata {
+                changed_mergebase,
+                missed_changes,
+            },
+        files_to_recheck,
+        files_to_prioritize,
+        files_to_force,
+        find_ref_command,
+        require_full_check_reinit,
+    } = workload;
+
+    let did_change_mergebase = changed_mergebase.unwrap_or(false);
+
+    let mut files_to_recheck_set = CheckedSet::empty();
+    files_to_recheck_set.add(Some(files_to_recheck), None, Some(files_to_prioritize));
+
+    if missed_changes && !did_change_mergebase {
+        files_to_recheck_set.add(Some(env.checked_files.focused().clone()), None, None);
+    }
+
+    if !require_full_check_reinit
+        && !did_change_mergebase
+        && files_to_recheck_set.is_empty()
+        && files_to_force.is_empty()
+    {
+        return RecheckOutcome::NothingToDo(env);
+    }
+
+    let stop_parallelizable_workloads = start_parallelizable_workloads(genv, &env);
+
+    // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
+    // may have introduced garbage into shared memory. Since we immediately start another
+    // recheck, we should first check whether we need to compact. Otherwise, sharedmem could
+    // potentially grow unbounded.
+    // The constant budget provided here should be sufficient to fully scan a 5G heap within 5
+    // iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
+    // heap to grow faster than we can scan. An algorithmic approach to determine the amount of
+    // work based on the allocation rate would be better.
+    // Adding files_to_force to will_be_checked_files makes sure that future requests for
+    // the same files doesn't cause us to cancel a check that was already working on
+    // files are definitely checked, so we can add them now.
+    will_be_checked_files.union(files_to_force.dupe());
+
+    let f = move || {
+        let (profiling, env) = recheck(
+            genv,
+            env,
+            files_to_force,
+            find_ref_command,
+            require_full_check_reinit,
+            changed_mergebase,
+            missed_changes,
+            &mut will_be_checked_files,
+            files_to_recheck_set,
+            node_modules_containers,
+        );
+        stop_parallelizable_workloads();
+        server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
+
+        RecheckOutcome::CompletedRecheck {
+            profiling,
+            env,
+            recheck_count,
+        }
+    };
+    run_but_cancel_on_file_changes(
+        options,
+        shared_mem,
+        &|| CheckedSet::empty(),
+        priority,
+        f,
+        || {},
+        || unreachable!("post_cancel is unreachable without async cancellation support"),
+    )
+}
+
+// It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
+// rechecks. But something is better than nothing...
+pub fn recheck_loop(
+    genv: &server_env::Genv,
+    env: server_env::Env,
+    shared_mem: &SharedMem,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+) -> (Vec<ProfilingFinished>, server_env::Env) {
+    let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
+    let mut env = env;
+    loop {
+        let _should_print_summary = genv.options.profile;
+        let recheck_result = recheck_single(1, genv, env, shared_mem, node_modules_containers);
+        match recheck_result {
+            RecheckOutcome::NothingToDo(e) => {
+                return (profiling_list, e);
+            }
+            RecheckOutcome::CompletedRecheck {
+                profiling: recheck_profiling,
+                env: e,
+                recheck_count,
+            } => {
+                let _ = recheck_count;
+                profiling_list.push(recheck_profiling);
+                env = e;
+            }
+        }
+    }
+}

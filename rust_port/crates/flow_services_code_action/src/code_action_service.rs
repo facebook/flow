@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/code_action_service.ml`
-
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -47,9 +45,8 @@ use flow_services_export::export_index;
 use flow_services_export::export_search;
 use flow_services_export::export_search::ExportSearch;
 use flow_services_inference::type_contents;
-use flow_services_inference::types_js_types::FileArtifacts;
-use flow_services_inference::types_js_types::ParseArtifacts;
-use flow_services_inference::types_js_types::TypecheckArtifacts;
+use flow_services_inference_types::ParseArtifacts;
+use flow_services_inference_types::TypecheckArtifacts;
 use flow_type_sig::signature_error::TolerableError;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::BindingError;
@@ -153,7 +150,6 @@ fn add_missing_imports_kind() -> CodeActionKind {
 fn is_kind(prefix: &CodeActionKind, kind: &CodeActionKind) -> bool {
     let prefix_str = prefix.as_str();
     let kind_str = kind.as_str();
-    // prefix is a prefix of kind: either equal, or kind starts with prefix + "."
     kind_str == prefix_str || kind_str.starts_with(&format!("{}.", prefix_str))
 }
 
@@ -206,7 +202,6 @@ fn mk_log_command(title: &str, diagnostic_title: &str) -> Command {
     }
 }
 
-//             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
 fn autofix_insert_type_annotation_helper(
     options: &Options,
     ast: &ast::Program<Loc, Loc>,
@@ -219,9 +214,6 @@ fn autofix_insert_type_annotation_helper(
     let edits =
         flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(&opts, &diff));
     let title = "Insert type annotation to fix signature-verification-failure error";
-    //       (* Handing back the diagnostics we were given is a placeholder for
-    //          eventually generating the diagnostics for the errors we are fixing *)
-    //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
     vec![CodeActionOrCommand::CodeAction(CodeAction {
         title: title.to_string(),
         kind: Some(CodeActionKind::QUICKFIX),
@@ -240,7 +232,6 @@ fn autofix_insert_type_annotation_helper(
     })]
 }
 
-//     fix_signature_verification_error_at_loc
 fn autofix_exports_code_actions<'a, 'b>(
     options: &Options,
     cx: &Context<'a>,
@@ -257,7 +248,7 @@ fn autofix_exports_code_actions<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
     file_sig: &Arc<FileSig>,
     tolerable_errors: &[TolerableError<Loc>],
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     diagnostics: &[Diagnostic],
     uri: &Url,
     loc: Loc,
@@ -265,7 +256,6 @@ fn autofix_exports_code_actions<'a, 'b>(
     let fixable_locs =
         autofix_exports::set_of_fixable_signature_verification_locations(tolerable_errors);
     if fixable_locs.contains(&loc) {
-        //   fix_signature_verification_error_at_loc
         let new_ast = autofix_exports::fix_signature_verification_error_at_loc(
             None, // remote_converter
             cx,
@@ -290,7 +280,6 @@ fn autofix_exports_code_actions<'a, 'b>(
     }
 }
 
-//     fix_missing_param_annot_at_loc
 fn autofix_missing_local_annot_code_actions<'a, 'b>(
     options: &Options,
     cx: &Context<'a>,
@@ -307,7 +296,7 @@ fn autofix_missing_local_annot_code_actions<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
     file_sig: &Arc<FileSig>,
     _tolerable_errors: &[TolerableError<Loc>],
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     diagnostics: &[Diagnostic],
     uri: &Url,
     loc: Loc,
@@ -318,7 +307,6 @@ fn autofix_missing_local_annot_code_actions<'a, 'b>(
         .find(|(err_loc, _)| Loc::contains(err_loc, &loc));
     match entry {
         Some((_, type_t)) => {
-            //   fix_missing_param_annot_at_loc
             let new_ast = autofix_missing_local_annots::fix_missing_param_annot_at_loc(
                 None, // remote_converter
                 cx,
@@ -359,7 +347,7 @@ fn code_action_insert_inferred_render_type<'a, 'b>(
     >,
     ast: &ast::Program<Loc, Loc>,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     uri: &Url,
     loc: Loc,
 ) -> Result<Vec<CodeActionOrCommand>, String> {
@@ -385,7 +373,6 @@ fn code_action_insert_inferred_render_type<'a, 'b>(
                 &opts, &diff,
             ));
             let title = "Insert inferred render type";
-            //             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
             Ok(vec![CodeActionOrCommand::CodeAction(CodeAction {
                 title: title.to_string(),
                 kind: Some(CodeActionKind::REFACTOR),
@@ -429,7 +416,6 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
     match loc.source {
         None => vec![],
         Some(ref file) => {
-            //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
             let lsp_action_from_refactor = |diagnostic_title: &str,
                                             kind: CodeActionKind,
                                             refactor: &refactor_extract::Refactor|
@@ -471,7 +457,6 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
                         Some(file.dupe()),
                         file_contents,
                     );
-                    //          (lsp_action_from_refactor
                     refactor_extract::provide_available_refactors(
                         &tokens,
                         ast,
@@ -496,7 +481,6 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
                     })
                     .collect()
                 };
-            //     Stub_unbound_name.stub
             match stub_unbound_name::stub(
                 ast,
                 cx,
@@ -517,7 +501,6 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
                     );
                 }
             }
-            // refactors
             refactors
         }
     }
@@ -529,7 +512,7 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
     ast: &ast::Program<Loc, Loc>,
     cx: &Context<'a>,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
     get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
@@ -569,15 +552,18 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
                 None => vec![],
                 Some(ref extracted) => {
                     let expression_loc = extracted.expression.loc().dupe();
+                    let loc_of_aloc_rc = loc_of_aloc.clone();
+                    let get_haste_module_info_rc = get_haste_module_info.clone();
+                    let get_type_sig_rc = get_type_sig.clone();
                     let remote_converter =
                         crate::insert_type_imports::imports_helper::RemoteConverter::new(
-                            &*loc_of_aloc,
+                            Box::new(move |aloc| loc_of_aloc_rc(aloc)),
                             options.file_options.dupe(),
-                            &*get_haste_module_info,
-                            &*get_type_sig,
+                            Box::new(move |fk| get_haste_module_info_rc(fk)),
+                            Box::new(move |fk| get_type_sig_rc(fk)),
                             0, // iteration
                             file.dupe(),
-                            Default::default(), // reserved_names: SSet.empty
+                            Default::default(),
                         );
                     let mut remote_converter = remote_converter;
                     match insert_type::insert_type(
@@ -638,13 +624,11 @@ fn insert_jsdoc_code_actions(
 ) -> Vec<CodeActionOrCommand> {
     match insert_jsdoc::insert_stub_for_target(false, loc, ast) {
         Some((ast_prime, _)) => {
-            //     ast'
             let diff = flow_ast_differ::program(ast, &ast_prime);
             let opts = code_action_utils::layout_options(options);
             let edits = flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(
                 &opts, &diff,
             ));
-            //            (* This hack is needed because the differ doesn't differentiate between
             let edits = edits
                 .into_iter()
                 .map(|edit| TextEdit {
@@ -653,7 +637,6 @@ fn insert_jsdoc_code_actions(
                 })
                 .collect::<Vec<_>>();
             let title = "Add JSDoc documentation";
-            //               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
             vec![CodeActionOrCommand::CodeAction(CodeAction {
                 title: title.to_string(),
                 kind: Some(CodeActionKind::REFACTOR),
@@ -672,9 +655,6 @@ fn insert_jsdoc_code_actions(
     }
 }
 
-//       Convert_type_to_readonly_form.convert
-//         ast
-//         loc
 fn convert_type_to_readonly_form_code_actions(
     options: &Options,
     ast: &ast::Program<Loc, Loc>,
@@ -683,9 +663,6 @@ fn convert_type_to_readonly_form_code_actions(
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if include_rewrite_refactors(only) {
-        //   Convert_type_to_readonly_form.convert
-        //     ast
-        //     loc
         match convert_type_to_readonly_form::convert(options.ts_utility_syntax, ast, loc) {
             None => vec![],
             Some((ast_prime, conversion_kind)) => {
@@ -708,7 +685,6 @@ fn convert_type_to_readonly_form_code_actions(
                         "Make the Set readonly"
                     }
                 };
-                //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
                 vec![CodeActionOrCommand::CodeAction(CodeAction {
                     title: title.to_string(),
                     kind: Some(CodeActionKind::REFACTOR_REWRITE),
@@ -743,13 +719,11 @@ fn refactor_arrow_function_code_actions(
     if include_rewrite_refactors(only) {
         match refactor_arrow_functions::add_or_remove_braces(ast, scope_info, &loc) {
             Some((ast_prime, title)) => {
-                //   ast'
                 let diff = flow_ast_differ::program(ast, &ast_prime);
                 let opts = code_action_utils::layout_options(options);
                 let edits = flow_loc_patch_to_lsp_edits(
                     &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
                 );
-                //             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
                 vec![CodeActionOrCommand::CodeAction(CodeAction {
                     title: title.clone(),
                     kind: Some(CodeActionKind::REFACTOR_REWRITE),
@@ -771,9 +745,6 @@ fn refactor_arrow_function_code_actions(
     }
 }
 
-//     Context.enable_pattern_matching cx
-//     && (include_quick_fixes only || include_rewrite_refactors only)
-//   then
 fn refactor_switch_to_match_statement_actions(
     cx: &Context,
     ast: &ast::Program<Loc, Loc>,
@@ -782,9 +753,6 @@ fn refactor_switch_to_match_statement_actions(
     uri: &Url,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
-    //   Context.enable_pattern_matching cx
-    //   && (include_quick_fixes only || include_rewrite_refactors only)
-    // then
     if cx.enable_pattern_matching()
         && (include_quick_fixes(only) || include_rewrite_refactors(only))
     {
@@ -796,7 +764,6 @@ fn refactor_switch_to_match_statement_actions(
                     &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
                 );
                 let title = "Refactor `switch` to `match`";
-                //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
                 vec![CodeActionOrCommand::CodeAction(CodeAction {
                     title: title.to_string(),
                     kind: Some(CodeActionKind::QUICKFIX),
@@ -818,9 +785,6 @@ fn refactor_switch_to_match_statement_actions(
     }
 }
 
-//     Context.enable_pattern_matching cx
-//     && (include_quick_fixes only || include_rewrite_refactors only)
-//   then
 fn refactor_match_coded_like_switch(
     cx: &Context,
     ast: &ast::Program<Loc, Loc>,
@@ -845,7 +809,6 @@ fn refactor_match_coded_like_switch(
                     &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
                 );
                 let title = "Refactor `match` coded like a switch";
-                //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
                 vec![CodeActionOrCommand::CodeAction(CodeAction {
                     title: title.to_string(),
                     kind: Some(CodeActionKind::QUICKFIX),
@@ -879,7 +842,6 @@ fn add_jsx_props_code_actions(
     match refactor_add_jsx_props::fill_props(cx, snippets_enabled, ast, typed_ast, loc) {
         None => vec![],
         Some(xs) => {
-            //   xs
             let patch: Vec<(Loc, String)> = xs
                 .into_iter()
                 .map(|(loc, attr)| {
@@ -893,7 +855,6 @@ fn add_jsx_props_code_actions(
                 .collect();
             let edits = flow_loc_patch_to_lsp_edits(&patch);
             let title = "Add missing attributes";
-            //             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
             vec![CodeActionOrCommand::CodeAction(CodeAction {
                 title: title.to_string(),
                 kind: Some(CodeActionKind::QUICKFIX),
@@ -929,7 +890,6 @@ fn preferred_import(
     }
 }
 
-//     imports
 fn maybe_sort_by_usage(
     imports_ranked_usage: bool,
     mut imports: Vec<(export_index::Export, i32)>,
@@ -973,7 +933,6 @@ fn find_unbound_names_from_scope(
                 if loc.intersects(&query_loc)
                     && !already_handled_unbound_names_with_error.contains(&loc)
                 {
-                    //       then (loc, name) :: acc
                     acc.push((loc, name.dupe()));
                 }
             }
@@ -983,7 +942,6 @@ fn find_unbound_names_from_scope(
     acc
 }
 
-// Lsp_helpers.ranges_overlap
 fn ranges_overlap(a: &LspRange, b: &LspRange) -> bool {
     a.start <= b.end && b.start <= a.end
 }
@@ -1024,7 +982,6 @@ fn suggest_imports(
         .cloned()
         .collect();
     let is_available_autoimport_result = lsp_import_edits::is_available_autoimport_result(cx);
-    // files
     let mut filtered: Vec<(export_index::Export, i32)> = files
         .into_iter()
         .filter(|(export_index::Export(source, _), _)| is_available_autoimport_result(name, source))
@@ -1047,7 +1004,6 @@ fn suggest_imports(
                 title,
                 from: _,
             }) => {
-                //                  ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
                 let command = CodeActionOrCommand::CodeAction(CodeAction {
                     title: title.clone(),
                     kind: Some(CodeActionKind::QUICKFIX),
@@ -1059,7 +1015,6 @@ fn suggest_imports(
                     command: Some(mk_log_command(&title, "import")),
                     ..Default::default()
                 });
-                //          command :: acc
                 acc.push(command);
             }
         }
@@ -1083,11 +1038,6 @@ pub enum QuickfixConfidence {
     BestEffort,
 }
 
-//   title: string;
-//   diagnostic_title: string;
-//   transform: ast_transform;
-//   target_loc: Loc.t;
-//   confidence: quickfix_confidence;
 pub struct AstTransformOfError {
     pub title: String,
     pub diagnostic_title: String,
@@ -1096,14 +1046,11 @@ pub struct AstTransformOfError {
     pub confidence: QuickfixConfidence,
 }
 
-//   Some (transform ast loc)
 pub fn untyped_ast_transform(
     transform: Box<dyn Fn(&ast::Program<Loc, Loc>, Loc) -> ast::Program<Loc, Loc>>,
 ) -> AstTransform {
-    // Some (transform ast loc)
     Box::new(
         move |_cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
-            // Some (transform ast loc)
             Some(transform(ast, loc))
         },
     )
@@ -1153,8 +1100,6 @@ fn autofix_in_upstream_file(
         _ => Some(CodeActionOrCommand::CodeAction(CodeAction {
             title: title.to_string(),
             kind: Some(CodeActionKind::QUICKFIX),
-            // (* Handing back the diagnostics we were given is a placeholder for
-            //    eventually generating the diagnostics for the errors we are fixing *)
             diagnostics: Some(diagnostics.to_vec()),
             edit: Some(WorkspaceEdit {
                 changes: Some(HashMap::from([(uri, edits)])),
@@ -1190,10 +1135,8 @@ pub fn ast_transforms_of_error(
         >,
     >,
     loc: Option<Loc>,
-    error_message: &ErrorMessage<Loc>, /* Loc.t Error_message.t' */
+    error_message: &ErrorMessage<Loc>,
 ) -> Vec<AstTransformOfError> {
-    // Shared body for EInvariantSubtypingWithUseOp and EPropsNotFoundInInvariantSubtyping
-    // (OCaml uses a combined match arm with |)
     let invariant_subtyping_actions = |lower_loc: Loc,
                                        upper_loc: Loc,
                                        upper_ty: &flow_common_ty::ty::ALocTy,
@@ -1212,12 +1155,10 @@ pub fn ast_transforms_of_error(
                 }
             }
         };
-        //     Convert_type_to_readonly_form.convert
         let make_readonly_code_action =
             |upper_ty: &flow_common_ty::ty::Ty<ALoc>, upper_loc: Loc| -> Vec<AstTransformOfError> {
                 let transform: AstTransform = Box::new(
                     |cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
-                        // Convert_type_to_readonly_form.convert
                         convert_type_to_readonly_form::convert(cx.ts_utility_syntax(), ast, loc)
                             .map(|(ast, _kind)| ast)
                     },
@@ -1238,12 +1179,10 @@ pub fn ast_transforms_of_error(
                     confidence: QuickfixConfidence::BestEffort,
                 }]
             };
-        // (match error_loc_opt with
         match error_loc_opt {
             None => vec![],
             Some(_) => {
                 let upper_ty = ty_utils::simplify_type(true, None, upper_ty.dupe());
-                //      ast lower_loc upper_ty
                 let lower_loc_clone = lower_loc.dupe();
                 let upper_ty_clone = upper_ty.dupe();
                 let loc_of_aloc_clone = loc_of_aloc.dupe();
@@ -1264,8 +1203,8 @@ pub fn ast_transforms_of_error(
                             &*get_type_sig_clone,
                             &file_sig,
                             typed_ast,
-                            false, // ~strict:false
-                            None,  // no remote_converter
+                            false,
+                            None, // no remote_converter
                             ast,
                             lower_loc_clone.dupe(),
                             upper_ty_clone.dupe(),
@@ -1288,7 +1227,6 @@ pub fn ast_transforms_of_error(
     match error_message {
         ErrorMessage::EDeprecatedBool(error_loc) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                //       untyped_ast_transform
                 vec![AstTransformOfError {
                     title: "Replace `bool` with `boolean`".to_string(),
                     diagnostic_title: "replace_bool".to_string(),
@@ -1322,7 +1260,6 @@ pub fn ast_transforms_of_error(
             duplicates,
         }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                //     ...
                 let duplicates = duplicates.clone();
                 vec![AstTransformOfError {
                     title: "Wrap spread prop with Omit".to_string(),
@@ -1363,7 +1300,6 @@ pub fn ast_transforms_of_error(
                                         }),
                                     })
                                 };
-                                // Generic { Generic.id = ...; targs = Some ...; comments = None }
                                 TypeInner::Generic {
                                     loc: LOC_NONE,
                                     inner: Arc::new(ast::types::Generic {
@@ -1776,9 +1712,6 @@ pub fn ast_transforms_of_error(
             enabled_casting_syntax,
         } => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                //     ( "Convert to `as` expression `<expr> as <type>`",
-                //       "convert_colon_cast",
-                //       Autofix_casting_syntax.convert_colon_cast )
                 let (title, diagnostic_title) = match enabled_casting_syntax {
                     CastingSyntax::As | CastingSyntax::Both => (
                         "Convert to `as` expression `<expr> as <type>`",
@@ -1839,7 +1772,6 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        //     ( error_loc,
         ErrorMessage::EInternalType(
             error_loc,
             InternalType::DollarUtilityTypeWithNonDollarAliases(replacement_name),
@@ -1868,8 +1800,6 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        //     ( error_loc,
-        //         replacement_name_without_react
         ErrorMessage::EInternalType(
             error_loc,
             InternalType::ReactDollarUtilityTypesWithNonDollarAliases(
@@ -1879,7 +1809,6 @@ pub fn ast_transforms_of_error(
             let incorrect_name = format!("React${}", replacement_name_without_react);
             let replacement_name = format!("React.{}", replacement_name_without_react);
             let title = format!("Convert to `{}`", replacement_name);
-            //   Printf.sprintf "convert_react_dollar_%s_type" replacement_name_without_react
             let diagnostic_title = format!(
                 "convert_react_dollar_{}_type",
                 replacement_name_without_react
@@ -2009,7 +1938,6 @@ pub fn ast_transforms_of_error(
             _,
         )) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                //   Autofix_type_to_value_import.convert_type_to_value_import ast loc
                 let name = name.to_string();
                 vec![AstTransformOfError {
                     title: format!("Convert type import of `{}` to value import", name),
@@ -2290,7 +2218,6 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        //         Some
         ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
             explanation:
                 Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
@@ -2339,12 +2266,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        //   when match lower_desc with
         ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
             explanation,
             ..
         }) if {
-            // Extract (lower_loc, upper_loc, lower_desc, upper_ty) from explanation
             matches!(
                 explanation,
                 Some(
@@ -2382,7 +2307,6 @@ pub fn ast_transforms_of_error(
             )
         } =>
         {
-            // Extract the common bindings from the matched explanation
             let (lower_loc, upper_loc, upper_ty) = if let Some(
                 ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                     lower_array_loc,
@@ -2418,8 +2342,6 @@ pub fn ast_transforms_of_error(
             {
                 (lower_obj_loc.dupe(), upper_obj_loc.dupe(), upper_ty.dupe())
             } else {
-                // The outer match guard (matches!) ensures explanation is Some and
-                // contains one of the three variants with TypeDesc(Ok(_)) for upper_*_desc.
                 return vec![];
             };
             invariant_subtyping_actions(lower_loc, upper_loc, &upper_ty, &lazy_error_loc, loc)
@@ -2438,88 +2360,80 @@ pub fn ast_transforms_of_error(
                 upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
                 ..
             },
-        ) => {
-            // Same body as EInvariantSubtypingWithUseOp above
-            // (OCaml uses a combined match arm with |)
-            invariant_subtyping_actions(
-                lower_obj_loc.dupe(),
-                upper_obj_loc.dupe(),
-                upper_ty,
-                &lazy_error_loc,
-                loc,
-            )
-        }
-        error_message => {
-            // (match error_message |> Error_message.friendly_message_of_msg with ...)
-            match error_message.clone().friendly_message_of_msg() {
-                FriendlyMessageRecipe::PropMissingInLookup(box PropMissingInLookupData {
-                    loc: error_loc,
-                    suggestion: Some(suggestion),
-                    prop: Some(prop_name),
-                    ..
-                }) => {
-                    if loc_opt_intersects(loc, error_loc.dupe()) {
-                        let title = format!("Replace `{}` with `{}`", prop_name, suggestion);
-                        let suggestion: FlowSmolStr = suggestion.as_str().into();
+        ) => invariant_subtyping_actions(
+            lower_obj_loc.dupe(),
+            upper_obj_loc.dupe(),
+            upper_ty,
+            &lazy_error_loc,
+            loc,
+        ),
+        error_message => match error_message.clone().friendly_message_of_msg() {
+            FriendlyMessageRecipe::PropMissingInLookup(box PropMissingInLookupData {
+                loc: error_loc,
+                suggestion: Some(suggestion),
+                prop: Some(prop_name),
+                ..
+            }) => {
+                if loc_opt_intersects(loc, error_loc.dupe()) {
+                    let title = format!("Replace `{}` with `{}`", prop_name, suggestion);
+                    let suggestion: FlowSmolStr = suggestion.as_str().into();
+                    vec![AstTransformOfError {
+                        title,
+                        diagnostic_title: "replace_prop_typo_at_target".to_string(),
+                        transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                            autofix_prop_typo::replace_prop_typo_at_target(
+                                suggestion.dupe(),
+                                ast,
+                                loc,
+                            )
+                        })),
+                        target_loc: error_loc,
+                        confidence: QuickfixConfidence::BestEffort,
+                    }]
+                } else {
+                    vec![]
+                }
+            }
+            FriendlyMessageRecipe::IncompatibleUse(box IncompatibleUseData {
+                loc: error_loc,
+                upper_kind: UpperKind::IncompatibleGetPropT(..),
+                reason_lower,
+                ..
+            }) => {
+                match (
+                    loc_opt_intersects(loc, error_loc.dupe()),
+                    &reason_lower.desc,
+                ) {
+                    (
+                        true,
+                        r @ (VirtualReasonDesc::RVoid
+                        | VirtualReasonDesc::RNull
+                        | VirtualReasonDesc::RVoidedNull
+                        | VirtualReasonDesc::RNullOrVoid),
+                    ) => {
+                        let desc_str = flow_common::reason::string_of_desc::<Loc>(r);
+                        let title = format!(
+                            "Add optional chaining for object that might be `{}`",
+                            desc_str
+                        );
                         vec![AstTransformOfError {
                             title,
-                            diagnostic_title: "replace_prop_typo_at_target".to_string(),
-                            transform: untyped_ast_transform(Box::new(move |ast, loc| {
-                                autofix_prop_typo::replace_prop_typo_at_target(
-                                    suggestion.dupe(),
-                                    ast,
-                                    loc,
-                                )
+                            diagnostic_title: "add_optional_chaining".to_string(),
+                            transform: untyped_ast_transform(Box::new(|ast, loc| {
+                                autofix_optional_chaining::add_optional_chaining(ast, loc)
                             })),
                             target_loc: error_loc,
                             confidence: QuickfixConfidence::BestEffort,
                         }]
-                    } else {
-                        vec![]
                     }
+                    _ => vec![],
                 }
-                FriendlyMessageRecipe::IncompatibleUse(box IncompatibleUseData {
-                    loc: error_loc,
-                    upper_kind: UpperKind::IncompatibleGetPropT(..),
-                    reason_lower,
-                    ..
-                }) => {
-                    match (
-                        loc_opt_intersects(loc, error_loc.dupe()),
-                        &reason_lower.desc,
-                    ) {
-                        (
-                            true,
-                            r @ (VirtualReasonDesc::RVoid
-                            | VirtualReasonDesc::RNull
-                            | VirtualReasonDesc::RVoidedNull
-                            | VirtualReasonDesc::RNullOrVoid),
-                        ) => {
-                            let desc_str = flow_common::reason::string_of_desc::<Loc>(r);
-                            let title = format!(
-                                "Add optional chaining for object that might be `{}`",
-                                desc_str
-                            );
-                            vec![AstTransformOfError {
-                                title,
-                                diagnostic_title: "add_optional_chaining".to_string(),
-                                transform: untyped_ast_transform(Box::new(|ast, loc| {
-                                    autofix_optional_chaining::add_optional_chaining(ast, loc)
-                                })),
-                                target_loc: error_loc,
-                                confidence: QuickfixConfidence::BestEffort,
-                            }]
-                        }
-                        _ => vec![],
-                    }
-                }
-                _ => vec![],
             }
-        }
+            _ => vec![],
+        },
     }
 }
 
-//   ...
 fn fix_all_in_file_code_actions(
     options: &Options,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
@@ -2529,7 +2443,6 @@ fn fix_all_in_file_code_actions(
     loc: Loc,
     uri: &Url,
 ) -> Vec<CodeActionOrCommand> {
-    // (* Step 1: Check if there's an EInvalidTypeCastSyntax error at the requested location *)
     let has_invalid_cast_at_loc = errors.exists(|error| {
         let error_message = ErrorMessage::map_loc_of_error_message(
             |aloc: ALoc| loc_of_aloc(&aloc),
@@ -2546,7 +2459,6 @@ fn fix_all_in_file_code_actions(
     if !has_invalid_cast_at_loc {
         vec![]
     } else {
-        //   (* Step 2: Generate code action using convert_all_colon_casts *)
         let new_ast = autofix_casting_syntax::convert_all_colon_casts(ast);
         if new_ast == *ast {
             return vec![];
@@ -2556,7 +2468,6 @@ fn fix_all_in_file_code_actions(
         let edits = flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(
             &opts, &diff,
         ));
-        //               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
         let title = "Convert all colon casts to `as` expressions";
         vec![CodeActionOrCommand::CodeAction(CodeAction {
             title: title.to_string(),
@@ -2574,8 +2485,6 @@ fn fix_all_in_file_code_actions(
     }
 }
 
-//     uri loc =
-//   ...
 fn code_actions_of_errors(
     options: &Options,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
@@ -2610,8 +2519,6 @@ fn code_actions_of_errors(
                 |aloc: ALoc| loc_of_aloc(&aloc),
                 error.msg_of_error().clone(),
             );
-            //     when Options.autoimports options -> ...
-            //     when Options.autoimports options ->
             let (suggest_imports_actions, new_has_missing_import): (
                 Vec<CodeActionOrCommand>,
                 bool,
@@ -2651,8 +2558,6 @@ fn code_actions_of_errors(
                         make_intermediate_error(|aloc: &ALoc| loc_of_aloc_ref(aloc), false, &error);
                     intermediate.loc
                 };
-                //     ast_transforms_of_error
-                //       error_message
                 let transforms = ast_transforms_of_error(
                     loc_of_aloc.dupe(),
                     Some(lazy_error_loc),
@@ -2662,8 +2567,6 @@ fn code_actions_of_errors(
                     Some(loc.dupe()),
                     &error_message,
                 );
-                //            autofix_in_upstream_file
-                //              uri target_loc)
                 transforms
                     .iter()
                     .filter_map(|t| {
@@ -2693,7 +2596,6 @@ fn code_actions_of_errors(
             (actions, has_missing_import)
         },
     );
-    //   actions
     if include_add_missing_imports_action(only) && has_missing_import {
         let mut result = vec![CodeActionOrCommand::CodeAction(CodeAction {
             title: "Add all missing imports".to_string(),
@@ -2716,8 +2618,6 @@ fn code_actions_of_errors(
     }
 }
 
-//     ... :: acc
-//     acc
 fn code_action_for_parser_error_with_suggestion(
     mut acc: Vec<CodeActionOrCommand>,
     diagnostics: &[Diagnostic],
@@ -2738,7 +2638,6 @@ fn code_action_for_parser_error_with_suggestion(
             range: error_range,
             new_text: new_text.to_string(),
         };
-        //         ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
         acc.push(CodeActionOrCommand::CodeAction(CodeAction {
             title: title.to_string(),
             kind: Some(CodeActionKind::QUICKFIX),
@@ -2754,12 +2653,10 @@ fn code_action_for_parser_error_with_suggestion(
         }));
         acc
     } else {
-        // acc
         acc
     }
 }
 
-//     parse_errors
 fn code_actions_of_parse_errors(
     diagnostics: &[Diagnostic],
     uri: &Url,
@@ -2768,68 +2665,65 @@ fn code_actions_of_parse_errors(
 ) -> Vec<CodeActionOrCommand> {
     parse_errors
         .iter()
-        .fold(vec![], |acc, (error_loc, parse_error)| {
-            match parse_error {
-                ParseError::UnexpectedTokenWithSuggestion(token, suggestion) => {
-                    let title = format!("Replace `{}` with `{}`", token, suggestion);
-                    code_action_for_parser_error_with_suggestion(
-                        acc,
-                        diagnostics,
-                        uri,
-                        error_loc.dupe(),
-                        loc.dupe(),
-                        &title,
-                        suggestion,
-                    )
-                }
-                ParseError::InvalidComponentRenderAnnotation {
-                    has_nested_render: false,
-                } => {
-                    let title = "Replace `:` with `renders`";
-                    code_action_for_parser_error_with_suggestion(
-                        acc,
-                        diagnostics,
-                        uri,
-                        error_loc.dupe(),
-                        loc.dupe(),
-                        title,
-                        " renders",
-                    )
-                }
-                ParseError::InvalidComponentRenderAnnotation {
-                    has_nested_render: true,
-                } => {
-                    let title = "Remove `:`";
-                    code_action_for_parser_error_with_suggestion(
-                        acc,
-                        diagnostics,
-                        uri,
-                        error_loc.dupe(),
-                        loc.dupe(),
-                        title,
-                        "",
-                    )
-                }
-                ParseError::InvalidComponentStringParameterBinding { optional, name } => {
-                    let title = "Use as-renaming";
-                    //   Utils_js.(spf " as %s%s" (camelize name) (if optional then "?" else ":"))
-                    let replacement = format!(
-                        " as {}{}",
-                        flow_parser::parse_error::camelize(name),
-                        if *optional { "?" } else { ":" }
-                    );
-                    code_action_for_parser_error_with_suggestion(
-                        acc,
-                        diagnostics,
-                        uri,
-                        error_loc.dupe(),
-                        loc.dupe(),
-                        title,
-                        &replacement,
-                    )
-                }
-                _ => acc,
+        .fold(vec![], |acc, (error_loc, parse_error)| match parse_error {
+            ParseError::UnexpectedTokenWithSuggestion(token, suggestion) => {
+                let title = format!("Replace `{}` with `{}`", token, suggestion);
+                code_action_for_parser_error_with_suggestion(
+                    acc,
+                    diagnostics,
+                    uri,
+                    error_loc.dupe(),
+                    loc.dupe(),
+                    &title,
+                    suggestion,
+                )
             }
+            ParseError::InvalidComponentRenderAnnotation {
+                has_nested_render: false,
+            } => {
+                let title = "Replace `:` with `renders`";
+                code_action_for_parser_error_with_suggestion(
+                    acc,
+                    diagnostics,
+                    uri,
+                    error_loc.dupe(),
+                    loc.dupe(),
+                    title,
+                    " renders",
+                )
+            }
+            ParseError::InvalidComponentRenderAnnotation {
+                has_nested_render: true,
+            } => {
+                let title = "Remove `:`";
+                code_action_for_parser_error_with_suggestion(
+                    acc,
+                    diagnostics,
+                    uri,
+                    error_loc.dupe(),
+                    loc.dupe(),
+                    title,
+                    "",
+                )
+            }
+            ParseError::InvalidComponentStringParameterBinding { optional, name } => {
+                let title = "Use as-renaming";
+                let replacement = format!(
+                    " as {}{}",
+                    flow_parser::parse_error::camelize(name),
+                    if *optional { "?" } else { ":" }
+                );
+                code_action_for_parser_error_with_suggestion(
+                    acc,
+                    diagnostics,
+                    uri,
+                    error_loc.dupe(),
+                    loc.dupe(),
+                    title,
+                    &replacement,
+                )
+            }
+            _ => acc,
         })
 }
 
@@ -2842,13 +2736,10 @@ fn supported_code_actions() -> Vec<CodeActionKind> {
     ]
 }
 
-//       only
 pub fn kind_is_supported(only: Option<&[CodeActionKind]>) -> bool {
     match only {
         None => true,
-        //     only
         Some(only) => {
-            // is a sub-kind of kind (i.e., is_kind(kind, supported_kind))
             let supported = supported_code_actions();
             only.iter()
                 .any(|kind| supported.iter().any(|s| is_kind(kind, s)))
@@ -2873,7 +2764,6 @@ fn organize_imports_code_action(uri: &Url) -> CodeActionOrCommand {
     })
 }
 
-//   Ok actions
 pub fn code_actions_at_loc<'a>(
     options: &Options,
     lsp_init_params: &lsp_types::InitializeParams,
@@ -2896,7 +2786,7 @@ pub fn code_actions_at_loc<'a>(
     tolerable_errors: &[TolerableError<Loc>],
     file_contents: &str,
     ast: &ast::Program<Loc, Loc>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     scope_info: &ScopeInfo<Loc>,
     parse_errors: &[(Loc, ParseError)],
     diagnostics: &[Diagnostic],
@@ -2911,7 +2801,6 @@ pub fn code_actions_at_loc<'a>(
         .and_then(|v| v.get("snippetTextEdit"))
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
-    // get_haste_module_info:module_system_info.get_haste_module_info
     let get_haste_module_info: &dyn Fn(
         &FileKey,
     ) -> Option<flow_common_modulename::HasteModuleInfo> =
@@ -3075,7 +2964,6 @@ pub fn code_actions_at_loc<'a>(
     };
     let inspection_related_code_actions: Vec<CodeActionOrCommand> =
         if autofix_exports_actions.is_empty() {
-            // insert_inferred_type_as_cast_code_actions
             insert_inferred_type_as_cast_code_actions(
                 options,
                 file_contents,
@@ -3094,15 +2982,6 @@ pub fn code_actions_at_loc<'a>(
             vec![]
         };
     let parse_error_fixes = code_actions_of_parse_errors(diagnostics, uri, loc, parse_errors);
-    //   parse_error_fixes
-    //   @ autofix_exports_code_actions
-    //   @ autofix_missing_local_annot_code_actions
-    //   @ fix_all_in_file_actions
-    //   @ error_fixes
-    //   @ scope_based_auto_import_fixes
-    //   @ insert_inferred_render_type_code_actions
-    //   @ refactor_code_actions
-    //   @ inspection_related_code_actions
     let mut actions = vec![];
     actions.extend(parse_error_fixes);
     actions.extend(autofix_exports_actions);
@@ -3113,13 +2992,10 @@ pub fn code_actions_at_loc<'a>(
     actions.extend(insert_inferred_render_type_actions);
     actions.extend(refactor_actions);
     actions.extend(inspection_related_code_actions);
-    //     organize_imports_code_action uri :: actions
-    //     actions
     if include_organize_imports_actions(only) {
         let organize = organize_imports_code_action(uri);
         actions.insert(0, organize);
     }
-    // Ok actions
     Ok(actions)
 }
 
@@ -3167,16 +3043,12 @@ fn autofix_imports_fn(
             }
         },
     );
-    //   ExportSourceMap.fold
-    //         ExportKindMap.fold (fun export_kind names added_imports -> ...) names_of_kinds added_imports)
-    //     imports []
     let mut added_imports: Vec<(String, autofix_imports::Bindings)> = vec![];
     for (source, names_of_kinds) in &imports {
         let from = lsp_import_edits::from_of_source(module_system_info, src_dir, source);
         match from {
             None => {}
             Some(from) => {
-                //   ExportKindMap.fold (fun export_kind names added_imports -> ...)
                 for (export_kind, names) in names_of_kinds {
                     match export_kind {
                         export_index::Kind::DefaultType => {
@@ -3479,7 +3351,7 @@ pub fn suggest_imports_cli(
                                 &code_action_utils::layout_options(options),
                                 module_system_info,
                                 ast,
-                                &[],  // diagnostics = []
+                                &[],
                                 true, // imports_ranked_usage
                                 exports,
                                 name.as_str(),
@@ -3540,41 +3412,35 @@ pub fn autofix_exports_fn<'a>(
     >,
     file_key: FileKey,
     _file_content: &str,
-    file_artifacts: Result<&'a FileArtifacts<'a>, &ErrorSet>,
-) -> Result<(Vec<(Loc, String)>, Vec<String>), String> {
-    match file_artifacts {
-        //        Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ } ) ->
-        Ok((parse_artifacts, typecheck_artifacts)) => {
-            let ParseArtifacts {
-                ast,
-                file_sig,
-                tolerable_errors,
-                ..
-            } = parse_artifacts;
-            let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
-            let sv_errors =
-                autofix_exports::set_of_fixable_signature_verification_locations(tolerable_errors);
-            // fix_signature_verification_errors
-            let (new_ast, it_errs) = autofix_exports::fix_signature_verification_errors(
-                file_key,
-                cx,
-                &*loc_of_aloc,
-                options.file_options.dupe(),
-                get_ast_from_shared_mem,
-                &*get_haste_module_info,
-                &*get_type_sig,
-                file_sig,
-                typed_ast,
-                ast.clone(),
-                &sv_errors,
-            );
-            let opts = code_action_utils::layout_options(options);
-            let diff = flow_ast_differ::program(ast, &new_ast);
-            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
-            Ok((edits, it_errs))
-        }
-        Err(_) => Err("Failed to type-check file".to_string()),
-    }
+    parse_artifacts: &ParseArtifacts,
+    typecheck_artifacts: &TypecheckArtifacts<'a>,
+) -> (Vec<(Loc, String)>, Vec<String>) {
+    let ParseArtifacts {
+        ast,
+        file_sig,
+        tolerable_errors,
+        ..
+    } = parse_artifacts;
+    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
+    let sv_errors =
+        autofix_exports::set_of_fixable_signature_verification_locations(tolerable_errors);
+    let (new_ast, it_errs) = autofix_exports::fix_signature_verification_errors(
+        file_key,
+        cx,
+        &*loc_of_aloc,
+        options.file_options.dupe(),
+        get_ast_from_shared_mem,
+        &*get_haste_module_info,
+        &*get_type_sig,
+        file_sig,
+        typed_ast,
+        ast.clone(),
+        &sv_errors,
+    );
+    let opts = code_action_utils::layout_options(options);
+    let diff = flow_ast_differ::program(ast, &new_ast);
+    let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+    (edits, it_errs)
 }
 
 pub fn autofix_missing_local_annot_fn<'a>(
@@ -3590,31 +3456,27 @@ pub fn autofix_missing_local_annot_fn<'a>(
         >,
     >,
     _file_content: &str,
-    file_artifacts: Result<&'a FileArtifacts<'a>, &ErrorSet>,
+    parse_artifacts: &ParseArtifacts,
+    typecheck_artifacts: &TypecheckArtifacts<'a>,
 ) -> Result<Vec<(Loc, String)>, String> {
-    match file_artifacts {
-        Ok((parse_artifacts, typecheck_artifacts)) => {
-            let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
-            let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
-            let new_ast = autofix_missing_local_annots::fix_all_missing_param_annot_errors_in_file(
-                None, // no remote_converter
-                cx,
-                loc_of_aloc,
-                get_ast_from_shared_mem,
-                get_haste_module_info,
-                get_type_sig,
-                file_sig,
-                typed_ast,
-                ast.clone(),
-            )
-            .map_err(|e| format!("FailedToInsertType: {:?}", e))?;
-            let opts = code_action_utils::layout_options(options);
-            let diff = flow_ast_differ::program(ast, &new_ast);
-            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
-            Ok(edits)
-        }
-        Err(_) => Err("Failed to type-check file".to_string()),
-    }
+    let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
+    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
+    let new_ast = autofix_missing_local_annots::fix_all_missing_param_annot_errors_in_file(
+        None, // no remote_converter
+        cx,
+        loc_of_aloc,
+        get_ast_from_shared_mem,
+        get_haste_module_info,
+        get_type_sig,
+        file_sig,
+        typed_ast,
+        ast.clone(),
+    )
+    .map_err(|e| format!("FailedToInsertType: {:?}", e))?;
+    let opts = code_action_utils::layout_options(options);
+    let diff = flow_ast_differ::program(ast, &new_ast);
+    let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+    Ok(edits)
 }
 
 pub fn insert_type_fn<'a>(
@@ -3633,37 +3495,30 @@ pub fn insert_type_fn<'a>(
     target: Loc,
     omit_targ_defaults: bool,
     strict: bool,
-    file_artifacts: Result<&'a FileArtifacts<'a>, &ErrorSet>,
+    parse_artifacts: &ParseArtifacts,
+    typecheck_artifacts: &TypecheckArtifacts<'a>,
 ) -> Result<Vec<(Loc, String)>, String> {
-    match file_artifacts {
-        //        Typecheck_artifacts { cx; typed_ast; _ } ) ->
-        Ok((parse_artifacts, typecheck_artifacts)) => {
-            let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
-            let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
-            // (try
-            //   ...
-            let new_ast = insert_type::insert_type(
-                cx,
-                loc_of_aloc,
-                get_ast_from_shared_mem,
-                get_haste_module_info,
-                get_type_sig,
-                file_sig,
-                typed_ast,
-                omit_targ_defaults,
-                strict,
-                None, // no remote_converter
-                ast,
-                target,
-            )
-            .map_err(|err| insert_type::error_to_string(&err))?;
-            let opts = code_action_utils::layout_options(options);
-            let diff = flow_ast_differ::program(ast, &new_ast);
-            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
-            Ok(edits)
-        }
-        Err(_) => Err("Failed to type-check file".to_string()),
-    }
+    let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
+    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
+    let new_ast = insert_type::insert_type(
+        cx,
+        loc_of_aloc,
+        get_ast_from_shared_mem,
+        get_haste_module_info,
+        get_type_sig,
+        file_sig,
+        typed_ast,
+        omit_targ_defaults,
+        strict,
+        None, // no remote_converter
+        ast,
+        target,
+    )
+    .map_err(|err| insert_type::error_to_string(&err))?;
+    let opts = code_action_utils::layout_options(options);
+    let diff = flow_ast_differ::program(ast, &new_ast);
+    let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+    Ok(edits)
 }
 
 pub fn organize_imports_fn(options: &Options, ast: &ast::Program<Loc, Loc>) -> Vec<TextEdit> {

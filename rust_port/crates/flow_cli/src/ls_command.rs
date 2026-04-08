@@ -18,7 +18,6 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::command_spec;
 use crate::command_utils;
-use crate::flowconfig;
 
 enum FileResult {
     ImplicitlyIncluded,
@@ -147,7 +146,6 @@ fn get_ls_files(
 ) -> Box<dyn FnMut() -> Vec<String>> {
     match file_or_dir {
         None => {
-            // Files.make_next_files ~sort:true ~root ~all ~subdir:None ~options ~include_libdef:false ~all_unordered_libs
             let mut all_files = Vec::new();
             files::make_next_files(
                 root,
@@ -175,7 +173,6 @@ fn get_ls_files(
             })
         }
         Some(dir) if Path::new(dir).is_dir() => {
-            // Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~include_libdef:false ~all_unordered_libs
             let subdir = Path::new(dir).to_path_buf();
             let mut all_files = Vec::new();
             files::make_next_files(
@@ -254,8 +251,6 @@ fn get_next_append_const(
         if !result.is_empty() {
             return result;
         }
-        // const := [];
-        // ret
         remaining.take().unwrap_or_default()
     })
 }
@@ -267,7 +262,7 @@ fn main_impl(args: &command_spec::Values) {
         &command_spec::required(Some(".flowconfig".to_string()), command_spec::string()),
     )
     .unwrap();
-    let _ignore_version =
+    let ignore_version =
         command_spec::get(args, "--ignore-version", &command_spec::truthy()).unwrap();
     let strip_root = command_spec::get(args, "--strip-root", &command_spec::truthy()).unwrap();
     let root_flag = command_spec::get(
@@ -305,7 +300,6 @@ fn main_impl(args: &command_spec::Values) {
         None => match files_or_dirs.first() {
             Some(first_file) => {
                 let first_file = if strip_root {
-                    // Files.relative_path (Sys.getcwd ()) first_file
                     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
                     files::relative_path(&cwd, first_file)
                 } else {
@@ -320,13 +314,19 @@ fn main_impl(args: &command_spec::Values) {
 
     let config_path = root.join(&flowconfig_name);
     let config_path_str = config_path.to_string_lossy().to_string();
-    let (flowconfig, _warnings, _hash) = match flowconfig::get(&config_path_str) {
+    let (flowconfig, warnings, _hash) = match flow_config::get(&config_path_str) {
         Ok(r) => r,
-        Err(flowconfig::Error(line, msg)) => {
+        Err(flow_config::Error(line, msg)) => {
             eprintln!(".flowconfig:{} {}", line, msg);
             std::process::exit(1);
         }
     };
+    if !ignore_version && !warnings.is_empty() {
+        for flow_config::Warning(line, message) in &warnings {
+            eprintln!(".flowconfig:{} {}", line, message);
+        }
+        std::process::exit(8);
+    }
 
     let options = crate::command_utils::make_options(
         flowconfig,
@@ -343,10 +343,7 @@ fn main_impl(args: &command_spec::Values) {
         files::ordered_and_unordered_lib_paths(&options.file_options);
     let all_unordered_libs = Arc::new(all_unordered_libs);
 
-    // `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
     let empty_libs: Arc<BTreeSet<String>> = Arc::new(BTreeSet::new());
-
-    // node_modules_containers for make_next_files
     let node_modules_containers: RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>> =
         RwLock::new(BTreeMap::new());
 
@@ -395,7 +392,6 @@ fn main_impl(args: &command_spec::Values) {
         if !strip_root {
             filename.to_string()
         } else {
-            // Files.relative_path root_str filename
             files::relative_path(Path::new(&root_str), filename)
         }
     };

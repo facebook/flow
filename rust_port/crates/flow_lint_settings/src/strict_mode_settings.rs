@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 
 use crate::lints::LintKind;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StrictModeSettings(BTreeSet<LintKind>);
 
 impl StrictModeSettings {
@@ -24,9 +24,9 @@ impl StrictModeSettings {
         self.0.iter().fold(init, |acc, &kind| f(kind, acc))
     }
 
-    pub fn iter<F>(&self, f: F)
+    pub fn iter<F>(&self, mut f: F)
     where
-        F: Fn(LintKind),
+        F: FnMut(LintKind),
     {
         for &kind in self.0.iter() {
             f(kind);

@@ -51,8 +51,6 @@ mod literal_to_prop_loc {
                 object::Key::Identifier(id) if *id.name == *self.prop_name => {
                     self.acc.insert(literal_loc.dupe(), id.loc.dupe());
                 }
-                // TODO consider supporting other property keys (e.g. literals). Also update the
-                // optimization in property_access_searcher below when this happens.
                 _ => {}
             }
         }
@@ -82,13 +80,13 @@ mod potential_ordinary_refs_search {
     #[derive(Debug)]
     struct FoundImport(ALoc);
 
-    struct Searcher<'ctx, 'refs> {
-        cx: &'ctx Context<'ctx>,
+    struct Searcher<'ctx, 'cx, 'refs> {
+        cx: &'ctx Context<'cx>,
         target_name: String,
         potential_refs: &'refs mut ALocMap<Type>,
     }
 
-    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundImport> for Searcher<'_, '_> {
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundImport> for Searcher<'_, '_, '_> {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
         }
@@ -106,9 +104,6 @@ mod potential_ordinary_refs_search {
                 Ok(()) => Ok(()),
                 Err(FoundImport(name_loc)) => {
                     let (_, module_t) = &decl.source.0;
-                    // Replace previous bindings of `loc`. We should always use the result of the last call to
-                    // the hook for a given location (this may no longer be relevant with the removal of
-                    // generate-tests)
                     self.potential_refs.insert(name_loc, module_t.dupe());
                     Ok(())
                 }
@@ -233,7 +228,6 @@ mod potential_ordinary_refs_search {
                 pattern::Pattern::Identifier { inner, .. } => {
                     let (loc, ty) = &inner.name.loc;
                     let id_name = &inner.name.name;
-                    // If the location is already in the map, it was set by a parent
                     if *id_name == *self.target_name && !self.potential_refs.contains_key(loc) {
                         self.potential_refs.insert(loc.dupe(), ty.dupe());
                     }
@@ -245,7 +239,7 @@ mod potential_ordinary_refs_search {
     }
 
     pub fn search<'cx>(
-        cx: &'cx Context<'cx>,
+        cx: &Context<'cx>,
         target_name: &str,
         potential_refs: &mut ALocMap<Type>,
         ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -259,7 +253,6 @@ mod potential_ordinary_refs_search {
     }
 }
 
-/// Returns `true` iff the given type is a reference to the symbol we are interested in
 fn type_matches_locs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     cx: &Context<'cx>,
@@ -275,9 +268,6 @@ fn type_matches_locs<'cx>(
             get_def_utils::DefLoc::FoundClass(ty_def_locs) => {
                 prop_def_info.iter().any(|info| match info {
                     SinglePropertyDefInfo::ObjectProperty(_) => false,
-                    // Only take the first extracted def loc -- that is, the one for the actual definition
-                    // and not overridden implementations, and compare it to the list of def locs we are
-                    // interested in
                     SinglePropertyDefInfo::ClassProperty(loc) => *loc == *ty_def_locs.first(),
                 })
             }
@@ -290,8 +280,6 @@ fn type_matches_locs<'cx>(
             get_def_utils::DefLoc::FoundUnion(def_locs) => def_locs
                 .iter()
                 .any(|dl| def_loc_matches_locs(dl, prop_def_info)),
-            // TODO we may want to surface AnyType results somehow since we can't be sure whether they
-            // are references or not. For now we'll leave them out.
             get_def_utils::DefLoc::NoDefFound
             | get_def_utils::DefLoc::UnsupportedType
             | get_def_utils::DefLoc::AnyType => false,
@@ -317,7 +305,6 @@ fn get_loc_of_def_info<'cx>(
         }
     }
     let mut result: Vec<Loc> = Vec::new();
-    // Iterates all the map prop values. If any match prop_def_info, add the obj loc to the result
     for (loc, props_tmap_set) in obj_to_obj_map {
         for props_id in props_tmap_set {
             let props = cx.find_props(props_id.dupe());
@@ -371,7 +358,7 @@ fn process_prop_refs<'cx>(
 fn ordinary_property_find_refs_in_file<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &'cx Context<'cx>,
+    cx: &Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
@@ -410,7 +397,7 @@ fn ordinary_property_find_refs_in_file<'cx>(
 pub fn property_find_refs_in_file<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &'cx Context<'cx>,
+    cx: &Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
@@ -447,7 +434,7 @@ pub fn find_local_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file_key: &flow_parser::file_key::FileKey,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &'cx Context<'cx>,
+    cx: &Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,

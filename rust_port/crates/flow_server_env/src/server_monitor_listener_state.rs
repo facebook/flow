@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Ported from src/server/monitor_listener/serverMonitorListenerState.ml
-
 use std::collections::BTreeSet;
 use std::sync::Mutex;
 
@@ -92,12 +90,21 @@ pub fn cancellation_requests() -> &'static Mutex<BTreeSet<String>> {
     &CANCELLATION_REQUESTS
 }
 
-/// Placeholder for (FindRefsTypes.request * Persistent_connection.single_client *
-///   ((FindRefsTypes.single_ref list, string) result -> LspProt.response * LspProt.metadata))
-/// Until Persistent_connection and LspProt are fully ported, this bundles
-/// request+client+references_to_lsp_response as an opaque type.
+/// Placeholder until persistent connections and the LSP response plumbing are
+/// fully ported. This bundles the find-refs request, client, and response
+/// conversion as an opaque type.
 #[allow(dead_code)]
 pub struct FindRefCommand(Box<dyn FnOnce() + Send>);
+
+impl FindRefCommand {
+    pub fn new(f: Box<dyn FnOnce() + Send>) -> Self {
+        FindRefCommand(f)
+    }
+
+    pub fn run(self) {
+        (self.0)();
+    }
+}
 
 struct RecheckMsg {
     file_watcher_metadata: Option<FileWatcherMetadata>,
@@ -170,9 +177,9 @@ pub fn push_global_find_ref_request(def_locs: Vec<Loc>, find_ref_command: FindRe
     });
 }
 
-/// [push_lazy_init files] triggers a recheck of [files]. It should be called
-/// immediately after a lazy init, and [files] should be the files changed
-/// since mergebase.  
+/// Triggers a recheck of `files`.
+/// Call this immediately after a lazy init, where `files` are the files
+/// changed since mergebase.
 pub fn push_lazy_init(files: BTreeSet<String>) {
     push_recheck_msg(RecheckFiles::FilesToForceFocusedAndRecheck {
         files,
@@ -259,7 +266,7 @@ fn with_recheck_acc<T>(f: impl FnOnce(&mut RecheckWorkload) -> T) -> T {
     f(guard.as_mut().unwrap())
 }
 
-/// Updates [workload] while maintaining physical equality if there's nothing to do
+/// Updates `workload` while leaving it unchanged when there is nothing to do.
 fn update_workload(
     workload: &mut RecheckWorkload,
     files_to_prioritize: Option<&FlowOrdSet<FileKey>>,
@@ -334,15 +341,14 @@ fn _summarize_changes(a: &RecheckWorkload, b: &RecheckWorkload) -> WorkloadChang
     }
 }
 
-/// Process the messages which are currently in the recheck stream and return the resulting workload
+/// Processes the messages currently in the recheck stream and returns whether
+/// the resulting workload changed.
 ///
-/// The recheck stream gives us files as a set of strings. `process_updates` takes that set of
-/// strings and returns a `FilenameSet.t`. It filters out stuff we don't care about and causes us to
-/// exit on incompatible changes.
+/// The recheck stream gives us files as a set of strings. `process_updates`
+/// filters out entries we do not care about and exits on incompatible changes.
 ///
-/// `get_forced` is a function which gives us the `CheckedSet.t` of currently forced files. So if
-/// the recheck stream is asking us to focus `foo.js` but it's already focused, then we can ignore
-/// it.
+/// `get_forced` returns the currently forced files. If the recheck stream asks
+/// us to focus `foo.js` but it is already focused, then we can ignore it.
 pub fn recheck_fetch(
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
@@ -461,7 +467,6 @@ pub fn recheck_fetch(
                             result
                         }
                     };
-                    //       update ~files_to_force workload
                     update_workload(workload, None, None, Some(&files_to_force), None, None)
                 }
                 RecheckFiles::FilesToReinit {
@@ -573,7 +578,7 @@ pub fn get_and_clear_recheck_workload(
     }
 }
 
-/// [wait_for stream] blocks until a message arrives on [stream]  
+/// Blocks until a recheck message arrives.
 fn wait_for_recheck() {
     RECHECK_NOTIFY.1.recv().unwrap();
 }

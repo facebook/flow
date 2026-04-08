@@ -81,10 +81,10 @@ impl FlowServer {
             socket_path: socket_path.clone(),
         };
 
-        let _ = std::fs::remove_file(&socket_path);
+        let _remove_result = std::fs::remove_file(&socket_path);
 
         if let Some(parent) = Path::new(&socket_path).parent() {
-            let _ = std::fs::create_dir_all(parent);
+            let _mkdir_result = std::fs::create_dir_all(parent);
         }
 
         eprintln!("Initializing server...");
@@ -132,7 +132,7 @@ impl FlowServer {
 
         // Write the port to the socket file so clients can connect
         if let Some(parent) = Path::new(&socket_path).parent() {
-            let _ = std::fs::create_dir_all(parent);
+            let _mkdir_result = std::fs::create_dir_all(parent);
         }
         std::fs::write(&socket_path, port.to_string()).unwrap_or_else(|e| {
             eprintln!("Error: failed to write socket file {}: {}", socket_path, e);
@@ -144,7 +144,7 @@ impl FlowServer {
         // Signal readiness by writing to the ready file
         if ready_fd >= 0 {
             let ready_path = format!("{}.ready", socket_path);
-            let _ = std::fs::write(&ready_path, "ready");
+            let _write_result = std::fs::write(&ready_path, "ready");
         }
 
         for stream in listener.incoming() {
@@ -197,8 +197,8 @@ struct LockGuard {
 
 impl Drop for LockGuard {
     fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.socket_path);
-        let _ = std::fs::remove_file(&self.lock_path);
+        let _remove_socket = std::fs::remove_file(&self.socket_path);
+        let _remove_lock = std::fs::remove_file(&self.lock_path);
     }
 }
 
@@ -262,10 +262,10 @@ fn handle_connection(
         }
         ServerRequest::Shutdown => {
             let response = ServerResponse::ForceRecheck;
-            let _ = command_connect::send_message(&mut stream, &response);
+            let _send_result = command_connect::send_message(&mut stream, &response);
             eprintln!("Shutdown requested, exiting...");
-            let _ = std::fs::remove_file(socket_path);
-            let _ = std::fs::remove_file(lock_path);
+            let _remove_socket = std::fs::remove_file(socket_path);
+            let _remove_lock = std::fs::remove_file(lock_path);
             std::process::exit(0);
         }
     };
@@ -296,11 +296,6 @@ fn handle_force_recheck(
         ),
     );
     let options_arc = Arc::new(options.clone());
-
-    // Hold the env lock for the entire recheck to prevent concurrent status
-    // requests from seeing an empty env. The OCaml server is single-threaded
-    // (Lwt cooperative), so recheck naturally blocks other requests; we
-    // replicate that behavior here by holding the mutex.
     let mut env_guard = env.lock().unwrap();
 
     let all_unordered_libs_set: BTreeSet<String> = env_guard
@@ -403,7 +398,7 @@ fn handle_force_recheck(
             },
             coverage: BTreeMap::new(),
             collated_errors: flow_server_env::collated_errors::CollatedErrors::empty(),
-            connections: flow_server_env::persistent_connection::PersistentConnection::empty(),
+            connections: flow_server_env::persistent_connection::empty(),
             exports: None,
             master_cx: Arc::new(flow_typing_context::MasterContext::EmptyMasterContext),
         },

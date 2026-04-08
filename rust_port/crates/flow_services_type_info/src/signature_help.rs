@@ -238,8 +238,8 @@ pub fn func_details<L: Dupe>(
     }
 }
 
-/// given a Loc.t within a function call or `new` expression,
-/// returns the type of the function/constructor being called  
+/// Given a location within a function call or `new` expression,
+/// returns the type of the function or constructor being called.
 pub mod callee_finder {
     use flow_parser::ast::expression::ExpressionOrSpread;
     use flow_parser::ast_visitor::AstVisitor;
@@ -750,10 +750,10 @@ pub fn find_signatures<'a>(
     get_ast_from_shared_mem: &dyn Fn(
         &flow_parser::file_key::FileKey,
     ) -> Option<ast::Program<Loc, Loc>>,
-    cx: &'a Context<'a>,
+    cx: &Context<'a>,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     ast: &ast::Program<Loc, Loc>,
-    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
 ) -> Result<Option<(Vec<FuncDetailsResult>, i32)>, flow_typing_ty_normalizer::normalizer::Error> {
     match callee_finder::find_opt(loc_of_aloc, cx, typed_ast, loc) {

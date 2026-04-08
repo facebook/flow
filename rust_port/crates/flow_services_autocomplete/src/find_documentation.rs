@@ -402,3 +402,58 @@ pub fn documentation_of_jsdoc(jsdoc: &jsdoc::Jsdoc) -> Option<String> {
         Some(documentation_strings.join("\n\n"))
     }
 }
+
+enum FoundHardcodedDocumentation {
+    Found(String),
+}
+
+struct HardcodedDocumentationSearcher<'a> {
+    target_loc: &'a Loc,
+}
+
+impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, FoundHardcodedDocumentation>
+    for HardcodedDocumentationSearcher<'_>
+{
+    fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
+        loc
+    }
+
+    fn normalize_type(type_: &'ast Loc) -> &'ast Loc {
+        type_
+    }
+
+    fn render_type(
+        &mut self,
+        renders: &'ast ast::types::Renders<Loc, Loc>,
+    ) -> Result<(), FoundHardcodedDocumentation> {
+        let operator_loc = &renders.operator_loc;
+        let doc = match renders.variant {
+            ast::types::RendersVariant::Normal => {
+                "`renders A` means that it will eventually render exactly one React element `A`."
+            }
+            ast::types::RendersVariant::Maybe => {
+                "`renders? A` means that it will eventually render zero or one React element `A`."
+            }
+            ast::types::RendersVariant::Star => {
+                "`renders* A` means that it will eventually render any amount of `A`."
+            }
+        };
+        if operator_loc.contains(self.target_loc) {
+            return Err(FoundHardcodedDocumentation::Found(doc.to_string()));
+        }
+        ast_visitor::render_type_default(self, renders)
+    }
+}
+
+pub fn hardcoded_documentation_at_loc(
+    ast: &ast::Program<Loc, Loc>,
+    target_loc: Loc,
+) -> Option<String> {
+    let mut searcher = HardcodedDocumentationSearcher {
+        target_loc: &target_loc,
+    };
+    match searcher.program(ast) {
+        Ok(()) => None,
+        Err(FoundHardcodedDocumentation::Found(doc)) => Some(doc),
+    }
+}

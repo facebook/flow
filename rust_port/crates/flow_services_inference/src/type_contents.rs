@@ -25,6 +25,9 @@ use flow_parsing::parsing_service::ParseResult;
 use flow_parsing::parsing_service::ParseSkipReason;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_monitor_listener_state;
+use flow_services_inference_types::FileArtifacts;
+use flow_services_inference_types::ParseArtifacts;
+use flow_services_inference_types::TypecheckArtifacts;
 use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
@@ -36,9 +39,6 @@ use flow_typing_type::type_::Type;
 use crate::inference_utils;
 use crate::merge_service;
 use crate::obj_to_obj_hook;
-use crate::types_js_types::FileArtifacts;
-use crate::types_js_types::ParseArtifacts;
-use crate::types_js_types::TypecheckArtifacts;
 
 #[derive(Debug)]
 struct CheckedDependenciesCanceled;
@@ -296,10 +296,10 @@ fn unchecked_dependencies(
     )
 }
 
-// Ensures that dependencies are checked; schedules them to be checked and cancels the
-// Lwt thread to abort the command if not.
+// Ensures that dependencies are checked; schedules them to be checked and aborts the
+// command if not.
 //
-// This is necessary because [check_contents] needs all of the dep type sigs to be
+// This is necessary because `check_contents` needs all of the dep type sigs to be
 // available, but since it doesn't use workers it can't go parse everything itself.
 #[allow(dead_code)]
 fn ensure_checked_dependencies(

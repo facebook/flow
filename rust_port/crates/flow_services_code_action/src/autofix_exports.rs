@@ -65,7 +65,7 @@ pub(crate) fn fix_signature_verification_error_at_loc<'a, 'cx>(
         >,
     >,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'cx ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     ast: &ast::Program<Loc, Loc>,
     target: Loc,
 ) -> InsertTypeResult<ast::Program<Loc, Loc>> {
@@ -100,18 +100,18 @@ pub fn fix_signature_verification_errors<'a, 'cx>(
         >,
     >,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'cx ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     ast: ast::Program<Loc, Loc>,
     locs: &BTreeSet<Loc>,
 ) -> (ast::Program<Loc, Loc>, Vec<String>) {
     let mut remote_converter = insert_type_imports::imports_helper::RemoteConverter::new(
-        loc_of_aloc,           // ~loc_of_aloc
-        file_options,          // ~file_options
-        get_haste_module_info, // ~get_haste_module_info
-        get_type_sig,          // ~get_type_sig
-        0,                     // ~iteration:0
-        file_key,              // ~file:file_key
-        BTreeSet::new(),       // ~reserved_names:SSet.empty
+        Box::new(|aloc| loc_of_aloc(aloc)),       // ~loc_of_aloc
+        file_options,                             // ~file_options
+        Box::new(|fk| get_haste_module_info(fk)), // ~get_haste_module_info
+        Box::new(|fk| get_type_sig(fk)),          // ~get_type_sig
+        0,                                        // ~iteration:0
+        file_key,                                 // ~file:file_key
+        BTreeSet::new(),                          // ~reserved_names:SSet.empty
     );
     let mut ast = ast;
     let mut it_errors = Vec::<String>::new();

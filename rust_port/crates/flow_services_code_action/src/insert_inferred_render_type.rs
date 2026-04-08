@@ -110,7 +110,7 @@ pub fn insert_render_type_at_loc<'a, 'cx>(
         >,
     >,
     file_sig: &Arc<FileSig>,
-    typed_ast: &'cx ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     ast: &ast::Program<Loc, Loc>,
     id_loc: Loc,
 ) -> Result<Option<insert_type::InsertTypeResult<ast::Program<Loc, Loc>>>, FlowJsException> {

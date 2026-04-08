@@ -27,30 +27,30 @@ use flow_lint_settings::strict_mode_settings::StrictModeSettings;
 use regex::Regex;
 use starlark_map::small_map::SmallMap;
 
-pub(super) struct Warning(pub(super) u32, pub(super) String);
-pub(super) struct Error(pub(super) u32, pub(super) String);
+pub struct Warning(pub u32, pub String);
+pub struct Error(pub u32, pub String);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum FileWatcher {
+pub enum FileWatcher {
     NoFileWatcher,
     DFind,
     Watchman,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum LazyMode {
+pub enum LazyMode {
     Lazy,
     NonLazy,
     WatchmanDeprecated,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum ChannelMode {
+pub enum ChannelMode {
     Pipe,
     Socket,
 }
 
-pub(super) mod opts {
+pub mod opts {
     use super::*;
 
     struct RawValue(u32, String);
@@ -66,131 +66,131 @@ pub(super) mod opts {
     struct OptError(u32, ErrorKind);
 
     #[derive(Debug, Clone)]
-    pub(crate) struct Opts {
-        pub(crate) abstract_classes: bool,
-        pub(crate) all: Option<bool>,
-        pub(crate) autoimports: Option<bool>,
-        pub(crate) autoimports_min_characters: Option<u32>,
-        pub(crate) autoimports_ranked_by_usage: bool,
-        pub(crate) autoimports_ranked_by_usage_boost_exact_match_min_length: u32,
-        pub(crate) automatic_require_default: Option<bool>,
-        pub(crate) babel_loose_array_spread: Option<bool>,
-        pub(crate) ban_spread_key_props: Option<bool>,
-        pub(crate) casting_syntax: Option<CastingSyntax>,
-        pub(crate) casting_syntax_only_support_as_excludes: Vec<String>,
-        pub(crate) channel_mode: Option<ChannelMode>,
-        pub(crate) component_syntax: bool,
-        pub(crate) async_component_syntax: bool,
-        pub(crate) dev_only_refinement_info_as_errors: bool,
-        pub(crate) emoji: Option<bool>,
-        pub(crate) enable_const_params: Option<bool>,
-        pub(crate) enums: bool,
-        pub(crate) estimate_recheck_time: Option<bool>,
-        pub(crate) exact_by_default: Option<bool>,
-        pub(crate) facebook_fbs: Option<String>,
-        pub(crate) facebook_fbt: Option<String>,
-        pub(crate) facebook_module_interop: bool,
-        pub(crate) file_watcher: Option<FileWatcher>,
-        pub(crate) file_watcher_mergebase_with: Option<String>,
-        pub(crate) file_watcher_mergebase_with_git: Option<String>,
-        pub(crate) file_watcher_mergebase_with_hg: Option<String>,
-        pub(crate) file_watcher_timeout: Option<u32>,
-        pub(crate) files_implicitly_include_root: bool,
-        pub(crate) format_bracket_spacing: Option<bool>,
-        pub(crate) format_single_quotes: Option<bool>,
-        pub(crate) gc_worker_custom_major_ratio: Option<u32>,
-        pub(crate) gc_worker_custom_minor_max_size: Option<u32>,
-        pub(crate) gc_worker_custom_minor_ratio: Option<u32>,
-        pub(crate) gc_worker_major_heap_increment: Option<u32>,
-        pub(crate) gc_worker_minor_heap_size: Option<u32>,
-        pub(crate) gc_worker_space_overhead: Option<u32>,
-        pub(crate) gc_worker_window_size: Option<u32>,
-        pub(crate) haste_module_ref_prefix: Option<String>,
-        pub(crate) haste_paths_excludes: Vec<String>,
-        pub(crate) haste_paths_includes: Vec<String>,
-        pub(crate) hook_compatibility: bool,
-        pub(crate) hook_compatibility_includes: Vec<String>,
-        pub(crate) hook_compatibility_excludes: Vec<String>,
-        pub(crate) ignore_non_literal_requires: bool,
-        pub(crate) instance_t_objkit_fix: bool,
-        pub(crate) include_warnings: bool,
-        pub(crate) jest_integration: bool,
-        pub(crate) lazy_mode: Option<LazyMode>,
-        pub(crate) log_saving: BTreeMap<String, LogSaving>,
-        pub(crate) long_lived_workers: bool,
-        pub(crate) max_files_checked_per_worker: u32,
-        pub(crate) max_files_checked_per_worker_rust_port: Option<u32>,
-        pub(crate) max_header_tokens: u32,
-        pub(crate) max_seconds_for_check_per_worker: f64,
-        pub(crate) max_workers: Option<u32>,
-        pub(crate) max_workers_full_check: Option<u32>,
-        pub(crate) merge_timeout: Option<u32>,
-        pub(crate) missing_module_generators: Vec<(Regex, String)>,
-        pub(crate) module_declaration_dirnames: Vec<String>,
-        pub(crate) module_file_exts: Vec<FlowSmolStr>,
-        pub(crate) module_name_mappers: Vec<(Regex, String)>,
-        pub(crate) module_resource_exts: HashSet<FlowSmolStr>,
-        pub(crate) module_system: ModuleSystem,
-        pub(crate) modules_are_use_strict: bool,
-        pub(crate) multi_platform: Option<bool>,
-        pub(crate) multi_platform_extensions: Vec<FlowSmolStr>,
-        pub(crate) multi_platform_extension_group_mapping: Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
-        pub(crate) multi_platform_ambient_supports_platform_project_overrides:
+    pub struct Opts {
+        pub abstract_classes: bool,
+        pub all: Option<bool>,
+        pub autoimports: Option<bool>,
+        pub autoimports_min_characters: Option<u32>,
+        pub autoimports_ranked_by_usage: bool,
+        pub autoimports_ranked_by_usage_boost_exact_match_min_length: u32,
+        pub automatic_require_default: Option<bool>,
+        pub babel_loose_array_spread: Option<bool>,
+        pub ban_spread_key_props: Option<bool>,
+        pub casting_syntax: Option<CastingSyntax>,
+        pub casting_syntax_only_support_as_excludes: Vec<String>,
+        pub channel_mode: Option<ChannelMode>,
+        pub component_syntax: bool,
+        pub async_component_syntax: bool,
+        pub dev_only_refinement_info_as_errors: bool,
+        pub emoji: Option<bool>,
+        pub enable_const_params: Option<bool>,
+        pub enums: bool,
+        pub estimate_recheck_time: Option<bool>,
+        pub exact_by_default: Option<bool>,
+        pub facebook_fbs: Option<String>,
+        pub facebook_fbt: Option<String>,
+        pub facebook_module_interop: bool,
+        pub file_watcher: Option<FileWatcher>,
+        pub file_watcher_mergebase_with: Option<String>,
+        pub file_watcher_mergebase_with_git: Option<String>,
+        pub file_watcher_mergebase_with_hg: Option<String>,
+        pub file_watcher_timeout: Option<u32>,
+        pub files_implicitly_include_root: bool,
+        pub format_bracket_spacing: Option<bool>,
+        pub format_single_quotes: Option<bool>,
+        pub gc_worker_custom_major_ratio: Option<u32>,
+        pub gc_worker_custom_minor_max_size: Option<u32>,
+        pub gc_worker_custom_minor_ratio: Option<u32>,
+        pub gc_worker_major_heap_increment: Option<u32>,
+        pub gc_worker_minor_heap_size: Option<u32>,
+        pub gc_worker_space_overhead: Option<u32>,
+        pub gc_worker_window_size: Option<u32>,
+        pub haste_module_ref_prefix: Option<String>,
+        pub haste_paths_excludes: Vec<String>,
+        pub haste_paths_includes: Vec<String>,
+        pub hook_compatibility: bool,
+        pub hook_compatibility_includes: Vec<String>,
+        pub hook_compatibility_excludes: Vec<String>,
+        pub ignore_non_literal_requires: bool,
+        pub instance_t_objkit_fix: bool,
+        pub include_warnings: bool,
+        pub jest_integration: bool,
+        pub lazy_mode: Option<LazyMode>,
+        pub log_saving: BTreeMap<String, LogSaving>,
+        pub long_lived_workers: bool,
+        pub max_files_checked_per_worker: u32,
+        pub max_files_checked_per_worker_rust_port: Option<u32>,
+        pub max_header_tokens: u32,
+        pub max_seconds_for_check_per_worker: f64,
+        pub max_workers: Option<u32>,
+        pub max_workers_full_check: Option<u32>,
+        pub merge_timeout: Option<u32>,
+        pub missing_module_generators: Vec<(Regex, String)>,
+        pub module_declaration_dirnames: Vec<String>,
+        pub module_file_exts: Vec<FlowSmolStr>,
+        pub module_name_mappers: Vec<(Regex, String)>,
+        pub module_resource_exts: HashSet<FlowSmolStr>,
+        pub module_system: ModuleSystem,
+        pub modules_are_use_strict: bool,
+        pub multi_platform: Option<bool>,
+        pub multi_platform_extensions: Vec<FlowSmolStr>,
+        pub multi_platform_extension_group_mapping: Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
+        pub multi_platform_ambient_supports_platform_project_overrides:
             Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
-        pub(crate) munge_underscores: bool,
-        pub(crate) no_flowlib: bool,
-        pub(crate) no_unchecked_indexed_access: bool,
-        pub(crate) node_modules_errors: bool,
-        pub(crate) node_main_fields: Vec<String>,
-        pub(crate) node_package_export_conditions: Vec<String>,
-        pub(crate) node_resolver_allow_root_relative: bool,
-        pub(crate) node_resolver_dirnames: Vec<String>,
-        pub(crate) node_resolver_root_relative_dirnames: Vec<(Option<String>, String)>,
-        pub(crate) opaque_type_new_bound_syntax: bool,
-        pub(crate) pattern_matching: Option<bool>,
-        pub(crate) pattern_matching_instance_patterns: Option<bool>,
-        pub(crate) projects: Vec<FlowSmolStr>,
-        pub(crate) projects_overlap_mapping: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-        pub(crate) projects_path_mapping: Vec<(String, Vec<FlowSmolStr>)>,
-        pub(crate) projects_strict_boundary: bool,
-        pub(crate) projects_strict_boundary_validate_import_pattern_opt_outs: bool,
-        pub(crate) projects_strict_boundary_import_pattern_opt_outs: Vec<Regex>,
-        pub(crate) react_custom_jsx_typing: bool,
-        pub(crate) stylex_shorthand_prop: Option<String>,
-        pub(crate) react_ref_as_prop: ReactRefAsProp,
-        pub(crate) react_rules: Vec<ReactRule>,
-        pub(crate) react_runtime: ReactRuntime,
-        pub(crate) records: Option<bool>,
-        pub(crate) records_includes: Vec<String>,
-        pub(crate) recursion_limit: i32,
-        pub(crate) relay_integration: bool,
-        pub(crate) relay_integration_esmodules: bool,
-        pub(crate) relay_integration_excludes: Vec<String>,
-        pub(crate) relay_integration_module_prefix: Option<String>,
-        pub(crate) relay_integration_module_prefix_includes: Vec<String>,
-        pub(crate) root_name: Option<String>,
-        pub(crate) saved_state_fetcher: SavedStateFetcher,
-        pub(crate) saved_state_skip_version_check: bool,
-        pub(crate) shm_hash_table_pow: u32,
-        pub(crate) shm_heap_size: u64,
-        pub(crate) supported_operating_systems: Vec<SupportedOs>,
-        pub(crate) strict_es6_import_export: bool,
-        pub(crate) ts_syntax: bool,
-        pub(crate) ts_utility_syntax: bool,
-        pub(crate) tslib_syntax: bool,
-        pub(crate) deprecated_utilities: BTreeMap<String, Vec<String>>,
-        pub(crate) deprecated_utilities_excludes: Vec<String>,
-        pub(crate) deprecated_colon_extends: Vec<String>,
-        pub(crate) deprecated_colon_extends_excludes: Vec<String>,
-        pub(crate) enable_custom_error: bool,
-        pub(crate) assert_operator: AssertOperator,
-        pub(crate) type_expansion_recursion_limit: u32,
-        pub(crate) unsuppressable_error_codes: HashSet<String>,
-        pub(crate) use_unknown_in_catch_variables: Option<bool>,
-        pub(crate) vpn_less: bool,
-        pub(crate) wait_for_recheck: bool,
-        pub(crate) watchman_defer_states: Vec<String>,
-        pub(crate) watchman_sync_timeout: Option<u32>,
+        pub munge_underscores: bool,
+        pub no_flowlib: bool,
+        pub no_unchecked_indexed_access: bool,
+        pub node_modules_errors: bool,
+        pub node_main_fields: Vec<String>,
+        pub node_package_export_conditions: Vec<String>,
+        pub node_resolver_allow_root_relative: bool,
+        pub node_resolver_dirnames: Vec<String>,
+        pub node_resolver_root_relative_dirnames: Vec<(Option<String>, String)>,
+        pub opaque_type_new_bound_syntax: bool,
+        pub pattern_matching: Option<bool>,
+        pub pattern_matching_instance_patterns: Option<bool>,
+        pub projects: Vec<FlowSmolStr>,
+        pub projects_overlap_mapping: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+        pub projects_path_mapping: Vec<(String, Vec<FlowSmolStr>)>,
+        pub projects_strict_boundary: bool,
+        pub projects_strict_boundary_validate_import_pattern_opt_outs: bool,
+        pub projects_strict_boundary_import_pattern_opt_outs: Vec<Regex>,
+        pub react_custom_jsx_typing: bool,
+        pub stylex_shorthand_prop: Option<String>,
+        pub react_ref_as_prop: ReactRefAsProp,
+        pub react_rules: Vec<ReactRule>,
+        pub react_runtime: ReactRuntime,
+        pub records: Option<bool>,
+        pub records_includes: Vec<String>,
+        pub recursion_limit: i32,
+        pub relay_integration: bool,
+        pub relay_integration_esmodules: bool,
+        pub relay_integration_excludes: Vec<String>,
+        pub relay_integration_module_prefix: Option<String>,
+        pub relay_integration_module_prefix_includes: Vec<String>,
+        pub root_name: Option<String>,
+        pub saved_state_fetcher: SavedStateFetcher,
+        pub saved_state_skip_version_check: bool,
+        pub shm_hash_table_pow: u32,
+        pub shm_heap_size: u64,
+        pub supported_operating_systems: Vec<SupportedOs>,
+        pub strict_es6_import_export: bool,
+        pub ts_syntax: bool,
+        pub ts_utility_syntax: bool,
+        pub tslib_syntax: bool,
+        pub deprecated_utilities: BTreeMap<String, Vec<String>>,
+        pub deprecated_utilities_excludes: Vec<String>,
+        pub deprecated_colon_extends: Vec<String>,
+        pub deprecated_colon_extends_excludes: Vec<String>,
+        pub enable_custom_error: bool,
+        pub assert_operator: AssertOperator,
+        pub type_expansion_recursion_limit: u32,
+        pub unsuppressable_error_codes: HashSet<String>,
+        pub use_unknown_in_catch_variables: Option<bool>,
+        pub vpn_less: bool,
+        pub wait_for_recheck: bool,
+        pub watchman_defer_states: Vec<String>,
+        pub watchman_sync_timeout: Option<u32>,
     }
 
     // the order of this list determines precedence. ./foo resolves to foo.js before foo.json
@@ -201,7 +201,7 @@ pub(super) mod opts {
         ".webp",
     ];
 
-    pub(super) fn default_options() -> Opts {
+    pub fn default_options() -> Opts {
         let module_resource_exts = MODULE_RESOURCE_EXTS
             .iter()
             .map(|&s| FlowSmolStr::new(s))
@@ -447,7 +447,7 @@ pub(super) mod opts {
         Ok(result)
     }
 
-    pub(super) fn ocaml_str_to_rust_regex(pattern: &str) -> String {
+    pub fn ocaml_str_to_rust_regex(pattern: &str) -> String {
         let mut result = String::with_capacity(pattern.len());
         let chars: Vec<char> = pattern.chars().collect();
         let mut i = 0;
@@ -1918,7 +1918,7 @@ pub(super) mod opts {
         )
     }
 
-    pub(super) fn parse(config: &mut Opts, lines: &[(u32, String)]) -> Result<Vec<Warning>, Error> {
+    pub fn parse(config: &mut Opts, lines: &[(u32, String)]) -> Result<Vec<Warning>, Error> {
         let raw_opts = parse_lines(lines)?;
         let mut warnings = Vec::new();
 
@@ -2647,24 +2647,24 @@ pub(super) mod opts {
     }
 }
 
-#[derive(Debug)]
-pub(super) struct Rollout {
-    pub(super) enabled_group: String,
-    pub(super) disabled_groups: BTreeSet<String>,
+#[derive(Debug, Clone)]
+pub struct Rollout {
+    pub enabled_group: String,
+    pub disabled_groups: BTreeSet<String>,
 }
 
-#[derive(Debug)]
-pub(super) struct FlowConfig {
-    pub(super) rollouts: BTreeMap<String, Rollout>,
-    pub(super) ignores: Vec<(String, Option<String>)>,
-    pub(super) untyped: Vec<String>,
-    pub(super) declarations: Vec<String>,
-    pub(super) includes: Vec<String>,
-    pub(super) libs: Vec<(Option<FlowSmolStr>, String)>,
-    pub(super) lint_severities: LintSettings<Severity>,
-    pub(super) strict_mode: StrictModeSettings,
-    pub(super) options: opts::Opts,
-    pub(super) version: Option<String>,
+#[derive(Debug, Clone)]
+pub struct FlowConfig {
+    pub rollouts: BTreeMap<String, Rollout>,
+    pub ignores: Vec<(String, Option<String>)>,
+    pub untyped: Vec<String>,
+    pub declarations: Vec<String>,
+    pub includes: Vec<String>,
+    pub libs: Vec<(Option<FlowSmolStr>, String)>,
+    pub lint_severities: LintSettings<Severity>,
+    pub strict_mode: StrictModeSettings,
+    pub options: opts::Opts,
+    pub version: Option<String>,
 }
 
 struct Section((u32, String), Vec<(u32, String)>);
@@ -3159,7 +3159,7 @@ fn read(filename: &str) -> Result<(Vec<(u32, String)>, u64), std::io::Error> {
     Ok((lines, hash))
 }
 
-pub(super) fn empty_config() -> FlowConfig {
+pub fn empty_config() -> FlowConfig {
     FlowConfig {
         rollouts: BTreeMap::new(),
         ignores: Vec::new(),
@@ -3174,7 +3174,7 @@ pub(super) fn empty_config() -> FlowConfig {
     }
 }
 
-pub(super) fn get(path: &str) -> Result<(FlowConfig, Vec<Warning>, String), Error> {
+pub fn get(path: &str) -> Result<(FlowConfig, Vec<Warning>, String), Error> {
     let (lines, hash) =
         read(path).map_err(|e| Error(0, format!("Failed to read config: {}", e)))?;
     let mut config = empty_config();
