@@ -99,7 +99,10 @@ let process_updates ~skip_incompatible ~options env updates =
   with
   | Ok updates -> ServerMonitorListenerState.NormalUpdates updates
   | Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg; updates }) ->
-    Hh_logger.info "%s" msg;
+    Hh_logger.info "Libdef change detected: %s" msg;
+    Hh_logger.info
+      "Will require full check reinit (%d updates)"
+      (Utils_js.FilenameSet.cardinal updates);
     ServerMonitorListenerState.RequiredFullCheckReinit updates
   | Error (Recheck_updates.Unrecoverable { msg; exit_status }) -> Exit.exit ~msg exit_status
 

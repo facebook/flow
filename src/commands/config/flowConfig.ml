@@ -155,6 +155,7 @@ module Opts = struct
     saved_state_fetcher: Options.saved_state_fetcher;
     saved_state_direct_serialization: bool;
     saved_state_persist_export_index: bool;
+    saved_state_reinit_on_lib_change: bool;
     saved_state_skip_version_check: bool;
     shm_hash_table_pow: int;
     shm_heap_size: int;
@@ -318,6 +319,7 @@ module Opts = struct
       saved_state_fetcher = Options.Dummy_fetcher;
       saved_state_direct_serialization = false;
       saved_state_persist_export_index = false;
+      saved_state_reinit_on_lib_change = false;
       saved_state_skip_version_check = false;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
@@ -1301,6 +1303,9 @@ module Opts = struct
       ( "saved_state.persist_export_index",
         boolean (fun opts v -> Ok { opts with saved_state_persist_export_index = v })
       );
+      ( "saved_state.reinit_on_lib_change",
+        boolean (fun opts v -> Ok { opts with saved_state_reinit_on_lib_change = v })
+      );
       ( "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
         boolean (fun opts v -> Ok { opts with saved_state_skip_version_check = v })
       );
@@ -2172,6 +2177,8 @@ let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let saved_state_direct_serialization c = c.options.Opts.saved_state_direct_serialization
 
 let saved_state_persist_export_index c = c.options.Opts.saved_state_persist_export_index
+
+let saved_state_reinit_on_lib_change c = c.options.Opts.saved_state_reinit_on_lib_change
 
 let saved_state_skip_version_check c = c.options.Opts.saved_state_skip_version_check
 

@@ -192,6 +192,7 @@ type t = {
   opt_saved_state_direct_serialization: bool;
   opt_saved_state_persist_export_index: bool;
   opt_saved_state_no_fallback: bool;
+  opt_saved_state_reinit_on_lib_change: bool;
   opt_saved_state_skip_version_check: bool;
   opt_saved_state_verify: bool;
   opt_slow_to_check_logging: Slow_to_check_logging.t;
@@ -412,6 +413,8 @@ let saved_state_direct_serialization opts = opts.opt_saved_state_direct_serializ
 let saved_state_persist_export_index opts = opts.opt_saved_state_persist_export_index
 
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
+
+let saved_state_reinit_on_lib_change opts = opts.opt_saved_state_reinit_on_lib_change
 
 let saved_state_skip_version_check opts = opts.opt_saved_state_skip_version_check
 

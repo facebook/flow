@@ -2732,14 +2732,44 @@ let recheck
     Lwt.return (Base.Option.value_exn result)
   in
   if incompatible_lib_change then
-    reinit_full_check
-      ~profiling
-      ~workers
-      ~options
-      ~updates
-      ~files_to_force
-      ~will_be_checked_files
-      env
+    if did_change_mergebase && Options.saved_state_reinit_on_lib_change options then begin
+      (* The mergebase changed and a libdef changed. Try loading saved state first —
+         if the saved state was built after the libdef change, we only need to recheck
+         the delta files instead of all files. If saved state loading fails (e.g.
+         because the libdef also changed locally), fall back to reinit_full_check. *)
+      Hh_logger.info "Libdef changed with mergebase change; trying saved-state reinit first";
+      match%lwt
+        reinit
+          ~allow_fallback:true
+          ~reason:"libdef_change_with_mergebase_change"
+          ~profiling
+          ~workers
+          ~options
+          ~updates
+          ~files_to_force
+          ~will_be_checked_files
+          env
+      with
+      | Some result -> Lwt.return result
+      | None ->
+        Hh_logger.info "Saved-state reinit failed; falling back to reinit_full_check";
+        reinit_full_check
+          ~profiling
+          ~workers
+          ~options
+          ~updates
+          ~files_to_force
+          ~will_be_checked_files
+          env
+    end else
+      reinit_full_check
+        ~profiling
+        ~workers
+        ~options
+        ~updates
+        ~files_to_force
+        ~will_be_checked_files
+        env
   else if missed_changes && did_change_mergebase then
     (* Reinitialize the server. This should be just like starting up a new server,
        except that the existing server stays running and can answer requests
