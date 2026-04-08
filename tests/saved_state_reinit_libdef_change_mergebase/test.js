@@ -1,0 +1,2 @@
+// @flow
+(myGlobal: string);
