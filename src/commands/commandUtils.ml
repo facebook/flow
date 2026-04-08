@@ -1651,6 +1651,7 @@ let make_options
     opt_saved_state_direct_serialization;
     opt_saved_state_persist_export_index;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
+    opt_saved_state_reinit_on_lib_change = FlowConfig.saved_state_reinit_on_lib_change flowconfig;
     opt_saved_state_skip_version_check =
       saved_state_options_flags.saved_state_skip_version_check
       || FlowConfig.saved_state_skip_version_check flowconfig;

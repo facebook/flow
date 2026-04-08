@@ -291,6 +291,8 @@ val saved_state_direct_serialization : config -> bool
 
 val saved_state_persist_export_index : config -> bool
 
+val saved_state_reinit_on_lib_change : config -> bool
+
 val saved_state_skip_version_check : config -> bool
 
 val shm_hash_table_pow : config -> int
