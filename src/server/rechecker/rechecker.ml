@@ -130,7 +130,7 @@ let recheck
     env
     ?(files_to_force = CheckedSet.empty)
     ~find_ref_command
-    ~require_full_check_reinit
+    ~incompatible_lib_change
     ~changed_mergebase
     ~missed_changes
     ~will_be_checked_files
@@ -154,7 +154,7 @@ let recheck
             ~updates
             ~find_ref_request
             ~files_to_force
-            ~require_full_check_reinit
+            ~incompatible_lib_change
             ~changed_mergebase
             ~missed_changes
             ~will_be_checked_files
@@ -281,7 +281,7 @@ let rec recheck_single ~recheck_count genv env =
     files_to_prioritize;
     files_to_force;
     find_ref_command;
-    require_full_check_reinit;
+    incompatible_lib_change;
   } =
     workload
   in
@@ -300,7 +300,7 @@ let rec recheck_single ~recheck_count genv env =
       files_to_recheck
   in
   if
-    (not require_full_check_reinit)
+    (not incompatible_lib_change)
     && (not did_change_mergebase)
     && CheckedSet.is_empty files_to_recheck
     && CheckedSet.is_empty files_to_force
@@ -332,7 +332,7 @@ let rec recheck_single ~recheck_count genv env =
             genv
             env
             ~files_to_force
-            ~require_full_check_reinit
+            ~incompatible_lib_change
             ~changed_mergebase
             ~missed_changes
             ~will_be_checked_files

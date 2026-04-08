@@ -36,7 +36,7 @@ val recheck :
   updates:CheckedSet.t ->
   find_ref_request:FindRefsTypes.request ->
   files_to_force:CheckedSet.t ->
-  require_full_check_reinit:bool ->
+  incompatible_lib_change:bool ->
   changed_mergebase:bool option ->
   missed_changes:bool ->
   will_be_checked_files:CheckedSet.t ref ->
