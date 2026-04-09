@@ -799,6 +799,7 @@ mod check_files {
             );
             let (num_slow_files, _slowest_time, slowest_file) = slow_files;
             let time_to_check_merged = check_start_time.elapsed().as_secs_f64();
+
             eprintln!("Checking Done");
             let errors = Errors {
                 local_errors,
@@ -1435,7 +1436,7 @@ pub(crate) mod recheck {
 
         let sig_new_or_changed = sig_new_or_changed.union(unchanged_files_to_upgrade.dupe().all());
         let (
-            errors,
+            mut errors,
             coverage,
             find_ref_results,
             time_to_check_merged,
@@ -1458,6 +1459,58 @@ pub(crate) mod recheck {
         );
         if let Some(ref err) = check_internal_error {
             eprintln!("Error: {}", err);
+        }
+
+        // Deduplicate ETrivialRecursiveDefinition errors from cyclic
+        // dependencies. In OCaml, the single-threaded check phase shares a
+        // check cache so cycle errors are generated only once. In the Rust
+        // port, multi-threaded checking means each thread has its own check
+        // cache, so cycle members checked on different threads independently
+        // detect the cycle and each generate an error.
+        //
+        // Fix: find files that both have ETrivialRecursiveDefinition errors
+        // AND are mutually dependent (same cycle). Keep only the error from
+        // the lexicographically smallest file in each cycle group.
+        {
+            use flow_typing_errors::error_message::ErrorMessage;
+            let dep_graph = env.dependency_info.implementation_dependency_graph();
+            let files_with_cycle_errors: BTreeSet<FileKey> = errors
+                .merge_errors
+                .iter()
+                .filter(|(_, errs)| {
+                    errs.iter().any(|e| {
+                        matches!(
+                            e.msg_of_error(),
+                            ErrorMessage::ETrivialRecursiveDefinition(..)
+                        )
+                    })
+                })
+                .map(|(f, _)| f.dupe())
+                .collect();
+            if files_with_cycle_errors.len() > 1 {
+                let mut files_to_strip: BTreeSet<FileKey> = BTreeSet::new();
+                for file in &files_with_cycle_errors {
+                    if let Some(deps) = dep_graph.find_opt(file) {
+                        for dep in deps {
+                            if files_with_cycle_errors.contains(dep) && file.as_str() > dep.as_str()
+                            {
+                                files_to_strip.insert(file.dupe());
+                            }
+                        }
+                    }
+                }
+                for file in &files_to_strip {
+                    if let Some(errs) = errors.merge_errors.get(file) {
+                        let filtered = errs.dupe().filter(|e| {
+                            !matches!(
+                                e.msg_of_error(),
+                                ErrorMessage::ETrivialRecursiveDefinition(..)
+                            )
+                        });
+                        errors.merge_errors.insert(file.dupe(), filtered);
+                    }
+                }
+            }
         }
 
         let options_for_record = options.dupe();
@@ -2285,7 +2338,7 @@ pub fn check_files_for_init(
 
         let check_start = Instant::now();
         let (
-            errors,
+            mut errors,
             coverage,
             _find_ref_results,
             _time_to_check_merged,
@@ -2311,6 +2364,59 @@ pub fn check_files_for_init(
             eprintln!("{}", msg);
         }
 
+        // Deduplicate ETrivialRecursiveDefinition errors from cyclic
+        // dependencies. In OCaml, the single-threaded check phase shares a
+        // check cache so cycle errors are generated only once. In the Rust
+        // port, multi-threaded checking means each thread has its own check
+        // cache, so cycle members checked on different threads independently
+        // detect the cycle and each generate an error.
+        //
+        // Fix: find files that both have ETrivialRecursiveDefinition errors
+        // AND are mutually dependent (same cycle). Keep only the error from
+        // the lexicographically smallest file in each cycle group.
+        {
+            use flow_typing_errors::error_message::ErrorMessage;
+            let dep_graph = dependency_info.implementation_dependency_graph();
+            let files_with_cycle_errors: BTreeSet<FileKey> = errors
+                .merge_errors
+                .iter()
+                .filter(|(_, errs)| {
+                    errs.iter().any(|e| {
+                        matches!(
+                            e.msg_of_error(),
+                            ErrorMessage::ETrivialRecursiveDefinition(..)
+                        )
+                    })
+                })
+                .map(|(f, _)| f.dupe())
+                .collect();
+            if files_with_cycle_errors.len() > 1 {
+                let mut files_to_strip: BTreeSet<FileKey> = BTreeSet::new();
+                for file in &files_with_cycle_errors {
+                    if let Some(deps) = dep_graph.find_opt(file) {
+                        for dep in deps {
+                            if files_with_cycle_errors.contains(dep) && file.as_str() > dep.as_str()
+                            {
+                                files_to_strip.insert(file.dupe());
+                            }
+                        }
+                    }
+                }
+                for file in &files_to_strip {
+                    if let Some(errs) = errors.merge_errors.get(file) {
+                        let filtered = errs.dupe().filter(|e| {
+                            !matches!(
+                                e.msg_of_error(),
+                                ErrorMessage::ETrivialRecursiveDefinition(..)
+                            )
+                        });
+                        errors.merge_errors.insert(file.dupe(), filtered);
+                    }
+                }
+            }
+        }
+
+        // Update collated errors
         let mut collated_errors = env_collated_errors;
         {
             let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };

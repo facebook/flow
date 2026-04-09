@@ -8318,7 +8318,14 @@ pub fn optional_chain<'a>(
                         any_t::untyped(mk_reason(VirtualReasonDesc::RAnyImplicit, l)),
                     )
                 }
-                std::thread::sleep(std::time::Duration::from_secs_f64(value));
+                let mut n = value;
+                while n > 0.0 {
+                    if flow_utils_concurrency::worker_cancel::should_cancel() {
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_secs_f64(n.min(1.0)));
+                    n -= 1.0;
+                }
                 Some((
                     any_t_with_loc(loc.dupe()),
                     ExpressionInner::Call {

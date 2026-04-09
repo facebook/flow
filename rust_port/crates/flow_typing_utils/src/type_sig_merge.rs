@@ -1917,6 +1917,7 @@ fn merge_annot<'cx>(
             let f: ResolvedRequire<'cx> = match cx.builtin_module_opt(mref) {
                 Some((reason, lazy_module)) => {
                     ResolvedRequire::TypedModule(annotation_inference::force_module_type_thunk(
+                        cx.dupe(),
                         type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
                             reason,
                             lazy_module,
@@ -5137,7 +5138,7 @@ pub fn merge_builtins<'cx>(
                                     lazy_module.dupe(),
                                 );
                             ResolvedRequire::TypedModule(
-                                annotation_inference::force_module_type_thunk(s),
+                                annotation_inference::force_module_type_thunk(cx.dupe(), s),
                             )
                         })))
                     }

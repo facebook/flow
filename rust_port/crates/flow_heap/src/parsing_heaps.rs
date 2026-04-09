@@ -77,6 +77,11 @@ impl SharedMem {
         (self.file_heap.len() + self.haste_module_heap.len()) as i32
     }
 
+    /// Clear the reader cache (AST and ALoc table caches). Used during
+    /// lib file reinit to avoid returning stale cached ASTs.
+    pub fn clear_reader_cache(&self) {
+        self.reader_cache.clear();
+    }
     pub fn get_haste_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
         self.file_heap
             .get(file)
@@ -622,7 +627,7 @@ impl SharedMem {
 
         // Changing `file` does not cause the eponymous module's provider to be
         // re-picked, but it is still dirty because `file` changed. (see TODO)
-        dirty_modules.insert(Modulename::Filename(file_key.dupe()));
+        dirty_modules.insert(Modulename::Filename(files::chop_flow_ext(file_key)));
 
         dirty_modules
     }
@@ -632,13 +637,17 @@ impl SharedMem {
             return BTreeSet::new();
         }
         let impl_key = files::chop_flow_ext(file);
-        let phantom_dirty = if self.file_heap.get(&impl_key).is_none() {
-            self.add_unparsed(impl_key.dupe(), 0, None)
-        } else {
-            BTreeSet::new()
-        };
+        // OCaml uses prepare_find_or_add_phantom_file, which creates a phantom
+        // entry with no parse (parse_ent None). We must NOT use add_unparsed here
+        // because that creates a Parse::Untyped entry, which makes get_provider
+        // return Some for the phantom file even when the .js.flow alternate has
+        // been deleted.
+        if self.file_heap.get(&impl_key).is_none() {
+            self.file_heap
+                .insert(impl_key.dupe(), FileEntry::new_phantom());
+        }
         self.set_alternate_file(&impl_key, file.dupe());
-        phantom_dirty
+        BTreeSet::new()
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -799,7 +808,7 @@ impl SharedMem {
             }
             existing_entry.parse().advance(None);
             let mut dirty_modules = BTreeSet::new();
-            dirty_modules.insert(Modulename::Filename(file_key.dupe()));
+            dirty_modules.insert(Modulename::Filename(files::chop_flow_ext(&file_key)));
             if let Some(haste_info) = existing_entry.haste_info_entity().read_latest_clone() {
                 existing_entry.haste_info_entity().advance(None);
                 let _m = self.get_or_create_haste_module(haste_info.clone());
@@ -907,15 +916,28 @@ impl SharedMem {
     fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) {
         match dep {
             Dependency::HasteModule(Modulename::Haste(haste_info)) => {
-                if let Some(module) = self.get_haste_module(haste_info) {
-                    module.add_dependent(file.dupe());
-                }
+                // Use get_or_create so phantom dependencies (where the haste
+                // module doesn't have a provider yet) still register their
+                // dependents. When a provider is later added for this module,
+                // commit_modules will find these dependents and trigger a
+                // recheck.
+                let module = self.get_or_create_haste_module(haste_info.dupe());
+                module.add_dependent(file.dupe());
             }
             Dependency::HasteModule(Modulename::Filename(dep_file))
             | Dependency::File(dep_file) => {
-                if let Some(dep_entry) = self.file_heap.get(dep_file) {
-                    dep_entry.add_dependent(file.dupe());
-                }
+                // OCaml uses prepare_find_or_add_phantom_file to ensure a
+                // file_heap entry always exists for every dependency,
+                // including phantom (not-yet-existing) files. This is
+                // critical: without it, phantom dependencies' reverse-dep
+                // edges are lost, and when the file is later created, its
+                // dependents are not found during incremental recheck.
+                let dep_entry = self.file_heap.get(dep_file).cloned().unwrap_or_else(|| {
+                    let phantom_entry = FileEntry::new_phantom();
+                    self.file_heap.insert(dep_file.dupe(), phantom_entry.dupe());
+                    phantom_entry
+                });
+                dep_entry.add_dependent(file.dupe());
             }
         }
     }

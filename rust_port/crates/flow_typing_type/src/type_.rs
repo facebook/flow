@@ -8816,7 +8816,8 @@ pub mod aconstraint {
     pub enum OpInner {
         AnnotConcretizeForImportsExports {
             reason: Reason,
-            transform: Rc<dyn Fn(Type) -> Type + Send + Sync>,
+            import_kind: ImportKind,
+            name: FlowSmolStr,
         },
         AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(Reason),
         AnnotConcretizeForInspection {

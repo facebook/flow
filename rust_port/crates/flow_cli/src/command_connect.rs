@@ -82,6 +82,7 @@ pub(crate) enum ConnectError {
     ServerNotRunning,
     ConnectionFailed(String),
     CommunicationError(String),
+    Timeout,
 }
 
 impl std::fmt::Display for ConnectError {
@@ -92,6 +93,7 @@ impl std::fmt::Display for ConnectError {
                 write!(f, "Could not connect to server: {}", msg)
             }
             ConnectError::CommunicationError(msg) => write!(f, "Communication error: {}", msg),
+            ConnectError::Timeout => write!(f, "Timed out waiting for server response"),
         }
     }
 }
@@ -102,6 +104,18 @@ pub(crate) fn connect_and_make_request(
     tmp_dir: &str,
     root: &Path,
     request: ServerRequest,
+) -> Result<ServerResponse, ConnectError> {
+    connect_and_make_request_with_timeout(flowconfig_name, tmp_dir, root, request, None)
+}
+
+/// Connect to the Flow server and send a request, returning the response.
+/// If `timeout_secs` is Some, the read timeout is set to that value.
+pub(crate) fn connect_and_make_request_with_timeout(
+    flowconfig_name: &str,
+    tmp_dir: &str,
+    root: &Path,
+    request: ServerRequest,
+    timeout_secs: Option<u64>,
 ) -> Result<ServerResponse, ConnectError> {
     let socket_path = server_files_js::socket_file(flowconfig_name, tmp_dir, root);
 
@@ -128,7 +142,10 @@ pub(crate) fn connect_and_make_request(
     })?;
 
     // Set timeout
-    stream.set_read_timeout(Some(Duration::from_secs(60))).ok();
+    let read_timeout = timeout_secs.unwrap_or(60);
+    stream
+        .set_read_timeout(Some(Duration::from_secs(read_timeout)))
+        .ok();
     stream.set_write_timeout(Some(Duration::from_secs(10))).ok();
 
     // Send request
@@ -136,5 +153,11 @@ pub(crate) fn connect_and_make_request(
         .map_err(|e| ConnectError::CommunicationError(e.to_string()))?;
 
     // Receive response
-    receive_message(&mut stream).map_err(|e| ConnectError::CommunicationError(e.to_string()))
+    receive_message(&mut stream).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut {
+            ConnectError::Timeout
+        } else {
+            ConnectError::CommunicationError(e.to_string())
+        }
+    })
 }

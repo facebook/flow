@@ -157,21 +157,20 @@ fn error_unsupported(
 
 pub(crate) fn error_recursive(cx: &Context, dst_cx: &Context, reason: &Reason) -> Type {
     let loc = reason.loc().dupe();
-    let msg = ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc, reason.dupe())));
+    let msg = ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc.dupe(), reason.dupe())));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
     type_::any_t::error(reason.dupe())
 }
 
 // (* OCaml: let force_module_type_thunk cx s () = *)
 // (*   Type.Constraint.ForcingState.force ~on_error:(fun r -> Error (error_recursive cx r)) s *)
-// In OCaml, error_recursive reads dst_cx from a mutable ref (dst_cx_ref).
-// In Rust, dst_cx is passed explicitly as a parameter.
 pub fn force_module_type_thunk<'cx>(
+    src_cx: Context<'cx>,
     s: ModuleTypeForcingState<'cx, Context<'cx>>,
 ) -> Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<type_::ModuleType, Type> + 'cx> {
     let s = Rc::new(s);
-    Rc::new(move |cx: &Context<'cx>, dst_cx: &Context<'cx>| {
-        s.force(cx, |r| Err(error_recursive(cx, dst_cx, r)))
+    Rc::new(move |_cx: &Context<'cx>, dst_cx: &Context<'cx>| {
+        s.force(&src_cx, |r| Err(error_recursive(&src_cx, dst_cx, r)))
     })
 }
 
@@ -543,15 +542,15 @@ fn mk_lazy_tvar<'cx>(
     let id = mk_id() as i32;
     let tvar = Type::new(TypeInner::OpenT(type_::Tvar::new(reason.dupe(), id as u32)));
     let reason2 = reason.dupe();
-    let lazy_fn = move |cx2: &Context<'cx>| {
-        avar::unresolved_with_id(cx2, id, reason2.dupe());
-        f(cx2, id);
+    let cx2 = cx.dupe();
+    let lazy_fn = move |_cx: &Context<'cx>| {
+        avar::unresolved_with_id(&cx2, id, reason2.dupe());
+        f(&cx2, id);
         // Before forcing the type constraint of [id] we need to make sure the
         // respective annotation constraint has been processed. If not we infer
         // the empty type.
-        // Use merge_dst_cx if set (during cross-file merge), otherwise cx2.
         let dst_cx2 = cx2.merge_dst_cx().unwrap_or_else(|| cx2.dupe());
-        ensure_annot_resolved(cx2, &dst_cx2, reason2.dupe(), id)
+        ensure_annot_resolved(&cx2, &dst_cx2, reason2.dupe(), id)
     };
     let forcing_state = ForcingState::of_lazy_t(reason.dupe(), lazy_fn);
     let node = flow_utils_union_find::Node::create_root(Constraints::FullyResolved(forcing_state));
@@ -1171,10 +1170,32 @@ fn elab_t_concrete<'cx>(
             );
             elab_t(cx, dst_cx, Some(seen), t, op)
         }
-        (_, OpInner::AnnotConcretizeForImportsExports { transform, .. }) => {
-            // f l
-            (transform)(t)
-        }
+        (
+            _,
+            OpInner::AnnotConcretizeForImportsExports {
+                reason,
+                import_kind,
+                name,
+            },
+        ) => match import_kind {
+            type_::ImportKind::ImportType => flow_js_utils::import_type_t_kit::on_concrete_type(
+                cx,
+                reason.dupe(),
+                name.as_str(),
+                t,
+            )
+            .unwrap(),
+            type_::ImportKind::ImportTypeof => {
+                flow_js_utils::import_typeof_t_kit::on_concrete_type(
+                    cx,
+                    reason.dupe(),
+                    name.as_str(),
+                    &t,
+                )
+                .unwrap()
+            }
+            type_::ImportKind::ImportValue => t,
+        },
         // **************
         //  Opaque types
         // **************
@@ -3033,29 +3054,26 @@ pub fn import_default<'cx>(
         let result = lz.get_forced(cx).clone();
         match result {
             Ok(m) => {
-                let with_concretized_type = |cx: &Context<'cx>,
-                                             r: Reason,
-                                             f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
-                                             t: Type|
-                 -> Result<Type, FlowJsException> {
-                    let result = elab_t(
-                        cx,
-                        &effective_dst_cx(cx),
-                        None,
-                        t,
-                        Op::new(OpInner::AnnotConcretizeForImportsExports {
-                            reason: r,
-                            transform: Rc::new(|t: Type| t),
-                        }),
-                    );
-                    let result = match result.deref() {
-                        TypeInner::OpenT(tvar) => {
-                            get_fully_resolved_type(cx, &effective_dst_cx(cx), tvar.id() as i32)
-                        }
-                        _ => result,
+                let import_kind2 = import_kind.clone();
+                let export_name3 = export_name2.clone();
+                let with_concretized_type =
+                    |cx: &Context<'cx>,
+                     r: Reason,
+                     _f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
+                     t: Type|
+                     -> Result<Type, FlowJsException> {
+                        Ok(elab_t(
+                            cx,
+                            &effective_dst_cx(cx),
+                            None,
+                            t,
+                            Op::new(OpInner::AnnotConcretizeForImportsExports {
+                                reason: r,
+                                import_kind: import_kind2.clone(),
+                                name: export_name3.clone().into(),
+                            }),
+                        ))
                     };
-                    f(&result)
-                };
                 let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t(
                     cx,
                     &with_concretized_type,
@@ -3093,29 +3111,26 @@ pub fn import_named<'cx>(
         let result = lz.get_forced(cx).clone();
         match result {
             Ok(m) => {
-                let with_concretized_type = |cx: &Context<'cx>,
-                                             r: Reason,
-                                             f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
-                                             t: Type|
-                 -> Result<Type, FlowJsException> {
-                    let result = elab_t(
-                        cx,
-                        &effective_dst_cx(cx),
-                        None,
-                        t,
-                        Op::new(OpInner::AnnotConcretizeForImportsExports {
-                            reason: r,
-                            transform: Rc::new(|t: Type| t),
-                        }),
-                    );
-                    let result = match result.deref() {
-                        TypeInner::OpenT(tvar) => {
-                            get_fully_resolved_type(cx, &effective_dst_cx(cx), tvar.id() as i32)
-                        }
-                        _ => result,
+                let import_kind2 = import_kind.clone();
+                let export_name3 = export_name2.clone();
+                let with_concretized_type =
+                    |cx: &Context<'cx>,
+                     r: Reason,
+                     _f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
+                     t: Type|
+                     -> Result<Type, FlowJsException> {
+                        Ok(elab_t(
+                            cx,
+                            &effective_dst_cx(cx),
+                            None,
+                            t,
+                            Op::new(OpInner::AnnotConcretizeForImportsExports {
+                                reason: r,
+                                import_kind: import_kind2.clone(),
+                                name: export_name3.clone(),
+                            }),
+                        ))
                     };
-                    f(&result)
-                };
                 let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t(
                     cx,
                     &with_concretized_type,

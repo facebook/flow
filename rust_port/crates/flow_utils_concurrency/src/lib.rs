@@ -8,6 +8,8 @@
 pub mod display;
 pub mod lock;
 pub mod locked_map;
+pub mod locked_set;
 pub mod map_reduce;
 pub mod thread_pool;
 pub mod with_hash;
+pub mod worker_cancel;

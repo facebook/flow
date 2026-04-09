@@ -95,7 +95,7 @@ fn typed_builtin_module_opt<'cx>(
                 reason,
                 lazy_module,
             );
-            let thunk = annotation_inference::force_module_type_thunk(s);
+            let thunk = annotation_inference::force_module_type_thunk(cx.dupe(), s);
             Some(thunk)
         }
         None => None,
@@ -199,6 +199,7 @@ pub fn mk_check_file(
                             &dep_file_key.to_absolute(),
                         );
                         let thunk = annotation_inference::force_module_type_thunk(
+                            cx.dupe(),
                             type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
                                 reason,
                                 lazy_module,
@@ -568,7 +569,7 @@ pub fn mk_check_file(
             reason_for_forcing,
             lazy_module,
         );
-        let thunk = annotation_inference::force_module_type_thunk(s);
+        let thunk = annotation_inference::force_module_type_thunk(cx.dupe(), s);
         let exports: Rc<
             dyn Fn(&Context<'static>, &Context<'static>) -> Result<type_::ModuleType, Type>
                 + 'static,

@@ -105,6 +105,12 @@ fn spec() -> command_spec::Spec {
         "Write a .ready file when server is initialized (used by start command)",
         None,
     )
+    .flag(
+        "--verbose",
+        &command_spec::truthy(),
+        "Enable verbose mode",
+        None,
+    )
     .anon("root", &command_spec::optional(command_spec::string()))
 }
 
@@ -128,6 +134,7 @@ fn main(args: &command_spec::Values) {
     .unwrap();
     let lazy_flag = command_spec::get(args, "--lazy", &command_spec::truthy()).unwrap();
     let signal_ready = command_spec::get(args, "--signal-ready", &command_spec::truthy()).unwrap();
+    let verbose = command_spec::get(args, "--verbose", &command_spec::truthy()).unwrap();
     let root_arg = command_spec::get(
         args,
         "root",
@@ -153,13 +160,22 @@ fn main(args: &command_spec::Values) {
     };
 
     let root = command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
-    let options = crate::get_options_with_root_and_flowconfig_name(
+    let mut options = crate::get_options_with_root_and_flowconfig_name(
         no_flowlib,
         ignore_version,
         &root,
         &flowconfig_name,
         overrides,
     );
+
+    if verbose {
+        Arc::make_mut(&mut options).verbose = Some(Arc::new(flow_common::verbose::Verbose {
+            indent: 0,
+            depth: 1,
+            enabled_during_flowlib: false,
+            focused_files: None,
+        }));
+    }
 
     let tmp_dir = std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned());
 

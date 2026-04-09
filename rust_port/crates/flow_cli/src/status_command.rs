@@ -73,13 +73,13 @@ fn spec() -> command_spec::Spec {
     .flag(
         "--timeout",
         &command_spec::optional(command_spec::string()),
-        "Timeout (accepted but ignored)",
+        "Timeout in seconds for the server to respond",
         None,
     )
     .flag(
         "--no-auto-start",
         &command_spec::truthy(),
-        "Don't auto-start the server (accepted but ignored)",
+        "Don't auto-start the server",
         None,
     )
     .flag(
@@ -98,6 +98,12 @@ fn spec() -> command_spec::Spec {
         "--lazy",
         &command_spec::truthy(),
         "Lazy mode (accepted but ignored)",
+        None,
+    )
+    .flag(
+        "--include-warnings",
+        &command_spec::truthy(),
+        "Include warnings in the output",
         None,
     )
     .anon("root", &command_spec::optional(command_spec::string()))
@@ -119,6 +125,8 @@ fn main(args: &command_spec::Values) {
     let no_flowlib = command_spec::get(args, "--no-flowlib", &command_spec::truthy()).unwrap();
     let ignore_version =
         command_spec::get(args, "--ignore-version", &command_spec::truthy()).unwrap();
+    let no_auto_start =
+        command_spec::get(args, "--no-auto-start", &command_spec::truthy()).unwrap();
     let root_arg = command_spec::get(
         args,
         "root",
@@ -138,19 +146,52 @@ fn main(args: &command_spec::Values) {
 
     // (* let request = ServerProt.Request.STATUS { include_warnings } in *)
     // (* check_status flowconfig_name args connect_flags *)
-    let request = ServerRequest::Status {
-        include_warnings: true,
-        strip_root,
+    let include_warnings =
+        command_spec::get(args, "--include-warnings", &command_spec::truthy()).unwrap();
+    let timeout_str = command_spec::get(
+        args,
+        "--timeout",
+        &command_spec::optional(command_spec::string()),
+    )
+    .unwrap();
+    let timeout_secs: Option<u64> = timeout_str.as_deref().and_then(|s| s.parse().ok());
+    let mut attempted_autostart = false;
+    let response = loop {
+        match command_connect::connect_and_make_request_with_timeout(
+            &flowconfig_name,
+            options.temp_dir.as_str(),
+            &root,
+            ServerRequest::Status {
+                include_warnings,
+                strip_root,
+            },
+            timeout_secs,
+        ) {
+            Err(command_connect::ConnectError::ServerNotRunning)
+                if !no_auto_start && !attempted_autostart =>
+            {
+                attempted_autostart = true;
+                let _ = crate::start_command::start_server(
+                    &flowconfig_name,
+                    no_flowlib,
+                    ignore_version,
+                    true,
+                    None,
+                    false,
+                    false,
+                    None,
+                    &root,
+                );
+                continue;
+            }
+            response => break response,
+        }
     };
 
-    match command_connect::connect_and_make_request(
-        &flowconfig_name,
-        options.temp_dir.as_str(),
-        &root,
-        request,
-    ) {
+    match response {
         Ok(ServerResponse::Status {
             has_errors,
+            warning_count,
             error_output,
             lazy_stats,
             ..
@@ -163,12 +204,20 @@ fn main(args: &command_spec::Values) {
             } else {
                 None
             };
-            if has_errors {
+            let has_warnings = warning_count > 0;
+            if has_errors || has_warnings {
                 print!("{}", error_output);
                 if let Some(msg) = &lazy_msg {
                     println!("\n{}", msg);
                 }
-                flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::TypeError)
+                if has_errors {
+                    flow_common_exit_status::exit(
+                        flow_common_exit_status::FlowExitStatus::TypeError,
+                    )
+                } else {
+                    // Warnings only — exit success (0) like OCaml
+                    flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError)
+                }
             } else {
                 println!("No errors!");
                 if let Some(msg) = &lazy_msg {
@@ -184,6 +233,9 @@ fn main(args: &command_spec::Values) {
         Ok(response) => {
             eprintln!("Unexpected response from server: {:?}", response);
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError)
+        }
+        Err(command_connect::ConnectError::Timeout) => {
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfTime)
         }
         Err(command_connect::ConnectError::ServerNotRunning) => {
             eprintln!("There is no Flow server running in '{}'", root.display());

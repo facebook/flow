@@ -365,8 +365,6 @@ pub mod invalid_cyclic_type_validation {
                     if !seen.contains(&root_id) {
                         seen.insert(root_id);
                         let forced_t = s.force(tied_cx, |reason| {
-                            // Inline error_recursive: create ETrivialRecursiveDefinition
-                            // error and report it via add_annot_inference_error.
                             let loc = reason.loc().dupe();
                             let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc, reason.dupe())));
                             super::add_annot_inference_error(tied_cx, dst_cx, msg);
@@ -3562,7 +3560,6 @@ pub mod import_module_ns_t_kit {
 }
 
 pub mod import_default_t_kit {
-
     use dupe::Dupe;
     use flow_aloc::ALoc;
     use flow_common::flow_import_specifier::Userland;
@@ -3661,22 +3658,36 @@ pub mod import_default_t_kit {
 
         match import_kind {
             ImportKind::ImportType => {
+                let cx = cx.dupe();
+                let cx_for_f = cx.dupe();
                 let t = with_concretized_type(
-                    cx,
+                    &cx,
                     reason.dupe(),
                     &|t: &Type| {
-                        import_type_t_kit::on_concrete_type(cx, reason.dupe(), "default", t.dupe())
+                        import_type_t_kit::on_concrete_type(
+                            &cx_for_f,
+                            reason.dupe(),
+                            "default",
+                            t.dupe(),
+                        )
                     },
                     export_t,
                 )?;
                 Ok((loc_opt, t))
             }
             ImportKind::ImportTypeof => {
+                let cx = cx.dupe();
+                let cx_for_f = cx.dupe();
                 let t = with_concretized_type(
-                    cx,
+                    &cx,
                     reason.dupe(),
                     &|t: &Type| {
-                        import_typeof_t_kit::on_concrete_type(cx, reason.dupe(), "default", t)
+                        import_typeof_t_kit::on_concrete_type(
+                            &cx_for_f,
+                            reason.dupe(),
+                            "default",
+                            t,
+                        )
                     },
                     export_t,
                 )?;
@@ -3767,14 +3778,16 @@ pub mod import_named_t_kit {
 
         match (&import_kind, exported_symbol_opt) {
             (ImportKind::ImportType, Some(ns)) => {
+                let cx = cx.dupe();
+                let cx_for_f = cx.dupe();
                 let t = with_concretized_type(
-                    cx,
+                    &cx,
                     reason.dupe(),
                     &|t: &Type| {
                         import_type_t_kit::on_concrete_type(
-                            cx,
+                            &cx_for_f,
                             reason.dupe(),
-                            export_name,
+                            export_name.as_str(),
                             t.dupe(),
                         )
                     },
@@ -3783,14 +3796,16 @@ pub mod import_named_t_kit {
                 Ok((ns.name_loc.dupe(), t))
             }
             (ImportKind::ImportType, None) if has_every_named_export => {
+                let cx = cx.dupe();
+                let cx_for_f = cx.dupe();
                 let t = with_concretized_type(
-                    cx,
+                    &cx,
                     reason.dupe(),
                     &|t: &Type| {
                         import_type_t_kit::on_concrete_type(
-                            cx,
+                            &cx_for_f,
                             reason.dupe(),
-                            export_name,
+                            export_name.as_str(),
                             t.dupe(),
                         )
                     },
@@ -3799,22 +3814,36 @@ pub mod import_named_t_kit {
                 Ok((None, t))
             }
             (ImportKind::ImportTypeof, Some(ns)) => {
+                let cx = cx.dupe();
+                let cx_for_f = cx.dupe();
                 let t = with_concretized_type(
-                    cx,
+                    &cx,
                     reason.dupe(),
                     &|t: &Type| {
-                        import_typeof_t_kit::on_concrete_type(cx, reason.dupe(), export_name, t)
+                        import_typeof_t_kit::on_concrete_type(
+                            &cx_for_f,
+                            reason.dupe(),
+                            export_name.as_str(),
+                            t,
+                        )
                     },
                     ns.type_.dupe(),
                 )?;
                 Ok((ns.name_loc.dupe(), t))
             }
             (ImportKind::ImportTypeof, None) if has_every_named_export => {
+                let cx = cx.dupe();
+                let cx_for_f = cx.dupe();
                 let t = with_concretized_type(
-                    cx,
+                    &cx,
                     reason.dupe(),
                     &|t: &Type| {
-                        import_typeof_t_kit::on_concrete_type(cx, reason.dupe(), export_name, t)
+                        import_typeof_t_kit::on_concrete_type(
+                            &cx_for_f,
+                            reason.dupe(),
+                            export_name.as_str(),
+                            t,
+                        )
                     },
                     Type::new(TypeInner::AnyT(reason.dupe(), AnySource::Untyped)),
                 )?;

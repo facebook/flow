@@ -2355,7 +2355,10 @@ impl<'cx> Context<'cx> {
     ) -> (i32, type_::constraint::Constraints<'cx, Context<'cx>>) {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
-        let (id, c) = graph.find_constraints(id).unwrap();
+        let file = self.file();
+        let (id, c) = graph.find_constraints(id).unwrap_or_else(|e| {
+            panic!("find_constraints: TvarNotFound({}) in file {:?}", e.0, file,)
+        });
         (id, c.clone())
     }
 
@@ -2369,7 +2372,13 @@ impl<'cx> Context<'cx> {
     ) -> R {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
-        let (root_id, c) = graph.find_constraints(id).unwrap();
+        let (root_id, c) = graph.find_constraints(id).unwrap_or_else(|e| {
+            panic!(
+                "modify_constraints: TvarNotFound({}) in file {:?}",
+                e.0,
+                self.file(),
+            )
+        });
         f(root_id, c)
     }
 
@@ -2383,7 +2392,13 @@ impl<'cx> Context<'cx> {
     ) -> R {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
-        let (root_id, c) = graph.find_constraints(id).unwrap();
+        let (root_id, c) = graph.find_constraints(id).unwrap_or_else(|e| {
+            panic!(
+                "inspect_constraints: TvarNotFound({}) in file {:?}",
+                e.0,
+                self.file(),
+            )
+        });
         f(root_id, c)
     }
 
@@ -2396,7 +2411,10 @@ impl<'cx> Context<'cx> {
     ) {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
-        let (id, root) = graph.find_root(id).unwrap();
+        let file = self.file();
+        let (id, root) = graph
+            .find_root(id)
+            .unwrap_or_else(|e| panic!("find_root: TvarNotFound({}) in file {:?}", e.0, file,));
         (id, root.clone())
     }
 
@@ -2419,7 +2437,16 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn find_root_id(&self, id: i32) -> i32 {
-        self.graph().borrow_mut().find_root_id(id).unwrap()
+        self.graph()
+            .borrow_mut()
+            .find_root_id(id)
+            .unwrap_or_else(|e| {
+                panic!(
+                    "find_root_id: TvarNotFound({}) in file {:?}",
+                    e.0,
+                    self.file(),
+                )
+            })
     }
 
     pub fn on_cyclic_tvar_error(&self, reason: Reason) -> Type {

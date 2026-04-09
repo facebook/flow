@@ -22,6 +22,7 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::package_json::PackageJson;
 use flow_type_sig::packed_type_sig::Module;
 use flow_type_sig::signature_error::TolerableError;
+use flow_utils_concurrency::locked_set::LockedSet;
 use parking_lot::RwLock;
 
 use crate::entity::Entity;
@@ -35,7 +36,7 @@ type CompressedBytes = Arc<[u8]>;
 pub struct FileEntry {
     pub(crate) parse: Arc<Entity<Parse>>,
     pub(crate) haste_info: Arc<Entity<HasteModuleInfo>>,
-    pub(crate) dependents: Arc<RwLock<Option<Vec<FileKey>>>>,
+    pub(crate) dependents: Option<Arc<LockedSet<FileKey>>>,
     pub(crate) alternate_file: Arc<RwLock<Option<FileKey>>>,
 }
 
@@ -52,11 +53,25 @@ impl FileEntry {
             } else {
                 Entity::empty()
             }),
-            dependents: Arc::new(RwLock::new(if has_dependents {
-                Some(Vec::new())
+            dependents: if has_dependents {
+                Some(Arc::new(LockedSet::new()))
             } else {
                 None
-            })),
+            },
+            alternate_file: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    /// Create a phantom file entry that only tracks dependents.
+    /// OCaml's prepare_find_or_add_phantom_file creates these for files that
+    /// don't exist yet but are referenced as dependencies. The entry has no
+    /// parse data and no haste info — it exists solely to hold the dependents
+    /// list so that reverse-dep edges survive until the file is actually created.
+    pub(crate) fn new_phantom() -> Self {
+        Self {
+            parse: Arc::new(Entity::empty()),
+            haste_info: Arc::new(Entity::empty()),
+            dependents: Some(Arc::new(LockedSet::new())),
             alternate_file: Arc::new(RwLock::new(None)),
         }
     }
@@ -92,21 +107,19 @@ impl FileEntry {
     }
 
     pub(crate) fn add_dependent(&self, dependent: FileKey) {
-        if let Some(deps) = self.dependents.write().as_mut() {
-            if !deps.contains(&dependent) {
-                deps.push(dependent);
-            }
+        if let Some(deps) = &self.dependents {
+            deps.insert(dependent);
         }
     }
 
     pub(crate) fn remove_dependent(&self, dependent: &FileKey) {
-        if let Some(deps) = self.dependents.write().as_mut() {
-            deps.retain(|f| f != dependent);
+        if let Some(deps) = &self.dependents {
+            deps.remove(dependent);
         }
     }
 
     pub(crate) fn get_dependents(&self) -> Option<Vec<FileKey>> {
-        self.dependents.read().clone()
+        self.dependents.as_ref().map(|deps| deps.iter().collect())
     }
 
     pub(crate) fn get_alternate_file(&self) -> Option<FileKey> {

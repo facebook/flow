@@ -14,6 +14,7 @@ use flow_common::bitset::Bitset;
 use flow_common_modulename::HasteModuleInfo;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
+use flow_utils_concurrency::locked_set::LockedSet;
 use parking_lot::RwLock;
 
 use crate::entity::Entity;
@@ -22,7 +23,7 @@ use crate::entity::Entity;
 pub struct HasteModule {
     module_info: Arc<HasteModuleInfo>,
     provider: Arc<Entity<FileKey>>,
-    dependents: Arc<RwLock<Vec<FileKey>>>,
+    dependents: Arc<LockedSet<FileKey>>,
     all_providers: Arc<RwLock<BTreeSet<FileKey>>>,
 }
 
@@ -31,7 +32,7 @@ impl HasteModule {
         Self {
             module_info: Arc::new(module_info),
             provider: Arc::new(Entity::empty()),
-            dependents: Arc::new(RwLock::new(Vec::new())),
+            dependents: Arc::new(LockedSet::new()),
             all_providers: Arc::new(RwLock::new(BTreeSet::new())),
         }
     }
@@ -73,21 +74,18 @@ impl HasteModule {
     }
 
     pub fn add_dependent(&self, file: FileKey) {
-        let mut dependents = self.dependents.write();
-        if !dependents.contains(&file) {
-            dependents.push(file);
-        }
+        self.dependents.insert(file);
     }
 
     pub fn remove_dependent(&self, file: &FileKey) {
-        self.dependents.write().retain(|f| f != file);
+        self.dependents.remove(file);
     }
 
     pub fn get_dependents(&self) -> Vec<FileKey> {
-        self.dependents.read().clone()
+        self.dependents.iter().collect()
     }
 
     pub fn has_dependents(&self) -> bool {
-        !self.dependents.read().is_empty()
+        !self.dependents.is_empty()
     }
 }
