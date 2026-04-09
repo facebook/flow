@@ -85,30 +85,12 @@ to `#foo`. [unsupported-syntax]
          ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- accessibility.js:15:11
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   15|   private readonly d: string; // ERROR
-                 ^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- accessibility.js:16:3
 
 Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [unsupported-syntax]
 
    16|   protected readonly e: number; // ERROR
          ^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------- accessibility.js:16:13
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   16|   protected readonly e: number; // ERROR
-                   ^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:17:3
@@ -120,15 +102,6 @@ modifier. [unsupported-syntax]
          ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- accessibility.js:17:10
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   17|   public readonly f: boolean; // ERROR
-                ^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- accessibility.js:19:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
@@ -136,15 +109,6 @@ to `#foo`. [unsupported-syntax]
 
    19|   private static readonly g: string; // ERROR
          ^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------- accessibility.js:19:18
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   19|   private static readonly g: string; // ERROR
-                        ^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:20:3
@@ -155,15 +119,6 @@ Flow does not support using `protected` in classes. To fix, remove the `protecte
          ^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- accessibility.js:20:20
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   20|   protected static readonly h: number; // ERROR
-                          ^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- accessibility.js:21:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
@@ -171,15 +126,6 @@ modifier. [unsupported-syntax]
 
    21|   public static readonly i: boolean; // ERROR
          ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------- accessibility.js:21:17
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   21|   public static readonly i: boolean; // ERROR
-                       ^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:34:3
@@ -242,15 +188,6 @@ modifier. [unsupported-syntax]
 
    40|   public readonly g: boolean; // ERROR
          ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------- accessibility.js:40:10
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   40|   public readonly g: boolean; // ERROR
-                ^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- accessibility.js:41:3
@@ -827,69 +764,6 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
                ^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------- readonly_variance.js:2:3
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   2|   readonly foo: string, // ERROR
-        ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- readonly_variance.js:11:3
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   11|   readonly [string]: mixed; // ERROR
-         ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- readonly_variance.js:15:3
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   15|   readonly prop: string; // ERROR
-         ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- readonly_variance.js:19:3
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   19|   readonly prop: string; // ERROR
-         ^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------- readonly_variance.js:24:11
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   24| type T = [readonly foo: number]; // ERROR
-                 ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- readonly_variance.js:27:3
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   27|   readonly "foo": string, // ERROR
-         ^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- readonly_variance.js:30:3
-
-While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
-object type properties, and `+[string]: T` for dictionaries. [unsupported-syntax]
-
-   30|   readonly 0: string, // ERROR
-         ^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
 Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
@@ -1313,4 +1187,4 @@ types. [unsupported-syntax]
 
 
 
-Found 143 errors
+Found 129 errors

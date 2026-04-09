@@ -237,10 +237,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   let polarity cx variance =
     ( if not (Context.ts_syntax cx) then
       match variance with
-      | Some (loc, { Ast.Variance.kind = Ast.Variance.Readonly; _ }) ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc })
       | Some (loc, { Ast.Variance.kind = Ast.Variance.In; _ }) ->
         Flow_js_utils.add_output
           cx
