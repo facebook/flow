@@ -202,13 +202,10 @@ let%expect_test "first_match_can_be_weak" =
   test_weak "oo" "foobar";
   (* Control: "fo" in "foobar": 'f' is at word start, both should match *)
   test_weak "fo" "foobar";
-  (* TODO(marcoww): weak column should show actual scores, not "none".
-     first_match_can_be_weak=true is silently ignored due to a bug in
-     fuzzy_path_stubs.c (Bool_val reads the wrong variable). *)
   [%expect {|
-    "ob" ~> "foobar": default=none weak=none
-    "fo" ~> "barfoo": default=none weak=none
-    "ar" ~> "foobar": default=none weak=none
-    "oo" ~> "foobar": default=none weak=none
+    "ob" ~> "foobar": default=none weak=-9
+    "fo" ~> "barfoo": default=none weak=-10
+    "ar" ~> "foobar": default=none weak=-11
+    "oo" ~> "foobar": default=none weak=-8
     "fo" ~> "foobar": default=10 weak=10
   |}]

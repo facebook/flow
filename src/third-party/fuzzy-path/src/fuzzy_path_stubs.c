@@ -193,7 +193,7 @@ value fuzzy_score(value haystack_v, value needle_v, value boost_full_match_v, va
   const char *haystack = String_val(haystack_v);
   const char *needle = String_val(needle_v);
   bool boost_full_match = Bool_val(boost_full_match_v);
-  bool first_match_can_be_weak = Bool_val(first_match_can_be_weak);
+  bool first_match_can_be_weak = Bool_val(first_match_can_be_weak_v);
 
   int64_t score = 0;
   bool has_score = fuzzy_score_c(haystack, needle, boost_full_match, first_match_can_be_weak, &score);
