@@ -1022,7 +1022,11 @@ pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(),
 }
 
 pub fn add_output_non_speculating<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) {
-    add_output(cx, msg).expect("Non speculating")
+    if let Err(err) = add_output(cx, msg) {
+        if !crate::speculation::speculating(cx) {
+            panic!("Non speculating: {:?}", err);
+        }
+    }
 }
 
 // In annotation inference, errors are created in the exporting side (src_cx), and
@@ -1077,6 +1081,7 @@ where
 {
     use flow_data_structure_wrapper::ord_set::FlowOrdSet;
     use flow_typing_type::type_::union_rep::UnionRep;
+    use flow_typing_type::type_util::type_ex_set;
     use flow_typing_visitors::type_mapper;
 
     type TypeSet = FlowOrdSet<Type>;
@@ -1094,7 +1099,39 @@ where
         }
         let ts2 = type_mapper::union_flatten(cx, uts.iter().duped());
         let ts1 = type_mapper::union_flatten(cx, lts.iter().duped());
-        ts1.iter().all(|t1| ts2.iter().any(|t2| comparator(t1, t2)))
+        let mut rhs_set = type_ex_set::empty();
+        let mut has_str_general = false;
+        let mut has_num_general = false;
+        let mut has_bool_general = false;
+        let mut has_bigint_general = false;
+        for t in ts2.iter().duped() {
+            match t.deref() {
+                TypeInner::DefT(_, def) => match &**def {
+                    DefTInner::StrGeneralT(_) => has_str_general = true,
+                    DefTInner::NumGeneralT(_) => has_num_general = true,
+                    DefTInner::BoolGeneralT => has_bool_general = true,
+                    DefTInner::BigIntGeneralT(_) => has_bigint_general = true,
+                    _ => {}
+                },
+                _ => {}
+            }
+            type_ex_set::add(t, &mut rhs_set);
+        }
+        ts1.iter().all(|t1| {
+            let fast_ground = match t1.deref() {
+                TypeInner::DefT(_, def) => match &**def {
+                    DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. } => has_str_general,
+                    DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. } => has_num_general,
+                    DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. } => has_bool_general,
+                    DefTInner::BigIntGeneralT(_) | DefTInner::SingletonBigIntT { .. } => {
+                        has_bigint_general
+                    }
+                    _ => false,
+                },
+                _ => false,
+            };
+            fast_ground || type_ex_set::mem(t1, &rhs_set) || ts2.iter().any(|t2| comparator(t1, t2))
+        })
     }
 
     fn union_optimization_guard_impl<'cx, F2>(

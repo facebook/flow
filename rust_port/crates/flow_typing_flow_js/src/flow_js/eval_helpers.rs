@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use flow_typing_type::type_::ArrRestTData;
@@ -325,29 +326,55 @@ pub(super) fn mk_type_destructor<'cx>(
                 let reason_clone = reason.dupe();
                 let d_clone = d.clone();
                 let trace = DepthTrace::dummy_trace();
-                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |cx, t| {
-                    crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                        cx,
-                        reason_clone.dupe(),
-                        |cx, tvar_reason, tvar_id| {
-                            let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                            let errors = cx.errors();
-                            let cache_snapshot = cx.take_cache_snapshot();
-                            evaluate_type_destructor(
-                                cx,
-                                trace,
-                                use_op_clone.dupe(),
-                                &reason_clone,
-                                &t,
-                                &d_clone,
-                                &tvar,
-                            )
-                            .expect("Should not be under speculation");
-                            cx.restore_cache_snapshot(cache_snapshot);
-                            cx.reset_errors(errors);
-                        },
-                    )
-                })
+                let evaluation_error = Rc::new(RefCell::new(None));
+                let evaluation_error_for_map = Rc::clone(&evaluation_error);
+                let eval_t_fallback = Type::new(TypeInner::EvalT {
+                    type_: t.dupe(),
+                    defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+                        use_op.dupe(),
+                        reason.dupe(),
+                        Rc::new(d.clone()),
+                    )),
+                    id: id.dupe(),
+                });
+                let result = flow_js_utils::map_on_resolved_type(
+                    cx,
+                    reason.dupe(),
+                    t.dupe(),
+                    move |cx, t| {
+                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
+                            cx,
+                            reason_clone.dupe(),
+                            |cx, tvar_reason, tvar_id| {
+                                let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                                let errors = cx.errors();
+                                let cache_snapshot = cx.take_cache_snapshot();
+                                let result = evaluate_type_destructor(
+                                    cx,
+                                    trace,
+                                    use_op_clone.dupe(),
+                                    &reason_clone,
+                                    &t,
+                                    &d_clone,
+                                    &tvar,
+                                );
+                                cx.restore_cache_snapshot(cache_snapshot);
+                                cx.reset_errors(errors);
+                                result
+                            },
+                        ) {
+                            Ok(result) => result,
+                            Err(err) => {
+                                *evaluation_error_for_map.borrow_mut() = Some(err);
+                                eval_t_fallback.dupe()
+                            }
+                        }
+                    },
+                );
+                if let Some(err) = evaluation_error.borrow_mut().take() {
+                    return Err(err);
+                }
+                result
             }
         };
         let mut evaluated = cx.evaluated();
@@ -1354,9 +1381,12 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
             let use_op_clone = use_op.dupe();
             let reason_clone = reason.dupe();
             let d_clone = d.clone();
+            let evaluation_error = Rc::new(RefCell::new(None));
+            let evaluation_error_for_map = Rc::clone(&evaluation_error);
+            let eval_t_fallback = eval_t.dupe();
             let result =
                 flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |cx, t| {
-                    crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                    match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
                         cx,
                         reason_clone.dupe(),
                         |cx, tvar_reason, tvar_id| {
@@ -1370,13 +1400,20 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                 &d_clone,
                                 &tvar,
                             )
-                            .expect("Should not be under speculation")
                         },
-                    )
+                    ) {
+                        Ok(result) => result,
+                        Err(err) => {
+                            *evaluation_error_for_map.borrow_mut() = Some(err);
+                            eval_t_fallback.dupe()
+                        }
+                    }
                 });
-            let mut evaluated = cx.evaluated();
-            evaluated.insert(id, result);
-            cx.set_evaluated(evaluated);
+            if evaluation_error.borrow().is_none() {
+                let mut evaluated = cx.evaluated();
+                evaluated.insert(id, result);
+                cx.set_evaluated(evaluated);
+            }
         } else {
             let try_evaluate = |stuck_eval_kind: nominal::StuckEvalKind,
                                 stuck_eval_targs: Vec<Type>,
@@ -1388,6 +1425,9 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                 let stuck_eval_kind_for_map = stuck_eval_kind.clone();
                 let stuck_eval_targs_for_map = stuck_eval_targs.clone();
                 let upper_t_for_map = upper_t.clone();
+                let evaluation_error = Rc::new(RefCell::new(None));
+                let evaluation_error_for_map = Rc::clone(&evaluation_error);
+                let eval_t_fallback = eval_t.dupe();
                 let result = flow_js_utils::map_on_resolved_type(
                     cx,
                     reason.dupe(),
@@ -1399,7 +1439,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                         let stuck_eval_kind = stuck_eval_kind_for_map.clone();
                         let stuck_eval_targs = stuck_eval_targs_for_map.clone();
                         let upper_t = upper_t_for_map.clone();
-                        crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
                             cx,
                             reason.dupe(),
                             |cx, tvar_reason, tvar_id| {
@@ -1426,7 +1466,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                         }),
                                     );
                                 match result {
-                                    Ok(()) => {}
+                                    Ok(()) => Ok(()),
                                     Err(_) => {
                                         let nominal_type_args: Rc<
                                             [(SubstName, Reason, Type, Polarity)],
@@ -1466,16 +1506,24 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                             unknown_use(),
                                             (&stuck, &Type::new(TypeInner::OpenT(tvar.dupe()))),
                                         )
-                                        .expect("Should not be under speculation")
+                                        .map(|_| ())
                                     }
                                 }
                             },
-                        )
+                        ) {
+                            Ok(result) => result,
+                            Err(err) => {
+                                *evaluation_error_for_map.borrow_mut() = Some(err);
+                                eval_t_fallback.dupe()
+                            }
+                        }
                     },
                 );
-                let mut evaluated = cx.evaluated();
-                evaluated.insert(id.dupe(), result);
-                cx.set_evaluated(evaluated);
+                if evaluation_error.borrow().is_none() {
+                    let mut evaluated = cx.evaluated();
+                    evaluated.insert(id.dupe(), result);
+                    cx.set_evaluated(evaluated);
+                }
             };
 
             match d {

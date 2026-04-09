@@ -286,37 +286,6 @@ fn fvs_of_map<'cx>(
     acc
 }
 
-fn map_contains_free_var<'cx>(
-    cx: &Context<'cx>,
-    map: &FlowOrdMap<SubstName, Replacement<'cx>>,
-    name: &SubstName,
-) -> bool {
-    map.values().any(|replacement| match replacement {
-        Replacement::TypeSubst(_, fvs) => fvs.get_forced(cx).contains(name),
-        Replacement::AlphaRename(_) => false,
-    })
-}
-
-fn avoid_capture<'cx>(
-    cx: &Context<'cx>,
-    map: FlowOrdMap<SubstName, Replacement<'cx>>,
-    name: SubstName,
-) -> (SubstName, FlowOrdMap<SubstName, Replacement<'cx>>) {
-    if map_contains_free_var(cx, &map, &name) {
-        let fvs = fvs_of_map(cx, &map);
-        let new_name_val = new_name_avoiding_map(&name, &fvs, &map);
-        let mut new_map = map;
-        new_map.insert(name, Replacement::AlphaRename(new_name_val.dupe()));
-        (new_name_val, new_map)
-    } else if map.contains_key(&name) {
-        let mut new_map = map;
-        new_map.remove(&name);
-        (name, new_map)
-    } else {
-        (name, map)
-    }
-}
-
 fn union_ident_map_and_dedup<'cx, F>(
     cx: &Context<'cx>,
     mut f: F,
@@ -543,35 +512,104 @@ pub fn exports<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     }
 }
 
-struct Substituter {
+struct Substituter<'cx> {
     change_id: bool,
     obj_reachable_targs: Option<Vec<(Type, Polarity)>>,
+    cached_fvs: Option<(
+        FlowOrdMap<SubstName, Replacement<'cx>>,
+        FlowOrdSet<SubstName>,
+    )>,
 }
 
-impl Substituter {
+impl<'cx> Substituter<'cx> {
     fn new() -> Self {
         Self {
             change_id: false,
             obj_reachable_targs: None,
+            cached_fvs: None,
+        }
+    }
+
+    fn get_fvs_of_map(
+        &mut self,
+        cx: &Context<'cx>,
+        map: &FlowOrdMap<SubstName, Replacement<'cx>>,
+    ) -> FlowOrdSet<SubstName> {
+        match &self.cached_fvs {
+            Some((cached_map, fvs)) if cached_map.as_inner().ptr_eq(map.as_inner()) => fvs.dupe(),
+            _ => {
+                let fvs = fvs_of_map(cx, map);
+                self.cached_fvs = Some((map.dupe(), fvs.dupe()));
+                fvs
+            }
+        }
+    }
+
+    fn name_in_fvs_of_map(
+        &self,
+        cx: &Context<'cx>,
+        map: &FlowOrdMap<SubstName, Replacement<'cx>>,
+        name: &SubstName,
+    ) -> bool {
+        match &self.cached_fvs {
+            Some((cached_map, fvs)) if cached_map.as_inner().ptr_eq(map.as_inner()) => {
+                fvs.contains(name)
+            }
+            _ => map.values().any(|replacement| match replacement {
+                Replacement::TypeSubst(_, fvs) => fvs.get_forced(cx).contains(name),
+                Replacement::AlphaRename(_) => false,
+            }),
+        }
+    }
+
+    fn avoid_capture(
+        &mut self,
+        cx: &Context<'cx>,
+        map: FlowOrdMap<SubstName, Replacement<'cx>>,
+        name: SubstName,
+    ) -> (SubstName, FlowOrdMap<SubstName, Replacement<'cx>>) {
+        if self.name_in_fvs_of_map(cx, &map, &name) {
+            let fvs = self.get_fvs_of_map(cx, &map);
+            let new_name_val = new_name_avoiding_map(&name, &fvs, &map);
+            let mut new_map = map;
+            new_map.insert(name, Replacement::AlphaRename(new_name_val.dupe()));
+            self.cached_fvs = Some((new_map.dupe(), fvs));
+            (new_name_val, new_map)
+        } else if map.contains_key(&name) {
+            let cached_fvs = match &self.cached_fvs {
+                Some((cached_map, fvs)) if cached_map.as_inner().ptr_eq(map.as_inner()) => {
+                    Some(fvs.dupe())
+                }
+                _ => None,
+            };
+            let mut new_map = map;
+            new_map.remove(&name);
+            if let Some(fvs) = cached_fvs {
+                self.cached_fvs = Some((new_map.dupe(), fvs));
+            }
+            (name, new_map)
+        } else {
+            (name, map)
+        }
+    }
+
+    fn subst_distributive_tparam_name(
+        &mut self,
+        cx: &Context<'cx>,
+        name: &Option<SubstName>,
+        map: FlowOrdMap<SubstName, Replacement<'cx>>,
+    ) -> (Option<SubstName>, FlowOrdMap<SubstName, Replacement<'cx>>) {
+        match name {
+            None => (None, map),
+            Some(name) => {
+                let (new_name, new_map) = self.avoid_capture(cx, map, name.dupe());
+                (Some(new_name), new_map)
+            }
         }
     }
 }
 
-fn subst_distributive_tparam_name<'cx>(
-    cx: &Context<'cx>,
-    name: &Option<SubstName>,
-    map: FlowOrdMap<SubstName, Replacement<'cx>>,
-) -> (Option<SubstName>, FlowOrdMap<SubstName, Replacement<'cx>>) {
-    match name {
-        None => (None, map),
-        Some(name) => {
-            let (new_name, new_map) = avoid_capture(cx, map, name.dupe());
-            (Some(new_name), new_map)
-        }
-    }
-}
-
-impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
+impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
     fn tvar(&mut self, _cx: &Context<'cx>, _map_cx: &MapCx<'cx>, _r: &Reason, id: u32) -> u32 {
         id
     }
@@ -712,7 +750,8 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                                 }
                             }
                         };
-                        let (name, new_map) = avoid_capture(cx, current_map, typeparam.name.dupe());
+                        let (name, new_map) =
+                            self.avoid_capture(cx, current_map, typeparam.name.dupe());
                         current_map = new_map;
                         let bound_changed = !typeparam.bound.ptr_eq(&bound);
                         let default_changed = match (&typeparam.default, &default) {
@@ -767,7 +806,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                 is_this: i,
                 subst_name: this_name,
             }) => {
-                let (name, new_map) = avoid_capture(cx, map.dupe(), this_name.dupe());
+                let (name, new_map) = self.avoid_capture(cx, map.dupe(), this_name.dupe());
                 let this_prime = self.instance_type(
                     cx,
                     &(
@@ -940,7 +979,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                 false_t,
             } => {
                 let (distributive_tparam_name_new, mut current_map) =
-                    subst_distributive_tparam_name(cx, distributive_tparam_name, map.dupe());
+                    self.subst_distributive_tparam_name(cx, distributive_tparam_name, map.dupe());
                 let false_t_prime = self.type_(
                     cx,
                     &(
@@ -966,7 +1005,8 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                         ),
                         typeparam.bound.dupe(),
                     );
-                    let (name, new_map) = avoid_capture(cx, current_map, typeparam.name.dupe());
+                    let (name, new_map) =
+                        self.avoid_capture(cx, current_map, typeparam.name.dupe());
                     current_map = new_map;
                     let bound_changed = !typeparam.bound.ptr_eq(&bound);
                     changed = changed || bound_changed;
@@ -1019,7 +1059,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter {
                 homomorphic,
             } => {
                 let (distributive_tparam_name_new, new_map) =
-                    subst_distributive_tparam_name(cx, distributive_tparam_name, map.dupe());
+                    self.subst_distributive_tparam_name(cx, distributive_tparam_name, map.dupe());
                 let property_type_prime = self.type_(
                     cx,
                     &(new_map.dupe(), false, *placeholder_no_infer, *purpose, None),

@@ -2070,12 +2070,19 @@ pub(super) fn flow<'cx>(
                 UseTInner::UseT(_, _) => (ru, rl),
                 _ => flow_error::ordered_reasons((rl, ru)),
             };
-            flow_js_utils::add_output(
+            match flow_js_utils::add_output(
                 cx,
                 ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
-            )
-            .expect("Non speculative");
-            Ok(())
+            ) {
+                Ok(()) => Ok(()),
+                Err(FlowJsException::Speculative(e)) => Err(e),
+                Err(FlowJsException::LimitExceeded) => {
+                    unreachable!("add_output cannot raise LimitExceeded")
+                }
+                Err(FlowJsException::SpeculationSingletonError) => {
+                    unreachable!("add_output cannot raise SpeculationSingletonError")
+                }
+            }
         }
         Err(FlowJsException::Speculative(e)) => Err(e),
         // SpeculationSingletonError propagates through as-is, but flow() returns
@@ -2166,12 +2173,19 @@ pub(super) fn unify<'cx>(
         Err(FlowJsException::LimitExceeded) => {
             let reasons =
                 flow_error::ordered_reasons((reason_of_t(t1).dupe(), reason_of_t(t2).dupe()));
-            flow_js_utils::add_output(
+            match flow_js_utils::add_output(
                 cx,
                 ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
-            )
-            .expect("Non speculative");
-            Ok(())
+            ) {
+                Ok(()) => Ok(()),
+                Err(FlowJsException::Speculative(e)) => Err(e),
+                Err(FlowJsException::LimitExceeded) => {
+                    unreachable!("add_output cannot raise LimitExceeded")
+                }
+                Err(FlowJsException::SpeculationSingletonError) => {
+                    unreachable!("add_output cannot raise SpeculationSingletonError")
+                }
+            }
         }
         Err(FlowJsException::Speculative(e)) => Err(e),
         Err(FlowJsException::SpeculationSingletonError) => {

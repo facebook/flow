@@ -1079,11 +1079,19 @@ pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(),
 // Non-speculating variants
 
 pub fn flow_non_speculating<'cx>(cx: &Context<'cx>, (l, u): (&Type, &UseT<Context<'cx>>)) {
-    flow(cx, (l, u)).expect("Non speculating")
+    if let Err(err) = flow(cx, (l, u)) {
+        if !flow_typing_flow_common::speculation::speculating(cx) {
+            panic!("Non speculating: {:?}", err);
+        }
+    }
 }
 
 pub fn flow_t_non_speculating<'cx>(cx: &Context<'cx>, (t1, t2): (&Type, &Type)) {
-    flow_t(cx, (t1, t2)).expect("Non speculating")
+    if let Err(err) = flow_t(cx, (t1, t2)) {
+        if !flow_typing_flow_common::speculation::speculating(cx) {
+            panic!("Non speculating: {:?}", err);
+        }
+    }
 }
 
 pub fn mk_default_non_speculating<'cx>(
@@ -1140,7 +1148,11 @@ pub fn filter_optional_non_speculating<'cx>(
 }
 
 pub fn unify_non_speculating<'cx>(cx: &Context<'cx>, use_op: Option<UseOp>, t1: &Type, t2: &Type) {
-    unify(cx, use_op, t1, t2).expect("Non speculating")
+    if let Err(err) = unify(cx, use_op, t1, t2) {
+        if !flow_typing_flow_common::speculation::speculating(cx) {
+            panic!("Non speculating: {:?}", err);
+        }
+    }
 }
 
 pub fn reposition_non_speculating<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type) -> Type {
@@ -1172,5 +1184,9 @@ pub fn mk_type_destructor_non_speculating<'cx>(
 }
 
 pub fn add_output_non_speculating<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) {
-    add_output(cx, msg).expect("Non speculating")
+    if let Err(err) = add_output(cx, msg) {
+        if !flow_typing_flow_common::speculation::speculating(cx) {
+            panic!("Non speculating: {:?}", err);
+        }
+    }
 }

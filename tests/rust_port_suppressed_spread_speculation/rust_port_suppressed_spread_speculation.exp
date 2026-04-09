@@ -1,0 +1,42 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:40:15
+
+Cannot call `options.find` because property `find` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   test.js:40:15
+   40|       options.find(opt => opt.value === selectedOption)
+                     ^^^^
+
+References:
+   test.js:35:24
+   35| declare const options: $ReadOnlyArray<Option>;
+                              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:40:20
+
+An annotation on `opt` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   40|       options.find(opt => opt.value === selectedOption)
+                          ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:45:18
+
+Cannot return `emptyFunction.thatReturnsNull` because inexact `FunctionReturning` [1] is incompatible with exact
+`LocalDateInterval` [2]. [incompatible-exact]
+
+   test.js:45:18
+   45|           return emptyFunction.thatReturnsNull;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:12:21
+   12|   +thatReturnsNull: FunctionReturning<null>,
+                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:43:47
+   43|         calculateInterval(_today: LocalDate): LocalDateInterval {
+                                                     ^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 3 errors

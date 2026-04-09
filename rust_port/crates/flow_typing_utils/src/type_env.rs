@@ -1506,36 +1506,34 @@ pub fn intrinsic_ref<'cx>(
         let var_info = &env.var_info;
         match find_var_opt(var_info, &loc) {
             Err(loc) => Err(loc),
-            Ok(EnvRead {
-                def_loc,
-                write_locs,
-                val_kind,
-                name,
-                id,
-            }) => match (val_kind, name, def_loc) {
-                (ValKind::Type { .. }, Some(_), Some(_)) => Err(loc.dupe()),
-                (_, _, None) => Err(loc.dupe()),
-                (_, _, Some(def_loc)) => {
-                    let t = possibly_refined_write_state_of_state(
-                        LookupMode::ForValue,
-                        *val_kind,
-                        cx,
-                        loc.dupe(),
-                        reason.dupe(),
-                        write_locs,
-                        *id,
-                        None,
-                    );
-                    Ok((t, def_loc.dupe()))
-                }
-            },
+            Ok(read) => Ok(read.clone()),
         }
     };
     match read {
         Err(_) => None,
-        Ok((PossiblyRefinedWriteState { t, .. }, def_loc)) => {
-            Some((flow_js::reposition_non_speculating(cx, loc, t), def_loc))
-        }
+        Ok(EnvRead {
+            def_loc,
+            write_locs,
+            val_kind,
+            name,
+            id,
+        }) => match (val_kind, name, def_loc) {
+            (ValKind::Type { .. }, Some(_), Some(_)) => None,
+            (_, _, None) => None,
+            (_, _, Some(def_loc)) => {
+                let PossiblyRefinedWriteState { t, .. } = possibly_refined_write_state_of_state(
+                    LookupMode::ForValue,
+                    val_kind,
+                    cx,
+                    loc.dupe(),
+                    reason,
+                    &write_locs,
+                    id,
+                    None,
+                );
+                Some((flow_js::reposition_non_speculating(cx, loc, t), def_loc))
+            }
+        },
     }
 }
 
