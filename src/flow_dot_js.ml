@@ -158,6 +158,7 @@ let stub_metadata ~root ~checked =
     deprecated_colon_extends_excludes = [];
     stylex_shorthand_prop = None;
     ts_syntax = true;
+    allow_readonly_variance = true;
     ts_utility_syntax = true;
     tslib_syntax = true;
     type_expansion_recursion_limit = 3;

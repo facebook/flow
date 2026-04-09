@@ -176,6 +176,7 @@ pub mod opts {
         pub supported_operating_systems: Vec<SupportedOs>,
         pub strict_es6_import_export: bool,
         pub ts_syntax: bool,
+        pub allow_readonly_variance: bool,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: bool,
         pub deprecated_utilities: BTreeMap<String, Vec<String>>,
@@ -324,6 +325,7 @@ pub mod opts {
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
             ts_syntax: false,
+            allow_readonly_variance: false,
             ts_utility_syntax: true,
             tslib_syntax: false,
             deprecated_utilities: BTreeMap::new(),
@@ -2184,6 +2186,14 @@ pub mod opts {
                 "experimental.ts_syntax" => Some(parse_boolean(
                     |opts, v| {
                         opts.ts_syntax = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "experimental.allow_readonly_variance" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.allow_readonly_variance = v;
                         Ok(())
                     },
                     values,

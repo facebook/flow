@@ -196,6 +196,7 @@ pub struct FrozenMetadata {
     pub strip_root: bool,
     pub stylex_shorthand_prop: Option<String>,
     pub ts_syntax: bool,
+    pub allow_readonly_variance: bool,
     pub deprecated_colon_extends: Arc<[String]>,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,
@@ -259,6 +260,7 @@ impl Default for FrozenMetadata {
             strip_root: true,
             stylex_shorthand_prop: None,
             ts_syntax: false,
+            allow_readonly_variance: false,
             deprecated_colon_extends: Arc::from([]),
             deprecated_colon_extends_excludes: Arc::from([]),
             ts_utility_syntax: false,
@@ -621,6 +623,7 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             strip_root: options.strip_root,
             stylex_shorthand_prop: options.stylex_shorthand_prop.clone(),
             ts_syntax: options.ts_syntax,
+            allow_readonly_variance: options.allow_readonly_variance,
             deprecated_colon_extends: options.deprecated_colon_extends.dupe(),
             deprecated_colon_extends_excludes: options.deprecated_colon_extends_excludes.dupe(),
             ts_utility_syntax: options.ts_utility_syntax,
@@ -1330,6 +1333,10 @@ impl<'cx> Context<'cx> {
 
     pub fn ts_syntax(&self) -> bool {
         self.0.metadata.frozen.ts_syntax
+    }
+
+    pub fn allow_readonly_variance(&self) -> bool {
+        self.0.metadata.frozen.allow_readonly_variance
     }
 
     pub fn is_colon_extends_deprecated(&self) -> bool {

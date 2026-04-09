@@ -133,6 +133,7 @@ type metadata = {
   strip_root: bool;
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
+  allow_readonly_variance: bool;
   deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
   ts_utility_syntax: bool;
@@ -313,6 +314,8 @@ val should_strip_root : t -> bool
 val stylex_shorthand_prop : t -> string option
 
 val ts_syntax : t -> bool
+
+val allow_readonly_variance : t -> bool
 
 val deprecated_colon_extends : t -> string list
 

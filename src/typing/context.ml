@@ -83,6 +83,7 @@ type metadata = {
   strip_root: bool;
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
+  allow_readonly_variance: bool;
   deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
   ts_utility_syntax: bool;
@@ -345,6 +346,7 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
+    allow_readonly_variance = Options.allow_readonly_variance options;
     deprecated_colon_extends = Options.deprecated_colon_extends options;
     deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
     ts_utility_syntax = Options.ts_utility_syntax options;
@@ -718,6 +720,8 @@ let should_strip_root cx = cx.metadata.strip_root
 let stylex_shorthand_prop cx = cx.metadata.stylex_shorthand_prop
 
 let ts_syntax cx = cx.metadata.ts_syntax
+
+let allow_readonly_variance cx = cx.metadata.allow_readonly_variance
 
 let deprecated_colon_extends cx = cx.metadata.deprecated_colon_extends
 

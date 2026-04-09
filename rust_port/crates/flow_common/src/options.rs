@@ -250,6 +250,7 @@ pub struct Options {
     pub stylex_shorthand_prop: Option<String>,
     pub temp_dir: FlowSmolStr,
     pub ts_syntax: bool,
+    pub allow_readonly_variance: bool,
     pub tslib_syntax: bool,
     pub deprecated_colon_extends: Arc<[String]>,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,

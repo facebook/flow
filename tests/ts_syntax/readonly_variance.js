@@ -1,5 +1,5 @@
 type Obj = {
-  readonly foo: string, // ERROR
+  readonly foo: string, // OK
 };
 type Valid = {
   readonly: string, // OK
@@ -8,24 +8,24 @@ type Valid = {
 };
 
 type Indexer = {
-  readonly [string]: mixed; // ERROR
+  readonly [string]: mixed; // OK
 };
 
 class C {
-  readonly prop: string; // ERROR
+  readonly prop: string; // OK
 }
 
 interface I {
-  readonly prop: string; // ERROR
+  readonly prop: string; // OK
 }
 
 const readonly = 1; // OK
 
-type T = [readonly foo: number]; // ERROR
+type T = [readonly foo: number]; // OK
 
 type ObjStringKey = {
-  readonly "foo": string, // ERROR
+  readonly "foo": string, // OK
 };
 type ObjNumberKey = {
-  readonly 0: string, // ERROR
+  readonly 0: string, // OK
 };

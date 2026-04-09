@@ -203,6 +203,7 @@ type t = {
   opt_stylex_shorthand_prop: string option;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
+  opt_allow_readonly_variance: bool;
   opt_deprecated_colon_extends: string list;
   opt_deprecated_colon_extends_excludes: Str.regexp list;
   opt_ts_utility_syntax: bool;
@@ -443,6 +444,8 @@ let stylex_shorthand_prop opts = opts.opt_stylex_shorthand_prop
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
+
+let allow_readonly_variance opts = opts.opt_allow_readonly_variance
 
 let deprecated_colon_extends opts = opts.opt_deprecated_colon_extends
 

@@ -1,3 +1,4 @@
 [options]
 enums=true
 component_syntax=true
+experimental.allow_readonly_variance=true

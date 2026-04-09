@@ -338,6 +338,19 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
         match variance {
             Some(ast::Variance {
                 loc,
+                kind: ast::VarianceKind::Readonly,
+                ..
+            }) if !cx.allow_readonly_variance() => {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
+                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSReadonlyVariance,
+                        loc: loc.dupe(),
+                    })),
+                );
+            }
+            Some(ast::Variance {
+                loc,
                 kind: ast::VarianceKind::In,
                 ..
             }) => {

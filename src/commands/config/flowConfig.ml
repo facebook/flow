@@ -162,6 +162,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     supported_operating_systems: Options.supported_os list;
     ts_syntax: bool;
+    allow_readonly_variance: bool;
     deprecated_colon_extends: string list;
     deprecated_colon_extends_excludes: string list;
     ts_utility_syntax: bool;
@@ -326,6 +327,7 @@ module Opts = struct
       strict_es6_import_export = false;
       supported_operating_systems = [];
       ts_syntax = false;
+      allow_readonly_variance = false;
       deprecated_colon_extends = [];
       deprecated_colon_extends_excludes = [];
       ts_utility_syntax = true;
@@ -1196,6 +1198,9 @@ module Opts = struct
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
+      ( "experimental.allow_readonly_variance",
+        boolean (fun opts v -> Ok { opts with allow_readonly_variance = v })
+      );
       ( "experimental.deprecated_colon_extends",
         string
           ~init:(fun opts -> { opts with deprecated_colon_extends = [] })
@@ -2195,6 +2200,8 @@ let supported_operating_systems c = c.options.Opts.supported_operating_systems
 let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 
 let ts_syntax c = c.options.Opts.ts_syntax
+
+let allow_readonly_variance c = c.options.Opts.allow_readonly_variance
 
 let deprecated_colon_extends c = c.options.Opts.deprecated_colon_extends
 
