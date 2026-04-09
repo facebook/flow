@@ -168,3 +168,47 @@ let%expect_test "fuzzy_score" =
     "ab" ~> "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbxax": -125
     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" ~> "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": 1020
   |}]
+
+(* Test that first_match_can_be_weak=true allows matches where the first
+   matched character is in a weak position (mid-word). With the default
+   first_match_can_be_weak=false, "ob" ~> "foobar" returns None because
+   'o' is not at a word boundary. With first_match_can_be_weak=true, it
+   should return Some score.
+
+   NOTE: If the bug in fuzzy_path_stubs.c line 196 is present
+   (Bool_val(first_match_can_be_weak) instead of Bool_val(first_match_can_be_weak_v)),
+   both columns will show "none" because the parameter is silently ignored. *)
+let%expect_test "first_match_can_be_weak" =
+  let test_weak pattern word =
+    let score_default =
+      match Fuzzy_path.fuzzy_score ~first_match_can_be_weak:false ~pattern word with
+      | Some score -> Printf.sprintf "%d" score
+      | None -> "none"
+    in
+    let score_weak =
+      match Fuzzy_path.fuzzy_score ~first_match_can_be_weak:true ~pattern word with
+      | Some score -> Printf.sprintf "%d" score
+      | None -> "none"
+    in
+    Printf.printf "%S ~> %S: default=%s weak=%s\n" pattern word score_default score_weak
+  in
+  (* "ob" in "foobar": 'o' is mid-word, so default rejects but weak should allow *)
+  test_weak "ob" "foobar";
+  (* "fo" in "barfoo": 'f' is mid-word, so default rejects but weak should allow *)
+  test_weak "fo" "barfoo";
+  (* "ar" in "foobar": 'a' is mid-word *)
+  test_weak "ar" "foobar";
+  (* "oo" in "foobar": first 'o' is mid-word *)
+  test_weak "oo" "foobar";
+  (* Control: "fo" in "foobar": 'f' is at word start, both should match *)
+  test_weak "fo" "foobar";
+  (* TODO(marcoww): weak column should show actual scores, not "none".
+     first_match_can_be_weak=true is silently ignored due to a bug in
+     fuzzy_path_stubs.c (Bool_val reads the wrong variable). *)
+  [%expect {|
+    "ob" ~> "foobar": default=none weak=none
+    "fo" ~> "barfoo": default=none weak=none
+    "ar" ~> "foobar": default=none weak=none
+    "oo" ~> "foobar": default=none weak=none
+    "fo" ~> "foobar": default=10 weak=10
+  |}]
