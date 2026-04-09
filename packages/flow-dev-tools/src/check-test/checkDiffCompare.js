@@ -28,7 +28,11 @@ function normalizeWindowsEscapes(text: string): string {
   // \r\n escape sequences where Linux has just \n.  Normalize these
   // BEFORE normalizeWindowsPaths runs, so that both sides compare equally
   // after backslash→forward-slash conversion.
-  return text.replace(/\\r\\n/g, '\\n').replace(/\\r/g, '');
+  //
+  // Only replace \r\n pairs, NOT standalone \r — standalone \r also
+  // appears in file paths like <BUILTINS>\react.js where the \r is a
+  // backslash followed by 'r', not a carriage-return escape.
+  return text.replace(/\\r\\n/g, '\\n');
 }
 
 function normalizeWindowsPaths(text: string): string {
@@ -46,11 +50,31 @@ function normalizeWindowsPointers(text: string): string {
   if (process.platform !== 'win32') {
     return text;
   }
-  // Flow reads builtins with \r\n on Windows. The \r is counted as a
-  // visible character, so pointer lines (v, ^, ~, -) get one extra
-  // trailing dash.  Strip it from the ACTUAL output only so that
-  // pointer widths match the .exp files (generated on Linux).
-  return text.replace(/^(\s*[\^v~][\^v~-]*)-(\s*(?:\[\d+\])?\s*)$/gm, '$1$2');
+  // On Windows, builtins files have \r\n line endings. Flow counts the
+  // \r as a visible character, so pointer lines (v, ^, ~, -) that span
+  // to the end of a builtins source line get one extra trailing dash.
+  //
+  // Only strip the extra dash when the pointer references builtins
+  // content (indicated by a nearby <BUILTINS> line). Non-builtins
+  // pointer lines are left unchanged — their width is already correct.
+  const pointerRe = /^(\s*[\^v~][\^v~-]*)-(\s*(?:\[\d+\])?\s*)$/;
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const m = pointerRe.exec(lines[i]);
+    if (m == null) continue;
+    // Look within 5 lines above for a <BUILTINS> reference.
+    let nearBuiltins = false;
+    for (let j = Math.max(0, i - 5); j < i; j++) {
+      if (lines[j].includes('<BUILTINS>')) {
+        nearBuiltins = true;
+        break;
+      }
+    }
+    if (nearBuiltins) {
+      lines[i] = m[1] + m[2];
+    }
+  }
+  return lines.join('\n');
 }
 
 function substituteVersion(text: string, version: string): string {
