@@ -177,7 +177,6 @@ pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
         UseTInner::SealGenericT(data) => &data.reason,
         UseTInner::ResolveUnionT(data) => &data.reason,
         UseTInner::CheckUnusedPromiseT { reason, .. } => reason,
-        UseTInner::WriteComputedObjPropCheckT(data) => &data.reason,
         UseTInner::ConvertEmptyPropsToMixedT(reason, _) => reason,
         UseTInner::ExitRendersT { renders_reason, .. } => renders_reason,
         UseTInner::EvalTypeDestructorT(data) => &data.reason,
@@ -1021,7 +1020,6 @@ pub fn util_use_op_of_use_t<T, CX>(
         | UseTInner::EnumExhaustiveCheckT(..)
         | UseTInner::SealGenericT(..)
         | UseTInner::CheckUnusedPromiseT { .. }
-        | UseTInner::WriteComputedObjPropCheckT(..)
         | UseTInner::EvalTypeDestructorT(..) => nope(u),
     }
 }

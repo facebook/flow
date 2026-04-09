@@ -216,7 +216,6 @@ use flow_typing_type::type_::TypeMap;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
-use flow_typing_type::type_::WriteComputedObjPropCheckTData;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::string_of_ctor;
 use flow_typing_type::type_::string_of_use_ctor;
@@ -1562,15 +1561,6 @@ fn dump_use_t_<CX>(
         }
         UseTInner::CheckUnusedPromiseT { reason, .. } => {
             format!("CheckUnusedPromiseT ({})", string_of_reason(cx, reason))
-        }
-        UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
-            reason,
-            ..
-        }) => {
-            format!(
-                "WriteComputedObjPropCheckT ({})",
-                string_of_reason(cx, reason)
-            )
         }
         UseTInner::ConvertEmptyPropsToMixedT(_, _) => "ConvertEmptyPropsToMixedT".to_string(),
         UseTInner::ExitRendersT { .. } => "ExitRendersT".to_string(),

@@ -901,8 +901,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (use_kid upper)
           )
     | CheckUnusedPromiseT { reason; _ } -> spf "CheckUnusedPromiseT (%s)" (string_of_reason reason)
-    | WriteComputedObjPropCheckT { reason; _ } ->
-      spf "WriteComputedObjPropCheckT (%s)" (string_of_reason reason)
     | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
     | ExitRendersT _ -> "ExitRendersT"
     | EvalTypeDestructorT { destructor = s; tout = (r, x); _ } ->

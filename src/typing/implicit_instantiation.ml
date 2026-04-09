@@ -400,7 +400,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetEnumT _
     | CondT _
     | CheckUnusedPromiseT _
-    | WriteComputedObjPropCheckT _
     | ConvertEmptyPropsToMixedT _
     | ValueToTypeReferenceT _
     | ExitRendersT _ ->

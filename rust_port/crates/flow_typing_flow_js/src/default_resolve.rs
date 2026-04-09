@@ -256,7 +256,6 @@ pub fn default_resolve_touts<'cx>(
             resolve_tvar(tout_tvar)
         }
         UseTInner::CheckUnusedPromiseT { .. } => Ok(()),
-        UseTInner::WriteComputedObjPropCheckT(..) => Ok(()),
         UseTInner::ConvertEmptyPropsToMixedT(_, tout) => resolve(tout.dupe()),
         UseTInner::ExitRendersT {
             renders_reason: _,

@@ -1793,7 +1793,6 @@ struct
           end
         | (UnionT (_, rep), _)
           when match u with
-               | WriteComputedObjPropCheckT _ -> false
                | ConditionalT { distributive_tparam_name; _ } ->
                  Option.is_some distributive_tparam_name
                | _ -> true ->
@@ -5276,38 +5275,6 @@ struct
         (* computed properties *)
         | (t, ConcretizeT { reason = _; kind = ConcretizeAll; seen = _; collector }) ->
           TypeCollector.add collector t
-        | (DefT (lreason, SingletonStrT _), WriteComputedObjPropCheckT _) ->
-          let loc = loc_of_reason lreason in
-          add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
-        | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
-          let src = any_mod_src_keep_placeholder Untyped src in
-          rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason)
-        | ( DefT (_, StrGeneralT _),
-            WriteComputedObjPropCheckT { err_on_str_key = (use_op, reason_obj); _ }
-          ) ->
-          add_output
-            cx
-            (Error_message.EPropNotFoundInLookup
-               {
-                 prop_name = None;
-                 reason_prop = TypeUtil.reason_of_t l;
-                 reason_obj;
-                 use_op;
-                 suggestion = None;
-               }
-            )
-        | ( DefT (reason, SingletonNumT { value = (value, _); _ }),
-            WriteComputedObjPropCheckT { reason_key; _ }
-          ) ->
-          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
-          add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
-        | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
-          let reason = reason_of_t l in
-          add_output
-            cx
-            (Error_message.EObjectComputedPropertyAssign
-               (reason, reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
-            )
         | _ ->
           add_output
             cx
@@ -5923,7 +5890,7 @@ struct
     | EnumCastT _
     | ConcretizeTypeAppsT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
-    | WriteComputedObjPropCheckT _ ->
+      ->
       true
     (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
     | UseT _ -> true
@@ -7435,6 +7402,38 @@ struct
     | CallElem (reason_call, ft) ->
       rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft))
 
+  and write_computed_obj_prop cx trace ~use_op elem_t reason_obj tin =
+    let reason = TypeUtil.reason_of_t elem_t in
+    let rec loop elem_t =
+      match elem_t with
+      | DefT (reason, SingletonStrT _) ->
+        let loc = loc_of_reason reason in
+        add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
+      | AnyT (_, src) ->
+        let src = any_mod_src_keep_placeholder Untyped src in
+        rec_flow_t cx trace ~use_op:unknown_use (tin, AnyT.why src reason)
+      | DefT (_, StrGeneralT _)
+      | StrUtilT _ ->
+        add_output
+          cx
+          (Error_message.EPropNotFoundInLookup
+             { prop_name = None; reason_prop = reason; reason_obj; use_op; suggestion = None }
+          )
+      | GenericT { bound; _ } -> loop bound
+      | NominalT (_, { upper_t = Some upper; _ }) -> loop upper
+      | DefT (reason, SingletonNumT { value = (value, _); _ }) ->
+        let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
+        add_output cx (Error_message.EObjectComputedPropertyAssign (reason, None, kind))
+      | _ ->
+        add_output
+          cx
+          (Error_message.EObjectComputedPropertyAssign
+             (reason, None, Flow_intermediate_error_types.InvalidObjKey.Other)
+          )
+    in
+    let ts = possible_concrete_types ConcretizeForComputedObjectKeys cx reason elem_t in
+    List.iter loop ts
+
   and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =
     let obj_t = DefT (reason_obj, ObjT o) in
     let action = WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal; mode } in
@@ -7501,19 +7500,7 @@ struct
                   ignore_dicts = false;
                 }
             )
-      | Computed elem_t ->
-        rec_flow
-          cx
-          trace
-          ( elem_t,
-            WriteComputedObjPropCheckT
-              {
-                reason = TypeUtil.reason_of_t elem_t;
-                reason_key = None;
-                value_t = tin;
-                err_on_str_key = (use_op, reason_obj);
-              }
-          ))
+      | Computed elem_t -> write_computed_obj_prop cx trace ~use_op elem_t reason_obj tin)
 
   (* filter out undefined from a type *)
   and filter_optional cx ?trace reason opt_t =

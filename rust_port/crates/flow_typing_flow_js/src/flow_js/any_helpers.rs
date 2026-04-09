@@ -501,8 +501,7 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::SuperT(..)
         | UseTInner::TypeCastT(..)
         | UseTInner::EnumCastT(..)
-        | UseTInner::ConcretizeTypeAppsT(..)
-        | UseTInner::WriteComputedObjPropCheckT(..) => Ok(true),
+        | UseTInner::ConcretizeTypeAppsT(..) => Ok(true),
     }
 }
 

@@ -59,7 +59,6 @@ use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
-use flow_typing_type::type_::WriteComputedObjPropCheckTData;
 
 use super::any_helpers::*;
 use super::constraint_helpers::*;
@@ -3067,7 +3066,6 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::UnionT(_, rep), _)
             if match u.deref() {
-                UseTInner::WriteComputedObjPropCheckT(..) => false,
                 UseTInner::ConditionalT(box ConditionalTData {
                     distributive_tparam_name,
                     ..
@@ -9835,7 +9833,6 @@ fn __flow_impl<'cx>(
             }
         }
         (_, UseTInner::CheckUnusedPromiseT { .. }) => {}
-        // computed properties
         (
             _,
             UseTInner::ConcretizeT(box ConcretizeTData {
@@ -9846,86 +9843,6 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             collector.add(l.dupe());
-        }
-        (TypeInner::DefT(lreason, def_t), UseTInner::WriteComputedObjPropCheckT(..))
-            if matches!(def_t.deref(), DefTInner::SingletonStrT { .. }) =>
-        {
-            let loc = lreason.loc().dupe();
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EInternal(Box::new((loc, InternalError::PropRefComputedLiteral))),
-            )?;
-        }
-        (
-            TypeInner::AnyT(_, src),
-            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
-                reason,
-                value_t,
-                ..
-            }),
-        ) => {
-            let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
-            let any = any_t::why(src, reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (value_t, &any))?;
-        }
-        (
-            TypeInner::DefT(_, def_t),
-            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
-                err_on_str_key: box (use_op, reason_obj),
-                ..
-            }),
-        ) if matches!(def_t.deref(), DefTInner::StrGeneralT(_)) => {
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                    prop_name: None,
-                    reason_prop: reason_of_t(l).dupe(),
-                    reason_obj: reason_obj.dupe(),
-                    use_op: use_op.dupe(),
-                    suggestion: None,
-                })),
-            )?;
-        }
-        (
-            TypeInner::DefT(reason, def_t),
-            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
-                reason_key,
-                ..
-            }),
-        ) if let DefTInner::SingletonNumT {
-            value: NumberLiteral(value, _),
-            ..
-        } = def_t.deref() =>
-        {
-            let kind =
-                flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(
-                    *value,
-                );
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                    reason.dupe(),
-                    reason_key.dupe(),
-                    kind,
-                ))),
-            )?;
-        }
-        (
-            _,
-            UseTInner::WriteComputedObjPropCheckT(box WriteComputedObjPropCheckTData {
-                reason_key,
-                ..
-            }),
-        ) => {
-            let reason = reason_of_t(l);
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                    reason.dupe(),
-                    reason_key.dupe(),
-                    flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
-                ))),
-            )?;
         }
         _ => {
             flow_js_utils::add_output(

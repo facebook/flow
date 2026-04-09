@@ -99,7 +99,6 @@ and reason_of_use_t = function
   | SealGenericT { reason; _ } -> reason
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
-  | WriteComputedObjPropCheckT { reason; _ } -> reason
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | ExitRendersT { renders_reason; _ } -> renders_reason
   | EvalTypeDestructorT { reason; _ } -> reason
@@ -276,7 +275,6 @@ let rec util_use_op_of_use_t :
   | EnumExhaustiveCheckT _
   | SealGenericT _
   | CheckUnusedPromiseT _
-  | WriteComputedObjPropCheckT _
   | EvalTypeDestructorT _ ->
     nope u
 

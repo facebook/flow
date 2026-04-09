@@ -7,9 +7,9 @@
 
 use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
+use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
-use flow_typing_type::type_::WriteComputedObjPropCheckTData;
 
 use super::helpers::*;
 use super::*;
@@ -346,6 +346,112 @@ pub(super) fn elem_action_on_obj<'cx>(
     }
 }
 
+pub(super) fn write_computed_obj_prop<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: &UseOp,
+    elem_t: &Type,
+    reason_obj: &Reason,
+    tin: &Type,
+) -> Result<(), FlowJsException> {
+    let reason = reason_of_t(elem_t);
+    fn loop_<'cx>(
+        cx: &Context<'cx>,
+        trace: DepthTrace,
+        use_op: &UseOp,
+        elem_t: &Type,
+        reason: &Reason,
+        reason_obj: &Reason,
+        tin: &Type,
+    ) -> Result<(), FlowJsException> {
+        match elem_t.deref() {
+            TypeInner::DefT(reason, def_t)
+                if matches!(def_t.deref(), DefTInner::SingletonStrT { .. }) =>
+            {
+                let loc = reason.loc().dupe();
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EInternal(Box::new((loc, InternalError::PropRefComputedLiteral))),
+                )?;
+                Ok(())
+            }
+            TypeInner::AnyT(_, src) => {
+                let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
+                let any = any_t::why(src, reason.dupe());
+                rec_flow_t(cx, trace, unknown_use(), (tin, &any))
+            }
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::StrGeneralT(_)) => {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                        prop_name: None,
+                        reason_prop: reason.dupe(),
+                        reason_obj: reason_obj.dupe(),
+                        use_op: use_op.dupe(),
+                        suggestion: None,
+                    })),
+                )?;
+                Ok(())
+            }
+            TypeInner::StrUtilT { .. } => {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                        prop_name: None,
+                        reason_prop: reason.dupe(),
+                        reason_obj: reason_obj.dupe(),
+                        use_op: use_op.dupe(),
+                        suggestion: None,
+                    })),
+                )?;
+                Ok(())
+            }
+            TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                loop_(cx, trace, use_op, bound, reason, reason_obj, tin)
+            }
+            TypeInner::NominalT { nominal_type, .. } if let Some(upper) = &nominal_type.upper_t => {
+                loop_(cx, trace, use_op, upper, reason, reason_obj, tin)
+            }
+            TypeInner::DefT(reason, def_t)
+                if let DefTInner::SingletonNumT {
+                    value: NumberLiteral(value, _),
+                    ..
+                } = def_t.deref() =>
+            {
+                let kind =
+                    flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(
+                        *value,
+                    );
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EObjectComputedPropertyAssign(Box::new((
+                        reason.dupe(),
+                        None,
+                        kind,
+                    ))),
+                )?;
+                Ok(())
+            }
+            _ => {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EObjectComputedPropertyAssign(Box::new((
+                        reason.dupe(),
+                        None,
+                        flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
+                    ))),
+                )?;
+                Ok(())
+            }
+        }
+    }
+    let ts = possible_concrete_types_for_computed_object_keys(cx, reason, elem_t)?;
+    for t in &ts {
+        loop_(cx, trace, use_op, t, reason, reason_obj, tin)?;
+    }
+    Ok(())
+}
+
 pub(super) fn write_obj_prop<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -456,21 +562,9 @@ pub(super) fn write_obj_prop<'cx>(
                     )
                 }
             }
-            PropRef::Computed(elem_t) => rec_flow(
-                cx,
-                trace,
-                (
-                    elem_t,
-                    &UseT::new(UseTInner::WriteComputedObjPropCheckT(Box::new(
-                        WriteComputedObjPropCheckTData {
-                            reason: reason_of_t(elem_t).dupe(),
-                            reason_key: None,
-                            value_t: tin.dupe(),
-                            err_on_str_key: Box::new((use_op.dupe(), reason_obj.dupe())),
-                        },
-                    ))),
-                ),
-            ),
+            PropRef::Computed(elem_t) => {
+                write_computed_obj_prop(cx, trace, use_op, elem_t, reason_obj, tin)
+            }
         },
     }
 }

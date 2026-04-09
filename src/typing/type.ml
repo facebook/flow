@@ -829,12 +829,6 @@ module rec TypeTerm : sig
         reason: reason;
         async: bool;
       }
-    | WriteComputedObjPropCheckT of {
-        reason: reason;
-        reason_key: reason option;
-        value_t: t;
-        err_on_str_key: use_op * reason;
-      }
     (* When extracting the props of an abstract component, we don't want to produce empty, even
        when the config type of the component is empty, because that would allow unsound access
        to the props. This utility passes through everything else but converts empty to mixed.
@@ -4327,7 +4321,6 @@ let string_of_use_ctor = function
   | SealGenericT _ -> "SealGenericT"
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
-  | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | ExitRendersT _ -> "ExitRendersT"
   | EvalTypeDestructorT _ -> "EvalTypeDestructorT"

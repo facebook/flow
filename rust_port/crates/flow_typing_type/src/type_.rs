@@ -1555,14 +1555,6 @@ pub struct OptionalIndexedAccessTData {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct WriteComputedObjPropCheckTData {
-    pub reason: Reason,
-    pub reason_key: Option<Reason>,
-    pub value_t: Type,
-    pub err_on_str_key: Box<(UseOp, Reason)>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EvalTypeDestructorTData {
     pub destructor_use_op: UseOp,
     pub reason: Reason,
@@ -2225,7 +2217,6 @@ pub enum UseTInner<CX = ()> {
         reason: Reason,
         async_: bool,
     },
-    WriteComputedObjPropCheckT(Box<WriteComputedObjPropCheckTData>),
     ConvertEmptyPropsToMixedT(Reason, Type),
     ExitRendersT {
         renders_reason: Reason,
@@ -2330,9 +2321,6 @@ impl<CX> Clone for UseTInner<CX> {
                 reason: reason.clone(),
                 async_: *async_,
             },
-            UseTInner::WriteComputedObjPropCheckT(a) => {
-                UseTInner::WriteComputedObjPropCheckT(a.clone())
-            }
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
                 UseTInner::ConvertEmptyPropsToMixedT(a.clone(), b.clone())
             }
@@ -2469,10 +2457,6 @@ impl<CX> PartialEq for UseTInner<CX> {
                     async_: b2,
                 },
             ) => a1 == a2 && b1 == b2,
-            (
-                UseTInner::WriteComputedObjPropCheckT(a1),
-                UseTInner::WriteComputedObjPropCheckT(a2),
-            ) => a1 == a2,
             (
                 UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
                 UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
@@ -2647,7 +2631,6 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 reason.hash(state);
                 async_.hash(state);
             }
-            UseTInner::WriteComputedObjPropCheckT(a) => a.hash(state),
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -2729,10 +2712,9 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::SealGenericT(..) => 56,
                 UseTInner::OptionalIndexedAccessT(..) => 57,
                 UseTInner::CheckUnusedPromiseT { .. } => 58,
-                UseTInner::WriteComputedObjPropCheckT(..) => 59,
-                UseTInner::ConvertEmptyPropsToMixedT(..) => 60,
-                UseTInner::ExitRendersT { .. } => 61,
-                UseTInner::EvalTypeDestructorT(..) => 62,
+                UseTInner::ConvertEmptyPropsToMixedT(..) => 59,
+                UseTInner::ExitRendersT { .. } => 60,
+                UseTInner::EvalTypeDestructorT(..) => 61,
             }
         }
         let disc = variant_index(self).cmp(&variant_index(other));
@@ -2894,10 +2876,6 @@ impl<CX> Ord for UseTInner<CX> {
                 },
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
             (
-                UseTInner::WriteComputedObjPropCheckT(a1),
-                UseTInner::WriteComputedObjPropCheckT(a2),
-            ) => a1.cmp(a2),
-            (
                 UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
                 UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
@@ -3055,10 +3033,6 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .debug_struct("CheckUnusedPromiseT")
                 .field("reason", reason)
                 .field("async_", async_)
-                .finish(),
-            UseTInner::WriteComputedObjPropCheckT(a) => f
-                .debug_tuple("WriteComputedObjPropCheckT")
-                .field(a)
                 .finish(),
             UseTInner::ConvertEmptyPropsToMixedT(a, b) => f
                 .debug_tuple("ConvertEmptyPropsToMixedT")
@@ -10319,7 +10293,6 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::SealGenericT(..) => "SealGenericT".to_string(),
         UseTInner::OptionalIndexedAccessT(..) => "OptionalIndexedAccessT".to_string(),
         UseTInner::CheckUnusedPromiseT { .. } => "CheckUnusedPromiseT".to_string(),
-        UseTInner::WriteComputedObjPropCheckT(..) => "WriteComputedObjPropCheckT".to_string(),
         UseTInner::ConvertEmptyPropsToMixedT(..) => "ConvertEmptyPropsToMixedT".to_string(),
         UseTInner::ExitRendersT { .. } => "ExitRendersT".to_string(),
         UseTInner::EvalTypeDestructorT(..) => "EvalTypeDestructorT".to_string(),
