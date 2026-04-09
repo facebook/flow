@@ -113,7 +113,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `t` type → `CodemodReport`
           - [x] `unit_reporter`
           - [x] `S` module type → `CodemodReportS`
-      - [~] codemod_runner.ml → `flow_codemods/src/utils/codemod_runner.rs`
+      - [ ] codemod_runner.ml → `flow_codemods/src/utils/codemod_runner.rs`
           - [x] `log_input_files`
           - [x] `get_target_filename_set`
           - [x] `extract_flowlibs_or_exit`
@@ -132,207 +132,207 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `mk_next_for_check`
           - [x] `TYPED_RUNNER_WITH_PREPASS_CONFIG` → `TypedRunnerWithPrepassConfig`
           - [x] `TYPED_RUNNER_CONFIG` → `TypedRunnerConfig`
-          - [~] `SimpleTypedRunner`
-          - [~] `SimpleTypedTwoPassRunner`
-          - [~] `TypedRunnerWithPrepass`
-          - [~] `TypedRunner`
+          - [ ] `SimpleTypedRunner`
+          - [ ] `SimpleTypedTwoPassRunner`
+          - [ ] `TypedRunnerWithPrepass`
+          - [ ] `TypedRunner`
           - [x] `untyped_runner_job`
           - [x] `untyped_digest`
-          - [~] `UntypedRunner`
-          - [~] `UntypedFlowInitRunner`
-          - [~] `RepeatRunner`
-          - [~] `MakeSimpleTypedRunner`
-          - [~] `MakeSimpleTypedTwoPassRunner`
-          - [~] `MakeTypedRunnerWithPrepass`
-          - [~] `MakeUntypedFlowInitRunner`
-          - [~] `MakeUntypedRunner`
-      - [~] codemod_utils.ml → `flow_codemods/src/utils/codemod_utils.rs`
+          - [ ] `UntypedRunner`
+          - [ ] `UntypedFlowInitRunner`
+          - [ ] `RepeatRunner`
+          - [ ] `MakeSimpleTypedRunner`
+          - [ ] `MakeSimpleTypedTwoPassRunner`
+          - [ ] `MakeTypedRunnerWithPrepass`
+          - [ ] `MakeUntypedFlowInitRunner`
+          - [ ] `MakeUntypedRunner`
+      - [ ] codemod_utils.ml → `flow_codemods/src/utils/codemod_utils.rs`
           - [x] `abstract_codemod_runner` type → `AbstractCodemodRunner`
           - [x] `codemod_runner` type → `CodemodRunner`
           - [x] `job_config` type → `JobConfig`
           - [x] `save_ast_diff`
           - [x] `make_visitor`
           - [x] `initialize_logs`
-          - [~] `MakeMain.main` → `MakeMain::main`
-    - [~] annotate_exports.ml → `flow_codemods/src/annotate_exports.rs`
+          - [ ] `MakeMain.main` → `MakeMain::main`
+    - [ ] annotate_exports.ml → `flow_codemods/src/annotate_exports.rs`
         - [x] `SignatureVerification` module → `signature_verification`
         - [x] `SignatureVerificationErrorStats` module/type → `signature_verification_error_stats::SignatureVerificationErrorStats`
-        - [~] `Codemod_exports_annotator`
-        - [~] `Acc`
-        - [~] `mapper`
-    - [~] annotate_literal_declarations.ml → `flow_codemods/src/annotate_literal_declarations.rs`
+        - [ ] `Codemod_exports_annotator`
+        - [ ] `Acc`
+        - [ ] `mapper`
+    - [ ] annotate_literal_declarations.ml → `flow_codemods/src/annotate_literal_declarations.rs`
         - [x] `Stats` module/type → `stats::Stats`
-        - [~] `Codemod_exports_annotator`
-        - [~] `Acc`
-        - [~] `mapper`
-    - [~] annotate_optional_properties.ml → `flow_codemods/src/annotate_optional_properties.rs`
+        - [ ] `Codemod_exports_annotator`
+        - [ ] `Acc`
+        - [ ] `mapper`
+    - [ ] annotate_optional_properties.ml → `flow_codemods/src/annotate_optional_properties.rs`
         - [x] `prop_data` type → `PropData`
         - [x] `PropDataSet`
         - [x] `prop_accesses`
         - [x] `data_of_prop_missing_error`
         - [x] `ErrorStats` module/type → `error_stats::ErrorStats`
-        - [~] `Codemod_lti_annotator`
-        - [~] `Acc`
-        - [~] `mapper`
-    - [~] remove_react_import.ml → `flow_codemods/src/remove_react_import.rs`
+        - [ ] `Codemod_lti_annotator`
+        - [ ] `Acc`
+        - [ ] `mapper`
+    - [ ] remove_react_import.ml → `flow_codemods/src/remove_react_import.rs`
         - [x] `RemoveReactImportStats` module/type → `remove_react_import_stats::RemoveReactImportStats`
         - [x] `Acc`
         - [x] `react_import_def_loc_opt_of_stmt`
-        - [~] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
-        - [~] `mapper`
+        - [ ] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
+        - [ ] `mapper`
 - [ ] commands/
-  - [~] config/
-      - [~] flowConfig.ml → `flow_config/src/flowconfig.rs`
+  - [ ] config/
+      - [ ] flowConfig.ml → `flow_config/src/flowconfig.rs`
           - [x] `file_watcher` type → `FileWatcher`
           - [x] `lazy_mode` type → `LazyMode`
-          - [~] `config` type → `FlowConfig`
+          - [ ] `config` type → `FlowConfig`
           - [x] `warning` type → `Warning`
           - [x] `error` type → `Error`
-          - [~] `config_result` type
-          - [~] `get`
-          - [~] `get_hash`
-          - [~] `get_with_hash`
+          - [ ] `config_result` type
+          - [ ] `get`
+          - [ ] `get_hash`
+          - [ ] `get_with_hash`
           - [x] `empty_config`
           - [x] `init`
           - [x] `write`
-          - [~] `ignores`
-          - [~] `untyped`
-          - [~] `declarations`
-          - [~] `includes`
-          - [~] `libs`
-          - [~] `enabled_rollouts`
-          - [~] `abstract_classes`
-          - [~] `all`
-          - [~] `assert_operator`
-          - [~] `autoimports`
-          - [~] `autoimports_min_characters`
-          - [~] `autoimports_ranked_by_usage`
-          - [~] `autoimports_ranked_by_usage_boost_exact_match_min_length`
-          - [~] `automatic_require_default`
-          - [~] `babel_loose_array_spread`
-          - [~] `ban_spread_key_props`
-          - [~] `casting_syntax`
-          - [~] `casting_syntax_only_support_as_excludes`
-          - [~] `channel_mode`
-          - [~] `async_component_syntax`
-          - [~] `component_syntax`
-          - [~] `deprecated_utilities`
-          - [~] `deprecated_utilities_excludes`
-          - [~] `dev_only_refinement_info_as_errors`
-          - [~] `emoji`
-          - [~] `enable_const_params`
-          - [~] `enable_custom_error`
-          - [~] `enums`
-          - [~] `estimate_recheck_time`
-          - [~] `exact_by_default`
-          - [~] `facebook_fbs`
-          - [~] `facebook_fbt`
-          - [~] `facebook_module_interop`
-          - [~] `file_watcher`
-          - [~] `file_watcher_mergebase_with`
-          - [~] `file_watcher_mergebase_with_git`
-          - [~] `file_watcher_mergebase_with_hg`
-          - [~] `file_watcher_timeout`
-          - [~] `file_watcher_edenfs_timeout`
-          - [~] `file_watcher_edenfs_throttle_time_ms`
-          - [~] `files_implicitly_include_root`
-          - [~] `format_bracket_spacing`
-          - [~] `format_single_quotes`
-          - [~] `gc_worker_custom_major_ratio`
-          - [~] `gc_worker_custom_minor_max_size`
-          - [~] `gc_worker_custom_minor_ratio`
-          - [~] `gc_worker_major_heap_increment`
-          - [~] `gc_worker_minor_heap_size`
-          - [~] `gc_worker_space_overhead`
-          - [~] `gc_worker_window_size`
-          - [~] `haste_module_ref_prefix`
-          - [~] `haste_paths_excludes`
-          - [~] `haste_paths_includes`
-          - [~] `hook_compatibility`
-          - [~] `hook_compatibility_excludes`
-          - [~] `hook_compatibility_includes`
-          - [~] `ignore_non_literal_requires`
-          - [~] `include_warnings`
-          - [~] `instance_t_objkit_fix`
-          - [~] `jest_integration`
-          - [~] `lazy_mode`
-          - [~] `llm_context_include_imports`
-          - [~] `log_per_error_typing_telemetry`
-          - [~] `lint_severities`
-          - [~] `log_saving`
-          - [~] `long_lived_workers`
-          - [~] `max_files_checked_per_worker`
-          - [~] `max_header_tokens`
-          - [~] `max_seconds_for_check_per_worker`
-          - [~] `max_workers`
-          - [~] `max_workers_full_check`
-          - [~] `merge_timeout`
-          - [~] `missing_module_generators`
-          - [~] `module_declaration_dirnames`
-          - [~] `module_file_exts`
-          - [~] `module_name_mappers`
-          - [~] `module_resource_exts`
-          - [~] `module_system`
-          - [~] `modules_are_use_strict`
-          - [~] `multi_platform`
-          - [~] `multi_platform_ambient_supports_platform_project_overrides`
-          - [~] `multi_platform_extension_group_mapping`
-          - [~] `multi_platform_extensions`
-          - [~] `munge_underscores`
-          - [~] `no_flowlib`
-          - [~] `no_unchecked_indexed_access`
-          - [~] `node_modules_errors`
-          - [~] `node_main_fields`
-          - [~] `node_package_export_conditions`
-          - [~] `node_resolver_allow_root_relative`
-          - [~] `node_resolver_dirnames`
-          - [~] `node_resolver_root_relative_dirnames`
-          - [~] `opaque_type_new_bound_syntax`
-          - [~] `pattern_matching`
-          - [~] `pattern_matching_instance_patterns`
-          - [~] `projects`
-          - [~] `projects_overlap_mapping`
-          - [~] `projects_path_mapping`
-          - [~] `projects_strict_boundary`
-          - [~] `projects_strict_boundary_import_pattern_opt_outs`
-          - [~] `projects_strict_boundary_validate_import_pattern_opt_outs`
-          - [~] `react_custom_jsx_typing`
-          - [~] `react_ref_as_prop`
-          - [~] `react_rules`
-          - [~] `react_runtime`
-          - [~] `records`
-          - [~] `records_includes`
-          - [~] `recursion_limit`
-          - [~] `relay_integration`
-          - [~] `relay_integration_esmodules`
-          - [~] `relay_integration_excludes`
-          - [~] `relay_integration_module_prefix`
-          - [~] `relay_integration_module_prefix_includes`
-          - [~] `required_version`
-          - [~] `root_name`
-          - [~] `saved_state_fetcher`
-          - [~] `saved_state_direct_serialization`
-          - [~] `saved_state_persist_export_index`
-          - [~] `saved_state_reinit_on_lib_change`
-          - [~] `saved_state_skip_version_check`
-          - [~] `shm_hash_table_pow`
-          - [~] `shm_heap_size`
-          - [~] `strict_es6_import_export`
-          - [~] `strict_mode`
-          - [~] `supported_operating_systems`
-          - [~] `stylex_shorthand_prop`
-          - [~] `ts_syntax`
-          - [~] `deprecated_colon_extends`
-          - [~] `deprecated_colon_extends_excludes`
-          - [~] `ts_utility_syntax`
-          - [~] `tslib_syntax`
-          - [~] `type_expansion_recursion_limit`
-          - [~] `unsuppressable_error_codes`
-          - [~] `use_unknown_in_catch_variables`
-          - [~] `vpn_less`
-          - [~] `wait_for_recheck`
-          - [~] `watchman_defer_states`
-          - [~] `watchman_sync_timeout`
+          - [ ] `ignores`
+          - [ ] `untyped`
+          - [ ] `declarations`
+          - [ ] `includes`
+          - [ ] `libs`
+          - [ ] `enabled_rollouts`
+          - [ ] `abstract_classes`
+          - [ ] `all`
+          - [ ] `assert_operator`
+          - [ ] `autoimports`
+          - [ ] `autoimports_min_characters`
+          - [ ] `autoimports_ranked_by_usage`
+          - [ ] `autoimports_ranked_by_usage_boost_exact_match_min_length`
+          - [ ] `automatic_require_default`
+          - [ ] `babel_loose_array_spread`
+          - [ ] `ban_spread_key_props`
+          - [ ] `casting_syntax`
+          - [ ] `casting_syntax_only_support_as_excludes`
+          - [ ] `channel_mode`
+          - [ ] `async_component_syntax`
+          - [ ] `component_syntax`
+          - [ ] `deprecated_utilities`
+          - [ ] `deprecated_utilities_excludes`
+          - [ ] `dev_only_refinement_info_as_errors`
+          - [ ] `emoji`
+          - [ ] `enable_const_params`
+          - [ ] `enable_custom_error`
+          - [ ] `enums`
+          - [ ] `estimate_recheck_time`
+          - [ ] `exact_by_default`
+          - [ ] `facebook_fbs`
+          - [ ] `facebook_fbt`
+          - [ ] `facebook_module_interop`
+          - [ ] `file_watcher`
+          - [ ] `file_watcher_mergebase_with`
+          - [ ] `file_watcher_mergebase_with_git`
+          - [ ] `file_watcher_mergebase_with_hg`
+          - [ ] `file_watcher_timeout`
+          - [ ] `file_watcher_edenfs_timeout`
+          - [ ] `file_watcher_edenfs_throttle_time_ms`
+          - [ ] `files_implicitly_include_root`
+          - [ ] `format_bracket_spacing`
+          - [ ] `format_single_quotes`
+          - [ ] `gc_worker_custom_major_ratio`
+          - [ ] `gc_worker_custom_minor_max_size`
+          - [ ] `gc_worker_custom_minor_ratio`
+          - [ ] `gc_worker_major_heap_increment`
+          - [ ] `gc_worker_minor_heap_size`
+          - [ ] `gc_worker_space_overhead`
+          - [ ] `gc_worker_window_size`
+          - [ ] `haste_module_ref_prefix`
+          - [ ] `haste_paths_excludes`
+          - [ ] `haste_paths_includes`
+          - [ ] `hook_compatibility`
+          - [ ] `hook_compatibility_excludes`
+          - [ ] `hook_compatibility_includes`
+          - [ ] `ignore_non_literal_requires`
+          - [ ] `include_warnings`
+          - [ ] `instance_t_objkit_fix`
+          - [ ] `jest_integration`
+          - [ ] `lazy_mode`
+          - [ ] `llm_context_include_imports`
+          - [ ] `log_per_error_typing_telemetry`
+          - [ ] `lint_severities`
+          - [ ] `log_saving`
+          - [ ] `long_lived_workers`
+          - [ ] `max_files_checked_per_worker`
+          - [ ] `max_header_tokens`
+          - [ ] `max_seconds_for_check_per_worker`
+          - [ ] `max_workers`
+          - [ ] `max_workers_full_check`
+          - [ ] `merge_timeout`
+          - [ ] `missing_module_generators`
+          - [ ] `module_declaration_dirnames`
+          - [ ] `module_file_exts`
+          - [ ] `module_name_mappers`
+          - [ ] `module_resource_exts`
+          - [ ] `module_system`
+          - [ ] `modules_are_use_strict`
+          - [ ] `multi_platform`
+          - [ ] `multi_platform_ambient_supports_platform_project_overrides`
+          - [ ] `multi_platform_extension_group_mapping`
+          - [ ] `multi_platform_extensions`
+          - [ ] `munge_underscores`
+          - [ ] `no_flowlib`
+          - [ ] `no_unchecked_indexed_access`
+          - [ ] `node_modules_errors`
+          - [ ] `node_main_fields`
+          - [ ] `node_package_export_conditions`
+          - [ ] `node_resolver_allow_root_relative`
+          - [ ] `node_resolver_dirnames`
+          - [ ] `node_resolver_root_relative_dirnames`
+          - [ ] `opaque_type_new_bound_syntax`
+          - [ ] `pattern_matching`
+          - [ ] `pattern_matching_instance_patterns`
+          - [ ] `projects`
+          - [ ] `projects_overlap_mapping`
+          - [ ] `projects_path_mapping`
+          - [ ] `projects_strict_boundary`
+          - [ ] `projects_strict_boundary_import_pattern_opt_outs`
+          - [ ] `projects_strict_boundary_validate_import_pattern_opt_outs`
+          - [ ] `react_custom_jsx_typing`
+          - [ ] `react_ref_as_prop`
+          - [ ] `react_rules`
+          - [ ] `react_runtime`
+          - [ ] `records`
+          - [ ] `records_includes`
+          - [ ] `recursion_limit`
+          - [ ] `relay_integration`
+          - [ ] `relay_integration_esmodules`
+          - [ ] `relay_integration_excludes`
+          - [ ] `relay_integration_module_prefix`
+          - [ ] `relay_integration_module_prefix_includes`
+          - [ ] `required_version`
+          - [ ] `root_name`
+          - [ ] `saved_state_fetcher`
+          - [ ] `saved_state_direct_serialization`
+          - [ ] `saved_state_persist_export_index`
+          - [ ] `saved_state_reinit_on_lib_change`
+          - [ ] `saved_state_skip_version_check`
+          - [ ] `shm_hash_table_pow`
+          - [ ] `shm_heap_size`
+          - [ ] `strict_es6_import_export`
+          - [ ] `strict_mode`
+          - [ ] `supported_operating_systems`
+          - [ ] `stylex_shorthand_prop`
+          - [ ] `ts_syntax`
+          - [ ] `deprecated_colon_extends`
+          - [ ] `deprecated_colon_extends_excludes`
+          - [ ] `ts_utility_syntax`
+          - [ ] `tslib_syntax`
+          - [ ] `type_expansion_recursion_limit`
+          - [ ] `unsuppressable_error_codes`
+          - [ ] `use_unknown_in_catch_variables`
+          - [ ] `vpn_less`
+          - [ ] `wait_for_recheck`
+          - [ ] `watchman_defer_states`
+          - [ ] `watchman_sync_timeout`
   - [ ] extra/
     - [ ] facebook/
         - [ ] extra_commands.ml
@@ -351,8 +351,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] checkCommands.ml → `flow_cli/src/check_commands.rs`
     - [ ] checkContentsCommand.ml
     - [ ] codemodCommand.ml
-    - [~] commandConnect.ml → `flow_cli/src/command_connect.rs` (partial: no retry/autostart/handshake/version mismatch)
-    - [~] commandConnectSimple.ml → `flow_cli/src/command_connect.rs` (partial: simplified direct connection)
+    - [ ] commandConnect.ml → `flow_cli/src/command_connect.rs` (partial: no retry/autostart/handshake/version mismatch)
+    - [ ] commandConnectSimple.ml → `flow_cli/src/command_connect.rs` (partial: simplified direct connection)
     - [ ] commandInfo.ml
     - [ ] commandMeanKill.ml
     - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
@@ -365,7 +365,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
     - [ ] findModuleCommand.ml
     - [ ] fixCommand.ml
-    - [~] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs` (partial: simplified, no --json/--pretty)
+    - [ ] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs` (partial: simplified, no --json/--pretty)
     - [ ] getDefCommand.ml
     - [ ] graphCommand.ml
     - [ ] initCommand.ml
@@ -373,10 +373,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
     - [ ] lspCommand.ml
     - [ ] saveStateCommand.ml
-    - [~] serverCommand.ml → `flow_cli/src/server_command.rs` (partial: no monitor process, no shm config)
+    - [ ] serverCommand.ml → `flow_cli/src/server_command.rs` (partial: no monitor process, no shm config)
     - [ ] shellCompleteCommand.ml
-    - [~] startCommand.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize, no monitor, no --json)
-    - [~] statusCommands.ml → `flow_cli/src/status_command.rs` (partial: explicit status only, no --json/--pretty)
+    - [ ] startCommand.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize, no monitor, no --json)
+    - [ ] statusCommands.ml → `flow_cli/src/status_command.rs` (partial: explicit status only, no --json/--pretty)
     - [x] stopCommand.ml → `flow_cli/src/main.rs` (no-op in Rust, handled inline)
     - [ ] typeAtPosCommand.ml
     - [ ] typeOfNameCommand.ml
@@ -817,7 +817,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `map_userland` → `Userland::map()`
         - [x] `unwrap_userland` → `Userland::into_inner()` / `Userland::as_str()`
         - [x] `userland_specifier` → `FlowImportSpecifier::userland()`
-    - [~] flow_lsp_conversions.ml → `flow_server_env/src/flow_lsp_conversions.rs`
+    - [ ] flow_lsp_conversions.ml → `flow_server_env/src/flow_lsp_conversions.rs`
         - [ ] `markup_string`
         - [ ] `selection_range_of_loc`
         - [ ] `func_details_result_to_lsp`
@@ -1138,7 +1138,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [ ] lsp_fmt_test.ml
         - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_server_env/src/lsp_prot.rs` (Flow extensions)
         - [ ] lsp_fmt.ml
-        - [~] lsp_helpers.ml → `flow_server_env/src/lsp_helpers.rs`
+        - [ ] lsp_helpers.ml → `flow_server_env/src/lsp_helpers.rs`
             - [ ] `lsp_uri_to_path`
             - [ ] `path_to_lsp_uri`
             - [ ] `lsp_textDocumentIdentifier_to_filename`
@@ -1212,7 +1212,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] __tests__/
       - [ ] lspErrors_test.ml
     - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
-    - [~] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (client/server transport, reconnect loop, and custom status-capability behavior are still partial; see remaining function-level gaps)
+    - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (client/server transport, reconnect loop, and custom status-capability behavior are still partial; see remaining function-level gaps)
         - [x] `wrapped_id` type → `WrappedId`
         - [x] `encode_wrapped`
         - [x] `decode_wrapped`
@@ -1235,36 +1235,36 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `update_open_file`
         - [x] `new_metadata`
         - [x] `selectively_omit_errors`
-        - [~] `get_next_event_from_server` (server-side preamble/marshal read is still stubbed via `marshal_tools_from_fd_with_preamble`)
+        - [ ] `get_next_event_from_server` (server-side preamble/marshal read is still stubbed via `marshal_tools_from_fd_with_preamble`)
         - [x] `get_next_event_from_client`
-        - [~] `get_next_event` (no `select`/tick/server-fd multiplexing yet; always pulls from client queue)
+        - [ ] `get_next_event` (no `select`/tick/server-fd multiplexing yet; always pulls from client queue)
         - [x] `convert_to_client_uris`
         - [x] `convert_to_server_uris`
         - [x] `send_request_to_client`
-        - [~] `show_status` (Nuclide `window/status` capability is unported, so this only exercises the `ShowMessage` fallback path)
-        - [~] `send_to_server` (server IPC write is unported; `marshal_tools_to_fd_with_preamble` is still a stub)
-        - [~] `send_lsp_to_server` (inherits the unported `send_to_server` IPC path)
+        - [ ] `show_status` (Nuclide `window/status` capability is unported, so this only exercises the `ShowMessage` fallback path)
+        - [ ] `send_to_server` (server IPC write is unported; `marshal_tools_to_fd_with_preamble` is still a stub)
+        - [ ] `send_lsp_to_server` (inherits the unported `send_to_server` IPC path)
         - [x] `request_configuration`
         - [x] `subscribe_to_config_changes`
-        - [~] `do_initialize` (Flow-specific/custom capabilities such as `typeCoverageProvider`, `rageProvider`, and status support are not fully advertised)
-        - [~] `show_connected_status` (status UX is downgraded because `window/status` support is not modeled)
+        - [ ] `do_initialize` (Flow-specific/custom capabilities such as `typeCoverageProvider`, `rageProvider`, and status support are not fully advertised)
+        - [ ] `show_connected_status` (status UX is downgraded because `window/status` support is not modeled)
         - [x] `track_to_server`
         - [x] `track_from_server`
         - [x] `parse_and_cache`
         - [x] `do_documentSymbol`
         - [x] `do_selectionRange`
-        - [~] `do_rage` (log-file/temp-dir/PID-stack collection helpers are still unported, so rage output only includes adapter state)
+        - [ ] `do_rage` (log-file/temp-dir/PID-stack collection helpers are still unported, so rage output only includes adapter state)
         - [x] `parse_json`
         - [x] `collect_interaction_state`
         - [x] `gc_pending_interactions`
         - [x] `start_interaction`
         - [x] `log_interaction`
         - [x] `dismiss_tracks`
-        - [~] `do_live_diagnostics` (local parse-error push is ported, but the server `LiveErrorsRequest` leg still depends on the unported IPC send path)
-        - [~] `get_local_request_handler` (no OCaml-style mistyped-handler validation; non-error results are dispatched through a generic closure path)
-        - [~] `try_connect` (`CommandUtils.make_env`, `CommandConnectSimple.connect_once`, server autostart, and mean-kill flows are still stubbed/simplified)
+        - [ ] `do_live_diagnostics` (local parse-error push is ported, but the server `LiveErrorsRequest` leg still depends on the unported IPC send path)
+        - [ ] `get_local_request_handler` (no OCaml-style mistyped-handler validation; non-error results are dispatched through a generic closure path)
+        - [ ] `try_connect` (`CommandUtils.make_env`, `CommandConnectSimple.connect_once`, server autostart, and mean-kill flows are still stubbed/simplified)
         - [x] `log_needed` type
-        - [~] `run` (main loop is synchronous/client-driven; no Lwt event loop, periodic tick/select, or real connected-server event flow yet)
+        - [ ] `run` (main loop is synchronous/client-driven; no Lwt event loop, periodic tick/select, or real connected-server event flow yet)
     - [x] lspErrors.ml → `flow_lsp/src/lsp_errors.rs`
     - [x] lspInteraction.ml → `flow_lsp/src/lsp_interaction.rs`
         - [x] `id` type → `Id`
@@ -1303,7 +1303,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] logger/
       - [ ] flowServerMonitorLogger.ml
   - [ ] rpc/
-      - [~] monitorRPC.ml → `flow_server_env/src/monitor_rpc.rs` (monitor IPC read/write path is still unported)
+      - [ ] monitorRPC.ml → `flow_server_env/src/monitor_rpc.rs` (monitor IPC read/write path is still unported)
           - [x] `channels` type → `Channels`
           - [x] `state` type → `State`
           - [x] `with_channel`
@@ -1311,13 +1311,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `with_outfd`
           - [x] `init`
           - [x] `disable`
-          - [~] `read` (returns `IpcNotPorted` instead of deserializing a monitor message from the fd)
-          - [~] `send` (logs a warning instead of performing `Marshal_tools.to_fd_with_preamble` and raising `Monitor_died` on `EPIPE`)
-          - [~] `respond_to_request` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [~] `request_failed` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [~] `respond_to_persistent_connection` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [~] `send_telemetry` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [~] `status_update` (status-diff logic is ported, but the final `StatusUpdate` send still depends on the unported monitor IPC path)
+          - [ ] `read` (returns `IpcNotPorted` instead of deserializing a monitor message from the fd)
+          - [ ] `send` (logs a warning instead of performing `Marshal_tools.to_fd_with_preamble` and raising `Monitor_died` on `EPIPE`)
+          - [ ] `respond_to_request` (message construction is ported, but the underlying monitor IPC send is still unported)
+          - [ ] `request_failed` (message construction is ported, but the underlying monitor IPC send is still unported)
+          - [ ] `respond_to_persistent_connection` (message construction is ported, but the underlying monitor IPC send is still unported)
+          - [ ] `send_telemetry` (message construction is ported, but the underlying monitor IPC send is still unported)
+          - [ ] `status_update` (status-diff logic is ported, but the final `StatusUpdate` send still depends on the unported monitor IPC path)
   - [x] status/
       - [x] fileWatcherStatus.ml → `flow_server_env/src/file_watcher_status.rs`
           - [x] `file_watcher` type → `FileWatcher`
@@ -1347,8 +1347,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] utils/
       - [ ] exitSignal.ml
     - [ ] fileWatcher.ml
-    - [~] flowServerMonitor.ml → `flow_cli/src/flow_server.rs` (partial: simplified server without monitor process, uses Unix sockets + JSON IPC instead of Marshal + SocketHandshake)
-    - [~] flowServerMonitorDaemon.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize in start_command)
+    - [ ] flowServerMonitor.ml → `flow_cli/src/flow_server.rs` (partial: simplified server without monitor process, uses Unix sockets + JSON IPC instead of Marshal + SocketHandshake)
+    - [ ] flowServerMonitorDaemon.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize in start_command)
     - [ ] flowServerMonitorOptions.ml
     - [ ] flowServerMonitorServer.ml
     - [ ] persistentConnectionMap.ml
@@ -1751,7 +1751,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `reparse_with_defaults`
         - [ ] `next_of_filename_set`
 - [ ] procs/
-    - [~] multiWorkerLwt.ml → `flow_server/src/multi_worker.rs`
+    - [ ] multiWorkerLwt.ml → `flow_server/src/multi_worker.rs`
         - [x] `set_report_canceled_callback`
         - [x] `report_canceled`
         - [ ] `single_threaded_call_with_worker_id`
@@ -1766,23 +1766,23 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] `make`
 - [ ] server/
   - [ ] command_handler/
-      - [~] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
+      - [ ] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
           - [x] `type_parse_artifacts_with_cache`
           - [x] `get_status`
-          - [~] `autocomplete_on_parsed`
-          - [~] `autocomplete`
+          - [ ] `autocomplete_on_parsed`
+          - [ ] `autocomplete`
           - [x] `errors_of_file`
           - [x] `check_file`
           - [x] `get_def_of_check_result`
           - [x] `infer_type_to_response`
           - [x] `documentation_at_loc`
-          - [~] `infer_type`
+          - [ ] `infer_type`
           - [x] `type_of_name`
           - [x] `inlay_hint`
           - [x] `insert_type`
           - [x] `autofix_exports`
           - [x] `autofix_missing_local_annot`
-          - [~] `collect_rage`
+          - [ ] `collect_rage`
           - [x] `dump_types`
           - [x] `coverage`
           - [x] `batch_coverage`
@@ -1800,7 +1800,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `add_missing_imports`
           - [x] `organize_imports`
           - [x] `handle_apply_code_action`
-          - [~] `handle_autocomplete`
+          - [ ] `handle_autocomplete`
           - [x] `handle_autofix_exports`
           - [x] `handle_autofix_missing_local_annot`
           - [x] `handle_check_file`
@@ -1811,12 +1811,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `handle_find_module`
           - [x] `handle_get_def`
           - [x] `handle_graph_dep_graph`
-          - [~] `handle_infer_type`
+          - [ ] `handle_infer_type`
           - [x] `handle_type_of_name`
           - [x] `handle_inlay_hint`
           - [x] `handle_llm_context`
           - [x] `handle_insert_type`
-          - [~] `handle_rage`
+          - [ ] `handle_rage`
           - [x] `handle_status`
           - [ ] `handle_save_state`
           - [x] `handle_persistent_canceled`
@@ -1833,16 +1833,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `handle_persistent_get_def`
           - [x] `handle_persistent_infer_type`
           - [x] `handle_persistent_code_action_request`
-          - [~] `handle_persistent_autocomplete_lsp`
+          - [ ] `handle_persistent_autocomplete_lsp`
           - [x] `handle_persistent_signaturehelp_lsp`
           - [x] `handle_persistent_workspace_symbol`
-          - [~] `handle_persistent_find_references`
+          - [ ] `handle_persistent_find_references`
           - [x] `handle_persistent_document_highlight`
           - [x] `handle_persistent_prepare_rename`
           - [x] `handle_persistent_rename`
           - [x] `handle_persistent_coverage`
           - [x] `handle_persistent_llm_context`
-          - [~] `handle_persistent_rage`
+          - [ ] `handle_persistent_rage`
           - [x] `handle_persistent_ping`
           - [x] `handle_persistent_log_command`
           - [x] `handle_persistent_add_missing_imports_command`
@@ -1857,8 +1857,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `handle_persistent_text_document_diagnostics_lsp`
           - [x] `handle_persistent_immediately_unsafe`
           - [x] `handle_persistent_immediately`
-          - [~] `enqueue_or_handle_ephemeral`
-          - [~] `enqueue_persistent`
+          - [ ] `enqueue_or_handle_ephemeral`
+          - [ ] `enqueue_persistent`
       - [x] llmTypedContextProvider.ml → `flow_server_command_handler/src/llm_typed_context_provider.rs`
   - [ ] env/
       - [x] collated_errors.ml → `flow_server_env/src/collated_errors.rs`
@@ -2020,17 +2020,17 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] socketHandshake.ml → `flow_server_env/src/socket_handshake.rs`
   - [ ] rechecker/
       - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
-      - [~] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (async cancellation and parallelizable-workload machinery are still stubbed/simplified)
-          - [~] `Parallelizable_workload_loop` module (Lwt `pick`/cancellation loop is comment-only; no Rust async runtime equivalent is wired up yet)
-          - [~] `start_parallelizable_workloads` (returns a no-op stopper because the parallelizable workload loop is unported)
+      - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (async cancellation and parallelizable-workload machinery are still stubbed/simplified)
+          - [ ] `Parallelizable_workload_loop` module (Lwt `pick`/cancellation loop is comment-only; no Rust async runtime equivalent is wired up yet)
+          - [ ] `start_parallelizable_workloads` (returns a no-op stopper because the parallelizable workload loop is unported)
           - [x] `get_lazy_stats`
           - [x] `process_updates`
           - [x] `send_start_recheck`
           - [x] `send_end_recheck`
-          - [~] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml, and canceled-path semantics are still simplified)
-          - [~] `run_but_cancel_on_file_changes` (no race against file-watcher updates; it just runs `f()` synchronously)
+          - [ ] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml, and canceled-path semantics are still simplified)
+          - [ ] `run_but_cancel_on_file_changes` (no race against file-watcher updates; it just runs `f()` synchronously)
           - [x] `recheck_outcome` type → `RecheckOutcome`
-          - [~] `recheck_single` (restart-after-cancel path is still partial because cancellation/requeue/`SharedMem.collect_slice` behavior depends on the unported async cancellation machinery)
+          - [ ] `recheck_single` (restart-after-cancel path is still partial because cancellation/requeue/`SharedMem.collect_slice` behavior depends on the unported async cancellation machinery)
           - [x] `recheck_loop`
   - [x] server_files/
       - [x] server_files_js.ml → `flow_server_files/src/server_files_js.rs` (14/14 functions, 100% complete)
@@ -2060,33 +2060,33 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `content_of_file_input`
   - [ ] watchman_expression_terms/
       - [x] watchman_expression_terms.ml → `flow_server_watchman_expression_terms/src/lib.rs`
-    - [~] server.ml → `flow_server/src/server.rs` (daemon/monitor transport, background Lwt loops, and some exception handling paths are still simplified)
+    - [ ] server.ml → `flow_server/src/server.rs` (daemon/monitor transport, background Lwt loops, and some exception handling paths are still simplified)
         - [x] `sample_init_memory`
-        - [~] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
+        - [ ] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
         - [x] `string_of_saved_state_fetcher`
-        - [~] `init` (`focus_targets` is ignored and failure paths use `expect`/panic instead of the OCaml Lwt/exception flow)
-        - [~] `idle_logging_loop` (runs one bounded detached sampling period instead of the recursive `Lwt.pick` loop)
-        - [~] `gc_loop` (OCaml `SharedMem.collect_slice` incremental GC loop is currently a no-op)
-        - [~] `serve` (uses detached threads plus blocking waits instead of `Lwt.pick`/cancellation between idle work and monitor events)
+        - [ ] `init` (`focus_targets` is ignored and failure paths use `expect`/panic instead of the OCaml Lwt/exception flow)
+        - [ ] `idle_logging_loop` (runs one bounded detached sampling period instead of the recursive `Lwt.pick` loop)
+        - [ ] `gc_loop` (OCaml `SharedMem.collect_slice` incremental GC loop is currently a no-op)
+        - [ ] `serve` (uses detached threads plus blocking waits instead of `Lwt.pick`/cancellation between idle work and monitor events)
         - [x] `on_compact`
         - [x] `create_program_init`
         - [x] `detect_linux_distro`
         - [x] `check_supported_operating_system`
-        - [~] `run` (monitor IPC is disabled and there is no parallel `ServerMonitorListener.listen_for_messages` thread)
-        - [~] `exit_msg_of_exception` (uses display text rather than OCaml's full backtrace string formatting)
-        - [~] `run_from_daemonize` (panic-string matching approximates the OCaml typed exception handling/exits)
-        - [~] `check_once` (`format_errors` callback wiring and `focus_targets` behavior are still simplified away)
-        - [~] `daemonize` (delegates to `server_daemon::daemonize`, which still runs in-process instead of `Daemon.spawn`)
+        - [ ] `run` (monitor IPC is disabled and there is no parallel `ServerMonitorListener.listen_for_messages` thread)
+        - [ ] `exit_msg_of_exception` (uses display text rather than OCaml's full backtrace string formatting)
+        - [ ] `run_from_daemonize` (panic-string matching approximates the OCaml typed exception handling/exits)
+        - [ ] `check_once` (`format_errors` callback wiring and `focus_targets` behavior are still simplified away)
+        - [ ] `daemonize` (delegates to `server_daemon::daemonize`, which still runs in-process instead of `Daemon.spawn`)
     - [x] serverEnvBuild.ml → `flow_server/src/server_env_build.rs`
     - [x] serverWorker.ml → `flow_server/src/server_worker.rs`
-    - [~] server_daemon.ml → `flow_server/src/server_daemon.rs` (daemon spawn/fork behavior is still replaced with an in-process call)
+    - [ ] server_daemon.ml → `flow_server/src/server_daemon.rs` (daemon spawn/fork behavior is still replaced with an in-process call)
         - [x] `Server_files` module → `flow_server_files::server_files_js`
         - [x] `args` type → `Args`
         - [x] `entry_point` type → `EntryPoint`
         - [x] `open_log_file`
         - [x] `new_entry_point`
         - [x] `register_entry_point`
-        - [~] `daemonize` (calls the entry point directly in-process; no `Daemon.spawn`, fork/exec, or detached server master process)
+        - [ ] `daemonize` (calls the entry point directly in-process; no `Daemon.spawn`, fork/exec, or detached server master process)
 - [ ] services/
   - [x] autocomplete/ → `flow_services_autocomplete`
     - [x] __tests__/
@@ -2696,7 +2696,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
                 - [x] `increment`
                 - [x] `guard`
             - [x] `subst` → `mod.rs` (public wrapper around `type_subst::subst`)
-            - [~] `check_canceled` → `helpers.rs` (intentionally empty; revisit when full checker is ported)
+            - [ ] `check_canceled` → `helpers.rs` (intentionally empty; revisit when full checker is ported)
             - [x] `is_concrete` → moved to `flow_typing_type/src/type_util.rs`
             - [x] `inherited_method` → `helpers.rs`
             - [x] `find_resolved_opt` → `helpers.rs`
