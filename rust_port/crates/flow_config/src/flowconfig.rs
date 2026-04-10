@@ -179,6 +179,7 @@ pub mod opts {
         pub allow_readonly_variance: bool,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: bool,
+        pub typescript_library_definition_support: bool,
         pub deprecated_utilities: BTreeMap<String, Vec<String>>,
         pub deprecated_utilities_excludes: Vec<String>,
         pub deprecated_colon_extends: Vec<String>,
@@ -328,6 +329,7 @@ pub mod opts {
             allow_readonly_variance: false,
             ts_utility_syntax: true,
             tslib_syntax: false,
+            typescript_library_definition_support: false,
             deprecated_utilities: BTreeMap::new(),
             deprecated_utilities_excludes: Vec::new(),
             deprecated_colon_extends: Vec::new(),
@@ -2262,6 +2264,14 @@ pub mod opts {
                 "experimental.tslib_syntax" => Some(parse_boolean(
                     |opts, v| {
                         opts.tslib_syntax = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "experimental.typescript_library_definition_support" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.typescript_library_definition_support = v;
                         Ok(())
                     },
                     values,

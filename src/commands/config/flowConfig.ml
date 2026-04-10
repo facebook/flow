@@ -167,6 +167,7 @@ module Opts = struct
     deprecated_colon_extends_excludes: string list;
     ts_utility_syntax: bool;
     tslib_syntax: bool;
+    typescript_library_definition_support: bool;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
     use_unknown_in_catch_variables: bool option;
@@ -332,6 +333,7 @@ module Opts = struct
       deprecated_colon_extends_excludes = [];
       ts_utility_syntax = true;
       tslib_syntax = false;
+      typescript_library_definition_support = false;
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
       use_unknown_in_catch_variables = None;
@@ -1223,6 +1225,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
       );
       ("experimental.tslib_syntax", boolean (fun opts v -> Ok { opts with tslib_syntax = v }));
+      ( "experimental.typescript_library_definition_support",
+        boolean (fun opts v -> Ok { opts with typescript_library_definition_support = v })
+      );
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
       );
@@ -2210,6 +2215,8 @@ let deprecated_colon_extends_excludes c = c.options.Opts.deprecated_colon_extend
 let ts_utility_syntax c = c.options.Opts.ts_utility_syntax
 
 let tslib_syntax c = c.options.Opts.tslib_syntax
+
+let typescript_library_definition_support c = c.options.Opts.typescript_library_definition_support
 
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
 

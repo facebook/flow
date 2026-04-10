@@ -319,6 +319,8 @@ val ts_utility_syntax : config -> bool
 
 val tslib_syntax : config -> bool
 
+val typescript_library_definition_support : config -> bool
+
 val type_expansion_recursion_limit : config -> int
 
 val unsuppressable_error_codes : config -> SSet.t

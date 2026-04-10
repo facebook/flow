@@ -252,6 +252,7 @@ pub struct Options {
     pub ts_syntax: bool,
     pub allow_readonly_variance: bool,
     pub tslib_syntax: bool,
+    pub typescript_library_definition_support: bool,
     pub deprecated_colon_extends: Arc<[String]>,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,

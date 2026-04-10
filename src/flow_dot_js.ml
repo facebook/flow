@@ -161,6 +161,7 @@ let stub_metadata ~root ~checked =
     allow_readonly_variance = true;
     ts_utility_syntax = true;
     tslib_syntax = true;
+    typescript_library_definition_support = false;
     type_expansion_recursion_limit = 3;
     use_unknown_in_catch_variables = false;
   }

@@ -78,6 +78,7 @@ let metadata =
     ts_utility_syntax = true;
     tslib_syntax = false;
     type_expansion_recursion_limit = 3;
+    typescript_library_definition_support = false;
     use_unknown_in_catch_variables = false;
   }
 

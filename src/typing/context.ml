@@ -88,6 +88,7 @@ type metadata = {
   deprecated_colon_extends_excludes: Str.regexp list;
   ts_utility_syntax: bool;
   tslib_syntax: bool;
+  typescript_library_definition_support: bool;
   type_expansion_recursion_limit: int;
   use_unknown_in_catch_variables: bool;
 }
@@ -351,6 +352,7 @@ let metadata_of_options options =
     deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
     ts_utility_syntax = Options.ts_utility_syntax options;
     tslib_syntax = Options.tslib_syntax options;
+    typescript_library_definition_support = Options.typescript_library_definition_support options;
     deprecated_utilities = Options.deprecated_utilities options;
     assert_operator = Options.assert_operator options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
