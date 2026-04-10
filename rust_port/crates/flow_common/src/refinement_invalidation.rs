@@ -12,7 +12,18 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Reason {
     FunctionCall,
     ConstructorCall,

@@ -102,7 +102,7 @@ impl<T: Hash + Eq + Copy> TvarSeenSet<T> {
     }
 }
 
-#[derive(Debug, Clone, Dupe)]
+#[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
 pub struct NumberLiteral(pub f64, pub FlowSmolStr);
 
 fn normalized_number_literal_bits(value: f64) -> u64 {
@@ -143,7 +143,18 @@ impl std::hash::Hash for NumberLiteral {
     }
 }
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct BigIntLiteral(pub Option<i64>, pub FlowSmolStr);
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -709,21 +720,51 @@ impl EnumInfo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ClassOwnProtoCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub prop: Name,
     pub own_loc: Option<L>,
     pub proto_loc: Option<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ConformToCommonInterfaceData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub self_sig_loc: L,
     pub self_module_loc: L,
     pub originate_from_import: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub fn_: VirtualReason<L>,
@@ -731,7 +772,17 @@ pub struct FunCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub local: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunCallMethodData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub fn_: VirtualReason<L>,
@@ -740,27 +791,67 @@ pub struct FunCallMethodData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub local: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ReactCreateElementCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub component: VirtualReason<L>,
     pub children: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct RecordCreateData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub constructor: VirtualReason<L>,
     pub properties: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct SwitchRefinementCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub test: L,
     pub discriminant: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub reason: VirtualReason<L>,
     pub return_reason: VirtualReason<L>,
@@ -769,14 +860,34 @@ pub struct PositiveTypeGuardConsistencyData<L: Dupe + PartialEq + Eq + PartialOr
     pub is_return_false_statement: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ConstrainedAssignmentData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub name: FlowSmolStr,
     pub declaration: L,
     pub providers: Arc<[L]>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunParamData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub n: i32,
     pub name: Option<FlowSmolStr>,
@@ -784,7 +895,17 @@ pub struct FunParamData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub upper: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct OpaqueTypeCustomErrorCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
@@ -794,14 +915,34 @@ pub struct OpaqueTypeCustomErrorCompatibilityData<L: Dupe + PartialEq + Eq + Par
     pub name: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropertyCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub prop: Option<Name>,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct TupleElementCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub n: i32,
     pub lower: VirtualReason<L>,
@@ -810,7 +951,17 @@ pub struct TupleElementCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd +
     pub upper_optional: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct TypeArgCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub name: SubstName,
     pub targ: VirtualReason<L>,
@@ -819,7 +970,17 @@ pub struct TypeArgCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord>
     pub polarity: Polarity,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     UnknownUse,
     ObjectAddComputedProperty {
@@ -941,7 +1102,17 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     PositiveTypeGuardConsistency(Box<PositiveTypeGuardConsistencyData<L>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     ImplicitTypeParam,
     ReactConfigCheck,
@@ -1087,6 +1258,63 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for VirtualUseOp<L> {
                 }
             }
         }
+    }
+}
+
+impl<L> serde::Serialize for VirtualUseOp<L>
+where
+    L: Dupe + PartialEq + Eq + PartialOrd + Ord + serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Op(op) => serializer.serialize_newtype_variant("VirtualUseOp", 0, "Op", &**op),
+            Self::Frame(frame, use_op) => {
+                #[derive(serde::Serialize)]
+                struct FrameData<'a, L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+                    frame: &'a VirtualFrameUseOp<L>,
+                    use_op: &'a VirtualUseOp<L>,
+                }
+
+                serializer.serialize_newtype_variant(
+                    "VirtualUseOp",
+                    1,
+                    "Frame",
+                    &FrameData { frame, use_op },
+                )
+            }
+        }
+    }
+}
+
+impl<'de, L> serde::Deserialize<'de> for VirtualUseOp<L>
+where
+    L: Dupe + PartialEq + Eq + PartialOrd + Ord + serde::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        struct FrameData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+            frame: VirtualFrameUseOp<L>,
+            use_op: VirtualUseOp<L>,
+        }
+
+        #[derive(serde::Deserialize)]
+        enum VirtualUseOpSerde<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+            Op(VirtualRootUseOp<L>),
+            Frame(FrameData<L>),
+        }
+
+        Ok(match VirtualUseOpSerde::deserialize(deserializer)? {
+            VirtualUseOpSerde::Op(op) => Self::Op(Arc::new(op)),
+            VirtualUseOpSerde::Frame(FrameData { frame, use_op }) => {
+                Self::Frame(Arc::new(frame), Arc::new(use_op))
+            }
+        })
     }
 }
 
@@ -4479,7 +4707,18 @@ pub struct PredFuncallInfo(
     pub Rc<[CallArg]>,
 );
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum DroType {
     HookReturn,
     HookArg,
@@ -5571,7 +5810,7 @@ impl DepthTrace {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum UnionEnum {
     Void,
     Null,
@@ -6685,7 +6924,17 @@ pub mod union_rep {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum OptimizedError<L: Dupe> {
         NoCandidateMembers,
         NoCommonKeys,
@@ -8109,14 +8358,35 @@ pub mod arith_kind {
 
     use super::*;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ArithKindInner {
         Plus,
         RShift3,
         Other,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ArithKind(pub FlowSmolStr, pub ArithKindInner);
 
     impl ArithKind {
@@ -8293,6 +8563,53 @@ pub mod type_or_type_desc {
     pub enum TypeOrTypeDescT<L: Dupe> {
         Type(Type),
         TypeDesc(Result<ALocTy, VirtualReasonDesc<L>>),
+    }
+
+    impl<L> serde::Serialize for TypeOrTypeDescT<L>
+    where
+        L: Dupe + serde::Serialize,
+    {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            #[derive(serde::Serialize)]
+            enum TypeOrTypeDescSerde<'a, L: Dupe> {
+                Type(&'a VirtualReasonDesc<L>),
+                TypeDesc(&'a Result<ALocTy, VirtualReasonDesc<L>>),
+            }
+
+            match self {
+                TypeOrTypeDescT::Type(ty) => {
+                    TypeOrTypeDescSerde::Type(&crate::type_util::reason_of_t(ty).desc)
+                        .serialize(serializer)
+                }
+                TypeOrTypeDescT::TypeDesc(desc) => {
+                    TypeOrTypeDescSerde::TypeDesc(desc).serialize(serializer)
+                }
+            }
+        }
+    }
+
+    impl<'de, L> serde::Deserialize<'de> for TypeOrTypeDescT<L>
+    where
+        L: Dupe + serde::Deserialize<'de>,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            #[derive(serde::Deserialize)]
+            enum TypeOrTypeDescSerde<L: Dupe> {
+                Type(VirtualReasonDesc<L>),
+                TypeDesc(Result<ALocTy, VirtualReasonDesc<L>>),
+            }
+
+            Ok(match TypeOrTypeDescSerde::deserialize(deserializer)? {
+                TypeOrTypeDescSerde::Type(desc) => TypeOrTypeDescT::TypeDesc(Err(desc)),
+                TypeOrTypeDescSerde::TypeDesc(desc) => TypeOrTypeDescT::TypeDesc(desc),
+            })
+        }
     }
 
     // SAFETY: TypeOrTypeDesc is only accessed under a Mutex in map_reduce::call

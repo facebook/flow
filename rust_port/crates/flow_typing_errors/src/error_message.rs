@@ -137,7 +137,17 @@ use crate::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use crate::intermediate_error_types::UnsupportedSyntax;
 
 /// Data struct for boxed `ErrorMessage::EIncompatibleSpeculation` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncompatibleSpeculationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub use_op: Option<VirtualUseOp<L>>,
@@ -145,7 +155,17 @@ pub struct EIncompatibleSpeculationData<L: Dupe + PartialOrd + Ord + PartialEq +
 }
 
 /// Data struct for boxed `ErrorMessage::EIncompatibleDefs` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncompatibleDefsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason_lower: VirtualReason<L>,
@@ -154,7 +174,17 @@ pub struct EIncompatibleDefsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 }
 
 /// Data struct for boxed `ErrorMessage::EPropsNotFoundInInvariantSubtyping` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropsNotFoundInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_names: Vec1<Name>,
     pub reason_lower: VirtualReason<L>,
@@ -167,7 +197,17 @@ pub struct EPropsNotFoundInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + P
 }
 
 /// Data struct for boxed `ErrorMessage::EUnionSpeculationFailed` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EUnionSpeculationFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason: VirtualReason<L>,
@@ -176,7 +216,17 @@ pub struct EUnionSpeculationFailedData<L: Dupe + PartialOrd + Ord + PartialEq + 
 }
 
 /// Data struct for boxed `ErrorMessage::EInvariantSubtypingWithUseOp` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvariantSubtypingWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub use_op: VirtualUseOp<L>,
@@ -188,19 +238,49 @@ pub struct EInvariantSubtypingWithUseOpData<L: Dupe + PartialOrd + Ord + Partial
 }
 
 /// Data struct for boxed `ErrorMessage::EUnionPartialOptimizationNonUniqueKey` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EUnionPartialOptimizationNonUniqueKeyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub non_unique_keys: BTreeMap<Name, BTreeMap<UnionEnum, Vec1<VirtualReason<L>>>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum EnumKind {
     ConcreteEnumKind,
     AbstractEnumKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub member_name: Option<Name>,
     pub suggestion: Option<FlowSmolStr>,
@@ -208,32 +288,82 @@ pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + 
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub prev_use_loc: L,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidObjectFunctionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub case_test_loc: L,
     pub prev_check_loc: L,
@@ -241,13 +371,33 @@ pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq +
     pub member_name: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
@@ -255,13 +405,33 @@ pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub default_case_loc: Option<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
@@ -269,13 +439,33 @@ pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub from_match: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumMemberUsedAsTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason_lower: VirtualReason<L>,
@@ -285,27 +475,67 @@ pub struct EnumIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub casting_syntax: CastingSyntax,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidAbstractUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumNonIdentifierMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumDuplicateMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub prev_use_loc: L,
@@ -313,13 +543,33 @@ pub struct EnumDuplicateMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + 
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInconsistentMemberValuesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumInvalidMemberInitializerData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
@@ -327,28 +577,68 @@ pub struct EnumInvalidMemberInitializerData<L: Dupe + PartialOrd + Ord + Partial
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumBooleanMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumNumberMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumBigIntMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
     pub member_name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EnumStringMemberInconsistentlyInitializedData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
@@ -356,7 +646,17 @@ pub struct EnumStringMemberInconsistentlyInitializedData<
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EnumsNotEnabled(L),
     EnumConstNotSupported(L),
@@ -390,20 +690,50 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchNotExhaustiveData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
     pub missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchUnusedPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub already_seen: Option<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchNonExhaustiveObjectPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub rest: Option<VirtualReason<L>>,
@@ -411,46 +741,116 @@ pub struct MatchNonExhaustiveObjectPatternData<L: Dupe + PartialOrd + Ord + Part
     pub pattern_kind: MatchObjPatternKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchNonExplicitEnumCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub wildcard_reason: VirtualReason<L>,
     pub unchecked_members: Vec<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchInvalidIdentOrMemberPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub type_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchDuplicateObjectPropertyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
     pub pattern_kind: MatchObjPatternKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchInvalidPatternReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub binding_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchInvalidObjectShorthandData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
     pub pattern_kind: MatchObjPatternKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MatchInvalidCaseSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub kind: MatchInvalidCaseSyntax<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     MatchNotExhaustive(Box<MatchNotExhaustiveData<L>>),
     MatchUnusedPattern(Box<MatchUnusedPatternData<L>>),
@@ -489,7 +889,17 @@ pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     MatchInvalidInstancePattern(L),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     RecordBannedTypeUtil {
         reason_op: VirtualReason<L>,
@@ -510,14 +920,34 @@ pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 }
 
 /// Error message types for Flow type errors.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub lower: (VirtualReason<L>, Option<LowerKind>),
     pub upper: (VirtualReason<L>, UpperKind<L>),
     pub use_op: Option<VirtualUseOp<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop: Option<Name>,
     pub reason_prop: VirtualReason<L>,
@@ -526,7 +956,17 @@ pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: Option<VirtualUseOp<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EMissingTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_op: VirtualReason<L>,
     pub reason_tapp: VirtualReason<L>,
@@ -535,35 +975,85 @@ pub struct EMissingTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub max_arity: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExpectedStringLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExpectedNumberLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExpectedBooleanLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExpectedBigIntLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropNotFoundInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_name: Option<Name>,
     pub reason_prop: VirtualReason<L>,
@@ -572,7 +1062,17 @@ pub struct EPropNotFoundInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     pub suggestion: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_name: Option<Name>,
     pub reason_lower: VirtualReason<L>,
@@ -581,7 +1081,17 @@ pub struct EPropNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq +
     pub suggestion: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropsNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_names: Vec1<Name>,
     pub reason_lower: VirtualReason<L>,
@@ -589,7 +1099,17 @@ pub struct EPropsNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq 
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_names: Vec1<Name>,
     pub reason_l_obj: VirtualReason<L>,
@@ -597,7 +1117,17 @@ pub struct EPropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + Partia
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIndexerCheckFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_name: Name,
     pub reason_lower: VirtualReason<L>,
@@ -606,21 +1136,51 @@ pub struct EIndexerCheckFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_prop: VirtualReason<L>,
     pub prop_name: Option<Name>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_prop: VirtualReason<L>,
     pub prop_name: Option<Name>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub lreason: VirtualReason<L>,
     pub ureason: VirtualReason<L>,
@@ -628,7 +1188,17 @@ pub struct EPropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub name: FlowSmolStr,
@@ -636,27 +1206,67 @@ pub struct EPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub actual_polarity: Polarity,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EBuiltinNameLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EBuiltinModuleLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
     pub potential_generator: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExpectedModuleLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
     pub expected_module_purpose: ExpectedModulePurpose,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPlatformSpecificImplementationModuleLookupFailedData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
@@ -664,7 +1274,17 @@ pub struct EPlatformSpecificImplementationModuleLookupFailedData<
     pub name: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EComparisonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub r1: VirtualReason<L>,
     pub r2: VirtualReason<L>,
@@ -672,7 +1292,17 @@ pub struct EComparisonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub strict_comparison_opt: Option<StrictComparisonInfo<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub lower_reason: VirtualReason<L>,
@@ -684,7 +1314,17 @@ pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub unify: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleOutOfBoundsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason: VirtualReason<L>,
@@ -694,14 +1334,34 @@ pub struct ETupleOutOfBoundsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub index: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleNonIntegerIndexData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason: VirtualReason<L>,
     pub index: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleElementNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub index: i32,
@@ -709,7 +1369,17 @@ pub struct ETupleElementNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq +
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleElementNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub index: i32,
@@ -717,7 +1387,17 @@ pub struct ETupleElementNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq +
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleElementPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub index: i32,
     pub reason_lower: VirtualReason<L>,
@@ -727,20 +1407,50 @@ pub struct ETupleElementPolarityMismatchData<L: Dupe + PartialOrd + Ord + Partia
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleRequiredAfterOptionalData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_tuple: VirtualReason<L>,
     pub reason_required: VirtualReason<L>,
     pub reason_optional: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETupleInvalidTypeSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_spread: VirtualReason<L>,
     pub reason_arg: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ECallTypeArityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub call_loc: L,
     pub is_new: bool,
@@ -748,21 +1458,51 @@ pub struct ECallTypeArityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub expected_arity: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETooManyTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_tapp: VirtualReason<L>,
     pub arity_loc: L,
     pub maximum_arity: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETooFewTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_tapp: VirtualReason<L>,
     pub arity_loc: L,
     pub minimum_arity: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub is_truthy: bool,
@@ -771,68 +1511,168 @@ pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: Option<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETypeGuardInvalidParameterData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub type_guard_reason: VirtualReason<L>,
     pub binding_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETypeGuardFunctionInvalidWritesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub type_guard_reason: VirtualReason<L>,
     pub write_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETypeGuardFunctionParamHavocedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub type_guard_reason: VirtualReason<L>,
     pub param_reason: VirtualReason<L>,
     pub call_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETypeGuardIncompatibleWithFunctionKindData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub kind: FlowSmolStr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ENegativeTypeGuardConsistencyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub return_reason: VirtualReason<L>,
     pub type_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETypeParamConstIncompatibilityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExportRenamedDefaultData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: Option<FlowSmolStr>,
     pub is_reexport: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvalidObjectKitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub reason_op: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EObjectComputedPropertyAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_obj: VirtualReason<L>,
     pub reason_prop: VirtualReason<L>,
     pub kind: InvalidObjKey,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EObjectComputedPropertyPotentialOverwriteData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
@@ -840,7 +1680,17 @@ pub struct EObjectComputedPropertyPotentialOverwriteData<
     pub overwritten_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncompatibleWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason_lower: VirtualReason<L>,
@@ -848,26 +1698,66 @@ pub struct EIncompatibleWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + E
     pub explanation: Option<Explanation<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvalidReactCreateElementData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub create_element_loc: L,
     pub invalid_react: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EDuplicateModuleProviderData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub module_name: FlowSmolStr,
     pub provider: L,
     pub conflict: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncorrectTypeWithReplacementData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub kind: IncorrectType,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ESketchyNullLintData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub kind: SketchyNullKind,
     pub loc: L,
@@ -875,7 +1765,17 @@ pub struct ESketchyNullLintData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub falsy_loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPrimitiveAsInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason: VirtualReason<L>,
@@ -883,14 +1783,34 @@ pub struct EPrimitiveAsInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     pub kind: PrimitiveKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ECannotSpreadInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_reason: VirtualReason<L>,
     pub interface_reason: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ECannotSpreadIndexerOnRightData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_reason: VirtualReason<L>,
     pub object_reason: VirtualReason<L>,
@@ -898,7 +1818,17 @@ pub struct ECannotSpreadIndexerOnRightData<L: Dupe + PartialOrd + Ord + PartialE
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EUnableToSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_reason: VirtualReason<L>,
     pub object1_reason: VirtualReason<L>,
@@ -908,7 +1838,17 @@ pub struct EUnableToSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInexactMayOverwriteIndexerData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_reason: VirtualReason<L>,
     pub key_reason: VirtualReason<L>,
@@ -917,21 +1857,51 @@ pub struct EInexactMayOverwriteIndexerData<L: Dupe + PartialOrd + Ord + PartialE
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EExponentialSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
     pub reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EAssignConstLikeBindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub definition: VirtualReason<L>,
     pub binding_kind: AssignedConstLikeBindingType,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EImplicitInstantiationUnderconstrainedErrorData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
@@ -941,7 +1911,17 @@ pub struct EImplicitInstantiationUnderconstrainedErrorData<
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_class: VirtualReason<L>,
     pub reason_obj: VirtualReason<L>,
@@ -949,14 +1929,34 @@ pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub kind: ClassKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EMethodUnbindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub reason_prop: VirtualReason<L>,
     pub reason_op: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EHookIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub lower: VirtualReason<L>,
@@ -965,21 +1965,51 @@ pub struct EHookIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub hook_is_annot: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EHookUniqueIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EHookRuleViolationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub hook_rule: HookRule<L>,
     pub callee_loc: L,
     pub call_loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIncompatibleReactDeepReadOnlyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub dro_loc: L,
@@ -987,27 +2017,67 @@ pub struct EIncompatibleReactDeepReadOnlyData<L: Dupe + PartialOrd + Ord + Parti
     pub upper: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EComponentThisReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub component_loc: L,
     pub this_loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvalidDeclarationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub declaration: VirtualReason<L>,
     pub null_write: Option<NullWrite<L>>,
     pub possible_generic_escape_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ERecursiveDefinitionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub recursion: Vec<L>,
     pub annot_locs: Vec<AnnotLoc<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EDuplicateClassMemberData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub name: FlowSmolStr,
@@ -1015,13 +2085,33 @@ pub struct EDuplicateClassMemberData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     pub class_kind: ClassKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETSSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub kind: TSSyntaxKind,
     pub loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_out: VirtualReason<L>,
     pub reason_l: VirtualReason<L>,
@@ -1029,25 +2119,65 @@ pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub kind: flow_typing_type::type_::arith_kind::ArithKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EDuplicateComponentPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread: L,
     pub duplicates: Vec1<(L, Name, L)>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ERefComponentPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread: L,
     pub loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EKeySpreadPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread: L,
     pub loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EReactIntrinsicOverlapData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_loc: VirtualReason<L>,
     pub def: L,
@@ -1055,7 +2185,17 @@ pub struct EReactIntrinsicOverlapData<L: Dupe + PartialOrd + Ord + PartialEq + E
     pub mixed: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvalidRendersTypeArgumentData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub renders_variant: RendersVariant,
@@ -1063,7 +2203,17 @@ pub struct EInvalidRendersTypeArgumentData<L: Dupe + PartialOrd + Ord + PartialE
     pub invalid_type_reasons: Vec1<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EMissingPlatformSupportWithAvailablePlatformsData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
@@ -1072,44 +2222,114 @@ pub struct EMissingPlatformSupportWithAvailablePlatformsData<
     pub required_platforms: BTreeSet<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EMissingPlatformSupportData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub missing_platforms: BTreeSet<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EUnionOptimizationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub kind: OptimizedError<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EUnionOptimizationOnNonUnionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub arg: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EIllegalAssertOperatorData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub op: VirtualReason<L>,
     pub obj: VirtualReason<L>,
     pub specialized: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EDevOnlyRefinedLocInfoData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub refined_loc: L,
     pub refining_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EDevOnlyInvalidatedRefinementInfoData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub read_loc: L,
     pub invalidation_info: Vec<(L, refinement_invalidation::Reason)>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EIncompatible(Box<EIncompatibleData<L>>),
 
@@ -1594,19 +2814,50 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ETemporaryHardcodedErrorForPrototyping(Box<(VirtualReason<L>, FlowSmolStr)>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct NullWrite<L: Dupe> {
     pub null_loc: L,
     pub initialized: bool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RefInRenderKind {
     Argument,
     Access,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum BindingError {
     EGlobalAlreadyDeclared,
     ENameAlreadyBound,
@@ -1628,7 +2879,17 @@ pub enum BindingError {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InternalError {
     MethodNotAFunction,
     OptionalMethod,
@@ -1654,7 +2915,17 @@ pub enum InternalError {
     ImplicitInstantiationInvariant(FlowSmolStr),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum LowerKind {
     PossiblyNull,
     PossiblyVoid,
@@ -1662,7 +2933,17 @@ pub enum LowerKind {
     IncompatibleIntersection,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum UpperKind<L: Dupe> {
     IncompatibleGetPropT(L, Option<Name>),
     IncompatibleSetPropT(L, Option<Name>),
@@ -1693,7 +2974,17 @@ pub enum UpperKind<L: Dupe> {
     IncompatibleUnclassified(FlowSmolStr),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum TSSyntaxKind {
     TSUnknown,
     TSNever,
@@ -1711,7 +3002,18 @@ pub enum TSSyntaxKind {
     DeprecatedTypeParamColon,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InvalidMappedTypeErrorKind {
     InterfaceOrDeclaredClass,
     ExtraProperties,
@@ -1720,20 +3022,52 @@ pub enum InvalidMappedTypeErrorKind {
     VarianceOnArrayInput,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InOutVariance {
     In,
     Out,
     InOut,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ReadonlyTypeKind {
     Tuple,
     Array,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum HookRule<L: Dupe> {
     ConditionalHook,
     HookHasIllegalName,
@@ -1744,7 +3078,18 @@ pub enum HookRule<L: Dupe> {
     HookNotInComponentSyntaxComponentOrHookSyntaxHook,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ThisFinderKind {
     This,
     Super,
@@ -4937,7 +6282,17 @@ pub fn type_casting_examples(
 
 /// Friendly messages are created differently based on the specific error they come from.
 /// We collect the ingredients here and pass them to make_error_printable.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct IncompatibleUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub upper_kind: UpperKind<L>,
@@ -4946,14 +6301,34 @@ pub struct IncompatibleUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct SpeculationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub use_op: VirtualUseOp<L>,
     pub branches: Vec<ErrorMessage<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct IncompatibleSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
@@ -4961,7 +6336,17 @@ pub struct IncompatibleSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     pub explanation: Option<Explanation<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct IncompatibleInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub lower_loc: L,
@@ -4972,7 +6357,17 @@ pub struct IncompatibleInvariantSubtypingData<L: Dupe + PartialOrd + Ord + Parti
     pub explanation: Option<Explanation<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct IncompatibleEnumData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
@@ -4982,7 +6377,17 @@ pub struct IncompatibleEnumData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub casting_syntax: CastingSyntax,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropMissingInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub prop: Option<FlowSmolStr>,
@@ -4992,7 +6397,17 @@ pub struct PropMissingInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub reason_indexer: Option<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop: Option<FlowSmolStr>,
     pub suggestion: Option<FlowSmolStr>,
@@ -5002,7 +6417,17 @@ pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + E
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
     pub reason_lower: VirtualReason<L>,
@@ -5010,7 +6435,17 @@ pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + 
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropsMissingInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
     pub reason_lower: VirtualReason<L>,
@@ -5022,7 +6457,17 @@ pub struct PropsMissingInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + Par
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
     pub reason_l_obj: VirtualReason<L>,
@@ -5030,7 +6475,7 @@ pub struct PropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + Partial
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct UseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub message: Message<L>,
@@ -5038,7 +6483,17 @@ pub struct UseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub explanation: Option<Explanation<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
@@ -5046,7 +6501,7 @@ pub struct PropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
     pub use_op: VirtualUseOp<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     IncompatibleUse(Box<IncompatibleUseData<L>>),
     Speculation(Box<SpeculationData<L>>),

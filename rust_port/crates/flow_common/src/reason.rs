@@ -60,7 +60,17 @@ pub fn mk_id() -> usize {
     NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Name(FlowSmolStr);
 
 impl Dupe for Name {}
@@ -89,7 +99,18 @@ impl fmt::Display for Name {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ReasonDescFunction {
     RAsync,
     RGenerator,
@@ -111,7 +132,17 @@ impl ReasonDescFunction {
 }
 
 // TODO type names should not be able to be internal names
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VirtualReasonDesc<L: Dupe> {
     RAnyExplicit,
     RAnyImplicit,
@@ -730,7 +761,17 @@ impl<L: Dupe> VirtualReasonDesc<L> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct VirtualReasonInner<L: Dupe> {
     pub desc: VirtualReasonDesc<L>,
     pub loc: L,
@@ -787,6 +828,26 @@ impl<L: Dupe> Deref for VirtualReason<L> {
 impl<L: std::fmt::Debug + Dupe> std::fmt::Debug for VirtualReason<L> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+impl<L: Dupe + serde::Serialize> serde::Serialize for VirtualReason<L> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+impl<'de, L: Dupe + serde::Deserialize<'de>> serde::Deserialize<'de> for VirtualReason<L> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(VirtualReason(Arc::new(VirtualReasonInner::deserialize(
+            deserializer,
+        )?)))
     }
 }
 

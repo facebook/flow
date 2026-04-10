@@ -99,10 +99,6 @@ pub struct SavedStateData {
     // package.json info
     pub package_heaps: Vec<(FileKey, PackageFileData)>,
     pub non_flowlib_libs: BTreeSet<FlowSmolStr>,
-    // TODO: OCaml explicitly stores local_errors in saved state. Currently skipped because
-    // ErrorSet does not implement Serialize/Deserialize. This means local errors are lost
-    // on save/load cycle. When ErrorSet gains serde support, remove this skip annotation.
-
     // Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
     //
     // 1. Much smaller data structure. The whole env.errors data structure can be hundreds of MBs
@@ -110,7 +106,6 @@ pub struct SavedStateData {
     // 2. Saved state is designed to help skip parsing. One of the outputs of parsing are local errors
     // 3. Local errors should be the same after a lazy init and after a full init. This isn't true
     //    for the other members of env.errors which are filled in during typechecking
-    #[serde(skip, default)]
     pub local_errors: BTreeMap<FileKey, ErrorSet>,
     pub node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     pub dependency_graph: SavedStateDependencyGraph,
@@ -149,7 +144,6 @@ struct SerializedSavedStateEnvData {
     unparsed_files: BTreeSet<FileKey>,
     package_json_files: BTreeSet<FileKey>,
     non_flowlib_libs: BTreeSet<FlowSmolStr>,
-    #[serde(skip, default)]
     local_errors: BTreeMap<FileKey, ErrorSet>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     dependency_graph: SavedStateDependencyGraph,

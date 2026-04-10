@@ -9,7 +9,18 @@ use flow_lint_settings::lints::LintKind;
 use flow_lint_settings::lints::SketchyNullKind;
 use flow_lint_settings::lints::SketchyNumberKind;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ErrorCode {
     AmbiguousObjectType,
     ReactRuleUnsafeMutation,

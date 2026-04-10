@@ -16,13 +16,35 @@ use flow_parser::loc::Loc;
 
 use crate::error_codes::ErrorCode;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InferWarningKind {
     ExportKind,
     OtherKind,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ErrorKind {
     /// An error produced by the parser
     ParseError,
@@ -51,7 +73,17 @@ impl std::fmt::Display for ErrorKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RootKind {
     OperationRoot,
     ShortExplanationRoot,
@@ -121,7 +153,16 @@ pub mod friendly {
     /// The single message is split into two parts. A "root" and the rest of the
     /// message. If we have a root then some environments (such as the CLI) will
     /// merge errors with the same root cause into a single block.
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub(super) struct FriendlyGeneric<L> {
         pub(super) loc: L,
         pub(super) root: Option<ErrorRoot<L>>,
@@ -129,14 +170,32 @@ pub mod friendly {
         pub(super) message: ErrorMessage<L>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub(super) struct ErrorRoot<L> {
         pub(super) root_loc: L,
         pub(super) root_kind: RootKind,
         pub(super) root_message: Message<L>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub(super) enum ErrorMessage<L> {
         Normal {
             message: Message<L>,
@@ -151,7 +210,16 @@ pub mod friendly {
         },
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Message<L>(pub Vec<MessageFeature<L>>);
 
     impl<L> std::ops::Deref for Message<L> {
@@ -193,13 +261,31 @@ pub mod friendly {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum MessageFeature<L> {
         Inline(Vec<MessageInline>),
         Reference(Vec<MessageInline>, L),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum MessageInline {
         Text(String),
         Code(String),
@@ -1354,7 +1440,7 @@ pub mod friendly {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PrintableError<L>(ErrorKind, friendly::FriendlyGeneric<L>);
 
 fn infos_to_messages<L>(infos: Vec<Info<L>>) -> Vec<Message<L>> {

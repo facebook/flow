@@ -17,7 +17,17 @@ use flow_parser::loc_sig::LocSig;
 
 use crate::ty_symbol::Symbol;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Ty<L> {
     Bound(Box<(L, String)>),
     Generic(Box<GenericT<L>>),
@@ -74,7 +84,17 @@ pub enum Ty<L> {
 /* Recursive variable */
 pub type GenericT<L> = (Symbol<L>, GenKind, Option<Arc<[Arc<Ty<L>>]>>);
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum AnyKind<L> {
     Annotated(L),
     AnyError(Option<AnyErrorKind>),
@@ -84,13 +104,35 @@ pub enum AnyKind<L> {
     Placeholder,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum AnyErrorKind {
     UnresolvedName,
     MissingAnnotation,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum UnsoundnessKind {
     BoundFunctionThis,
     Constructor,
@@ -110,7 +152,17 @@ pub enum UnsoundnessKind {
  * the behavior of the signature optimizer when exporting types that contain
  * tvars with no lower bounds.
  */
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum UpperBoundKind<L> {
     /* No upper bounds are exported as `any` */
     NoUpper,
@@ -120,7 +172,17 @@ pub enum UpperBoundKind<L> {
     SomeUnknownUpper(String),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum BotKind<L> {
     /* Type.Empty */
     EmptyType,
@@ -128,7 +190,18 @@ pub enum BotKind<L> {
     NoLowerWithUpper(UpperBoundKind<L>),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum GenKind {
     ClassKind,
     InterfaceKind,
@@ -138,13 +211,34 @@ pub enum GenKind {
     RecordKind,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum FunEffect {
     Hook,
     Arbitrary,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunT<L> {
     pub fun_params: Arc<[(Option<FlowSmolStr>, Arc<Ty<L>>, FunParam)]>,
     pub fun_rest_param: Option<(Option<FlowSmolStr>, Arc<Ty<L>>)>,
@@ -154,13 +248,33 @@ pub struct FunT<L> {
     pub fun_effect: FunEffect,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ReturnT<L> {
     ReturnType(Arc<Ty<L>>),
     TypeGuard(bool /* implies */, FlowSmolStr, Arc<Ty<L>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ObjKind<L> {
     ExactObj,
     InexactObj,
@@ -168,20 +282,50 @@ pub enum ObjKind<L> {
     MappedTypeObj,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ObjT<L> {
     pub obj_def_loc: Option<L>,
     pub obj_props: Arc<[Prop<L>]>,
     pub obj_kind: ObjKind<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ArrT<L> {
     pub arr_readonly: bool,
     pub arr_elt_t: Arc<Ty<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum TupleElement<L> {
     TupleElement {
         name: Option<FlowSmolStr>,
@@ -195,19 +339,50 @@ pub enum TupleElement<L> {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct InterfaceT<L> {
     pub if_extends: Arc<[GenericT<L>]>,
     pub if_props: Arc<[Prop<L>]>,
     pub if_dict: Option<Dict<L>>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunParam {
     pub prm_optional: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Prop<L> {
     NamedProp {
         name: Name,
@@ -227,14 +402,34 @@ pub enum Prop<L> {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MappedTypeHomomorphicFlag<L> {
     Homomorphic,
     SemiHomomorphic(Arc<Ty<L>>),
     Unspecialized,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum NamedProp<L> {
     Field {
         t: Arc<Ty<L>>,
@@ -246,34 +441,87 @@ pub enum NamedProp<L> {
     Set(Arc<Ty<L>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum PropSource {
     Interface,
     PrimitiveProto(FlowSmolStr),
     Other,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MappedTypeOptionalFlag {
     RemoveOptional,
     KeepOptionality,
     MakeOptional,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MappedTypeVariance {
     OverrideVariance(Polarity),
     RemoveVariance(Polarity),
     KeepVariance,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MappedTypeFlags {
     pub optional: MappedTypeOptionalFlag,
     pub variance: MappedTypeVariance,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Dict<L> {
     pub dict_polarity: Polarity,
     pub dict_name: Option<FlowSmolStr>,
@@ -281,7 +529,17 @@ pub struct Dict<L> {
     pub dict_value: Arc<Ty<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct TypeParam<L> {
     pub tp_name: FlowSmolStr,
     pub tp_bound: Option<Arc<Ty<L>>>,
@@ -291,7 +549,17 @@ pub struct TypeParam<L> {
 }
 
 /* https://flow.org/en/docs/types/utilities/ */
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Utility<L> {
     Keys(Arc<Ty<L>>),
     Values(Arc<Ty<L>>),
@@ -317,7 +585,17 @@ pub enum Utility<L> {
     ReactElementConfigType(Arc<Ty<L>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ComponentProps<L> {
     UnflattenedComponentProps(Arc<Ty<L>>),
     FlattenedComponentProps {
@@ -326,7 +604,17 @@ pub enum ComponentProps<L> {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum FlattenedComponentProp<L> {
     FlattenedComponentProp {
         name: Name,
@@ -336,21 +624,53 @@ pub enum FlattenedComponentProp<L> {
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RendersKind {
     RendersNormal,
     RendersMaybe,
     RendersStar,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Polarity {
     Positive,
     Negative,
     Neutral,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum BuiltinOrSymbol<L> {
     FunProto,
     ObjProto,
@@ -358,7 +678,17 @@ pub enum BuiltinOrSymbol<L> {
     TSymbol(Symbol<L>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct DeclTypeAliasDeclData<L> {
     pub import: bool,
     pub name: Symbol<L>,
@@ -366,7 +696,17 @@ pub struct DeclTypeAliasDeclData<L> {
     pub type_: Option<Arc<Ty<L>>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct DeclEnumDeclData<L> {
     pub name: Symbol<L>,
     pub members: Option<Arc<[FlowSmolStr]>>,
@@ -374,7 +714,17 @@ pub struct DeclEnumDeclData<L> {
     pub truncated_members_count: i64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct DeclNominalComponentDeclData<L> {
     pub name: Symbol<L>,
     pub tparams: Option<Arc<[TypeParam<L>]>>,
@@ -385,20 +735,50 @@ pub struct DeclNominalComponentDeclData<L> {
     pub is_type: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct DeclNamespaceDeclData<L> {
     pub name: Option<Symbol<L>>,
     pub exports: Arc<[Decl<L>]>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct DeclModuleDeclData<L> {
     pub name: Option<Symbol<L>>,
     pub exports: Arc<[Decl<L>]>,
     pub default: Option<Arc<Ty<L>>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Decl<L> {
     VariableDecl(Box<(Name, Arc<Ty<L>>)>),
     TypeAliasDecl(Box<DeclTypeAliasDeclData<L>>),
@@ -411,7 +791,17 @@ pub enum Decl<L> {
     ModuleDecl(Box<DeclModuleDeclData<L>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Elt<L> {
     Type(Arc<Ty<L>>),
     Decl(Decl<L>),
@@ -3456,7 +3846,17 @@ where
 
 use std::marker::PhantomData;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Difference(pub i32);
 
 /* Compare Ty.t for structural equality

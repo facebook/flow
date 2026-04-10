@@ -356,7 +356,13 @@ fn comment(
                 let range = lexer.span();
                 if env.in_comment_syntax {
                     let loc = env.loc_of_span(&range);
-                    errors.push(loc, ParseError::UnexpectedTokenWithSuggestion("*/", "*-/"));
+                    errors.push(
+                        loc,
+                        ParseError::UnexpectedTokenWithSuggestion(
+                            "*/".to_owned(),
+                            "*-/".to_owned(),
+                        ),
+                    );
                 }
                 return range.end;
             }
@@ -2189,7 +2195,13 @@ fn jsx_child_text<'a>(
                     normal_prev = true;
                 } else {
                     let loc = env.loc_of_span(&lexer.span());
-                    errors.push(loc, ParseError::UnexpectedTokenWithSuggestion(">", "{'>'}"));
+                    errors.push(
+                        loc,
+                        ParseError::UnexpectedTokenWithSuggestion(
+                            ">".to_owned(),
+                            "{'>'}".to_owned(),
+                        ),
+                    );
                     return lexer;
                 }
             }
@@ -2202,7 +2214,13 @@ fn jsx_child_text<'a>(
                     normal_prev = true;
                 } else {
                     let loc = env.loc_of_span(&lexer.span());
-                    errors.push(loc, ParseError::UnexpectedTokenWithSuggestion("}", "{'}'}"));
+                    errors.push(
+                        loc,
+                        ParseError::UnexpectedTokenWithSuggestion(
+                            "}".to_owned(),
+                            "{'}'}".to_owned(),
+                        ),
+                    );
                     return lexer;
                 }
             }

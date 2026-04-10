@@ -13,7 +13,18 @@ use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 /// Represents the kind of operation for synthetic names
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum OpKind {
     Spread,
     MakeExact,
@@ -44,7 +55,17 @@ impl fmt::Display for OpKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum SubstNameInner {
     Name(FlowSmolStr),
     Id(i32, FlowSmolStr),
@@ -143,6 +164,26 @@ impl Ord for SubstName {
 impl std::hash::Hash for SubstName {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state)
+    }
+}
+
+impl serde::Serialize for SubstName {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SubstName {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(SubstName(Arc::new(SubstNameInner::deserialize(
+            deserializer,
+        )?)))
     }
 }
 

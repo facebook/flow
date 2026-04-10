@@ -9,20 +9,52 @@ use std::fmt;
 
 use crate::ast::statement::enum_declaration;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MatchNonLastRestKind {
     Object,
     Array,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum TSClassVisibilityKind {
     Public,
     Private,
     Protected,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ParseError {
     AbstractMethodInNonAbstractClass,
     AbstractMethodWithBody,
@@ -196,7 +228,7 @@ pub enum ParseError {
     UnexpectedStatic,
     UnexpectedSuper,
     UnexpectedSuperCall,
-    UnexpectedTokenWithSuggestion(&'static str, &'static str),
+    UnexpectedTokenWithSuggestion(String, String),
     UnexpectedTypeAlias,
     UnexpectedTypeAnnotation,
     UnexpectedTypeDeclaration,

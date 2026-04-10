@@ -19,7 +19,17 @@ use flow_parser::loc::Loc;
 use super::error_message::ErrorMessage;
 use super::error_message::TypeOrTypeDesc;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FlowError<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub loc: Option<L>,
     pub msg: ErrorMessage<L>,
@@ -98,6 +108,19 @@ pub fn ordered_reasons(reasons: (Reason, Reason)) -> (Reason, Reason) {
 
 #[derive(Debug, Clone, Dupe, PartialEq)]
 pub struct ErrorSet(FlowOrdSet<FlowError<ALoc>>);
+
+impl serde::Serialize for ErrorSet {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.elements().serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ErrorSet {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let errors = Vec::<FlowError<ALoc>>::deserialize(deserializer)?;
+        Ok(errors.into_iter().collect())
+    }
+}
 
 impl Default for ErrorSet {
     fn default() -> Self {

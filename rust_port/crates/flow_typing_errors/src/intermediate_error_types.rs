@@ -39,7 +39,18 @@ use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDes
 use flow_typing_type::type_::union_rep::OptimizedError;
 use vec1::Vec1;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum AssignedConstLikeBindingType {
     ClassNameBinding,
     FunctionNameBinding,
@@ -60,7 +71,17 @@ impl AssignedConstLikeBindingType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum DocblockError {
     MultipleFlowAttributes,
     InvalidFlowMode(FlowSmolStr),
@@ -72,13 +93,35 @@ pub enum DocblockError {
     DisallowedSupportsPlatform,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ExactnessErrorKind {
     UnexpectedIndexer,
     UnexpectedInexact,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum DeclareComponentInvalidParamKind {
     DeclareComponentParamAsBinding,
     DeclareComponentParamDefaultValue,
@@ -86,7 +129,18 @@ pub enum DeclareComponentInvalidParamKind {
     DeclareComponentParamStringLiteralWithoutAs,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ExpectedModulePurpose {
     ReactModuleForJSXFragment,
     ReactModuleForReactClassComponent,
@@ -96,13 +150,34 @@ pub enum ExpectedModulePurpose {
     ReactModuleForReactElementRefType,
 }
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExponentialSpreadReasonGroup<L: Dupe> {
     pub first_reason: VirtualReason<L>,
     pub second_reason: Option<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ContextDependentUnsupportedStatement {
     ToplevelLibraryImport,
     NonLibdefToplevelDeclareModule,
@@ -111,14 +186,34 @@ pub enum ContextDependentUnsupportedStatement {
     UnsupportedStatementInDeclareNamespace(FlowSmolStr),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InternalType {
     DollarReactDeepReadOnly,
     DollarUtilityTypeWithNonDollarAliases(FlowSmolStr),
     ReactDollarUtilityTypesWithNonDollarAliases(FlowSmolStr),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum UnsupportedSyntax {
     AnnotationInsideDestructuring,
     AsConstOnNonLiteral,
@@ -171,7 +266,18 @@ pub enum UnsupportedSyntax {
     ExportTypeSpecifierInExportType,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum DeclareClassPropKind {
     AnnotationAndInit,
     MissingAnnotationOrInit,
@@ -179,7 +285,17 @@ pub enum DeclareClassPropKind {
     InitWithoutReadonly,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum TsLibSyntaxKind {
     DeclarationWithoutDeclare,
     ImportTypeAnnotation,
@@ -211,12 +327,32 @@ pub enum TsLibSyntaxKind {
     OverrideModifier,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum SubComponentOfInvariantSubtypingError {
     ObjectProps(Vec<Name>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MatchInvalidCaseSyntax<L: Dupe> {
     InvalidMatchCaseMultiple {
         invalid_prefix_case_locs: Vec<L>,
@@ -228,7 +364,17 @@ pub enum MatchInvalidCaseSyntax<L: Dupe> {
     InvalidMatchCaseSuffixSemicolon,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RecordDeclarationInvalidSyntax<L: Dupe> {
     InvalidRecordDeclarationSyntaxMultiple {
         invalid_infix_equals_loc: Option<L>,
@@ -242,7 +388,17 @@ pub enum RecordDeclarationInvalidSyntax<L: Dupe> {
     InvalidRecordDeclarationSyntaxInfixEquals,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InvalidRenderTypeKind<L: Dupe> {
     InvalidRendersNullVoidFalse,
     InvalidRendersIterable,
@@ -252,46 +408,126 @@ pub enum InvalidRenderTypeKind<L: Dupe> {
     UncategorizedInvalidRenders,
 }
 
-#[derive(Debug, Clone, Dupe, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ConstantConditionKind {
     ConstCondGeneral,
     UnawaitedPromise,
     UncalledFunction,
 }
 
-#[derive(Debug, Clone, Dupe, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum NullSide {
     Left,
     Right,
 }
 
-#[derive(Debug, Clone, Dupe, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum EmptySide {
     Left,
     Right,
 }
 
-#[derive(Debug, Clone, Dupe, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum StrictComparisonKind {
     StrictComparisonGeneral,
     StrictComparisonNull { null_side: NullSide },
     StrictComparisonEmpty { empty_side: EmptySide },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct StrictComparisonInfo<L: Dupe> {
     pub left_precise_reason: VirtualReason<L>,
     pub right_precise_reason: VirtualReason<L>,
     pub strict_comparison_kind: StrictComparisonKind,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ClassKind {
     Class,
     Record,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum MatchObjPatternKind {
     Object,
     Instance,
@@ -306,7 +542,18 @@ impl MatchObjPatternKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum IncorrectType {
     Partial,
     Shape,
@@ -429,13 +676,35 @@ impl FromStr for IncorrectType {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum IncorrectTypeErrorType {
     DeprecatedUtility,
     TSType,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InvalidObjKey {
     Other,
     NumberNonInt,
@@ -469,7 +738,17 @@ impl InvalidObjKey {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ExplanationWithLazyParts<L: Dupe> {
     LazyExplanationInvariantSubtypingDueToMutableArray {
         lower_array_loc: L,
@@ -496,20 +775,50 @@ pub enum ExplanationWithLazyParts<L: Dupe> {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationConstrainedAssignData<L: Dupe> {
     pub name: FlowSmolStr,
     pub declaration: L,
     pub providers: Arc<[L]>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationCustomErrorData<L: Dupe> {
     pub name: FlowSmolStr,
     pub custom_error_loc: L,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationInvariantSubtypingDueToMutableArrayData<L: Dupe> {
     pub lower_array_loc: L,
     pub upper_array_loc: L,
@@ -518,7 +827,17 @@ pub struct ExplanationInvariantSubtypingDueToMutableArrayData<L: Dupe> {
     pub upper_array_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationInvariantSubtypingDueToMutablePropertyData<L: Dupe> {
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
@@ -528,7 +847,17 @@ pub struct ExplanationInvariantSubtypingDueToMutablePropertyData<L: Dupe> {
     pub property_name: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationInvariantSubtypingDueToMutablePropertiesData<L: Dupe> {
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
@@ -538,7 +867,17 @@ pub struct ExplanationInvariantSubtypingDueToMutablePropertiesData<L: Dupe> {
     pub properties: Vec<Name>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L: Dupe> {
     pub props_plural: bool,
     pub lower_obj_loc: L,
@@ -548,7 +887,17 @@ pub struct ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L: Dupe> {
     pub upper_object_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ExplanationAdditionalUnionMembersData<L: Dupe> {
     pub left: VirtualReason<L>,
     pub right: VirtualReason<L>,
@@ -556,7 +905,17 @@ pub struct ExplanationAdditionalUnionMembersData<L: Dupe> {
     pub extra_number: i32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Explanation<L: Dupe> {
     ExplanationAbstractEnumCasting,
     ExplanationArrayInvariantTyping,
@@ -600,13 +959,33 @@ pub enum Explanation<L: Dupe> {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum AccessChainSegment {
     PropSegment(Name),
     TupleIndexSegment(i32),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Frame<L: Dupe> {
     FrameAnonymous,
     FrameAccessChain {
@@ -649,7 +1028,17 @@ pub enum Frame<L: Dupe> {
     FrameUnionRepresentative(VirtualReason<L>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RootMessage<L: Dupe> {
     RootCannotAccessIndex {
         index: VirtualReasonDesc<L>,
@@ -739,33 +1128,65 @@ pub enum RootMessage<L: Dupe> {
 
 pub type UnionEnumMap<L> = BTreeMap<UnionEnum, Vec1<VirtualReason<L>>>;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ThisFinderKind {
     This,
     Super,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum PrimitiveKind {
     Boolean,
     Number,
     String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ObjKind {
     Type,
     Literal,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageAlreadyExhaustivelyCheckOneEnumMemberData<L: Dupe> {
     pub member_name: FlowSmolStr,
     pub prev_check_loc: L,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotAccessEnumMemberData<L: Dupe> {
     pub member_name: Option<Name>,
     pub suggestion: Option<FlowSmolStr>,
@@ -773,57 +1194,57 @@ pub struct MessageCannotAccessEnumMemberData<L: Dupe> {
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotAddComputedPropertyDueToPotentialOverwriteData<L: Dupe> {
     pub key_loc: L,
     pub overwritten_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotCallMaybeReactHookData<L: Dupe> {
     pub callee_loc: L,
     pub hooks: Vec<L>,
     pub non_hooks: Vec<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotCompareData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
     pub strict_comparison_opt: Option<StrictComparisonInfo<L>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExportRenamedDefaultData {
     pub name: Option<FlowSmolStr>,
     pub is_reexport: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExhaustivelyCheckAbstractEnumsData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotInstantiateObjectUtilTypeWithEnumData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotResolveBuiltinModuleData {
     pub name: FlowSmolStr,
     pub potential_generator: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotSpreadGeneralData<L: Dupe> {
     pub spread_reason: VirtualReason<L>,
     pub object1_reason: VirtualReason<L>,
@@ -832,7 +1253,7 @@ pub struct MessageCannotSpreadGeneralData<L: Dupe> {
     pub error_kind: ExactnessErrorKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
     pub spread_reason: VirtualReason<L>,
     pub object2_reason: VirtualReason<L>,
@@ -840,69 +1261,69 @@ pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
     pub value_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseEnumMemberUsedAsTypeData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
     pub reason_op: VirtualReason<L>,
     pub reason: VirtualReason<L>,
     pub suggestion: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeGuardWithFunctionParamHavocedData<L: Dupe> {
     pub type_guard_desc: VirtualReasonDesc<L>,
     pub param_reason: VirtualReason<L>,
     pub call_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeInValuePositionData<L: Dupe> {
     pub reason: VirtualReason<L>,
     pub type_only_namespace: bool,
     pub imported_name: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageDefinitionInvalidRecursiveData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub recursion: Vec<L>,
     pub annot_locs: Vec<AnnotLoc<L>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageDuplicateModuleProviderData<L: Dupe> {
     pub module_name: FlowSmolStr,
     pub provider: L,
     pub conflict: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageEnumDuplicateMemberNameData<L: Dupe> {
     pub member_name: String,
     pub prev_use_loc: L,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageEnumInvalidMemberInitializerData<L: Dupe> {
     pub member_name: String,
     pub explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
     pub enum_reason: VirtualReason<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageExponentialSpreadData<L: Dupe> {
     pub reason: VirtualReason<L>,
     pub reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
     pub reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleTupleArityData<L: Dupe> {
     pub lower_reason: VirtualReason<L>,
     pub lower_arity: (i32, i32),
@@ -913,13 +1334,13 @@ pub struct MessageIncompatibleTupleArityData<L: Dupe> {
     pub unify: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleImplicitReturnData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReasonDesc<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
     pub lower_loc: L,
     pub upper_loc: L,
@@ -927,7 +1348,7 @@ pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
     pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub lower_loc: L,
@@ -936,14 +1357,14 @@ pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
     pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleReactDeepReadOnlyData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
     pub dro_loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub enum_reason: VirtualReason<L>,
@@ -951,78 +1372,78 @@ pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
     pub default_case_loc: Option<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidEnumMemberCheckData<L: Dupe> {
     pub enum_reason: VirtualReason<L>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidRefPropertyInSpreadData<L: Dupe> {
     pub ref_loc: L,
     pub spread_loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidKeyPropertyInSpreadData<L: Dupe> {
     pub key_loc: L,
     pub spread_loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidRendersTypeArgumentData<L: Dupe> {
     pub renders_variant: RendersVariant,
     pub invalid_render_type_kind: InvalidRenderTypeKind<L>,
     pub invalid_type_reasons: Vec1<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidSelfReferencingTypeAnnotationData<L: Dupe> {
     pub name: FlowSmolStr,
     pub loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidSelfReferencingDefaultData<L: Dupe> {
     pub name: FlowSmolStr,
     pub def_loc: L,
     pub ref_loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageMissingPlatformSupportWithAvailablePlatformsData {
     pub available_platforms: BTreeSet<FlowSmolStr>,
     pub required_platforms: BTreeSet<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageNoDefaultExportData {
     pub module_name: FlowSmolStr,
     pub suggestion: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageNoNamedExportData {
     pub module_name: FlowSmolStr,
     pub export_name: FlowSmolStr,
     pub suggestion: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageOnlyDefaultExportData {
     pub module_name: FlowSmolStr,
     pub export_name: FlowSmolStr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropExtraAgainstExactObjectData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
     pub props: Vec1<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropMissingData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: Option<VirtualReason<L>>,
@@ -1031,21 +1452,21 @@ pub struct MessagePropMissingData<L: Dupe> {
     pub reason_indexer: Option<VirtualReason<L>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropsMissingData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
     pub props: Vec1<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropPolarityMismatchData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
     pub props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageReactIntrinsicOverlapData<L: Dupe> {
     pub use_: VirtualReason<L>,
     pub def: L,
@@ -1053,13 +1474,13 @@ pub struct MessageReactIntrinsicOverlapData<L: Dupe> {
     pub mixed: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageRedeclareComponentPropData<L: Dupe> {
     pub duplicates: Vec1<(L, Name, L)>,
     pub spread_loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageShouldAnnotateVariableUsedInGenericContextData<L: Dupe> {
     pub reason: VirtualReason<L>,
     pub null_loc: L,
@@ -1067,28 +1488,28 @@ pub struct MessageShouldAnnotateVariableUsedInGenericContextData<L: Dupe> {
     pub possible_generic_escape_locs: Vec<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageSketchyNullCheckData<L: Dupe> {
     pub kind: SketchyNullKind,
     pub falsy_loc: L,
     pub null_loc: L,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleElementNotReadableData<L: Dupe> {
     pub reason: VirtualReason<L>,
     pub index: i32,
     pub name: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleElementNotWritableData<L: Dupe> {
     pub reason: VirtualReason<L>,
     pub index: i32,
     pub name: Option<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleIndexOutOfBoundData<L: Dupe> {
     pub reason_op: VirtualReason<L>,
     pub inexact: bool,
@@ -1096,32 +1517,32 @@ pub struct MessageTupleIndexOutOfBoundData<L: Dupe> {
     pub index: FlowSmolStr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleNonIntegerIndexData<L: Dupe> {
     pub index_def_loc: L,
     pub index: FlowSmolStr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageVariableOnlyAssignedByNullData<L: Dupe> {
     pub reason: VirtualReason<L>,
     pub null_loc: Option<L>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageMatchNonExhaustiveObjectPatternData<L: Dupe> {
     pub rest: Option<VirtualReason<L>>,
     pub missing_props: Vec<FlowSmolStr>,
     pub pattern_kind: MatchObjPatternKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageMatchNonExplicitEnumCheckData<L: Dupe> {
     pub wildcard_reason: VirtualReason<L>,
     pub unchecked_members: Vec<FlowSmolStr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Message<L: Dupe> {
     MessagePlainTextReservedForInternalErrorOnly(FlowSmolStr),
 
@@ -1900,7 +2321,7 @@ pub enum Message<L: Dupe> {
     },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct IntermediateError<L: Dupe> {
     pub kind: ErrorKind,
     pub loc: Loc,
@@ -1911,7 +2332,7 @@ pub struct IntermediateError<L: Dupe> {
     pub unsuppressable: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ErrorMessage<L: Dupe> {
     SingletonMessage {
         message: Message<L>,

@@ -25,7 +25,17 @@ use flow_parser::loc_sig::LocSig;
 
 use crate::provider_api;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum EnvInvariantFailure<L> {
     NameDefOrderingFailure {
         all: Vec<L>,
@@ -63,7 +73,18 @@ pub enum LiteralCheck<L> {
     SingletonStr(L, FlowSmolStr),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum DefLocType {
     OrdinaryNameLoc,
     FunctionParamLoc,
@@ -490,7 +511,17 @@ where
     pub pred_func_map: FlowOrdMap<L, PredFuncInfo<L>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum AnnotLoc<L: Dupe> {
     Loc(L),
     Object { loc: L, props: Vec<L> },

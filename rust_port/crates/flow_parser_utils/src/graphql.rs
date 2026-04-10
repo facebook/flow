@@ -10,7 +10,18 @@ use flow_parser::ast;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum GraphqlError {
     InvalidTaggedTemplate,
     InvalidGraphQL,

@@ -102,6 +102,26 @@ impl std::fmt::Debug for ALoc {
     }
 }
 
+impl serde::Serialize for ALoc {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        (&self.0.source, &self.0.start, &self.0.end).serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ALoc {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let (source, start, end) =
+            <(Option<FileKey>, Position, Position)>::deserialize(deserializer)?;
+        Ok(ALoc(Loc { source, start, end }))
+    }
+}
+
 fn compare_opt_file_key(a: Option<&FileKey>, b: Option<&FileKey>) -> std::cmp::Ordering {
     match (a, b) {
         (None, None) => std::cmp::Ordering::Equal,
