@@ -53,10 +53,10 @@ module Modules = struct
         (* remove .js extension *)
         let local_file = Filename.chop_extension local_file in
         if dep_folder = this_folder then
-          Filename.concat "./" local_file
+          Files.normalized_concat "./" local_file
         else
           let relative_dir = Files.relative_path this_folder dep_folder in
-          Filename.concat relative_dir local_file
+          Files.normalized_concat relative_dir local_file
 end
 
 module AstHelper = struct
