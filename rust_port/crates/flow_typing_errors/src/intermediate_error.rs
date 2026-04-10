@@ -5391,6 +5391,16 @@ where
                 ref_(x),
                 text(" is already bound."),
             ]),
+            MessageInterfaceMergePropertyConflict(x) => friendly::Message(vec![
+                text("Duplicate property "),
+                ref_(x),
+                text(" in a merged interface declaration."),
+            ]),
+            MessageInterfaceMergeTparamMismatch(x) => friendly::Message(vec![
+                text("Cannot merge interface "),
+                ref_(x),
+                text(" because type parameter lists differ."),
+            ]),
             MessageCannotDeclareReservedType { reason, keyword } => friendly::Message(vec![
                 text("Cannot declare "),
                 ref_(reason),

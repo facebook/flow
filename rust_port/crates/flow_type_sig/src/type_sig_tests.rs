@@ -18009,6 +18009,901 @@ ESModule {
 }
 
 #[test]
+fn builtin_interface_merge_props() {
+    let input = r#"
+        interface Foo {
+          a: string;
+        }
+        interface Foo {
+          b: number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [2:2-3]
+2. [2:5-11]
+3. [5:2-3]
+4. [5:5-11]
+5. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    Some(
+                        1,
+                    ),
+                    Annot(
+                        String(
+                            2,
+                        ),
+                    ),
+                    Neutral,
+                ),
+                "b": InterfaceField(
+                    Some(
+                        3,
+                    ),
+                    Annot(
+                        Number(
+                            4,
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                5,
+                Ref(
+                    LocalRef {
+                        ref_loc: 5,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_methods_overload() {
+    let input = r#"
+        interface Foo {
+          bar(): string;
+        }
+        interface Foo {
+          bar(): number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [2:2-15]
+2. [2:2-5]
+3. [2:9-15]
+4. [5:2-15]
+5. [5:2-5]
+6. [5:9-15]
+7. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "bar": InterfaceMethod(
+                    [
+                        (
+                            2,
+                            1,
+                            FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    String(
+                                        3,
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        ),
+                        (
+                            5,
+                            4,
+                            FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        6,
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        ),
+                    ],
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 7,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                7,
+                Ref(
+                    LocalRef {
+                        ref_loc: 7,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_extends() {
+    let input = r#"
+        interface Base1 { x: string; }
+        interface Base2 { y: number; }
+        interface Foo extends Base1 {
+          a: string;
+        }
+        interface Foo extends Base2 {
+          b: number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-15]
+1. [1:18-19]
+2. [1:21-27]
+3. [2:10-15]
+4. [2:18-19]
+5. [2:21-27]
+6. [3:10-13]
+7. [3:22-27]
+8. [4:2-3]
+9. [4:5-11]
+10. [6:22-27]
+11. [7:2-3]
+12. [7:5-11]
+13. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Base1",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "x": InterfaceField(
+                    Some(
+                        1,
+                    ),
+                    Annot(
+                        String(
+                            2,
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+1. Interface(
+    DefInterface {
+        id_loc: 3,
+        name: "Base2",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "y": InterfaceField(
+                    Some(
+                        4,
+                    ),
+                    Annot(
+                        Number(
+                            5,
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+2. Interface(
+    DefInterface {
+        id_loc: 6,
+        name: "Foo",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [
+                TyRef(
+                    Unqualified(
+                        LocalRef {
+                            ref_loc: 7,
+                            index: 0,
+                        },
+                    ),
+                ),
+                TyRef(
+                    Unqualified(
+                        LocalRef {
+                            ref_loc: 10,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ],
+            props: {
+                "a": InterfaceField(
+                    Some(
+                        8,
+                    ),
+                    Annot(
+                        String(
+                            9,
+                        ),
+                    ),
+                    Neutral,
+                ),
+                "b": InterfaceField(
+                    Some(
+                        11,
+                    ),
+                    Annot(
+                        Number(
+                            12,
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+3. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 13,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                13,
+                Ref(
+                    LocalRef {
+                        ref_loc: 13,
+                        index: 3,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Base1": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+            "Base2": (
+                3,
+                Ref(
+                    LocalRef {
+                        ref_loc: 3,
+                        index: 1,
+                    },
+                ),
+            ),
+            "Foo": (
+                6,
+                Ref(
+                    LocalRef {
+                        ref_loc: 6,
+                        index: 2,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Base1
+
+Builtin global type Base2
+
+Builtin global type Foo
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_calls() {
+    let input = r#"
+        interface Foo {
+          (): string;
+        }
+        interface Foo {
+          (): number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [2:2-12]
+2. [2:6-12]
+3. [5:2-12]
+4. [5:6-12]
+5. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {},
+            computed_props: [],
+            calls: [
+                Annot(
+                    FunAnnot(
+                        (
+                            1,
+                            FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    String(
+                                        2,
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        ),
+                    ),
+                ),
+                Annot(
+                    FunAnnot(
+                        (
+                            3,
+                            FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    Number(
+                                        4,
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        ),
+                    ),
+                ),
+            ],
+            dict: None,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                5,
+                Ref(
+                    LocalRef {
+                        ref_loc: 5,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_three_way() {
+    let input = r#"
+        interface Foo {
+          a: string;
+        }
+        interface Foo {
+          b: number;
+        }
+        interface Foo {
+          c: boolean;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [2:2-3]
+2. [2:5-11]
+3. [5:2-3]
+4. [5:5-11]
+5. [8:2-3]
+6. [8:5-12]
+7. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    Some(
+                        1,
+                    ),
+                    Annot(
+                        String(
+                            2,
+                        ),
+                    ),
+                    Neutral,
+                ),
+                "b": InterfaceField(
+                    Some(
+                        3,
+                    ),
+                    Annot(
+                        Number(
+                            4,
+                        ),
+                    ),
+                    Neutral,
+                ),
+                "c": InterfaceField(
+                    Some(
+                        5,
+                    ),
+                    Annot(
+                        Boolean(
+                            6,
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 7,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                7,
+                Ref(
+                    LocalRef {
+                        ref_loc: 7,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_prop_conflict() {
+    let input = r#"
+        interface Foo {
+          a: string;
+        }
+        interface Foo {
+          a: number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [2:2-3]
+2. [2:5-11]
+3. [5:2-3]
+4. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Mono,
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    Some(
+                        1,
+                    ),
+                    Annot(
+                        String(
+                            2,
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef {
+                        ref_loc: 4,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+
+Errors:
+BindingValidationError(InterfaceMergePropertyConflict { name: "a", current_binding_loc: 3, existing_binding_loc: 1 })
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_tparam_mismatch() {
+    let input = r#"
+        interface Foo<T> {
+          a: T;
+        }
+        interface Foo<T, U> {
+          b: U;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [1:13-16]
+2. [1:14-15]
+3. [2:2-3]
+4. [2:5-6]
+5. [4:10-13]
+6. [0:0]
+
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Poly(
+            1,
+            [
+                TParam {
+                    name_loc: 2,
+                    name: "T",
+                    polarity: Neutral,
+                    bound: None,
+                    default: None,
+                    is_const: false,
+                },
+            ],
+        ),
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    Some(
+                        3,
+                    ),
+                    Annot(
+                        Bound(
+                            AnnotBound {
+                                ref_loc: 4,
+                                name: "T",
+                            },
+                        ),
+                    ),
+                    Neutral,
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            dict: None,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 6,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                6,
+                Ref(
+                    LocalRef {
+                        ref_loc: 6,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+
+Errors:
+BindingValidationError(InterfaceMergeTparamMismatch { name: "Foo", current_binding_loc: 5, existing_binding_loc: 0 })
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_interface_merge_with_type_alias() {
+    let input = r#"
+        type Foo = string;
+        interface Foo {
+          a: number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:5-8]
+1. [1:11-17]
+2. [2:10-13]
+3. [0:0]
+
+Local defs:
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 0,
+        custom_error_loc_opt: None,
+        name: "Foo",
+        tparams: Mono,
+        body: Annot(
+            String(
+                1,
+            ),
+        ),
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 3,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                3,
+                Ref(
+                    LocalRef {
+                        ref_loc: 3,
+                        index: 1,
+                    },
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
+            ),
+        },
+    },
+)
+
+Builtin global value globalThis
+
+Builtin global type Foo
+
+Errors:
+BindingValidationError(NameOverride { name: "Foo", override_binding_loc: 0, existing_binding_loc: 2 })
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
 fn builtin_toplevel_import() {
     let input = r#"
         declare module foo {

@@ -5862,6 +5862,14 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     invalid_binding_loc,
                     ..
                 } => Some(invalid_binding_loc.dupe()),
+                BindingValidation::InterfaceMergePropertyConflict {
+                    existing_binding_loc,
+                    ..
+                } => Some(existing_binding_loc.dupe()),
+                BindingValidation::InterfaceMergeTparamMismatch {
+                    existing_binding_loc,
+                    ..
+                } => Some(existing_binding_loc.dupe()),
             },
 
             Self::ESignatureVerification(sve) => match sve {
@@ -8233,6 +8241,28 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         );
                         Message::MessageCannotDeclareAlreadyBoundNameInNamespace(x)
                     }
+                    BV::InterfaceMergePropertyConflict {
+                        name,
+                        current_binding_loc,
+                        ..
+                    } => {
+                        let x = VirtualReason::new(
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            current_binding_loc,
+                        );
+                        Message::MessageInterfaceMergePropertyConflict(x)
+                    }
+                    BV::InterfaceMergeTparamMismatch {
+                        name,
+                        current_binding_loc,
+                        ..
+                    } => {
+                        let x = VirtualReason::new(
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            current_binding_loc,
+                        );
+                        Message::MessageInterfaceMergeTparamMismatch(x)
+                    }
                 };
                 Normal(msg)
             }
@@ -9411,6 +9441,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 flow_type_sig::signature_error::BindingValidation::NameOverride { .. },
             ) => Some(LibdefOverride),
             ErrorMessage::ESignatureBindingValidation(
+                flow_type_sig::signature_error::BindingValidation::InterfaceMergePropertyConflict {
+                    ..
+                },
+            )
+            | ErrorMessage::ESignatureBindingValidation(
+                flow_type_sig::signature_error::BindingValidation::InterfaceMergeTparamMismatch {
+                    ..
+                },
+            ) => Some(LibdefOverride),
+            ErrorMessage::ESignatureBindingValidation(
                 flow_type_sig::signature_error::BindingValidation::NamespacedNameAlreadyBound {
                     ..
                 },
@@ -9715,6 +9755,24 @@ where
         } => NamespacedNameAlreadyBound {
             name,
             invalid_binding_loc: f(invalid_binding_loc),
+            existing_binding_loc: f(existing_binding_loc),
+        },
+        InterfaceMergePropertyConflict {
+            name,
+            current_binding_loc,
+            existing_binding_loc,
+        } => InterfaceMergePropertyConflict {
+            name,
+            current_binding_loc: f(current_binding_loc),
+            existing_binding_loc: f(existing_binding_loc),
+        },
+        InterfaceMergeTparamMismatch {
+            name,
+            current_binding_loc,
+            existing_binding_loc,
+        } => InterfaceMergeTparamMismatch {
+            name,
+            current_binding_loc: f(current_binding_loc),
             existing_binding_loc: f(existing_binding_loc),
         },
     }

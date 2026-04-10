@@ -1,0 +1,53 @@
+Error --------------------------------------------------------------------------------- interface_merging_libdefs.js:5:1
+
+Cannot cast `merged_props.a` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   interface_merging_libdefs.js:5:1
+   5| merged_props.a as number; // error: string ~> number
+      ^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:3:6
+   3|   a: string;
+           ^^^^^^ [1]
+   interface_merging_libdefs.js:5:19
+   5| merged_props.a as number; // error: string ~> number
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- interface_merging_libdefs.js:6:1
+
+Cannot cast `merged_props.b` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   interface_merging_libdefs.js:6:1
+   6| merged_props.b as string; // error: number ~> string
+      ^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:6:6
+   6|   b: number;
+           ^^^^^^ [1]
+   interface_merging_libdefs.js:6:19
+   6| merged_props.b as string; // error: number ~> string
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- interface_merging_libdefs.js:26:1
+
+Cannot cast `three_way.first` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   interface_merging_libdefs.js:26:1
+   26| three_way.first as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:38:10
+   38|   first: string;
+                ^^^^^^ [1]
+   interface_merging_libdefs.js:26:20
+   26| three_way.first as number; // error: string ~> number
+                          ^^^^^^ [2]
+
+
+
+Found 3 errors

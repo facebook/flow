@@ -852,6 +852,115 @@ module Scope = struct
   let bind_type scope tbls id_loc name def =
     bind_local ~type_only:true scope tbls name id_loc (TypeBinding { id_loc; def })
 
+  let tparams_arity = function
+    | Mono -> 0
+    | Poly (_, _, rest) -> 1 + List.length rest
+
+  let loc_of_interface_prop = function
+    | InterfaceField (Some loc, _, _) -> loc
+    | InterfaceField (None, _, _) -> failwith "InterfaceField should always have a location"
+    | InterfaceAccess (Get (loc, _) | Set (loc, _) | GetSet (loc, _, _, _)) -> loc
+    | InterfaceMethod ((id_loc, _, _), _) -> id_loc
+
+  let merge_interface_sigs ~existing_id_loc ~current_id_loc tbls old_sig new_sig =
+    let (InterfaceSig old_s) = old_sig in
+    let (InterfaceSig new_s) = new_sig in
+    InterfaceSig
+      {
+        extends = old_s.extends @ new_s.extends;
+        props =
+          SMap.union
+            ~combine:(fun prop_name existing_prop new_prop ->
+              match (existing_prop, new_prop) with
+              | (InterfaceMethod old_sigs, InterfaceMethod new_sigs) ->
+                Some (InterfaceMethod (Nel.append old_sigs new_sigs))
+              | _ ->
+                tbls.additional_errors <-
+                  Signature_error.InterfaceMergePropertyConflict
+                    {
+                      name = prop_name;
+                      current_binding_loc = loc_of_interface_prop new_prop;
+                      existing_binding_loc = loc_of_interface_prop existing_prop;
+                    }
+                  :: tbls.additional_errors;
+                Some existing_prop)
+            old_s.props
+            new_s.props;
+        computed_props = old_s.computed_props @ new_s.computed_props;
+        calls = old_s.calls @ new_s.calls;
+        dict =
+          (match (old_s.dict, new_s.dict) with
+          | (Some existing_dict, Some _) ->
+            tbls.additional_errors <-
+              Signature_error.InterfaceMergePropertyConflict
+                {
+                  name = "[indexer]";
+                  current_binding_loc = current_id_loc;
+                  existing_binding_loc = existing_id_loc;
+                }
+              :: tbls.additional_errors;
+            Some existing_dict
+          | (Some _, None) -> old_s.dict
+          | (None, _) -> new_s.dict);
+      }
+
+  let bind_interface scope tbls id_loc name new_def k =
+    bind ~type_only:true scope tbls name id_loc (fun binding_opt ->
+        match binding_opt with
+        | Some (LocalBinding existing_node) ->
+          (match Local_defs.value existing_node with
+          | TypeBinding { id_loc = existing_id_loc; def = old_def } ->
+            let merged_def =
+              lazy
+                (match (Lazy.force old_def, Lazy.force new_def) with
+                | ( Interface { id_loc; name; tparams = old_tp; def = old_sig },
+                    Interface { id_loc = new_id_loc; tparams = new_tp; def = new_sig; _ }
+                  ) ->
+                  if tparams_arity old_tp = tparams_arity new_tp then
+                    Interface
+                      {
+                        id_loc;
+                        name;
+                        tparams = old_tp;
+                        def =
+                          merge_interface_sigs
+                            ~existing_id_loc:id_loc
+                            ~current_id_loc:new_id_loc
+                            tbls
+                            old_sig
+                            new_sig;
+                      }
+                  else begin
+                    tbls.additional_errors <-
+                      Signature_error.InterfaceMergeTparamMismatch
+                        { name; current_binding_loc = new_id_loc; existing_binding_loc = id_loc }
+                      :: tbls.additional_errors;
+                    Lazy.force old_def
+                  end
+                | _ ->
+                  (* Existing binding is not an interface — emit NameOverride *)
+                  tbls.additional_errors <-
+                    Signature_error.NameOverride
+                      {
+                        name;
+                        override_binding_loc = existing_id_loc;
+                        existing_binding_loc = id_loc;
+                      }
+                    :: tbls.additional_errors;
+                  Lazy.force old_def)
+            in
+            Local_defs.modify existing_node (fun _ ->
+                TypeBinding { id_loc = existing_id_loc; def = merged_def }
+            );
+            (binding_opt, true)
+          | _ -> (binding_opt, false))
+        | None ->
+          let node = push_local_def tbls (TypeBinding { id_loc; def = new_def }) in
+          k name node;
+          (Some (LocalBinding node), true)
+        | _ -> (binding_opt, false)
+    )
+
   let bind_class scope tbls id_loc name def =
     bind_local ~type_only:false scope tbls name id_loc (ClassBinding { id_loc; name; def })
 
@@ -5248,7 +5357,7 @@ let interface_decl opts scope tbls decl =
        )
       )
   in
-  Scope.bind_type scope tbls id_loc name def
+  Scope.bind_interface scope tbls id_loc name def
 
 let enum_decl =
   let module E = Ast.Statement.EnumDeclaration in

@@ -92,7 +92,7 @@ fn pack_builtins<'arena: 'ast, 'ast>(
         >,
     ),
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, Builtins<Loc>) {
-    // mark
+    // mark - forces lazys, which may append to tbls.additional_errors
     let mut marker = mark::Marker::new(&[]);
     for b in global_values.values() {
         mark::mark_binding(opts, &mut scopes, &mut tbls, &mut marker, b);
@@ -106,6 +106,7 @@ fn pack_builtins<'arena: 'ast, 'ast>(
     mark::mark_errors(&mut marker, &tbls.additional_errors);
 
     // compact
+    // Read additional_errors after mark, since lazy forcing may add errors.
     let parse::Tables {
         locs,
         module_refs,

@@ -1,0 +1,30 @@
+Error --------------------------------------------------------------------------------------- flow-typed/declares.js:3:3
+
+Duplicate property `a` [1] in a merged interface declaration. [libdef-override]
+
+   flow-typed/declares.js:3:3
+   3|   a: string; // ERROR
+        ^
+
+References:
+   flow-typed/declares.js:6:3
+   6|   a: number;
+        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/declares.js:10:11
+
+Cannot merge interface `TparamMismatch` [1] because type parameter lists differ. [libdef-override]
+
+   flow-typed/declares.js:10:11
+   10| interface TparamMismatch<T> {
+                 ^^^^^^^^^^^^^^
+
+References:
+   flow-typed/declares.js:13:11
+   13| interface TparamMismatch<T, U> {
+                 ^^^^^^^^^^^^^^ [1]
+
+
+
+Found 2 errors

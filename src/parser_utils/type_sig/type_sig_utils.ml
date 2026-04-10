@@ -44,14 +44,16 @@ let pack_builtins (tbls, (global_values, global_types, global_modules)) =
     remote_refs;
     pattern_defs;
     patterns;
-    additional_errors;
+    additional_errors = _;
   } =
     tbls
   in
-  (* mark *)
+  (* mark — forces lazys, which may append to tbls.additional_errors *)
   SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) global_values;
   SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) global_types;
   SMap.iter (fun _ m -> Mark.mark_builtin_module m) global_modules;
+  (* Read additional_errors AFTER mark, since lazy forcing may add errors *)
+  let additional_errors = tbls.Parse.additional_errors in
   Mark.mark_errors additional_errors;
   (* compact *)
   let locs = Locs.compact locs in

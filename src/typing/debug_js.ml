@@ -1749,6 +1749,22 @@ let dump_error_message =
       spf
         "ESignatureBindingValidation (NamespacedNameAlreadyBound %s)"
         (string_of_aloc invalid_binding_loc)
+    | ESignatureBindingValidation
+        (Signature_error.InterfaceMergePropertyConflict
+          { current_binding_loc; existing_binding_loc; _ }
+          ) ->
+      spf
+        "ESignatureBindingValidation (InterfaceMergePropertyConflict %s %s)"
+        (string_of_aloc current_binding_loc)
+        (string_of_aloc existing_binding_loc)
+    | ESignatureBindingValidation
+        (Signature_error.InterfaceMergeTparamMismatch
+          { current_binding_loc; existing_binding_loc; _ }
+          ) ->
+      spf
+        "ESignatureBindingValidation (InterfaceMergeTparamMismatch %s %s)"
+        (string_of_aloc current_binding_loc)
+        (string_of_aloc existing_binding_loc)
     | ESignatureVerification sve ->
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg

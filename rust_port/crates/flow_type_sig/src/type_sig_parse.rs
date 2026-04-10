@@ -1339,6 +1339,226 @@ pub(super) mod scope {
         );
     }
 
+    fn tparams_arity(tparams: &TParams<LocNode<'_>, Parsed<'_, '_>>) -> usize {
+        match tparams {
+            TParams::Mono => 0,
+            TParams::Poly(_, params) => params.len(),
+        }
+    }
+
+    fn loc_of_interface_prop<'arena, 'ast>(
+        prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+    ) -> LocNode<'arena> {
+        match prop {
+            InterfaceProp::InterfaceField(Some(loc), _, _) => loc.dupe(),
+            InterfaceProp::InterfaceField(None, _, _) => {
+                panic!("InterfaceField should always have a location")
+            }
+            InterfaceProp::InterfaceAccess(Accessor::Get(loc, _))
+            | InterfaceProp::InterfaceAccess(Accessor::Set(loc, _))
+            | InterfaceProp::InterfaceAccess(Accessor::GetSet(loc, _, _, _)) => loc.dupe(),
+            InterfaceProp::InterfaceMethod(ms) => ms.first().0.dupe(),
+        }
+    }
+
+    fn merge_interface_sigs<'arena, 'ast>(
+        existing_id_loc: LocNode<'arena>,
+        current_id_loc: LocNode<'arena>,
+        tbls: &mut Tables<'arena, 'ast>,
+        old_sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        new_sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+    ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+        // props: union, first wins; methods merge overloads, fields conflict
+        let mut props = old_sig.props.clone();
+        for (prop_name, new_prop) in &new_sig.props {
+            use std::collections::btree_map::Entry;
+            match props.entry(prop_name.clone()) {
+                Entry::Occupied(mut e) => {
+                    if let (
+                        InterfaceProp::InterfaceMethod(old_sigs),
+                        InterfaceProp::InterfaceMethod(new_sigs),
+                    ) = (e.get(), new_prop)
+                    {
+                        // merge overloads
+                        let mut merged: Vec<_> = old_sigs.iter().cloned().collect();
+                        merged.extend(new_sigs.iter().cloned());
+                        let merged = Vec1::try_from_vec(merged).unwrap();
+                        *e.get_mut() = InterfaceProp::InterfaceMethod(merged);
+                    } else {
+                        // first wins + error
+                        tbls.additional_errors.push(
+                            signature_error::BindingValidation::InterfaceMergePropertyConflict {
+                                name: prop_name.clone(),
+                                current_binding_loc: loc_of_interface_prop(new_prop),
+                                existing_binding_loc: loc_of_interface_prop(e.get()),
+                            },
+                        );
+                    }
+                }
+                Entry::Vacant(e) => {
+                    e.insert(new_prop.clone());
+                }
+            }
+        }
+
+        // extends: concatenate
+        let mut extends = old_sig.extends.clone();
+        extends.extend(new_sig.extends.iter().cloned());
+
+        // computed_props: concatenate
+        let mut computed_props = old_sig.computed_props.clone();
+        computed_props.extend(new_sig.computed_props.iter().cloned());
+
+        // calls: concatenate
+        let mut calls = old_sig.calls.clone();
+        calls.extend(new_sig.calls.iter().cloned());
+
+        // dict: first wins if both exist, error
+        let dict = match (&old_sig.dict, &new_sig.dict) {
+            (Some(_), Some(_)) => {
+                tbls.additional_errors.push(
+                    signature_error::BindingValidation::InterfaceMergePropertyConflict {
+                        name: FlowSmolStr::new_inline("[indexer]"),
+                        current_binding_loc: current_id_loc,
+                        existing_binding_loc: existing_id_loc,
+                    },
+                );
+                old_sig.dict.clone()
+            }
+            (Some(_), None) => old_sig.dict.clone(),
+            (None, _) => new_sig.dict.clone(),
+        };
+
+        InterfaceSig {
+            extends,
+            props,
+            computed_props,
+            calls,
+            dict,
+        }
+    }
+
+    pub(super) fn bind_interface<'arena: 'ast, 'ast>(
+        id: ScopeId,
+        scopes: &mut Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        id_loc: LocNode<'arena>,
+        name: FlowSmolStr,
+        new_def: Lazy<'arena, 'ast, ParsedDef<'arena, 'ast>>,
+        k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
+    ) {
+        bind(
+            true,
+            id,
+            scopes,
+            tbls,
+            &name,
+            id_loc.dupe(),
+            |scopes, tbls, binding_opt| match binding_opt {
+                Some(BindingNode::LocalBinding(existing_node)) => {
+                    // Check if existing is a TypeBinding; if so, create merged lazy
+                    let existing_is_type_binding =
+                        matches!(&*existing_node.0.data(), LocalBinding::TypeBinding { .. });
+                    if existing_is_type_binding {
+                        let existing_id_loc = {
+                            let data = existing_node.0.data();
+                            match &*data {
+                                LocalBinding::TypeBinding { id_loc, .. } => id_loc.dupe(),
+                                _ => unreachable!(),
+                            }
+                        };
+                        // Take old def out, replace with merged lazy
+                        let old_def = {
+                            let mut data = existing_node.0.data_mut();
+                            let old = std::mem::replace(
+                                &mut *data,
+                                LocalBinding::TypeBinding {
+                                    id_loc: existing_id_loc.dupe(),
+                                    def: Lazy::new(Box::new(|_, _, _| unreachable!("placeholder"))),
+                                },
+                            );
+                            match old {
+                                LocalBinding::TypeBinding { def, .. } => def,
+                                _ => unreachable!(),
+                            }
+                        };
+
+                        let merge_existing_id_loc = existing_id_loc.dupe();
+                        let merge_id_loc = id_loc.dupe();
+                        let merge_name = name.dupe();
+                        let merged_def = Lazy::new(Box::new(
+                            move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
+                                let old_val = old_def.get_forced(opts, scopes, tbls);
+                                let new_val = new_def.get_forced(opts, scopes, tbls);
+                                match (old_val, new_val) {
+                                    (Def::Interface(old_iface), Def::Interface(new_iface)) => {
+                                        if tparams_arity(&old_iface.tparams)
+                                            == tparams_arity(&new_iface.tparams)
+                                        {
+                                            let merged_sig = merge_interface_sigs(
+                                                old_iface.id_loc.dupe(),
+                                                new_iface.id_loc.dupe(),
+                                                tbls,
+                                                &old_iface.def,
+                                                &new_iface.def,
+                                            );
+                                            Def::Interface(Box::new(DefInterface {
+                                                id_loc: old_iface.id_loc.dupe(),
+                                                name: old_iface.name.dupe(),
+                                                tparams: old_iface.tparams.clone(),
+                                                def: merged_sig,
+                                            }))
+                                        } else {
+                                            tbls.additional_errors.push(
+                                                signature_error::BindingValidation::InterfaceMergeTparamMismatch {
+                                                    name: merge_name,
+                                                    current_binding_loc: new_iface.id_loc.dupe(),
+                                                    existing_binding_loc: old_iface.id_loc.dupe(),
+                                                },
+                                            );
+                                            old_val.clone()
+                                        }
+                                    }
+                                    _ => {
+                                        // Existing binding is not an interface — emit NameOverride
+                                        tbls.additional_errors.push(
+                                            signature_error::BindingValidation::NameOverride {
+                                                name: merge_name,
+                                                override_binding_loc: merge_existing_id_loc,
+                                                existing_binding_loc: merge_id_loc,
+                                            },
+                                        );
+                                        old_val.clone()
+                                    }
+                                }
+                            },
+                        ));
+
+                        {
+                            let mut data = existing_node.0.data_mut();
+                            *data = LocalBinding::TypeBinding {
+                                id_loc: existing_id_loc,
+                                def: merged_def,
+                            };
+                        }
+                        (BindingNode::LocalBinding(existing_node), true)
+                    } else {
+                        (BindingNode::LocalBinding(existing_node), false)
+                    }
+                }
+                None => {
+                    let node = tbls.push_local_def(LocalBinding::TypeBinding {
+                        id_loc,
+                        def: new_def,
+                    });
+                    k(scopes, &name, node.dupe());
+                    (BindingNode::LocalBinding(node), true)
+                }
+                Some(b) => (b, false),
+            },
+        );
+    }
+
     pub(super) fn bind_class<'arena, 'ast>(
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
@@ -9439,7 +9659,7 @@ fn interface_decl<'arena: 'ast, 'ast>(
         })
     }));
 
-    scope::bind_type(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+    scope::bind_interface(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
 fn enum_decl<'arena: 'ast, 'ast>(

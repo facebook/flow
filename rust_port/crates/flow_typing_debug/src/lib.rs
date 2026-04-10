@@ -3129,6 +3129,28 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     string_of_aloc(None, invalid_binding_loc)
                 )
             }
+            BindingValidation::InterfaceMergePropertyConflict {
+                current_binding_loc,
+                existing_binding_loc,
+                ..
+            } => {
+                format!(
+                    "ESignatureBindingValidation (InterfaceMergePropertyConflict {} {})",
+                    string_of_aloc(None, current_binding_loc),
+                    string_of_aloc(None, existing_binding_loc)
+                )
+            }
+            BindingValidation::InterfaceMergeTparamMismatch {
+                current_binding_loc,
+                existing_binding_loc,
+                ..
+            } => {
+                format!(
+                    "ESignatureBindingValidation (InterfaceMergeTparamMismatch {} {})",
+                    string_of_aloc(None, current_binding_loc),
+                    string_of_aloc(None, existing_binding_loc)
+                )
+            }
         },
         ErrorMessage::ESignatureVerification(sve) => {
             let msg = string_of_signature_error(|loc: &ALoc| string_of_aloc(None, loc), sve);

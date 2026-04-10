@@ -591,6 +591,8 @@ type 'loc message =
   | MessageAnyValueUsedAsType of 'loc virtual_reason_desc
   | MessageBadLibdefModuleOverride of 'loc virtual_reason
   | MessageBadLibdefNameOverride of 'loc virtual_reason
+  | MessageInterfaceMergePropertyConflict of 'loc virtual_reason
+  | MessageInterfaceMergeTparamMismatch of 'loc virtual_reason
   | MessageCannotAccessEnumMember of {
       member_name: name option;
       suggestion: string option;

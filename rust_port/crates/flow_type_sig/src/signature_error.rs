@@ -152,6 +152,28 @@ impl<Loc: fmt::Display> fmt::Display for BindingValidation<Loc> {
                     name, invalid_binding_loc, existing_binding_loc
                 )
             }
+            BindingValidation::InterfaceMergePropertyConflict {
+                name,
+                current_binding_loc,
+                existing_binding_loc,
+            } => {
+                write!(
+                    f,
+                    "InterfaceMergePropertyConflict (name: {}, current_binding_loc: {}, existing_binding_loc: {})",
+                    name, current_binding_loc, existing_binding_loc
+                )
+            }
+            BindingValidation::InterfaceMergeTparamMismatch {
+                name,
+                current_binding_loc,
+                existing_binding_loc,
+            } => {
+                write!(
+                    f,
+                    "InterfaceMergeTparamMismatch (name: {}, current_binding_loc: {}, existing_binding_loc: {})",
+                    name, current_binding_loc, existing_binding_loc
+                )
+            }
         }
     }
 }
@@ -183,6 +205,16 @@ pub enum BindingValidation<Loc> {
         invalid_binding_loc: Loc,
         existing_binding_loc: Loc,
     },
+    InterfaceMergePropertyConflict {
+        name: FlowSmolStr,
+        current_binding_loc: Loc,
+        existing_binding_loc: Loc,
+    },
+    InterfaceMergeTparamMismatch {
+        name: FlowSmolStr,
+        current_binding_loc: Loc,
+        existing_binding_loc: Loc,
+    },
 }
 
 impl<Loc> BindingValidation<Loc> {
@@ -210,6 +242,22 @@ impl<Loc> BindingValidation<Loc> {
                 ..
             } => {
                 f_loc(invalid_binding_loc);
+                f_loc(existing_binding_loc);
+            }
+            Self::InterfaceMergePropertyConflict {
+                current_binding_loc,
+                existing_binding_loc,
+                ..
+            } => {
+                f_loc(current_binding_loc);
+                f_loc(existing_binding_loc);
+            }
+            Self::InterfaceMergeTparamMismatch {
+                current_binding_loc,
+                existing_binding_loc,
+                ..
+            } => {
+                f_loc(current_binding_loc);
                 f_loc(existing_binding_loc);
             }
         }
@@ -246,6 +294,24 @@ impl<Loc> BindingValidation<Loc> {
             } => BindingValidation::NamespacedNameAlreadyBound {
                 name: name.dupe(),
                 invalid_binding_loc: f(cx, invalid_binding_loc),
+                existing_binding_loc: f(cx, existing_binding_loc),
+            },
+            Self::InterfaceMergePropertyConflict {
+                name,
+                current_binding_loc,
+                existing_binding_loc,
+            } => BindingValidation::InterfaceMergePropertyConflict {
+                name: name.dupe(),
+                current_binding_loc: f(cx, current_binding_loc),
+                existing_binding_loc: f(cx, existing_binding_loc),
+            },
+            Self::InterfaceMergeTparamMismatch {
+                name,
+                current_binding_loc,
+                existing_binding_loc,
+            } => BindingValidation::InterfaceMergeTparamMismatch {
+                name: name.dupe(),
+                current_binding_loc: f(cx, current_binding_loc),
                 existing_binding_loc: f(cx, existing_binding_loc),
             },
         }

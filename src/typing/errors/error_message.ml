@@ -2605,7 +2605,9 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       (match e with
       | ModuleOverride { override_binding_loc; _ } -> Some override_binding_loc
       | NameOverride { override_binding_loc; _ } -> Some override_binding_loc
-      | NamespacedNameAlreadyBound { invalid_binding_loc; _ } -> Some invalid_binding_loc)
+      | NamespacedNameAlreadyBound { invalid_binding_loc; _ } -> Some invalid_binding_loc
+      | InterfaceMergePropertyConflict { existing_binding_loc; _ } -> Some existing_binding_loc
+      | InterfaceMergeTparamMismatch { existing_binding_loc; _ } -> Some existing_binding_loc)
     )
   | ESignatureVerification sve ->
     Signature_error.(
@@ -3386,6 +3388,14 @@ let friendly_message_of_msg = function
       (Signature_error.NamespacedNameAlreadyBound { name; existing_binding_loc; _ }) ->
     let x = mk_reason (RIdentifier (OrdinaryName name)) existing_binding_loc in
     Normal (MessageCannotDeclareAlreadyBoundNameInNamespace x)
+  | ESignatureBindingValidation
+      (Signature_error.InterfaceMergePropertyConflict { name; current_binding_loc; _ }) ->
+    let x = mk_reason (RIdentifier (OrdinaryName name)) current_binding_loc in
+    Normal (MessageInterfaceMergePropertyConflict x)
+  | ESignatureBindingValidation
+      (Signature_error.InterfaceMergeTparamMismatch { name; current_binding_loc; _ }) ->
+    let x = mk_reason (RIdentifier (OrdinaryName name)) current_binding_loc in
+    Normal (MessageInterfaceMergeTparamMismatch x)
   | ESignatureVerification sve -> Normal (MessageCannotBuildTypedInterface sve)
   | EUnreachable _ -> Normal MessageUnreachableCode
   | EInvalidObjectKit { reason; reason_op = _; use_op } ->
@@ -4197,6 +4207,10 @@ let error_code_of_message err : error_code option =
   | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite
   | ESignatureBindingValidation (Signature_error.ModuleOverride _ | Signature_error.NameOverride _)
     ->
+    Some LibdefOverride
+  | ESignatureBindingValidation
+      ( Signature_error.InterfaceMergePropertyConflict _
+      | Signature_error.InterfaceMergeTparamMismatch _ ) ->
     Some LibdefOverride
   | ESignatureBindingValidation (Signature_error.NamespacedNameAlreadyBound _) ->
     Some SignatureVerificationFailure

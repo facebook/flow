@@ -5434,6 +5434,308 @@ let%expect_test "builtin_module_import_typeof" =
                   stars = []; strict = true;
                   platform_availability_set = None}} |}]
 
+let%expect_test "builtin_interface_merge_props" =
+  print_builtins [{|
+    interface Foo {
+      a: string;
+    }
+    interface Foo {
+      b: number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-13];
+         name = "Foo"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral));
+             "b" -> (InterfaceField ((Some [5:2-3]), (Annot (Number [5:5-11])), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo |}]
+
+let%expect_test "builtin_interface_merge_methods_overload" =
+  print_builtins [{|
+    interface Foo {
+      bar(): string;
+    }
+    interface Foo {
+      bar(): number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-13];
+         name = "Foo"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "bar" ->
+             (InterfaceMethod
+                (([2:2-5], [2:2-15],
+                  FunSig {tparams = Mono;
+                    params = []; rest_param = None;
+                    this_param = None;
+                    return = (Annot (String [2:9-15]));
+                    type_guard = None;
+                    effect_ = ArbitraryEffect}),
+                 [([5:2-5], [5:2-15],
+                   FunSig {tparams = Mono;
+                     params = []; rest_param = None;
+                     this_param = None;
+                     return = (Annot (Number [5:9-15]));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect})
+                   ])) };
+           computed_props = []; calls = [];
+           dict = None}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo |}]
+
+let%expect_test "builtin_interface_merge_extends" =
+  print_builtins [{|
+    interface Base1 { x: string; }
+    interface Base2 { y: number; }
+    interface Foo extends Base1 {
+      a: string;
+    }
+    interface Foo extends Base2 {
+      b: number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-15];
+         name = "Base1"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "x" ->
+             (InterfaceField ((Some [1:18-19]), (Annot (String [1:21-27])), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    1. Interface {id_loc = [2:10-15];
+         name = "Base2"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "y" ->
+             (InterfaceField ((Some [2:18-19]), (Annot (Number [2:21-27])), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    2. Interface {id_loc = [3:10-13];
+         name = "Foo"; tparams = Mono;
+         def =
+         InterfaceSig {
+           extends =
+           [(TyRef (Unqualified LocalRef {ref_loc = [3:22-27]; index = 0}));
+             (TyRef (Unqualified LocalRef {ref_loc = [6:22-27]; index = 1}))];
+           props =
+           { "a" -> (InterfaceField ((Some [4:2-3]), (Annot (String [4:5-11])), Polarity.Neutral));
+             "b" -> (InterfaceField ((Some [7:2-3]), (Annot (Number [7:5-11])), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    3. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 3})) };
+         types =
+         { "Base1" -> ([1:10-15], (Ref LocalRef {ref_loc = [1:10-15]; index = 0}));
+           "Base2" -> ([2:10-15], (Ref LocalRef {ref_loc = [2:10-15]; index = 1}));
+           "Foo" -> ([3:10-13], (Ref LocalRef {ref_loc = [3:10-13]; index = 2})) }}
+
+    Builtin global value globalThis
+    Builtin global type Base1
+    Builtin global type Base2
+    Builtin global type Foo |}]
+
+let%expect_test "builtin_interface_merge_calls" =
+  print_builtins [{|
+    interface Foo {
+      (): string;
+    }
+    interface Foo {
+      (): number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-13];
+         name = "Foo"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props = {}; computed_props = [];
+           calls =
+           [(Annot
+               (FunAnnot ([2:2-12],
+                  FunSig {tparams = Mono;
+                    params = []; rest_param = None;
+                    this_param = None;
+                    return = (Annot (String [2:6-12]));
+                    type_guard = None;
+                    effect_ = ArbitraryEffect}
+                  )));
+             (Annot
+                (FunAnnot ([5:2-12],
+                   FunSig {tparams = Mono;
+                     params = []; rest_param = None;
+                     this_param = None;
+                     return = (Annot (Number [5:6-12]));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   )))
+             ];
+           dict = None}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo |}]
+
+let%expect_test "builtin_interface_merge_three_way" =
+  print_builtins [{|
+    interface Foo {
+      a: string;
+    }
+    interface Foo {
+      b: number;
+    }
+    interface Foo {
+      c: boolean;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-13];
+         name = "Foo"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral));
+             "b" -> (InterfaceField ((Some [5:2-3]), (Annot (Number [5:5-11])), Polarity.Neutral));
+             "c" -> (InterfaceField ((Some [8:2-3]), (Annot (Boolean [8:5-12])), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo |}]
+
+let%expect_test "builtin_interface_merge_prop_conflict" =
+  print_builtins [{|
+    interface Foo {
+      a: string;
+    }
+    interface Foo {
+      a: number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-13];
+         name = "Foo"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo
+    Errors:
+    (BindingValidationError
+       Signature_error.InterfaceMergePropertyConflict {
+         name = "a"; current_binding_loc = [5:2-3];
+         existing_binding_loc = [2:2-3]}) |}]
+
+let%expect_test "builtin_interface_merge_tparam_mismatch" =
+  print_builtins [{|
+    interface Foo<T> {
+      a: T;
+    }
+    interface Foo<T, U> {
+      b: U;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Interface {id_loc = [1:10-13];
+         name = "Foo";
+         tparams =
+         (Poly ([1:13-16],
+            TParam {name_loc = [1:14-15];
+              name = "T"; polarity = Polarity.Neutral;
+              bound = None; default = None;
+              is_const = false},
+            []));
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "a" ->
+             (InterfaceField ((Some [2:2-3]), (
+                Annot Bound {ref_loc = [2:5-6]; name = "T"}), Polarity.Neutral)) };
+           computed_props = []; calls = [];
+           dict = None}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo
+    Errors:
+    (BindingValidationError
+       Signature_error.InterfaceMergeTparamMismatch {
+         name = "Foo"; current_binding_loc = [4:10-13];
+         existing_binding_loc = [1:10-13]}) |}]
+
+let%expect_test "builtin_interface_merge_with_type_alias" =
+  print_builtins [{|
+    type Foo = string;
+    interface Foo {
+      a: number;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-8]; custom_error_loc_opt = None;
+         name = "Foo"; tparams = Mono;
+         body = (Annot (String [1:11-17]))}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = { "Foo" -> ([1:5-8], (Ref LocalRef {ref_loc = [1:5-8]; index = 0})) }}
+
+    Builtin global value globalThis
+    Builtin global type Foo
+    Errors:
+    (BindingValidationError
+       Signature_error.NameOverride {
+         name = "Foo"; override_binding_loc = [1:5-8];
+         existing_binding_loc = [2:10-13]}) |}]
+
 let%expect_test "builtin_toplevel_import" =
   (* this should be a parse error, but in the meantime, make sure we don't fatal.
      the `import` gets ignored and the `x` becomes a BuiltinRef. *)

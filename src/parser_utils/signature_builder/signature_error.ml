@@ -31,6 +31,16 @@ type 'loc binding_validation_t =
       invalid_binding_loc: 'loc;
       existing_binding_loc: 'loc;
     }
+  | InterfaceMergePropertyConflict of {
+      name: string;
+      current_binding_loc: 'loc;
+      existing_binding_loc: 'loc;
+    }
+  | InterfaceMergeTparamMismatch of {
+      name: string;
+      current_binding_loc: 'loc;
+      existing_binding_loc: 'loc;
+    }
 [@@deriving show, iter, map]
 
 let compare = Stdlib.compare

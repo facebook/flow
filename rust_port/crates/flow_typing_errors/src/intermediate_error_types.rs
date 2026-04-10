@@ -1560,6 +1560,8 @@ pub enum Message<L: Dupe> {
     MessageAnyValueUsedAsType(VirtualReasonDesc<L>),
     MessageBadLibdefModuleOverride(VirtualReason<L>),
     MessageBadLibdefNameOverride(VirtualReason<L>),
+    MessageInterfaceMergePropertyConflict(VirtualReason<L>),
+    MessageInterfaceMergeTparamMismatch(VirtualReason<L>),
 
     MessageCannotAccessEnumMember(Box<MessageCannotAccessEnumMemberData<L>>),
 

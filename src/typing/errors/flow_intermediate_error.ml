@@ -2605,6 +2605,10 @@ let to_printable_error :
         ref x;
         text " is already bound.";
       ]
+    | MessageInterfaceMergePropertyConflict x ->
+      [text "Duplicate property "; ref x; text " in a merged interface declaration."]
+    | MessageInterfaceMergeTparamMismatch x ->
+      [text "Cannot merge interface "; ref x; text " because type parameter lists differ."]
     | MessageCannotDeclareReservedType { reason; keyword } ->
       [
         text "Cannot declare ";
