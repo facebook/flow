@@ -1,10 +1,10 @@
-Error ----------------------------------------------------------------------------------------------------- lib.js:26:21
+Error ----------------------------------------------------------------------------------------------------- lib.js:29:21
 
 This name declaration overrides an existing binding `React.CreateElement` [1]. Overriding in library definitions can
 lead to surprising behaviors. [libdef-override]
 
-   lib.js:26:21
-    26| declare opaque type React$CreateElement: // intentional-libdef-override
+   lib.js:29:21
+    29| declare opaque type React$CreateElement: (< // intentional-libdef-override
                             ^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -34,14 +34,18 @@ References:
    <BUILTINS>/react.js:44:5
    44|   | component(...empty);
            ^^^^^^^^^^^^^^^^^^^ [3]
-   lib.js:32:6
-            v
-   32|   & (<
-   33|     Comp: React$ElementType,
-   34|     Props: {...},
-   35|     Children: $ReadOnlyArray<mixed> = [],
-   36|   >(component: Comp, props: Props, ...children: Children) => CheckedReactElement<Comp, Props, Children>
-         ----------------------------------------------------------------------------------------------------^ [4]
+   lib.js:37:4
+          v
+   37|   (<
+   38|     Comp: React$ElementType,
+   39|     Props: {...},
+   40|     Children: ReadonlyArray<unknown> = [],
+   41|   >(
+   42|     component: Comp,
+   43|     props: Props,
+   44|     ...children: Children
+   45|   ) => CheckedReactElement<Comp, Props, Children>);
+         ----------------------------------------------^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:7
@@ -80,9 +84,9 @@ References:
    test.js:9:25
     9| React.createElement(42, {}); // Error: Number is not a valid component type.
                                ^^ [1]
-   lib.js:30:30
-   30|   >(component: Comp, props?: null | void, ...children: Children) => CheckedReactElement<Comp, {||}, Children>
-                                    ^^^^^^^^^^^ [2]
+   lib.js:34:11
+   34|   props?: null | void,
+                 ^^^^^^^^^^^ [2]
    test.js:9:21
     9| React.createElement(42, {}); // Error: Number is not a valid component type.
                            ^^ [3]
@@ -105,9 +109,9 @@ References:
    test.js:10:25
    10| React.createElement({}, {}); // Error: Object is not a valid component type.
                                ^^ [1]
-   lib.js:30:30
-   30|   >(component: Comp, props?: null | void, ...children: Children) => CheckedReactElement<Comp, {||}, Children>
-                                    ^^^^^^^^^^^ [2]
+   lib.js:34:11
+   34|   props?: null | void,
+                 ^^^^^^^^^^^ [2]
    test.js:10:21
    10| React.createElement({}, {}); // Error: Object is not a valid component type.
                            ^^ [3]
@@ -116,1431 +120,1535 @@ References:
            ^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:18:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:18:7
-   18| React.createElement(A, {
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:20:8
-   20|   bar: 'Hello, world!', // Error: `bar` is a string.
-              ^^^^^^^^^^^^^^^ [1]
-   test.js:13:52
-   13| class A extends React.Component<{foo: number, bar: number}> {}
-                                                          ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:22:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
    test.js:22:7
-   22| React.createElement(B, {
+   22| React.createElement(A, {
              ^^^^^^^^^^^^^
 
 References:
    test.js:24:8
    24|   bar: 'Hello, world!', // Error: `bar` is a string.
               ^^^^^^^^^^^^^^^ [1]
-   test.js:14:38
-   14| function B(props: {foo: number, bar: number}) { return null }
-                                            ^^^^^^ [2]
+   test.js:15:52
+   15| class A extends React.Component<{foo: number, bar: number}> {}
+                                                          ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `bar` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:26:7
-   26| React.createElement(A, {foo: 42}); // Error: `bar` is missing.
+   26| React.createElement(B, {
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:27:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `bar` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:27:7
-   27| React.createElement(B, {foo: 42}); // Error: `bar` is missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:28:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
-object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:28:7
-   28| React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:29:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
-object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:29:7
-   29| React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:28:8
+   28|   bar: 'Hello, world!', // Error: `bar` is a string.
+              ^^^^^^^^^^^^^^^ [1]
+   test.js:16:38
+   16| function B(props: {foo: number, bar: number}) {
+                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:30:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
-object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `bar` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:30:7
-   30| React.createElement(A, null); // Error: `foo` and `bar` are missing.
+   30| React.createElement(A, {foo: 42}); // Error: `bar` is missing.
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
-object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `bar` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:31:7
-   31| React.createElement(B, null); // Error: `foo` and `bar` are missing.
+   31| React.createElement(B, {foo: 42}); // Error: `bar` is missing.
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:34:8
+Error ----------------------------------------------------------------------------------------------------- test.js:32:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
+object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:32:7
+   32| React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
+             ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                          ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
+object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:33:7
+   33| React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
+             ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                          ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:34:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
+object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:34:7
+   34| React.createElement(A, null); // Error: `foo` and `bar` are missing.
+             ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                          ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
+object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:35:7
+   35| React.createElement(B, null); // Error: `foo` and `bar` are missing.
+             ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                          ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:8
 
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
  - Or cannot instantiate `ExactReactElement_DEPRECATED` because property `ref` is extra in props of class `A` [3] but
    missing in object type [4]. Exact objects do not accept extra props.
 
-   test.js:34:8
-   34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
+   test.js:42:8
+   42| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
               ^^^^^^^^^^^^^
 
 References:
-   test.js:34:25
-   34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
+   test.js:42:25
+   42| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
                                ^^^^^^^^^^^^^^^^ [1]
-   lib.js:30:30
-   30|   >(component: Comp, props?: null | void, ...children: Children) => CheckedReactElement<Comp, {||}, Children>
-                                    ^^^^^^^^^^^ [2]
-   test.js:13:7
-   13| class A extends React.Component<{foo: number, bar: number}> {}
+   lib.js:34:11
+   34|   props?: null | void,
+                 ^^^^^^^^^^^ [2]
+   test.js:15:7
+   15| class A extends React.Component<{foo: number, bar: number}> {}
              ^ [3]
-   test.js:34:83
-   34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
-                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test.js:44:3
+   44|   {foo: boolean, bar: number},
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:8
+Error ----------------------------------------------------------------------------------------------------- test.js:46:8
 
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
  - Or cannot instantiate `ExactReactElement_DEPRECATED` because in property `foo`: number [3] is incompatible with
    boolean [4].
 
-   test.js:35:8
-   35| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
+   test.js:46:8
+   46| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
               ^^^^^^^^^^^^^
 
 References:
-   test.js:35:25
-   35| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
+   test.js:46:25
+   46| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
                                ^^^^^^^^^^^^^^^^ [1]
-   lib.js:30:30
-   30|   >(component: Comp, props?: null | void, ...children: Children) => CheckedReactElement<Comp, {||}, Children>
-                                    ^^^^^^^^^^^ [2]
-   test.js:14:25
-   14| function B(props: {foo: number, bar: number}) { return null }
+   lib.js:34:11
+   34|   props?: null | void,
+                 ^^^^^^^^^^^ [2]
+   test.js:16:25
+   16| function B(props: {foo: number, bar: number}) {
                                ^^^^^^ [3]
-   test.js:35:89
-   35| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
-                                                                                               ^^^^^^^ [4]
+   test.js:48:9
+   48|   {foo: boolean, bar: number},
+               ^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:36:42
-
-Cannot get `React.createElement(...).nope` because property `nope` is missing in `ExactReactElement_DEPRECATED` [1].
-[prop-missing]
-
-   test.js:36:42
-   36| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
-                                                ^^^^
-
-References:
-   lib.js:36:62
-   36|   >(component: Comp, props: Props, ...children: Children) => CheckedReactElement<Comp, Props, Children>
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:37:42
+Error ---------------------------------------------------------------------------------------------------- test.js:50:42
 
 Cannot get `React.createElement(...).nope` because property `nope` is missing in `ExactReactElement_DEPRECATED` [1].
 [prop-missing]
 
-   test.js:37:42
-   37| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+   test.js:50:42
+   50| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
                                                 ^^^^
 
 References:
-   lib.js:36:62
-   36|   >(component: Comp, props: Props, ...children: Children) => CheckedReactElement<Comp, Props, Children>
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   lib.js:45:8
+   45|   ) => CheckedReactElement<Comp, Props, Children>);
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:38:7
+Error ---------------------------------------------------------------------------------------------------- test.js:51:42
+
+Cannot get `React.createElement(...).nope` because property `nope` is missing in `ExactReactElement_DEPRECATED` [1].
+[prop-missing]
+
+   test.js:51:42
+   51| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
+                                                ^^^^
+
+References:
+   lib.js:45:8
+   45|   ) => CheckedReactElement<Comp, Props, Children>);
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
 object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
 
-   test.js:38:7
-   38| React.createElement(A); // Error: Missing `foo` and `bar`.
+   test.js:52:7
+   52| React.createElement(A); // Error: Missing `foo` and `bar`.
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:39:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
-object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:39:7
-   39| React.createElement(B); // Error: Missing `foo` and `bar`.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:49:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:49:7
-   49| React.createElement(C, {
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:51:8
-   51|   bar: 'Hello, world!', // Error: `bar` is a string.
-              ^^^^^^^^^^^^^^^ [1]
-   test.js:41:52
-   41| class C extends React.Component<{foo: number, bar: number}> {
-                                                          ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: properties `bar` and `foo` are missing in
+object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:53:7
-   53| React.createElement(D, {
+   53| React.createElement(B); // Error: Missing `foo` and `bar`.
              ^^^^^^^^^^^^^
 
 References:
-   test.js:55:8
-   55|   bar: 'Hello, world!', // Error: `bar` is a string.
-              ^^^^^^^^^^^^^^^ [1]
-   test.js:45:39
-   45| function D(props: {foo: number, bar?: number}) { return null }
-                                             ^^^^^^ [2]
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:65:7
-   65| React.createElement(E, {}); // Error
+   65| React.createElement(C, {
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:67:8
+   67|   bar: 'Hello, world!', // Error: `bar` is a string.
+              ^^^^^^^^^^^^^^^ [1]
+   test.js:55:52
+   55| class C extends React.Component<{foo: number, bar: number}> {
+                                                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:66:7
+Error ----------------------------------------------------------------------------------------------------- test.js:69:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:66:7
-   66| React.createElement(E, undefined); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:67:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:67:7
-   67| React.createElement(E, null); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:71:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:71:7
-   71| React.createElement(E, {}, 1, 2); // Error
+   test.js:69:7
+   69| React.createElement(D, {
              ^^^^^^^^^^^^^
 
 References:
-   test.js:71:1
-   71| React.createElement(E, {}, 1, 2); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
+   test.js:71:8
+   71|   bar: 'Hello, world!', // Error: `bar` is a string.
+              ^^^^^^^^^^^^^^^ [1]
+   test.js:59:39
+   59| function D(props: {foo: number, bar?: number}) {
+                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:72:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:72:7
-   72| React.createElement(E, undefined, 1, 2); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:72:1
-   72| React.createElement(E, undefined, 1, 2); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:73:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:73:7
-   73| React.createElement(E, null, 1, 2); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:73:1
-   73| React.createElement(E, null, 1, 2); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:74:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:74:7
-   74| React.createElement(E, {}, 1, 2, 3); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:74:1
-   74| React.createElement(E, {}, 1, 2, 3); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:75:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: array literal [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:75:7
-   75| React.createElement(E, {}, [1, 2]); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:75:28
-   75| React.createElement(E, {}, [1, 2]); // Error
-                                  ^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:76:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:76:7
-   76| React.createElement(E, {}, [1, 2], [3, 4]); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:76:1
-   76| React.createElement(E, {}, [1, 2], [3, 4]); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:77:7
+Error ----------------------------------------------------------------------------------------------------- test.js:84:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
 literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
-   test.js:77:7
-   77| React.createElement(E, {}, ...[]); // Error
+   test.js:84:7
+   84| React.createElement(E, {}); // Error
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:79:7
+Error ----------------------------------------------------------------------------------------------------- test.js:85:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
-   test.js:79:7
-   79| React.createElement(E, {}, ...[1, 2]); // Error
+   test.js:85:7
+   85| React.createElement(E, undefined); // Error
              ^^^^^^^^^^^^^
 
 References:
-   test.js:79:1
-   79| React.createElement(E, {}, ...[1, 2]); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:80:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:80:7
-   80| React.createElement(E, {}, ...(any: Array<number>)); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:80:1
-   80| React.createElement(E, {}, ...(any: Array<number>)); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:82:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:82:7
-   82| React.createElement(E, {}, 1, ...[2]); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:82:1
-   82| React.createElement(E, {}, 1, ...[2]); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:83:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:83:7
-   83| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:83:1
-   83| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:64:44
-   64| class E extends React.Component<{children: number}> {}
-                                                  ^^^^^^ [2]
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:86:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:86:7
-   86| React.createElement(F, {}); // Error
+   86| React.createElement(E, null); // Error
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:87:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:87:7
-   87| React.createElement(F, undefined); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:88:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:88:7
-   88| React.createElement(F, null); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:89:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
-
-   test.js:89:7
-   89| React.createElement(F, {}, 1); // Error
-             ^^^^^^^^^^^^^
-
-References:
-   test.js:89:28
-   89| React.createElement(F, {}, 1); // Error
-                                  ^ [1]
-   test.js:85:44
-   85| class F extends React.Component<{children: Array<number>}> {}
-                                                  ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:90:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:90:7
-   90| React.createElement(F, undefined, 1); // Error
+   90| React.createElement(E, {}, 1, 2); // Error
              ^^^^^^^^^^^^^
 
 References:
-   test.js:90:35
-   90| React.createElement(F, undefined, 1); // Error
-                                         ^ [1]
-   test.js:85:44
-   85| class F extends React.Component<{children: Array<number>}> {}
-                                                  ^^^^^^^^^^^^^ [2]
+   test.js:90:1
+   90| React.createElement(E, {}, 1, 2); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:91:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:91:7
-   91| React.createElement(F, null, 1); // Error
+   91| React.createElement(E, undefined, 1, 2); // Error
              ^^^^^^^^^^^^^
 
 References:
-   test.js:91:30
-   91| React.createElement(F, null, 1); // Error
-                                    ^ [1]
-   test.js:85:44
-   85| class F extends React.Component<{children: Array<number>}> {}
-                                                  ^^^^^^^^^^^^^ [2]
+   test.js:91:1
+   91| React.createElement(E, undefined, 1, 2); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:97:7
+Error ----------------------------------------------------------------------------------------------------- test.js:92:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > array element:
-array literal [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
-   test.js:97:7
-   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+   test.js:92:7
+   92| React.createElement(E, null, 1, 2); // Error
              ^^^^^^^^^^^^^
 
 References:
-   test.js:97:28
-   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+   test.js:92:1
+   92| React.createElement(E, null, 1, 2); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:93:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:93:7
+   93| React.createElement(E, {}, 1, 2, 3); // Error
+             ^^^^^^^^^^^^^
+
+References:
+   test.js:93:1
+   93| React.createElement(E, {}, 1, 2, 3); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:94:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: array literal [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:94:7
+   94| React.createElement(E, {}, [1, 2]); // Error
+             ^^^^^^^^^^^^^
+
+References:
+   test.js:94:28
+   94| React.createElement(E, {}, [1, 2]); // Error
                                   ^^^^^^ [1]
-   test.js:85:50
-   85| class F extends React.Component<{children: Array<number>}> {}
-                                                        ^^^^^^ [2]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:97:7
+Error ----------------------------------------------------------------------------------------------------- test.js:95:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > array element:
-array literal [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
-   test.js:97:7
-   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+   test.js:95:7
+   95| React.createElement(E, {}, [1, 2], [3, 4]); // Error
              ^^^^^^^^^^^^^
 
 References:
-   test.js:97:36
-   97| React.createElement(F, {}, [1, 2], [3, 4]); // Error
-                                          ^^^^^^ [1]
-   test.js:85:50
-   85| class F extends React.Component<{children: Array<number>}> {}
-                                                        ^^^^^^ [2]
+   test.js:95:1
+   95| React.createElement(E, {}, [1, 2], [3, 4]); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:98:7
+Error ----------------------------------------------------------------------------------------------------- test.js:96:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
 literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
-   test.js:98:7
-   98| React.createElement(F, {}, ...[]); // Error
+   test.js:96:7
+   96| React.createElement(E, {}, ...[]); // Error
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                v-------------------------------
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   24|     Props,
+   25|     Children,
+   26|   >,
+         ^ [1]
+   lib.js:23:20
+   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:98:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:98:7
+   98| React.createElement(E, {}, ...[1, 2]); // Error
+             ^^^^^^^^^^^^^
+
+References:
+   test.js:98:1
+   98| React.createElement(E, {}, ...[1, 2]); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:99:7
-   99| React.createElement(F, {}, ...[1]); // Error
+   99| React.createElement(E, {}, ...(any: Array<number>)); // Error
              ^^^^^^^^^^^^^
 
 References:
-   test.js:99:32
-   99| React.createElement(F, {}, ...[1]); // Error
-                                      ^ [1]
-   test.js:85:44
-   85| class F extends React.Component<{children: Array<number>}> {}
-                                                  ^^^^^^^^^^^^^ [2]
+   test.js:99:1
+   99| React.createElement(E, {}, ...(any: Array<number>)); // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+   83| class E extends React.Component<{children: number}> {}
+                                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:101:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:101:7
+   101| React.createElement(E, {}, 1, ...[2]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:101:1
+   101| React.createElement(E, {}, 1, ...[2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+    83| class E extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:102:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:102:7
-   102| React.createElement(F, {}, 1, ...[]); // Error
+   102| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:102:28
-   102| React.createElement(F, {}, 1, ...[]); // Error
-                                   ^ [1]
-   test.js:85:44
-    85| class F extends React.Component<{children: Array<number>}> {}
-                                                   ^^^^^^^^^^^^^ [2]
+   test.js:102:1
+   102| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:83:44
+    83| class E extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:105:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:105:7
+   105| React.createElement(F, {}); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:106:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:106:7
+   106| React.createElement(F, undefined); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:107:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:107:7
-   107| React.createElement(G, {}); // Error
+   107| React.createElement(F, null); // Error
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:112:7
+Error ---------------------------------------------------------------------------------------------------- test.js:108:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
+incompatible with array type [2]. [incompatible-type]
+
+   test.js:108:7
+   108| React.createElement(F, {}, 1); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:108:28
+   108| React.createElement(F, {}, 1); // Error
+                                   ^ [1]
+   test.js:104:44
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                   ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:109:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
+incompatible with array type [2]. [incompatible-type]
+
+   test.js:109:7
+   109| React.createElement(F, undefined, 1); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:109:35
+   109| React.createElement(F, undefined, 1); // Error
+                                          ^ [1]
+   test.js:104:44
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                   ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:110:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
+incompatible with array type [2]. [incompatible-type]
+
+   test.js:110:7
+   110| React.createElement(F, null, 1); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:110:30
+   110| React.createElement(F, null, 1); // Error
+                                     ^ [1]
+   test.js:104:44
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                   ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:116:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > array element:
+array literal [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:116:7
+   116| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:116:28
+   116| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                   ^^^^^^ [1]
+   test.js:104:50
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:116:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > array element:
+array literal [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:116:7
+   116| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:116:36
+   116| React.createElement(F, {}, [1, 2], [3, 4]); // Error
+                                           ^^^^^^ [1]
+   test.js:104:50
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:117:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:117:7
+   117| React.createElement(F, {}, ...[]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:118:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
+incompatible with array type [2]. [incompatible-type]
+
+   test.js:118:7
+   118| React.createElement(F, {}, ...[1]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:118:32
+   118| React.createElement(F, {}, ...[1]); // Error
+                                       ^ [1]
+   test.js:104:44
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                   ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:121:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
+incompatible with array type [2]. [incompatible-type]
+
+   test.js:121:7
+   121| React.createElement(F, {}, 1, ...[]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:121:28
+   121| React.createElement(F, {}, 1, ...[]); // Error
+                                   ^ [1]
+   test.js:104:44
+   104| class F extends React.Component<{children: Array<number>}> {}
+                                                   ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:126:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:126:7
+   126| React.createElement(G, {}); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:131:7
 
 Cannot call `React.createElement` because in property `children` of type argument `_ValidatedProps`: [incompatible-type]
  - Either in array element: array literal [1] is incompatible with number [2].
  - Or rest array [3] is incompatible with number [4].
 
-   test.js:112:7
-   112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
+   test.js:131:7
+   131| React.createElement(G, {}, [1, 2], [3, 4]); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:112:28
-   112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
+   test.js:131:28
+   131| React.createElement(G, {}, [1, 2], [3, 4]); // Error
                                    ^^^^^^ [1]
-   test.js:106:68
-   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
-                                                                           ^^^^^^ [2]
-   test.js:112:1
-   112| React.createElement(G, {}, [1, 2], [3, 4]); // Error
+   test.js:125:67
+   125| class G extends React.Component<{children: number | ReadonlyArray<number>}> {}
+                                                                          ^^^^^^ [2]
+   test.js:131:1
+   131| React.createElement(G, {}, [1, 2], [3, 4]); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:106:44
-   106| class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
+   test.js:125:44
+   125| class G extends React.Component<{children: number | ReadonlyArray<number>}> {}
                                                    ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:113:7
+Error ---------------------------------------------------------------------------------------------------- test.js:132:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
 literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
-   test.js:113:7
-   113| React.createElement(G, {}, ...[]); // Error
+   test.js:132:7
+   132| React.createElement(G, {}, ...[]); // Error
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:127:7
+Error ---------------------------------------------------------------------------------------------------- test.js:146:7
 
 Cannot call `React.createElement` because in property `children` of type argument `_ValidatedProps`: [incompatible-type]
  - Either in array element: array literal [1] is incompatible with number [2].
  - Or rest array [3] is incompatible with number [4].
 
-   test.js:127:7
-   127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+   test.js:146:7
+   146| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:127:29
-   127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+   test.js:146:29
+   146| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
                                     ^^^^^^ [1]
-   test.js:121:70
-   121| class G2 extends React.Component<{children?: number | $ReadOnlyArray<number>}> {}
-                                                                             ^^^^^^ [2]
-   test.js:127:1
-   127| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
+   test.js:140:69
+   140| class G2 extends React.Component<{children?: number | ReadonlyArray<number>}> {}
+                                                                            ^^^^^^ [2]
+   test.js:146:1
+   146| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:121:46
-   121| class G2 extends React.Component<{children?: number | $ReadOnlyArray<number>}> {}
+   test.js:140:46
+   140| class G2 extends React.Component<{children?: number | ReadonlyArray<number>}> {}
                                                      ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:138:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:138:7
-   138| React.createElement(H, {}); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:144:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:144:7
-   144| React.createElement(H, {}, ...[]); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:155:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: null [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:155:7
-   155| React.createElement(I, {}, null); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:155:28
-   155| React.createElement(I, {}, null); // Error
-                                   ^^^^ [1]
-   test.js:152:45
-   152| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:157:7
-   157| React.createElement(I, {}, 1, 2); // Error
+   157| React.createElement(H, {}); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:157:1
-   157| React.createElement(I, {}, 1, 2); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:152:45
-   152| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:160:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:160:7
-   160| React.createElement(I, {}, ...[1, 2]); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:160:1
-   160| React.createElement(I, {}, ...[1, 2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:152:45
-   152| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:161:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:161:7
-   161| React.createElement(I, {}, ...(any: Array<number>)); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:161:1
-   161| React.createElement(I, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:152:45
-   152| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:163:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
    test.js:163:7
-   163| React.createElement(I, {}, 1, ...[2]); // Error
+   163| React.createElement(H, {}, ...[]); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:163:1
-   163| React.createElement(I, {}, 1, ...[2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:152:45
-   152| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:164:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:164:7
-   164| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:164:1
-   164| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:152:45
-   152| class I extends React.Component<{children?: number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:167:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:167:7
-   167| React.createElement(J, {}); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:171:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:171:7
-   171| React.createElement(J, {}, 1, 2); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:171:1
-   171| React.createElement(J, {}, 1, 2); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:166:45
-   166| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:172:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:172:7
-   172| React.createElement(J, {}, ...[]); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: null [1] is
 incompatible with number [2]. [incompatible-type]
 
    test.js:174:7
-   174| React.createElement(J, {}, ...[1, 2]); // Error
+   174| React.createElement(I, {}, null); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:174:1
-   174| React.createElement(J, {}, ...[1, 2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:166:45
-   166| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:175:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:175:7
-   175| React.createElement(J, {}, ...(any: Array<number>)); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:175:1
-   175| React.createElement(J, {}, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:166:45
-   166| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:177:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:177:7
-   177| React.createElement(J, {}, 1, ...[2]); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:177:1
-   177| React.createElement(J, {}, 1, ...[2]); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:166:45
-   166| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:178:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:178:7
-   178| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:178:1
-   178| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:166:45
-   166| class J extends React.Component<{children: ?number}> {}
-                                                    ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:184:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
-
-   test.js:184:7
-   184| React.createElement(K, {}, '42'); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   test.js:184:28
-   184| React.createElement(K, {}, '42'); // Error
+   test.js:174:28
+   174| React.createElement(I, {}, null); // Error
                                    ^^^^ [1]
-   test.js:180:44
-   180| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
+   test.js:171:45
+   171| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:185:7
+Error ---------------------------------------------------------------------------------------------------- test.js:176:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:185:7
-   185| React.createElement(K, {children: '42'}); // Error
+   test.js:176:7
+   176| React.createElement(I, {}, 1, 2); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:185:35
-   185| React.createElement(K, {children: '42'}); // Error
-                                          ^^^^ [1]
-   test.js:180:44
-   180| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
+   test.js:176:1
+   176| React.createElement(I, {}, 1, 2); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:171:45
+   171| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:187:7
+Error ---------------------------------------------------------------------------------------------------- test.js:179:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:187:7
-   187| React.createElement(K, {children: 42}, '42'); // Error
+   test.js:179:7
+   179| React.createElement(I, {}, ...[1, 2]); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:187:40
-   187| React.createElement(K, {children: 42}, '42'); // Error
-                                               ^^^^ [1]
-   test.js:180:44
-   180| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
+   test.js:179:1
+   179| React.createElement(I, {}, ...[1, 2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:171:45
+   171| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:188:7
+Error ---------------------------------------------------------------------------------------------------- test.js:180:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:188:7
-   188| React.createElement(K, {children: '42'}, '42'); // Error
+   test.js:180:7
+   180| React.createElement(I, {}, ...(any: Array<number>)); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:188:42
-   188| React.createElement(K, {children: '42'}, '42'); // Error
-                                                 ^^^^ [1]
-   test.js:180:44
-   180| class K extends React.Component<{children: number}> {}
-                                                   ^^^^^^ [2]
+   test.js:180:1
+   180| React.createElement(I, {}, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:171:45
+   171| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:201:7
+Error ---------------------------------------------------------------------------------------------------- test.js:182:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
-type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
 
-   test.js:201:7
-   201| React.createElement(L, {}, 1); // Error
+   test.js:182:7
+   182| React.createElement(I, {}, 1, ...[2]); // Error
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:182:1
+   182| React.createElement(I, {}, 1, ...[2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:171:45
+   171| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:202:7
+Error ---------------------------------------------------------------------------------------------------- test.js:183:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:183:7
+   183| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:183:1
+   183| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:171:45
+   171| class I extends React.Component<{children?: number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:186:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
 literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
 
-   test.js:202:7
-   202| React.createElement(L, {children: 1}); // Error
+   test.js:186:7
+   186| React.createElement(J, {}); // Error
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
                            ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:190:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:190:7
+   190| React.createElement(J, {}, 1, 2); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:190:1
+   190| React.createElement(J, {}, 1, 2); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:185:45
+   185| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:191:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `children` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:191:7
+   191| React.createElement(J, {}, ...[]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:193:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:193:7
+   193| React.createElement(J, {}, ...[1, 2]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:193:1
+   193| React.createElement(J, {}, ...[1, 2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:185:45
+   185| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:194:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:194:7
+   194| React.createElement(J, {}, ...(any: Array<number>)); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:194:1
+   194| React.createElement(J, {}, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:185:45
+   185| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:196:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:196:7
+   196| React.createElement(J, {}, 1, ...[2]); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:196:1
+   196| React.createElement(J, {}, 1, ...[2]); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:185:45
+   185| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:197:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:197:7
+   197| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:197:1
+   197| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:185:45
+   185| class J extends React.Component<{children: ?number}> {}
+                                                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:203:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
-type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
+incompatible with number [2]. [incompatible-type]
 
    test.js:203:7
-   203| React.createElement(L, {bar: 1}, 2); // Error
+   203| React.createElement(K, {}, '42'); // Error
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:203:28
+   203| React.createElement(K, {}, '42'); // Error
+                                   ^^^^ [1]
+   test.js:199:44
+   199| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:204:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
-literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
-
-   test.js:204:7
-   204| React.createElement(L, {bar: 1, children: 2}); // Error
-              ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-    22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:205:7
-
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: string [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:205:7
-   205| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
+   test.js:204:7
+   204| React.createElement(K, {children: '42'}); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:205:30
-   205| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
-                                     ^^^ [1]
-   test.js:191:8
-   191|   foo: number,
-               ^^^^^^ [2]
+   test.js:204:35
+   204| React.createElement(K, {children: '42'}); // Error
+                                          ^^^^ [1]
+   test.js:199:44
+   199| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:206:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: string [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
    test.js:206:7
-   206| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
+   206| React.createElement(K, {children: 42}, '42'); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:206:30
-   206| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
-                                     ^^^ [1]
-   test.js:191:8
-   191|   foo: number,
-               ^^^^^^ [2]
+   test.js:206:40
+   206| React.createElement(K, {children: 42}, '42'); // Error
+                                               ^^^^ [1]
+   test.js:199:44
+   199| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:207:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
    test.js:207:7
-   207| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
+   207| React.createElement(K, {children: '42'}, '42'); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:207:38
-   207| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
-                                             ^^^ [1]
-   test.js:192:8
-   192|   bar: number,
+   test.js:207:42
+   207| React.createElement(K, {children: '42'}, '42'); // Error
+                                                 ^^^^ [1]
+   test.js:199:44
+   199| class K extends React.Component<{children: number}> {}
+                                                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:220:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
+type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:220:7
+   220| React.createElement(L, {}, 1); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:221:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:221:7
+   221| React.createElement(L, {children: 1}); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:222:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
+type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:222:7
+   222| React.createElement(L, {bar: 1}, 2); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:223:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps`: property `foo` is missing in object
+literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
+
+   test.js:223:7
+   223| React.createElement(L, {bar: 1, children: 2}); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   lib.js:23:42
+                                                 v-------------------------------
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+    24|     Props,
+    25|     Children,
+    26|   >,
+          ^ [1]
+   lib.js:23:20
+    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                           ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:224:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: string [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:224:7
+   224| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:224:30
+   224| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
+                                     ^^^ [1]
+   test.js:210:8
+   210|   foo: number,
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:208:7
+Error ---------------------------------------------------------------------------------------------------- test.js:225:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: string [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:225:7
+   225| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:225:30
+   225| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
+                                     ^^^ [1]
+   test.js:210:8
+   210|   foo: number,
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:226:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:208:7
-   208| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+   test.js:226:7
+   226| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:208:38
-   208| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+   test.js:226:38
+   226| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
                                              ^^^ [1]
-   test.js:192:8
-   192|   bar: number,
+   test.js:211:8
+   211|   bar: number,
                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:209:7
+Error ---------------------------------------------------------------------------------------------------- test.js:227:7
+
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
+incompatible with number [2]. [incompatible-type]
+
+   test.js:227:7
+   227| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:227:38
+   227| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
+                                             ^^^ [1]
+   test.js:211:8
+   211|   bar: number,
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:228:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:209:7
-   209| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+   test.js:228:7
+   228| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:209:42
-   209| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
+   test.js:228:42
+   228| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
                                                  ^^^ [1]
-   test.js:193:13
-   193|   children: number,
+   test.js:212:13
+   212|   children: number,
                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:210:7
+Error ---------------------------------------------------------------------------------------------------- test.js:229:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
 incompatible with number [2]. [incompatible-type]
 
-   test.js:210:7
-   210| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+   test.js:229:7
+   229| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
               ^^^^^^^^^^^^^
 
 References:
-   test.js:210:51
-   210| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
+   test.js:229:51
+   229| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
                                                           ^^^ [1]
-   test.js:193:13
-   193|   children: number,
+   test.js:212:13
+   212|   children: number,
                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:215:8
+Error ---------------------------------------------------------------------------------------------------- test.js:234:8
 
 Cannot call `React.createElement` because in the first argument: `M` [1] is incompatible with `N` [2].
 [incompatible-type]
 
-   test.js:215:8
-   215| (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
+   test.js:234:8
+   234| (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
                ^^^^^^^^^^^^^
 
 References:
-   test.js:212:7
-   212| class M extends React.Component<{}> {}
+   test.js:231:7
+   231| class M extends React.Component<{}> {}
               ^ [1]
-   test.js:215:61
-   215| (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
+   test.js:234:61
+   234| (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
                                                                     ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:218:7
+Error ---------------------------------------------------------------------------------------------------- test.js:237:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > index `children[0]`: number [1] is
 incompatible with number literal `1` [2]. [incompatible-type]
 
-   test.js:218:7
-   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+   test.js:237:7
+   237| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
               ^^^^^^^^^^^^^
 
 References:
-   test.js:218:30
-   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+   test.js:237:30
+   237| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
                                      ^ [1]
-   test.js:217:35
-   217| declare function P(x: {children: [1, 2]}): void;
+   test.js:236:35
+   236| declare function P(x: {children: [1, 2]}): void;
                                           ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:218:7
+Error ---------------------------------------------------------------------------------------------------- test.js:237:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > index `children[1]`: number [1] is
 incompatible with number literal `2` [2]. [incompatible-type]
 
-   test.js:218:7
-   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+   test.js:237:7
+   237| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
               ^^^^^^^^^^^^^
 
 References:
-   test.js:218:33
-   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+   test.js:237:33
+   237| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
                                         ^ [1]
-   test.js:217:38
-   217| declare function P(x: {children: [1, 2]}): void;
+   test.js:236:38
+   236| declare function P(x: {children: [1, 2]}): void;
                                              ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:219:7
+Error ---------------------------------------------------------------------------------------------------- test.js:238:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] has
 an unknown number of elements, so is incompatible with tuple type [2]. [invalid-tuple-arity]
 
-   test.js:219:7
-   219| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+   test.js:238:7
+   238| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
               ^^^^^^^^^^^^^
 
 References:
-   test.js:219:1
-   219| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+   test.js:238:1
+   238| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:217:34
-   217| declare function P(x: {children: [1, 2]}): void;
+   test.js:236:34
+   236| declare function P(x: {children: [1, 2]}): void;
                                          ^^^^^^ [2]
 
 

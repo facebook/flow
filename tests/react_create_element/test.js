@@ -8,10 +8,14 @@ React.createElement(42); // Error: Number is not a valid component type.
 React.createElement('div', {...null}); // OK
 React.createElement(42, {}); // Error: Number is not a valid component type.
 React.createElement({}, {}); // Error: Object is not a valid component type.
-React.createElement(() => { return null }, {}); // OK
+React.createElement(() => {
+  return null;
+}, {}); // OK
 
 class A extends React.Component<{foo: number, bar: number}> {}
-function B(props: {foo: number, bar: number}) { return null }
+function B(props: {foo: number, bar: number}) {
+  return null;
+}
 
 React.createElement(A, {foo: 1, bar: 2}); // OK
 React.createElement(B, {foo: 1, bar: 2}); // OK
@@ -29,10 +33,20 @@ React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(A, null); // Error: `foo` and `bar` are missing.
 React.createElement(B, null); // Error: `foo` and `bar` are missing.
-(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>>); // OK
-(React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B>); // OK
-(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
-(React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
+(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+  Class<A>,
+>); // OK
+(React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+  typeof B,
+>); // OK
+(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+  Class<A>,
+  {foo: boolean, bar: number},
+>); // error
+(React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+  typeof B,
+  {foo: boolean, bar: number},
+>); // error
 React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
 React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -42,7 +56,9 @@ class C extends React.Component<{foo: number, bar: number}> {
   static defaultProps: {bar: number} = {bar: 42};
 }
 
-function D(props: {foo: number, bar?: number}) { return null }
+function D(props: {foo: number, bar?: number}) {
+  return null;
+}
 
 React.createElement(C, {foo: 1, bar: 2}); // OK
 React.createElement(D, {foo: 1, bar: 2}); // OK
@@ -57,7 +73,10 @@ React.createElement(D, {
 React.createElement(C, {foo: 42}); // OK: `bar` is in `defaultProps`.
 React.createElement(D, {foo: 42}); // OK: `bar` is optional
 (React.createElement(C, {foo: 42}): ExactReactElement_DEPRECATED<Class<C>>); // OK
-(React.createElement(D, {foo: 42}): ExactReactElement_DEPRECATED<typeof D, {foo: number, bar?: number}>); // OK
+(React.createElement(D, {foo: 42}): ExactReactElement_DEPRECATED<
+  typeof D,
+  {foo: number, bar?: number},
+>); // OK
 
 React.createElement(any, {whateverYouWant: 'yes'}); // OK
 
@@ -103,7 +122,7 @@ React.createElement(F, {}, 1, ...[]); // Error
 React.createElement(F, {}, 1, ...[2]); // OK
 React.createElement(F, {}, 1, ...(any: Array<number>)); // missing error, potentially unsafe when any = []
 
-class G extends React.Component<{children: number | $ReadOnlyArray<number>}> {}
+class G extends React.Component<{children: number | ReadonlyArray<number>}> {}
 React.createElement(G, {}); // Error
 React.createElement(G, {}, 1); // OK
 React.createElement(G, {}, 1, 2); // OK
@@ -118,7 +137,7 @@ React.createElement(G, {}, 1, ...[]); // OK
 React.createElement(G, {}, 1, ...[2]); // OK
 React.createElement(G, {}, 1, ...(any: Array<number>)); // OK
 
-class G2 extends React.Component<{children?: number | $ReadOnlyArray<number>}> {}
+class G2 extends React.Component<{children?: number | ReadonlyArray<number>}> {}
 React.createElement(G2, {}); // OK
 React.createElement(G2, {}, 1); // OK
 React.createElement(G2, {}, 1, 2); // OK
@@ -133,7 +152,7 @@ React.createElement(G2, {}, 1, ...[]); // OK
 React.createElement(G2, {}, 1, ...[2]); // OK
 React.createElement(G2, {}, 1, ...(any: Array<number>)); // OK
 
-type NumberArrayRecursive = number | $ReadOnlyArray<NumberArrayRecursive>;
+type NumberArrayRecursive = number | ReadonlyArray<NumberArrayRecursive>;
 class H extends React.Component<{children: NumberArrayRecursive}> {}
 React.createElement(H, {}); // Error
 React.createElement(H, {}, 1); // OK
