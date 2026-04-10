@@ -79,7 +79,7 @@ module InsertType = struct
     | (false, _, _) -> stdout
     | (true, Some p, _)
     | (true, None, Some p) -> begin
-      try open_out p with
+      try open_out_bin p with
       | _ ->
         handle_error ~code:Exit.Path_is_not_a_file
         @@ Printf.sprintf "failed to open output file: %s" p
@@ -177,7 +177,7 @@ module MissingLocalAnnot = struct
     | (false, _, _) -> stdout
     | (true, Some p, _)
     | (true, None, p) -> begin
-      try open_out p with
+      try open_out_bin p with
       | _ ->
         handle_error ~code:Exit.Path_is_not_a_file
         @@ Printf.sprintf "failed to open output file: %s" p
@@ -260,7 +260,7 @@ module Exports = struct
     | (false, _, _) -> stdout
     | (true, Some p, _)
     | (true, None, p) -> begin
-      try open_out p with
+      try open_out_bin p with
       | _ ->
         handle_error ~code:Exit.Path_is_not_a_file
         @@ Printf.sprintf "failed to open output file: %s" p

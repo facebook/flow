@@ -41,7 +41,7 @@ module Quickfix = struct
     let write_patch content =
       let output_channel =
         if in_place then
-          open_out source_path
+          open_out_bin source_path
         else
           stdout
       in
@@ -108,7 +108,7 @@ module SourceAddMissingImports = struct
     let write_patch content =
       let output_channel =
         if in_place then
-          open_out source_path
+          open_out_bin source_path
         else
           stdout
       in

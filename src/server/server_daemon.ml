@@ -129,7 +129,7 @@ let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher
         set_close_on_exec stdout;
         set_close_on_exec stderr
       with
-      | Unix_error (EINVAL, _, _) -> ()
+      | Unix_error ((EINVAL | EBADF), _, _) -> ()
     )
   );
   let name = spf "server master process watching %s" (File_path.to_string root) in
