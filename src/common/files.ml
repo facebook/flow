@@ -925,13 +925,6 @@ let absolute_path root =
   let absolute_path_parts = absolute_path_parts root in
   (fun file -> absolute_path_parts file |> String.concat Filename.dir_sep)
 
-(** Like [Filename.concat] but normalizes output to use forward slashes. *)
-let normalized_concat dir file = Sys_utils.normalize_filename_dir_sep (Filename.concat dir file)
-
-(** Returns [File_path.to_string root ^ "/"] with separators normalized to forward slashes. *)
-let normalized_root_prefix root =
-  Sys_utils.normalize_filename_dir_sep (File_path.to_string root ^ Filename.dir_sep)
-
 (* helper to get the full path to the "flow-typed" library dir *)
 let get_flowtyped_path root = make_path_absolute root "flow-typed"
 

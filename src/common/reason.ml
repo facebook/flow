@@ -406,7 +406,7 @@ let string_of_source ?(strip_root = None) src =
   | File_key.LibFile _ -> begin
     match strip_root with
     | Some root ->
-      let root_str = Files.normalized_root_prefix root in
+      let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
       if String.starts_with ~prefix:root_str file then
         spf "[LIB] %s" (Files.relative_path root_str file)
       else
@@ -418,7 +418,7 @@ let string_of_source ?(strip_root = None) src =
   | File_key.ResourceFile _ -> begin
     match strip_root with
     | Some root ->
-      let root_str = Files.normalized_root_prefix root in
+      let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
       Files.relative_path root_str file
     | None -> file
   end

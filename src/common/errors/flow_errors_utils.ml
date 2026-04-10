@@ -1041,13 +1041,14 @@ let relative_path ~strip_root filename =
         filename
 
 let relative_lib_path ~strip_root filename =
+  let sep = Filename.dir_sep in
   match strip_root with
   | Some root ->
-    let root_str = Files.normalized_root_prefix root in
+    let root_str = Printf.sprintf "%s%s" (File_path.to_string root) sep in
     if String.starts_with ~prefix:root_str filename then
       relative_path ~strip_root filename
     else
-      Files.normalized_concat "<BUILTINS>" (Filename.basename filename)
+      Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
   | None -> relative_path ~strip_root filename
 
 (* 0-indexed
