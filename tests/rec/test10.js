@@ -3,7 +3,7 @@ type X<T> = Array<T> | X<Array<T>>;
 
 [] as X<number>;
 
-type Y<T> = $ReadOnlyArray<T> | Y<$ReadOnlyArray<T>>;
+type Y<T> = ReadonlyArray<T> | Y<ReadonlyArray<T>>;
 
 [] as Y<number>;
 

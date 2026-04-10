@@ -1,9 +1,9 @@
 Error ---------------------------------------------------------------------------------------------- eval_values.js:3:18
 
-Invalid trivially recursive definition of `$Values`.  [recursive-definition]
+Invalid trivially recursive definition of `Values`.  [recursive-definition]
 
-   3|   [key: string]: $Values<CyclicWith$Values>,
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   3|   [key: string]: Values<CyclicWith$Values>,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- eval_values.js:11:1
@@ -15,32 +15,34 @@ Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empt
        ^^^^^^^^^^^
 
 References:
-   exported_eval_values.js:2:42
-    2| declare export const options: {[string]: Value};
+   exported_eval_values.js:1:42
+    1| declare export const options: {[string]: Value};
                                                 ^^^^^ [1]
    eval_values.js:11:16
    11| options.foo as empty; // error
                       ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- exported_eval_values.js:4:36
+Error ------------------------------------------------------------------------------------- exported_eval_values.js:3:36
 
-Invalid trivially recursive definition of `$Values`.  [recursive-definition]
+Invalid trivially recursive definition of `$Values`. . (FLOW BUG: This is a misplaced error. The original error was
+raised in file `eval_values.js`) [recursive-definition]
 
-                                         v------------------------
-   4| export opaque type Value: number = $Values< // error: cyclic
+                                         v------
+   3| export opaque type Value: number = Values<
+   4|   // error: cyclic
    5|   typeof options,
    6| >;
       ^
 
 
-Error ------------------------------------------------------------------------------------- exported_eval_values.js:4:36
+Error ------------------------------------------------------------------------------------- exported_eval_values.js:3:36
 
-Invalid trivially recursive definition of `$Values`. . (FLOW BUG: This is a misplaced error. The original error was
-raised in file `eval_values.js`) [recursive-definition]
+Invalid trivially recursive definition of `Values`.  [recursive-definition]
 
-                                         v------------------------
-   4| export opaque type Value: number = $Values< // error: cyclic
+                                         v------
+   3| export opaque type Value: number = Values<
+   4|   // error: cyclic
    5|   typeof options,
    6| >;
       ^
@@ -48,10 +50,10 @@ raised in file `eval_values.js`) [recursive-definition]
 
 Error ------------------------------------------------------------------------------------ exported_eval_values.js:14:22
 
-Invalid trivially recursive definition of `$Values`.  [recursive-definition]
+Invalid trivially recursive definition of `Values`.  [recursive-definition]
 
-   14| export type Result = $Values<typeof Results>; // error: cyclic
-                            ^^^^^^^^^^^^^^^^^^^^^^^
+   14| export type Result = Values<typeof Results>; // error: cyclic
+                            ^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- id_alias.js:2:10
@@ -380,7 +382,7 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve name `DoesntMatter`. [cannot-resolve-name]
 
-   19|   return <DoesntMatter
+   19|   return <DoesntMatter {...tvarprops} />;
                  ^^^^^^^^^^^^
 
 

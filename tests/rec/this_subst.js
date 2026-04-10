@@ -1,5 +1,5 @@
 var container = class InstrumentedContainer extends container {
-  foo(): mixed {
+  foo(): unknown {
     return this.props;
   }
 };
