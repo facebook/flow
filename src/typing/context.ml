@@ -416,6 +416,20 @@ let docblock_overrides docblock_info file_key metadata =
       has_explicit_supports_platform = Option.is_some explicit_available_platforms;
     }
   in
+  let metadata =
+    if Files.has_ts_ext file_key then
+      {
+        metadata with
+        (* .ts files are always checked, consistent with `types_checked` in `parsing_service_js` *)
+        checked = true;
+        ts_syntax = true;
+        tslib_syntax = true;
+        abstract_classes = true;
+        ts_utility_syntax = true;
+      }
+    else
+      metadata
+  in
   metadata
 
 let empty_sig_cx =

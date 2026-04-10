@@ -69,8 +69,9 @@ impl TypeSigOptions {
             enable_enums: options.enums,
             enable_component_syntax,
             component_syntax_enabled_in_config: options.component_syntax,
-            enable_ts_syntax: options.ts_syntax,
-            enable_ts_utility_syntax: options.ts_utility_syntax,
+            enable_ts_syntax: options.ts_syntax || flow_common::files::has_ts_ext(file),
+            enable_ts_utility_syntax: options.ts_utility_syntax
+                || flow_common::files::has_ts_ext(file),
             enable_records: options.enable_records,
             for_builtins: false,
         }

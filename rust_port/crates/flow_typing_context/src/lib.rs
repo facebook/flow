@@ -141,7 +141,7 @@ impl Default for OverridableMetadata {
 
 /// Fields set once from `Options`, never modified per-file. Stored in `Rc<FrozenMetadata>` for
 /// cheap cloning.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FrozenMetadata {
     pub include_suppressions: bool,
     pub slow_to_check_logging: SlowToCheckLogging,
@@ -700,6 +700,16 @@ pub fn docblock_overrides(
     );
     metadata.overridable.available_platforms = available_platforms;
     metadata.overridable.has_explicit_supports_platform = explicit_available_platforms.is_some();
+
+    if flow_common::files::has_ts_ext(file_key) {
+        // .ts files are always checked, consistent with `types_checked` in `parsing_service_js`
+        metadata.overridable.checked = true;
+        let frozen = Rc::make_mut(&mut metadata.frozen);
+        frozen.ts_syntax = true;
+        frozen.tslib_syntax = true;
+        frozen.abstract_classes = true;
+        frozen.ts_utility_syntax = true;
+    }
 
     metadata
 }

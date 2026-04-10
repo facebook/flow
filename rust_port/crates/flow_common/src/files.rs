@@ -139,6 +139,10 @@ pub fn chop_flow_ext(file: &FileKey) -> FileKey {
     }
 }
 
+pub fn has_ts_ext(file: &FileKey) -> bool {
+    file.check_suffix(".ts") || file.check_suffix(".tsx")
+}
+
 pub fn is_prefix(prefix: &str, path: &str) -> bool {
     if prefix.ends_with(std::path::MAIN_SEPARATOR) {
         return path.starts_with(prefix);

@@ -132,6 +132,8 @@ let chop_flow_ext file =
   else
     file
 
+let has_ts_ext file = File_key.check_suffix file ".ts" || File_key.check_suffix file ".tsx"
+
 (* Every <file>.js can be imported by its path, so it effectively exports a
    module by the name <file>.js. Every <file>.js.flow shadows the corresponding
    <file>.js, so it effectively exports a module by the name <file>.js. *)

@@ -109,6 +109,9 @@ let types_checked options file docblock =
   if File_key.is_lib_file file then
     (* types are always allowed in lib files *)
     true
+  else if Files.has_ts_ext file then
+    (* .ts files are always typed *)
+    true
   else
     let open Docblock in
     match flow docblock with

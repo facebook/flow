@@ -162,6 +162,9 @@ fn types_checked(options: &Options, file: &FileKey, docblock: &Docblock) -> bool
     if file.is_lib_file() {
         // types are always allowed in lib files
         true
+    } else if flow_common::files::has_ts_ext(file) {
+        // .ts files are always typed
+        true
     } else {
         use flow_common::docblock::FlowMode;
         match &docblock.flow {

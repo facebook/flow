@@ -68,6 +68,8 @@ val has_flow_ext : File_key.t -> bool
 
 val chop_flow_ext : File_key.t -> File_key.t
 
+val has_ts_ext : File_key.t -> bool
+
 val eponymous_module : File_key.t -> Modulename.t
 
 (* If the given file is a Haste file, return Some(haste name of file) *)

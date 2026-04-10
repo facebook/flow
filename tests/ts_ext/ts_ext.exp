@@ -1,0 +1,31 @@
+Error -------------------------------------------------------------------------------------------- abstract_class.ts:1:1
+
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+      v-------------------------------------------------------------------------------------
+   1| declare abstract class Base { // ERROR: abstract classes unconditionally error for now
+   2|   abstract getName(): string;
+   3|   greet(): string;
+   4| }
+      ^
+
+
+Error ------------------------------------------------------------------------------------------------- ts_syntax.ts:7:1
+
+Cannot cast `y` to `T` because `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
+
+   ts_syntax.ts:7:1
+   7| y as T; // ERROR: expected - unknown is not empty
+      ^
+
+References:
+   ts_syntax.ts:6:18
+   6| declare const y: unknown;
+                       ^^^^^^^ [1]
+   ts_syntax.ts:7:6
+   7| y as T; // ERROR: expected - unknown is not empty
+           ^ [2]
+
+
+
+Found 2 errors
