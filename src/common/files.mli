@@ -163,6 +163,12 @@ val relative_path : string -> string -> string
 
 val absolute_path : string -> string -> string
 
+(** Like [Filename.concat] but normalizes output to use forward slashes. *)
+val normalized_concat : string -> string -> string
+
+(** Returns [File_path.to_string root ^ "/"] with separators normalized to forward slashes. *)
+val normalized_root_prefix : File_path.t -> string
+
 (* TODO: this doesn't match the signatures of the related functions above *)
 val make_path_absolute : File_path.t -> string -> File_path.t
 
