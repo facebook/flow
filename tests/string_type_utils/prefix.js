@@ -21,7 +21,7 @@ type DataProp = StringPrefix<'data-'>;
 }
 
 // Use in a dictionary
-type Dict = {+[DataProp]: mixed};
+type Dict = {+[DataProp]: unknown};
 {
   const o = {
     'data-foo': 1,
@@ -30,10 +30,10 @@ type Dict = {+[DataProp]: mixed};
   const d = o as Dict; // OK
   d['data-baz']; // OK
   d[123]; // ERROR
-  'data-baz' as $Keys<Dict>; // OK
+  'data-baz' as keyof Dict; // OK
   declare const x: DataProp;
-  x as $Keys<Dict>; // OK
-  x as $Keys<{['xxx']: mixed}>; // ERROR
+  x as keyof Dict; // OK
+  x as keyof {['xxx']: unknown}; // ERROR
 }
 
 // Can use string properties and methods
@@ -109,17 +109,25 @@ type Price = StringPrefix<'$', '1' | '2'>;
 type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
 {
   declare function stripDollar<X: string>(x: StringPrefix<'$', X>): X;
-  const x =  stripDollar("$2");
-  x as "2"; // OK
-  x as "3"; // ERROR
+  const x = stripDollar('$2');
+  x as '2'; // OK
+  x as '3'; // ERROR
 }
 
 type SpreadOverOptionalProperies = StringPrefix<'foo'>;
 {
   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
-  const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // OK
-  const readonlyObj: $ReadOnly<{[SpreadOverOptionalProperies]: number, bar?: number}> = obj; // OK
-  const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
-  const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
-  
+  const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {
+    ...obj,
+  }; // OK
+  const readonlyObj: Readonly<{
+    [SpreadOverOptionalProperies]: number,
+    bar?: number,
+  }> = obj; // OK
+  const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} =
+    obj; // ERROR
+  const validKeyInvalidValue: {
+    [SpreadOverOptionalProperies]: number,
+    +foobar?: string,
+  } = obj; // ERROR
 }

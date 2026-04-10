@@ -256,7 +256,7 @@ Cannot cast `x` to key set because string prefixed with `data-` [1] is incompati
 [incompatible-type]
 
    prefix.js:36:3
-   36|   x as $Keys<{['xxx']: mixed}>; // ERROR
+   36|   x as keyof {['xxx']: unknown}; // ERROR
          ^
 
 References:
@@ -264,7 +264,7 @@ References:
    34|   declare const x: DataProp;
                           ^^^^^^^^ [1]
    prefix.js:36:16
-   36|   x as $Keys<{['xxx']: mixed}>; // ERROR
+   36|   x as keyof {['xxx']: unknown}; // ERROR
                       ^^^^^ [2]
 
 
@@ -468,52 +468,52 @@ Cannot cast `x` to string literal `3` because string with prefix `$` removed [1]
 `3` [2]. [incompatible-type]
 
    prefix.js:114:3
-   114|   x as "3"; // ERROR
+   114|   x as '3'; // ERROR
           ^
 
 References:
-   prefix.js:112:26
-   112|   const x =  stripDollar("$2");
-                                 ^^^^ [1]
+   prefix.js:112:25
+   112|   const x = stripDollar('$2');
+                                ^^^^ [1]
    prefix.js:114:8
-   114|   x as "3"; // ERROR
+   114|   x as '3'; // ERROR
                ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- prefix.js:122:82
+Error -------------------------------------------------------------------------------------------------- prefix.js:128:5
 
 Cannot assign `obj` to `noCopyReadWrite` because in the indexer property's key: string `bar` [1] is incompatible with
 string prefixed with `foo` [2]. [incompatible-type]
 
-   prefix.js:122:82
-   122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
-                                                                                         ^^^
+   prefix.js:128:5
+   128|     obj; // ERROR
+            ^^^
 
 References:
-   prefix.js:122:26
-   122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
+   prefix.js:127:26
+   127|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} =
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    prefix.js:119:16
    119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- prefix.js:123:91
+Error -------------------------------------------------------------------------------------------------- prefix.js:132:7
 
 Cannot assign `obj` to `validKeyInvalidValue` because in property `foobar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
-   prefix.js:123:91
-   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
-                                                                                                  ^^^
+   prefix.js:132:7
+   132|   } = obj; // ERROR
+              ^^^
 
 References:
    prefix.js:119:46
    119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
                                                      ^^^^^^ [1]
-   prefix.js:123:81
-   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
-                                                                                        ^^^^^^ [2]
+   prefix.js:131:15
+   131|     +foobar?: string,
+                      ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
