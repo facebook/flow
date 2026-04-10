@@ -48,7 +48,7 @@ fn choose_provider_and_warn_about_duplicates(
     }
 
     let (mut definitions, mut implementations): (Vec<_>, Vec<_>) =
-        providers.into_iter().partition(files::has_flow_ext);
+        providers.into_iter().partition(files::has_declaration_ext);
 
     if implementations.is_empty() && definitions.is_empty() {
         fallback()
@@ -68,7 +68,7 @@ fn choose_provider_and_warn_about_duplicates(
         let defn = definitions.remove(0);
         let dup_defns = definitions;
 
-        let def_with_flow_ext_chopped = files::chop_flow_ext(&defn);
+        let def_with_flow_ext_chopped = files::chop_declaration_ext(&defn);
         let file_options = &options.file_options;
         let impl_with_platform_suffix_chopped =
             files::chop_platform_suffix_for_file(file_options, &impl_);

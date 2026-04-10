@@ -15,7 +15,7 @@ let choose_provider_and_warn_about_duplicates =
   in
   fun ~options m errmap providers fallback ->
     let (definitions, implementations) =
-      let f (key, _) = Files.has_flow_ext key in
+      let f (key, _) = Files.has_declaration_ext key in
       List.partition f providers
     in
     match (implementations, definitions) with
@@ -31,7 +31,7 @@ let choose_provider_and_warn_about_duplicates =
     | (impl :: dup_impls, defn :: dup_defns) ->
       let (impl_key, _) = impl in
       let (defn_key, _) = defn in
-      let def_with_flow_ext_chopped = Files.chop_flow_ext defn_key in
+      let def_with_flow_ext_chopped = Files.chop_declaration_ext defn_key in
       let impl_with_platform_suffix_chopped =
         Files.chop_platform_suffix_for_file ~options:(Options.file_options options) impl_key
       in

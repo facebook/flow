@@ -143,6 +143,34 @@ pub fn has_ts_ext(file: &FileKey) -> bool {
     file.check_suffix(".ts") || file.check_suffix(".tsx")
 }
 
+pub const DTS_EXT: &str = ".d.ts";
+
+pub fn has_dts_ext(file: &FileKey) -> bool {
+    file.check_suffix(DTS_EXT)
+}
+
+pub fn chop_dts_ext(file: &FileKey) -> FileKey {
+    if has_dts_ext(file) {
+        file.chop_suffix(DTS_EXT)
+    } else {
+        file.dupe()
+    }
+}
+
+pub fn has_declaration_ext(file: &FileKey) -> bool {
+    has_flow_ext(file) || has_dts_ext(file)
+}
+
+pub fn chop_declaration_ext(file: &FileKey) -> FileKey {
+    if has_flow_ext(file) {
+        chop_flow_ext(file)
+    } else if has_dts_ext(file) {
+        chop_dts_ext(file).with_suffix(".js")
+    } else {
+        file.dupe()
+    }
+}
+
 pub fn is_prefix(prefix: &str, path: &str) -> bool {
     if prefix.ends_with(std::path::MAIN_SEPARATOR) {
         return path.starts_with(prefix);

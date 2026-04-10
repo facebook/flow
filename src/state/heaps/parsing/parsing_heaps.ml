@@ -673,8 +673,8 @@ let prepare_create_file file_key haste_module_info_opt resolved_requires_opt =
   and+ update_resolved_requires =
     prepare_update_resolved_requires_if_changed None resolved_requires_opt
   and+ (dependents, set_alternate) =
-    if Files.has_flow_ext file_key then
-      let impl_key = Files.chop_flow_ext file_key in
+    if Files.has_declaration_ext file_key then
+      let impl_key = Files.chop_declaration_ext file_key in
       let+ impl_file = prepare_find_or_add_phantom_file impl_key in
       (None, (fun decl_file -> set_alternate_file impl_file decl_file))
     else

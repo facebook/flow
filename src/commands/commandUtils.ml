@@ -747,7 +747,16 @@ let file_options =
           |> File_path.to_string
       )
     in
-    let module_file_exts = FlowConfig.module_file_exts flowconfig in
+    let module_file_exts =
+      let exts = FlowConfig.module_file_exts flowconfig in
+      if
+        FlowConfig.typescript_library_definition_support flowconfig
+        && not (Base.List.mem exts ".d.ts" ~equal:String.equal)
+      then
+        exts @ [".d.ts"]
+      else
+        exts
+    in
     let module_resource_exts = FlowConfig.module_resource_exts flowconfig in
     let multi_platform = FlowConfig.multi_platform flowconfig |> Base.Option.value ~default:false in
     let multi_platform_extensions = FlowConfig.multi_platform_extensions flowconfig in

@@ -1572,8 +1572,8 @@ pub fn nominal_id_have_same_logical_module(
     let matching_platform_specific_impl_and_interface_file_key =
         |a_src: &FileKey, b_src: &FileKey| -> bool {
             // A.js.flow, A.ios.js in the same directory
-            files::has_flow_ext(a_src)
-                && files::chop_flow_ext(a_src)
+            files::has_declaration_ext(a_src)
+                && files::chop_declaration_ext(a_src)
                     == files::chop_platform_suffix_for_file(file_options, b_src)
                 || {
                     // Regardless of which namespace the Haste module has or what platform they have, if they have

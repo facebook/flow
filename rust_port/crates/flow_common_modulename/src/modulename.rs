@@ -42,7 +42,7 @@ impl Modulename {
     }
 
     pub fn eponymous_module(file: FileKey) -> Self {
-        let chopped = flow_common::files::chop_flow_ext(&file);
+        let chopped = flow_common::files::chop_declaration_ext(&file);
         Modulename::Filename(chopped)
     }
 }

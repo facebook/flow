@@ -861,7 +861,7 @@ let check_haste_provider_conflict cx tast =
          * We want to emit the same kinds of Haste module provider conflict error as if the same set of
          * code is covered by two flowconfigs.
          * (one include web only + common, one include native only + common) *)
-        Files.has_flow_ext filename
+        Files.has_declaration_ext filename
       then
         (* We have Foo.js.flow in common code.
 
@@ -898,7 +898,7 @@ let check_haste_provider_conflict cx tast =
               let platform_specific_provider_file =
                 Base.Option.value_exn (ALoc.source platform_specific_provider_module_loc)
               in
-              if Files.has_flow_ext platform_specific_provider_file then
+              if Files.has_declaration_ext platform_specific_provider_file then
                 add_duplicate_provider_error platform_specific_provider_file
             | Context.TypedModule f ->
               (match f () with
@@ -908,7 +908,7 @@ let check_haste_provider_conflict cx tast =
                 let platform_specific_provider_file =
                   Base.Option.value_exn (ALoc.source (TypeUtil.loc_of_t t))
                 in
-                if Files.has_flow_ext platform_specific_provider_file then
+                if Files.has_declaration_ext platform_specific_provider_file then
                   add_duplicate_provider_error platform_specific_provider_file
               | Ok platform_specific_module_type ->
                 let open Type in

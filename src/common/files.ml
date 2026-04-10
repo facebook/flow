@@ -134,10 +134,32 @@ let chop_flow_ext file =
 
 let has_ts_ext file = File_key.check_suffix file ".ts" || File_key.check_suffix file ".tsx"
 
+let dts_ext = ".d.ts"
+
+let has_dts_ext file = File_key.check_suffix file dts_ext
+
+let chop_dts_ext file =
+  if has_dts_ext file then
+    File_key.chop_suffix file dts_ext
+  else
+    file
+
 (* Every <file>.js can be imported by its path, so it effectively exports a
    module by the name <file>.js. Every <file>.js.flow shadows the corresponding
-   <file>.js, so it effectively exports a module by the name <file>.js. *)
-let eponymous_module file = Modulename.Filename (chop_flow_ext file)
+   <file>.js, so it effectively exports a module by the name <file>.js.
+   Similarly, every <file>.d.ts shadows the corresponding <file>.js, so it
+   effectively exports a module by the name <file>.js. *)
+let has_declaration_ext file = has_flow_ext file || has_dts_ext file
+
+let chop_declaration_ext file =
+  if has_flow_ext file then
+    chop_flow_ext file
+  else if has_dts_ext file then
+    File_key.with_suffix (chop_dts_ext file) ".js"
+  else
+    file
+
+let eponymous_module file = Modulename.Filename (chop_declaration_ext file)
 
 let is_prefix prefix =
   let prefix_with_sep =

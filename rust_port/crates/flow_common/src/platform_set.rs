@@ -127,10 +127,10 @@ pub fn platform_specific_implementation_mrefs_of_possibly_interface_file(
     platform_set: Option<&PlatformSet>,
     file: &FileKey,
 ) -> Option<(Vec<String>, Vec<(String, Vec<String>)>)> {
-    if !file_options.multi_platform || !files::has_flow_ext(file) {
+    if !file_options.multi_platform || !files::has_declaration_ext(file) {
         return None;
     }
-    let file = files::chop_flow_ext(file);
+    let file = files::chop_declaration_ext(file);
     let platform_set = platform_set.unwrap();
     file_options
         .module_file_exts

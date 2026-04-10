@@ -162,7 +162,7 @@ pub(super) fn make_options(
                 merge_timeout,
                 missing_module_generators,
                 module_declaration_dirnames,
-                module_file_exts,
+                mut module_file_exts,
                 module_name_mappers,
                 module_resource_exts,
                 module_system,
@@ -401,6 +401,10 @@ pub(super) fn make_options(
         as i32;
 
     let log_file = std::path::PathBuf::from(&temp_dir).join(format!("{}.log", flowconfig_name));
+
+    if typescript_library_definition_support && !module_file_exts.contains(&".d.ts".into()) {
+        module_file_exts.push(".d.ts".into());
+    }
 
     let file_options = {
         use flow_common::files::FileOptions;

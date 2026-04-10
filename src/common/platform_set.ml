@@ -67,8 +67,8 @@ let to_platform_string_set ~file_options bitset =
 
 let platform_specific_implementation_mrefs_of_possibly_interface_file
     ~file_options ~platform_set ~file =
-  if Files.multi_platform file_options && Files.has_flow_ext file then
-    let file = Files.chop_flow_ext file in
+  if Files.multi_platform file_options && Files.has_declaration_ext file then
+    let file = Files.chop_declaration_ext file in
     let platform_set = Base.Option.value_exn platform_set in
     Base.List.find_map (Files.module_file_exts file_options) ~f:(fun module_file_ext ->
         if File_key.check_suffix file module_file_ext then

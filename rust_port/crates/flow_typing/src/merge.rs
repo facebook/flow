@@ -1299,7 +1299,7 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
             })),
         );
     };
-    if files::has_flow_ext(filename) {
+    if files::has_declaration_ext(filename) {
         // Suppose we have the setup of web project, native project, and web+native common code project.
         // We want to emit the same kinds of Haste module provider conflict error as if the same set of
         // code is covered by two flowconfigs.
@@ -1333,7 +1333,7 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
                     // .js.flow file
                     let platform_specific_provider_file =
                         ALoc::source(&platform_specific_provider_module_loc).unwrap();
-                    if files::has_flow_ext(platform_specific_provider_file) {
+                    if files::has_declaration_ext(platform_specific_provider_file) {
                         add_duplicate_provider_error(platform_specific_provider_file);
                     }
                 }
@@ -1343,7 +1343,7 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
                         // but in this case the module is any typed instead of untyped.
                         let platform_specific_provider_file =
                             ALoc::source(type_util::loc_of_t(&t)).unwrap();
-                        if files::has_flow_ext(platform_specific_provider_file) {
+                        if files::has_declaration_ext(platform_specific_provider_file) {
                             add_duplicate_provider_error(platform_specific_provider_file);
                         }
                     }

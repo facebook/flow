@@ -633,10 +633,10 @@ impl SharedMem {
     }
 
     fn handle_flow_ext(&self, file: &FileKey) -> BTreeSet<Modulename> {
-        if !files::has_flow_ext(file) {
+        if !files::has_declaration_ext(file) {
             return BTreeSet::new();
         }
-        let impl_key = files::chop_flow_ext(file);
+        let impl_key = files::chop_declaration_ext(file);
         // OCaml uses prepare_find_or_add_phantom_file, which creates a phantom
         // entry with no parse (parse_ent None). We must NOT use add_unparsed here
         // because that creates a Parse::Untyped entry, which makes get_provider

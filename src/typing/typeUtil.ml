@@ -496,9 +496,10 @@ let nominal_id_have_same_logical_module
     ((b_id, b_name) : ALoc.id * string option) =
   let haste_name_opt = Files.haste_name_opt ~options:file_options in
   let matching_platform_specific_impl_and_interface_file_key a_src b_src =
-    Files.has_flow_ext a_src
-    && (* A.js.flow, A.ios.js in the same directory *)
-    Files.chop_flow_ext a_src = Files.chop_platform_suffix_for_file ~options:file_options b_src
+    (* A.js.flow or A.d.ts, A.ios.js in the same directory *)
+    Files.has_declaration_ext a_src
+    && Files.chop_declaration_ext a_src
+       = Files.chop_platform_suffix_for_file ~options:file_options b_src
     || (* Regardless of which namespace the Haste module has or what platform they have, if they have
         * the same name, we assume it's the same logical module. It's impossible to happen in normal
         * circumstances due to uniqueness guarantee. It's only possible to happen during multiplatform
