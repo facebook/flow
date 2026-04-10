@@ -225,7 +225,7 @@ impl Hash for FileKeyInner {
     }
 }
 
-#[derive(Debug, Clone, Dupe)]
+#[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
 pub struct FileKey {
     inner: Arc<FileKeyInner>,
 }

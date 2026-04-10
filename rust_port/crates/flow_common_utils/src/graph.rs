@@ -11,6 +11,7 @@ use std::hash::Hash;
 
 use dupe::Dupe;
 
+#[derive(Clone)]
 struct Node<K> {
     forward: BTreeSet<K>,
     // These edges are mutable *only* for efficiency during construction. Once the graph is
@@ -18,6 +19,7 @@ struct Node<K> {
     backward: BTreeSet<K>,
 }
 
+#[derive(Clone)]
 pub struct Graph<K: Eq + Ord + Hash + Dupe> {
     nodes: BTreeMap<K, Node<K>>,
 }

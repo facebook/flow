@@ -61,6 +61,14 @@ impl HasteModule {
         self.provider.advance(provider);
     }
 
+    pub fn commit_provider(&self) {
+        self.provider.commit();
+    }
+
+    pub fn rollback_provider(&self) {
+        self.provider.rollback();
+    }
+
     pub fn add_provider(&self, file: FileKey) {
         self.all_providers.write().insert(file);
     }

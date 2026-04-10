@@ -11,6 +11,7 @@
 
 use std::sync::Arc;
 
+use flow_common::options::SavedStateFetcher;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_utils_concurrency::thread_pool::ThreadCount;
 use flow_utils_concurrency::thread_pool::ThreadPool;
@@ -18,6 +19,15 @@ use flow_utils_concurrency::thread_pool::ThreadPool;
 use crate::command_spec;
 use crate::command_utils;
 use crate::flow_server::FlowServer;
+
+fn saved_state_fetcher_flag() -> command_spec::FlagType<Option<SavedStateFetcher>> {
+    command_spec::enum_flag(vec![
+        ("none", SavedStateFetcher::DummyFetcher),
+        ("local", SavedStateFetcher::LocalFetcher),
+        ("scm", SavedStateFetcher::ScmFetcher),
+        ("fb", SavedStateFetcher::FbFetcher),
+    ])
+}
 
 // (* let spec = { CommandSpec.name = "server"; doc = "Runs a Flow server in the foreground"; ... } *)
 fn spec() -> command_spec::Spec {
@@ -36,7 +46,7 @@ fn spec() -> command_spec::Spec {
         "--no-flowlib",
         &command_spec::truthy(),
         "Do not use the bundled flowlib",
-        None,
+        Some("NO_FLOWLIB"),
     )
     .flag(
         "--ignore-version",
@@ -100,6 +110,36 @@ fn spec() -> command_spec::Spec {
         None,
     )
     .flag(
+        "--saved-state-fetcher",
+        &command_spec::optional(saved_state_fetcher_flag()),
+        "Which saved state fetcher Flow should use (none, local, scm, fb)",
+        None,
+    )
+    .flag(
+        "--saved-state-force-recheck",
+        &command_spec::truthy(),
+        "Force a lazy server to recheck the changes since the saved state was generated",
+        None,
+    )
+    .flag(
+        "--saved-state-no-fallback",
+        &command_spec::truthy(),
+        "If saved state fails to load, exit instead of falling back to a cold start",
+        None,
+    )
+    .flag(
+        "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+        &command_spec::truthy(),
+        "",
+        Some("FLOW_SAVED_STATE_SKIP_VERSION_CHECK_DO_NOT_USE_OR_YOU_WILL_BE_FIRED"),
+    )
+    .flag(
+        "--saved-state-verify",
+        &command_spec::truthy(),
+        "Verifies that the saved state matches what is on disk",
+        None,
+    )
+    .flag(
         "--signal-ready",
         &command_spec::truthy(),
         "Write a .ready file when server is initialized (used by start command)",
@@ -135,6 +175,24 @@ fn main(args: &command_spec::Values) {
     let lazy_flag = command_spec::get(args, "--lazy", &command_spec::truthy()).unwrap();
     let signal_ready = command_spec::get(args, "--signal-ready", &command_spec::truthy()).unwrap();
     let verbose = command_spec::get(args, "--verbose", &command_spec::truthy()).unwrap();
+    let saved_state_fetcher = command_spec::get(
+        args,
+        "--saved-state-fetcher",
+        &command_spec::optional(saved_state_fetcher_flag()),
+    )
+    .unwrap();
+    let saved_state_force_recheck =
+        command_spec::get(args, "--saved-state-force-recheck", &command_spec::truthy()).unwrap();
+    let saved_state_no_fallback =
+        command_spec::get(args, "--saved-state-no-fallback", &command_spec::truthy()).unwrap();
+    let saved_state_skip_version_check = command_spec::get(
+        args,
+        "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+        &command_spec::truthy(),
+    )
+    .unwrap();
+    let saved_state_verify =
+        command_spec::get(args, "--saved-state-verify", &command_spec::truthy()).unwrap();
     let root_arg = command_spec::get(
         args,
         "root",
@@ -145,8 +203,8 @@ fn main(args: &command_spec::Values) {
     // Determine lazy_mode override from --lazy-mode and --lazy flags
     let lazy_mode = if let Some(ref mode) = lazy_mode_flag {
         match mode.as_str() {
-            "fs" | "ide" => Some(true),
-            "none" => Some(false),
+            "true" | "fs" | "ide" | "watchman" => Some(true),
+            "false" | "none" => Some(false),
             _ => Some(true),
         }
     } else if lazy_flag {
@@ -156,6 +214,11 @@ fn main(args: &command_spec::Values) {
     };
     let overrides = command_utils::MakeOptionsOverrides {
         lazy_mode,
+        saved_state_fetcher,
+        saved_state_force_recheck: Some(saved_state_force_recheck),
+        saved_state_no_fallback: Some(saved_state_no_fallback),
+        saved_state_skip_version_check: Some(saved_state_skip_version_check),
+        saved_state_verify: Some(saved_state_verify),
         ..Default::default()
     };
 

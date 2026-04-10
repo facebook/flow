@@ -3128,7 +3128,9 @@ fn with_type_checked_file<T>(
         let intermediate_result = type_contents::parse_contents(options, file_content, file_key);
         let (ref _parse_artifacts_opt, ref parse_errs) = intermediate_result;
         if !parse_errs.is_empty() {
-            Err(parse_errs.clone())
+            Err(flow_services_inference_types::TypeContentsError::Errors(
+                parse_errs.clone(),
+            ))
         } else {
             type_contents::type_parse_artifacts(
                 options,

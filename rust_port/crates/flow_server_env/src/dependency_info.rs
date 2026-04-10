@@ -13,6 +13,7 @@ use flow_common_utils::graph::Graph;
 use flow_parser::file_key::FileKey;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 
+#[derive(Clone)]
 pub struct DependencyInfo {
     sig_dependency_graph: Graph<FileKey>,
     implementation_dependency_graph: Graph<FileKey>,

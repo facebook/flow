@@ -120,68 +120,6 @@ fn string_of_saved_state_fetcher(options: &Options) -> &'static str {
     }
 }
 
-fn init(
-    profiling: &ProfilingRunning,
-    _genv: &Genv,
-    shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-) -> (Env, NodeModulesContainers, Option<String>) {
-    // write binary path and version to server log
-    log::info!(
-        "executable={}",
-        std::env::current_exe()
-            .map(|p| p.display().to_string())
-            .unwrap_or_default()
-    );
-    log::info!("version={}", flow_common::flow_version::VERSION);
-
-    crate::multi_worker::set_report_canceled_callback(|total, finished| {
-        log::info!("Canceling progress {}/{}", finished, total);
-        monitor_rpc::status_update(server_status::Event::CancelingProgress(
-            server_status::Progress {
-                total: Some(total),
-                finished,
-            },
-        ));
-    });
-
-    monitor_rpc::status_update(server_status::Event::InitStart);
-
-    extract_flowlibs_or_exit(&_genv.options);
-
-    let pool = _genv.workers.as_ref().expect("workers must be initialized");
-    let root = _genv.options.root.clone();
-    let (env, libs_ok, node_modules_containers) =
-        flow_services_inference::type_service::init_from_scratch(
-            &_genv.options,
-            pool,
-            shared_mem,
-            &root,
-        );
-    let (_env, _first_internal_error): (Env, Option<String>) = if !libs_ok {
-        (env, None)
-    } else if _genv.options.lazy_mode {
-        flow_services_inference::type_service::libdef_check_for_lazy_init(
-            &_genv.options,
-            pool,
-            shared_mem,
-            env,
-        )
-        .expect("libdef_check_for_lazy_init failed")
-    } else {
-        flow_services_inference::type_service::full_check_for_init(
-            &_genv.options,
-            pool,
-            shared_mem,
-            None,
-            env,
-        )
-        .expect("full_check_for_init failed")
-    };
-    sample_init_memory(profiling, shared_mem);
-
-    (_env, node_modules_containers, _first_internal_error)
-}
-
 fn idle_logging_loop(_options: &Options, _start_time: f64) {
     let idle_period_in_seconds = 300.0_f64;
     let sample = |profiling: &ProfilingRunning| {
@@ -237,12 +175,18 @@ fn serve(
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs_f64();
-        std::thread::spawn({
+        let stop_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let idle_handle = std::thread::spawn({
             let options = _options.clone();
             let start_time = _start_time;
-            move || idle_logging_loop(&options, start_time)
+            let stop = stop_flag.clone();
+            move || {
+                if !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                    idle_logging_loop(&options, start_time);
+                }
+            }
         });
-        std::thread::spawn(gc_loop);
+        let gc_handle = std::thread::spawn(gc_loop);
         server_monitor_listener_state::wait_for_anything(
             &|skip_incompatible, updates| {
                 flow_server_rechecker::rechecker::process_updates(
@@ -255,6 +199,10 @@ fn serve(
             },
             &|| _env.checked_files.clone(),
         );
+
+        stop_flag.store(true, std::sync::atomic::Ordering::Relaxed);
+        let _ = idle_handle.join();
+        let _ = gc_handle.join();
 
         let (_profiling, new_env) = flow_server_rechecker::rechecker::recheck_loop(
             _genv,
@@ -370,10 +318,36 @@ fn run(_init_id: &str, _options: Arc<Options>) {
         .as_secs_f64();
     log::info!("Initializing Server (This might take some time)");
 
+    log::info!(
+        "executable={}",
+        std::env::current_exe()
+            .map(|p| p.display().to_string())
+            .unwrap_or_default()
+    );
+    log::info!("version={}", flow_common::flow_version::VERSION);
+
+    crate::multi_worker::set_report_canceled_callback(|total, finished| {
+        log::info!("Canceling progress {}/{}", finished, total);
+        monitor_rpc::status_update(server_status::Event::CancelingProgress(
+            server_status::Progress {
+                total: Some(total),
+                finished,
+            },
+        ));
+    });
+
+    monitor_rpc::status_update(server_status::Event::InitStart);
+
+    extract_flowlibs_or_exit(&genv.options);
+
     let should_print_summary = _options.profile;
+    let pool = genv.workers.as_ref().expect("workers must be initialized");
     let (profiling, (env, node_modules_containers, _first_internal_error)) =
         with_profiling("Init", should_print_summary, |profiling| {
-            init(profiling, &genv, &genv.shared_mem)
+            let (env, node_modules_containers, first_internal_error) =
+                flow_services_inference::type_service::init(&genv.options, pool, &genv.shared_mem);
+            sample_init_memory(profiling, &genv.shared_mem);
+            (env, node_modules_containers, first_internal_error)
         });
     let init_duration = profiling.get_profiling_duration();
 
@@ -452,12 +426,40 @@ pub fn check_once(_init_id: &str, _options: Arc<Options>) {
 
     let _genv = create_program_init(_init_id, _options.clone());
 
+    log::info!(
+        "executable={}",
+        std::env::current_exe()
+            .map(|p| p.display().to_string())
+            .unwrap_or_default()
+    );
+    log::info!("version={}", flow_common::flow_version::VERSION);
+
+    crate::multi_worker::set_report_canceled_callback(|total, finished| {
+        log::info!("Canceling progress {}/{}", finished, total);
+        monitor_rpc::status_update(server_status::Event::CancelingProgress(
+            server_status::Progress {
+                total: Some(total),
+                finished,
+            },
+        ));
+    });
+
+    monitor_rpc::status_update(server_status::Event::InitStart);
+
+    extract_flowlibs_or_exit(&_genv.options);
+
     let should_print_summary = _options.profile;
+    let pool = _genv.workers.as_ref().expect("workers must be initialized");
 
     let (profiling, (_errors, _warnings, _first_internal_error)) =
         with_profiling("Init", should_print_summary, |profiling| {
             let (env, _node_modules_containers, first_internal_error) =
-                init(profiling, &_genv, &_genv.shared_mem);
+                flow_services_inference::type_service::init(
+                    &_genv.options,
+                    pool,
+                    &_genv.shared_mem,
+                );
+            sample_init_memory(profiling, &_genv.shared_mem);
 
             let (errors, warnings, suppressed_errors) = error_collator::get(&env);
 

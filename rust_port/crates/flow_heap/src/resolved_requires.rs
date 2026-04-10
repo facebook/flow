@@ -13,7 +13,15 @@ use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::Modulename;
 use flow_parser::file_key::FileKey;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Dependency {
     HasteModule(Modulename),
     File(FileKey),
@@ -42,7 +50,7 @@ impl Dependency {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ResolvedModule {
     HasteModule(Modulename),
     File(FileKey),

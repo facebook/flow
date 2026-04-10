@@ -21,10 +21,23 @@ use flow_server_files::server_files_js;
 use serde::Deserialize;
 use serde::Serialize;
 
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) enum SaveStateOut {
+    File(String),
+    Scm,
+}
+
 /// Requests sent from client to server.
 /// Simplified wire types for the subset of ServerProt.Request.Command used by the Rust CLI.
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) enum ServerRequest {
+    CheckContents {
+        filename: Option<String>,
+        content: String,
+        force: bool,
+        include_warnings: bool,
+        strip_root: bool,
+    },
     Status {
         include_warnings: bool,
         strip_root: bool,
@@ -35,6 +48,9 @@ pub(crate) enum ServerRequest {
         missed_changes: bool,
         changed_mergebase: bool,
     },
+    SaveState {
+        out: SaveStateOut,
+    },
     Shutdown,
 }
 
@@ -42,6 +58,12 @@ pub(crate) enum ServerRequest {
 /// Simplified wire types for the subset of ServerProt.Response.Response used by the Rust CLI.
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) enum ServerResponse {
+    CheckContents {
+        has_errors: bool,
+        warning_count: usize,
+        error_output: String,
+        not_covered: bool,
+    },
     Status {
         has_errors: bool,
         error_count: usize,
@@ -50,6 +72,9 @@ pub(crate) enum ServerResponse {
         lazy_stats: LazyStats,
     },
     ForceRecheck,
+    SaveState {
+        result: Result<String, String>,
+    },
     Error {
         message: String,
     },
@@ -80,15 +105,31 @@ pub(crate) fn receive_message<R: Read, T: for<'de> Deserialize<'de>>(
 
 pub(crate) enum ConnectError {
     ServerNotRunning,
+    ServerSocketMissing,
     ConnectionFailed(String),
     CommunicationError(String),
     Timeout,
+}
+
+fn io_error_is_server_not_running(kind: std::io::ErrorKind) -> bool {
+    matches!(
+        kind,
+        std::io::ErrorKind::ConnectionRefused
+            | std::io::ErrorKind::ConnectionReset
+            | std::io::ErrorKind::ConnectionAborted
+            | std::io::ErrorKind::BrokenPipe
+            | std::io::ErrorKind::UnexpectedEof
+            | std::io::ErrorKind::NotConnected
+    )
 }
 
 impl std::fmt::Display for ConnectError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ConnectError::ServerNotRunning => write!(f, "There is no Flow server running"),
+            ConnectError::ServerSocketMissing => {
+                write!(f, "The flow server lock exists but the socket is missing")
+            }
             ConnectError::ConnectionFailed(msg) => {
                 write!(f, "Could not connect to server: {}", msg)
             }
@@ -96,6 +137,20 @@ impl std::fmt::Display for ConnectError {
             ConnectError::Timeout => write!(f, "Timed out waiting for server response"),
         }
     }
+}
+
+fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
+    let lock_path = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
+    Path::new(&lock_path).exists()
+}
+
+pub(crate) fn remove_server_files(flowconfig_name: &str, tmp_dir: &str, root: &Path) {
+    let lock_path = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
+    let socket_path = server_files_js::socket_file(flowconfig_name, tmp_dir, root);
+    let ready_path = server_files_js::ready_file(flowconfig_name, tmp_dir, root);
+    let _ = std::fs::remove_file(lock_path);
+    let _ = std::fs::remove_file(socket_path);
+    let _ = std::fs::remove_file(ready_path);
 }
 
 /// Connect to the Flow server and send a request, returning the response.
@@ -118,24 +173,36 @@ pub(crate) fn connect_and_make_request_with_timeout(
     timeout_secs: Option<u64>,
 ) -> Result<ServerResponse, ConnectError> {
     let socket_path = server_files_js::socket_file(flowconfig_name, tmp_dir, root);
+    let server_exists = server_exists(flowconfig_name, tmp_dir, root);
 
     // Read the port from the socket file (written by the server on startup)
     let port_str = std::fs::read_to_string(&socket_path).map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            ConnectError::ServerNotRunning
+            if server_exists {
+                ConnectError::ServerSocketMissing
+            } else {
+                ConnectError::ServerNotRunning
+            }
         } else {
             ConnectError::ConnectionFailed(e.to_string())
         }
     })?;
-    let port: u16 = port_str
-        .trim()
-        .parse()
-        .map_err(|_| ConnectError::ConnectionFailed("invalid port in socket file".to_string()))?;
+    let port: u16 = port_str.trim().parse().map_err(|_| {
+        if server_exists {
+            ConnectError::ServerSocketMissing
+        } else {
+            ConnectError::ConnectionFailed("invalid port in socket file".to_string())
+        }
+    })?;
 
     // Connect via TCP to localhost
     let mut stream = TcpStream::connect(("127.0.0.1", port)).map_err(|e| {
-        if e.kind() == std::io::ErrorKind::ConnectionRefused {
-            ConnectError::ServerNotRunning
+        if io_error_is_server_not_running(e.kind()) {
+            if server_exists {
+                ConnectError::ServerSocketMissing
+            } else {
+                ConnectError::ServerNotRunning
+            }
         } else {
             ConnectError::ConnectionFailed(e.to_string())
         }
@@ -149,13 +216,28 @@ pub(crate) fn connect_and_make_request_with_timeout(
     stream.set_write_timeout(Some(Duration::from_secs(10))).ok();
 
     // Send request
-    send_message(&mut stream, &request)
-        .map_err(|e| ConnectError::CommunicationError(e.to_string()))?;
+    send_message(&mut stream, &request).map_err(|e| {
+        if io_error_is_server_not_running(e.kind()) {
+            if server_exists {
+                ConnectError::ServerSocketMissing
+            } else {
+                ConnectError::ServerNotRunning
+            }
+        } else {
+            ConnectError::CommunicationError(e.to_string())
+        }
+    })?;
 
     // Receive response
     receive_message(&mut stream).map_err(|e| {
         if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut {
             ConnectError::Timeout
+        } else if io_error_is_server_not_running(e.kind()) {
+            if server_exists {
+                ConnectError::ServerSocketMissing
+            } else {
+                ConnectError::ServerNotRunning
+            }
         } else {
             ConnectError::CommunicationError(e.to_string())
         }

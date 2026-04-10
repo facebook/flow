@@ -13,6 +13,7 @@ use std::rc::Rc;
 use flow_common_utils::filename_cache;
 use flow_services_inference_types::AutocompleteArtifacts;
 use flow_services_inference_types::FileArtifacts;
+use flow_services_inference_types::TypeContentsError;
 use lsp_types::InitializeParams;
 
 use crate::flow_lsp_conversions;
@@ -61,16 +62,14 @@ pub struct SingleClient {
     lsp_initialize_params: InitializeParams,
     subscribed: bool,
     opened_files: BTreeMap<String, String>,
-    type_parse_artifacts_cache: filename_cache::Cache<
-        Result<FileArtifacts<'static>, flow_typing_errors::flow_error::ErrorSet>,
-    >,
+    type_parse_artifacts_cache:
+        filename_cache::Cache<Result<FileArtifacts<'static>, TypeContentsError>>,
     client_config: client_config::T,
     outstanding_handlers: HashMap<Prot::LspId, lsp_handler::UnitLspHandler>,
     autocomplete_token: Option<AutocompleteToken>,
     autocomplete_session_length: i32,
-    autocomplete_artifacts_cache: filename_cache::Cache<
-        Result<AutocompleteArtifacts<'static>, flow_typing_errors::flow_error::ErrorSet>,
-    >,
+    autocomplete_artifacts_cache:
+        filename_cache::Cache<Result<AutocompleteArtifacts<'static>, TypeContentsError>>,
 }
 
 pub type SingleClientRef = Rc<RefCell<SingleClient>>;
@@ -503,16 +502,13 @@ pub fn client_config(client: &SingleClientRef) -> client_config::T {
 
 pub fn type_parse_artifacts_cache(
     client: &SingleClientRef,
-) -> filename_cache::Cache<Result<FileArtifacts<'static>, flow_typing_errors::flow_error::ErrorSet>>
-{
+) -> filename_cache::Cache<Result<FileArtifacts<'static>, TypeContentsError>> {
     client.borrow().type_parse_artifacts_cache.clone()
 }
 
 pub fn autocomplete_artifacts_cache(
     client: &SingleClientRef,
-) -> filename_cache::Cache<
-    Result<AutocompleteArtifacts<'static>, flow_typing_errors::flow_error::ErrorSet>,
-> {
+) -> filename_cache::Cache<Result<AutocompleteArtifacts<'static>, TypeContentsError>> {
     client.borrow().autocomplete_artifacts_cache.clone()
 }
 

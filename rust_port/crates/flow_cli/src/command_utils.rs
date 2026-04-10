@@ -203,7 +203,10 @@ pub(super) fn make_options(
                 relay_integration_module_prefix,
                 relay_integration_module_prefix_includes,
                 root_name,
+                saved_state_direct_serialization,
                 saved_state_fetcher,
+                saved_state_persist_export_index,
+                saved_state_reinit_on_lib_change,
                 saved_state_skip_version_check,
                 shm_hash_table_pow: _shm_hash_table_pow,
                 shm_heap_size: _shm_heap_size,
@@ -643,9 +646,12 @@ pub(super) fn make_options(
         relay_integration_module_prefix_includes,
         root: Arc::new(root),
         root_name: root_name.map(FlowSmolStr::new),
+        saved_state_direct_serialization,
         saved_state_fetcher: saved_state_fetcher_override.unwrap_or(saved_state_fetcher),
         saved_state_force_recheck: saved_state_force_recheck.unwrap_or(false),
         saved_state_no_fallback: saved_state_no_fallback.unwrap_or(false),
+        saved_state_persist_export_index,
+        saved_state_reinit_on_lib_change,
         saved_state_skip_version_check: saved_state_skip_version_check_override.unwrap_or(false)
             || saved_state_skip_version_check,
         saved_state_verify: saved_state_verify.unwrap_or(false),
@@ -812,7 +818,13 @@ pub(super) fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> st
         path.to_path_buf()
     } else {
         path.parent()
-            .map(|p| p.to_path_buf())
+            .map(|p| {
+                if p.as_os_str().is_empty() {
+                    Path::new(".").to_path_buf()
+                } else {
+                    p.to_path_buf()
+                }
+            })
             .unwrap_or_else(|| Path::new(".").to_path_buf())
     };
     let dir = dir.canonicalize().unwrap_or_else(|_| dir.to_path_buf());

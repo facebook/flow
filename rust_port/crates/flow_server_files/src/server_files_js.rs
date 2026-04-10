@@ -144,6 +144,16 @@ pub fn recheck_stats_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> 
     )
 }
 
+pub fn ready_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
+    file_of_root(
+        Some(MAX_ROOT_PART_LEN),
+        "ready",
+        flowconfig_name,
+        tmp_dir,
+        root,
+    )
+}
+
 // Socket files don't care about length. socket.ml will worry about abridging those
 pub fn socket_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
     file_of_root(None, "sockv3", flowconfig_name, tmp_dir, root)

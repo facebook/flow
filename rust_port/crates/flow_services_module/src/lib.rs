@@ -408,13 +408,40 @@ mod node {
         None
     }
 
-    fn parse_package(shared_mem: &SharedMem, package_filename: &str) -> Arc<PackageJson> {
+    fn parse_package(
+        options: &Options,
+        shared_mem: &SharedMem,
+        package_filename: &str,
+    ) -> Arc<PackageJson> {
         let package_filename = super::resolve_symlinks(package_filename);
         let file_key = FileKey::json_file_of_absolute(&package_filename);
 
-        shared_mem
-            .get_package_info(&file_key)
-            .unwrap_or_else(|| Arc::new(PackageJson::empty()))
+        shared_mem.get_package_info(&file_key).unwrap_or_else(|| {
+            std::fs::read_to_string(&package_filename)
+                .ok()
+                .and_then(|content| {
+                    let node_main_fields: Vec<_> = options
+                        .node_main_fields
+                        .iter()
+                        .map(FlowSmolStr::new)
+                        .collect();
+                    let parse_options = None;
+                    let ((_loc, obj), parse_errors) = flow_parser::parse_package_json_file(
+                        false,
+                        None,
+                        parse_options,
+                        Some(file_key.dupe()),
+                        Ok(content.as_str()),
+                    );
+                    if parse_errors.is_empty() {
+                        Some(PackageJson::parse(&node_main_fields, &obj))
+                    } else {
+                        None
+                    }
+                })
+                .map(Arc::new)
+                .unwrap_or_else(|| Arc::new(PackageJson::empty()))
+        })
     }
 
     fn parse_exports(
@@ -433,7 +460,7 @@ mod node {
             .map(FlowSmolStr::new)
             .collect();
         let package_json_path = Path::new(package_dir).join("package.json");
-        let package = parse_package(shared_mem, package_json_path.to_str().unwrap());
+        let package = parse_package(options, shared_mem, package_json_path.to_str().unwrap());
 
         let source_path = package
             .exports()
@@ -456,13 +483,14 @@ mod node {
     }
 
     fn parse_main(
+        options: &Options,
         shared_mem: &SharedMem,
         file_options: &FileOptions,
         mut phantom_acc: Option<&mut PhantomAcc>,
         package_filename: &str,
         file_exts: &[FlowSmolStr],
     ) -> Option<Dependency> {
-        let package = parse_package(shared_mem, package_filename);
+        let package = parse_package(options, shared_mem, package_filename);
         package.main().and_then(|main| {
             let dir = Path::new(package_filename).parent()?.to_str()?;
             let path = files::normalize_path(dir, main.as_str());
@@ -515,6 +543,7 @@ mod node {
         .or_else(|| {
             let package_json = Path::new(&full_package_path).join("package.json");
             parse_main(
+                options,
                 shared_mem,
                 file_options,
                 phantom_acc.as_deref_mut(),
@@ -724,6 +753,20 @@ mod node {
                     ) {
                         return Some(result);
                     }
+                }
+            }
+        } else {
+            for dirname in &file_options.node_resolver_dirnames {
+                if let Some(result) = resolve_relative(
+                    options,
+                    shared_mem,
+                    phantom_acc.as_deref_mut(),
+                    importing_file,
+                    possible_node_module_container_dir,
+                    Some(&package_subpath),
+                    &format!("{}{}{}", dirname, std::path::MAIN_SEPARATOR, package_name),
+                ) {
+                    return Some(result);
                 }
             }
         }

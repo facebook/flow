@@ -119,7 +119,7 @@ fn recheck(
     env: server_env::Env,
     files_to_force: CheckedSet,
     find_ref_command: Option<server_monitor_listener_state::FindRefCommand>,
-    require_full_check_reinit: bool,
+    incompatible_lib_change: bool,
     changed_mergebase: Option<bool>,
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
@@ -144,7 +144,7 @@ fn recheck(
         &updates,
         &find_ref_request.def_info,
         files_to_force,
-        require_full_check_reinit,
+        incompatible_lib_change,
         changed_mergebase,
         missed_changes,
         node_modules_containers,
@@ -153,7 +153,7 @@ fn recheck(
     );
     let (log_recheck_event, recheck_stats, _find_ref_results, env) = match recheck_result {
         Ok((log_event, stats, results, env)) => (log_event, stats, results, env),
-        Err(type_service::RecheckError::Canceled) => {
+        Err(type_service::RecheckError::Canceled(_changed_files)) => {
             log::error!("Recheck was canceled (unexpected without async runtime)");
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError);
         }
@@ -223,14 +223,14 @@ pub(crate) fn recheck_single(
 ) -> RecheckOutcome {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
-    let process_updates_fn = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
+    let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
         process_updates(skip_incompatible, options, &env, shared_mem, updates)
     };
 
     let mut will_be_checked_files = env.checked_files.clone();
 
     let (priority, workload) =
-        server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates_fn, &|| {
+        server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates, &|| {
             will_be_checked_files.clone()
         });
 
@@ -244,7 +244,7 @@ pub(crate) fn recheck_single(
         files_to_prioritize,
         files_to_force,
         find_ref_command,
-        require_full_check_reinit,
+        incompatible_lib_change,
     } = workload;
 
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
@@ -256,7 +256,7 @@ pub(crate) fn recheck_single(
         files_to_recheck_set.add(Some(env.checked_files.focused().clone()), None, None);
     }
 
-    if !require_full_check_reinit
+    if !incompatible_lib_change
         && !did_change_mergebase
         && files_to_recheck_set.is_empty()
         && files_to_force.is_empty()
@@ -285,7 +285,7 @@ pub(crate) fn recheck_single(
             env,
             files_to_force,
             find_ref_command,
-            require_full_check_reinit,
+            incompatible_lib_change,
             changed_mergebase,
             missed_changes,
             &mut will_be_checked_files,

@@ -11,10 +11,20 @@
 
 use std::path::Path;
 
+use flow_common::options::SavedStateFetcher;
 use flow_server_files::server_files_js;
 
 use crate::command_spec;
 use crate::command_utils;
+
+fn saved_state_fetcher_flag() -> command_spec::FlagType<Option<SavedStateFetcher>> {
+    command_spec::enum_flag(vec![
+        ("none", SavedStateFetcher::DummyFetcher),
+        ("local", SavedStateFetcher::LocalFetcher),
+        ("scm", SavedStateFetcher::ScmFetcher),
+        ("fb", SavedStateFetcher::FbFetcher),
+    ])
+}
 
 pub(crate) fn start_server(
     flowconfig_name: &str,
@@ -25,6 +35,11 @@ pub(crate) fn start_server(
     lazy_flag: bool,
     verbose: bool,
     log_file_flag: Option<&str>,
+    saved_state_fetcher: Option<SavedStateFetcher>,
+    saved_state_force_recheck: bool,
+    saved_state_no_fallback: bool,
+    saved_state_skip_version_check: bool,
+    saved_state_verify: bool,
     root: &Path,
 ) -> Result<(), String> {
     // Determine lazy_mode override from --lazy-mode and --lazy flags
@@ -41,6 +56,11 @@ pub(crate) fn start_server(
     };
     let overrides = command_utils::MakeOptionsOverrides {
         lazy_mode,
+        saved_state_fetcher,
+        saved_state_force_recheck: Some(saved_state_force_recheck),
+        saved_state_no_fallback: Some(saved_state_no_fallback),
+        saved_state_skip_version_check: Some(saved_state_skip_version_check),
+        saved_state_verify: Some(saved_state_verify),
         ..Default::default()
     };
 
@@ -62,7 +82,6 @@ pub(crate) fn start_server(
     }
 
     let tmp_dir = std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned());
-
     let lock_path = server_files_js::lock_file(flowconfig_name, &tmp_dir, root);
     if Path::new(&lock_path).exists() {
         return Err(format!(
@@ -73,11 +92,12 @@ pub(crate) fn start_server(
 
     let log_path = log_file_flag
         .map(ToOwned::to_owned)
+        .or_else(|| std::env::var("FLOW_LOG_FILE").ok())
         .unwrap_or_else(|| server_files_js::log_file(flowconfig_name, &tmp_dir, root));
 
     // Spawn the server as a child process using the current binary with --server-mode
     let socket_path = server_files_js::socket_file(flowconfig_name, &tmp_dir, root);
-    let ready_path = format!("{}.ready", socket_path);
+    let ready_path = server_files_js::ready_file(flowconfig_name, &tmp_dir, root);
     let _ = std::fs::remove_file(&ready_path);
 
     let log_file = std::fs::OpenOptions::new()
@@ -108,6 +128,27 @@ pub(crate) fn start_server(
     if verbose {
         cmd.arg("--verbose");
     }
+    if let Some(saved_state_fetcher) = saved_state_fetcher {
+        let saved_state_fetcher = match saved_state_fetcher {
+            SavedStateFetcher::DummyFetcher => "none",
+            SavedStateFetcher::LocalFetcher => "local",
+            SavedStateFetcher::ScmFetcher => "scm",
+            SavedStateFetcher::FbFetcher => "fb",
+        };
+        cmd.arg("--saved-state-fetcher").arg(saved_state_fetcher);
+    }
+    if saved_state_force_recheck {
+        cmd.arg("--saved-state-force-recheck");
+    }
+    if saved_state_no_fallback {
+        cmd.arg("--saved-state-no-fallback");
+    }
+    if saved_state_skip_version_check {
+        cmd.arg("--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED");
+    }
+    if saved_state_verify {
+        cmd.arg("--saved-state-verify");
+    }
     cmd.arg("--flowconfig-name").arg(flowconfig_name);
     cmd.arg("--signal-ready");
     cmd.arg(root.to_string_lossy().as_ref());
@@ -118,9 +159,15 @@ pub(crate) fn start_server(
     cmd.stdout(std::process::Stdio::from(log_file));
     cmd.stderr(std::process::Stdio::from(log_file_err));
 
-    let child = cmd
+    let mut child = cmd
         .spawn()
         .map_err(|e| format!("failed to spawn server: {}", e))?;
+
+    let cleanup_startup_artifacts = || {
+        let _ = std::fs::remove_file(&lock_path);
+        let _ = std::fs::remove_file(&socket_path);
+        let _ = std::fs::remove_file(&ready_path);
+    };
 
     eprintln!("Spawned flow server (pid={})", child.id());
     eprintln!("Logs will go to {}", log_path);
@@ -134,6 +181,15 @@ pub(crate) fn start_server(
         loop {
             if std::path::Path::new(&socket_path).exists() {
                 break;
+            }
+            if let Some(_status) = child
+                .try_wait()
+                .map_err(|e| format!("failed to wait for server process: {}", e))?
+            {
+                cleanup_startup_artifacts();
+                flow_common_exit_status::exit(
+                    flow_common_exit_status::FlowExitStatus::ServerStartFailed,
+                );
             }
             if start.elapsed() > timeout {
                 break;
@@ -150,6 +206,15 @@ pub(crate) fn start_server(
             if std::path::Path::new(&ready_path).exists() {
                 let _ = std::fs::remove_file(&ready_path);
                 break;
+            }
+            if let Some(_status) = child
+                .try_wait()
+                .map_err(|e| format!("failed to wait for server process: {}", e))?
+            {
+                cleanup_startup_artifacts();
+                flow_common_exit_status::exit(
+                    flow_common_exit_status::FlowExitStatus::ServerStartFailed,
+                );
             }
             if start.elapsed() > timeout {
                 break;
@@ -177,7 +242,7 @@ fn spec() -> command_spec::Spec {
         "--no-flowlib",
         &command_spec::truthy(),
         "Do not use the bundled flowlib",
-        None,
+        Some("NO_FLOWLIB"),
     )
     .flag(
         "--ignore-version",
@@ -247,6 +312,36 @@ fn spec() -> command_spec::Spec {
         None,
     )
     .flag(
+        "--saved-state-fetcher",
+        &command_spec::optional(saved_state_fetcher_flag()),
+        "Which saved state fetcher Flow should use (none, local, scm, fb)",
+        None,
+    )
+    .flag(
+        "--saved-state-force-recheck",
+        &command_spec::truthy(),
+        "Force a lazy server to recheck the changes since the saved state was generated",
+        None,
+    )
+    .flag(
+        "--saved-state-no-fallback",
+        &command_spec::truthy(),
+        "If saved state fails to load, exit instead of falling back to a cold start",
+        None,
+    )
+    .flag(
+        "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+        &command_spec::truthy(),
+        "",
+        Some("FLOW_SAVED_STATE_SKIP_VERSION_CHECK_DO_NOT_USE_OR_YOU_WILL_BE_FIRED"),
+    )
+    .flag(
+        "--saved-state-verify",
+        &command_spec::truthy(),
+        "Verifies that the saved state matches what is on disk",
+        None,
+    )
+    .flag(
         "--autostop",
         &command_spec::truthy(),
         "Auto-stop when last client disconnects (accepted but ignored)",
@@ -311,6 +406,24 @@ fn main(args: &command_spec::Values) {
         &command_spec::optional(command_spec::string()),
     )
     .unwrap();
+    let saved_state_fetcher = command_spec::get(
+        args,
+        "--saved-state-fetcher",
+        &command_spec::optional(saved_state_fetcher_flag()),
+    )
+    .unwrap();
+    let saved_state_force_recheck =
+        command_spec::get(args, "--saved-state-force-recheck", &command_spec::truthy()).unwrap();
+    let saved_state_no_fallback =
+        command_spec::get(args, "--saved-state-no-fallback", &command_spec::truthy()).unwrap();
+    let saved_state_skip_version_check = command_spec::get(
+        args,
+        "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+        &command_spec::truthy(),
+    )
+    .unwrap();
+    let saved_state_verify =
+        command_spec::get(args, "--saved-state-verify", &command_spec::truthy()).unwrap();
     let root_arg = command_spec::get(
         args,
         "root",
@@ -328,6 +441,11 @@ fn main(args: &command_spec::Values) {
         lazy_flag,
         verbose,
         log_file_flag.as_deref(),
+        saved_state_fetcher,
+        saved_state_force_recheck,
+        saved_state_no_fallback,
+        saved_state_skip_version_check,
+        saved_state_verify,
         &root,
     ) {
         eprintln!("Error: {}", msg);

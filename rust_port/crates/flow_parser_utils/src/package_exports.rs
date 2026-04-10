@@ -16,7 +16,7 @@ use flow_parser::loc::Loc;
 
 use crate::export_condition_map::ExportConditionMap;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PackageExports {
     subpaths: HashMap<FlowSmolStr, ExportConditionMap>,
 }

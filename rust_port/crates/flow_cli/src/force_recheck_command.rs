@@ -75,7 +75,7 @@ fn spec() -> command_spec::Spec {
         "--no-flowlib",
         &command_spec::truthy(),
         "Do not use the bundled flowlib",
-        None,
+        Some("NO_FLOWLIB"),
     )
     .flag(
         "--root",
@@ -242,6 +242,10 @@ fn main(args: &command_spec::Values) {
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError)
         }
         Err(command_connect::ConnectError::ServerNotRunning) => {
+            eprintln!("There is no Flow server running in '{}'", root.display());
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoServerRunning)
+        }
+        Err(command_connect::ConnectError::ServerSocketMissing) => {
             eprintln!("There is no Flow server running in '{}'", root.display());
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoServerRunning)
         }

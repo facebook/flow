@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-struct Mutator {
+pub struct Mutator {
     commit: Box<dyn FnOnce()>,
     rollback: Box<dyn FnOnce()>,
 }
@@ -16,26 +16,27 @@ pub struct Transaction {
     committed: bool,
 }
 
-impl Transaction {
-    // (* let add ~commit ~rollback transaction = transaction := { commit; rollback } :: !transaction *)
-    pub fn add(&mut self, commit: impl FnOnce() + 'static, rollback: impl FnOnce() + 'static) {
-        self.mutators.push(Mutator {
-            commit: Box::new(commit),
-            rollback: Box::new(rollback),
-        });
-    }
+pub fn add(
+    transaction: &mut Transaction,
+    commit: impl FnOnce() + 'static,
+    rollback: impl FnOnce() + 'static,
+) {
+    transaction.mutators.push(Mutator {
+        commit: Box::new(commit),
+        rollback: Box::new(rollback),
+    });
 }
 
-fn commit(transaction: &mut Transaction) {
-    eprintln!("Committing transaction: {}", transaction.name);
+pub fn commit(transaction: &mut Transaction) {
+    log::info!("Committing transaction: {}", transaction.name);
     for mutator in std::mem::take(&mut transaction.mutators).into_iter().rev() {
         (mutator.commit)();
     }
     transaction.committed = true;
 }
 
-fn rollback(transaction: &mut Transaction) {
-    eprintln!("Rolling back transaction: {}", transaction.name);
+pub fn rollback(transaction: &mut Transaction) {
+    log::info!("Rolling back transaction: {}", transaction.name);
     for mutator in std::mem::take(&mut transaction.mutators).into_iter().rev() {
         (mutator.rollback)();
     }
@@ -58,4 +59,22 @@ pub fn with_transaction_sync<T>(name: &str, f: impl FnOnce(&mut Transaction) -> 
     let result = f(&mut transaction);
     commit(&mut transaction);
     result
+}
+
+pub fn with_transaction_result_sync<T, E>(
+    name: &str,
+    f: impl FnOnce(&mut Transaction) -> Result<T, E>,
+) -> Result<T, E> {
+    let mut transaction = Transaction {
+        name: name.to_string(),
+        mutators: Vec::new(),
+        committed: false,
+    };
+    match f(&mut transaction) {
+        Ok(result) => {
+            commit(&mut transaction);
+            Ok(result)
+        }
+        Err(err) => Err(err),
+    }
 }

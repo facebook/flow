@@ -25,8 +25,10 @@ use flow_parsing::parsing_service::ParseResult;
 use flow_parsing::parsing_service::ParseSkipReason;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_monitor_listener_state;
+use flow_services_inference_types::CheckedDependenciesCanceled;
 use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
+use flow_services_inference_types::TypeContentsError;
 use flow_services_inference_types::TypecheckArtifacts;
 use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
@@ -39,9 +41,6 @@ use flow_typing_type::type_::Type;
 use crate::inference_utils;
 use crate::merge_service;
 use crate::obj_to_obj_hook;
-
-#[derive(Debug)]
-struct CheckedDependenciesCanceled;
 
 // Note that there may be parse errors
 pub enum ParseContentsReturn {
@@ -221,7 +220,7 @@ pub fn printable_errors_of_file_artifacts_result(
     env: &Env,
     shared_mem: &SharedMem,
     filename: &FileKey,
-    result: Result<&FileArtifacts, &ErrorSet>,
+    result: Result<&FileArtifacts, &TypeContentsError>,
 ) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
     let root = &*options.root;
     let loc_of_aloc = |aloc: &ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
@@ -239,7 +238,7 @@ pub fn printable_errors_of_file_artifacts_result(
             );
             (errors, warnings)
         }
-        Err(errors) => {
+        Err(TypeContentsError::Errors(errors)) => {
             let errors = intermediate_error::make_errors_printable(
                 loc_of_aloc,
                 get_ast,
@@ -248,6 +247,10 @@ pub fn printable_errors_of_file_artifacts_result(
             );
             (errors, ConcreteLocPrintableErrorSet::empty())
         }
+        Err(TypeContentsError::CheckedDependenciesCanceled) => (
+            ConcreteLocPrintableErrorSet::empty(),
+            ConcreteLocPrintableErrorSet::empty(),
+        ),
     }
 }
 
@@ -268,6 +271,18 @@ fn unchecked_dependencies(
     ) -> Option<FileKey> {
         let file = shared_mem.get_provider(m)?;
         let _parse = shared_mem.get_typed_parse(&file)?;
+        let abs_path = file.to_absolute();
+        match std::fs::read_to_string(&abs_path) {
+            Ok(content)
+                if !parsing_service::does_content_match_file_hash(shared_mem, &file, &content) =>
+            {
+                return Some(file);
+            }
+            Err(_) => {
+                return Some(file);
+            }
+            Ok(_) => {}
+        }
         match shared_mem.get_leader(&file) {
             None => Some(file),
             Some(_) => None,
@@ -301,26 +316,26 @@ fn unchecked_dependencies(
 //
 // This is necessary because `check_contents` needs all of the dep type sigs to be
 // available, but since it doesn't use workers it can't go parse everything itself.
-#[allow(dead_code)]
 fn ensure_checked_dependencies(
     options: &Options,
     shared_mem: &SharedMem,
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) {
+) -> Result<(), CheckedDependenciesCanceled> {
     let unchecked_deps =
         unchecked_dependencies(options, shared_mem, file, requires, node_modules_containers);
     if !unchecked_deps.is_empty() {
         let n = unchecked_deps.len();
         eprintln!("Canceling command due to {} unchecked dependencies", n);
         server_monitor_listener_state::push_dependencies_to_prioritize(unchecked_deps);
-        std::panic::panic_any(CheckedDependenciesCanceled);
+        Err(CheckedDependenciesCanceled)
+    } else {
+        Ok(())
     }
 }
 
 // file+contents may not agree with file system state
-#[allow(dead_code)]
 pub fn check_contents(
     options: &Options,
     shared_mem: Arc<SharedMem>,
@@ -331,7 +346,7 @@ pub fn check_contents(
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context<'static>, ast::Program<ALoc, (ALoc, Type)>) {
+) -> Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled> {
     with_timer(options, "MergeContents", || {
         ensure_checked_dependencies(
             options,
@@ -339,8 +354,8 @@ pub fn check_contents(
             &filename,
             requires,
             node_modules_containers,
-        );
-        merge_service::check_contents_context(
+        )?;
+        Ok(merge_service::check_contents_context(
             shared_mem,
             Arc::new(options.clone()),
             master_cx,
@@ -349,12 +364,11 @@ pub fn check_contents(
             docblock,
             file_sig,
             node_modules_containers,
-        )
+        ))
     })
 }
 
 // IDE service: enable for_ide flag to ensure declaration files are fully checked
-#[allow(dead_code)]
 pub fn compute_env_of_contents(
     options: &Options,
     shared_mem: Arc<SharedMem>,
@@ -365,7 +379,7 @@ pub fn compute_env_of_contents(
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context<'static>, ast::Program<ALoc, ALoc>) {
+) -> Result<(Context<'static>, ast::Program<ALoc, ALoc>), CheckedDependenciesCanceled> {
     type_inference_hooks_js::with_for_ide(true, || {
         with_timer(options, "MergeContents", || {
             ensure_checked_dependencies(
@@ -374,8 +388,8 @@ pub fn compute_env_of_contents(
                 &filename,
                 requires,
                 node_modules_containers,
-            );
-            merge_service::compute_env_of_contents(
+            )?;
+            Ok(merge_service::compute_env_of_contents(
                 shared_mem,
                 Arc::new(options.clone()),
                 master_cx,
@@ -384,13 +398,12 @@ pub fn compute_env_of_contents(
                 docblock,
                 file_sig,
                 node_modules_containers,
-            )
+            ))
         })
     })
 }
 
 // We assume that callers have already inspected the parse errors, so we discard them here.
-#[allow(dead_code)]
 pub fn type_parse_artifacts(
     options: &Options,
     shared_mem: Arc<SharedMem>,
@@ -398,7 +411,7 @@ pub fn type_parse_artifacts(
     filename: FileKey,
     intermediate_result: (Option<ParseArtifacts>, ErrorSet),
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> Result<FileArtifacts<'static>, ErrorSet> {
+) -> Result<FileArtifacts<'static>, TypeContentsError> {
     match intermediate_result {
         (Some(parse_artifacts), _errs) => {
             let ParseArtifacts {
@@ -410,7 +423,7 @@ pub fn type_parse_artifacts(
                 tolerable_errors,
                 parse_errors,
             } = parse_artifacts;
-            let ((cx, typed_ast), obj_to_obj_map) = {
+            let (result, obj_to_obj_map) = {
                 let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
                 type_inference_hooks_js::with_for_ide(true, || {
                     obj_to_obj_hook::with_obj_to_obj_hook(true, &loc_of_aloc, || {
@@ -428,6 +441,9 @@ pub fn type_parse_artifacts(
                     })
                 })
             };
+            let (cx, typed_ast) = result.map_err(|CheckedDependenciesCanceled| {
+                TypeContentsError::CheckedDependenciesCanceled
+            })?;
             Ok((
                 ParseArtifacts {
                     docblock,
@@ -445,6 +461,6 @@ pub fn type_parse_artifacts(
                 },
             ))
         }
-        (None, errs) => Err(errs),
+        (None, errs) => Err(TypeContentsError::Errors(errs)),
     }
 }

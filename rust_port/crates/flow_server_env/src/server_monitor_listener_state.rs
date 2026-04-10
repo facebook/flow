@@ -231,7 +231,7 @@ pub struct RecheckWorkload {
     pub files_to_force: CheckedSet,
     pub find_ref_command: Option<FindRefCommand>,
     pub metadata: FileWatcherMetadata,
-    pub require_full_check_reinit: bool,
+    pub incompatible_lib_change: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -252,7 +252,7 @@ fn empty_recheck_workload() -> RecheckWorkload {
         files_to_force: CheckedSet::empty(),
         find_ref_command: None,
         metadata: empty_file_watcher_metadata(),
-        require_full_check_reinit: false,
+        incompatible_lib_change: false,
     }
 }
 
@@ -267,7 +267,7 @@ fn with_recheck_acc<T>(f: impl FnOnce(&mut RecheckWorkload) -> T) -> T {
 }
 
 /// Updates `workload` while leaving it unchanged when there is nothing to do.
-fn update_workload(
+fn update(
     workload: &mut RecheckWorkload,
     files_to_prioritize: Option<&FlowOrdSet<FileKey>>,
     files_to_recheck: Option<&FlowOrdSet<FileKey>>,
@@ -316,10 +316,10 @@ fn update_workload(
 }
 
 fn update_to_require_reinit(workload: &mut RecheckWorkload) -> bool {
-    if workload.require_full_check_reinit {
+    if workload.incompatible_lib_change {
         false
     } else {
-        workload.require_full_check_reinit = true;
+        workload.incompatible_lib_change = true;
         true
     }
 }
@@ -370,16 +370,16 @@ pub fn recheck_fetch(
                     match process_updates(false, &changed_files) {
                         Updates::NormalUpdates(updates) => {
                             if urgent {
-                                update_workload(workload, Some(&updates), None, None, None, None)
+                                update(workload, Some(&updates), None, None, None, None)
                             } else {
-                                update_workload(workload, None, Some(&updates), None, None, None)
+                                update(workload, None, Some(&updates), None, None, None)
                             }
                         }
                         Updates::RequiredFullCheckReinit(updates) => {
                             let w_changed = if urgent {
-                                update_workload(workload, Some(&updates), None, None, None, None)
+                                update(workload, Some(&updates), None, None, None, None)
                             } else {
-                                update_workload(workload, None, Some(&updates), None, None, None)
+                                update(workload, None, Some(&updates), None, None, None)
                             };
                             let r_changed = update_to_require_reinit(workload);
                             w_changed || r_changed
@@ -398,12 +398,12 @@ pub fn recheck_fetch(
                                 updates
                                     .dupe()
                                     .into_inner()
-                                    .difference(forced_focused.into_inner()),
+                                    .relative_complement(forced_focused.into_inner()),
                             )
                         };
                         let mut files_to_force = CheckedSet::empty();
                         files_to_force.add(Some(focused), None, None);
-                        update_workload(
+                        update(
                             workload,
                             None,
                             Some(&updates),
@@ -420,12 +420,12 @@ pub fn recheck_fetch(
                                 updates
                                     .dupe()
                                     .into_inner()
-                                    .difference(forced_focused.into_inner()),
+                                    .relative_complement(forced_focused.into_inner()),
                             )
                         };
                         let mut files_to_force = CheckedSet::empty();
                         files_to_force.add(Some(focused), None, None);
-                        let w_changed = update_workload(
+                        let w_changed = update(
                             workload,
                             None,
                             Some(&updates),
@@ -446,7 +446,7 @@ pub fn recheck_fetch(
                         .filter_map(|loc| loc.source())
                         .cloned()
                         .collect();
-                    update_workload(
+                    update(
                         workload,
                         None,
                         Some(&files_to_recheck),
@@ -467,14 +467,14 @@ pub fn recheck_fetch(
                             result
                         }
                     };
-                    update_workload(workload, None, None, Some(&files_to_force), None, None)
+                    update(workload, None, None, Some(&files_to_force), None, None)
                 }
                 RecheckFiles::FilesToReinit {
                     files_to_prioritize,
                     files_to_recheck,
                     files_to_force,
                 } => {
-                    update_workload(
+                    update(
                         workload,
                         Some(&files_to_prioritize),
                         Some(&files_to_recheck),
@@ -487,7 +487,7 @@ pub fn recheck_fetch(
             };
             let metadata_changed = match &file_watcher_metadata {
                 None => false,
-                Some(metadata) => update_workload(workload, None, None, None, None, Some(metadata)),
+                Some(metadata) => update(workload, None, None, None, None, Some(metadata)),
             };
             changed = changed || msg_changed || metadata_changed;
         }
@@ -516,14 +516,14 @@ pub fn requeue_workload(workload: RecheckWorkload) {
         prev.files_to_force.union(workload.files_to_force);
         prev.find_ref_command = workload.find_ref_command.or(prev.find_ref_command.take());
         prev.metadata = merge_file_watcher_metadata(&prev.metadata, &workload.metadata);
-        if prev.require_full_check_reinit || workload.require_full_check_reinit {
+        if prev.incompatible_lib_change || workload.incompatible_lib_change {
             eprintln!(
                 "Previous recheck requires restart: {}; new workload requires restart: {}",
-                prev.require_full_check_reinit, workload.require_full_check_reinit,
+                prev.incompatible_lib_change, workload.incompatible_lib_change,
             );
         }
-        prev.require_full_check_reinit =
-            prev.require_full_check_reinit || workload.require_full_check_reinit;
+        prev.incompatible_lib_change =
+            prev.incompatible_lib_change || workload.incompatible_lib_change;
     });
 }
 
@@ -540,7 +540,7 @@ pub fn get_and_clear_recheck_workload(
         files_to_force,
         find_ref_command,
         metadata,
-        require_full_check_reinit,
+        incompatible_lib_change,
     } = workload;
     let (dependencies_to_force, files_to_force) = files_to_force.partition_dependencies();
     if dependencies_to_force.is_empty() {
@@ -550,7 +550,7 @@ pub fn get_and_clear_recheck_workload(
             files_to_force,
             find_ref_command,
             metadata,
-            require_full_check_reinit,
+            incompatible_lib_change,
         };
         *guard = Some(empty_recheck_workload());
         (Priority::Normal, workload)
@@ -563,7 +563,7 @@ pub fn get_and_clear_recheck_workload(
             files_to_recheck: FlowOrdSet::new(),
             find_ref_command: None,
             metadata: empty_file_watcher_metadata(),
-            require_full_check_reinit: false,
+            incompatible_lib_change: false,
         };
         let remaining_workload = RecheckWorkload {
             files_to_force,
@@ -571,7 +571,7 @@ pub fn get_and_clear_recheck_workload(
             files_to_recheck,
             find_ref_command,
             metadata,
-            require_full_check_reinit,
+            incompatible_lib_change,
         };
         *guard = Some(remaining_workload);
         (Priority::Priority, priority_workload)

@@ -268,14 +268,14 @@ pub fn process_updates(
     let config_path = server_files_js::config_file(&options.flowconfig_name, root);
     let sroot = format!("{}{}", root.to_string_lossy(), std::path::MAIN_SEPARATOR);
     let want = |f: &str| -> bool { files::wanted(file_options, false, &all_libs, f) };
+    let do_filter = |updates: &BTreeSet<String>| -> FlowOrdSet<FileKey> {
+        filter_wanted_updates(file_options, &sroot, &want, updates)
+    };
     let is_incompatible_pj = |f: &str| -> PackageIncompatibleReturn {
         is_incompatible_package_json(options, shared_mem, &want, &sroot, file_options, f)
     };
     check_for_flowconfig_change(options, skip_incompatible, &config_path, updates)?;
     check_for_package_json_changes(&is_incompatible_pj, skip_incompatible, updates)?;
-    let do_filter = |updates: &BTreeSet<String>| -> FlowOrdSet<FileKey> {
-        filter_wanted_updates(file_options, &sroot, &want, updates)
-    };
     check_for_lib_changes(
         shared_mem,
         &all_libs,

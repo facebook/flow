@@ -47,6 +47,15 @@ pub struct TypecheckArtifacts<'cx> {
 
 pub type FileArtifacts<'cx> = (ParseArtifacts, TypecheckArtifacts<'cx>);
 
+#[derive(Clone, Debug)]
+pub struct CheckedDependenciesCanceled;
+
+#[derive(Clone)]
+pub enum TypeContentsError {
+    Errors(ErrorSet),
+    CheckedDependenciesCanceled,
+}
+
 pub type AutocompleteArtifacts<'cx> = (
     String,
     ParseArtifacts,

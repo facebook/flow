@@ -35,6 +35,7 @@ impl ErrorStateTimestamps {
     }
 }
 
+#[derive(Clone)]
 pub struct CollatedErrors {
     pub collated_duplicate_providers_errors: Vec<(PrintableError<Loc>, FileKey, FileKey)>,
     pub collated_local_errors: BTreeMap<FileKey, ConcreteLocPrintableErrorSet>,

@@ -12,7 +12,16 @@ use dupe::Dupe;
 use flow_common::bitset::Bitset;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct HasteModuleInfo {
     module_name: FlowSmolStr,
     namespace_bitset: Bitset,

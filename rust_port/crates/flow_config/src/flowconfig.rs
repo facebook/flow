@@ -35,6 +35,7 @@ pub enum FileWatcher {
     NoFileWatcher,
     DFind,
     Watchman,
+    EdenFS,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -169,7 +170,10 @@ pub mod opts {
         pub relay_integration_module_prefix: Option<String>,
         pub relay_integration_module_prefix_includes: Vec<String>,
         pub root_name: Option<String>,
+        pub saved_state_direct_serialization: bool,
         pub saved_state_fetcher: SavedStateFetcher,
+        pub saved_state_persist_export_index: bool,
+        pub saved_state_reinit_on_lib_change: bool,
         pub saved_state_skip_version_check: bool,
         pub shm_hash_table_pow: u32,
         pub shm_heap_size: u64,
@@ -319,7 +323,10 @@ pub mod opts {
                 "<PROJECT_ROOT>/.*",
             )],
             root_name: None,
+            saved_state_direct_serialization: false,
             saved_state_fetcher: SavedStateFetcher::DummyFetcher,
+            saved_state_persist_export_index: false,
+            saved_state_reinit_on_lib_change: false,
             saved_state_skip_version_check: false,
             shm_hash_table_pow: 19,
             shm_heap_size: 1024 * 1024 * 25, // 25MB
@@ -1817,6 +1824,48 @@ pub mod opts {
         )
     }
 
+    fn saved_state_direct_serialization_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_boolean(
+            |opts, v| {
+                opts.saved_state_direct_serialization = v;
+                Ok(())
+            },
+            values,
+            config,
+        )
+    }
+
+    fn saved_state_persist_export_index_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_boolean(
+            |opts, v| {
+                opts.saved_state_persist_export_index = v;
+                Ok(())
+            },
+            values,
+            config,
+        )
+    }
+
+    fn saved_state_reinit_on_lib_change_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_boolean(
+            |opts, v| {
+                opts.saved_state_reinit_on_lib_change = v;
+                Ok(())
+            },
+            values,
+            config,
+        )
+    }
+
     fn assert_operator_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
         enum_parser(
             &[
@@ -2531,7 +2580,16 @@ pub mod opts {
                     relay_integration_module_prefix_includes_parser(values, config),
                 ),
                 "saved_state.allow_reinit" => Some(saved_state_allow_reinit_parser(values, config)),
+                "saved_state.direct_serialization" => {
+                    Some(saved_state_direct_serialization_parser(values, config))
+                }
                 "saved_state.fetcher" => Some(saved_state_fetcher_parser(values, config)),
+                "saved_state.persist_export_index" => {
+                    Some(saved_state_persist_export_index_parser(values, config))
+                }
+                "saved_state.reinit_on_lib_change" => {
+                    Some(saved_state_reinit_on_lib_change_parser(values, config))
+                }
                 "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED" => {
                     Some(parse_boolean(
                         |opts, v| {

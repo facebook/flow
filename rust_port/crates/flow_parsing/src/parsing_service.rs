@@ -265,7 +265,7 @@ pub fn do_parse(
                 let (ast, parse_errors) = parse_source_file(options, content, file);
                 let file_sig = Arc::new(parse_file_sig(options, file, docblock, &ast));
                 let requires: Vec<FlowImportSpecifier> =
-                    file_sig.require_set().into_iter().collect();
+                    file_sig.require_loc_map().into_keys().collect();
 
                 // TODO: compute globals
                 // let (_, (_, _, globals)) =
@@ -397,9 +397,14 @@ fn reducer(
     acc: &mut ParseResults,
     file_key: FileKey,
 ) {
-    // Only skip already-parsed files during init (to handle duplicate file walks).
-    // During recheck, we must re-parse files even if they have an existing parse result.
-    if is_init && shared_mem.get_parse(&file_key).is_some() {
+    // In OCaml, this skip only applies during the true init transaction, where
+    // duplicate file walks can ask us to parse the same file twice. Approximate
+    // that here by skipping only files that have an uncommitted parse entry,
+    // i.e. files first parsed earlier in this same transaction.
+    if is_init
+        && shared_mem.get_parse(&file_key).is_some()
+        && shared_mem.get_parse_committed(&file_key).is_none()
+    {
         return;
     }
 
@@ -471,7 +476,7 @@ fn reducer(
                 aloc_representation_do_not_use::make_table(file_key.dupe(), locs.into_vec());
             let packed_aloc_table = aloc_table.pack();
 
-            let requires_vec: Vec<_> = file_sig.require_set().into_iter().collect();
+            let requires_vec: Vec<_> = file_sig.require_loc_map().into_keys().collect();
 
             let haste_module_info =
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());

@@ -18,6 +18,5 @@ pub mod merge_stream;
 pub mod obj_to_obj_hook;
 pub mod pure_dep_graph_operations;
 pub mod recheck_stats;
-pub mod transaction;
 pub mod type_contents;
 pub mod type_service;

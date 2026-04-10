@@ -37,17 +37,16 @@ use flow_services_inference::type_contents::type_parse_artifacts;
 use flow_services_inference_types::AutocompleteArtifacts;
 use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
+use flow_services_inference_types::TypeContentsError;
 use lsp_types::MessageType;
 
 type CheckResult<'cx> = FileArtifacts<'cx>;
-type FileArtifactsResult<'cx> = Result<CheckResult<'cx>, flow_typing_errors::flow_error::ErrorSet>;
-type AcArtifactsResult<'cx> =
-    Result<AutocompleteArtifacts<'cx>, flow_typing_errors::flow_error::ErrorSet>;
-type TypeParseArtifactsCache = flow_common_utils::filename_cache::Cache<
-    Result<FileArtifacts<'static>, flow_typing_errors::flow_error::ErrorSet>,
->;
+type FileArtifactsResult<'cx> = Result<CheckResult<'cx>, TypeContentsError>;
+type AcArtifactsResult<'cx> = Result<AutocompleteArtifacts<'cx>, TypeContentsError>;
+type TypeParseArtifactsCache =
+    flow_common_utils::filename_cache::Cache<Result<FileArtifacts<'static>, TypeContentsError>>;
 type AutocompleteArtifactsCache = flow_common_utils::filename_cache::Cache<
-    Result<AutocompleteArtifacts<'static>, flow_typing_errors::flow_error::ErrorSet>,
+    Result<AutocompleteArtifacts<'static>, TypeContentsError>,
 >;
 type AcResult = Option<(
     flow_common::docblock::Docblock,
@@ -840,7 +839,7 @@ fn type_parse_artifacts_for_ac_with_cache(
 ) -> (AcArtifactsResult<'static>, Option<bool>) {
     let file_for_result = file.dupe();
     let type_parse_artifacts = || match artifacts {
-        (None, errs) => Err(errs),
+        (None, errs) => Err(TypeContentsError::Errors(errs)),
         (Some(parse_artifacts), _errs) => {
             let ParseArtifacts {
                 ref docblock,
@@ -861,7 +860,8 @@ fn type_parse_artifacts_for_ac_with_cache(
                 requires,
                 file_sig.dupe(),
                 node_modules_containers,
-            );
+            )
+            .map_err(|_| TypeContentsError::CheckedDependenciesCanceled)?;
             Ok((contents.clone(), parse_artifacts, cx, aloc_ast))
         }
     };
@@ -1238,7 +1238,7 @@ fn errors_of_file(
         Ok((file_key, content)) => {
             let intermediate_result = parse_contents(&options, &content, &file_key);
             let result = if !intermediate_result.1.is_empty() {
-                Err(intermediate_result.1)
+                Err(TypeContentsError::Errors(intermediate_result.1))
             } else {
                 type_parse_artifacts(
                     &options,
@@ -2405,14 +2405,19 @@ fn get_def(
 }
 
 fn save_state(
-    _genv: &server_env::Genv,
-    _env: &server_env::Env,
+    genv: &server_env::Genv,
+    env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
-    Err(format!(
-        "Saved_state.save is not yet ported to Rust (filename: {})",
-        saved_state_filename
-    ))
+    flow_saved_state::save(
+        std::path::Path::new(saved_state_filename),
+        &genv.shared_mem,
+        env,
+        &genv.options,
+        genv.node_modules_containers.as_ref(),
+    )
+    .map(|_| saved_state_filename.to_string())
+    .map_err(|reason| reason.to_string())
 }
 
 fn auto_close_jsx(

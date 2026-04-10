@@ -49,7 +49,7 @@ fn spec() -> command_spec::Spec {
         "--no-flowlib",
         &command_spec::truthy(),
         "Do not use the bundled flowlib",
-        None,
+        Some("NO_FLOWLIB"),
     )
     .flag(
         "--from",
@@ -167,6 +167,33 @@ fn main(args: &command_spec::Values) {
             },
             timeout_secs,
         ) {
+            Err(command_connect::ConnectError::ServerSocketMissing)
+                if !no_auto_start && !attempted_autostart =>
+            {
+                command_connect::remove_server_files(
+                    &flowconfig_name,
+                    options.temp_dir.as_str(),
+                    &root,
+                );
+                attempted_autostart = true;
+                let _ = crate::start_command::start_server(
+                    &flowconfig_name,
+                    no_flowlib,
+                    ignore_version,
+                    true,
+                    None,
+                    false,
+                    false,
+                    None,
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    &root,
+                );
+                continue;
+            }
             Err(command_connect::ConnectError::ServerNotRunning)
                 if !no_auto_start && !attempted_autostart =>
             {
@@ -180,6 +207,11 @@ fn main(args: &command_spec::Values) {
                     false,
                     false,
                     None,
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
                     &root,
                 );
                 continue;
@@ -238,6 +270,10 @@ fn main(args: &command_spec::Values) {
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfTime)
         }
         Err(command_connect::ConnectError::ServerNotRunning) => {
+            eprintln!("There is no Flow server running in '{}'", root.display());
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoServerRunning)
+        }
+        Err(command_connect::ConnectError::ServerSocketMissing) => {
             eprintln!("There is no Flow server running in '{}'", root.display());
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoServerRunning)
         }

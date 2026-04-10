@@ -612,6 +612,8 @@ impl SharedMem {
         let mut dirty_modules = BTreeSet::new();
 
         if let Some(info) = old_haste_info {
+            let module = self.get_or_create_haste_module(info.clone());
+            module.remove_provider(file_key);
             dirty_modules.insert(Modulename::Haste(info));
         }
 
@@ -810,8 +812,9 @@ impl SharedMem {
             let mut dirty_modules = BTreeSet::new();
             dirty_modules.insert(Modulename::Filename(files::chop_flow_ext(&file_key)));
             if let Some(haste_info) = existing_entry.haste_info_entity().read_latest_clone() {
+                let module = self.get_or_create_haste_module(haste_info.clone());
+                module.remove_provider(&file_key);
                 existing_entry.haste_info_entity().advance(None);
-                let _m = self.get_or_create_haste_module(haste_info.clone());
                 dirty_modules.insert(Modulename::Haste(haste_info));
             }
             dirty_modules
@@ -942,6 +945,105 @@ impl SharedMem {
         }
     }
 
+    fn rollback_resolved_requires(
+        &self,
+        file: &FileKey,
+        ent: &Arc<crate::entity::Entity<ResolvedRequires>>,
+    ) {
+        let old_resolved_requires = ent.read_committed_clone();
+        let new_resolved_requires = ent.read_latest_clone();
+        let old_dependencies = old_resolved_requires
+            .as_ref()
+            .map(ResolvedRequires::all_dependencies)
+            .unwrap_or_default();
+        let new_dependencies = new_resolved_requires
+            .as_ref()
+            .map(ResolvedRequires::all_dependencies)
+            .unwrap_or_default();
+        for dep in &new_dependencies {
+            if !old_dependencies.contains(dep) {
+                self.remove_dependent_from(file, dep);
+            }
+        }
+        for dep in &old_dependencies {
+            if !new_dependencies.contains(dep) {
+                self.add_dependent_to(file, dep);
+            }
+        }
+        ent.rollback();
+    }
+
+    fn rollback_leader(&self, parse: &TypedParse) {
+        parse.leader.rollback();
+        parse.sig_hash.rollback();
+    }
+
+    fn rollback_file(&self, file_key: &FileKey, file: &FileEntry) {
+        let old_typed_parse = file.parse_committed().and_then(|parse| match parse {
+            Parse::Typed(typed) => Some(typed),
+            _ => None,
+        });
+        let new_typed_parse = file.parse_latest().and_then(|parse| match parse {
+            Parse::Typed(typed) => Some(typed),
+            _ => None,
+        });
+        let haste_ent = file.haste_info_entity();
+        let (old_haste_module, new_haste_module) = if haste_ent.has_changed() {
+            let old_info = haste_ent.read_committed_clone();
+            let new_info = haste_ent.read_latest_clone();
+            (
+                old_info
+                    .as_ref()
+                    .and_then(|info| self.get_haste_module(info)),
+                new_info
+                    .as_ref()
+                    .and_then(|info| self.get_haste_module(info)),
+            )
+        } else {
+            (None, None)
+        };
+
+        match (old_typed_parse, new_typed_parse) {
+            (None, None) => {}
+            (Some(old_parse), None) => {
+                let old_resolved_requires = old_parse.resolved_requires.read_latest_clone();
+                let old_dependencies = old_resolved_requires
+                    .as_ref()
+                    .map(ResolvedRequires::all_dependencies)
+                    .unwrap_or_default();
+                for dep in &old_dependencies {
+                    self.add_dependent_to(file_key, dep);
+                }
+            }
+            (None, Some(new_parse)) => {
+                let new_resolved_requires = new_parse.resolved_requires.read_latest_clone();
+                let new_dependencies = new_resolved_requires
+                    .as_ref()
+                    .map(ResolvedRequires::all_dependencies)
+                    .unwrap_or_default();
+                for dep in &new_dependencies {
+                    self.remove_dependent_from(file_key, dep);
+                }
+            }
+            (Some(_), Some(new_parse)) => {
+                self.rollback_resolved_requires(file_key, &new_parse.resolved_requires);
+                self.rollback_leader(&new_parse);
+            }
+        }
+        if let Some(module) = &old_haste_module {
+            module.rollback_provider();
+        }
+        if let Some(module) = &new_haste_module {
+            module.rollback_provider();
+            module.remove_provider(file_key);
+        }
+        file.parse().rollback();
+        haste_ent.rollback();
+        if let Some(module) = old_haste_module {
+            module.add_provider(file_key.dupe());
+        }
+    }
+
     pub fn compact_parse(&self, file: &FileKey) {
         // Placeholder for future: convert Live AST to Serialized form
         // This would require interior mutability on TypedParse.ast
@@ -955,9 +1057,25 @@ impl SharedMem {
     /// enabling the merge skip optimization.
     pub fn commit_entities(&self) {
         for entry in self.file_heap.values() {
+            entry.parse.commit();
+            entry.haste_info.commit();
             if let Some(Parse::Typed(typed)) = entry.parse_latest() {
+                typed.resolved_requires.commit();
+                typed.leader.commit();
                 typed.sig_hash.commit();
             }
+        }
+        for module in self.haste_module_heap.values() {
+            module.commit_provider();
+        }
+    }
+
+    pub fn rollback_entities(&self) {
+        for (file_key, entry) in self.file_heap.iter_unordered() {
+            self.rollback_file(file_key, entry);
+        }
+        for module in self.haste_module_heap.values() {
+            module.rollback_provider();
         }
     }
 }

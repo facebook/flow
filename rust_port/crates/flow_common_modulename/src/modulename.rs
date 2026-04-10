@@ -27,7 +27,15 @@ use crate::haste_module_info::HasteModuleInfo;
 //
 // * A module name may be a Filename: e.g., in the Node module system a module
 // is simply known by its path in the file system.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Modulename {
     Haste(HasteModuleInfo),
     Filename(FileKey),

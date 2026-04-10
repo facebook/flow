@@ -89,6 +89,14 @@ impl<T> Entity<T> {
         *self.old.write() = new_val;
     }
 
+    pub fn rollback(&self)
+    where
+        T: Dupe,
+    {
+        let old_val = self.old.read().as_ref().map(|v| v.dupe());
+        *self.new.write() = old_val;
+    }
+
     pub fn has_changed(&self) -> bool
     where
         T: PartialEq,

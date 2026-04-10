@@ -17,7 +17,7 @@ use flow_parser::loc::Loc;
 
 use crate::package_exports::PackageExports;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PackageJson {
     name: Option<FlowSmolStr>,
     main: Option<FlowSmolStr>,

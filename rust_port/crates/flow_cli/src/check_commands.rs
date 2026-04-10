@@ -301,7 +301,7 @@ fn common_spec(name: &str, doc: &str, usage: &str) -> command_spec::Spec {
             "--no-flowlib",
             &command_spec::truthy(),
             "Do not use the bundled flowlib",
-            None,
+            Some("NO_FLOWLIB"),
         )
         .flag(
             "--verbose",

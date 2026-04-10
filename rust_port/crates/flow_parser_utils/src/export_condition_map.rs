@@ -13,14 +13,14 @@ use flow_parser::ast;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::loc::Loc;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ConditionValue {
     Null,
     Path(FlowSmolStr),
     Nested(Vec<(FlowSmolStr, ConditionValue)>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ExportConditionMap {
     conditions: Vec<(FlowSmolStr, ConditionValue)>,
 }

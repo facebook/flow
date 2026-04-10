@@ -685,7 +685,7 @@ lazy_static! {
 pub fn watched_paths(options: &FileOptions) -> Vec<PathBuf> {
     let mut stems = options.includes.stems().to_vec();
     stems.sort();
-    stems.dedup_by(|prev_stem, stem| stem.starts_with(prev_stem));
+    stems.dedup_by(|b, a| a.starts_with(b));
     stems
 }
 
@@ -783,6 +783,21 @@ pub fn make_next_files(
     let can_prune = can_prune_dir(&options);
     let mut chunk = Vec::new();
     for starting_point_path in starting_point_paths {
+        if is_node_module(&options, &starting_point_path.to_string_lossy()) {
+            let dirname = starting_point_path
+                .parent()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let basename = starting_point_path
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let mut containers = node_modules_containers.write().unwrap();
+            containers
+                .entry(FlowSmolStr::new(&dirname))
+                .or_default()
+                .insert(FlowSmolStr::new(&basename));
+        }
         let duped_options = options.dupe();
         let duped_all_unordered_libs = all_unordered_libs.dupe();
         for entry in jwalk::WalkDir::new(starting_point_path)

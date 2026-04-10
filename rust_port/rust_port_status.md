@@ -310,11 +310,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [ ] `relay_integration_module_prefix_includes`
           - [ ] `required_version`
           - [ ] `root_name`
-          - [ ] `saved_state_fetcher`
-          - [ ] `saved_state_direct_serialization`
-          - [ ] `saved_state_persist_export_index`
-          - [ ] `saved_state_reinit_on_lib_change`
-          - [ ] `saved_state_skip_version_check`
+          - [x] `saved_state_fetcher`
+          - [x] `saved_state_direct_serialization`
+          - [x] `saved_state_persist_export_index`
+          - [x] `saved_state_reinit_on_lib_change`
+          - [x] `saved_state_skip_version_check`
           - [ ] `shm_hash_table_pow`
           - [ ] `shm_heap_size`
           - [ ] `strict_es6_import_export`
@@ -372,7 +372,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] inlayHintCommand.ml
     - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
     - [ ] lspCommand.ml
-    - [ ] saveStateCommand.ml
+    - [ ] saveStateCommand.ml → `flow_cli/src/save_state_command.rs`
     - [ ] serverCommand.ml → `flow_cli/src/server_command.rs` (partial: no monitor process, no shm config)
     - [ ] shellCompleteCommand.ml
     - [ ] startCommand.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize, no monitor, no --json)
@@ -568,11 +568,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] test_utils/
       - [ ] test_utils.ml
   - [x] transaction/
-      - [x] transaction.ml → `flow_services_inference/src/transaction.rs`
+      - [x] transaction.ml → `flow_common_transaction/src/lib.rs`
           - [x] `add`
           - [x] `commit`
           - [x] `rollback`
-          - [x] `with_transaction`
+          - [x] `with_transaction_sync`
   - [x] ty/ → `flow_common_ty/src/`
       - [x] __tests__/
         - [x] ty_printer_test.ml → `flow_common_ty/src/ty_printer_test.rs`
@@ -974,8 +974,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] rage/
       - [ ] flytrap.ml
       - [ ] rageCommand.ml
-  - [ ] saved_state/
-      - [ ] saved_state_fb_fetcher.ml
+  - [x] saved_state/
+      - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/saved_state_fb_fetcher.rs`
   - [ ] server_callable/
     - [ ] lib/
         - [ ] ast_visitor.ml
@@ -1741,8 +1741,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `parse_docblock` → `parse_docblock()`
     - [x] parsing_service_js.ml → `flow_parsing/src/parsing_service.rs`
         - [x] `do_parse`
+        - [x] `content_hash_matches_file_hash`
         - [x] `does_content_match_file_hash`
         - [x] `content_hash_matches_old_file_hash`
+        - [x] `fold_failed`
+        - [x] `reducer`
+        - [x] `merge`
+        - [x] `parse`
         - [x] `ensure_parsed`
         - [x] `parse_file_sig`
         - [x] `parse_package_json_file`
@@ -2340,14 +2345,15 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `recheck_impl`
           - [x] `make_next_files`
           - [x] `init_from_scratch`
+          - [x] `load_saved_state`
           - [x] `exit_if_no_fallback`
-          - [x] `reinit` (stub — saved state not yet ported)
+          - [x] `reinit`
           - [x] `reinit_full_check`
           - [x] `check_files_for_init`
           - [x] `check_once` (Rust-only convenience)
-          - [ ] `init` (saved state init — not yet ported)
-          - [ ] `init_from_saved_state` (not yet ported)
-          - [ ] `handle_updates_since_saved_state` (not yet ported)
+          - [x] `init` → `flow_services_inference/src/type_service.rs`
+          - [x] `init_from_saved_state`
+          - [x] `handle_updates_since_saved_state`
   - [x] jsdoc/
       - [x] find_documentation.ml → `flow_services_autocomplete/src/find_documentation.rs`
       - [x] insert_jsdoc.ml → `flow_services_autocomplete/src/insert_jsdoc.rs`
@@ -2401,15 +2407,23 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] renameModule.ml
       - [x] variableFindRefs.ml → `flow_services_references/src/variable_find_refs.rs`
         - [x] `local_find_refs` → `local_find_refs()`
-  - [ ] saved_state/
-    - [ ] compression/
-        - [ ] saved_state_compression.ml
-    - [ ] fetcher/
-        - [ ] saved_state_dummy_fetcher.ml
-        - [ ] saved_state_fetcher.ml
-        - [ ] saved_state_local_fetcher.ml
-        - [ ] saved_state_scm_fetcher.ml
-      - [ ] saved_state.ml
+  - [x] saved_state/ → `flow_saved_state`
+    - [x] compression/
+        - [x] saved_state_compression.ml → `flow_saved_state/src/compression/saved_state_compression.rs`
+    - [x] fetcher/
+        - [x] saved_state_dummy_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_dummy_fetcher.rs`
+        - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs`
+        - [x] saved_state_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fetcher.rs`
+        - [x] saved_state_local_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_local_fetcher.rs`
+        - [x] saved_state_scm_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_scm_fetcher.rs`
+      - [x] saved_state.ml → `flow_saved_state/src/saved_state.rs`
+        - [x] `save`
+        - [x] `load`
+        - [x] `invalid_reason_to_string`
+        - [x] `backtrace_of_invalid_reason`
+        - [x] `non_flowlib_libs`
+        - [x] `denormalize_file_data`
+        - [x] `restore_dependency_info`
   - [x] type_info/ → `flow_services_type_info`
       - [x] signature_help.ml → `flow_services_type_info/src/signature_help.rs`
       - [x] type_info_service.ml → `flow_services_type_info/src/type_info_service.rs`

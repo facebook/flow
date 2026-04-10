@@ -947,7 +947,7 @@ where
             &updates,
             &def_info,
             files_to_force,
-            false, // require_full_check_reinit
+            false,
             None,  // changed_mergebase
             false, // missed_changes
             &node_modules_containers,

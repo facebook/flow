@@ -41,6 +41,7 @@ pub struct Genv {
 // Do not change these to contain `Loc`s. Because these errors are stored between rechecks, it is
 // critical that they contain `ALoc`s, so that we can update the concrete locations when we
 // render the errors, without having to retypecheck the files that generated those errors.
+#[derive(Clone)]
 pub struct Errors {
     /// errors are stored in a map from file path to error set, so that the errors
     /// from checking particular files can be cleared during recheck.
@@ -58,6 +59,7 @@ pub struct Errors {
     pub suppressions: ErrorSuppressions,
 }
 
+#[derive(Clone)]
 pub struct Env {
     /// All the files that we at least parse (includes libs).
     pub files: FlowOrdSet<FileKey>,
