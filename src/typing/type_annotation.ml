@@ -1281,22 +1281,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 targs
           )
         | "ReadonlyArray" ->
-          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
-            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-                let (elemts, targs) = convert_type_params () in
-                let elemt = List.hd elemts in
-                reconstruct_ast
-                  (DefT (mk_annot_reason RROArrayType loc, ArrT (ROArrayAT (elemt, None))))
-                  targs
-            )
-          else
-            error_type
-              cx
-              loc
-              (Error_message.EIncorrectTypeWithReplacement
-                 { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyArray }
-              )
-              t_ast
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (elemts, targs) = convert_type_params () in
+              let elemt = List.hd elemts in
+              reconstruct_ast
+                (DefT (mk_annot_reason RROArrayType loc, ArrT (ROArrayAT (elemt, None))))
+                targs
+          )
         | "NonNullable" ->
           if Context.ts_syntax cx || Context.ts_utility_syntax cx then
             check_type_arg_arity cx loc t_ast targs 1 (fun () ->
