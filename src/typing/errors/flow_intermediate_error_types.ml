@@ -227,9 +227,6 @@ module IncorrectType = struct
     | Partial
     | Shape
     | TSReadonly
-    | TSReadonlyArray
-    | TSReadonlyMap
-    | TSReadonlySet
     | TSNonNullable
     | Values
     | DollarNonMaybeType
@@ -268,9 +265,6 @@ module IncorrectType = struct
     | Partial -> "$Partial"
     | Shape -> "$Shape"
     | TSReadonly -> "Readonly"
-    | TSReadonlyArray -> "ReadonlyArray"
-    | TSReadonlyMap -> "ReadonlyMap"
-    | TSReadonlySet -> "ReadonlySet"
     | TSNonNullable -> "NonNullable"
     | Values -> "Values"
     | DollarNonMaybeType -> "$NonMaybeType"
@@ -288,9 +282,6 @@ module IncorrectType = struct
     | Partial -> "Partial"
     | Shape -> "Partial"
     | TSReadonly -> "$ReadOnly"
-    | TSReadonlyArray -> "$ReadOnlyArray"
-    | TSReadonlyMap -> "$ReadOnlyMap"
-    | TSReadonlySet -> "$ReadOnlySet"
     | TSNonNullable -> "$NonMaybeType"
     | Values -> "$Values"
     | DollarNonMaybeType -> "NonNullable"
@@ -323,9 +314,6 @@ module IncorrectType = struct
     | Mixed ->
       DeprecatedUtility
     | TSReadonly
-    | TSReadonlyArray
-    | TSReadonlyMap
-    | TSReadonlySet
     | TSNonNullable
     | Values ->
       TSType
