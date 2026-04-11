@@ -1290,10 +1290,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               );
           local_generic_type ()
         | "$ReadOnlyMap" ->
-          if
-            Context.is_utility_type_deprecated env.cx "$ReadOnlyMap"
-            && Context.ts_utility_syntax env.cx
-          then begin
+          if Context.is_utility_type_deprecated env.cx "$ReadOnlyMap" then begin
             Flow_js_utils.add_output
               env.cx
               (Error_message.EIncorrectTypeWithReplacement
@@ -1302,10 +1299,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           end;
           local_generic_type ()
         | "$ReadOnlySet" ->
-          if
-            Context.is_utility_type_deprecated env.cx "$ReadOnlySet"
-            && Context.ts_utility_syntax env.cx
-          then begin
+          if Context.is_utility_type_deprecated env.cx "$ReadOnlySet" then begin
             Flow_js_utils.add_output
               env.cx
               (Error_message.EIncorrectTypeWithReplacement
