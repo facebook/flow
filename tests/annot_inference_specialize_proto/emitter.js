@@ -9,7 +9,10 @@ import type {EventSubscription} from './event_types';
 
 class EventEmitter {
   constructor() {}
-  addEventListener(eventType: string, listener: (...$ReadOnlyArray<mixed>) => mixed): EventSubscription {
+  addEventListener(
+    eventType: string,
+    listener: (...ReadonlyArray<unknown>) => unknown,
+  ): EventSubscription {
     return {remove: () => {}};
   }
 }
