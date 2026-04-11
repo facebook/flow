@@ -3246,15 +3246,13 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReadOnly (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "ReadonlyArray" ->
-    if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
-      match targs with
-      | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope tbls xs t in
-        Annot (ReadOnlyArray (loc, t))
-      | _ -> Err (loc, CheckError)
-    else
-      Annot (Any loc)
+  | "ReadonlyArray" -> begin
+    match targs with
+    | Some (_, { arguments = [t]; _ }) ->
+      let t = annot opts scope tbls xs t in
+      Annot (ReadOnlyArray (loc, t))
+    | _ -> Err (loc, CheckError)
+  end
   | "NonNullable" ->
     if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
       match targs with
