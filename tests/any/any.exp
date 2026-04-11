@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------------------ any.js:8:16
+Error ----------------------------------------------------------------------------------------------------- any.js:14:17
 
 Cannot assign `bar(...)` to `y` because `unknown` [1] is incompatible with string [2]. [incompatible-type]
 
-   any.js:8:16
-   8| var y:string = bar(0);
-                     ^^^^^^
+   any.js:14:17
+   14| var y: string = bar(0);
+                       ^^^^^^
 
 References:
-   any.js:4:21
-   4| function bar(x:any):mixed { return x; }
-                          ^^^^^ [1]
-   any.js:8:7
-   8| var y:string = bar(0);
-            ^^^^^^ [2]
+   any.js:6:23
+    6| function bar(x: any): unknown {
+                             ^^^^^^^ [1]
+   any.js:14:8
+   14| var y: string = bar(0);
+              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- ex_special_cases.js:30:21
