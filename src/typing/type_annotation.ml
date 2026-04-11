@@ -1289,23 +1289,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 targs
           )
         | "NonNullable" ->
-          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
-            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-                let (ts, targs) = convert_type_params () in
-                let t = List.hd ts in
-                let reason = mk_reason (RType (OrdinaryName "NonNullable")) loc in
-                reconstruct_ast
-                  (mk_type_destructor cx (use_op reason) reason t NonMaybeType (mk_eval_id cx loc))
-                  targs
-            )
-          else
-            error_type
-              cx
-              loc
-              (Error_message.EIncorrectTypeWithReplacement
-                 { loc; kind = Flow_intermediate_error_types.IncorrectType.TSNonNullable }
-              )
-              t_ast
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let reason = mk_reason (RType (OrdinaryName "NonNullable")) loc in
+              reconstruct_ast
+                (mk_type_destructor cx (use_op reason) reason t NonMaybeType (mk_eval_id cx loc))
+                targs
+          )
         | "React$Node" ->
           if not (Context.is_lib_file cx) then
             Flow_js_utils.add_output
