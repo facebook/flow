@@ -159,7 +159,6 @@ let stub_metadata ~root ~checked =
     stylex_shorthand_prop = None;
     ts_syntax = true;
     allow_readonly_variance = true;
-    ts_utility_syntax = true;
     tslib_syntax = true;
     typescript_library_definition_support = false;
     type_expansion_recursion_limit = 3;

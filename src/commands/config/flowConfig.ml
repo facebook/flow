@@ -165,7 +165,6 @@ module Opts = struct
     allow_readonly_variance: bool;
     deprecated_colon_extends: string list;
     deprecated_colon_extends_excludes: string list;
-    ts_utility_syntax: bool;
     tslib_syntax: bool;
     typescript_library_definition_support: bool;
     type_expansion_recursion_limit: int;
@@ -331,7 +330,6 @@ module Opts = struct
       allow_readonly_variance = false;
       deprecated_colon_extends = [];
       deprecated_colon_extends_excludes = [];
-      ts_utility_syntax = true;
       tslib_syntax = false;
       typescript_library_definition_support = false;
       type_expansion_recursion_limit = 3;
@@ -1220,9 +1218,6 @@ module Opts = struct
                 opts with
                 deprecated_colon_extends_excludes = v :: opts.deprecated_colon_extends_excludes;
               })
-      );
-      ( "experimental.ts_utility_syntax",
-        boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
       );
       ("experimental.tslib_syntax", boolean (fun opts v -> Ok { opts with tslib_syntax = v }));
       ( "experimental.typescript_library_definition_support",
@@ -2212,7 +2207,7 @@ let deprecated_colon_extends c = c.options.Opts.deprecated_colon_extends
 
 let deprecated_colon_extends_excludes c = c.options.Opts.deprecated_colon_extends_excludes
 
-let ts_utility_syntax c = c.options.Opts.ts_utility_syntax
+let ts_utility_syntax _c = true
 
 let tslib_syntax c = c.options.Opts.tslib_syntax
 

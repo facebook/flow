@@ -84,7 +84,6 @@ let stub_metadata ~root ~checked =
     ts_syntax = true;
     deprecated_colon_extends = [];
     deprecated_colon_extends_excludes = [];
-    ts_utility_syntax = true;
     tslib_syntax = false;
     type_expansion_recursion_limit = 3;
     typescript_library_definition_support = false;

@@ -86,7 +86,6 @@ type metadata = {
   allow_readonly_variance: bool;
   deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
-  ts_utility_syntax: bool;
   tslib_syntax: bool;
   typescript_library_definition_support: bool;
   type_expansion_recursion_limit: int;
@@ -350,7 +349,6 @@ let metadata_of_options options =
     allow_readonly_variance = Options.allow_readonly_variance options;
     deprecated_colon_extends = Options.deprecated_colon_extends options;
     deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
-    ts_utility_syntax = Options.ts_utility_syntax options;
     tslib_syntax = Options.tslib_syntax options;
     typescript_library_definition_support = Options.typescript_library_definition_support options;
     deprecated_utilities = Options.deprecated_utilities options;
@@ -425,7 +423,6 @@ let docblock_overrides docblock_info file_key metadata =
         ts_syntax = true;
         tslib_syntax = true;
         abstract_classes = true;
-        ts_utility_syntax = true;
       }
     else
       metadata
@@ -757,7 +754,7 @@ let is_colon_extends_deprecated cx =
       (not is_excluded)
       && List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
-let ts_utility_syntax cx = cx.metadata.ts_utility_syntax
+let ts_utility_syntax _cx = true
 
 let tslib_syntax cx = cx.metadata.tslib_syntax
 

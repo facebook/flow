@@ -75,7 +75,6 @@ let metadata =
     strip_root = true;
     stylex_shorthand_prop = None;
     ts_syntax = true;
-    ts_utility_syntax = true;
     tslib_syntax = false;
     type_expansion_recursion_limit = 3;
     typescript_library_definition_support = false;

@@ -59,7 +59,7 @@ let of_options options docblock locs_to_dirtify file =
     enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
     component_syntax_enabled_in_config = Options.component_syntax options;
     enable_ts_syntax = Options.ts_syntax options || Files.has_ts_ext file;
-    enable_ts_utility_syntax = Options.ts_utility_syntax options || Files.has_ts_ext file;
+    enable_ts_utility_syntax = true;
     enable_records = Options.enable_records options;
     for_builtins = false;
   }

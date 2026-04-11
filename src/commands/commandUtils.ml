@@ -1686,7 +1686,6 @@ let make_options
         ~f:(fun pattern ->
           pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.deprecated_colon_extends_excludes flowconfig);
-    opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
     opt_tslib_syntax = FlowConfig.tslib_syntax flowconfig;
     opt_typescript_library_definition_support =
       FlowConfig.typescript_library_definition_support flowconfig;

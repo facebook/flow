@@ -206,7 +206,6 @@ type t = {
   opt_allow_readonly_variance: bool;
   opt_deprecated_colon_extends: string list;
   opt_deprecated_colon_extends_excludes: Str.regexp list;
-  opt_ts_utility_syntax: bool;
   opt_tslib_syntax: bool;
   opt_typescript_library_definition_support: bool;
   opt_type_expansion_recursion_limit: int;
@@ -452,7 +451,7 @@ let deprecated_colon_extends opts = opts.opt_deprecated_colon_extends
 
 let deprecated_colon_extends_excludes opts = opts.opt_deprecated_colon_extends_excludes
 
-let ts_utility_syntax opts = opts.opt_ts_utility_syntax
+let ts_utility_syntax _opts = true
 
 let tslib_syntax opts = opts.opt_tslib_syntax
 

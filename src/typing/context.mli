@@ -136,7 +136,6 @@ type metadata = {
   allow_readonly_variance: bool;
   deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
-  ts_utility_syntax: bool;
   tslib_syntax: bool;
   typescript_library_definition_support: bool;
   type_expansion_recursion_limit: int;
