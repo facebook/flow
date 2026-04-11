@@ -12,7 +12,7 @@ References:
    16| <X />;
        ^^^^^ [1]
    test.js:15:7
-   15| class X extends React.Component<Props1<mixed>> {}
+   15| class X extends React.Component<Props1<unknown>> {}
              ^ [2]
 
 
