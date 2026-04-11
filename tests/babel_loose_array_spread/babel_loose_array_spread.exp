@@ -9,7 +9,7 @@ Cannot call `f.apply` because in type argument `A`: property `length` is missing
 
 References:
    apply.js:3:11
-     3| const it: Iterable<number> = [7,8,9];
+     3| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:380:29
    380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
@@ -44,7 +44,7 @@ Error --------------------------------------------------------------------------
 
 References:
    iterables.js:1:11
-     1| const it: Iterable<number> = [7,8,9];
+     1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:726:15
    726| declare class $ReadOnlyArray<+T> {
@@ -61,7 +61,7 @@ Error --------------------------------------------------------------------------
 
 References:
    iterables.js:1:11
-     1| const it: Iterable<number> = [7,8,9];
+     1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:726:15
    726| declare class $ReadOnlyArray<+T> {
@@ -78,7 +78,7 @@ Error --------------------------------------------------------------------------
 
 References:
    iterables.js:1:11
-     1| const it: Iterable<number> = [7,8,9];
+     1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:726:15
    726| declare class $ReadOnlyArray<+T> {
@@ -158,7 +158,7 @@ Error --------------------------------------------------------------------------
 `Map` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
 
    maps.js:5:6
-     5|   ...map2 // Error
+     5|   ...map2, // Error
              ^^^^
 
 References:
@@ -192,7 +192,7 @@ Error --------------------------------------------------------------------------
 `Map` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
 
    maps.js:10:6
-    10|   ...map2 // Error
+    10|   ...map2, // Error
              ^^^^
 
 References:

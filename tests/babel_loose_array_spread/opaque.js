@@ -1,4 +1,4 @@
-export opaque type OpaqueReadOnlyArray: $ReadOnlyArray<number> = $ReadOnlyArray<number>;
+export opaque type OpaqueReadOnlyArray: ReadonlyArray<number> = ReadonlyArray<number>;
 export const opaqueReadOnlyArray: OpaqueReadOnlyArray = [];
 export opaque type OpaqueDerivedReadOnlyArray: OpaqueReadOnlyArray = OpaqueReadOnlyArray;
 export const opaqueDerivedReadOnlyArray: OpaqueDerivedReadOnlyArray = [];

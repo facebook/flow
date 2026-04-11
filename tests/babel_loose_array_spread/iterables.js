@@ -1,4 +1,4 @@
-const it: Iterable<number> = [7,8,9];
+const it: Iterable<number> = [7, 8, 9];
 [...it]; // Error
 f(...it); // Error
 f.bind(null, ...it); // Error
@@ -18,4 +18,4 @@ if (Array.isArray(oit)) {
   f.bind(null, ...oit); // No error
 }
 
-function f(...args: Array<mixed>) {}
+function f(...args: Array<unknown>) {}
