@@ -387,7 +387,7 @@ Flags: --pretty --lsp
   }
 }
 
-records.js:68:18
+records.js:67:18
 Flags: --pretty --lsp
 {
   "label":"WithStatics",
@@ -396,7 +396,7 @@ Flags: --pretty --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":67,"character":11},"end":{"line":67,"character":17}},
+    "range":{"start":{"line":66,"character":11},"end":{"line":66,"character":17}},
     "newText":"WithStatics {field: null}"
   },
   "command":{
@@ -423,7 +423,7 @@ Flags: --pretty --lsp
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
-    "range":{"start":{"line":67,"character":11},"end":{"line":67,"character":17}},
+    "range":{"start":{"line":66,"character":11},"end":{"line":66,"character":17}},
     "newText":"WithStatics"
   },
   "command":{

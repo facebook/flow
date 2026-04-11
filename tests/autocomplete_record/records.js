@@ -7,28 +7,28 @@ record Person {
   active: boolean,
 }
 
-const p = Pe
+const p = Pe;
 //          ^
 
 // Test 2: Record with optional fields (should only suggest required fields)
 record User {
   id: string,
-  email: string = "",
+  email: string = '',
   verified: boolean,
 }
 
-const u = Us
+const u = Us;
 //          ^
 
 // Test 3: Record with complex types
-type ComplexType = mixed;
+type ComplexType = unknown;
 
 record Data {
   value: ComplexType,
   ref: unknown,
 }
 
-const d = Da
+const d = Da;
 //          ^
 
 // Test 4: Generic record
@@ -37,16 +37,16 @@ record Container<T> {
   id: string,
 }
 
-const c = Con
+const c = Con;
 //           ^
 
 // Test 5: Record with all optional fields (generates `Optional {}`)
 record Optional {
   a: number = 1,
-  b: string = "",
+  b: string = '',
 }
 
-const opt = Opt
+const opt = Opt;
 //             ^
 
 // Test 6: Record with methods (should exclude methods from completion)
@@ -55,15 +55,14 @@ record WithMethods {
   method(): void {}
 }
 
-const wm = WithMe
+const wm = WithMe;
 //               ^
-
 
 // Test 7: Record with statics (should exclude methods from completion)
 record WithStatics {
   field: string,
-  static bar: number = 3
+  static bar: number = 3,
 }
 
-const ws = WithSt
+const ws = WithSt;
 //               ^
