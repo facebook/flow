@@ -3253,15 +3253,13 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReadOnlyArray (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "NonNullable" ->
-    if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
-      match targs with
-      | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope tbls xs t in
-        Annot (NonMaybeType (loc, t))
-      | _ -> Err (loc, CheckError)
-    else
-      Annot (Any loc)
+  | "NonNullable" -> begin
+    match targs with
+    | Some (_, { arguments = [t]; _ }) ->
+      let t = annot opts scope tbls xs t in
+      Annot (NonMaybeType (loc, t))
+    | _ -> Err (loc, CheckError)
+  end
   | name ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs
