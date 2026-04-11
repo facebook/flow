@@ -4,7 +4,6 @@ unused_ts_shim.js
 [options]
 all=true
 no_flowlib=false
-experimental.ts_utility_syntax=true
 experimental.allow_readonly_variance=true
 
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>/deprecated'
