@@ -426,12 +426,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       | `Bool -> Flow_js_utils.add_output env.cx (Error_message.EDeprecatedBool loc)
       | `Boolean -> ());
       ((loc, BoolModuleT.at loc), t_ast)
-    | (loc, (Unknown _ as t_ast)) ->
-      if not (Context.ts_syntax env.cx || Context.ts_utility_syntax env.cx) then
-        Flow_js_utils.add_output
-          env.cx
-          (Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc });
-      ((loc, MixedT.at loc), t_ast)
+    | (loc, (Unknown _ as t_ast)) -> ((loc, MixedT.at loc), t_ast)
     | (loc, (Never _ as t_ast)) ->
       if not (Context.ts_syntax env.cx) then
         Flow_js_utils.add_output
