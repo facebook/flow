@@ -3269,10 +3269,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       | _ -> Err (loc, CheckError)
     else
       Annot (Any loc)
-  | "ReadonlyMap" when not (opts.enable_ts_syntax || opts.enable_ts_utility_syntax) ->
-    Annot (Any loc)
-  | "ReadonlySet" when not (opts.enable_ts_syntax || opts.enable_ts_utility_syntax) ->
-    Annot (Any loc)
   | name ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs
