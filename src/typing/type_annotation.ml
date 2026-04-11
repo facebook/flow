@@ -1306,22 +1306,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                  { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyArray }
               )
               t_ast
-        | "ReadonlyMap" when not (Context.ts_syntax cx || Context.ts_utility_syntax cx) ->
-          error_type
-            cx
-            loc
-            (Error_message.EIncorrectTypeWithReplacement
-               { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyMap }
-            )
-            t_ast
-        | "ReadonlySet" when not (Context.ts_syntax cx || Context.ts_utility_syntax cx) ->
-          error_type
-            cx
-            loc
-            (Error_message.EIncorrectTypeWithReplacement
-               { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlySet }
-            )
-            t_ast
         | "NonNullable" ->
           if Context.ts_syntax cx || Context.ts_utility_syntax cx then
             check_type_arg_arity cx loc t_ast targs 1 (fun () ->
