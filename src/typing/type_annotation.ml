@@ -406,7 +406,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       add_unclear_type_error_if_not_lib_file env.cx loc;
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
     | (loc, (Mixed _ as t_ast)) ->
-      if Context.is_utility_type_deprecated env.cx "mixed" && Context.ts_utility_syntax env.cx then begin
+      if Context.is_utility_type_deprecated env.cx "mixed" then begin
         Flow_js_utils.add_output
           env.cx
           (Error_message.EIncorrectTypeWithReplacement
