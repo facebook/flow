@@ -768,7 +768,8 @@ end = struct
         Generic
           {
             Generic.id =
-              Generic.Identifier.Unqualified (_, { Ast.Identifier.name = "$ReadOnlyArray"; _ });
+              Generic.Identifier.Unqualified
+                (_, { Ast.Identifier.name = "$ReadOnlyArray" | "ReadonlyArray"; _ });
             targs = Some (_, { Ast.Type.TypeArgs.arguments = [t']; _ });
             _;
           }
@@ -783,7 +784,7 @@ end = struct
                   {
                     Generic.id =
                       Generic.Identifier.Unqualified
-                        (_, { Ast.Identifier.name = "$ReadOnlyArray"; _ });
+                        (_, { Ast.Identifier.name = "$ReadOnlyArray" | "ReadonlyArray"; _ });
                     targs = Some (_, { Ast.Type.TypeArgs.arguments = [t']; _ });
                     _;
                   }
