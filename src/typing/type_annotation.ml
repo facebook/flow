@@ -1272,23 +1272,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           )
         (* TS Types *)
         | "Readonly" ->
-          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
-            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-                let (ts, targs) = convert_type_params () in
-                let t = List.hd ts in
-                let reason = mk_reason RReadOnlyType loc in
-                reconstruct_ast
-                  (mk_type_destructor cx (use_op reason) reason t ReadOnlyType (mk_eval_id cx loc))
-                  targs
-            )
-          else
-            error_type
-              cx
-              loc
-              (Error_message.EIncorrectTypeWithReplacement
-                 { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonly }
-              )
-              t_ast
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let t = List.hd ts in
+              let reason = mk_reason RReadOnlyType loc in
+              reconstruct_ast
+                (mk_type_destructor cx (use_op reason) reason t ReadOnlyType (mk_eval_id cx loc))
+                targs
+          )
         | "ReadonlyArray" ->
           if Context.ts_syntax cx || Context.ts_utility_syntax cx then
             check_type_arg_arity cx loc t_ast targs 1 (fun () ->
