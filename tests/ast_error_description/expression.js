@@ -3,10 +3,10 @@
  * @flow
  */
 
-type T = {p: mixed};
+type T = {p: unknown};
 
 let a = 0;
-const f = (x: mixed): mixed => x;
+const f = (x: unknown): unknown => x;
 const o = {p: 42};
 
 declare var React: {createElement: React$CreateElement};
