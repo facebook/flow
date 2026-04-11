@@ -59,29 +59,29 @@ Cannot assign `array` to `problem` because read-only array type [1] is incompati
 
 References:
    isarray.js:8:26
-    8|   function hmm<Z>(array: Z): Z  {
+    8|   function hmm<Z>(array: Z): Z {
                                 ^ [1]
    isarray.js:10:20
    10|     const problem: Array<Z> = array; // error
                           ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- isarray.js:23:35
+Error ------------------------------------------------------------------------------------------------- isarray.js:23:37
 
 Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
 [incompatible-type]
 
-   isarray.js:23:35
-   23|     const problem: Array<mixed> = array; // error
-                                         ^^^^^
+   isarray.js:23:37
+   23|     const problem: Array<unknown> = array; // error
+                                           ^^^^^
 
 References:
    isarray.js:21:22
    21| function hmm2(array: unknown) {
                             ^^^^^^^ [1]
    isarray.js:23:20
-   23|     const problem: Array<mixed> = array; // error
-                          ^^^^^^^^^^^^ [2]
+   23|     const problem: Array<unknown> = array; // error
+                          ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- map.js:6:7

@@ -5,22 +5,22 @@ function hmm1<Z>(array: Z) {
 }
 
 function coerce<T, U>(t: T): U {
-  function hmm<Z>(array: Z): Z  {
-    if (!Array.isArray(array)) throw new Error("Unreachable.");
+  function hmm<Z>(array: Z): Z {
+    if (!Array.isArray(array)) throw new Error('Unreachable.');
     const problem: Array<Z> = array; // error
-    if (array.length === 0) throw new Error("Unreachable.");
+    if (array.length === 0) throw new Error('Unreachable.');
     return problem[0];
   }
-  const result: Array<{ value: T }> = hmm([{ value: t }]);
-  if (Array.isArray(result)) throw new Error("Unreachable.");
+  const result: Array<{value: T}> = hmm([{value: t}]);
+  if (Array.isArray(result)) throw new Error('Unreachable.');
   return ((result: empty).value: U);
 }
-const twelve: number = coerce("twelve");
+const twelve: number = coerce('twelve');
 twelve.toFixed();
 
 function hmm2(array: unknown) {
   if (Array.isArray(array)) {
-    const problem: Array<mixed> = array; // error
+    const problem: Array<unknown> = array; // error
     problem[1] = 0;
   }
 }
