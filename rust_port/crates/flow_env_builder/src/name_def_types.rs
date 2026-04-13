@@ -287,7 +287,15 @@ pub struct FunctionDefData {
     pub function_loc: ALoc,
     pub function_: ast::function::Function<ALoc, ALoc>,
     pub statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
     pub tparams_map: TparamsMap,
+}
+
+#[derive(Clone)]
+pub struct DeclaredFunctionDefData {
+    pub declarations: Vec<(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)>,
+    pub statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    pub namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
 }
 
 #[derive(Clone)]
@@ -342,6 +350,7 @@ pub enum Def {
         op: ast::expression::UpdateOperator,
     },
     Function(Box<FunctionDefData>),
+    DeclaredFunction(Box<DeclaredFunctionDefData>),
     Component(Box<ComponentDefData>),
     Class(Box<ClassDefData>),
     Record(Box<RecordDefData>),
@@ -546,6 +555,15 @@ pub mod print {
             }
             Def::Record(data) => {
                 format!("record {}", data.record.id.name)
+            }
+            Def::DeclaredFunction(data) => {
+                let name = data
+                    .declarations
+                    .first()
+                    .and_then(|(_, decl)| decl.id.as_ref())
+                    .map(|id| id.name.as_str())
+                    .unwrap_or("<anonymous>");
+                format!("declare function {}", name)
             }
             Def::TypeAlias(_, alias) => {
                 format!("alias {}", alias.right.loc().debug_to_string(false))

@@ -10350,14 +10350,26 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         match &m.id {
             Id::Global(_) => {}
             Id::Local(id) => {
-                let stmt = Statement::new(StatementInner::DeclareNamespace {
-                    loc: loc.dupe(),
-                    inner: Arc::new(m.clone()),
+                let merged_with_function = self.env_read_opt(&id.name).is_some_and(|env_val| {
+                    env_val
+                        .def_loc
+                        .as_ref()
+                        .is_some_and(|def_loc| def_loc < &id.loc)
+                        && matches!(
+                            env_val.kind,
+                            BindingsKind::Function | BindingsKind::DeclaredFunction
+                        )
                 });
-                if flow_parser::ast_utils::is_type_only_declaration_statement(&stmt) {
-                    self.binding_type_identifier(id)?;
-                } else {
-                    self.pattern_identifier(Some(flow_parser::ast::VariableKind::Const), id)?;
+                if !merged_with_function {
+                    let stmt = Statement::new(StatementInner::DeclareNamespace {
+                        loc: loc.dupe(),
+                        inner: Arc::new(m.clone()),
+                    });
+                    if flow_parser::ast_utils::is_type_only_declaration_statement(&stmt) {
+                        self.binding_type_identifier(id)?;
+                    } else {
+                        self.pattern_identifier(Some(flow_parser::ast::VariableKind::Const), id)?;
+                    }
                 }
             }
         }

@@ -1400,6 +1400,7 @@ fn def_of_function(
     has_this_def: bool,
     function_loc: ALoc,
     statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
     arrow: bool,
     function_: ast::function::Function<ALoc, ALoc>,
 ) -> Def {
@@ -1412,6 +1413,19 @@ fn def_of_function(
         function_,
         tparams_map,
         statics,
+        namespace_types,
+    }))
+}
+
+fn def_of_declared_function(
+    declarations: Vec<(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)>,
+    statics: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+) -> Def {
+    Def::DeclaredFunction(Box::new(DeclaredFunctionDefData {
+        declarations,
+        statics,
+        namespace_types,
     }))
 }
 
@@ -1466,6 +1480,73 @@ static FUNC_OWN_PROPS: std::sync::LazyLock<BTreeSet<&'static str>> =
 
 // Type alias for function statics map
 type StaticsMap = BTreeMap<FlowSmolStr, EnvKey<ALoc>>;
+type NamespaceTypesMap = BTreeMap<FlowSmolStr, EnvKey<ALoc>>;
+
+fn add_namespace_member(
+    map: &mut BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    name: &FlowSmolStr,
+    loc: &ALoc,
+) {
+    map.entry(name.dupe())
+        .or_insert_with(|| EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()));
+}
+
+fn collect_declared_namespace_members(
+    statements: &[ast::statement::Statement<ALoc, ALoc>],
+) -> (StaticsMap, NamespaceTypesMap) {
+    use ast::pattern::Pattern;
+    use ast::statement::StatementInner;
+
+    let mut values = BTreeMap::new();
+    let mut types = BTreeMap::new();
+
+    for stmt in statements {
+        match stmt.deref() {
+            StatementInner::DeclareNamespace { inner, .. } => {
+                if let ast::statement::declare_namespace::Id::Local(id) = &inner.id {
+                    add_namespace_member(&mut values, &id.name, &id.loc);
+                }
+            }
+            StatementInner::DeclareTypeAlias { inner, .. }
+            | StatementInner::TypeAlias { inner, .. } => {
+                add_namespace_member(&mut types, &inner.id.name, &inner.id.loc);
+            }
+            StatementInner::DeclareOpaqueType { inner, .. }
+            | StatementInner::OpaqueType { inner, .. } => {
+                add_namespace_member(&mut types, &inner.id.name, &inner.id.loc);
+            }
+            StatementInner::DeclareInterface { inner, .. }
+            | StatementInner::InterfaceDeclaration { inner, .. } => {
+                add_namespace_member(&mut types, &inner.id.name, &inner.id.loc);
+            }
+            StatementInner::DeclareVariable { inner, .. } => {
+                for decl in inner.declarations.iter() {
+                    if let Pattern::Identifier { inner: pat_id, .. } = &decl.id {
+                        add_namespace_member(&mut values, &pat_id.name.name, &pat_id.name.loc);
+                    }
+                }
+            }
+            StatementInner::DeclareFunction { inner, .. } => {
+                if let Some(id) = &inner.id {
+                    add_namespace_member(&mut values, &id.name, &id.loc);
+                }
+            }
+            StatementInner::DeclareClass { inner, .. } => {
+                add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+            }
+            StatementInner::DeclareComponent { inner, .. } => {
+                add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+            }
+            StatementInner::DeclareEnum { inner, .. }
+            | StatementInner::EnumDeclaration { inner, .. } => {
+                add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+            }
+            _ => {}
+        }
+    }
+
+    (values, types)
+}
 
 fn fail(loc: ALoc, str: &str) -> ! {
     panic!(
@@ -2150,6 +2231,7 @@ impl<'a> DefFinder<'a> {
         has_this_def: bool,
         var_assigned_to: Option<&ast::Identifier<ALoc, ALoc>>,
         statics: &StaticsMap,
+        namespace_types: &NamespaceTypesMap,
         arrow: bool,
         hooklike: bool,
         function_loc: ALoc,
@@ -2177,6 +2259,7 @@ impl<'a> DefFinder<'a> {
         let func_hints_clone = func_hints.to_vec();
         let func_return_hints_clone = func_return_hints.to_vec();
         let statics_clone = statics.clone();
+        let namespace_types_clone = namespace_types.clone();
         self.in_new_tparams_env(false, |this| {
             this.visit_function(
                 &scope_kind,
@@ -2222,6 +2305,7 @@ impl<'a> DefFinder<'a> {
                     has_this_def,
                     function_loc.dupe(),
                     statics_clone.clone(),
+                    namespace_types_clone.clone(),
                     false,
                     expr.clone(),
                 );
@@ -2239,6 +2323,7 @@ impl<'a> DefFinder<'a> {
     fn visit_function_declaration(
         &mut self,
         statics: &StaticsMap,
+        namespace_types: &NamespaceTypesMap,
         loc: ALoc,
         expr: &ast::function::Function<ALoc, ALoc>,
     ) {
@@ -2271,6 +2356,7 @@ impl<'a> DefFinder<'a> {
                 true, // has_this_def:true
                 loc.dupe(),
                 statics.clone(),
+                namespace_types.clone(),
                 false, // arrow:false
                 expr.clone(),
             );
@@ -2282,6 +2368,38 @@ impl<'a> DefFinder<'a> {
                     this.add_ordinary_binding(loc.dupe(), reason, def);
                 }
             }
+        });
+    }
+
+    fn visit_declared_function(
+        &mut self,
+        loc: ALoc,
+        decl: &ast::statement::DeclareFunction<ALoc, ALoc>,
+        declarations: &[(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)],
+        statics: &StaticsMap,
+        namespace_types: &NamespaceTypesMap,
+    ) {
+        if let Some(id) = &decl.id {
+            self.add_ordinary_binding(
+                id.loc.dupe(),
+                func_reason(false, false, loc.dupe()),
+                def_of_declared_function(
+                    declarations.to_vec(),
+                    statics.clone(),
+                    namespace_types.clone(),
+                ),
+            );
+        }
+        let Ok(()) = ast_visitor::declare_function_default(self, &loc, decl);
+    }
+
+    fn visit_merged_declare_namespace_body(
+        &mut self,
+        namespace: &ast::statement::DeclareNamespace<ALoc, ALoc>,
+    ) {
+        let (body_loc, body_block) = &namespace.body;
+        self.in_scope(ScopeKind::DeclareNamespace, |this| {
+            let Ok(()) = ast_visitor::block_default(this, body_loc, body_block);
         });
     }
 
@@ -3577,6 +3695,7 @@ impl<'a> DefFinder<'a> {
                             false,
                             loc.dupe(),
                             BTreeMap::new(),
+                            BTreeMap::new(),
                             true,
                             inner_fn.clone(),
                         );
@@ -3593,6 +3712,7 @@ impl<'a> DefFinder<'a> {
                     &hints_before_synthesizable_check,
                     true,
                     None,
+                    &BTreeMap::new(),
                     &BTreeMap::new(),
                     false,
                     false,
@@ -4041,6 +4161,7 @@ impl<'a> DefFinder<'a> {
                             false,
                             None,
                             &BTreeMap::new(),
+                            &BTreeMap::new(),
                             false,
                             false,
                             fn_loc.dupe(),
@@ -4056,6 +4177,7 @@ impl<'a> DefFinder<'a> {
                             false,
                             None,
                             &BTreeMap::new(),
+                            &BTreeMap::new(),
                             false,
                             false,
                             fn_loc.dupe(),
@@ -4070,6 +4192,7 @@ impl<'a> DefFinder<'a> {
                             &func_hints,
                             false,
                             None,
+                            &BTreeMap::new(),
                             &BTreeMap::new(),
                             false,
                             false,
@@ -4360,10 +4483,32 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             },
         }
 
-        type FunctionState = (
-            BTreeMap<FlowSmolStr, Option<EnvKey<ALoc>>>,
-            Vec<DeferredVisit>,
-        );
+        struct FunctionState {
+            statics: BTreeMap<FlowSmolStr, Option<EnvKey<ALoc>>>,
+            namespace_types: NamespaceTypesMap,
+            deferred_visits: Vec<DeferredVisit>,
+            declared_functions: Vec<(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)>,
+            merge_candidate_loc: Option<ALoc>,
+        }
+
+        impl FunctionState {
+            fn new() -> Self {
+                Self {
+                    statics: BTreeMap::new(),
+                    namespace_types: BTreeMap::new(),
+                    deferred_visits: Vec::new(),
+                    declared_functions: Vec::new(),
+                    merge_candidate_loc: None,
+                }
+            }
+
+            fn record_merge_candidate(&mut self, loc: &ALoc) {
+                match &self.merge_candidate_loc {
+                    Some(existing) if existing <= loc => {}
+                    _ => self.merge_candidate_loc = Some(loc.dupe()),
+                }
+            }
+        }
 
         let mut state: BTreeMap<FlowSmolStr, FunctionState> = BTreeMap::new();
 
@@ -4442,8 +4587,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         },
                     );
 
-                    if let Some((statics_map, _)) = state.get(obj_name) {
-                        if !statics_map.contains_key(prop_name) {
+                    if let Some(function_state) = state.get(obj_name) {
+                        if !function_state.statics.contains_key(prop_name) {
                             // Only first assignment sets the type.
                             let key = if let ExpressionInner::Function { inner, .. } = &**init {
                                 if let Some(id) = &inner.id {
@@ -4475,8 +4620,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             } else {
                                 None
                             };
-                            if let Some((statics_map, _)) = state.get_mut(obj_name) {
-                                statics_map.insert(prop_name.dupe(), key_opt);
+                            if let Some(function_state) = state.get_mut(obj_name) {
+                                function_state.statics.insert(prop_name.dupe(), key_opt);
                             }
                         }
                     }
@@ -4491,18 +4636,17 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
                     if crate::env_api::has_assigning_write(
-                        EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc),
+                        EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                         &self.env_info.env_entries,
                     ) {
                         let deferred = DeferredVisit::FunctionDecl {
                             loc: loc.dupe(),
                             func: func.clone(),
                         };
-                        state
-                            .entry(name.dupe())
-                            .or_insert_with(|| (BTreeMap::new(), Vec::new()))
-                            .1
-                            .push(deferred);
+                        let function_state =
+                            state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                        function_state.record_merge_candidate(&id_loc);
+                        function_state.deferred_visits.push(deferred);
                     } else {
                         let Ok(()) = self.statement(stmt);
                     }
@@ -4533,18 +4677,17 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
                             if crate::env_api::has_assigning_write(
-                                EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc),
+                                EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                                 &self.env_info.env_entries,
                             ) {
                                 let deferred = DeferredVisit::FunctionDecl {
                                     loc: loc.dupe(),
                                     func: func.clone(),
                                 };
-                                state
-                                    .entry(name.dupe())
-                                    .or_insert_with(|| (BTreeMap::new(), Vec::new()))
-                                    .1
-                                    .push(deferred);
+                                let function_state =
+                                    state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                                function_state.record_merge_candidate(&id_loc);
+                                function_state.deferred_visits.push(deferred);
                             } else {
                                 let Ok(()) = self.statement(stmt);
                             }
@@ -4579,23 +4722,72 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
                             if crate::env_api::has_assigning_write(
-                                EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc),
+                                EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
                                 &self.env_info.env_entries,
                             ) {
                                 let deferred = DeferredVisit::FunctionDecl {
                                     loc: loc.dupe(),
                                     func: func.clone(),
                                 };
-                                state
-                                    .entry(name.dupe())
-                                    .or_insert_with(|| (BTreeMap::new(), Vec::new()))
-                                    .1
-                                    .push(deferred);
+                                let function_state =
+                                    state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                                function_state.record_merge_candidate(&id_loc);
+                                function_state.deferred_visits.push(deferred);
                             } else {
                                 let Ok(()) = self.statement(stmt);
                             }
                         }
                     }
+                }
+
+                StatementInner::DeclareFunction { loc, inner } if inner.id.is_some() => {
+                    let decl = inner.as_ref();
+                    let id = decl.id.as_ref().unwrap();
+                    let id_loc = id.loc.dupe();
+                    let name = &id.name;
+                    if crate::env_api::has_assigning_write(
+                        EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
+                        &self.env_info.env_entries,
+                    ) {
+                        let function_state =
+                            state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                        function_state.record_merge_candidate(&id_loc);
+                        function_state
+                            .declared_functions
+                            .push((loc.dupe(), decl.clone()));
+                    } else {
+                        let Ok(()) = self.statement(stmt);
+                    }
+                }
+
+                StatementInner::DeclareNamespace { inner, .. } => {
+                    if let ast::statement::declare_namespace::Id::Local(id) = &inner.id {
+                        let should_merge = state
+                            .get(&id.name)
+                            .and_then(|function_state| function_state.merge_candidate_loc.as_ref())
+                            .is_some_and(|function_loc| function_loc < &id.loc);
+                        if should_merge {
+                            let (namespace_values, namespace_types) =
+                                collect_declared_namespace_members(&inner.body.1.body);
+                            if let Some(function_state) = state.get_mut(&id.name) {
+                                for (member_name, env_key) in namespace_values {
+                                    function_state
+                                        .statics
+                                        .entry(member_name)
+                                        .or_insert(Some(env_key));
+                                }
+                                for (member_name, env_key) in namespace_types {
+                                    function_state
+                                        .namespace_types
+                                        .entry(member_name)
+                                        .or_insert(env_key);
+                                }
+                            }
+                            self.visit_merged_declare_namespace_body(inner);
+                            continue;
+                        }
+                    }
+                    let Ok(()) = self.statement(stmt);
                 }
 
                 // const f = () => {}; const f = function () {}; *)
@@ -4647,8 +4839,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         };
                         state
                             .entry(name.dupe())
-                            .or_insert_with(|| (BTreeMap::new(), Vec::new()))
-                            .1
+                            .or_insert_with(FunctionState::new)
+                            .deferred_visits
                             .push(deferred);
                     } else {
                         let Ok(()) = self.statement(stmt);
@@ -4720,8 +4912,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 };
                                 state
                                     .entry(name.dupe())
-                                    .or_insert_with(|| (BTreeMap::new(), Vec::new()))
-                                    .1
+                                    .or_insert_with(FunctionState::new)
+                                    .deferred_visits
                                     .push(deferred);
                             } else {
                                 let Ok(()) = self.statement(stmt);
@@ -4736,15 +4928,18 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             }
         }
 
-        for (_, (statics_map, process_funcs)) in state {
-            let statics: StaticsMap = statics_map
+        for (_, function_state) in state {
+            let statics: StaticsMap = function_state
+                .statics
                 .into_iter()
                 .filter_map(|(k, v)| v.map(|env_key| (k, env_key)))
                 .collect();
-            for deferred in process_funcs {
+            let namespace_types = function_state.namespace_types;
+            let declarations = function_state.declared_functions;
+            for deferred in function_state.deferred_visits {
                 match deferred {
                     DeferredVisit::FunctionDecl { loc, func } => {
-                        self.visit_function_declaration(&statics, loc, &func);
+                        self.visit_function_declaration(&statics, &namespace_types, loc, &func);
                     }
                     DeferredVisit::FunctionExpr {
                         loc,
@@ -4759,12 +4954,28 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             !arrow,
                             Some(&var_id),
                             &statics,
+                            &BTreeMap::new(),
                             arrow,
                             hooklike,
                             loc,
                             &func,
                         );
                     }
+                }
+            }
+            if namespace_types.is_empty() {
+                for (loc, decl) in declarations.iter() {
+                    let Ok(()) = self.declare_function(loc, decl);
+                }
+            } else {
+                for (loc, decl) in declarations.iter() {
+                    self.visit_declared_function(
+                        loc.dupe(),
+                        decl,
+                        &declarations,
+                        &statics,
+                        &namespace_types,
+                    );
                 }
             }
         }
@@ -5053,6 +5264,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             true,
             None,
             &BTreeMap::new(),
+            &BTreeMap::new(),
             false,
             false,
             loc.dupe(),
@@ -5066,7 +5278,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         loc: &ALoc,
         func: &ast::function::Function<ALoc, ALoc>,
     ) -> Result<(), !> {
-        self.visit_function_declaration(&BTreeMap::new(), loc.dupe(), func);
+        self.visit_function_declaration(&BTreeMap::new(), &BTreeMap::new(), loc.dupe(), func);
         Ok(())
     }
 

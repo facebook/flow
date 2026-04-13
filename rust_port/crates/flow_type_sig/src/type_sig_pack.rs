@@ -855,6 +855,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             fn_loc,
             def,
             statics,
+            namespace_types,
         } => {
             let id_loc = pack_loc(id_loc);
             let fn_loc = pack_loc(fn_loc);
@@ -870,6 +871,14 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                     (k.dupe(), (id_loc, t))
                 })
                 .collect();
+            let namespace_types = namespace_types
+                .iter()
+                .map(|(k, (id_loc, t))| {
+                    let id_loc = pack_loc(id_loc);
+                    let t = pack_parsed(cx, t);
+                    (k.dupe(), (id_loc, t))
+                })
+                .collect();
             Def::FunBinding(Box::new(DefFunBinding {
                 id_loc,
                 name: name.dupe(),
@@ -878,6 +887,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 fn_loc,
                 def,
                 statics,
+                namespace_types,
             }))
         }
         parse::LocalBinding::ComponentBinding {
@@ -907,7 +917,12 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 })),
             }
         }
-        parse::LocalBinding::DeclareFunBinding { name, defs } => {
+        parse::LocalBinding::DeclareFunBinding {
+            name,
+            defs,
+            statics,
+            namespace_types,
+        } => {
             let mut packed_defs: Vec<_> = defs
                 .iter()
                 .map(|(id_loc, fn_loc, def)| {
@@ -920,12 +935,30 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                     (id_loc, fn_loc, def)
                 })
                 .collect();
+            let statics = statics
+                .iter()
+                .map(|(k, (id_loc, t))| {
+                    let id_loc = pack_loc(id_loc);
+                    let t = pack_parsed(cx, t);
+                    (k.dupe(), (id_loc, t))
+                })
+                .collect();
+            let namespace_types = namespace_types
+                .iter()
+                .map(|(k, (id_loc, t))| {
+                    let id_loc = pack_loc(id_loc);
+                    let t = pack_parsed(cx, t);
+                    (k.dupe(), (id_loc, t))
+                })
+                .collect();
             let (id_loc, fn_loc, def) = packed_defs.remove(0);
             Def::DeclareFun(Box::new(DefDeclareFun {
                 id_loc,
                 name: name.dupe(),
                 fn_loc,
                 def,
+                statics,
+                namespace_types,
                 tail: packed_defs,
             }))
         }

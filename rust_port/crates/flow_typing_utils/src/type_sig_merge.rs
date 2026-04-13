@@ -3760,6 +3760,47 @@ fn merge_fun_statics<'cx>(
     )
 }
 
+fn merge_namespace_symbols<'cx>(
+    env: &MergeEnv,
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    members: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
+) -> BTreeMap<Name, NamedSymbol> {
+    let mut result: BTreeMap<Name, NamedSymbol> = BTreeMap::new();
+    for (name, (loc, packed)) in members {
+        let t = merge_impl(env, cx, file, packed, false, false);
+        result.insert(
+            Name::new(name.dupe()),
+            NamedSymbol::new(Some(loc.dupe()), None, t),
+        );
+    }
+    result
+}
+
+fn wrap_with_namespace_types<'cx>(
+    cx: &Context<'cx>,
+    namespace_name: &FlowSmolStr,
+    namespace_loc: ALoc,
+    values_type: Type,
+    namespace_types: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
+    env: &MergeEnv,
+    file: &File<'cx>,
+) -> Type {
+    if namespace_types.is_empty() {
+        values_type
+    } else {
+        let namespace_symbol =
+            Symbol::mk_namespace_symbol(namespace_name.dupe(), namespace_loc.dupe());
+        let namespace_types = merge_namespace_symbols(env, cx, file, namespace_types);
+        flow_js_utils::namespace_type_with_values_type(
+            cx,
+            namespace_symbol,
+            values_type,
+            &namespace_types,
+        )
+    }
+}
+
 fn merge_fun<'cx>(
     env: &MergeEnv,
     cx: &Context<'cx>,
@@ -4352,19 +4393,24 @@ fn merge_declare_class<'cx>(
 fn merge_declare_fun<'cx>(
     cx: &Context<'cx>,
     file: &File<'cx>,
+    reason: Reason,
+    name: &FlowSmolStr,
+    id_loc: ALoc,
     defs: &Vec1<(ALoc, ALoc, FunSig<ALoc, Pack::Packed<ALoc>>)>,
+    statics: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
+    namespace_types: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
+    let env = mk_merge_env(FlowOrdMap::new());
+    let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), statics);
     let ts: Vec<Type> = defs
         .iter()
         .map(|(_, fn_loc, def)| {
             let reason = reason::mk_reason(RFunctionType, fn_loc.dupe());
-            let env = mk_merge_env(FlowOrdMap::new());
-            let statics = merge_fun_statics(&env, cx, file, reason.dupe(), &BTreeMap::new());
-            merge_fun(&env, cx, file, reason, def, statics, false, false)
+            merge_fun(&env, cx, file, reason, def, statics_t.dupe(), false, false)
         })
         .collect();
-    match ts.len() {
+    let function_t = match ts.len() {
         1 => ts.into_iter().next().unwrap(),
         _ => {
             let mut iter = ts.into_iter();
@@ -4379,7 +4425,8 @@ fn merge_declare_fun<'cx>(
                 type_::inter_rep::make(t0, t1, rest.into()),
             ))
         }
-    }
+    };
+    wrap_with_namespace_types(cx, name, id_loc, function_t, namespace_types, &env, file)
 }
 
 pub fn merge_def<'cx>(
@@ -4478,13 +4525,40 @@ pub fn merge_def<'cx>(
         Def::FunBinding(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
             let statics_t = merge_fun_statics(&env, cx, file, reason.dupe(), &inner.statics);
-            merge_fun(&env, cx, file, reason, &inner.def, statics_t, false, false)
+            let function_t = merge_fun(
+                &env,
+                cx,
+                file,
+                reason.dupe(),
+                &inner.def,
+                statics_t,
+                false,
+                false,
+            );
+            wrap_with_namespace_types(
+                cx,
+                &inner.name,
+                inner.id_loc.dupe(),
+                function_t,
+                &inner.namespace_types,
+                &env,
+                file,
+            )
         }
         Def::DeclareFun(inner) => {
             let mut all_defs = vec![(inner.id_loc.dupe(), inner.fn_loc.dupe(), inner.def.clone())];
             all_defs.extend(inner.tail.iter().cloned());
             let defs = Vec1::try_from_vec(all_defs).unwrap();
-            merge_declare_fun(cx, file, &defs)
+            merge_declare_fun(
+                cx,
+                file,
+                reason,
+                &inner.name,
+                inner.id_loc.dupe(),
+                &defs,
+                &inner.statics,
+                &inner.namespace_types,
+            )
         }
         Def::ComponentBinding(inner) => {
             let env = mk_merge_env(FlowOrdMap::new());
@@ -4538,26 +4612,15 @@ pub fn merge_def<'cx>(
         Def::NamespaceBinding(inner) => {
             let (id_loc, name, values, types) =
                 (&inner.id_loc, &inner.name, &inner.values, &inner.types);
-            let f = |smap: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>| {
-                let mut result: BTreeMap<Name, type_::NamedSymbol> = BTreeMap::new();
-                for (name, (loc, packed)) in smap {
-                    let t = merge_impl(
-                        &mk_merge_env(FlowOrdMap::new()),
-                        cx,
-                        file,
-                        packed,
-                        false,
-                        false,
-                    );
-                    result.insert(
-                        Name::new(name.dupe()),
-                        type_::NamedSymbol::new(Some(loc.dupe()), None, t),
-                    );
-                }
-                result
-            };
+            let env = mk_merge_env(FlowOrdMap::new());
             let namespace_symbol = Symbol::mk_namespace_symbol(name.dupe(), id_loc.dupe());
-            flow_js_utils::namespace_type(cx, reason, namespace_symbol, &f(values), &f(types))
+            flow_js_utils::namespace_type(
+                cx,
+                reason,
+                namespace_symbol,
+                &merge_namespace_symbols(&env, cx, file, values),
+                &merge_namespace_symbols(&env, cx, file, types),
+            )
         }
     }
 }

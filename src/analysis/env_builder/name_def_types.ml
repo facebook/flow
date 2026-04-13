@@ -112,6 +112,7 @@ type root =
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       statics: Env_api.EnvKey.t SMap.t;
+      namespace_types: Env_api.EnvKey.t SMap.t;
       arrow: bool;
       tparams_map: tparams_map;
     }
@@ -207,7 +208,13 @@ type def =
       function_loc: ALoc.t;
       function_: (ALoc.t, ALoc.t) Ast.Function.t;
       statics: Env_api.EnvKey.t SMap.t;
+      namespace_types: Env_api.EnvKey.t SMap.t;
       tparams_map: tparams_map;
+    }
+  | DeclaredFunction of {
+      declarations: (ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareFunction.t) list;
+      statics: Env_api.EnvKey.t SMap.t;
+      namespace_types: Env_api.EnvKey.t SMap.t;
     }
   | Component of {
       tparams_map: tparams_map;
@@ -334,6 +341,15 @@ module Print = struct
            ~default:"<anonymous>"
            id
         )
+    | DeclaredFunction { declarations = (_, { Ast.Statement.DeclareFunction.id; _ }) :: _; _ } ->
+      spf
+        "declare fun %s"
+        (Base.Option.value_map
+           ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
+           ~default:"<anonymous>"
+           id
+        )
+    | DeclaredFunction { declarations = []; _ } -> "declare fun <empty>"
     | Component
         {
           component = { Ast.Statement.ComponentDeclaration.id = (_, { Ast.Identifier.name; _ }); _ };

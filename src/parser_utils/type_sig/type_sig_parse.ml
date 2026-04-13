@@ -238,10 +238,13 @@ and 'loc local_binding =
       fn_loc: 'loc loc_node;
       def: ('loc loc_node, 'loc parsed) fun_sig Lazy.t;
       statics: ('loc loc_node * 'loc parsed) smap;
+      namespace_types: ('loc loc_node * 'loc parsed) smap;
     }
   | DeclareFunBinding of {
       name: string;
       defs_rev: ('loc loc_node * 'loc loc_node * ('loc loc_node, 'loc parsed) fun_sig Lazy.t) Nel.t;
+      statics: ('loc loc_node * 'loc parsed) smap;
+      namespace_types: ('loc loc_node * 'loc parsed) smap;
     }
   | ComponentBinding of {
       id_loc: 'loc loc_node;
@@ -1014,8 +1017,9 @@ module Scope = struct
         match binding_opt with
         | None ->
           let statics = SMap.empty in
+          let namespace_types = SMap.empty in
           let def : _ local_binding =
-            FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
+            FunBinding { id_loc; name; async; generator; fn_loc; def; statics; namespace_types }
           in
           let node = push_local_def tbls def in
           k name node;
@@ -1037,7 +1041,9 @@ module Scope = struct
         match binding_opt with
         | None ->
           let defs_rev = Nel.one (id_loc, fn_loc, def) in
-          let def = DeclareFunBinding { name; defs_rev } in
+          let statics = SMap.empty in
+          let namespace_types = SMap.empty in
+          let def = DeclareFunBinding { name; defs_rev; statics; namespace_types } in
           let node = push_local_def tbls def in
           k name node;
           (Some (LocalBinding node), true)
@@ -1045,11 +1051,11 @@ module Scope = struct
         | Some (LocalBinding node) ->
           let legal_ref = ref false in
           Local_defs.modify node (function
-              | DeclareFunBinding { name; defs_rev } ->
+              | DeclareFunBinding { name; defs_rev; statics; namespace_types } ->
                 k name node;
                 legal_ref := true;
                 let defs_rev = Nel.cons (id_loc, fn_loc, def) defs_rev in
-                DeclareFunBinding { name; defs_rev }
+                DeclareFunBinding { name; defs_rev; statics; namespace_types }
               | def -> def
               );
           (binding_opt, !legal_ref)
@@ -1376,127 +1382,185 @@ module Scope = struct
     in
     (values, types)
 
-  (* a `declare namespace` exports every binding. *)
-  let finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name =
-    match scope with
-    (* Special declaration merging rules for namespaces in the global scope *)
-    | DeclareNamespace { values; types; parent = Global global_scope; _ } ->
-      let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
-      let def : _ local_binding = NamespaceBinding { id_loc; name; values; types } in
-      let union_values_and_types existing_values existing_types values types =
-        let new_binding name (l, _) =
-          match SMap.find_opt name existing_values with
+  let merge_namespace_entries tbls existing_values existing_types values types =
+    SMap.iter
+      (fun name ((loc, _) as entry) ->
+        match SMap.find_opt name !existing_values with
+        | Some (existing_binding_loc, _) ->
+          tbls.additional_errors <-
+            Signature_error.NamespacedNameAlreadyBound
+              { name; invalid_binding_loc = loc; existing_binding_loc }
+            :: tbls.additional_errors
+        | None ->
+          (match SMap.find_opt name !existing_types with
           | Some (existing_binding_loc, _) ->
             tbls.additional_errors <-
               Signature_error.NamespacedNameAlreadyBound
-                { name; invalid_binding_loc = l; existing_binding_loc }
-              :: tbls.additional_errors;
-            false
-          | None ->
-            (match SMap.find_opt name existing_types with
-            | Some (existing_binding_loc, _) ->
-              tbls.additional_errors <-
-                Signature_error.NamespacedNameAlreadyBound
-                  { name; invalid_binding_loc = l; existing_binding_loc }
-                :: tbls.additional_errors;
-              false
-            | None -> true)
-        in
-        let values = SMap.filter new_binding values in
-        let types = SMap.filter new_binding types in
-        (SMap.union existing_values values, SMap.union existing_types types)
-      in
-      (* When we decide that the namespace binding is mergeable. We call this function to
-       * mutate the existing node with merged names. *)
-      let merge_with_existing_local_binding_node (node : _ local_binding Local_defs.node) =
-        Local_defs.modify node (function
-            | NamespaceBinding { id_loc; name; values = existing_values; types = existing_types } ->
-              let (values, types) =
-                union_values_and_types existing_values existing_types values types
-              in
-              NamespaceBinding { id_loc; name; values; types }
-            | b -> b
-            )
-      in
-      (* This updater handle the simple case when we can directly update one kind of binding map
-       * (either value or type-only bindings). *)
-      let simple_updater = function
-        | Some (LocalBinding node) as existing_binding ->
-          merge_with_existing_local_binding_node node;
-          existing_binding
-        | Some (RemoteBinding _) as existing_binding -> existing_binding
+                { name; invalid_binding_loc = loc; existing_binding_loc }
+              :: tbls.additional_errors
+          | None -> existing_values := SMap.add name entry !existing_values))
+      values;
+    SMap.iter
+      (fun name ((loc, _) as entry) ->
+        match SMap.find_opt name !existing_values with
+        | Some (existing_binding_loc, _) ->
+          tbls.additional_errors <-
+            Signature_error.NamespacedNameAlreadyBound
+              { name; invalid_binding_loc = loc; existing_binding_loc }
+            :: tbls.additional_errors
         | None ->
-          let node = push_local_def tbls def in
-          Some (LocalBinding node)
+          (match SMap.find_opt name !existing_types with
+          | Some (existing_binding_loc, _) ->
+            tbls.additional_errors <-
+              Signature_error.NamespacedNameAlreadyBound
+                { name; invalid_binding_loc = loc; existing_binding_loc }
+              :: tbls.additional_errors
+          | None -> existing_types := SMap.add name entry !existing_types))
+      types
+
+  let merge_namespace_into_local_binding_node tbls node values types =
+    let merged = ref false in
+    Local_defs.modify node (fun (binding : _ local_binding) ->
+        match binding with
+        | NamespaceBinding { id_loc; name; values = existing_values; types = existing_types } ->
+          let existing_values = ref existing_values in
+          let existing_types = ref existing_types in
+          merge_namespace_entries tbls existing_values existing_types values types;
+          merged := true;
+          NamespaceBinding { id_loc; name; values = !existing_values; types = !existing_types }
+        | FunBinding ({ statics = existing_values; namespace_types = existing_types; _ } as binding)
+          ->
+          let existing_values = ref existing_values in
+          let existing_types = ref existing_types in
+          merge_namespace_entries tbls existing_values existing_types values types;
+          merged := true;
+          FunBinding { binding with statics = !existing_values; namespace_types = !existing_types }
+        | DeclareFunBinding
+            ({ statics = existing_values; namespace_types = existing_types; _ } as binding) ->
+          let existing_values = ref existing_values in
+          let existing_types = ref existing_types in
+          merge_namespace_entries tbls existing_values existing_types values types;
+          merged := true;
+          DeclareFunBinding
+            { binding with statics = !existing_values; namespace_types = !existing_types }
+        | binding -> binding
+    );
+    !merged
+
+  (* a `declare namespace` exports every binding. *)
+  let finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name =
+    match scope with
+    | DeclareNamespace { values; types; parent } ->
+      let (namespace_values, namespace_types) =
+        namespace_binding_of_values_and_types scope (values, types)
       in
-      let updater values_map types_map =
-        match (is_type_only, SMap.find_opt name values_map, SMap.find_opt name types_map) with
+      let (parent_values, parent_types) =
+        match parent with
+        | Global { values; types; _ }
+        | DeclareModule { values; types; _ }
+        | DeclareNamespace { values; types; _ }
+        | Module { values; types; _ }
+        | Lexical { values; types; _ } ->
+          (values, types)
+        | ConditionalTypeExtends _ -> failwith "The host scope cannot be ConditionalTypeExtends"
+      in
+      let set_parent_values_and_types parent_values parent_types =
+        match parent with
+        | Global ({ values = _; types = _; modules = _ } as scope) ->
+          scope.values <- parent_values;
+          scope.types <- parent_types
+        | DeclareModule ({ values = _; types = _; parent = _; exports = _ } as scope) ->
+          scope.values <- parent_values;
+          scope.types <- parent_types
+        | DeclareNamespace ({ values = _; types = _; parent = _ } as scope) ->
+          scope.values <- parent_values;
+          scope.types <- parent_types
+        | Module ({ values = _; types = _; exports = _ } as scope) ->
+          scope.values <- parent_values;
+          scope.types <- parent_types
+        | Lexical ({ values = _; types = _; parent = _ } as scope) ->
+          scope.values <- parent_values;
+          scope.types <- parent_types
+        | ConditionalTypeExtends _ -> failwith "The host scope cannot be ConditionalTypeExtends"
+      in
+      begin
+        match (is_type_only, SMap.find_opt name parent_values, SMap.find_opt name parent_types) with
         | (_, Some _, Some _) ->
           failwith "Invariant violation: a name cannot be in both values and types"
-        (* Simple case: no existing binding exist *)
-        | (false, None, None) -> (SMap.update name simple_updater values_map, types_map)
-        | (true, None, None) -> (values_map, SMap.update name simple_updater types_map)
-        (* Simple case: existing binding exist, but in the same value/type category *)
-        | (false, Some _, None) -> (SMap.update name simple_updater values_map, types_map)
-        | (true, None, Some _) -> (values_map, SMap.update name simple_updater types_map)
-        (* Originally not-type-only, now merging with a type-only namespace,
-         * so it's still not type-only *)
-        | (true, Some _, None) -> (SMap.update name simple_updater values_map, types_map)
-        (* Originally type-only, but now it's merging with a non-type-only namespace.
-         * The namespace binding needs to be promoted to a non-type-only namespace.
-         * (implemented by removing the node from type-only map, add to the value map, and
-         * mutate the binding node in place with additional names.)
-         *
-         * e.g. Consider
-         * ```
-         * declare namespace ns { type A = '' };
-         * declare namespace ns { declare const b: string };
-         * ```
-         *
-         * In order for the behavior to be equivalent to
-
-         * ```
-         * declare namespace ns { type A = ''; declare const b: string };
-         * ```
-         * We have to promote the original type-only namespace to a value binding.
-         *)
+        | (_, None, None) ->
+          let node =
+            push_local_def
+              tbls
+              (NamespaceBinding { id_loc; name; values = namespace_values; types = namespace_types })
+          in
+          if is_type_only then
+            set_parent_values_and_types
+              parent_values
+              (SMap.add name (LocalBinding node) parent_types)
+          else
+            set_parent_values_and_types
+              (SMap.add name (LocalBinding node) parent_values)
+              parent_types
+        | (false, Some (LocalBinding node), None)
+        | (true, Some (LocalBinding node), None)
+        | (true, None, Some (LocalBinding node)) ->
+          ignore (merge_namespace_into_local_binding_node tbls node namespace_values namespace_types)
+        | (false, Some (RemoteBinding _), None)
+        | (true, None, Some (RemoteBinding _))
+        | (true, Some (RemoteBinding _), None) ->
+          ()
         | (false, None, Some (LocalBinding node))
           when match Local_defs.value node with
                | NamespaceBinding _ -> true
                | _ -> false ->
-          merge_with_existing_local_binding_node node;
-          (SMap.add name (LocalBinding node) values_map, SMap.remove name types_map)
-        (* Has an existing non-namespace binding, do nothing *)
-        | (false, None, Some _) -> (values_map, types_map)
-      in
-      let (values, types) = updater global_scope.values global_scope.types in
-      global_scope.values <- values;
-      global_scope.types <- types
-    | DeclareNamespace { values; types; parent; _ } ->
-      let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
-      bind_local
-        ~type_only:is_type_only
-        parent
-        tbls
-        name
-        id_loc
-        (NamespaceBinding { id_loc; name; values; types })
-        ignore2
+          ignore (merge_namespace_into_local_binding_node tbls node namespace_values namespace_types);
+          set_parent_values_and_types
+            (SMap.add name (LocalBinding node) parent_values)
+            (SMap.remove name parent_types)
+        | (false, None, Some _) -> ()
+      end
     | _ -> failwith "The scope must be lexical"
 
   (* Version of finalize_declare_namespace_exn that exports the namespace binding *)
   let finalize_declare_namespace_exported_exn ~is_type_only scope tbls id_loc name k =
     match scope with
     | DeclareNamespace { values; types; parent; _ } ->
-      let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
-      bind_local
-        ~type_only:is_type_only
-        parent
-        tbls
-        name
-        id_loc
-        (NamespaceBinding { id_loc; name; values; types })
-        k
+      let (namespace_values, namespace_types) =
+        namespace_binding_of_values_and_types scope (values, types)
+      in
+      let (parent_values, parent_types) =
+        match parent with
+        | Global { values; types; _ }
+        | DeclareModule { values; types; _ }
+        | DeclareNamespace { values; types; _ }
+        | Module { values; types; _ }
+        | Lexical { values; types; _ } ->
+          (values, types)
+        | ConditionalTypeExtends _ -> failwith "The host scope cannot be ConditionalTypeExtends"
+      in
+      let merged_existing =
+        match (is_type_only, SMap.find_opt name parent_values, SMap.find_opt name parent_types) with
+        | (_, Some _, Some _) ->
+          failwith "Invariant violation: a name cannot be in both values and types"
+        | (false, Some (LocalBinding node), None)
+        | (true, Some (LocalBinding node), None)
+        | (true, None, Some (LocalBinding node)) ->
+          if merge_namespace_into_local_binding_node tbls node namespace_values namespace_types then (
+            k name node;
+            true
+          ) else
+            false
+        | _ -> false
+      in
+      if not merged_existing then
+        bind_local
+          ~type_only:is_type_only
+          parent
+          tbls
+          name
+          id_loc
+          (NamespaceBinding { id_loc; name; values = namespace_values; types = namespace_types })
+          k
     | Global _ ->
       (* Global namespaces cannot be exported *)
       ()

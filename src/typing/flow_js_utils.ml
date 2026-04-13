@@ -998,6 +998,18 @@ let obj_key_mirror cx o reason_op =
   let reason = replace_desc_reason RObjectType reason_op in
   DefT (reason, ObjT { o with props_tmap; flags })
 
+let namespace_type_with_values_type cx _reason namespace_symbol values_type types =
+  let add name { preferred_def_locs; name_loc; type_ } acc =
+    NameUtils.Map.add
+      name
+      (Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
+      acc
+  in
+  let types_tmap =
+    Context.generate_property_map cx (NameUtils.Map.fold add types NameUtils.Map.empty)
+  in
+  NamespaceT { namespace_symbol; values_type; types_tmap }
+
 let namespace_type cx reason namespace_symbol values types =
   let add name { preferred_def_locs; name_loc; type_ } acc =
     NameUtils.Map.add
@@ -1008,10 +1020,7 @@ let namespace_type cx reason namespace_symbol values types =
   let props = NameUtils.Map.fold add values NameUtils.Map.empty in
   let proto = ObjProtoT reason in
   let values_type = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
-  let types_tmap =
-    Context.generate_property_map cx (NameUtils.Map.fold add types NameUtils.Map.empty)
-  in
-  NamespaceT { namespace_symbol; values_type; types_tmap }
+  namespace_type_with_values_type cx reason namespace_symbol values_type types
 
 let obj_is_readonlyish { Type.react_dro; _ } = Base.Option.is_some react_dro
 

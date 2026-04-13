@@ -2158,6 +2158,40 @@ pub fn obj_key_mirror<'cx>(
     ))
 }
 
+pub fn namespace_type_with_values_type<'cx>(
+    cx: &Context<'cx>,
+    namespace_symbol: flow_common::flow_symbol::Symbol,
+    values_type: Type,
+    types: &std::collections::BTreeMap<Name, flow_typing_type::type_::NamedSymbol>,
+) -> Type {
+    use flow_common::polarity::Polarity;
+    use flow_typing_type::type_::FieldData;
+    use flow_typing_type::type_::NamespaceType;
+    use flow_typing_type::type_::Property;
+    use flow_typing_type::type_::PropertyInner;
+    use flow_typing_type::type_::properties::PropertiesMap;
+
+    let mk_prop = |symbol: &flow_typing_type::type_::NamedSymbol| -> Property {
+        Property::new(PropertyInner::Field(Box::new(FieldData {
+            preferred_def_locs: symbol.preferred_def_locs.clone(),
+            key_loc: symbol.name_loc.dupe(),
+            type_: symbol.type_.dupe(),
+            polarity: Polarity::Positive,
+        })))
+    };
+
+    let types_props: PropertiesMap = types
+        .iter()
+        .map(|(name, symbol)| (name.dupe(), mk_prop(symbol)))
+        .collect();
+    let types_tmap = cx.generate_property_map(types_props);
+    Type::new(TypeInner::NamespaceT(std::rc::Rc::new(NamespaceType {
+        namespace_symbol,
+        values_type,
+        types_tmap,
+    })))
+}
+
 pub fn namespace_type<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
@@ -2167,7 +2201,6 @@ pub fn namespace_type<'cx>(
 ) -> Type {
     use flow_common::polarity::Polarity;
     use flow_typing_type::type_::FieldData;
-    use flow_typing_type::type_::NamespaceType;
     use flow_typing_type::type_::ObjKind;
     use flow_typing_type::type_::Property;
     use flow_typing_type::type_::PropertyInner;
@@ -2198,17 +2231,7 @@ pub fn namespace_type<'cx>(
         None,
         proto,
     );
-
-    let types_props: PropertiesMap = types
-        .iter()
-        .map(|(name, symbol)| (name.dupe(), mk_prop(symbol)))
-        .collect();
-    let types_tmap = cx.generate_property_map(types_props);
-    Type::new(TypeInner::NamespaceT(std::rc::Rc::new(NamespaceType {
-        namespace_symbol,
-        values_type,
-        types_tmap,
-    })))
+    namespace_type_with_values_type(cx, namespace_symbol, values_type, types)
 }
 
 pub fn obj_is_readonlyish(obj: &flow_typing_type::type_::ObjType) -> bool {

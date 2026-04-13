@@ -6898,13 +6898,28 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! declare_namespace loc ({ Ast.Statement.DeclareNamespace.id; body; _ } as m) =
         (match id with
         | Ast.Statement.DeclareNamespace.Global _ -> ()
-        | Ast.Statement.DeclareNamespace.Local id ->
-          if
-            Flow_ast_utils.is_type_only_declaration_statement (loc, Ast.Statement.DeclareNamespace m)
-          then
-            ignore @@ this#binding_type_identifier id
-          else
-            ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);
+        | Ast.Statement.DeclareNamespace.Local ((id_loc, { Ast.Identifier.name; _ }) as id) ->
+          let merged_with_function =
+            Base.Option.value_map
+              ~default:false
+              ~f:(fun { def_loc; kind; _ } ->
+                Base.Option.value_map ~default:false ~f:(fun def_loc -> def_loc < id_loc) def_loc
+                &&
+                match kind with
+                | Bindings.Function
+                | Bindings.DeclaredFunction ->
+                  true
+                | _ -> false)
+              (this#env_read_opt name)
+          in
+          if not merged_with_function then
+            if
+              Flow_ast_utils.is_type_only_declaration_statement
+                (loc, Ast.Statement.DeclareNamespace m)
+            then
+              ignore @@ this#binding_type_identifier id
+            else
+              ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let bindings =
           let hoist = new Hoister.hoister ~enable_enums ~with_types:true in

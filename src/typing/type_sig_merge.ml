@@ -1838,6 +1838,32 @@ and merge_fun_statics env file reason statics =
     ~props
     ?call:None
 
+and merge_namespace_symbols env file members =
+  SMap.fold
+    (fun name (loc, packed) acc ->
+      NameUtils.Map.add
+        (Reason.OrdinaryName name)
+        { Type.name_loc = Some loc; preferred_def_locs = None; type_ = merge env file packed }
+        acc)
+    members
+    NameUtils.Map.empty
+
+and wrap_with_namespace_types
+    cx reason namespace_name namespace_loc values_type namespace_types env file =
+  if SMap.is_empty namespace_types then
+    values_type
+  else
+    let namespace_symbol =
+      FlowSymbol.mk_namespace_symbol ~name:namespace_name ~def_loc:namespace_loc
+    in
+    let namespace_types = merge_namespace_symbols env file namespace_types in
+    Flow_js_utils.namespace_type_with_values_type
+      cx
+      reason
+      namespace_symbol
+      values_type
+      namespace_types
+
 and merge_fun
     ?(is_method = false)
     ?(is_static = false)
@@ -2186,20 +2212,24 @@ let merge_declare_class file reason class_name id def =
   in
   merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
 
-let merge_declare_fun file defs =
+let merge_declare_fun file reason name id_loc defs statics namespace_types =
+  let env = mk_merge_env SMap.empty in
+  let statics_t = merge_fun_statics env file reason statics in
   let ts =
     Nel.map
       (fun (_, fn_loc, def) ->
         let reason = Reason.(mk_reason RFunctionType fn_loc) in
-        let statics = merge_fun_statics (mk_merge_env SMap.empty) file reason SMap.empty in
-        merge_fun (mk_merge_env SMap.empty) file reason def statics)
+        merge_fun env file reason def statics_t)
       defs
   in
-  match ts with
-  | (t, []) -> t
-  | (t0, t1 :: ts) ->
-    let reason = TypeUtil.reason_of_t t0 |> Reason.(replace_desc_reason RIntersectionType) in
-    Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
+  let function_t =
+    match ts with
+    | (t, []) -> t
+    | (t0, t1 :: ts) ->
+      let reason = TypeUtil.reason_of_t t0 |> Reason.(replace_desc_reason RIntersectionType) in
+      Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
+  in
+  wrap_with_namespace_types file.cx reason name id_loc function_t namespace_types env file
 
 let merge_def ~const_decl file reason = function
   | TypeAlias { id_loc = _; custom_error_loc_opt; name; tparams; body } ->
@@ -2223,11 +2253,14 @@ let merge_def ~const_decl file reason = function
   | RecordBinding { id_loc; name; def; defaulted_props } ->
     let id = Context.make_aloc_id file.cx id_loc in
     merge_record (mk_merge_env SMap.empty) file reason (Some name) id def defaulted_props
-  | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
-    let statics = merge_fun_statics (mk_merge_env SMap.empty) file reason statics in
-    merge_fun (mk_merge_env SMap.empty) file reason def statics
-  | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
-    merge_declare_fun file ((id_loc, fn_loc, def), tail)
+  | FunBinding { id_loc; name; async = _; generator = _; fn_loc = _; def; statics; namespace_types }
+    ->
+    let env = mk_merge_env SMap.empty in
+    let statics = merge_fun_statics env file reason statics in
+    let function_t = merge_fun env file reason def statics in
+    wrap_with_namespace_types file.cx reason name id_loc function_t namespace_types env file
+  | DeclareFun { id_loc; fn_loc; name; def; statics; namespace_types; tail } ->
+    merge_declare_fun file reason name id_loc ((id_loc, fn_loc, def), tail) statics namespace_types
   | ComponentBinding { id_loc; name; fn_loc = _; def } ->
     merge_component
       (mk_merge_env SMap.empty)

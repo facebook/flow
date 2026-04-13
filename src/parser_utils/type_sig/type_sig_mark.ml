@@ -102,7 +102,8 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
         mark_loc ~visit_loc id_loc;
         mark_parsed ~locs_to_dirtify ~visit_loc def)
       statics
-  | P.FunBinding { id_loc; name = _; async = _; generator = _; fn_loc; def; statics } ->
+  | P.FunBinding
+      { id_loc; name = _; async = _; generator = _; fn_loc; def; statics; namespace_types } ->
     mark_loc ~visit_loc id_loc;
     mark_loc ~visit_loc fn_loc;
     mark_fun ~locs_to_dirtify ~visit_loc (Lazy.force def);
@@ -110,7 +111,12 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
       (fun _ (id_loc, def) ->
         mark_loc ~visit_loc id_loc;
         mark_parsed ~locs_to_dirtify ~visit_loc def)
-      statics
+      statics;
+    SMap.iter
+      (fun _ (id_loc, def) ->
+        mark_loc ~visit_loc id_loc;
+        mark_parsed ~locs_to_dirtify ~visit_loc def)
+      namespace_types
   | P.ComponentBinding { id_loc; name = _; fn_loc; def } ->
     mark_loc ~visit_loc id_loc;
     begin
@@ -132,13 +138,23 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
     (match def with
     | None -> ()
     | Some (lazy def) -> mark_record ~locs_to_dirtify ~visit_loc def)
-  | P.DeclareFunBinding { name = _; defs_rev } ->
+  | P.DeclareFunBinding { name = _; defs_rev; statics; namespace_types } ->
     Nel.iter
       (fun (id_loc, fn_loc, def) ->
         mark_loc ~visit_loc id_loc;
         mark_loc ~visit_loc fn_loc;
         mark_fun ~locs_to_dirtify ~visit_loc (Lazy.force def))
-      defs_rev
+      defs_rev;
+    SMap.iter
+      (fun _ (id_loc, def) ->
+        mark_loc ~visit_loc id_loc;
+        mark_parsed ~locs_to_dirtify ~visit_loc def)
+      statics;
+    SMap.iter
+      (fun _ (id_loc, def) ->
+        mark_loc ~visit_loc id_loc;
+        mark_parsed ~locs_to_dirtify ~visit_loc def)
+      namespace_types
   | P.EnumBinding { id_loc; name = _; def } ->
     mark_loc ~visit_loc id_loc;
     begin

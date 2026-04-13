@@ -334,12 +334,15 @@ type ('loc, 'a) def =
       fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
       statics: ('loc * 'a) smap;
+      namespace_types: ('loc * 'a) smap;
     }
   | DeclareFun of {
       id_loc: 'loc;
       name: string;
       fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
+      statics: ('loc * 'a) smap;
+      namespace_types: ('loc * 'a) smap;
       tail: ('loc * 'loc * ('loc, 'a) fun_sig) list;
     }
   | ComponentBinding of {

@@ -404,8 +404,116 @@ let resolve_pred_func cx (class_stack, ex, callee, targs, arguments) =
      (use_op, fst ex, callee, targs, argts)
     )
 
+let resolve_namespace_types cx namespace_types =
+  SMap.fold
+    (fun name env_key acc ->
+      let (def_loc_type, loc) = env_key in
+      let type_ = Type_env.checked_find_loc_env_write cx def_loc_type loc in
+      NameUtils.Map.add
+        (OrdinaryName name)
+        { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+        acc)
+    namespace_types
+    NameUtils.Map.empty
+
+let wrap_with_namespace_types cx namespace_name namespace_loc values_type namespace_types =
+  if SMap.is_empty namespace_types then
+    values_type
+  else
+    let types = resolve_namespace_types cx namespace_types in
+    Flow_js_utils.namespace_type_with_values_type
+      cx
+      (TypeUtil.reason_of_t values_type)
+      (FlowSymbol.mk_namespace_symbol ~name:namespace_name ~def_loc:namespace_loc)
+      values_type
+      types
+
+let wrap_function_with_namespace_types cx id values_type namespace_types =
+  if SMap.is_empty namespace_types then
+    values_type
+  else
+    let (loc, { Ast.Identifier.name; _ }) = Base.Option.value_exn id in
+    wrap_with_namespace_types cx name loc values_type namespace_types
+
+let resolve_function_statics cx reason statics =
+  let props =
+    SMap.fold
+      (fun name env_key acc ->
+        let (def_loc_type, loc) = env_key in
+        let type_ = Type_env.checked_find_loc_env_write cx def_loc_type loc in
+        NameUtils.Map.add
+          (OrdinaryName name)
+          (Type.Field
+             { preferred_def_locs = None; key_loc = Some loc; type_; polarity = Polarity.Neutral }
+          )
+          acc)
+      statics
+      NameUtils.Map.empty
+  in
+  let reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
+  Obj_type.mk_with_proto cx reason (Type.FunProtoT reason) ~obj_kind:Type.Inexact ~props ?call:None
+
+let replace_function_statics function_t statics_t =
+  match function_t with
+  | Type.DefT (reason, Type.FunT (_, funtype)) -> Type.DefT (reason, Type.FunT (statics_t, funtype))
+  | Type.DefT (reason, Type.PolyT { tparams_loc; tparams; t_out; id }) -> begin
+    match t_out with
+    | Type.DefT (inner_reason, Type.FunT (_, funtype)) ->
+      let t_out = Type.DefT (inner_reason, Type.FunT (statics_t, funtype)) in
+      Type.DefT (reason, Type.PolyT { tparams_loc; tparams; t_out; id })
+    | _ -> function_t
+  end
+  | _ -> function_t
+
+let resolve_declared_function cx declarations statics namespace_types =
+  let (loc, first_decl) = Base.List.hd_exn declarations in
+  let statics_t =
+    resolve_function_statics cx (Reason.mk_annot_reason Reason.RFunctionType loc) statics
+  in
+  let ts =
+    Base.List.map declarations ~f:(fun (_, declaration) ->
+        let effect_ =
+          match snd declaration.Ast.Statement.DeclareFunction.annot with
+          | (_, Ast.Type.Function { Ast.Type.Function.effect_; _ }) -> effect_
+          | _ -> Ast.Function.Arbitrary
+        in
+        let t =
+          replace_function_statics
+            (resolve_annotation cx ALocMap.empty declaration.Ast.Statement.DeclareFunction.annot)
+            statics_t
+        in
+        match declaration.Ast.Statement.DeclareFunction.id with
+        | Some (_, { Ast.Identifier.name; _ })
+          when effect_ <> Ast.Function.Hook && Flow_ast_utils.hook_name name ->
+          make_hooklike cx t
+        | _ -> t
+    )
+  in
+  let function_t =
+    match ts with
+    | [t] -> t
+    | t0 :: t1 :: ts ->
+      let reason = TypeUtil.reason_of_t t0 |> Reason.(replace_desc_reason RIntersectionType) in
+      Type.IntersectionT (reason, Type.InterRep.make t0 t1 ts)
+    | [] -> failwith "declared function definitions should be non-empty"
+  in
+  wrap_function_with_namespace_types
+    cx
+    first_decl.Ast.Statement.DeclareFunction.id
+    function_t
+    namespace_types
+
 let resolve_annotated_function
-    cx ~scope_kind ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
+    cx
+    ~scope_kind
+    ~bind_this
+    ~statics
+    ~namespace_types
+    ~hook_like
+    reason
+    tparams_map
+    function_loc
+    function_ =
   let { Ast.Function.sig_loc; effect_; async; _ } = function_ in
   if
     (scope_kind = ComponentOrHookBody || scope_kind = AsyncComponentOrHookBody)
@@ -441,10 +549,13 @@ let resolve_annotated_function
       default_this
       func_sig
   in
-  if effect_ <> Ast.Function.Hook && hook_like then
-    make_hooklike cx t
-  else
-    t
+  let t =
+    if effect_ <> Ast.Function.Hook && hook_like then
+      make_hooklike cx t
+    else
+      t
+  in
+  wrap_function_with_namespace_types cx function_.Ast.Function.id t namespace_types
 
 let resolve_annotated_component cx scope_kind reason tparams_map component_loc component =
   if not (Context.component_syntax cx) then begin
@@ -550,6 +661,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
         ~bind_this
         ~hook_like:false
         ~statics:SMap.empty
+        ~namespace_types:SMap.empty
         reason
         ALocMap.empty
         fn_loc
@@ -720,6 +832,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
           function_loc;
           function_;
           statics;
+          namespace_types;
           arrow;
           tparams_map;
         }
@@ -753,7 +866,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       Statement.Func_stmt_sig.functiontype cx ~arrow (Some function_loc) default_this func_sig
     in
     Node_cache.set_function_sig cache sig_loc sig_data;
-    t
+    wrap_function_with_namespace_types cx function_.Ast.Function.id t namespace_types
   | Root
       (FunctionValue
         {
@@ -762,6 +875,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
           function_loc;
           function_;
           statics;
+          namespace_types;
           arrow;
           tparams_map = _;
         }
@@ -797,7 +911,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       )
     in
     Node_cache.set_expression cache expr;
-    func_type
+    wrap_function_with_namespace_types cx function_.Ast.Function.id func_type namespace_types
   | Root (EmptyArray { array_providers; arr_loc }) ->
     let (elem_t, tuple_view, reason) =
       if ALocSet.cardinal array_providers > 0 then
@@ -948,7 +1062,8 @@ let rec resolve_binding cx def_scope_kind reason loc b =
           t))
 
 let resolve_inferred_function
-    cx ~scope_kind ~statics ~needs_this_param id_loc reason function_loc function_ =
+    cx ~scope_kind ~statics ~namespace_types ~needs_this_param id_loc reason function_loc function_
+    =
   let cache = Context.node_cache cx in
   let ((fun_type, _) as fn) =
     Statement.mk_function cx ~needs_this_param ~statics reason function_loc function_
@@ -969,13 +1084,16 @@ let resolve_inferred_function
       cx
       (Error_message.EUnsupportedSyntax (function_loc, Flow_intermediate_error_types.AsyncHookSyntax)
       );
-  if
-    function_.Ast.Function.effect_ <> Ast.Function.Hook
-    && Base.Option.is_some (Flow_ast_utils.hook_function function_)
-  then
-    make_hooklike cx fun_type
-  else
-    fun_type
+  let fun_type =
+    if
+      function_.Ast.Function.effect_ <> Ast.Function.Hook
+      && Base.Option.is_some (Flow_ast_utils.hook_function function_)
+    then
+      make_hooklike cx fun_type
+    else
+      fun_type
+  in
+  wrap_function_with_namespace_types cx function_.Ast.Function.id fun_type namespace_types
 
 let resolve_class cx id_loc reason ~kind class_loc class_ =
   let cache = Context.node_cache cx in
@@ -1242,6 +1360,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           function_loc;
           tparams_map;
           statics;
+          namespace_types;
           hints = _;
         } ->
       let hook_like = Base.Option.is_some (Flow_ast_utils.hook_function function_) in
@@ -1250,6 +1369,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         ~scope_kind:def_scope_kind
         ~bind_this:(not arrow)
         ~statics
+        ~namespace_types
         ~hook_like
         def_reason
         tparams_map
@@ -1264,17 +1384,21 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           function_loc;
           tparams_map = _;
           statics;
+          namespace_types;
           hints = _;
         } ->
       resolve_inferred_function
         cx
         ~scope_kind:def_scope_kind
         ~statics
+        ~namespace_types
         ~needs_this_param:(not arrow)
         id_loc
         def_reason
         function_loc
         function_
+    | DeclaredFunction { declarations; statics; namespace_types } ->
+      resolve_declared_function cx declarations statics namespace_types
     | Class { class_; class_loc; kind; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason ~kind class_loc class_
     | Record { record; record_loc; this_super_write_locs = _; defaulted_props } ->

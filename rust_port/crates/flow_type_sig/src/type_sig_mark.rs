@@ -284,12 +284,17 @@ fn mark_local_binding<'arena, 'ast>(
             fn_loc,
             def,
             statics,
+            namespace_types,
         } => {
             mark_loc(marker, id_loc);
             mark_loc(marker, fn_loc);
             let parsed = def.get_forced(opts, scopes, tbls);
             mark_fun(opts, scopes, tbls, marker, parsed);
             for (id_loc, def) in statics.values() {
+                mark_loc(marker, id_loc);
+                mark_parsed(opts, scopes, tbls, marker, def);
+            }
+            for (id_loc, def) in namespace_types.values() {
                 mark_loc(marker, id_loc);
                 mark_parsed(opts, scopes, tbls, marker, def);
             }
@@ -339,12 +344,25 @@ fn mark_local_binding<'arena, 'ast>(
                 mark_class(opts, scopes, tbls, marker, def);
             }
         }
-        parse::LocalBinding::DeclareFunBinding { name: _, defs } => {
+        parse::LocalBinding::DeclareFunBinding {
+            name: _,
+            defs,
+            statics,
+            namespace_types,
+        } => {
             for (id_loc, fn_loc, def) in defs {
                 mark_loc(marker, id_loc);
                 mark_loc(marker, fn_loc);
                 let def = def.get_forced(opts, scopes, tbls);
                 mark_fun(opts, scopes, tbls, marker, def);
+            }
+            for (id_loc, def) in statics.values() {
+                mark_loc(marker, id_loc);
+                mark_parsed(opts, scopes, tbls, marker, def);
+            }
+            for (id_loc, def) in namespace_types.values() {
+                mark_loc(marker, id_loc);
+                mark_parsed(opts, scopes, tbls, marker, def);
             }
         }
         parse::LocalBinding::EnumBinding {

@@ -20,6 +20,28 @@ declare namespace type_only {
   type T = number;
 }
 
+export function exported_merged(x: string): string {
+  return x;
+}
+declare namespace exported_merged {
+  declare const foo: string;
+  declare type T = string;
+}
+exported_merged.foo as empty; // error: string ~> empty
+'' as exported_merged.T; // ok
+1 as exported_merged.T; // error: number ~> string
+
+export default function default_merged(x: string): string {
+  return x;
+}
+declare namespace default_merged {
+  declare const foo: string;
+  declare type T = string;
+}
+default_merged.foo as empty; // error: string ~> empty
+'' as default_merged.T; // ok
+1 as default_merged.T; // error: number ~> string
+
 // Test declare export namespace syntax
 declare export namespace direct_export_ns {
   declare const x: number;

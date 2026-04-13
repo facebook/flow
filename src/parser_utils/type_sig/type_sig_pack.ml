@@ -352,7 +352,7 @@ and pack_local_binding cx = function
       let def = pack_record cx def in
       RecordBinding { id_loc; name; def; defaulted_props }
     | None -> DisabledRecordBinding { id_loc; name })
-  | P.FunBinding { id_loc; name; async; generator; fn_loc; def; statics } ->
+  | P.FunBinding { id_loc; name; async; generator; fn_loc; def; statics; namespace_types } ->
     let id_loc = pack_loc id_loc in
     let fn_loc = pack_loc fn_loc in
     let def = pack_fun cx (Lazy.force def) in
@@ -364,7 +364,15 @@ and pack_local_binding cx = function
           (id_loc, t))
         statics
     in
-    FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
+    let namespace_types =
+      SMap.map
+        (fun (id_loc, t) ->
+          let id_loc = pack_loc id_loc in
+          let t = pack_parsed cx t in
+          (id_loc, t))
+        namespace_types
+    in
+    FunBinding { id_loc; name; async; generator; fn_loc; def; statics; namespace_types }
   | P.ComponentBinding { id_loc; name; fn_loc; def } ->
     let id_loc = pack_loc id_loc in
     begin
@@ -375,7 +383,7 @@ and pack_local_binding cx = function
         ComponentBinding { id_loc; name; fn_loc; def }
       | None -> DisabledComponentBinding { id_loc; name }
     end
-  | P.DeclareFunBinding { name; defs_rev } ->
+  | P.DeclareFunBinding { name; defs_rev; statics; namespace_types } ->
     let ((id_loc, fn_loc, def), tail) =
       Nel.rev_map
         (fun (id_loc, fn_loc, def) ->
@@ -385,7 +393,23 @@ and pack_local_binding cx = function
           (id_loc, fn_loc, def))
         defs_rev
     in
-    DeclareFun { id_loc; name; fn_loc; def; tail }
+    let statics =
+      SMap.map
+        (fun (id_loc, t) ->
+          let id_loc = pack_loc id_loc in
+          let t = pack_parsed cx t in
+          (id_loc, t))
+        statics
+    in
+    let namespace_types =
+      SMap.map
+        (fun (id_loc, t) ->
+          let id_loc = pack_loc id_loc in
+          let t = pack_parsed cx t in
+          (id_loc, t))
+        namespace_types
+    in
+    DeclareFun { id_loc; name; fn_loc; def; statics; namespace_types; tail }
   | P.EnumBinding { id_loc; name; def } ->
     let id_loc = pack_loc id_loc in
     begin

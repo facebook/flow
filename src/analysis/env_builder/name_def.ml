@@ -786,7 +786,48 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
   in
   (fun e -> synthesizable e)
 
-let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~arrow function_ =
+type namespace_types_map = Env_api.EnvKey.t SMap.t
+
+type deferred_visit =
+  | FunctionDecl of {
+      loc: ALoc.t;
+      func: (ALoc.t, ALoc.t) Ast.Function.t;
+    }
+  | FunctionExpr of {
+      loc: ALoc.t;
+      func: (ALoc.t, ALoc.t) Ast.Function.t;
+      arrow: bool;
+      var_id: (ALoc.t, ALoc.t) Ast.Identifier.t;
+      hooklike: bool;
+    }
+
+type function_state = {
+  statics: Env_api.EnvKey.t option SMap.t;
+  namespace_types: namespace_types_map;
+  deferred_visits: deferred_visit list;
+  declared_functions: (ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareFunction.t) list;
+  merge_candidate_loc: ALoc.t option;
+}
+
+let empty_function_state =
+  {
+    statics = SMap.empty;
+    namespace_types = SMap.empty;
+    deferred_visits = [];
+    declared_functions = [];
+    merge_candidate_loc = None;
+  }
+
+let record_merge_candidate loc state =
+  let merge_candidate_loc =
+    match state.merge_candidate_loc with
+    | Some existing when existing <= loc -> state.merge_candidate_loc
+    | _ -> Some loc
+  in
+  { state with merge_candidate_loc }
+
+let def_of_function
+    ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~namespace_types ~arrow function_ =
   Function
     {
       hints;
@@ -797,7 +838,72 @@ let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~ar
       function_;
       tparams_map;
       statics;
+      namespace_types;
     }
+
+let def_of_declared_function ~declarations ~statics ~namespace_types =
+  DeclaredFunction { declarations; statics; namespace_types }
+
+let add_namespace_member map name loc =
+  SMap.update
+    name
+    (function
+      | Some env_key -> Some env_key
+      | None -> Some (Env_api.OrdinaryNameLoc, loc))
+    map
+
+let collect_declared_namespace_members statements =
+  Base.List.fold
+    ~init:(SMap.empty, SMap.empty)
+    ~f:(fun (values, types) (_, stmt) ->
+      match stmt with
+      | Ast.Statement.DeclareNamespace
+          {
+            Ast.Statement.DeclareNamespace.id =
+              Ast.Statement.DeclareNamespace.Local (loc, { Ast.Identifier.name; _ });
+            _;
+          } ->
+        (add_namespace_member values name loc, types)
+      | Ast.Statement.DeclareTypeAlias
+          { Ast.Statement.TypeAlias.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.TypeAlias
+          { Ast.Statement.TypeAlias.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.DeclareOpaqueType
+          { Ast.Statement.OpaqueType.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.OpaqueType
+          { Ast.Statement.OpaqueType.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.DeclareInterface
+          { Ast.Statement.Interface.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.InterfaceDeclaration
+          { Ast.Statement.Interface.id = (loc, { Ast.Identifier.name; _ }); _ } ->
+        (values, add_namespace_member types name loc)
+      | Ast.Statement.DeclareVariable { Ast.Statement.DeclareVariable.declarations; _ } ->
+        let values =
+          Base.List.fold declarations ~init:values ~f:(fun values (_, declarator) ->
+              match declarator.Ast.Statement.VariableDeclaration.Declarator.id with
+              | ( _,
+                  Ast.Pattern.Identifier
+                    { Ast.Pattern.Identifier.name = (loc, { Ast.Identifier.name; _ }); _ }
+                ) ->
+                add_namespace_member values name loc
+              | _ -> values
+          )
+        in
+        (values, types)
+      | Ast.Statement.DeclareFunction
+          { Ast.Statement.DeclareFunction.id = Some (loc, { Ast.Identifier.name; _ }); _ } ->
+        (add_namespace_member values name loc, types)
+      | Ast.Statement.DeclareClass
+          { Ast.Statement.DeclareClass.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.DeclareComponent
+          { Ast.Statement.DeclareComponent.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.DeclareEnum
+          { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.EnumDeclaration
+          { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
+        (add_namespace_member values name loc, types)
+      | _ -> (values, types))
+    statements
 
 let def_of_component ~tparams_map ~component_loc component =
   Component { tparams_map; component_loc; component }
@@ -906,20 +1012,58 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         result
 
     method! statement_list stmts =
-      (* Function statics *)
-      let open Ast.Statement in
       let stmts = Flow_ast_utils.hoist_function_and_component_declarations stmts in
       let rec loop state stmts =
         match stmts with
         | [] ->
           SMap.iter
-            (fun _ (statics, process_funcs) -> Base.List.iter ~f:(fun f -> f statics) process_funcs)
+            (fun _ { statics; namespace_types; deferred_visits; declared_functions; _ } ->
+              let statics =
+                SMap.fold
+                  (fun name env_key acc ->
+                    match env_key with
+                    | Some env_key -> SMap.add name env_key acc
+                    | None -> acc)
+                  statics
+                  SMap.empty
+              in
+              Base.List.iter
+                ~f:(function
+                  | FunctionDecl { loc; func } ->
+                    this#visit_function_declaration ~statics ~namespace_types loc func
+                  | FunctionExpr { loc; func; arrow; var_id; hooklike } ->
+                    this#visit_function_expr
+                      ~func_hints:[]
+                      ~func_return_hints:[]
+                      ~has_this_def:(not arrow)
+                      ~var_assigned_to:(Some var_id)
+                      ~statics
+                      ~namespace_types:SMap.empty
+                      ~arrow
+                      ~hooklike
+                      loc
+                      func)
+                deferred_visits;
+              if SMap.is_empty namespace_types then
+                Base.List.iter
+                  ~f:(fun (loc, decl) -> ignore @@ this#declare_function loc decl)
+                  declared_functions
+              else
+                Base.List.iter
+                  ~f:(fun (loc, decl) ->
+                    this#visit_declared_function
+                      ~declarations:declared_functions
+                      ~statics
+                      ~namespace_types
+                      loc
+                      decl)
+                  declared_functions)
             state
         (* f.a = <e>; *)
         | ( _,
-            Expression
+            Ast.Statement.Expression
               {
-                Expression.expression =
+                Ast.Statement.Expression.expression =
                   ( assign_loc,
                     Ast.Expression.Assignment
                       ( {
@@ -958,7 +1102,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               obj_name
               (function
                 | None -> None
-                | Some (statics, process_funcs) ->
+                | Some function_state ->
                   let statics =
                     (* Only first assignment sets the type. *)
                     SMap.update
@@ -986,46 +1130,48 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                                 );
                               (Env_api.OrdinaryNameLoc, member_loc)
                           in
-                          if EnvMap.mem key entries then
-                            Some key
-                          else
-                            None
+                          Some
+                            ( if EnvMap.mem key entries then
+                              Some key
+                            else
+                              None
+                            )
                         | x -> x)
-                      statics
+                      function_state.statics
                   in
-                  Some (statics, process_funcs))
+                  Some { function_state with statics })
               state
           in
           loop state xs
         (* function f() {}; export function f() {}; export default function f() {} *)
         | ( ( ( loc,
-                FunctionDeclaration
+                Ast.Statement.FunctionDeclaration
                   ({ Ast.Function.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as func)
               )
             | ( _,
-                ExportNamedDeclaration
+                Ast.Statement.ExportNamedDeclaration
                   {
-                    ExportNamedDeclaration.declaration =
+                    Ast.Statement.ExportNamedDeclaration.declaration =
                       Some
                         ( loc,
-                          FunctionDeclaration
+                          Ast.Statement.FunctionDeclaration
                             ( { Ast.Function.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as
                             func
                             )
                         );
-                    export_kind = ExportValue;
-                    specifiers = None;
-                    source = None;
+                    Ast.Statement.ExportNamedDeclaration.export_kind = Ast.Statement.ExportValue;
+                    Ast.Statement.ExportNamedDeclaration.specifiers = None;
+                    Ast.Statement.ExportNamedDeclaration.source = None;
                     _;
                   }
               )
             | ( _,
-                ExportDefaultDeclaration
+                Ast.Statement.ExportDefaultDeclaration
                   {
-                    ExportDefaultDeclaration.declaration =
-                      ExportDefaultDeclaration.Declaration
+                    Ast.Statement.ExportDefaultDeclaration.declaration =
+                      Ast.Statement.ExportDefaultDeclaration.Declaration
                         ( loc,
-                          FunctionDeclaration
+                          Ast.Statement.FunctionDeclaration
                             ( { Ast.Function.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as
                             func
                             )
@@ -1041,12 +1187,22 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                 (Env_api.OrdinaryNameLoc, id_loc)
                 env_info.Env_api.env_entries
             then
-              let visit statics = this#visit_function_declaration ~statics loc func in
               SMap.update
                 name
                 (function
-                  | None -> Some (SMap.empty, [visit])
-                  | Some (statics, process_funcs) -> Some (statics, visit :: process_funcs))
+                  | None ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc empty_function_state) with
+                        deferred_visits = [FunctionDecl { loc; func }];
+                      }
+                  | Some function_state ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc function_state) with
+                        deferred_visits =
+                          function_state.deferred_visits @ [FunctionDecl { loc; func }];
+                      })
                 state
             else (
               ignore @@ this#statement stmt;
@@ -1056,13 +1212,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           loop state xs
         (* const f = () => {}; const f = function () {}; *)
         | ( ( _,
-              ( VariableDeclaration
+              ( Ast.Statement.VariableDeclaration
                   {
-                    VariableDeclaration.declarations =
+                    Ast.Statement.VariableDeclaration.declarations =
                       [
                         ( _,
                           {
-                            VariableDeclaration.Declarator.id =
+                            Ast.Statement.VariableDeclaration.Declarator.id =
                               ( _,
                                 Ast.Pattern.Identifier
                                   {
@@ -1082,18 +1238,18 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                       ];
                     _;
                   }
-              | ExportNamedDeclaration
+              | Ast.Statement.ExportNamedDeclaration
                   {
-                    ExportNamedDeclaration.declaration =
+                    Ast.Statement.ExportNamedDeclaration.declaration =
                       Some
                         ( _,
-                          VariableDeclaration
+                          Ast.Statement.VariableDeclaration
                             {
-                              VariableDeclaration.declarations =
+                              Ast.Statement.VariableDeclaration.declarations =
                                 [
                                   ( _,
                                     {
-                                      VariableDeclaration.Declarator.id =
+                                      Ast.Statement.VariableDeclaration.Declarator.id =
                                         ( _,
                                           Ast.Pattern.Identifier
                                             {
@@ -1114,9 +1270,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                               _;
                             }
                         );
-                    export_kind = ExportValue;
-                    specifiers = None;
-                    source = None;
+                    Ast.Statement.ExportNamedDeclaration.export_kind = Ast.Statement.ExportValue;
+                    Ast.Statement.ExportNamedDeclaration.specifiers = None;
+                    Ast.Statement.ExportNamedDeclaration.source = None;
                     _;
                   } )
             ) as stmt
@@ -1133,23 +1289,36 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                 (Env_api.OrdinaryNameLoc, id_loc)
                 env_info.Env_api.env_entries
             then
-              let visit statics =
-                this#visit_function_expr
-                  ~func_hints:[]
-                  ~func_return_hints:[]
-                  ~has_this_def:(not arrow)
-                  ~var_assigned_to:(Some var_id)
-                  ~statics
-                  ~arrow
-                  ~hooklike:(Flow_ast_utils.hook_name name)
-                  loc
-                  func
-              in
               SMap.update
                 name
                 (function
-                  | None -> Some (SMap.empty, [visit])
-                  | Some (statics, process_funcs) -> Some (statics, visit :: process_funcs))
+                  | None ->
+                    Some
+                      {
+                        empty_function_state with
+                        deferred_visits =
+                          [
+                            FunctionExpr
+                              { loc; func; arrow; var_id; hooklike = Flow_ast_utils.hook_name name };
+                          ];
+                      }
+                  | Some function_state ->
+                    Some
+                      {
+                        function_state with
+                        deferred_visits =
+                          function_state.deferred_visits
+                          @ [
+                              FunctionExpr
+                                {
+                                  loc;
+                                  func;
+                                  arrow;
+                                  var_id;
+                                  hooklike = Flow_ast_utils.hook_name name;
+                                };
+                            ];
+                      })
                 state
             else (
               ignore @@ this#statement stmt;
@@ -1157,6 +1326,104 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             )
           in
           loop state xs
+        | ( ( loc,
+              Ast.Statement.DeclareFunction
+                ( { Ast.Statement.DeclareFunction.id = Some (id_loc, { Ast.Identifier.name; _ }); _ }
+                as decl
+                )
+            ) as stmt
+          )
+          :: xs ->
+          let state =
+            if
+              Env_api.has_assigning_write
+                (Env_api.OrdinaryNameLoc, id_loc)
+                env_info.Env_api.env_entries
+            then
+              SMap.update
+                name
+                (function
+                  | None ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc empty_function_state) with
+                        declared_functions = [(loc, decl)];
+                      }
+                  | Some function_state ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc function_state) with
+                        declared_functions = function_state.declared_functions @ [(loc, decl)];
+                      })
+                state
+            else (
+              ignore @@ this#statement stmt;
+              state
+            )
+          in
+          loop state xs
+        | ( ( _,
+              Ast.Statement.DeclareNamespace
+                ( {
+                    Ast.Statement.DeclareNamespace.id =
+                      Ast.Statement.DeclareNamespace.Local (id_loc, { Ast.Identifier.name; _ });
+                    body;
+                    _;
+                  } as ns
+                )
+            ) as stmt
+          )
+          :: xs ->
+          let should_merge =
+            Base.Option.value_map
+              ~default:false
+              ~f:(fun function_state ->
+                Base.Option.value_map
+                  ~default:false
+                  ~f:(fun function_loc -> function_loc < id_loc)
+                  function_state.merge_candidate_loc)
+              (SMap.find_opt name state)
+          in
+          if should_merge then (
+            let (_, { Ast.Statement.Block.body = statements; comments = _ }) = body in
+            let (namespace_values, namespace_types) =
+              collect_declared_namespace_members statements
+            in
+            let state =
+              SMap.update
+                name
+                (function
+                  | None -> None
+                  | Some function_state ->
+                    let statics =
+                      SMap.fold
+                        (fun member_name env_key ->
+                          SMap.update member_name (function
+                              | Some existing -> Some existing
+                              | None -> Some (Some env_key)
+                              ))
+                        namespace_values
+                        function_state.statics
+                    in
+                    let namespace_types =
+                      SMap.fold
+                        (fun member_name env_key ->
+                          SMap.update member_name (function
+                              | Some existing -> Some existing
+                              | None -> Some env_key
+                              ))
+                        namespace_types
+                        function_state.namespace_types
+                    in
+                    Some { function_state with statics; namespace_types })
+                state
+            in
+            this#visit_merged_declare_namespace_body ns;
+            loop state xs
+          ) else (
+            ignore @@ this#statement stmt;
+            loop state xs
+          )
         | x :: xs ->
           ignore @@ this#statement x;
           loop state xs
@@ -1673,6 +1940,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         ~has_this_def
         ~var_assigned_to
         ~statics
+        ~namespace_types
         ~arrow
         ~hooklike
         function_loc
@@ -1702,6 +1970,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                      function_loc;
                      function_ = expr;
                      statics;
+                     namespace_types;
                      arrow;
                      tparams_map = tparams;
                    }
@@ -1732,6 +2001,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                 ~arrow:false
                 ~function_loc
                 ~statics
+                ~namespace_types
                 expr
             in
             this#add_ordinary_binding binding_loc reason def
@@ -1749,6 +2019,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         ~has_this_def:true
         ~var_assigned_to:None
         ~statics:SMap.empty
+        ~namespace_types:SMap.empty
         ~arrow:false
         ~hooklike:false
         loc
@@ -1756,10 +2027,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       expr
 
     method! function_declaration loc expr =
-      this#visit_function_declaration ~statics:SMap.empty loc expr;
+      this#visit_function_declaration ~statics:SMap.empty ~namespace_types:SMap.empty loc expr;
       expr
 
-    method visit_function_declaration ~statics loc expr =
+    method visit_function_declaration ~statics ~namespace_types loc expr =
       let { Ast.Function.id; async; generator; sig_loc; params; body; _ } = expr in
       let scope_kind = func_scope_kind expr in
       this#in_new_tparams_env (fun () ->
@@ -1776,12 +2047,28 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               ~function_loc:loc
               ~arrow:false
               ~statics
+              ~namespace_types
               expr
           in
           match id with
           | Some (id_loc, _) -> this#add_ordinary_binding id_loc reason def
           | None -> this#add_ordinary_binding loc reason def
       )
+
+    method visit_declared_function ~declarations ~statics ~namespace_types loc decl =
+      let open Ast.Statement.DeclareFunction in
+      (match decl.id with
+      | Some (id_loc, _) ->
+        this#add_ordinary_binding
+          id_loc
+          (func_reason ~async:false ~generator:false loc)
+          (def_of_declared_function ~declarations ~statics ~namespace_types)
+      | None -> ());
+      ignore @@ super#declare_function loc decl
+
+    method visit_merged_declare_namespace_body namespace =
+      let { Ast.Statement.DeclareNamespace.body = (body_loc, body_block); _ } = namespace in
+      this#in_scope (super#block body_loc) DeclareNamespace body_block |> ignore
 
     method! function_type ft = this#in_new_tparams_env ~keep:true (fun () -> super#function_type ft)
 
@@ -3253,6 +3540,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                   ~arrow:true
                   ~function_loc:loc
                   ~statics:SMap.empty
+                  ~namespace_types:SMap.empty
                   x
               in
               this#add_ordinary_binding loc reason def
@@ -3267,6 +3555,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ~has_this_def:true
           ~var_assigned_to:None
           ~statics:SMap.empty
+          ~namespace_types:SMap.empty
           ~arrow:false
           ~hooklike:false
           loc
@@ -3540,6 +3829,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                 ~has_this_def:false
                 ~var_assigned_to:None
                 ~statics:SMap.empty
+                ~namespace_types:SMap.empty
                 ~arrow:false
                 ~hooklike:false
                 loc

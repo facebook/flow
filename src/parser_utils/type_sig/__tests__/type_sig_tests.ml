@@ -490,7 +490,7 @@ let%expect_test "export_function_reference" =
            rest_param = None; this_param = None;
            return = (Annot (Number [1:25-31]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
   |}]
 
 let%expect_test "export_function_reference_check1" =
@@ -518,7 +518,7 @@ let%expect_test "export_function_reference_check1" =
            rest_param = None; this_param = None;
            return = (Annot (Number [1:17-23]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
 
     Errors:
     (SigError (Signature_error.ExpectedAnnotation ([1:13-14], Expected_annotation_sort.Identifier)))
@@ -550,7 +550,7 @@ let%expect_test "export_function_reference_check2" =
            rest_param = None; this_param = None;
            return = (Err [1:23]); type_guard = None;
            effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
 
     Errors:
     (SigError
@@ -593,7 +593,7 @@ let%expect_test "export_function_generic_typeof" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:41-45]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
     1. Parameter {id_loc = [1:21-22];
          name = "x"; def = (Annot Bound {ref_loc = [1:24-25]; name = "X"});
          tparams =
@@ -632,7 +632,7 @@ let%expect_test "export_function_typeof_return" =
                 qname = ["b"]; t = (Ref LocalRef {ref_loc = [1:48-49]; index = 1});
                 targs = None});
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
     1. Parameter {id_loc = [1:18-19]; name = "b"; def = (Annot (String [1:21-27])); tparams = Mono}
     |}]
 
@@ -669,7 +669,7 @@ let%expect_test "export_function_generic_typeof_return" =
                 qname = ["x"]; t = (Ref LocalRef {ref_loc = [1:35-36]; index = 1});
                 targs = None});
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
     1. Parameter {id_loc = [1:21-22];
          name = "x"; def = (Annot Bound {ref_loc = [1:24-25]; name = "X"});
          tparams =
@@ -1753,7 +1753,7 @@ let%expect_test "void_function" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:14]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
   |}]
 
 let%expect_test "void_generator" =
@@ -1781,7 +1781,7 @@ let%expect_test "void_generator" =
            rest_param = None; this_param = None;
            return = (Err [1:15]); type_guard = None;
            effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
 
     Errors:
     (SigError
@@ -2761,7 +2761,7 @@ let%expect_test "named_function_expression" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:31]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
   |}]
 
 let%expect_test "interface_coverage" =
@@ -3061,7 +3061,7 @@ let%expect_test "function_return" =
            rest_param = None; this_param = None;
            return = (Err [2:38]); type_guard = None;
            effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
 
     Errors:
     (SigError
@@ -3115,7 +3115,7 @@ let%expect_test "function_return_2" =
            rest_param = None; this_param = None;
            return = (Err [2:42]); type_guard = None;
            effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
 
     Errors:
     (SigError
@@ -3149,7 +3149,8 @@ let%expect_test "function_statics" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:16-20]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = { "x" -> ([3:4-5], (Ref LocalRef {ref_loc = [3:8-9]; index = 1})) }}
+         statics = { "x" -> ([3:4-5], (Ref LocalRef {ref_loc = [3:8-9]; index = 1})) };
+         namespace_types = {}}
     1. Variable {id_loc = [2:6-7]; name = "x"; def = (Value (NumberLit ([2:10-12], 42., "42")))}
   |}]
 
@@ -3177,7 +3178,7 @@ let%expect_test "function_statics_conditional" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:23-27]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
   |}]
 
 let%expect_test "function_predicates" =
@@ -3204,7 +3205,7 @@ let%expect_test "function_predicates" =
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:31-38]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}} |}]
+         statics = {}; namespace_types = {}} |}]
 
 let%expect_test "async_function_1" =
   print_sig {|
@@ -3228,7 +3229,7 @@ let%expect_test "async_function_1" =
            rest_param = None; this_param = None;
            return = (AsyncVoidReturn [1:20]);
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
   |}]
 
 let%expect_test "async_function_2" =
@@ -3253,7 +3254,7 @@ let%expect_test "async_function_2" =
            rest_param = None; this_param = None;
            return = (Err [1:20]); type_guard = None;
            effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
 
     Errors:
     (SigError
@@ -4424,7 +4425,8 @@ let%expect_test "cjs_export_fun_binding_props" =
            type_guard = None; effect_ = ArbitraryEffect};
          statics =
          { "bar" -> ([3:8-11], (Value (NumberLit ([3:14-15], 1., "1"))));
-           "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) }} |}]
+           "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) };
+         namespace_types = {}} |}]
 
 let%expect_test "es_export_named_fun_props" =
   print_sig {|
@@ -4447,7 +4449,8 @@ let%expect_test "es_export_named_fun_props" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:21]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) }} |}]
+         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) };
+         namespace_types = {}} |}]
 
 let%expect_test "es_export_default_fun_props" =
   print_sig {|
@@ -4471,7 +4474,8 @@ let%expect_test "es_export_default_fun_props" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:29]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) }} |}]
+         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) };
+         namespace_types = {}} |}]
 
 let%expect_test "fun_binding_assign" =
   print_sig {|
@@ -4496,7 +4500,8 @@ let%expect_test "fun_binding_assign" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:14]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }} |}]
+         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) };
+         namespace_types = {}} |}]
 
 let%expect_test "fun_const_assign" =
   print_sig {|
@@ -4548,7 +4553,8 @@ let%expect_test "ref_const_assign" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:24]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }}
+         statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) };
+         namespace_types = {}}
     1. Variable {id_loc = [1:6-9]; name = "foo";
          def = (Ref LocalRef {ref_loc = [1:21-22]; index = 0})} |}]
 
@@ -4691,7 +4697,7 @@ let%expect_test "export_default_function_binding" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:29-33]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}} |}]
+         statics = {}; namespace_types = {}} |}]
 
 let%expect_test "export_default_class_binding" =
   print_sig {|
@@ -4734,6 +4740,7 @@ let%expect_test "declared_export_default_function_binding" =
            rest_param = None; this_param = None;
            return = (Annot (Void [1:37-41]));
            type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}; namespace_types = {};
          tail = []} |}]
 
 let%expect_test "declared_export_default_class_binding" =
@@ -5287,6 +5294,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            rest_param = None; this_param = None;
            return = (Annot (Void [7:24-28]));
            type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}; namespace_types = {};
          tail = []}
     4. DeclareClassBinding {id_loc = [8:16-17];
          nominal_id_loc = [8:16-17];
@@ -5842,6 +5850,7 @@ let%expect_test "builtin_declare_namespace" =
            rest_param = None; this_param = None;
            return = (Annot (String [5:24-30]));
            type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}; namespace_types = {};
          tail =
          [([6:19-20], [6:20-30],
            FunSig {tparams = Mono; params = [];
@@ -6046,7 +6055,7 @@ let%expect_test "this_param_1" =
            rest_param = None; this_param = (Some (Annot (Mixed [1:27-32])));
            return = (Annot (Void [1:36-40]));
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}} |}]
+         statics = {}; namespace_types = {}} |}]
 
 let%expect_test "this_param_2" =
   print_sig {|
@@ -6099,6 +6108,7 @@ let%expect_test "this_param_3" =
            rest_param = None; this_param = (Some (Annot (Mixed [1:35-40])));
            return = (Annot (Void [1:44-48]));
            type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}; namespace_types = {};
          tail = []} |}]
 
 let%expect_test "this_param_4" =
@@ -6398,6 +6408,7 @@ let%expect_test "fun_shadow_declare_fun" =
            rest_param = None; this_param = None;
            return = (Annot (Number [1:31-37]));
            type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}; namespace_types = {};
          tail =
          [([2:17-18], [2:18-37],
            FunSig {tparams = Mono;
@@ -7288,7 +7299,7 @@ let%expect_test "function_const_type_param" =
            rest_param = None; this_param = None;
            return = (Annot Bound {ref_loc = [1:36-37]; name = "X"});
            type_guard = None; effect_ = ArbitraryEffect};
-         statics = {}}
+         statics = {}; namespace_types = {}}
   |}]
 
 let%expect_test "record_named_export" =

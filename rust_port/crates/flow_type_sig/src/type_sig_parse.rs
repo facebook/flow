@@ -277,6 +277,7 @@ pub(super) enum LocalBinding<'arena, 'ast> {
         fn_loc: LocNode<'arena>,
         def: Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         statics: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     },
     DeclareFunBinding {
         name: FlowSmolStr,
@@ -285,6 +286,8 @@ pub(super) enum LocalBinding<'arena, 'ast> {
             LocNode<'arena>,
             Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         )>,
+        statics: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     },
     ComponentBinding {
         id_loc: LocNode<'arena>,
@@ -1724,6 +1727,7 @@ pub(super) mod scope {
             |scopes, tbls, binding_opt| match binding_opt {
                 None => {
                     let statics = BTreeMap::new();
+                    let namespace_types = BTreeMap::new();
                     let def = LocalBinding::FunBinding {
                         id_loc,
                         name: name.clone(),
@@ -1732,6 +1736,7 @@ pub(super) mod scope {
                         fn_loc,
                         def,
                         statics,
+                        namespace_types,
                     };
                     let node = tbls.push_local_def(def);
                     k(scopes, &name, node.dupe());
@@ -1775,9 +1780,13 @@ pub(super) mod scope {
             |scopes, tbls, binding_opt| match binding_opt {
                 None => {
                     let defs = vec![(id_loc, fn_loc, def)];
+                    let statics = BTreeMap::new();
+                    let namespace_types = BTreeMap::new();
                     let def = LocalBinding::DeclareFunBinding {
                         name: name.clone(),
                         defs,
+                        statics,
+                        namespace_types,
                     };
                     let node = tbls.push_local_def(def);
                     k(scopes, &name, node.dupe());
@@ -2062,11 +2071,12 @@ pub(super) mod scope {
                     | LocalBinding::ClassBinding { .. }
                     | LocalBinding::DeclareClassBinding { .. }
                     | LocalBinding::RecordBinding { .. }
-                    | LocalBinding::DeclareFunBinding { .. }
                     | LocalBinding::ComponentBinding { .. }
                     | LocalBinding::EnumBinding { .. }
                     | LocalBinding::NamespaceBinding { .. } => return None,
-                    LocalBinding::FunBinding { .. } | LocalBinding::ConstFunBinding { .. } => {
+                    LocalBinding::FunBinding { .. }
+                    | LocalBinding::ConstFunBinding { .. }
+                    | LocalBinding::DeclareFunBinding { .. } => {
                         return Some(node.dupe());
                     }
                     LocalBinding::ConstRefBinding {
@@ -2103,7 +2113,8 @@ pub(super) mod scope {
             let mut def = node.0.data_mut();
             match def.deref_mut() {
                 LocalBinding::FunBinding { statics, .. }
-                | LocalBinding::ConstFunBinding { statics, .. } => {
+                | LocalBinding::ConstFunBinding { statics, .. }
+                | LocalBinding::DeclareFunBinding { statics, .. } => {
                     statics.insert(prop_name, prop);
                 }
                 _ => {}
@@ -2601,6 +2612,84 @@ pub(super) mod scope {
         (new_values, new_types)
     }
 
+    fn merge_namespace_entries<'arena, 'ast>(
+        tbls: &mut Tables<'arena, 'ast>,
+        existing_values: &mut BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        existing_types: &mut BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        ns_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        ns_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+    ) {
+        for (n, entry) in ns_values {
+            if let Some((existing_binding_loc, _)) = existing_values.get(&n) {
+                tbls.additional_errors
+                    .push(BindingValidation::NamespacedNameAlreadyBound {
+                        name: n,
+                        invalid_binding_loc: entry.0,
+                        existing_binding_loc: existing_binding_loc.dupe(),
+                    });
+            } else if let Some((existing_binding_loc, _)) = existing_types.get(&n) {
+                tbls.additional_errors
+                    .push(BindingValidation::NamespacedNameAlreadyBound {
+                        name: n,
+                        invalid_binding_loc: entry.0,
+                        existing_binding_loc: existing_binding_loc.dupe(),
+                    });
+            } else {
+                existing_values.insert(n, entry);
+            }
+        }
+
+        for (n, entry) in ns_types {
+            if let Some((existing_binding_loc, _)) = existing_values.get(&n) {
+                tbls.additional_errors
+                    .push(BindingValidation::NamespacedNameAlreadyBound {
+                        name: n,
+                        invalid_binding_loc: entry.0,
+                        existing_binding_loc: existing_binding_loc.dupe(),
+                    });
+            } else if let Some((existing_binding_loc, _)) = existing_types.get(&n) {
+                tbls.additional_errors
+                    .push(BindingValidation::NamespacedNameAlreadyBound {
+                        name: n,
+                        invalid_binding_loc: entry.0,
+                        existing_binding_loc: existing_binding_loc.dupe(),
+                    });
+            } else {
+                existing_types.insert(n, entry);
+            }
+        }
+    }
+
+    fn merge_namespace_into_local_binding_node<'arena, 'ast>(
+        tbls: &mut Tables<'arena, 'ast>,
+        node: &LocalDefNode<'arena, 'ast>,
+        ns_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        ns_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+    ) -> bool {
+        let mut binding = node.0.data_mut();
+        match binding.deref_mut() {
+            LocalBinding::NamespaceBinding {
+                values: existing_values,
+                types: existing_types,
+                ..
+            }
+            | LocalBinding::FunBinding {
+                statics: existing_values,
+                namespace_types: existing_types,
+                ..
+            }
+            | LocalBinding::DeclareFunBinding {
+                statics: existing_values,
+                namespace_types: existing_types,
+                ..
+            } => {
+                merge_namespace_entries(tbls, existing_values, existing_types, ns_values, ns_types);
+                true
+            }
+            _ => false,
+        }
+    }
+
     pub(super) fn finalize_declare_namespace_exn<'arena, 'ast>(
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
@@ -2622,87 +2711,17 @@ pub(super) mod scope {
             _ => panic!("The scope must be DeclareNamespace"),
         };
 
-        let Scope::Global { values, types, .. } = scopes.get_mut(parent) else {
-            bind_local(
-                is_type_only,
-                parent,
-                scopes,
-                tbls,
-                name.clone(),
-                id_loc.dupe(),
-                LocalBinding::NamespaceBinding {
-                    id_loc,
-                    name,
-                    values: ns_values,
-                    types: ns_types,
-                },
-                |_, _, _| {},
-            );
-            return;
+        let (values, types) = match scopes.get_mut(parent) {
+            Scope::Global { values, types, .. }
+            | Scope::DeclareModule { values, types, .. }
+            | Scope::DeclareNamespace { values, types, .. }
+            | Scope::Module { values, types, .. }
+            | Scope::Lexical { values, types, .. } => (values, types),
+            Scope::ConditionalTypeExtends(_) => {
+                panic!("The host scope cannot be ConditionalTypeExtends")
+            }
         };
 
-        fn merge_with_existing_local_binding_node<'arena, 'ast>(
-            tbls: &mut Tables<'arena, 'ast>,
-            node: &LocalDefNode<'arena, 'ast>,
-            ns_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
-            ns_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
-        ) {
-            let mut binding = node.0.data_mut();
-            let binding = binding.deref_mut();
-            if let LocalBinding::NamespaceBinding {
-                id_loc: _,
-                name: _,
-                values: existing_values,
-                types: existing_types,
-            } = binding
-            {
-                for (n, entry) in ns_values {
-                    if let Some((existing_binding_loc, _)) = existing_values.get(&n) {
-                        tbls.additional_errors.push(
-                            BindingValidation::NamespacedNameAlreadyBound {
-                                name: n,
-                                invalid_binding_loc: entry.0,
-                                existing_binding_loc: existing_binding_loc.dupe(),
-                            },
-                        );
-                    } else if let Some((existing_binding_loc, _)) = existing_types.get(&n) {
-                        tbls.additional_errors.push(
-                            BindingValidation::NamespacedNameAlreadyBound {
-                                name: n,
-                                invalid_binding_loc: entry.0,
-                                existing_binding_loc: existing_binding_loc.dupe(),
-                            },
-                        );
-                    } else {
-                        existing_values.insert(n, entry);
-                    }
-                }
-
-                for (n, entry) in ns_types {
-                    if let Some((existing_binding_loc, _)) = existing_values.get(&n) {
-                        tbls.additional_errors.push(
-                            BindingValidation::NamespacedNameAlreadyBound {
-                                name: n,
-                                invalid_binding_loc: entry.0,
-                                existing_binding_loc: existing_binding_loc.dupe(),
-                            },
-                        );
-                    } else if let Some((existing_binding_loc, _)) = existing_types.get(&n) {
-                        tbls.additional_errors.push(
-                            BindingValidation::NamespacedNameAlreadyBound {
-                                name: n,
-                                invalid_binding_loc: entry.0,
-                                existing_binding_loc: existing_binding_loc.dupe(),
-                            },
-                        );
-                    } else {
-                        existing_types.insert(n, entry);
-                    }
-                }
-            }
-        }
-
-        // Special declaration merging rules for namespaces in the global scope
         match (
             is_type_only,
             values.get(&name).map(|n| n.dupe()),
@@ -2711,13 +2730,12 @@ pub(super) mod scope {
             (_, Some(_), Some(_)) => {
                 panic!("Invariant violation: a name cannot be in both values and types")
             }
-            // Simple case: no existing binding exist - create new namespace
             (_, None, None) => {
                 let def = LocalBinding::NamespaceBinding {
                     id_loc,
                     name: name.clone(),
-                    values: ns_values,
-                    types: ns_types,
+                    values: ns_values.clone(),
+                    types: ns_types.clone(),
                 };
                 let node = tbls.push_local_def(def);
                 if is_type_only {
@@ -2726,45 +2744,37 @@ pub(super) mod scope {
                     values.insert(name.clone(), BindingNode::LocalBinding(node));
                 }
             }
-            // Existing binding exists, merge if it's a namespace binding
             (false, Some(BindingNode::LocalBinding(node)), None)
             | (true, None, Some(BindingNode::LocalBinding(node))) => {
-                merge_with_existing_local_binding_node(tbls, &node, ns_values, ns_types);
+                if !merge_namespace_into_local_binding_node(
+                    tbls,
+                    &node,
+                    ns_values.clone(),
+                    ns_types.clone(),
+                ) {
+                    // Has an existing non-namespace binding, do nothing.
+                }
             }
-            // Originally not-type-only, now merging with a type-only namespace,
-            // so it's still not type-only
             (true, Some(BindingNode::LocalBinding(node)), None) => {
-                merge_with_existing_local_binding_node(tbls, &node, ns_values, ns_types);
+                if !merge_namespace_into_local_binding_node(
+                    tbls,
+                    &node,
+                    ns_values.clone(),
+                    ns_types.clone(),
+                ) {
+                    // Has an existing non-namespace binding, do nothing.
+                }
             }
-            // Has an existing remote binding, do nothing
             (false, Some(BindingNode::RemoteBinding(_)), None)
             | (true, None, Some(BindingNode::RemoteBinding(_)))
             | (true, Some(BindingNode::RemoteBinding(_)), None) => {}
-            /* Originally type-only, but now it's merging with a non-type-only namespace.
-             * The namespace binding needs to be promoted to a non-type-only namespace.
-             * (implemented by removing the node from type-only map, add to the value map, and
-             * mutate the binding node in place with additional names.)
-             *
-             * e.g. Consider
-             * ```
-             * declare namespace ns { type A = '' };
-             * declare namespace ns { declare const b: string };
-             * ```
-             *
-             * In order for the behavior to be equivalent to
-             * ```
-             * declare namespace ns { type A = ''; declare const b: string };
-             * ```
-             * We have to promote the original type-only namespace to a value binding.
-             */
             (false, None, Some(BindingNode::LocalBinding(node)))
                 if matches!(node.0.data().deref(), LocalBinding::NamespaceBinding { .. }) =>
             {
-                merge_with_existing_local_binding_node(tbls, &node, ns_values, ns_types);
+                merge_namespace_into_local_binding_node(tbls, &node, ns_values, ns_types);
                 types.remove(&name);
                 values.insert(name, BindingNode::LocalBinding(node));
             }
-            // Has an existing non-namespace binding, do nothing
             (false, None, Some(_)) => {}
         }
     }
@@ -2787,21 +2797,58 @@ pub(super) mod scope {
                 let (ns_values, ns_types) =
                     namespace_binding_of_values_and_types(id, values, types);
                 let parent = *parent;
-                bind_local(
+                let (parent_values, parent_types) = match scopes.get_mut(parent) {
+                    Scope::Global { values, types, .. }
+                    | Scope::DeclareModule { values, types, .. }
+                    | Scope::DeclareNamespace { values, types, .. }
+                    | Scope::Module { values, types, .. }
+                    | Scope::Lexical { values, types, .. } => (values, types),
+                    Scope::ConditionalTypeExtends(_) => {
+                        panic!("The host scope cannot be ConditionalTypeExtends")
+                    }
+                };
+                let merged_existing = match (
                     is_type_only,
-                    parent,
-                    scopes,
-                    tbls,
-                    name.clone(),
-                    id_loc.dupe(),
-                    LocalBinding::NamespaceBinding {
-                        id_loc,
-                        name,
-                        values: ns_values,
-                        types: ns_types,
-                    },
-                    k,
-                );
+                    parent_values.get(&name).map(|n| n.dupe()),
+                    parent_types.get(&name).map(|n| n.dupe()),
+                ) {
+                    (_, Some(_), Some(_)) => {
+                        panic!("Invariant violation: a name cannot be in both values and types")
+                    }
+                    (false, Some(BindingNode::LocalBinding(node)), None)
+                    | (true, Some(BindingNode::LocalBinding(node)), None)
+                    | (true, None, Some(BindingNode::LocalBinding(node))) => {
+                        if merge_namespace_into_local_binding_node(
+                            tbls,
+                            &node,
+                            ns_values.clone(),
+                            ns_types.clone(),
+                        ) {
+                            k(scopes, &name, node);
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    _ => false,
+                };
+                if !merged_existing {
+                    bind_local(
+                        is_type_only,
+                        parent,
+                        scopes,
+                        tbls,
+                        name.clone(),
+                        id_loc.dupe(),
+                        LocalBinding::NamespaceBinding {
+                            id_loc,
+                            name,
+                            values: ns_values,
+                            types: ns_types,
+                        },
+                        k,
+                    );
+                }
             }
             Scope::Global { .. } => {
                 // Global namespaces cannot be exported

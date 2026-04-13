@@ -1003,7 +1003,7 @@ struct
             ops
       and depends_of_hints state = Base.List.fold ~init:state ~f:depends_of_hint in
 
-      let depends_of_fun synth tparams_map ~hints ~statics function_ state =
+      let depends_of_fun synth tparams_map ~hints ~statics ~namespace_types function_ state =
         let (fully_annotated, state) =
           match synth with
           | FunctionSynthesizable -> (true, state)
@@ -1015,7 +1015,32 @@ struct
             (fun visitor -> visitor#function_def ~fully_annotated function_)
             (depends_of_tparams_map tparams_map state)
         in
-        depends_of_node (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) statics) state
+        let state =
+          depends_of_node
+            (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) statics)
+            state
+        in
+        depends_of_node
+          (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) namespace_types)
+          state
+      in
+      let depends_of_declared_fun declarations ~statics ~namespace_types =
+        let state =
+          depends_of_node
+            (fun visitor ->
+              Base.List.iter declarations ~f:(fun (loc, decl) ->
+                  ignore @@ visitor#declare_function loc decl
+              ))
+            EnvMap.empty
+        in
+        let state =
+          depends_of_node
+            (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) statics)
+            state
+        in
+        depends_of_node
+          (fun visitor -> SMap.iter (fun _ -> visitor#add ~why:id_loc) namespace_types)
+          state
       in
       let depends_of_component tparams_map component state =
         depends_of_node
@@ -1211,6 +1236,7 @@ struct
                 ALocMap.empty
                 ~hints:[]
                 ~statics:SMap.empty
+                ~namespace_types:SMap.empty
                 fn
                 state
             | Ast.Expression.Member
@@ -1243,6 +1269,7 @@ struct
                   ALocMap.empty
                   ~hints:[]
                   ~statics:SMap.empty
+                  ~namespace_types:SMap.empty
                   fn
                   state
               | Property (_, Init { key = Identifier _; value; _ }) ->
@@ -1261,10 +1288,18 @@ struct
               function_loc = _;
               function_;
               statics;
+              namespace_types;
               arrow = _;
               tparams_map;
             } ->
-          depends_of_fun synthesizable_from_annotation tparams_map ~hints ~statics function_ state
+          depends_of_fun
+            synthesizable_from_annotation
+            tparams_map
+            ~hints
+            ~statics
+            ~namespace_types
+            function_
+            state
         | EmptyArray { array_providers; _ } ->
           ALocSet.fold
             (fun loc acc ->
@@ -1405,6 +1440,7 @@ struct
             function_loc = _;
             tparams_map;
             statics;
+            namespace_types;
             hints;
           } ->
         depends_of_fun
@@ -1412,8 +1448,11 @@ struct
           tparams_map
           ~hints
           ~statics
+          ~namespace_types
           function_
           EnvMap.empty
+      | DeclaredFunction { declarations; statics; namespace_types } ->
+        depends_of_declared_fun declarations ~statics ~namespace_types
       | Component { tparams_map; component; component_loc = _ } ->
         depends_of_component tparams_map component EnvMap.empty
       | Class { class_; class_loc = _; this_super_write_locs = _; kind = _ } ->
@@ -1500,6 +1539,7 @@ struct
       | MissingThisAnnot
       | DeclaredComponent _
       | DeclaredClass _
+      | DeclaredFunction _
       | DeclaredNamespace _
       | Function { synthesizable_from_annotation = FunctionSynthesizable; _ }
       | Component _ ->
@@ -1589,6 +1629,7 @@ struct
     | Class _
     | Record _
     | DeclaredClass _
+    | DeclaredFunction _
     | DeclaredComponent _
     | MatchCasePattern _
     | ExpressionDef _

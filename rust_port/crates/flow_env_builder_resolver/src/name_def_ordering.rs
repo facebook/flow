@@ -40,6 +40,7 @@ use flow_env_builder::name_def_types::Binding;
 use flow_env_builder::name_def_types::ClassDefData;
 use flow_env_builder::name_def_types::ComponentDefData;
 use flow_env_builder::name_def_types::ContextualData;
+use flow_env_builder::name_def_types::DeclaredFunctionDefData;
 use flow_env_builder::name_def_types::Def;
 use flow_env_builder::name_def_types::EmptyArrayData;
 use flow_env_builder::name_def_types::ExpressionDef;
@@ -1828,6 +1829,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
         tparams_map: &flow_env_builder::name_def_types::TparamsMap,
         hints: &[AstHint],
         statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+        namespace_types: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
         function_: &ast::function::Function<ALoc, ALoc>,
         state: EnvMap<ALoc, Vec1<ALoc>>,
     ) -> EnvMap<ALoc, Vec1<ALoc>> {
@@ -1879,6 +1881,56 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             state,
             |visitor| {
                 for (_, env_key) in statics.iter() {
+                    visitor.add(id_loc.dupe(), env_key.dupe());
+                }
+                for (_, env_key) in namespace_types.iter() {
+                    visitor.add(id_loc.dupe(), env_key.dupe());
+                }
+            },
+        )
+    }
+
+    fn depends_of_declared_fun<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
+        cx: &'cx Cx,
+        this_super_dep_loc_map: &'a EnvMap<ALoc, EnvKey<ALoc>>,
+        env_values: &'a Values<ALoc>,
+        env_entries: &'a EnvMap<ALoc, EnvEntry<ALoc>>,
+        providers: &'a provider_api::Info<ALoc>,
+        refinement_of_id: &'a dyn Fn(i32) -> Refinement<ALoc>,
+        id_loc: ALoc,
+        declarations: &[(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)],
+        statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+        namespace_types: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+    ) -> EnvMap<ALoc, Vec1<ALoc>> {
+        let state = depends_of_node::<Cx, Fl>(
+            cx,
+            this_super_dep_loc_map,
+            env_values,
+            env_entries,
+            providers,
+            refinement_of_id,
+            false,
+            EnvMap::empty(),
+            |visitor| {
+                for (loc, declaration) in declarations {
+                    let Ok(()) = visitor.declare_function(loc, declaration);
+                }
+            },
+        );
+        depends_of_node::<Cx, Fl>(
+            cx,
+            this_super_dep_loc_map,
+            env_values,
+            env_entries,
+            providers,
+            refinement_of_id,
+            false,
+            state,
+            |visitor| {
+                for (_, env_key) in statics.iter() {
+                    visitor.add(id_loc.dupe(), env_key.dupe());
+                }
+                for (_, env_key) in namespace_types.iter() {
                     visitor.add(id_loc.dupe(), env_key.dupe());
                 }
             },
@@ -2492,6 +2544,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                                 &Default::default(),
                                 &[],
                                 &Default::default(),
+                                &Default::default(),
                                 fn_,
                                 state,
                             )
@@ -2596,6 +2649,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                             &Default::default(),
                             &[],
                             &Default::default(),
+                            &Default::default(),
                             fn_,
                             state,
                         ),
@@ -2678,6 +2732,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 tparams_map,
                 hints,
                 statics,
+                &Default::default(),
                 function_,
                 state,
             ),
@@ -3173,6 +3228,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             function_loc: _,
             tparams_map,
             statics,
+            namespace_types,
             hints,
         }) => depends_of_fun::<Cx, Fl>(
             cx,
@@ -3187,8 +3243,25 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             tparams_map,
             hints,
             statics,
+            namespace_types,
             function_,
             EnvMap::empty(),
+        ),
+        Def::DeclaredFunction(box DeclaredFunctionDefData {
+            declarations,
+            statics,
+            namespace_types,
+        }) => depends_of_declared_fun::<Cx, Fl>(
+            cx,
+            this_super_dep_loc_map,
+            env_values,
+            env_entries,
+            providers,
+            refinement_of_id,
+            id_loc,
+            declarations,
+            statics,
+            namespace_types,
         ),
         Def::Component(box ComponentDefData {
             tparams_map,
@@ -3432,6 +3505,7 @@ fn recursively_resolvable(def: &Def) -> bool {
         | Def::MissingThisAnnot
         | Def::DeclaredComponent(..)
         | Def::DeclaredClass(..)
+        | Def::DeclaredFunction(..)
         | Def::DeclaredNamespace(..)
         | Def::Function(box FunctionDefData {
             synthesizable_from_annotation: FunctionSynthKind::FunctionSynthesizable,
@@ -3578,6 +3652,7 @@ fn annotation_locs(
         | Def::Class(_)
         | Def::Record(_)
         | Def::DeclaredClass(..)
+        | Def::DeclaredFunction(..)
         | Def::DeclaredComponent(..)
         | Def::MatchCasePattern(_)
         | Def::ExpressionDef(_)

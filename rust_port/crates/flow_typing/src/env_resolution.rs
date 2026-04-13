@@ -845,6 +845,7 @@ fn resolve_annotated_function<'cx>(
     scope_kind: ScopeKind,
     bind_this: bool,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+    namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
     hook_like: bool,
     reason: Reason,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
@@ -904,11 +905,186 @@ fn resolve_annotated_function<'cx>(
         default_this,
         func_sig,
     );
-    Ok(if *effect_ != ast::function::Effect::Hook && hook_like {
+    let t = if *effect_ != ast::function::Effect::Hook && hook_like {
         make_hooklike(cx, t)
     } else {
         t
-    })
+    };
+    Ok(wrap_function_with_namespace_types(
+        cx,
+        function_.id.as_ref(),
+        t,
+        namespace_types,
+    ))
+}
+
+fn resolve_function_statics<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+) -> Type {
+    let props: type_::properties::PropertiesMap = statics
+        .iter()
+        .map(|(name, env_key)| {
+            let expr_t =
+                type_env::checked_find_loc_env_write(cx, env_key.def_loc_type, env_key.loc.dupe());
+            let field =
+                type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
+                    preferred_def_locs: None,
+                    key_loc: Some(env_key.loc.dupe()),
+                    type_: expr_t,
+                    polarity: flow_common::polarity::Polarity::Neutral,
+                })));
+            (reason::Name::new(name.dupe()), field)
+        })
+        .collect();
+    flow_typing_flow_common::obj_type::mk_with_proto(
+        cx,
+        reason.dupe(),
+        type_::ObjKind::Inexact,
+        None,
+        None,
+        Some(props),
+        None,
+        Type::new(TypeInner::FunProtoT(reason)),
+    )
+}
+
+fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
+    match function_t.deref() {
+        TypeInner::DefT(reason, def_t) => match def_t.deref() {
+            DefTInner::FunT(_, fun_t) => Type::new(TypeInner::DefT(
+                reason.dupe(),
+                DefT::new(DefTInner::FunT(statics_t.dupe(), fun_t.dupe())),
+            )),
+            DefTInner::PolyT(box type_::PolyTData {
+                tparams_loc,
+                tparams,
+                t_out,
+                id,
+            }) => match t_out.deref() {
+                TypeInner::DefT(inner_reason, inner_def_t)
+                    if let DefTInner::FunT(_, fun_t) = inner_def_t.deref() =>
+                {
+                    let new_t_out = Type::new(TypeInner::DefT(
+                        inner_reason.dupe(),
+                        DefT::new(DefTInner::FunT(statics_t.dupe(), fun_t.dupe())),
+                    ));
+                    Type::new(TypeInner::DefT(
+                        reason.dupe(),
+                        DefT::new(DefTInner::PolyT(Box::new(type_::PolyTData {
+                            tparams_loc: tparams_loc.dupe(),
+                            tparams: tparams.dupe(),
+                            t_out: new_t_out,
+                            id: id.dupe(),
+                        }))),
+                    ))
+                }
+                _ => function_t.dupe(),
+            },
+            _ => function_t.dupe(),
+        },
+        _ => function_t.dupe(),
+    }
+}
+
+fn wrap_with_namespace_types<'cx>(
+    cx: &Context<'cx>,
+    namespace_name: &FlowSmolStr,
+    namespace_loc: ALoc,
+    values_type: Type,
+    namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+) -> Type {
+    if namespace_types.is_empty() {
+        values_type
+    } else {
+        let types = namespace_types
+            .iter()
+            .map(|(name, env_key)| {
+                let type_ = type_env::checked_find_loc_env_write(
+                    cx,
+                    env_key.def_loc_type,
+                    env_key.loc.dupe(),
+                );
+                (
+                    reason::Name::new(name.dupe()),
+                    type_::NamedSymbol::new(Some(env_key.loc.dupe()), None, type_),
+                )
+            })
+            .collect();
+        flow_js_utils::namespace_type_with_values_type(
+            cx,
+            flow_common::flow_symbol::Symbol::mk_namespace_symbol(
+                namespace_name.dupe(),
+                namespace_loc,
+            ),
+            values_type,
+            &types,
+        )
+    }
+}
+
+fn wrap_function_with_namespace_types<'cx>(
+    cx: &Context<'cx>,
+    id: Option<&ast::Identifier<ALoc, ALoc>>,
+    values_type: Type,
+    namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+) -> Type {
+    if namespace_types.is_empty() {
+        values_type
+    } else {
+        let id = id.expect("merged function namespace requires a named function");
+        wrap_with_namespace_types(cx, &id.name, id.loc.dupe(), values_type, namespace_types)
+    }
+}
+
+fn resolve_declared_function<'cx>(
+    cx: &Context<'cx>,
+    declarations: &[(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)],
+    statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+    namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+) -> Type {
+    let first_decl = declarations
+        .first()
+        .expect("declared function definitions should be non-empty");
+    let statics_t = resolve_function_statics(
+        cx,
+        reason::mk_annot_reason(
+            reason::VirtualReasonDesc::RFunctionType,
+            first_decl.0.dupe(),
+        ),
+        statics,
+    );
+    let mut types = declarations.iter().map(|(_, declaration)| {
+        let effect = match &*declaration.annot.annotation {
+            ast::types::TypeInner::Function { inner, .. } => inner.effect,
+            _ => ast::function::Effect::Arbitrary,
+        };
+        let t = replace_function_statics(
+            resolve_annotation(cx, &FlowOrdMap::default(), None, &declaration.annot),
+            &statics_t,
+        );
+        match declaration.id.as_ref() {
+            Some(id)
+                if effect != ast::function::Effect::Hook
+                    && flow_parser::ast_utils::hook_name(&id.name) =>
+            {
+                make_hooklike(cx, t)
+            }
+            _ => t,
+        }
+    });
+    let function_t = match (types.next(), types.next()) {
+        (Some(t0), None) => t0,
+        (Some(t0), Some(t1)) => Type::new(TypeInner::IntersectionT(
+            type_util::reason_of_t(&t0)
+                .dupe()
+                .replace_desc(reason::VirtualReasonDesc::RIntersectionType),
+            type_::inter_rep::make(t0, t1, types.collect::<Vec<_>>().into()),
+        )),
+        (None, _) => panic!("declared function definitions should be non-empty"),
+    };
+    wrap_function_with_namespace_types(cx, first_decl.1.id.as_ref(), function_t, namespace_types)
 }
 
 fn resolve_annotated_component<'cx>(
@@ -1082,6 +1258,7 @@ fn resolve_binding<'cx>(
                     cx,
                     def_scope_kind,
                     bind_this,
+                    &BTreeMap::new(),
                     &BTreeMap::new(),
                     false,
                     reason,
@@ -1830,6 +2007,7 @@ fn resolve_inferred_function<'cx>(
     cx: &Context<'cx>,
     scope_kind: ScopeKind,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
+    namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
     needs_this_param: bool,
     id_loc: ALoc,
     reason: Reason,
@@ -1874,9 +2052,14 @@ fn resolve_inferred_function<'cx>(
         if function_.effect_ != ast::function::Effect::Hook
             && ast_utils::hook_function(function_).is_some()
         {
-            make_hooklike(cx, fun_type)
+            wrap_function_with_namespace_types(
+                cx,
+                function_.id.as_ref(),
+                make_hooklike(cx, fun_type),
+                namespace_types,
+            )
         } else {
-            fun_type
+            wrap_function_with_namespace_types(cx, function_.id.as_ref(), fun_type, namespace_types)
         },
     )
 }
@@ -2389,6 +2572,7 @@ fn resolve<'cx>(
             function_loc,
             tparams_map,
             statics,
+            namespace_types,
             hints: _,
         }) => {
             let hook_like = ast_utils::hook_function(function_).is_some();
@@ -2397,6 +2581,7 @@ fn resolve<'cx>(
                 def_scope_kind,
                 !*arrow,
                 statics,
+                namespace_types,
                 hook_like,
                 def_reason,
                 tparams_map,
@@ -2412,17 +2597,24 @@ fn resolve<'cx>(
             function_loc,
             tparams_map: _,
             statics,
+            namespace_types,
             hints: _,
         }) => resolve_inferred_function(
             cx,
             def_scope_kind,
             statics,
+            namespace_types,
             !*arrow,
             id_loc.dupe(),
             def_reason,
             function_loc.dupe(),
             function_,
         )?,
+        Def::DeclaredFunction(box name_def_types::DeclaredFunctionDefData {
+            declarations,
+            statics,
+            namespace_types,
+        }) => resolve_declared_function(cx, declarations, statics, namespace_types),
         Def::Class(box ClassDefData {
             class_,
             class_loc,

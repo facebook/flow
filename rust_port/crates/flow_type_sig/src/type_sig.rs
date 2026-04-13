@@ -1196,6 +1196,7 @@ pub struct DefFunBinding<Loc, T> {
     pub fn_loc: Loc,
     pub def: FunSig<Loc, T>,
     pub statics: BTreeMap<FlowSmolStr, (Loc, T)>,
+    pub namespace_types: BTreeMap<FlowSmolStr, (Loc, T)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
@@ -1204,6 +1205,8 @@ pub struct DefDeclareFun<Loc, T> {
     pub name: FlowSmolStr,
     pub fn_loc: Loc,
     pub def: FunSig<Loc, T>,
+    pub statics: BTreeMap<FlowSmolStr, (Loc, T)>,
+    pub namespace_types: BTreeMap<FlowSmolStr, (Loc, T)>,
     pub tail: Vec<(Loc, Loc, FunSig<Loc, T>)>,
 }
 
@@ -1381,11 +1384,23 @@ impl<Loc: Clone, T> Def<Loc, T> {
                     f_loc(cx, loc);
                     f_t(cx, t);
                 }
+                for (loc, t) in inner.namespace_types.values() {
+                    f_loc(cx, loc);
+                    f_t(cx, t);
+                }
             }
             Def::DeclareFun(inner) => {
                 f_loc(cx, &inner.id_loc);
                 f_loc(cx, &inner.fn_loc);
                 inner.def.iter(cx, f_loc, f_t);
+                for (loc, t) in inner.statics.values() {
+                    f_loc(cx, loc);
+                    f_t(cx, t);
+                }
+                for (loc, t) in inner.namespace_types.values() {
+                    f_loc(cx, loc);
+                    f_t(cx, t);
+                }
                 for (loc1, loc2, sig) in &inner.tail {
                     f_loc(cx, loc1);
                     f_loc(cx, loc2);
@@ -1500,12 +1515,27 @@ impl<Loc: Clone, T> Def<Loc, T> {
                     .iter()
                     .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
                     .collect(),
+                namespace_types: inner
+                    .namespace_types
+                    .iter()
+                    .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
+                    .collect(),
             })),
             Def::DeclareFun(inner) => Def::DeclareFun(Box::new(DefDeclareFun {
                 id_loc: f_loc(cx, &inner.id_loc),
                 name: inner.name.dupe(),
                 fn_loc: f_loc(cx, &inner.fn_loc),
                 def: inner.def.map(cx, &f_loc, &f_t),
+                statics: inner
+                    .statics
+                    .iter()
+                    .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
+                    .collect(),
+                namespace_types: inner
+                    .namespace_types
+                    .iter()
+                    .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
+                    .collect(),
                 tail: inner
                     .tail
                     .iter()

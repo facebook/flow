@@ -27,7 +27,7 @@ unsupported_statements.a as empty; // error: number ~> empty
 unsupported_statements.B.C as unsupported_statements.B; // ok
 unsupported_statements.B.D as empty; // error: enum ~> empty
 
-import {exported_ns, empty, direct_export_ns} from './exported';
+import default_merged, {exported_ns, empty, direct_export_ns, exported_merged} from './exported';
 exported_ns.bar1 as empty; // error: number ~> empty
 exported_ns.bar2 as empty; // error: boolean ~> empty
 exported_ns.bar3 as empty; // error: string ~> empty
@@ -43,6 +43,14 @@ empty as empty; // ok: already errored being type-only in exported.js
 // Test importing directly exported namespace (declare export namespace)
 direct_export_ns.x as empty; // error: number ~> empty
 1 as direct_export_ns.T; // error: number ~> string
+
+exported_merged.foo as empty; // error: string ~> empty
+'' as exported_merged.T; // ok
+1 as exported_merged.T; // error: number ~> string
+
+default_merged.foo as empty; // error: string ~> empty
+'' as default_merged.T; // ok
+1 as default_merged.T; // error: number ~> string
 
 import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
 exported_ns_type_only; exported_ns_type_only2; // error: type-as-value
@@ -60,3 +68,23 @@ function ns_type_only_ns_tests() {
   '' as type_only.Bar; // ok
   1 as type_only.Bar; // error: number ~> string
 }
+
+declare function merged_declared_fn(x: string): string;
+declare namespace merged_declared_fn {
+  declare const foo: string;
+  declare type T = string;
+}
+merged_declared_fn.foo as empty; // error: string ~> empty
+'' as merged_declared_fn.T; // ok
+1 as merged_declared_fn.T; // error: number ~> string
+
+function merged_runtime_fn(x: string): string {
+  return x;
+}
+declare namespace merged_runtime_fn {
+  declare const foo: string;
+  declare type T = string;
+}
+merged_runtime_fn.foo as empty; // error: string ~> empty
+'' as merged_runtime_fn.T; // ok
+1 as merged_runtime_fn.T; // error: number ~> string
