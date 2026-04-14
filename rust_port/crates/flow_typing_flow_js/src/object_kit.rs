@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -484,32 +485,34 @@ pub fn run<'cx>(
             } = slice;
             // TODO(jmbrown): Add polarity information to props
             let polarity = Polarity::Neutral;
-            let pmap: properties::PropertiesMap = props
-                .iter()
-                .map(|(name, prop)| {
-                    let object::Prop {
-                        prop_t: t,
-                        is_own: _,
-                        is_method,
-                        polarity: _,
-                        key_loc,
-                    } = prop;
-                    let p = if *is_method {
-                        Property::new(PropertyInner::Method {
-                            key_loc: key_loc.dupe(),
-                            type_: t.dupe(),
-                        })
-                    } else {
-                        Property::new(PropertyInner::Field(Box::new(FieldData {
-                            preferred_def_locs: None,
-                            key_loc: key_loc.dupe(),
-                            type_: t.dupe(),
-                            polarity,
-                        })))
-                    };
-                    (name.dupe(), p)
-                })
-                .collect();
+            let pmap = properties::PropertiesMap::from_btree_map(
+                props
+                    .iter()
+                    .map(|(name, prop)| {
+                        let object::Prop {
+                            prop_t: t,
+                            is_own: _,
+                            is_method,
+                            polarity: _,
+                            key_loc,
+                        } = prop;
+                        let p = if *is_method {
+                            Property::new(PropertyInner::Method {
+                                key_loc: key_loc.dupe(),
+                                type_: t.dupe(),
+                            })
+                        } else {
+                            Property::new(PropertyInner::Field(Box::new(FieldData {
+                                preferred_def_locs: None,
+                                key_loc: key_loc.dupe(),
+                                type_: t.dupe(),
+                                polarity,
+                            })))
+                        };
+                        (name.dupe(), p)
+                    })
+                    .collect(),
+            );
             let new_flags = Flags {
                 obj_kind: obj_type::map_dict(
                     |mut dict| {
@@ -585,32 +588,49 @@ pub fn run<'cx>(
                 interface: _,
                 reachable_targs: config_targs,
             } = config;
-            // Remove the key and ref props from our config. ...
-            let mut config_props = config_props.clone();
-            config_props.remove(&Name::new("key"));
-            match ref_manipulation {
-                object::react_config::RefManipulation::KeepRef => {}
-                object::react_config::RefManipulation::AddRef(prop_t) => {
-                    config_props.insert(
-                        Name::new("ref"),
-                        object::Prop {
-                            prop_t: prop_t.dupe(),
-                            is_own: true,
-                            is_method: false,
-                            polarity: prop_polarity,
-                            key_loc: None,
-                        },
-                    );
-                }
-            }
-
             let config_dict = obj_type::get_dict_opt(&config_flags.obj_kind);
+            let key_name = Name::new("key");
+            let ref_name = Name::new("ref");
+            let make_property = |key_loc: Option<ALoc>, type_: Type, is_method: bool| {
+                if is_method {
+                    Property::new(PropertyInner::Method { key_loc, type_ })
+                } else {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: None,
+                        key_loc,
+                        type_,
+                        polarity: prop_polarity,
+                    })))
+                }
+            };
+            let config_prop = |key: &Name| -> Option<Cow<'_, object::Prop>> {
+                if key == &key_name {
+                    None
+                } else {
+                    match ref_manipulation {
+                        object::react_config::RefManipulation::AddRef(prop_t)
+                            if key == &ref_name =>
+                        {
+                            Some(Cow::Owned(object::Prop {
+                                prop_t: prop_t.dupe(),
+                                is_own: true,
+                                is_method: false,
+                                polarity: prop_polarity,
+                                key_loc: None,
+                            }))
+                        }
+                        _ => {
+                            slice_utils::get_prop(config_reason, config_props.get(key), config_dict)
+                        }
+                    }
+                }
+            };
             // Create the final props map and dict.
             //
             // NOTE: React will copy any enumerable prop whether or not it
             // is own to the config.
             let (props_map, flags, generics, reachable_targs): (
-                BTreeMap<Name, (Option<ALoc>, Type, bool)>,
+                BTreeMap<Name, Property>,
                 Flags,
                 object::GenericSpreadId,
                 Rc<[(Type, Polarity)]>,
@@ -629,28 +649,27 @@ pub fn run<'cx>(
                     } = defaults_slice;
                     let defaults_dict = obj_type::get_dict_opt(&defaults_flags.obj_kind);
                     //  Merge our props and default props.
-                    let mut merged_props: BTreeMap<Name, (Option<ALoc>, Type, bool)> =
-                        BTreeMap::new();
-                    let mut all_keys: std::collections::BTreeSet<Name> =
-                        std::collections::BTreeSet::new();
-                    for k in config_props.keys() {
-                        all_keys.insert(k.dupe());
-                    }
-                    for k in defaults_props.keys() {
-                        all_keys.insert(k.dupe());
-                    }
-                    for key in all_keys {
-                        let p1 = slice_utils::get_prop(
-                            config_reason,
-                            config_props.get(&key),
-                            config_dict,
-                        );
+                    let mut merged_props: BTreeMap<Name, Property> = defaults_props
+                        .iter()
+                        .map(|(key, prop)| {
+                            (
+                                key.dupe(),
+                                make_property(
+                                    prop.key_loc.dupe(),
+                                    prop.prop_t.dupe(),
+                                    prop.is_method,
+                                ),
+                            )
+                        })
+                        .collect();
+                    let mut merge_key = |key: &Name| -> Result<(), FlowJsException> {
+                        let p1 = config_prop(key);
                         let p2 = slice_utils::get_prop(
                             defaults_reason,
-                            defaults_props.get(&key),
+                            defaults_props.get(key),
                             defaults_dict,
                         );
-                        let result = match (&p1, &p2) {
+                        let result = match (p1.as_deref(), p2.as_deref()) {
                             (None, None) => None,
                             (
                                 Some(object::Prop {
@@ -661,7 +680,7 @@ pub fn run<'cx>(
                                     key_loc: l,
                                 }),
                                 None,
-                            ) => Some((l.dupe(), t.dupe(), *m)),
+                            ) => Some(make_property(l.dupe(), t.dupe(), *m)),
                             (
                                 None,
                                 Some(object::Prop {
@@ -671,7 +690,7 @@ pub fn run<'cx>(
                                     polarity: _,
                                     key_loc: l,
                                 }),
-                            ) => Some((l.dupe(), t.dupe(), *m)),
+                            ) => Some(make_property(l.dupe(), t.dupe(), *m)),
                             // If a property is defined in both objects, and the first property's
                             // type includes void then we want to replace every occurrence of void
                             // with the second property's type. This is consistent with the behavior
@@ -726,12 +745,24 @@ pub fn run<'cx>(
                                         Ok::<(), FlowJsException>(())
                                     },
                                 )?;
-                                Some((l.dupe(), t, *m1 || *m2))
+                                Some(make_property(l.dupe(), t, *m1 || *m2))
                             }
                         };
-                        if let Some(entry) = result {
-                            merged_props.insert(key, entry);
+                        if let Some(prop) = result {
+                            merged_props.insert(key.dupe(), prop);
                         }
+                        Ok(())
+                    };
+                    for key in config_props.keys() {
+                        if key != &key_name {
+                            merge_key(key)?;
+                        }
+                    }
+                    if matches!(
+                        ref_manipulation,
+                        object::react_config::RefManipulation::AddRef(_)
+                    ) {
+                        merge_key(&ref_name)?;
                     }
                     // Merge the dictionary from our config with the defaults dictionary.
                     let dict: Option<DictType> = match (config_dict, defaults_dict) {
@@ -789,19 +820,28 @@ pub fn run<'cx>(
                 }
                 // Otherwise turn our slice props map into an object props.
                 None => {
-                    let props_map: BTreeMap<Name, (Option<ALoc>, Type, bool)> = config_props
-                        .iter()
-                        .map(|(name, prop)| {
-                            let object::Prop {
-                                prop_t: t,
-                                is_own: _,
-                                is_method,
-                                polarity: _,
-                                key_loc: l,
-                            } = prop;
-                            (name.dupe(), (l.dupe(), t.dupe(), *is_method))
+                    let mut props_map: BTreeMap<Name, Property> = config_props
+                        .keys()
+                        .filter_map(|name| {
+                            config_prop(name).map(|prop| {
+                                let prop = prop.as_ref();
+                                (
+                                    name.dupe(),
+                                    make_property(
+                                        prop.key_loc.dupe(),
+                                        prop.prop_t.dupe(),
+                                        prop.is_method,
+                                    ),
+                                )
+                            })
                         })
                         .collect();
+                    if let object::react_config::RefManipulation::AddRef(prop_t) = ref_manipulation
+                    {
+                        props_map
+                            .entry(ref_name.dupe())
+                            .or_insert_with(|| make_property(None, prop_t.dupe(), false));
+                    }
                     // Create a new dictionary from our config's dictionary with a
                     // positive polarity.
                     let dict = config_dict.map(|d| DictType {
@@ -832,25 +872,7 @@ pub fn run<'cx>(
             };
             let call = None;
             // Finish creating our props object.
-            let pmap: properties::PropertiesMap = props_map
-                .iter()
-                .map(|(name, (key_loc, type_, is_method))| {
-                    let p = if *is_method {
-                        Property::new(PropertyInner::Method {
-                            key_loc: key_loc.dupe(),
-                            type_: type_.dupe(),
-                        })
-                    } else {
-                        Property::new(PropertyInner::Field(Box::new(FieldData {
-                            preferred_def_locs: None,
-                            key_loc: key_loc.dupe(),
-                            type_: type_.dupe(),
-                            polarity: prop_polarity,
-                        })))
-                    };
-                    (name.dupe(), p)
-                })
-                .collect();
+            let pmap = properties::PropertiesMap::from_btree_map(props_map);
             let id = cx.generate_property_map(pmap);
             let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
             Ok(slice_utils::mk_object_type(
