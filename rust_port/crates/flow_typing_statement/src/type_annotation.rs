@@ -1832,7 +1832,7 @@ fn convert_inner<'a>(
                         )),
                         t,
                     ),
-                    // $Omit
+                    // Omit<T, K> removes keys K from T.
                     "$Omit" => {
                         if !cx.is_lib_file() {
                             flow_js_utils::add_output_non_speculating(

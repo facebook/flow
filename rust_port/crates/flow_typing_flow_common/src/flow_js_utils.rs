@@ -3042,8 +3042,7 @@ pub mod import_type_t_kit {
     use flow_typing_type::type_::TypeTKind;
     use flow_typing_type::type_util;
 
-    use super::FlowJsException;
-    use super::add_output;
+    use super::add_output_non_speculating;
     use super::fix_this_instance;
     use super::mk_tparams;
 
@@ -3148,28 +3147,25 @@ pub mod import_type_t_kit {
         reason: Reason,
         export_name: &str,
         exported_type: Type,
-    ) -> Result<Type, FlowJsException> {
+    ) -> Type {
         if export_name == "default"
             && let TypeInner::DefT(_, def_t) = exported_type.deref()
             && matches!(def_t.deref(), DefTInner::ObjT(_))
         {
-            return Ok(exported_type);
+            return exported_type;
         }
 
         match canonicalize_imported_type(cx, reason.dupe(), &exported_type) {
-            Some(imported_t) => Ok(imported_t),
+            Some(imported_t) => imported_t,
             None => {
-                add_output(
+                add_output_non_speculating(
                     cx,
                     ErrorMessage::EImportValueAsType(Box::new((
                         reason.dupe(),
                         FlowSmolStr::new(export_name),
                     ))),
-                )?;
-                Ok(Type::new(TypeInner::AnyT(
-                    reason,
-                    AnySource::AnyError(None),
-                )))
+                );
+                Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None)))
             }
         }
     }
@@ -3197,15 +3193,14 @@ pub mod import_typeof_t_kit {
     use flow_typing_type::type_::TypeTKind;
     use flow_typing_type::type_util;
 
-    use super::FlowJsException;
-    use super::add_output;
+    use super::add_output_non_speculating;
 
     pub fn on_concrete_type<'cx>(
         cx: &Context<'cx>,
         reason: Reason,
         export_name: &str,
         l: &Type,
-    ) -> Result<Type, FlowJsException> {
+    ) -> Type {
         match l.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::PolyT(box PolyTData {
@@ -3220,10 +3215,10 @@ pub mod import_typeof_t_kit {
                         {
                             let typeof_t =
                                 type_util::typeof_annotation(reason.dupe(), l.dupe(), None);
-                            Ok(Type::new(TypeInner::DefT(
+                            Type::new(TypeInner::DefT(
                                 reason,
                                 DefT::new(DefTInner::TypeT(TypeTKind::ImportTypeofKind, typeof_t)),
-                            )))
+                            ))
                         }
                         DefTInner::ClassT(_)
                         | DefTInner::FunT(_, _)
@@ -3231,7 +3226,7 @@ pub mod import_typeof_t_kit {
                             let typeof_t =
                                 type_util::typeof_annotation(reason.dupe(), t_out.dupe(), None);
                             let new_id = flow_typing_type::type_::poly::Id::generate_id();
-                            Ok(type_util::poly_type_of_tparam_list(
+                            type_util::poly_type_of_tparam_list(
                                 new_id,
                                 tparams_loc.dupe(),
                                 typeparams.dupe(),
@@ -3242,68 +3237,62 @@ pub mod import_typeof_t_kit {
                                         typeof_t,
                                     )),
                                 )),
-                            ))
+                            )
                         }
                         DefTInner::TypeT(_, _) => {
-                            add_output(
+                            add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EImportTypeAsTypeof(Box::new((
                                     reason.dupe(),
                                     FlowSmolStr::new(export_name),
                                 ))),
-                            )?;
-                            Ok(Type::new(TypeInner::AnyT(
-                                reason,
-                                AnySource::AnyError(None),
-                            )))
+                            );
+                            Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None)))
                         }
                         _ => {
                             let typeof_t =
                                 type_util::typeof_annotation(reason.dupe(), l.dupe(), None);
-                            Ok(Type::new(TypeInner::DefT(
+                            Type::new(TypeInner::DefT(
                                 reason,
                                 DefT::new(DefTInner::TypeT(TypeTKind::ImportTypeofKind, typeof_t)),
-                            )))
+                            ))
                         }
                     },
                     _ => {
                         let typeof_t = type_util::typeof_annotation(reason.dupe(), l.dupe(), None);
-                        Ok(Type::new(TypeInner::DefT(
+                        Type::new(TypeInner::DefT(
                             reason,
                             DefT::new(DefTInner::TypeT(TypeTKind::ImportTypeofKind, typeof_t)),
-                        )))
+                        ))
                     }
                 },
 
                 DefTInner::TypeT(_, _) => {
-                    add_output(
+                    add_output_non_speculating(
                         cx,
                         ErrorMessage::EImportTypeAsTypeof(Box::new((
                             reason.dupe(),
                             FlowSmolStr::new(export_name),
                         ))),
-                    )?;
-                    Ok(Type::new(TypeInner::AnyT(
-                        reason,
-                        AnySource::AnyError(None),
-                    )))
+                    );
+                    Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None)))
                 }
 
                 _ => {
                     let typeof_t = type_util::typeof_annotation(reason.dupe(), l.dupe(), None);
-                    Ok(Type::new(TypeInner::DefT(
+                    Type::new(TypeInner::DefT(
                         reason,
                         DefT::new(DefTInner::TypeT(TypeTKind::ImportTypeofKind, typeof_t)),
-                    )))
+                    ))
                 }
             },
 
             _ => {
                 let typeof_t = type_util::typeof_annotation(reason.dupe(), l.dupe(), None);
-                Ok(Type::new(TypeInner::DefT(
+                Type::new(TypeInner::DefT(
                     reason,
                     DefT::new(DefTInner::TypeT(TypeTKind::ImportTypeofKind, typeof_t)),
-                )))
+                ))
             }
         }
     }
@@ -3583,6 +3572,8 @@ pub mod import_module_ns_t_kit {
 }
 
 pub mod import_default_t_kit {
+    use std::rc::Rc;
+
     use dupe::Dupe;
     use flow_aloc::ALoc;
     use flow_common::flow_import_specifier::Userland;
@@ -3612,9 +3603,9 @@ pub mod import_default_t_kit {
         with_concretized_type: &dyn Fn(
             &Context<'cx>,
             Reason,
-            &dyn Fn(&Type) -> Result<Type, FlowJsException>,
+            Rc<dyn Fn(Type) -> Type + 'cx>,
             Type,
-        ) -> Result<Type, FlowJsException>,
+        ) -> Type,
         reason: Reason,
         import_kind: ImportKind,
         local_name: &str,
@@ -3686,16 +3677,11 @@ pub mod import_default_t_kit {
                 let t = with_concretized_type(
                     &cx,
                     reason.dupe(),
-                    &|t: &Type| {
-                        import_type_t_kit::on_concrete_type(
-                            &cx_for_f,
-                            reason.dupe(),
-                            "default",
-                            t.dupe(),
-                        )
-                    },
+                    Rc::new(move |t: Type| {
+                        import_type_t_kit::on_concrete_type(&cx_for_f, reason.dupe(), "default", t)
+                    }),
                     export_t,
-                )?;
+                );
                 Ok((loc_opt, t))
             }
             ImportKind::ImportTypeof => {
@@ -3704,16 +3690,16 @@ pub mod import_default_t_kit {
                 let t = with_concretized_type(
                     &cx,
                     reason.dupe(),
-                    &|t: &Type| {
+                    Rc::new(move |t: Type| {
                         import_typeof_t_kit::on_concrete_type(
                             &cx_for_f,
                             reason.dupe(),
                             "default",
-                            t,
+                            &t,
                         )
-                    },
+                    }),
                     export_t,
-                )?;
+                );
                 Ok((loc_opt, t))
             }
             ImportKind::ImportValue => Ok((loc_opt, export_t)),
@@ -3722,6 +3708,8 @@ pub mod import_default_t_kit {
 }
 
 pub mod import_named_t_kit {
+    use std::rc::Rc;
+
     use dupe::Dupe;
     use flow_aloc::ALoc;
     use flow_common::flow_import_specifier::Userland;
@@ -3752,9 +3740,9 @@ pub mod import_named_t_kit {
         with_concretized_type: &dyn Fn(
             &Context<'cx>,
             Reason,
-            &dyn Fn(&Type) -> Result<Type, FlowJsException>,
+            Rc<dyn Fn(Type) -> Type + 'cx>,
             Type,
-        ) -> Result<Type, FlowJsException>,
+        ) -> Type,
         reason: Reason,
         import_kind: ImportKind,
         export_name: &FlowSmolStr,
@@ -3803,73 +3791,79 @@ pub mod import_named_t_kit {
             (ImportKind::ImportType, Some(ns)) => {
                 let cx = cx.dupe();
                 let cx_for_f = cx.dupe();
+                let export_name = export_name.dupe();
                 let t = with_concretized_type(
                     &cx,
                     reason.dupe(),
-                    &|t: &Type| {
+                    Rc::new(move |t: Type| {
                         import_type_t_kit::on_concrete_type(
                             &cx_for_f,
                             reason.dupe(),
                             export_name.as_str(),
-                            t.dupe(),
+                            t,
                         )
-                    },
+                    }),
                     ns.type_.dupe(),
-                )?;
+                );
                 Ok((ns.name_loc.dupe(), t))
             }
             (ImportKind::ImportType, None) if has_every_named_export => {
                 let cx = cx.dupe();
                 let cx_for_f = cx.dupe();
+                let export_name = export_name.dupe();
+                let any_reason = reason.dupe();
                 let t = with_concretized_type(
                     &cx,
                     reason.dupe(),
-                    &|t: &Type| {
+                    Rc::new(move |t: Type| {
                         import_type_t_kit::on_concrete_type(
                             &cx_for_f,
                             reason.dupe(),
                             export_name.as_str(),
-                            t.dupe(),
+                            t,
                         )
-                    },
-                    Type::new(TypeInner::AnyT(reason.dupe(), AnySource::Untyped)),
-                )?;
+                    }),
+                    Type::new(TypeInner::AnyT(any_reason, AnySource::Untyped)),
+                );
                 Ok((None, t))
             }
             (ImportKind::ImportTypeof, Some(ns)) => {
                 let cx = cx.dupe();
                 let cx_for_f = cx.dupe();
+                let export_name = export_name.dupe();
                 let t = with_concretized_type(
                     &cx,
                     reason.dupe(),
-                    &|t: &Type| {
+                    Rc::new(move |t: Type| {
                         import_typeof_t_kit::on_concrete_type(
                             &cx_for_f,
                             reason.dupe(),
                             export_name.as_str(),
-                            t,
+                            &t,
                         )
-                    },
+                    }),
                     ns.type_.dupe(),
-                )?;
+                );
                 Ok((ns.name_loc.dupe(), t))
             }
             (ImportKind::ImportTypeof, None) if has_every_named_export => {
                 let cx = cx.dupe();
                 let cx_for_f = cx.dupe();
+                let export_name = export_name.dupe();
+                let any_reason = reason.dupe();
                 let t = with_concretized_type(
                     &cx,
                     reason.dupe(),
-                    &|t: &Type| {
+                    Rc::new(move |t: Type| {
                         import_typeof_t_kit::on_concrete_type(
                             &cx_for_f,
                             reason.dupe(),
                             export_name.as_str(),
-                            t,
+                            &t,
                         )
-                    },
-                    Type::new(TypeInner::AnyT(reason.dupe(), AnySource::Untyped)),
-                )?;
+                    }),
+                    Type::new(TypeInner::AnyT(any_reason, AnySource::Untyped)),
+                );
                 Ok((None, t))
             }
             (ImportKind::ImportValue, Some(ns)) => Ok((ns.name_loc.dupe(), ns.type_.dupe())),
@@ -3884,19 +3878,20 @@ pub mod import_named_t_kit {
                         .expect("checked above");
                     let cx = cx.dupe();
                     let cx_for_f = cx.dupe();
+                    let export_name = export_name.dupe();
                     let t = with_concretized_type(
                         &cx,
                         reason.dupe(),
-                        &|t: &Type| {
+                        Rc::new(move |t: Type| {
                             import_type_t_kit::on_concrete_type(
                                 &cx_for_f,
                                 reason.dupe(),
                                 export_name.as_str(),
-                                t.dupe(),
+                                t,
                             )
-                        },
+                        }),
                         ns.type_.dupe(),
-                    )?;
+                    );
                     Ok((ns.name_loc.dupe(), t))
                 } else {
                     add_output(
@@ -4595,13 +4590,13 @@ pub mod import_export_utils {
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
         let is_strict = cx.is_strict();
         let mut name_def_loc_ref: Option<ALoc> = None;
-        let with_concretized_type = |cx: &Context<'cx>,
-                                     r: Reason,
-                                     f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
-                                     t: Type|
-         -> Result<Type, FlowJsException> {
-            f(&singleton_concretize_type_for_imports_exports(cx, r, t)?)
-        };
+        let with_concretized_type =
+            |cx: &Context<'cx>, r: Reason, f: Rc<dyn Fn(Type) -> Type + 'cx>, t: Type| -> Type {
+                match singleton_concretize_type_for_imports_exports(cx, r.dupe(), t) {
+                    Ok(t) => f(t),
+                    Err(_) => Type::new(TypeInner::AnyT(r, AnySource::AnyError(None))),
+                }
+            };
         let t = match source_module {
             Ok(m) => {
                 if remote_name == "default" {
@@ -4680,7 +4675,12 @@ pub mod import_export_utils {
                     source_module,
                 )?;
                 let bind_reason = import_reason.reposition(local_loc);
-                import_typeof_t_kit::on_concrete_type(cx, bind_reason, "*", &module_ns_t)
+                Ok(import_typeof_t_kit::on_concrete_type(
+                    cx,
+                    bind_reason,
+                    "*",
+                    &module_ns_t,
+                ))
             }
             AstImportKind::ImportValue => {
                 let reason = mk_reason(

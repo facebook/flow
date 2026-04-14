@@ -5,5 +5,4 @@
 [libs]
 
 [options]
-module.system=haste
 all=true

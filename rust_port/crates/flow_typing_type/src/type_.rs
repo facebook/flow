@@ -9129,13 +9129,11 @@ pub mod aconstraint {
         pub dro_type: DroType,
     }
 
+    pub type AnnotConcretizeForImportsExportsFn<'cx> = Rc<dyn Fn(Type) -> Type + 'cx>;
+
     #[derive(Clone)]
-    pub enum OpInner {
-        AnnotConcretizeForImportsExports {
-            reason: Reason,
-            import_kind: ImportKind,
-            name: FlowSmolStr,
-        },
+    pub enum OpInner<'cx> {
+        AnnotConcretizeForImportsExports(Reason, AnnotConcretizeForImportsExportsFn<'cx>),
         AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(Reason),
         AnnotConcretizeForInspection {
             reason: Reason,
@@ -9198,16 +9196,16 @@ pub mod aconstraint {
     }
 
     #[derive(Clone, Dupe)]
-    pub struct Op(Rc<OpInner>);
+    pub struct Op<'cx>(Rc<OpInner<'cx>>);
 
-    impl Op {
-        pub fn new(inner: OpInner) -> Self {
+    impl<'cx> Op<'cx> {
+        pub fn new(inner: OpInner<'cx>) -> Self {
             Op(Rc::new(inner))
         }
     }
 
-    impl Deref for Op {
-        type Target = OpInner;
+    impl<'cx> Deref for Op<'cx> {
+        type Target = OpInner<'cx>;
 
         fn deref(&self) -> &Self::Target {
             &self.0
@@ -9258,39 +9256,39 @@ pub mod aconstraint {
     /// which is similar to how we handle the above constraints, when that type
     /// variable is exported.
     #[derive(Clone)]
-    pub enum AConstraintInner {
+    pub enum AConstraintInner<'cx> {
         AnnotUnresolved {
             reason: Reason,
             dependents: Rc<RefCell<FlowOrdSet<i32>>>,
         },
         AnnotOp {
-            op: Op,
+            op: Op<'cx>,
             id: i32,
             dependents: Rc<RefCell<FlowOrdSet<i32>>>,
         },
     }
 
     #[derive(Clone, Dupe)]
-    pub struct AConstraint(Rc<AConstraintInner>);
+    pub struct AConstraint<'cx>(Rc<AConstraintInner<'cx>>);
 
-    impl AConstraint {
-        pub fn new(inner: AConstraintInner) -> Self {
+    impl<'cx> AConstraint<'cx> {
+        pub fn new(inner: AConstraintInner<'cx>) -> Self {
             AConstraint(Rc::new(inner))
         }
     }
 
-    impl Deref for AConstraint {
-        type Target = AConstraintInner;
+    impl<'cx> Deref for AConstraint<'cx> {
+        type Target = AConstraintInner<'cx>;
 
         fn deref(&self) -> &Self::Target {
             &self.0
         }
     }
 
-    impl Op {
+    impl<'cx> Op<'cx> {
         pub fn reason(&self) -> Reason {
             match &**self {
-                OpInner::AnnotConcretizeForImportsExports { reason, .. }
+                OpInner::AnnotConcretizeForImportsExports(reason, _)
                 | OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(reason)
                 | OpInner::AnnotConcretizeForInspection { reason, .. }
                 | OpInner::AnnotImportTypeofT { reason, .. }
@@ -9335,7 +9333,7 @@ pub mod aconstraint {
         }
     }
 
-    impl AConstraint {
+    impl<'cx> AConstraint<'cx> {
         pub fn deps(&self) -> &RefCell<FlowOrdSet<i32>> {
             match &**self {
                 AConstraintInner::AnnotUnresolved { dependents, .. } => dependents,
@@ -9343,7 +9341,7 @@ pub mod aconstraint {
             }
         }
 
-        pub fn to_annot_op_exn(&self) -> &Op {
+        pub fn to_annot_op_exn(&self) -> &Op<'cx> {
             match &**self {
                 AConstraintInner::AnnotUnresolved { .. } => panic!("to_annot_op_exn on unresolved"),
                 AConstraintInner::AnnotOp { op, .. } => op,
@@ -9360,14 +9358,14 @@ pub mod aconstraint {
         }
     }
 
-    impl Op {
+    impl<'cx> Op<'cx> {
         pub fn string_of_operation(&self) -> &'static str {
             match &**self {
                 OpInner::AnnotSpecializeT(_) => "Annot_SpecializeT",
                 OpInner::AnnotDeepReadOnlyT(_) => "Annot_DeepReadOnlyT",
                 OpInner::AnnotThisSpecializeT { .. } => "Annot_ThisSpecializeT",
                 OpInner::AnnotUseTTypeT { .. } => "Annot_UseT_TypeT",
-                OpInner::AnnotConcretizeForImportsExports { .. } => {
+                OpInner::AnnotConcretizeForImportsExports(_, _) => {
                     "Annot_ConcretizeForImportsExports"
                 }
                 OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(_) => {
@@ -9496,6 +9494,7 @@ impl<'a, CX: 'a> TypeContext<'a, CX> {
     }
 }
 
+#[derive(Clone)]
 pub struct FlowSet<CX = ()> {
     // Stack of BTreeMap layers. Bottom = oldest, top = newest.
     // add() checks all layers, inserts into top.

@@ -1,4 +1,5 @@
 /**
+ * @noflow
  */
 
 export const x = 123;

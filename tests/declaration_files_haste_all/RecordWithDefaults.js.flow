@@ -1,0 +1,28 @@
+declare class RecordWithDefaultsBase {
+  label: string;
+  note: ?string;
+
+  constructor(
+    value?: {|
+      +label?: string,
+      +note?: ?string,
+    |},
+  ): void;
+
+  get(key: 'label'): string;
+  get(key: 'note'): ?string;
+
+  set(key: 'label', value: string): this;
+  set(key: 'note', value: ?string): this;
+
+  merge(
+    value: {|
+      +label?: string,
+      +note?: ?string,
+    |},
+  ): this;
+}
+
+declare class RecordWithDefaults extends RecordWithDefaultsBase {}
+
+export default RecordWithDefaults;

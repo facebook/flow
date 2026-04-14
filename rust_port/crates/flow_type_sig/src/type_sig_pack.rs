@@ -1184,8 +1184,11 @@ pub(crate) fn pack_exports<'arena, 'ast>(
     } = exports;
 
     let (type_export_keys, type_exports) = pack_btreemap(types, pack_type_export);
+    // OCaml builds type_stars with :: (prepend), so the list is in reverse
+    // declaration order. Rust uses push (append), so we reverse here to match.
     let type_stars = type_stars
         .iter()
+        .rev()
         .map(|(loc, mref)| pack_star(loc, mref))
         .collect();
 
@@ -1291,8 +1294,11 @@ pub(crate) fn pack_exports<'arena, 'ast>(
         }
         parse::ModuleKind::ESModule { names, stars } => {
             let (export_keys, exports) = pack_btreemap(names, |e| pack_export(cx, e));
+            // OCaml builds stars with :: (prepend), so the list is in reverse
+            // declaration order. Rust uses push (append), so we reverse here to match.
             let stars = stars
                 .iter()
+                .rev()
                 .map(|(loc, mref)| pack_star(loc, mref))
                 .collect();
             let info = ESModuleInfo {

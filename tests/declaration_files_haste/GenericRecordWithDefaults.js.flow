@@ -1,0 +1,36 @@
+'use strict';
+
+import type {Spec} from 'GenericRecordWithDefaultsSpec';
+
+declare class GenericRecordWithDefaultsBase {
+  foo: string;
+  bar: ?string;
+
+  constructor(
+    value?: {
+      +foo?: string,
+      +bar?: ?string,
+      ...
+    },
+  ): void;
+
+  get(key: 'foo'): string;
+  get(key: 'bar'): ?string;
+
+  set(key: 'foo', value: string): this;
+  set(key: 'bar', value: ?string): this;
+
+  merge(
+    value: {
+      +foo?: string,
+      +bar?: ?string,
+      ...
+    },
+  ): this;
+
+  toJS(): Spec;
+}
+
+declare class GenericRecordWithDefaults extends GenericRecordWithDefaultsBase {}
+
+export default GenericRecordWithDefaults;

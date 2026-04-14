@@ -440,7 +440,7 @@ pub struct ComponentT<'cx> {
     env_value_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
     env_type_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
     // map from annot tvar ids to nodes used during annotation processing
-    annot_graph: RefCell<IntHashMap<i32, AConstraint>>,
+    annot_graph: RefCell<IntHashMap<i32, AConstraint<'cx>>>,
     // Used to power an autofix that takes the lower bounds of types where we emit missing-local-annot
     // and turn them into annotations. This has to exist outside of the tvar graph because we will
     // eventually not use unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap
@@ -2618,11 +2618,11 @@ impl<'cx> Context<'cx> {
         })
     }
 
-    pub fn add_avar(&self, id: i32, constraint_: AConstraint) {
+    pub fn add_avar(&self, id: i32, constraint_: AConstraint<'cx>) {
         self.0.ccx.annot_graph.borrow_mut().insert(id, constraint_);
     }
 
-    pub fn find_avar(&self, id: i32) -> AConstraint {
+    pub fn find_avar(&self, id: i32) -> AConstraint<'cx> {
         self.0
             .ccx
             .annot_graph
@@ -2632,7 +2632,7 @@ impl<'cx> Context<'cx> {
             .dupe()
     }
 
-    pub fn find_avar_opt(&self, id: i32) -> Option<AConstraint> {
+    pub fn find_avar_opt(&self, id: i32) -> Option<AConstraint<'cx>> {
         self.0.ccx.annot_graph.borrow().get(&id).duped()
     }
 
@@ -2651,7 +2651,7 @@ impl<'cx> Context<'cx> {
 
     pub fn iter_annot_dependent_set<F>(&self, mut f: F, set: &FlowOrdSet<i32>)
     where
-        F: FnMut(i32, &type_::aconstraint::Op),
+        F: FnMut(i32, &type_::aconstraint::Op<'cx>),
     {
         for &i in set {
             let constraints = self.find_avar(i);

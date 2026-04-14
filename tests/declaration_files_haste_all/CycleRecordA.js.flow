@@ -1,0 +1,12 @@
+import type Immutable from 'immutable';
+import type CycleRecordB from './CycleRecordB';
+
+declare export default class CycleRecordA {
+  items: Immutable.List<CycleRecordB>;
+
+  constructor(value: {|
+    +items: Immutable.List<CycleRecordB>,
+  |}): void;
+
+  get(key: 'items'): Immutable.List<CycleRecordB>;
+}

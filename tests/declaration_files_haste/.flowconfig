@@ -3,6 +3,7 @@
 [include]
 
 [libs]
+globals.js
 
 [options]
 module.system=haste
@@ -10,4 +11,4 @@ module.system.haste.paths.excludes=<PROJECT_ROOT>/external/.*
 module.system.haste.paths.excludes=<PROJECT_ROOT>/foo/.*
 module.system.haste.paths.excludes=<PROJECT_ROOT>/ws/.*
 module.system.haste.paths.excludes=<PROJECT_ROOT>/node_modules/qux/.*
-all=false
+all=true

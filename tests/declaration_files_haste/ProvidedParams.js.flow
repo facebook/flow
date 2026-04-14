@@ -1,0 +1,43 @@
+'use strict';
+
+import type Immutable from 'immutable';
+import type {Spec} from 'ProvidedParamsSpec';
+
+declare class ProvidedParamsBase {
+  description: ?string;
+  id: ?string;
+  ownerId: string;
+  tags: Immutable.List<string>;
+
+  constructor(
+    value: {|
+      +description?: ?string,
+      +id?: ?string,
+      +ownerId: string,
+      +tags: Immutable.List<string>,
+    |},
+  ): void;
+
+  get(key: 'description' | 'id'): ?string;
+  get(key: 'ownerId'): string;
+  get(key: 'tags'): Immutable.List<string>;
+
+  set(key: 'description' | 'id', value: ?string): this;
+  set(key: 'ownerId', value: string): this;
+  set(key: 'tags', value: Immutable.List<string>): this;
+
+  merge(
+    value: {|
+      +description?: ?string,
+      +id?: ?string,
+      +ownerId?: string,
+      +tags?: Immutable.List<string>,
+    |},
+  ): this;
+
+  toJS(): Spec;
+}
+
+declare class ProvidedParams extends ProvidedParamsBase {}
+
+export default ProvidedParams;

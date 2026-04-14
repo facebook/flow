@@ -1,3 +1,120 @@
+Error ---------------------------------------------------------------------------------------------- RecordModel.js:5:25
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+                              v--------------------------
+   5| const RecordModelBase = Immutable.Record({ // ERROR
+   6|   count: 0,
+   7|   label: undefined,
+   8|   tags: undefined,
+   9| });
+      -^
+
+
+Error --------------------------------------------------------------------------------------- RecordWithDefaults.js:5:32
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+                                     v--------------------------
+   5| const RecordWithDefaultsBase = Immutable.Record({ // ERROR
+   6|   label: 'default',
+   7|   note: undefined,
+   8| });
+      -^
+
+
+Error --------------------------------------------------------------------------------------- record_operations.js:14:17
+
+Cannot call `RecordModel` with object literal bound to `value` because property `tags` is missing in object literal [1]
+but exists in object type [2]. [incompatible-type]
+
+   record_operations.js:14:17
+                       v
+   14| new RecordModel({
+   15|   count: 1,
+   16|   label: 'ok',
+   17| }); // ERROR
+       ^ [1]
+
+References:
+   RecordModel.js.flow:8:22
+                            v-
+    8|   constructor(value: {|
+    9|     +count: number,
+   10|     +label: string,
+   11|     +tags: Immutable.List<string>,
+   12|   |}): void;
+         -^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- record_operations.js:19:8
+
+Cannot call `record.set` because: [incompatible-type]
+ - Either string [1] is incompatible with number [2].
+ - Or string literal `count` [3] is incompatible with string literal `label` [4].
+
+   record_operations.js:19:8
+   19| record.set('count', 'bad'); // ERROR
+              ^^^
+
+References:
+   record_operations.js:19:21
+   19| record.set('count', 'bad'); // ERROR
+                           ^^^^^ [1]
+   RecordModel.js.flow:18:28
+   18|   set(key: 'count', value: number): this;
+                                  ^^^^^^ [2]
+   record_operations.js:19:12
+   19| record.set('count', 'bad'); // ERROR
+                  ^^^^^^^ [3]
+   RecordModel.js.flow:19:12
+   19|   set(key: 'label', value: string): this;
+                  ^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------- record_operations.js:25:19
+
+Cannot assign `42` to `mutable.label` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   record_operations.js:25:19
+   25|   mutable.label = 42; // ERROR
+                         ^^ [1]
+
+References:
+   RecordModel.js.flow:5:10
+    5|   label: string;
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- record_operations.js:37:12
+
+Cannot call `overridden.set` because: [incompatible-type]
+ - Either string literal `label` [1] is incompatible with string literal `note` [2].
+ - Or null [3] is incompatible with string [4].
+
+   record_operations.js:37:12
+   37| overridden.set('label', null); // ERROR
+                  ^^^
+
+References:
+   record_operations.js:37:16
+   37| overridden.set('label', null); // ERROR
+                      ^^^^^^^ [1]
+   RecordWithDefaults.js.flow:16:12
+   16|   set(key: 'note', value: ?string): this;
+                  ^^^^^^ [2]
+   record_operations.js:37:25
+   37| overridden.set('label', null); // ERROR
+                               ^^^^ [3]
+   RecordWithDefaults.js.flow:15:28
+   15|   set(key: 'label', value: string): this;
+                                  ^^^^^^ [4]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
 Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
@@ -16,4 +133,7 @@ References:
 
 
 
-Found 1 error
+Found 7 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

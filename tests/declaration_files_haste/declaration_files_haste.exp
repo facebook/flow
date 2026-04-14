@@ -1,3 +1,72 @@
+Error -------------------------------------------------------------------------------------------- GenericRecord.js:5:27
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+                                 v--------------------------
+    5| const GenericRecordBase = Immutable.Record({ // ERROR
+    6|   foo: undefined,
+    7|   bar: undefined,
+    8|   baz: undefined,
+    9|   qux: undefined,
+   10|   fn: undefined,
+   11| });
+       -^
+
+
+Error ------------------------------------------------------------------------------------------- GenericRecord.js:13:32
+
+`GenericRecordBase` [1] is not a polymorphic type. [incompatible-use]
+
+   13| class GenericRecord<T> extends GenericRecordBase<T> {} // ERROR
+                                      ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- GenericRecord.js:13:32
+
+`GenericRecordBase` [1] is not a polymorphic type. [incompatible-use]
+
+   GenericRecord.js:13:32
+   13| class GenericRecord<T> extends GenericRecordBase<T> {} // ERROR
+                                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   GenericRecord.js:13:32
+   13| class GenericRecord<T> extends GenericRecordBase<T> {} // ERROR
+                                      ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- GenericRecordWithDefaults.js:5:39
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+                                            v--------------------------
+   5| const GenericRecordWithDefaultsBase = Immutable.Record({ // ERROR
+   6|   foo: 'foo',
+   7|   bar: undefined,
+   8| });
+      -^
+
+
+Error ------------------------------------------------------------------------------------------- ProvidedParams.js:5:28
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+                                  v--------------------------
+    5| const ProvidedParamsBase = Immutable.Record({ // ERROR
+    6|   description: undefined,
+    7|   id: undefined,
+    8|   ownerId: undefined,
+    9|   tags: undefined,
+   10| });
+       -^
+
+
 Error -------------------------------------------------------------------------------------- foo/bar/nested_test.js:5:31
 
 Cannot resolve module `SomeOtherModule`. [cannot-resolve-module]
@@ -38,6 +107,80 @@ References:
    foo/bar/nested_test.js:8:16
    8| corge.fun() as string;
                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- generic_record_operations.js:4:5
+
+Cannot call `GenericRecord` because function [1] requires another argument. [incompatible-type]
+
+   generic_record_operations.js:4:5
+    4| new GenericRecord(); // ERROR
+           ^^^^^^^^^^^^^
+
+References:
+   GenericRecord.js.flow:15:3
+         v-----------
+   15|   constructor(
+   16|     value: {
+   17|       +foo: Map<string, number>,
+   18|       +bar: string,
+   19|       +baz?: ?Immutable.List<string>,
+   20|       +qux: T,
+   21|       +fn?: ?GenericFn,
+   22|       ...
+   23|     },
+   24|   ): void;
+         ------^ [1]
+
+
+Error -------------------------------------------------------------------------------- generic_record_operations.js:16:8
+
+Cannot call `record.set` because: [incompatible-type]
+ - Either string [1] is incompatible with number [2].
+ - Or string literal `qux` [3] is incompatible with string literal `foo` [4].
+
+   generic_record_operations.js:16:8
+   16| record.set('qux', 'bad'); // ERROR
+              ^^^
+
+References:
+   generic_record_operations.js:16:19
+   16| record.set('qux', 'bad'); // ERROR
+                         ^^^^^ [1]
+   generic_record_operations.js:6:34
+    6| const record = new GenericRecord<number>({
+                                        ^^^^^^ [2]
+   generic_record_operations.js:16:12
+   16| record.set('qux', 'bad'); // ERROR
+                  ^^^^^ [3]
+   GenericRecord.js.flow:31:12
+   31|   set(key: 'foo', value: Map<string, number>): this;
+                  ^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------- generic_record_operations.js:33:12
+
+Cannot call `overridden.set` because: [incompatible-type]
+ - Either string literal `foo` [1] is incompatible with string literal `bar` [2].
+ - Or null [3] is incompatible with string [4].
+
+   generic_record_operations.js:33:12
+   33| overridden.set('foo', null); // ERROR
+                  ^^^
+
+References:
+   generic_record_operations.js:33:16
+   33| overridden.set('foo', null); // ERROR
+                      ^^^^^ [1]
+   GenericRecordWithDefaults.js.flow:21:12
+   21|   set(key: 'bar', value: ?string): this;
+                  ^^^^^ [2]
+   generic_record_operations.js:33:23
+   33| overridden.set('foo', null); // ERROR
+                             ^^^^ [3]
+   GenericRecordWithDefaults.js.flow:20:26
+   20|   set(key: 'foo', value: string): this;
+                                ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:1
@@ -92,4 +235,7 @@ References:
 
 
 
-Found 6 errors
+Found 14 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

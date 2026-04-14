@@ -160,7 +160,7 @@ pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
         UseTInner::SetPropT(_, reason, _, _, _, _, _) => reason,
         UseTInner::SetPrivatePropT(data) => &data.reason,
         UseTInner::SetProtoT(reason, _) => reason,
-        UseTInner::SpecializeT(data) => &data.reason,
+        UseTInner::SpecializeT(data) => &data.reason2,
         UseTInner::ObjKitT(_, reason, _, _, _) => reason,
         UseTInner::SuperT(data) => &data.reason,
         UseTInner::TestPropT(data) => &data.reason,

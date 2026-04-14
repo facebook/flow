@@ -1,0 +1,7 @@
+import type Immutable from 'immutable';
+
+declare export default class ImportedRecord {
+  groupByTags: Immutable.List<string>;
+
+  get(key: 'groupByTags'): Immutable.List<string>;
+}

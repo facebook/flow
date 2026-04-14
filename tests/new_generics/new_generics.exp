@@ -431,6 +431,78 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- defaulted_type_args.js:46:10
+
+Cannot return `plugins` because in array element: `Plugin<TItem, TColumnKey> | Plugin<TItem, string>` [1] is not exactly
+the same as `Plugin<TItem, TColumnKey>` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either annotate array literal [1] with `Array<Plugin<TItem, TColumnKey>>` [3]
+- Or make array type [3] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   defaulted_type_args.js:46:10
+   46|   return plugins; // ERROR
+                ^^^^^^^
+
+References:
+   defaulted_type_args.js:42:19
+                         v
+   42|   const plugins = [
+   43|     siblingPlugin<TItem, TColumnKey>(),
+   44|     rowInteraction<TItem, _>(),
+   45|   ];
+         ^ [1]
+   defaulted_type_args.js:41:53
+   41| function collectPlugins<TItem, TColumnKey>(): Array<Plugin<TItem, TColumnKey>> {
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   defaulted_type_args.js:41:47
+   41| function collectPlugins<TItem, TColumnKey>(): Array<Plugin<TItem, TColumnKey>> {
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------- defaulted_type_args.js:61:11
+
+Cannot return array literal because in array element > type argument `TColumnKey` [1]: string (inferred from type
+parameter's default) [2] is incompatible with `TColumnKey` [3]. [incompatible-type]
+
+   defaulted_type_args.js:61:11
+   61|   return [box]; // ERROR
+                 ^^^
+
+References:
+   defaulted_type_args.js:49:21
+   49| type LateBox<TItem, TColumnKey> = {
+                           ^^^^^^^^^^ [1]
+   defaulted_type_args.js:54:48
+   54| declare function lateInner<TItem, TColumnKey = string>(): LateBox<
+                                                      ^^^^^^ [2]
+   defaulted_type_args.js:59:66
+   59| function collectBoxes<TItem, TColumnKey>(): Array<LateBox<TItem, TColumnKey>> {
+                                                                        ^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------- defaulted_type_args.js:61:11
+
+Cannot return array literal because in array element > type argument `TColumnKey` [1]: `unknown` [2] is incompatible
+with string (inferred from type parameter's default) [3]. [incompatible-type]
+
+   defaulted_type_args.js:61:11
+   61|   return [box]; // ERROR
+                 ^^^
+
+References:
+   defaulted_type_args.js:49:21
+   49| type LateBox<TItem, TColumnKey> = {
+                           ^^^^^^^^^^ [1]
+   defaulted_type_args.js:59:66
+   59| function collectBoxes<TItem, TColumnKey>(): Array<LateBox<TItem, TColumnKey>> {
+                                                                        ^^^^^^^^^^ [2]
+   defaulted_type_args.js:54:48
+   54| declare function lateInner<TItem, TColumnKey = string>(): LateBox<
+                                                      ^^^^^^ [3]
+
+
 Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:15:7
 
 Cannot compare `a` [1] to string literal `b` [2], because `A` [3] is not a subtype of string literal `b` [2] and string
@@ -1568,7 +1640,7 @@ References:
 
 
 
-Found 90 errors
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

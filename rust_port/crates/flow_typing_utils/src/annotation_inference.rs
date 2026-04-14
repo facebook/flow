@@ -55,12 +55,12 @@ use flow_typing_type::type_util;
 
 use crate::avar;
 
-fn object_like_op(op: &OpInner) -> bool {
+fn object_like_op<'cx>(op: &OpInner<'cx>) -> bool {
     match op {
         OpInner::AnnotSpecializeT(_)
         | OpInner::AnnotThisSpecializeT { .. }
         | OpInner::AnnotUseTTypeT { .. }
-        | OpInner::AnnotConcretizeForImportsExports { .. }
+        | OpInner::AnnotConcretizeForImportsExports(_, _)
         | OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(_)
         | OpInner::AnnotConcretizeForInspection { .. }
         | OpInner::AnnotImportTypeofT { .. }
@@ -88,7 +88,7 @@ fn object_like_op(op: &OpInner) -> bool {
     }
 }
 
-fn primitive_promoting_op(op: &OpInner) -> bool {
+fn primitive_promoting_op<'cx>(op: &OpInner<'cx>) -> bool {
     match op {
         OpInner::AnnotGetPropT(_) | OpInner::AnnotGetElemT { .. } | OpInner::AnnotLookupT(_) => {
             true
@@ -144,12 +144,12 @@ fn error_unsupported_reason(
     type_::any_t::error(reason_op)
 }
 
-fn error_unsupported(
+fn error_unsupported<'cx>(
     suggestion: Option<FlowSmolStr>,
     cx: &Context,
     dst_cx: &Context,
     reason: Reason,
-    op: &Op,
+    op: &Op<'cx>,
 ) -> Type {
     let reason_op = op.display_reason();
     error_unsupported_reason(suggestion, cx, dst_cx, reason, reason_op)
@@ -222,7 +222,7 @@ fn error_internal_reason(cx: &Context, dst_cx: &Context, msg: &str, reason_op: R
     type_::any_t::error(reason_op)
 }
 
-fn error_internal(cx: &Context, dst_cx: &Context, msg: &str, op: &Op) -> Type {
+fn error_internal<'cx>(cx: &Context, dst_cx: &Context, msg: &str, op: &Op<'cx>) -> Type {
     let reason_op = op.display_reason();
     error_internal_reason(cx, dst_cx, msg, reason_op)
 }
@@ -346,6 +346,21 @@ fn mk_typeapp_of_poly<'cx>(
     )
     // Annotation inference is never speculative
     .unwrap()
+}
+
+fn with_concretized_type<'cx>(
+    cx: &Context<'cx>,
+    r: Reason,
+    f: Rc<dyn Fn(Type) -> Type + 'cx>,
+    t: Type,
+) -> Type {
+    elab_t(
+        cx,
+        &effective_dst_cx(cx),
+        None,
+        t,
+        Op::new(OpInner::AnnotConcretizeForImportsExports(r, f)),
+    )
 }
 
 // (***********)
@@ -636,7 +651,7 @@ fn elab_open<'cx>(
     seen: &FlowOrdSet<i32>,
     reason: Reason,
     id: i32,
-    op: Op,
+    op: Op<'cx>,
 ) -> Type {
     if seen.contains(&id) {
         return error_recursive(cx, dst_cx, &reason);
@@ -681,7 +696,7 @@ pub fn elab_t<'cx>(
     dst_cx: &Context<'cx>,
     seen: Option<FlowOrdSet<i32>>,
     t: Type,
-    op: Op,
+    op: Op<'cx>,
 ) -> Type {
     let seen = seen.unwrap_or_default();
     match (t.deref(), op.deref()) {
@@ -864,7 +879,7 @@ pub fn elab_t<'cx>(
     }
 }
 
-fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &Op) -> Type {
+fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &Op<'cx>) -> Type {
     use flow_typing_type::type_::any_t;
 
     let reason_op = op.reason();
@@ -897,7 +912,7 @@ fn elab_t_concrete<'cx>(
     dst_cx: &Context<'cx>,
     seen: FlowOrdSet<i32>,
     t: Type,
-    op: Op,
+    op: Op<'cx>,
 ) -> Type {
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::EnumInfoInner;
@@ -1105,7 +1120,6 @@ fn elab_t_concrete<'cx>(
                 name.as_str(),
                 &t,
             )
-            .unwrap()
         }
         // ****************
         //  Module exports
@@ -1170,32 +1184,7 @@ fn elab_t_concrete<'cx>(
             );
             elab_t(cx, dst_cx, Some(seen), t, op)
         }
-        (
-            _,
-            OpInner::AnnotConcretizeForImportsExports {
-                reason,
-                import_kind,
-                name,
-            },
-        ) => match import_kind {
-            type_::ImportKind::ImportType => flow_js_utils::import_type_t_kit::on_concrete_type(
-                cx,
-                reason.dupe(),
-                name.as_str(),
-                t,
-            )
-            .unwrap(),
-            type_::ImportKind::ImportTypeof => {
-                flow_js_utils::import_typeof_t_kit::on_concrete_type(
-                    cx,
-                    reason.dupe(),
-                    name.as_str(),
-                    &t,
-                )
-                .unwrap()
-            }
-            type_::ImportKind::ImportValue => t,
-        },
+        (_, OpInner::AnnotConcretizeForImportsExports(_, f)) => f(t),
         // **************
         //  Opaque types
         // **************
@@ -2611,7 +2600,7 @@ fn elab_t_wildcard_op<'cx>(
     dst_cx: &Context<'cx>,
     seen: FlowOrdSet<i32>,
     t: Type,
-    op: Op,
+    op: Op<'cx>,
 ) -> Type {
     use flow_typing_type::type_::DefTInner;
 
@@ -3046,51 +3035,32 @@ pub fn import_default<'cx>(
     is_strict: bool,
     resolved_require: flow_typing_context::ResolvedRequire<'cx>,
 ) -> Type {
-    let reason2 = reason.dupe();
-    let export_name2: String = export_name.into();
-    let module_name2 = module_name.clone();
+    let on_module_reason = reason.dupe();
+    let export_name = export_name.to_owned();
+    let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
+        let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t(
+            cx,
+            &with_concretized_type,
+            on_module_reason.dupe(),
+            import_kind.clone(),
+            &export_name,
+            module_name.clone(),
+            is_strict,
+            m,
+        )
+        .unwrap_or_else(|_| (None, type_::any_t::error(on_module_reason.dupe())));
+        t
+    };
+    let why_reason = reason.dupe();
     let lz = get_lazy_module_type_or_any_src(&resolved_require);
-    let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
-        let result = lz.get_forced(cx).clone();
-        match result {
-            Ok(m) => {
-                let import_kind2 = import_kind.clone();
-                let export_name3 = export_name2.clone();
-                let with_concretized_type =
-                    |cx: &Context<'cx>,
-                     r: Reason,
-                     _f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
-                     t: Type|
-                     -> Result<Type, FlowJsException> {
-                        Ok(elab_t(
-                            cx,
-                            &effective_dst_cx(cx),
-                            None,
-                            t,
-                            Op::new(OpInner::AnnotConcretizeForImportsExports {
-                                reason: r,
-                                import_kind: import_kind2.clone(),
-                                name: export_name3.clone().into(),
-                            }),
-                        ))
-                    };
-                let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t(
-                    cx,
-                    &with_concretized_type,
-                    reason2.dupe(),
-                    import_kind.clone(),
-                    &export_name2,
-                    module_name2.clone(),
-                    is_strict,
-                    &m,
-                )
-                .unwrap_or_else(|_| (None, type_::any_t::error(reason2.dupe())));
-                t
-            }
-            Err(src) => type_::any_t::why(src, reason2.dupe()),
-        }
-    })
-        as Box<dyn FnOnce(&Context<'cx>) -> Type>));
+    let resolved = Rc::new(flow_lazy::Lazy::new(
+        Box::new(
+            move |lazy_cx: &Context<'cx>| match lz.get_forced(lazy_cx).clone() {
+                Ok(m) => on_module(lazy_cx, &m),
+                Err(src) => type_::any_t::why(src, why_reason.dupe()),
+            },
+        ) as Box<dyn FnOnce(&Context<'cx>) -> Type>,
+    ));
     mk_sig_tvar(cx, reason, resolved)
 }
 
@@ -3106,45 +3076,27 @@ pub fn import_named<'cx>(
     let reason2 = reason.dupe();
     let export_name2: FlowSmolStr = export_name.into();
     let module_name2 = module_name.clone();
+    let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
+        let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t(
+            cx,
+            &with_concretized_type,
+            reason2.dupe(),
+            import_kind.clone(),
+            &export_name2,
+            module_name2.clone(),
+            is_strict,
+            m,
+        )
+        .unwrap_or_else(|_| (None, type_::any_t::error(reason2.dupe())));
+        t
+    };
     let lz = get_lazy_module_type_or_any_src(&resolved_require);
+    let why_reason = reason.dupe();
     let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let result = lz.get_forced(cx).clone();
         match result {
-            Ok(m) => {
-                let import_kind2 = import_kind.clone();
-                let export_name3 = export_name2.clone();
-                let with_concretized_type =
-                    |cx: &Context<'cx>,
-                     r: Reason,
-                     _f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
-                     t: Type|
-                     -> Result<Type, FlowJsException> {
-                        Ok(elab_t(
-                            cx,
-                            &effective_dst_cx(cx),
-                            None,
-                            t,
-                            Op::new(OpInner::AnnotConcretizeForImportsExports {
-                                reason: r,
-                                import_kind: import_kind2.clone(),
-                                name: export_name3.clone(),
-                            }),
-                        ))
-                    };
-                let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t(
-                    cx,
-                    &with_concretized_type,
-                    reason2.dupe(),
-                    import_kind.clone(),
-                    &export_name2,
-                    module_name2.clone(),
-                    is_strict,
-                    &m,
-                )
-                .unwrap_or_else(|_| (None, type_::any_t::error(reason2.dupe())));
-                t
-            }
-            Err(src) => type_::any_t::why(src, reason2.dupe()),
+            Ok(m) => on_module(cx, &m),
+            Err(src) => type_::any_t::why(src, why_reason.dupe()),
         }
     })
         as Box<dyn FnOnce(&Context<'cx>) -> Type>));
@@ -3360,7 +3312,7 @@ fn object_kit_concrete<'cx>(
     cx: &Context<'cx>,
     dst_cx: &Context<'cx>,
     use_op: UseOp,
-    op: &Op,
+    op: &Op<'cx>,
     reason: Reason,
     resolve_tool: type_::object::ResolveTool,
     tool: type_::object::Tool,

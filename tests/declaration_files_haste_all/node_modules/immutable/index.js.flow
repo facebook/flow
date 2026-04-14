@@ -1,0 +1,11 @@
+declare export class List<+T> {
+  get(index: number): T | void;
+  size: number;
+}
+
+declare export function Record<T>(value: T): Class<any>;
+
+export default {
+  List,
+  Record,
+};

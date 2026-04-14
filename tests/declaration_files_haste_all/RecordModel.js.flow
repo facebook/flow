@@ -1,0 +1,39 @@
+import type Immutable from 'immutable';
+
+declare class RecordModelBase {
+  count: number;
+  label: string;
+  tags: Immutable.List<string>;
+
+  constructor(value: {|
+    +count: number,
+    +label: string,
+    +tags: Immutable.List<string>,
+  |}): void;
+
+  get(key: 'count'): number;
+  get(key: 'label'): string;
+  get(key: 'tags'): Immutable.List<string>;
+
+  set(key: 'count', value: number): this;
+  set(key: 'label', value: string): this;
+  set(key: 'tags', value: Immutable.List<string>): this;
+
+  update(key: 'count', updater: (value: number) => number): this;
+  update(key: 'label', updater: (value: string) => string): this;
+  update(key: 'tags', updater: (value: Immutable.List<string>) => Immutable.List<string>): this;
+
+  merge(
+    value: {|
+      +count?: number,
+      +label?: string,
+      +tags?: Immutable.List<string>,
+    |},
+  ): this;
+
+  withMutations(mutator: (mutableRecord: this) => void): this;
+}
+
+declare class RecordModel extends RecordModelBase {}
+
+export default RecordModel;

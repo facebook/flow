@@ -13659,12 +13659,12 @@ Module {
             type_export_keys: [],
             type_stars: [
                 (
-                    0,
-                    0,
+                    1,
+                    1,
                 ),
                 (
-                    1,
-                    1,
+                    0,
+                    0,
                 ),
             ],
             strict: true,
@@ -13712,23 +13712,23 @@ Module {
             type_export_keys: [],
             type_stars: [
                 (
-                    0,
-                    0,
+                    1,
+                    1,
                 ),
                 (
-                    1,
-                    1,
+                    0,
+                    0,
                 ),
             ],
             export_keys: [],
             stars: [
                 (
-                    2,
-                    2,
+                    3,
+                    3,
                 ),
                 (
-                    3,
-                    3,
+                    2,
+                    2,
                 ),
             ],
             strict: true,

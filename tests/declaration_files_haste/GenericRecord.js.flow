@@ -1,0 +1,57 @@
+'use strict';
+
+import type Immutable from 'immutable';
+import type {Spec} from 'GenericRecordSpec';
+
+type GenericFn = (input: string) => number;
+
+declare class GenericRecordBase<T> {
+  foo: Map<string, number>;
+  bar: string;
+  baz: ?Immutable.List<string>;
+  qux: T;
+  fn: ?GenericFn;
+
+  constructor(
+    value: {
+      +foo: Map<string, number>,
+      +bar: string,
+      +baz?: ?Immutable.List<string>,
+      +qux: T,
+      +fn?: ?GenericFn,
+      ...
+    },
+  ): void;
+
+  get(key: 'foo'): Map<string, number>;
+  get(key: 'bar'): string;
+  get(key: 'baz'): ?Immutable.List<string>;
+  get(key: 'qux'): T;
+
+  set(key: 'foo', value: Map<string, number>): this;
+  set(key: 'bar', value: string): this;
+  set(key: 'baz', value: ?Immutable.List<string>): this;
+  set(key: 'qux', value: T): this;
+
+  update(key: 'bar', updater: (value: string) => string): this;
+  update(key: 'qux', updater: (value: T) => T): this;
+
+  merge(
+    value: {
+      +foo?: Map<string, number>,
+      +bar?: string,
+      +baz?: ?Immutable.List<string>,
+      +qux?: T,
+      +fn?: ?GenericFn,
+      ...
+    },
+  ): this;
+
+  withMutations(mutator: (mutableRecord: this) => void): this;
+
+  toJS(): Spec<T>;
+}
+
+declare class GenericRecord<T> extends GenericRecordBase<T> {}
+
+export default GenericRecord;
