@@ -48,6 +48,7 @@ type package_incompatible_reason =
   | Became_valid
   | Name_changed of string option * string option
   | Main_changed of string option * string option
+  | Types_changed of string option * string option
   | Haste_commonjs_changed of bool
   | Exports_changed
   | Unknown

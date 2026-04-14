@@ -17,33 +17,47 @@ use flow_parser::loc::Loc;
 
 use crate::package_exports::PackageExports;
 
+// type t = {
+//   name: string option;
+//   main: string option;
+//   types: string option;
+//   haste_commonjs: bool;
+//   exports: Package_exports.t option;
+// }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PackageJson {
     name: Option<FlowSmolStr>,
     main: Option<FlowSmolStr>,
+    types: Option<FlowSmolStr>,
     haste_commonjs: bool,
     exports: Option<PackageExports>,
 }
 
 impl PackageJson {
+    // let empty = { name = None; main = None; types = None; haste_commonjs = false; exports = None }
     pub fn empty() -> PackageJson {
         PackageJson {
             name: None,
             main: None,
+            types: None,
             haste_commonjs: false,
             exports: None,
         }
     }
 
+    // let create ~name ~main ~types ~haste_commonjs ~exports =
+    //   { name; main; types; haste_commonjs; exports }
     pub fn create(
         name: Option<FlowSmolStr>,
         main: Option<FlowSmolStr>,
+        types: Option<FlowSmolStr>,
         haste_commonjs: bool,
         exports: Option<PackageExports>,
     ) -> PackageJson {
         PackageJson {
             name,
             main,
+            types,
             haste_commonjs,
             exports,
         }
@@ -55,6 +69,11 @@ impl PackageJson {
 
     pub fn main(&self) -> Option<FlowSmolStr> {
         self.main.clone()
+    }
+
+    // let types package = package.types
+    pub fn types(&self) -> Option<FlowSmolStr> {
+        self.types.clone()
     }
 
     pub fn haste_commonjs(&self) -> bool {
@@ -72,11 +91,21 @@ impl PackageJson {
         }
         let name = string_opt(prop_map.get("name"));
         let main = find_main_property(&prop_map, node_main_fields);
+        // let types =
+        //   match SMap.find_opt "types" prop_map |> string_opt with
+        //   | Some _ as t -> t
+        //   | None -> SMap.find_opt "typings" prop_map |> string_opt
+        // in
+        let types = match string_opt(prop_map.get("types")) {
+            Some(t) => Some(t),
+            None => string_opt(prop_map.get("typings")),
+        };
         let haste_commonjs = bool_opt(prop_map.get("haste_commonjs")).unwrap_or(false);
         let exports = package_exports_opt(prop_map.get("exports"));
         Self {
             name,
             main,
+            types,
             haste_commonjs,
             exports,
         }

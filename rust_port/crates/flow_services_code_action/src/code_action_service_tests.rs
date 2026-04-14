@@ -143,7 +143,7 @@ fn leaves_index_json_extension() {
 
 #[test]
 fn removes_node_modules_in_parent() {
-    let pkg = PackageJson::create(None, None, false, None);
+    let pkg = PackageJson::create(None, None, None, false, None);
     with_package(
         "/path/to/root/a/node_modules/module/package.json",
         pkg,
@@ -168,7 +168,7 @@ fn removes_node_modules_in_parent() {
 
 #[test]
 fn removes_node_modules_in_self() {
-    let pkg = PackageJson::create(None, None, false, None);
+    let pkg = PackageJson::create(None, None, None, false, None);
     with_package(
         "/path/to/root/a/node_modules/module/package.json",
         pkg,
@@ -235,7 +235,7 @@ fn does_not_remove_node_modules_in_cousin() {
 
 #[test]
 fn supports_package_json_main() {
-    let pkg = PackageJson::create(None, Some("main.js".into()), false, None);
+    let pkg = PackageJson::create(None, Some("main.js".into()), None, false, None);
     with_package(
         "/path/to/root/node_modules/pkg_with_main/package.json",
         pkg,
@@ -263,7 +263,7 @@ fn supports_package_json_main() {
 
 #[test]
 fn supports_package_json_relative_main() {
-    let pkg = PackageJson::create(None, Some("./main.js".into()), false, None);
+    let pkg = PackageJson::create(None, Some("./main.js".into()), None, false, None);
     with_package(
         "/path/to/root/node_modules/pkg_with_relative_main/package.json",
         pkg,
@@ -291,7 +291,7 @@ fn supports_package_json_relative_main() {
 
 #[test]
 fn supports_package_json_nested_main() {
-    let pkg = PackageJson::create(None, Some("dist/main.js".into()), false, None);
+    let pkg = PackageJson::create(None, Some("dist/main.js".into()), None, false, None);
     with_package(
         "/path/to/root/node_modules/pkg_with_nested_main/package.json",
         pkg,

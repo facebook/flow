@@ -1606,7 +1606,30 @@ let make_options
     opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
     opt_node_modules_errors = FlowConfig.node_modules_errors flowconfig;
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
-    opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
+    opt_node_package_export_conditions =
+      (let conditions = FlowConfig.node_package_export_conditions flowconfig in
+       if FlowConfig.typescript_library_definition_support flowconfig then
+         (* When typescript_library_definition_support is enabled, we add "types"
+            and "import" to the valid export conditions. "types" points to .d.ts
+            declaration files. "import" matches the ESM entry point, which is
+            appropriate when packages provide .d.ts or .d.mts types for their
+            ESM exports. We only add these when not already user-configured. *)
+         let conditions =
+           if Base.List.mem conditions "types" ~equal:String.equal then
+             conditions
+           else
+             "types" :: conditions
+         in
+         let conditions =
+           if Base.List.mem conditions "import" ~equal:String.equal then
+             conditions
+           else
+             "import" :: conditions
+         in
+         conditions
+       else
+         conditions
+      );
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       Base.List.map

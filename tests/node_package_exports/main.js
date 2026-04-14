@@ -10,6 +10,8 @@ subpathExports as empty;
 
 import defaultExportCondition from "default-export-condition";
 
+defaultExportCondition as empty;
+
 conditionalExports1 as empty;
 
 import scopedSubpathExportsRoot from "@scope/subpath-exports";
@@ -41,3 +43,4 @@ import privateSubpathPatternA from "subpath-pattern/feature/private/a";
 import nestedConditions from "nested-conditions";
 
 nestedConditions as empty;
+

@@ -126,7 +126,12 @@ let tests =
          ( "removes_node_modules_in_parent" >:: fun ctxt ->
            let fn = "/path/to/root/a/node_modules/module/package.json" in
            let pkg =
-             Package_json.create ~name:None ~main:None ~haste_commonjs:false ~exports:None
+             Package_json.create
+               ~name:None
+               ~main:None
+               ~types:None
+               ~haste_commonjs:false
+               ~exports:None
            in
            with_package fn pkg @@ fun () ->
            let path =
@@ -145,7 +150,12 @@ let tests =
          ( "removes_node_modules_in_self" >:: fun ctxt ->
            let fn = "/path/to/root/a/node_modules/module/package.json" in
            let pkg =
-             Package_json.create ~name:None ~main:None ~haste_commonjs:false ~exports:None
+             Package_json.create
+               ~name:None
+               ~main:None
+               ~types:None
+               ~haste_commonjs:false
+               ~exports:None
            in
            with_package fn pkg @@ fun () ->
            let path =
@@ -195,6 +205,7 @@ let tests =
              Package_json.create
                ~name:None
                ~main:(Some "main.js")
+               ~types:None
                ~haste_commonjs:false
                ~exports:None
            in
@@ -218,6 +229,7 @@ let tests =
              Package_json.create
                ~name:None
                ~main:(Some "./main.js")
+               ~types:None
                ~haste_commonjs:false
                ~exports:None
            in
@@ -241,6 +253,7 @@ let tests =
              Package_json.create
                ~name:None
                ~main:(Some "dist/main.js")
+               ~types:None
                ~haste_commonjs:false
                ~exports:None
            in

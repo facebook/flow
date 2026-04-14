@@ -97,6 +97,8 @@ type package_incompatible_reason =
       (** The `name` property changed from the former to the latter *)
   | Main_changed of string option * string option
       (** The `main` property changed from the former to the latter *)
+  | Types_changed of string option * string option
+      (** The `types`/`typings` property changed from the former to the latter *)
   | Haste_commonjs_changed of bool  (** The `haste_commonjs` property changed to this value *)
   | Exports_changed  (** The `exports` property changed *)
   | Unknown
@@ -114,6 +116,8 @@ let string_of_package_incompatible_reason =
     Printf.sprintf "name changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
   | Main_changed (old, new_) ->
     Printf.sprintf "main changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
+  | Types_changed (old, new_) ->
+    Printf.sprintf "types changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
   | Haste_commonjs_changed new_ ->
     Printf.sprintf "haste_commonjs changed from `%b` to `%b`" (not new_) new_
   | Exports_changed -> "exports changed"
@@ -137,6 +141,8 @@ let package_incompatible ~reader filename new_package =
     else
       let old_main = Package_json.main old_package in
       let new_main = Package_json.main new_package in
+      let old_types = Package_json.types old_package in
+      let new_types = Package_json.types new_package in
       let old_name = Package_json.name old_package in
       let new_name = Package_json.name new_package in
       let old_haste_commonjs = Package_json.haste_commonjs old_package in
@@ -147,6 +153,8 @@ let package_incompatible ~reader filename new_package =
         Incompatible (Name_changed (old_name, new_name))
       else if old_main <> new_main then
         Incompatible (Main_changed (old_main, new_main))
+      else if old_types <> new_types then
+        Incompatible (Types_changed (old_types, new_types))
       else if old_haste_commonjs <> new_haste_commonjs then
         Incompatible (Haste_commonjs_changed new_haste_commonjs)
       else if old_exports <> new_exports then
@@ -281,6 +289,20 @@ module Node = struct
             (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path_w_index file_exts);
         ]
 
+  let resolve_types_field ~reader ~file_options phantom_acc package_dir package file_exts =
+    match Package_json.types package with
+    | None -> None
+    | Some file ->
+      let path = Files.normalize_path package_dir file in
+      let path_w_index = Filename.concat path "index" in
+      lazy_seq
+        [
+          lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
+          lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
+          lazy
+            (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path_w_index file_exts);
+        ]
+
   let resolve_package ~options ~reader ~phantom_acc ~subpath package_dir =
     let file_options = Options.file_options options in
     let file_exts = Files.module_file_exts file_options in
@@ -289,9 +311,44 @@ module Node = struct
       | Some s -> Files.normalize_path package_dir s
       | None -> package_dir
     in
+    let ts_lib_support = Options.typescript_library_definition_support options in
+    let package_json_path = Filename.concat package_dir "package.json" in
+    let package = lazy (parse_package ~reader package_json_path) in
     lazy_seq
       [
         lazy (parse_exports ~reader ~options phantom_acc package_dir subpath file_exts);
+        (* When typescript_library_definition_support is enabled and the package
+           has no "exports" field, try the "types"/"typings" field before "main".
+           In TypeScript's resolution algorithm, when "exports" exists it takes
+           full precedence (the "types" condition in exports handles that case
+           instead). The "types"/"typings" field only applies to root imports,
+           not subpath imports.
+           When trying extensions for the "types" field, .d.ts is prioritized
+           over source extensions (.js, .jsx, etc.) so that an extensionless
+           target like "types": "./index" resolves to index.d.ts before index.js,
+           matching TypeScript's declaration-first semantics. *)
+        lazy
+          ( if
+            ts_lib_support
+            && Option.is_none (Package_json.exports (Lazy.force package))
+            && (subpath = None || subpath = Some ".")
+          then
+            let decl_first_file_exts =
+              if Base.List.mem file_exts ".d.ts" ~equal:String.equal then
+                ".d.ts" :: List.filter (fun ext -> ext <> ".d.ts") file_exts
+              else
+                file_exts
+            in
+            resolve_types_field
+              ~reader
+              ~file_options
+              phantom_acc
+              package_dir
+              (Lazy.force package)
+              decl_first_file_exts
+          else
+            None
+          );
         lazy
           (parse_main
              ~reader

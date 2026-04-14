@@ -409,6 +409,19 @@ pub(super) fn make_options(
         module_file_exts.push(".d.ts".into());
     }
 
+    let node_package_export_conditions = if typescript_library_definition_support {
+        let mut conditions = node_package_export_conditions;
+        if !conditions.contains(&"types".to_string()) {
+            conditions.insert(0, "types".to_string());
+        }
+        if !conditions.contains(&"import".to_string()) {
+            conditions.insert(0, "import".to_string());
+        }
+        conditions
+    } else {
+        node_package_export_conditions
+    };
+
     let file_options = {
         use flow_common::files::FileOptions;
 

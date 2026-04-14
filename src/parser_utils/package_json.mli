@@ -12,6 +12,7 @@ val empty : t
 val create :
   name:string option ->
   main:string option ->
+  types:string option ->
   haste_commonjs:bool ->
   exports:Package_exports.t option ->
   t
@@ -19,6 +20,8 @@ val create :
 val name : t -> string option
 
 val main : t -> string option
+
+val types : t -> string option
 
 val haste_commonjs : t -> bool
 

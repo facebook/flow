@@ -1,0 +1,42 @@
+
+State 1: types -> a.d.ts (x is number)
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:3:1
+   3| x as string; // ERROR in state 1 (a.d.ts), OK in state 2 (b.d.ts)
+      ^
+
+References:
+   node_modules/pkg/a.d.ts:1:25
+   1| export declare const x: number;
+                              ^^^^^^ [1]
+   test.js:3:6
+   3| x as string; // ERROR in state 1 (a.d.ts), OK in state 2 (b.d.ts)
+           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+State 2: types -> b.d.ts (x is string)
+Error ------------------------------------------------------------------------------------------------------ test.js:2:1
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:2:1
+   2| x as number; // OK in state 1 (a.d.ts), ERROR in state 2 (b.d.ts)
+      ^
+
+References:
+   node_modules/pkg/b.d.ts:1:25
+   1| export declare const x: string;
+                              ^^^^^^ [1]
+   test.js:2:6
+   2| x as number; // OK in state 1 (a.d.ts), ERROR in state 2 (b.d.ts)
+           ^^^^^^ [2]
+
+
+
+Found 1 error

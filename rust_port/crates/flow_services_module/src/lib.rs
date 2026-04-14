@@ -124,6 +124,9 @@ pub enum PackageIncompatibleReason {
     BecameValid,
     NameChanged(Option<FlowSmolStr>, Option<FlowSmolStr>),
     MainChanged(Option<FlowSmolStr>, Option<FlowSmolStr>),
+    /// The `types`/`typings` property changed from the former to the latter
+    TypesChanged(Option<FlowSmolStr>, Option<FlowSmolStr>),
+    /// The `haste_commonjs` property changed to this value
     HasteCommonjsChanged(bool),
     ExportsChanged,
     Unknown,
@@ -151,6 +154,14 @@ impl std::fmt::Display for PackageIncompatibleReason {
             Self::MainChanged(old, new_) => write!(
                 f,
                 "main changed from `{}` to `{}`",
+                string_of_option(old),
+                string_of_option(new_)
+            ),
+            // | Types_changed (old, new_) ->
+            //   Printf.sprintf "types changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
+            Self::TypesChanged(old, new_) => write!(
+                f,
+                "types changed from `{}` to `{}`",
                 string_of_option(old),
                 string_of_option(new_)
             ),
@@ -187,6 +198,8 @@ pub fn package_incompatible(
         (Some(Ok(old_package)), Ok(new_package)) => {
             let old_main = old_package.main();
             let new_main = new_package.main();
+            let old_types = old_package.types();
+            let new_types = new_package.types();
             let old_name = old_package.name();
             let new_name = new_package.name();
             let old_haste_commonjs = old_package.haste_commonjs();
@@ -196,6 +209,7 @@ pub fn package_incompatible(
 
             if old_name == new_name
                 && old_main == new_main
+                && old_types == new_types
                 && old_haste_commonjs == new_haste_commonjs
                 && old_exports == new_exports
             {
@@ -209,6 +223,10 @@ pub fn package_incompatible(
             } else if old_main != new_main {
                 PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::MainChanged(
                     old_main, new_main,
+                ))
+            } else if old_types != new_types {
+                PackageIncompatibleReturn::Incompatible(PackageIncompatibleReason::TypesChanged(
+                    old_types, new_types,
                 ))
             } else if old_haste_commonjs != new_haste_commonjs {
                 PackageIncompatibleReturn::Incompatible(
@@ -519,6 +537,58 @@ mod node {
         })
     }
 
+    // let resolve_types_field ~reader ~file_options phantom_acc package_dir package file_exts =
+    //   match Package_json.types package with
+    //   | None -> None
+    //   | Some file ->
+    //     let path = Files.normalize_path package_dir file in
+    //     let path_w_index = Filename.concat path "index" in
+    //     lazy_seq
+    //       [
+    //         lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
+    //         lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
+    //         lazy
+    //           (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path_w_index file_exts);
+    //       ]
+    fn resolve_types_field(
+        shared_mem: &SharedMem,
+        file_options: &FileOptions,
+        mut phantom_acc: Option<&mut PhantomAcc>,
+        package_dir: &str,
+        package: &PackageJson,
+        file_exts: &[FlowSmolStr],
+    ) -> Option<Dependency> {
+        package.types().and_then(|file| {
+            let path = files::normalize_path(package_dir, file.as_str());
+            let path_w_index = Path::new(&path).join("index");
+            let path_w_index_str = path_w_index.to_str()?;
+
+            path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path)
+                .or_else(|| {
+                    path_if_exists_with_file_exts(
+                        shared_mem,
+                        file_options,
+                        phantom_acc.as_deref_mut(),
+                        &path,
+                        file_exts,
+                    )
+                })
+                .or_else(|| {
+                    path_if_exists_with_file_exts(
+                        shared_mem,
+                        file_options,
+                        phantom_acc,
+                        path_w_index_str,
+                        file_exts,
+                    )
+                })
+        })
+    }
+
+    // let resolve_package ~options ~reader ~phantom_acc ~subpath package_dir =
+    //   let file_options = Options.file_options options in
+    //   let file_exts = Files.module_file_exts file_options in
+    //   ...
     pub(super) fn resolve_package(
         options: &Options,
         shared_mem: &SharedMem,
@@ -532,6 +602,20 @@ mod node {
             .map(|s| files::normalize_path(package_dir, s))
             .unwrap_or_else(|| package_dir.to_string());
 
+        // let ts_lib_support = Options.typescript_library_definition_support options in
+        let ts_lib_support = options.typescript_library_definition_support;
+        // let package_json_path = Filename.concat package_dir "package.json" in
+        let package_json_path = Path::new(package_dir).join("package.json");
+        // let package = lazy (parse_package ~reader package_json_path) in
+        let package = std::cell::OnceCell::new();
+        let get_package = || -> Arc<PackageJson> {
+            package
+                .get_or_init(|| {
+                    parse_package(options, shared_mem, package_json_path.to_str().unwrap())
+                })
+                .clone()
+        };
+
         parse_exports(
             shared_mem,
             options,
@@ -540,6 +624,46 @@ mod node {
             subpath,
             file_exts,
         )
+        // When typescript_library_definition_support is enabled and the package
+        // has no "exports" field, try the "types"/"typings" field before "main".
+        // In TypeScript's resolution algorithm, when "exports" exists it takes
+        // full precedence (the "types" condition in exports handles that case
+        // instead). The "types"/"typings" field only applies to root imports,
+        // not subpath imports.
+        // When trying extensions for the "types" field, .d.ts is prioritized
+        // over source extensions (.js, .jsx, etc.) so that an extensionless
+        // target like "types": "./index" resolves to index.d.ts before index.js,
+        // matching TypeScript's declaration-first semantics.
+        .or_else(|| {
+            if ts_lib_support
+                && get_package().exports().is_none()
+                && (subpath.is_none() || subpath == Some("."))
+            {
+                let decl_first_file_exts: Vec<FlowSmolStr> =
+                    if file_exts.iter().any(|ext| ext.as_str() == ".d.ts") {
+                        let mut exts = vec![FlowSmolStr::new(".d.ts")];
+                        exts.extend(
+                            file_exts
+                                .iter()
+                                .filter(|ext| ext.as_str() != ".d.ts")
+                                .cloned(),
+                        );
+                        exts
+                    } else {
+                        file_exts.to_vec()
+                    };
+                resolve_types_field(
+                    shared_mem,
+                    file_options,
+                    phantom_acc.as_deref_mut(),
+                    package_dir,
+                    &get_package(),
+                    &decl_first_file_exts,
+                )
+            } else {
+                None
+            }
+        })
         .or_else(|| {
             let package_json = Path::new(&full_package_path).join("package.json");
             parse_main(

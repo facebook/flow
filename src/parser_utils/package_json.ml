@@ -10,17 +10,21 @@ module Ast = Flow_ast
 type t = {
   name: string option;
   main: string option;
+  types: string option;
   haste_commonjs: bool;
   exports: Package_exports.t option;
 }
 
-let empty = { name = None; main = None; haste_commonjs = false; exports = None }
+let empty = { name = None; main = None; types = None; haste_commonjs = false; exports = None }
 
-let create ~name ~main ~haste_commonjs ~exports = { name; main; haste_commonjs; exports }
+let create ~name ~main ~types ~haste_commonjs ~exports =
+  { name; main; types; haste_commonjs; exports }
 
 let name package = package.name
 
 let main package = package.main
+
+let types package = package.types
 
 let haste_commonjs package = package.haste_commonjs
 
@@ -79,8 +83,13 @@ let parse ~node_main_fields { Ast.Expression.Object.properties; comments = _ } =
   let prop_map = List.fold_left extract_property SMap.empty properties in
   let name = SMap.find_opt "name" prop_map |> string_opt in
   let main = find_main_property prop_map node_main_fields in
+  let types =
+    match SMap.find_opt "types" prop_map |> string_opt with
+    | Some _ as t -> t
+    | None -> SMap.find_opt "typings" prop_map |> string_opt
+  in
   let haste_commonjs =
     SMap.find_opt "haste_commonjs" prop_map |> bool_opt |> Base.Option.value ~default:false
   in
   let exports = SMap.find_opt "exports" prop_map |> package_exports_opt in
-  { name; main; haste_commonjs; exports }
+  { name; main; types; haste_commonjs; exports }
