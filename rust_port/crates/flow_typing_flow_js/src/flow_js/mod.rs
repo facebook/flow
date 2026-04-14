@@ -78,12 +78,8 @@ use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::ElemAction;
-use flow_typing_type::type_::EnumCheck;
-use flow_typing_type::type_::EnumConcreteInfo;
-use flow_typing_type::type_::EnumExhaustiveCheckToolT;
 use flow_typing_type::type_::EnumInfo;
 use flow_typing_type::type_::EnumInfoInner;
-use flow_typing_type::type_::EnumPossibleExhaustiveCheckT;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::Flags;
 use flow_typing_type::type_::FrameUseOp;
@@ -476,6 +472,14 @@ impl FlowJs {
         helpers::possible_concrete_types_for_inspection(cx, reason, t)
     }
 
+    pub fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, SpeculativeError> {
+        helpers::possible_concrete_types_for_enum_exhaustive_check(cx, reason, t)
+    }
+
     pub fn possible_concrete_types_for_imports_exports<'cx>(
         cx: &Context<'cx>,
         reason: &Reason,
@@ -850,6 +854,14 @@ impl FlowJs {
         t: &Type,
     ) -> Result<Type, SpeculativeError> {
         helpers::singleton_concrete_type_for_inspection(cx, reason, t)
+    }
+
+    pub fn singleton_concrete_type_for_type_cast<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, SpeculativeError> {
+        helpers::singleton_concrete_type_for_type_cast(cx, reason, t)
     }
 
     pub fn all_possible_concrete_types<'cx>(

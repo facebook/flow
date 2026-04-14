@@ -789,17 +789,6 @@ module rec TypeTerm : sig
         upper: use_t;
         id: ident;
       }
-    | TypeCastT of use_op * t
-    | EnumCastT of {
-        use_op: use_op;
-        enum: reason * enum_info;
-      }
-    | EnumExhaustiveCheckT of {
-        reason: reason;
-        check: enum_possible_exhaustive_check_t;
-        incomplete_out: t;
-        discriminant_after_check: t option;
-      }
     (* Used by `EnumType` type destructor - gets the EnumValueT or EnumObjectT from the other one. *)
     | GetEnumT of {
         use_op: use_op;
@@ -853,20 +842,8 @@ module rec TypeTerm : sig
         member_name: string;
       }
 
-  (* Valid state transitions are:
-   * EnumResolveDiscriminant -> EnumResolveCaseTest (with discriminant info populated)
-   * EnumResolveCaseTest -> EnumResolveCaseTest *)
-  and enum_exhaustive_check_tool_t =
-    | EnumResolveDiscriminant
-    | EnumResolveCaseTest of {
-        discriminant_enum: enum_concrete_info;
-        discriminant_reason: reason;
-        check: enum_check_t;
-      }
-
   and enum_possible_exhaustive_check_t =
     | EnumExhaustiveCheckPossiblyValid of {
-        tool: enum_exhaustive_check_tool_t;
         (* We only convert a "possible check" into a "check" if it has the same
          * enum type as the discriminant. *)
         possible_checks: (t * enum_check_t) list;
@@ -1634,6 +1611,7 @@ module rec TypeTerm : sig
     | ConcretizeForOptionalChain
     | ConcretizeForImportsExports
     | ConcretizeForInspection
+    | ConcretizeForEnumExhaustiveCheck
     | ConcretizeForPredicate of predicate_concretizer_variant
     | ConcretizeForOperatorsChecking
     | ConcretizeForComputedObjectKeys
@@ -4241,8 +4219,6 @@ let string_of_use_ctor = function
   | CallT _ -> "CallT"
   | ConstructorT _ -> "ConstructorT"
   | ElemT _ -> "ElemT"
-  | EnumCastT _ -> "EnumCastT"
-  | EnumExhaustiveCheckT _ -> "EnumExhaustiveCheckT"
   | GetEnumT _ -> "GetEnumT"
   | ConditionalT _ -> "ConditionalT"
   | ExtendsUseT _ -> "ExtendsUseT"
@@ -4266,6 +4242,7 @@ let string_of_use_ctor = function
         "ConcretizeForCJSExtractNamedExportsAndTypeExports"
       | ConcretizeForOptionalChain -> "ConcretizeForOptionalChain"
       | ConcretizeForInspection -> "ConcretizeForInspection"
+      | ConcretizeForEnumExhaustiveCheck -> "ConcretizeForEnumExhaustiveCheck"
       | ConcretizeForPredicate v ->
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
       | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
@@ -4310,7 +4287,6 @@ let string_of_use_ctor = function
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | ToStringT _ -> "ToStringT"
   | ValueToTypeReferenceT _ -> "ValueToTypeReferenceT"
-  | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
   | ResolveUnionT _ -> "ResolveUnionT"

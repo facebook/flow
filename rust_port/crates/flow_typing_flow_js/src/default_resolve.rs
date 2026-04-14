@@ -246,9 +246,7 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ResolveUnionT(box ResolveUnionTData { upper, .. }) => {
             default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), upper)
         }
-        UseTInner::TypeCastT(_, t) => resolve(t.dupe()),
         UseTInner::GetEnumT(box GetEnumTData { tout, .. }) => resolve(tout.dupe()),
-        UseTInner::EnumCastT(..) | UseTInner::EnumExhaustiveCheckT(..) => Ok(()),
         UseTInner::HooklikeT(tvar) | UseTInner::DeepReadOnlyT(tvar, _) => resolve_tvar(tvar),
         UseTInner::FilterOptionalT(_, t) | UseTInner::FilterMaybeT(_, t) => resolve(t.dupe()),
         UseTInner::SealGenericT(box SealGenericTData { cont, .. }) => resolve_cont(cont),

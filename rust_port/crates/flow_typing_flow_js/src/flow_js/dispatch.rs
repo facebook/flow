@@ -18,8 +18,6 @@ use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
 use flow_typing_errors::error_message::ETupleInvalidTypeSpreadData;
-use flow_typing_errors::error_message::EnumInvalidAbstractUseData;
-use flow_typing_errors::error_message::EnumInvalidCheckData;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
@@ -32,8 +30,6 @@ use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::ConditionalTData;
 use flow_typing_type::type_::ElemTData;
-use flow_typing_type::type_::EnumCastTData;
-use flow_typing_type::type_::EnumExhaustiveCheckTData;
 use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::ExtendsUseTData;
 use flow_typing_type::type_::GenericTData;
@@ -816,216 +812,6 @@ fn __flow_impl<'cx>(
             rec_flow(cx, trace, (&t, u))?;
         }
 
-        // ***************************
-        // * type cast e.g. `(x: T)` *
-        // ***************************
-        (TypeInner::DefT(reason, def_t), UseTInner::TypeCastT(use_op, cast_to_t))
-            if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
-        {
-            rec_flow(
-                cx,
-                trace,
-                (
-                    cast_to_t,
-                    &UseT::new(UseTInner::EnumCastT(Box::new(EnumCastTData {
-                        use_op: use_op.dupe(),
-                        enum_: (reason.dupe(), (**enum_info).dupe()),
-                    }))),
-                ),
-            )?;
-        }
-        (TypeInner::UnionT(_, rep), UseTInner::TypeCastT(use_op, u_union))
-            if matches!(u_union.deref(), TypeInner::UnionT(_, _)) =>
-        {
-            subtyping_kit::union_to_union(cx, trace, use_op.dupe(), l, rep, u_union)?;
-        }
-        (TypeInner::UnionT(_, _), UseTInner::TypeCastT(use_op, annot_t))
-            if let TypeInner::AnnotT(r, t, use_desc) = annot_t.deref() =>
-        {
-            rec_flow(
-                cx,
-                trace,
-                (
-                    t,
-                    &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
-                        reason: r.dupe(),
-                        use_desc: *use_desc,
-                        use_op: use_op.dupe(),
-                        type_: l.dupe(),
-                    }))),
-                ),
-            )?;
-        }
-        // | (UnionT (_, rep1), TypeCastT (use_op, cast_to_t)) ->
-        (TypeInner::UnionT(_, rep1), UseTInner::TypeCastT(use_op, cast_to_t)) => {
-            //   (* For homogeneous enum unions, try a single representative member
-            //      speculatively. If it fails, emit just that one error (all members
-            //      would fail identically). If it succeeds, fall through to normal
-            //      distribution to catch members that might fail. *)
-            //   let flowed_single =
-            let flowed_single = {
-                //     if not (UnionRep.is_optimized_finally rep1) then
-                //       UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep1;
-                if !rep1.is_optimized_finally() {
-                    rep1.optimize_enum_only(|ts| {
-                        flow_typing_visitors::type_mapper::union_flatten(cx, ts.duped())
-                    });
-                }
-                //     match UnionRep.check_enum_with_tag rep1 with
-                match rep1.check_enum_with_tag() {
-                    //     | Some (enums, Some _) when UnionEnumSet.cardinal enums > 1 ->
-                    Some((enums, Some(_))) if enums.len() > 1 => {
-                        //       let representative = UnionRep.members rep1 |> List.hd in
-                        let mut members = rep1.members_iter();
-                        match members.next() {
-                            None => false,
-                            Some(representative) => {
-                                let representative = representative.dupe();
-                                drop(members);
-                                //       (match
-                                //          SpeculationKit.try_singleton_throw_on_failure
-                                //            cx
-                                //            trace
-                                //            representative
-                                //            (TypeCastT (use_op, cast_to_t))
-                                match speculation_kit::try_singleton_throw_on_failure(
-                                    cx,
-                                    trace,
-                                    representative.dupe(),
-                                    UseT::new(UseTInner::TypeCastT(
-                                        use_op.dupe(),
-                                        cast_to_t.dupe(),
-                                    )),
-                                ) {
-                                    //        with
-                                    //       | exception Flow_js_utils.SpeculationSingletonError ->
-                                    Err(FlowJsException::SpeculationSingletonError) => {
-                                        //         let use_op =
-                                        //           Flow_js_utils.union_representative_use_op cx ~l ~representative use_op
-                                        //         in
-                                        let use_op = flow_js_utils::union_representative_use_op(
-                                            cx,
-                                            l,
-                                            &representative,
-                                            use_op.dupe(),
-                                        );
-                                        //         rec_flow cx trace (representative, TypeCastT (use_op, cast_to_t));
-                                        rec_flow(
-                                            cx,
-                                            trace,
-                                            (
-                                                &representative,
-                                                &UseT::new(UseTInner::TypeCastT(
-                                                    use_op,
-                                                    cast_to_t.dupe(),
-                                                )),
-                                            ),
-                                        )?;
-                                        //         true
-                                        true
-                                    }
-                                    //       | () -> false)
-                                    Ok(()) => false,
-                                    Err(e) => return Err(e),
-                                }
-                            }
-                        }
-                    }
-                    //     | _ -> false
-                    _ => false,
-                }
-            };
-            //   in
-            //   if not flowed_single then flow_all_in_union cx trace rep1 u
-            if !flowed_single {
-                flow_all_in_union(cx, trace, rep1, u)?;
-            }
-        }
-        (_, UseTInner::TypeCastT(use_op, cast_to_t)) => {
-            let reason_l = reason_of_t(l);
-            let concrete = singleton_concrete_type_for_inspection(cx, reason_l, l)?;
-            match concrete.deref() {
-                TypeInner::DefT(reason, def_t)
-                    if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
-                {
-                    rec_flow(
-                        cx,
-                        trace,
-                        (
-                            cast_to_t,
-                            &UseT::new(UseTInner::EnumCastT(Box::new(EnumCastTData {
-                                use_op: use_op.dupe(),
-                                enum_: (reason.dupe(), (**enum_info).dupe()),
-                            }))),
-                        ),
-                    )?;
-                }
-                _ => {
-                    rec_flow(
-                        cx,
-                        trace,
-                        (
-                            l,
-                            &UseT::new(UseTInner::UseT(use_op.dupe(), cast_to_t.dupe())),
-                        ),
-                    )?;
-                }
-            }
-        }
-        // ***********************************************************************
-        // * enum cast e.g. `(x: T)` where `x` is an `EnumValueT`                *
-        // * We allow enums to be explicitly cast to their representation type.  *
-        // * When we specialize `TypeCastT` when the LHS is an `EnumValueT`, the *
-        // * `cast_to_t` of `TypeCastT` must then be resolved. So we call flow   *
-        // * with it on the LHS, and `EnumCastT` on the RHS. When we actually    *
-        // * turn this into a `UseT<Context<'cx>>`, it must placed back on the RHS.            *
-        // ***********************************************************************
-        (
-            _,
-            UseTInner::EnumCastT(box EnumCastTData {
-                use_op,
-                enum_: (_, enum_info),
-            }),
-        ) if {
-            let representation_t = match EnumInfo::deref(enum_info) {
-                EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
-                EnumInfoInner::AbstractEnum { representation_t } => representation_t,
-            };
-            type_util::quick_subtype(None::<&fn(&Type)>, representation_t, l)
-        } =>
-        {
-            let representation_t = match EnumInfo::deref(enum_info) {
-                EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
-                EnumInfoInner::AbstractEnum { representation_t } => representation_t,
-            };
-            rec_flow(
-                cx,
-                trace,
-                (
-                    representation_t,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), l.dupe())),
-                ),
-            )?;
-        }
-        (
-            _,
-            UseTInner::EnumCastT(box EnumCastTData {
-                use_op,
-                enum_: (reason, enum_info),
-            }),
-        ) => {
-            rec_flow(
-                cx,
-                trace,
-                (
-                    &Type::new(TypeInner::DefT(
-                        reason.dupe(),
-                        DefT::new(DefTInner::EnumValueT(Rc::new(enum_info.dupe()))),
-                    )),
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), l.dupe())),
-                ),
-            )?;
-        }
         // ******************
         // * Module exports *
         // ******************
@@ -2504,8 +2290,16 @@ fn __flow_impl<'cx>(
                 tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, t);
             }
         }
-        // Concretize types for type inspection purpose up to this point. The rest are
-        // recorded as lower bound to the target tvar.
+        (
+            TypeInner::GenericT(box GenericTData { reason, bound, .. }),
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForEnumExhaustiveCheck,
+                ..
+            }),
+        ) => {
+            let repos = helpers::reposition_reason(cx, None, reason, false, bound)?;
+            rec_flow(cx, trace, (&repos, u))?;
+        }
         (
             _,
             UseTInner::ConcretizeT(box ConcretizeTData {
@@ -3343,6 +3137,7 @@ fn __flow_impl<'cx>(
                 reason: _,
                 kind:
                     ConcretizationKind::ConcretizeForOptionalChain
+                    | ConcretizationKind::ConcretizeForEnumExhaustiveCheck
                     | ConcretizationKind::ConcretizeForOperatorsChecking
                     | ConcretizationKind::ConcretizeForComputedObjectKeys
                     | ConcretizationKind::ConcretizeForObjectAssign
@@ -8271,6 +8066,16 @@ fn __flow_impl<'cx>(
             let repos = helpers::reposition_reason(cx, None, reason, false, bound)?;
             rec_flow(cx, trace, (&repos, u))?;
         }
+        (
+            _,
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForEnumExhaustiveCheck,
+                collector,
+                ..
+            }),
+        ) => {
+            collector.add(l.dupe());
+        }
         // ************
         // * GetEnumT *
         // ************
@@ -8353,188 +8158,6 @@ fn __flow_impl<'cx>(
                 cx,
                 trace,
                 (l, &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe()))),
-            )?;
-        }
-        (
-            TypeInner::DefT(enum_reason, def_t),
-            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
-                reason: check_reason,
-                check:
-                    box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                        tool: EnumExhaustiveCheckToolT::EnumResolveDiscriminant,
-                        possible_checks,
-                        checks,
-                        default_case_loc,
-                    },
-                incomplete_out,
-                discriminant_after_check,
-            }),
-        ) if let DefTInner::EnumValueT(info) = def_t.deref()
-            && let EnumInfoInner::ConcreteEnum(enum_info) = EnumInfo::deref(info) =>
-        {
-            enum_helpers::enum_exhaustive_check(
-                cx,
-                trace,
-                check_reason,
-                enum_reason,
-                enum_info,
-                possible_checks.clone(),
-                checks,
-                default_case_loc.dupe(),
-                incomplete_out,
-                discriminant_after_check.as_ref(),
-            )?;
-        }
-        (
-            TypeInner::DefT(enum_reason, def_t),
-            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData { reason, .. }),
-        ) if matches!(def_t.deref(), DefTInner::EnumValueT(info) if matches!(EnumInfo::deref(info), EnumInfoInner::AbstractEnum { .. })) =>
-        {
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(Box::new(
-                    EnumInvalidAbstractUseData {
-                        reason: reason.dupe(),
-                        enum_reason: enum_reason.dupe(),
-                    },
-                ))),
-            )?;
-        }
-        // Resolving the case tests.
-        (
-            _,
-            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
-                reason: check_reason,
-                check:
-                    box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                        tool:
-                            EnumExhaustiveCheckToolT::EnumResolveCaseTest {
-                                discriminant_reason,
-                                discriminant_enum,
-                                check,
-                            },
-                        possible_checks,
-                        checks,
-                        default_case_loc,
-                    },
-                incomplete_out,
-                discriminant_after_check,
-            }),
-        ) => {
-            let member_name = &check.member_name;
-            let enum_id_discriminant = &discriminant_enum.enum_id;
-            let members = &discriminant_enum.members;
-            //   let checks =
-            //     match l with
-            //     | DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = enum_id_check; _ }; _ })
-            //       when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members
-            //       ->
-            //       check :: checks
-            //     | _ -> checks
-            //   in
-            let checks = match l.deref() {
-                TypeInner::DefT(_, inner_def)
-                    if let DefTInner::EnumObjectT { enum_info, .. } = inner_def.deref()
-                        && let EnumInfoInner::ConcreteEnum(concrete) =
-                            enum_info.deref().deref()
-                        && concrete.enum_id == *enum_id_discriminant
-                        && members.contains_key(member_name) =>
-                {
-                    let mut new_checks = vec![check.clone()];
-                    new_checks.extend(checks.iter().cloned());
-                    new_checks
-                }
-                // If the check is not the same enum type, ignore it and continue. The user will
-                // still get an error as the comparison between discriminant and case test will fail.
-                _ => checks.to_vec(),
-            };
-            enum_helpers::enum_exhaustive_check(
-                cx,
-                trace,
-                check_reason,
-                discriminant_reason,
-                discriminant_enum,
-                possible_checks.clone(),
-                &checks,
-                default_case_loc.dupe(),
-                incomplete_out,
-                discriminant_after_check.as_ref(),
-            )?;
-        }
-        (
-            TypeInner::DefT(enum_reason, def_t),
-            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
-                reason,
-                check: box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(reasons),
-                incomplete_out,
-                discriminant_after_check: _,
-            }),
-        ) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
-            let example_member = match EnumInfo::deref(enum_info) {
-                EnumInfoInner::ConcreteEnum(concrete) => {
-                    concrete.members.keys().next().map(|k| k.dupe())
-                }
-                EnumInfoInner::AbstractEnum { .. } => None,
-            };
-            for loc in reasons.iter() {
-                flow_js_utils::add_output(
-                    cx,
-                    ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(Box::new(
-                        EnumInvalidCheckData {
-                            loc: loc.dupe(),
-                            enum_reason: enum_reason.dupe(),
-                            example_member: example_member.dupe(),
-                            from_match: false,
-                        },
-                    ))),
-                )?;
-            }
-            enum_helpers::enum_exhaustive_check_incomplete(
-                cx,
-                trace,
-                reason,
-                None,
-                incomplete_out,
-            )?;
-        }
-        // If the discriminant is empty, the check is successful.
-        (
-            TypeInner::DefT(_, def_t),
-            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData { check, .. }),
-        ) if matches!(def_t.deref(), DefTInner::EmptyT)
-            && matches!(
-                check,
-                box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_)
-                    | box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                        tool: EnumExhaustiveCheckToolT::EnumResolveDiscriminant,
-                        ..
-                    }
-            ) => {}
-
-        // Non-enum discriminants.
-        // If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
-        // away by each case), then `trigger` will be empty, which will prevent the implicit void
-        // return that could occur otherwise.
-        (
-            _,
-            UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData {
-                reason,
-                check:
-                    box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_)
-                    | box EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                        tool: EnumExhaustiveCheckToolT::EnumResolveDiscriminant,
-                        ..
-                    },
-                incomplete_out,
-                discriminant_after_check,
-            }),
-        ) => {
-            enum_helpers::enum_exhaustive_check_incomplete(
-                cx,
-                trace,
-                reason,
-                discriminant_after_check.as_ref(),
-                incomplete_out,
             )?;
         }
         // ***************

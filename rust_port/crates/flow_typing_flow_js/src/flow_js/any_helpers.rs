@@ -447,7 +447,6 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::CondT(..)
         | UseTInner::ConstructorT(..)
         | UseTInner::ElemT(..)
-        | UseTInner::EnumExhaustiveCheckT(..)
         | UseTInner::ExtendsUseT(..)
         | UseTInner::ConditionalT(..)
         | UseTInner::GetElemT(..)
@@ -499,8 +498,6 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::SetPrivatePropT(..)
         | UseTInner::SetProtoT(..)
         | UseTInner::SuperT(..)
-        | UseTInner::TypeCastT(..)
-        | UseTInner::EnumCastT(..)
         | UseTInner::ConcretizeTypeAppsT(..) => Ok(true),
     }
 }

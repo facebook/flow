@@ -807,7 +807,7 @@ fn type_variable<'cx>(
                 };
             }
             match uses[0].deref() {
-                UseTInner::UseT(_, t) | UseTInner::TypeCastT(_, t) => {
+                UseTInner::UseT(_, t) => {
                     let ty = cont(env, state, Some(IdKey::TVarKey(id)), t)?;
                     acc.push(ty);
                     uses.pop_front();

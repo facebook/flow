@@ -1508,17 +1508,28 @@ module Make
         else
           None
       in
-      Flow.flow
-        cx
-        ( discriminant_t,
-          EnumExhaustiveCheckT
-            {
-              reason = reason_of_t discriminant_t;
-              check = enum_exhaustive_check;
-              incomplete_out = exhaustive_check_incomplete_out;
-              discriminant_after_check;
-            }
-        );
+      let check_reason = reason_of_t discriminant_t in
+      begin
+        match enum_exhaustive_check with
+        | EnumExhaustiveCheckPossiblyValid { possible_checks; checks; default_case_loc } ->
+          check_possible_enum_exhaustive_check
+            cx
+            ~check_reason
+            ~possible_checks
+            ~checks
+            ~default_case_loc
+            ~incomplete_out:exhaustive_check_incomplete_out
+            ~discriminant_after_check
+            discriminant_t
+        | EnumExhaustiveCheckInvalid reasons ->
+          check_invalid_enum_exhaustive_check
+            cx
+            ~check_reason
+            ~reasons
+            ~incomplete_out:exhaustive_check_incomplete_out
+            ~discriminant_after_check
+            discriminant_t
+      end;
       (* We need to fully resolve all types attached to AST,
          because the post inference pass might inspect them. *)
       Tvar_resolver.resolve cx exhaustive_check_incomplete_out;
@@ -3590,7 +3601,8 @@ module Make
       let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
       let (((_, infer_t), _) as e') = expression cx e in
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
-      Flow.flow cx (infer_t, TypeCastT (use_op, t));
+      Tvar_resolver.resolve cx infer_t;
+      Type_operation_utils.perform_type_cast cx use_op infer_t t;
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
     | AsExpression { AsExpression.expression = e; annot; comments } ->
       let casting_syntax = Context.casting_syntax cx in
@@ -3601,7 +3613,8 @@ module Make
         let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
         let (((_, infer_t), _) as e') = expression cx e in
         let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
-        Flow.flow cx (infer_t, TypeCastT (use_op, t));
+        Tvar_resolver.resolve cx infer_t;
+        Type_operation_utils.perform_type_cast cx use_op infer_t t;
         ((loc, t), AsExpression { AsExpression.expression = e'; annot = annot'; comments }))
     | AsConstExpression { AsConstExpression.expression = e; comments } ->
       let (((_, t), _) as e) = expression cx ~as_const:true e in
@@ -5875,9 +5888,7 @@ module Make
     | { operator = Await; argument; comments } ->
       let reason = mk_reason RAwait loc in
       let (((_, arg), _) as argument_ast) = expression cx argument in
-      ( Type_operation_utils.Promise.await cx reason arg,
-        { operator = Await; argument = argument_ast; comments }
-      )
+      (Promise.await cx reason arg, { operator = Await; argument = argument_ast; comments })
     | { operator = Nonnull; argument; comments } ->
       if not (Context.assert_operator_enabled cx) then
         Flow_js_utils.add_output
@@ -8237,7 +8248,8 @@ module Make
                     let use_op =
                       Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
                     in
-                    Flow.flow cx (infer_t, TypeCastT (use_op, t));
+                    Tvar_resolver.resolve cx infer_t;
+                    Type_operation_utils.perform_type_cast cx use_op infer_t t;
                     ( (loc, t),
                       AsExpression { AsExpression.expression = e'; annot = annot'; comments }
                     )
@@ -8254,7 +8266,8 @@ module Make
                     let use_op =
                       Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
                     in
-                    Flow.flow cx (infer_t, TypeCastT (use_op, t));
+                    Tvar_resolver.resolve cx infer_t;
+                    Type_operation_utils.perform_type_cast cx use_op infer_t t;
                     ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
                 )
               | As ->
@@ -10316,6 +10329,199 @@ module Make
   and is_valid_enum_member_name name =
     (not @@ Base.String.is_empty name) && (not @@ Base.Char.is_lowercase name.[0])
 
+  and flow_enum_exhaustive_check_incomplete
+      cx ~check_reason ?trigger exhaustive_check_incomplete_out =
+    let trigger = Base.Option.value trigger ~default:(VoidT.why check_reason) in
+    Flow.flow cx (trigger, UseT (unknown_use, exhaustive_check_incomplete_out))
+
+  and enum_case_test_matches_discriminant cx ~enum_id_discriminant ~members member_name obj_t =
+    let rec matches_single = function
+      | DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = enum_id_check; _ }; _ })
+        when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members ->
+        true
+      | IntersectionT (_, rep) -> InterRep.members rep |> List.exists matches
+      | _ -> false
+    and matches t =
+      match Flow.possible_concrete_types_for_enum_exhaustive_check cx (reason_of_t t) t with
+      | [t] -> matches_single t
+      | _ -> false
+    in
+    matches obj_t
+
+  and check_possible_enum_exhaustive_check
+      cx
+      ~check_reason
+      ~possible_checks
+      ~checks
+      ~default_case_loc
+      ~incomplete_out
+      ~discriminant_after_check
+      discriminant_t =
+    let concrete_discriminants =
+      Flow.possible_concrete_types_for_enum_exhaustive_check cx check_reason discriminant_t
+    in
+    List.iter
+      (function
+        | IntersectionT (_, rep) ->
+          InterRep.members rep
+          |> Base.List.map ~f:(fun member () ->
+                 check_possible_enum_exhaustive_check
+                   cx
+                   ~check_reason
+                   ~possible_checks
+                   ~checks
+                   ~default_case_loc
+                   ~incomplete_out
+                   ~discriminant_after_check
+                   member
+             )
+          |> Speculation_flow.try_custom cx ~no_match_error_loc:(loc_of_reason check_reason)
+        | DefT (enum_reason, EnumValueT (ConcreteEnum enum_info)) ->
+          perform_enum_exhaustive_check
+            cx
+            ~check_reason
+            ~enum_reason
+            ~enum:enum_info
+            ~possible_checks
+            ~checks
+            ~default_case_loc
+            ~incomplete_out
+            ~discriminant_after_check
+        | DefT (enum_reason, EnumValueT (AbstractEnum _)) ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EEnumError (EnumInvalidAbstractUse { reason = check_reason; enum_reason })
+            )
+        | DefT (_, EmptyT) -> ()
+        | _ ->
+          flow_enum_exhaustive_check_incomplete
+            cx
+            ~check_reason
+            ?trigger:discriminant_after_check
+            incomplete_out)
+      concrete_discriminants
+
+  and check_invalid_enum_exhaustive_check
+      cx ~check_reason ~reasons ~incomplete_out ~discriminant_after_check discriminant_t =
+    let concrete_discriminants =
+      Flow.possible_concrete_types_for_enum_exhaustive_check cx check_reason discriminant_t
+    in
+    List.iter
+      (function
+        | IntersectionT (_, rep) ->
+          InterRep.members rep
+          |> Base.List.map ~f:(fun member () ->
+                 check_invalid_enum_exhaustive_check
+                   cx
+                   ~check_reason
+                   ~reasons
+                   ~incomplete_out
+                   ~discriminant_after_check
+                   member
+             )
+          |> Speculation_flow.try_custom cx ~no_match_error_loc:(loc_of_reason check_reason)
+        | DefT (enum_reason, EnumValueT enum_info) ->
+          let example_member =
+            match enum_info with
+            | ConcreteEnum { members; _ } -> SMap.choose_opt members |> Base.Option.map ~f:fst
+            | AbstractEnum _ -> None
+          in
+          List.iter
+            (fun loc ->
+              Flow_js_utils.add_output
+                cx
+                Error_message.(
+                  EEnumError
+                    (EnumInvalidCheck { loc; enum_reason; example_member; from_match = false })
+                ))
+            reasons;
+          flow_enum_exhaustive_check_incomplete cx ~check_reason incomplete_out
+        | DefT (_, EmptyT) -> ()
+        | _ ->
+          flow_enum_exhaustive_check_incomplete
+            cx
+            ~check_reason
+            ?trigger:discriminant_after_check
+            incomplete_out)
+      concrete_discriminants
+
+  and perform_enum_exhaustive_check
+      cx
+      ~check_reason
+      ~enum_reason
+      ~enum
+      ~possible_checks
+      ~checks
+      ~default_case_loc
+      ~incomplete_out
+      ~discriminant_after_check:_ =
+    (* Resolve all case tests by concretizing each obj_t directly *)
+    let checks =
+      List.fold_left
+        (fun checks (obj_t, check) ->
+          let (EnumCheck { member_name; _ }) = check in
+          let { enum_id = enum_id_discriminant; members; _ } = enum in
+          let is_valid =
+            enum_case_test_matches_discriminant cx ~enum_id_discriminant ~members member_name obj_t
+          in
+          if is_valid then
+            check :: checks
+          else
+            checks)
+        checks
+        possible_checks
+    in
+    (* Analyze the exhaustive check *)
+    let { members; has_unknown_members; _ } = enum in
+    let check_member (members_remaining, seen) (EnumCheck { case_test_loc; member_name }) =
+      if not @@ SMap.mem member_name members_remaining then
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EEnumError
+              (EnumMemberAlreadyChecked
+                 {
+                   case_test_loc;
+                   prev_check_loc = SMap.find member_name seen;
+                   enum_reason;
+                   member_name;
+                 }
+              )
+          );
+      (SMap.remove member_name members_remaining, SMap.add member_name case_test_loc seen)
+    in
+    let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
+    match (SMap.is_empty left_over, default_case_loc, has_unknown_members) with
+    | (false, _, _) ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EEnumError
+            (EnumNotAllChecked
+               {
+                 reason = check_reason;
+                 enum_reason;
+                 left_to_check = SMap.keys left_over;
+                 default_case_loc;
+               }
+            )
+        );
+      flow_enum_exhaustive_check_incomplete cx ~check_reason incomplete_out
+    | (true, None, true) ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(EEnumError (EnumUnknownNotChecked { reason = check_reason; enum_reason }));
+      flow_enum_exhaustive_check_incomplete cx ~check_reason incomplete_out
+    | (true, Some _, true) -> ()
+    | (true, Some default_case_loc, false) ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EEnumError (EnumAllMembersAlreadyChecked { loc = default_case_loc; enum_reason })
+        )
+    | _ -> ()
+
   and enum_exhaustive_check_of_switch_cases cases_ast =
     let open Flow_ast in
     let open Flow_ast.Statement.Switch in
@@ -10341,35 +10547,23 @@ module Make
             when is_valid_enum_member_name name ->
             (match acc with
             | EnumExhaustiveCheckInvalid _ -> acc
-            | EnumExhaustiveCheckPossiblyValid { tool; possible_checks; checks; default_case_loc }
-              ->
+            | EnumExhaustiveCheckPossiblyValid { possible_checks; checks; default_case_loc } ->
               let possible_check = (obj_t, EnumCheck { case_test_loc; member_name = name }) in
               EnumExhaustiveCheckPossiblyValid
-                {
-                  tool;
-                  possible_checks = possible_check :: possible_checks;
-                  checks;
-                  default_case_loc;
-                })
+                { possible_checks = possible_check :: possible_checks; checks; default_case_loc })
           | (default_case_loc, { Case.test = None; _ }) ->
             (match acc with
             | EnumExhaustiveCheckInvalid _ -> acc
-            | EnumExhaustiveCheckPossiblyValid
-                { tool; possible_checks; checks; default_case_loc = _ } ->
+            | EnumExhaustiveCheckPossiblyValid { possible_checks; checks; default_case_loc = _ } ->
               EnumExhaustiveCheckPossiblyValid
-                { tool; possible_checks; checks; default_case_loc = Some default_case_loc })
+                { possible_checks; checks; default_case_loc = Some default_case_loc })
           | (_, { Case.test = Some ((case_test_loc, _), _); _ }) ->
             (match acc with
             | EnumExhaustiveCheckInvalid invalid_checks ->
               EnumExhaustiveCheckInvalid (case_test_loc :: invalid_checks)
             | EnumExhaustiveCheckPossiblyValid _ -> EnumExhaustiveCheckInvalid [case_test_loc]))
         (EnumExhaustiveCheckPossiblyValid
-           {
-             tool = EnumResolveDiscriminant;
-             possible_checks = [];
-             checks = [];
-             default_case_loc = None;
-           }
+           { possible_checks = []; checks = []; default_case_loc = None }
         )
         cases_ast
     in

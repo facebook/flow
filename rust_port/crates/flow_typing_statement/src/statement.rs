@@ -85,6 +85,7 @@ use flow_typing_errors::intermediate_error_types::RecordDeclarationInvalidSyntax
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
 use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -101,6 +102,7 @@ use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util::*;
 use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::speculation_flow;
 use flow_typing_utils::type_env;
 use flow_typing_utils::type_hint;
 use flow_typing_utils::type_operation_utils;
@@ -2639,18 +2641,37 @@ fn statement_<'a>(
             } else {
                 None
             };
-            flow_js::flow_non_speculating(
-                cx,
-                (
-                    discriminant_t,
-                    &UseT::new(UseTInner::EnumExhaustiveCheckT(Box::new(EnumExhaustiveCheckTData {
-                        reason: reason_of_t(discriminant_t).dupe(),
-                        check: Box::new(enum_exhaustive_check),
-                        incomplete_out: exhaustive_check_incomplete_out.dupe(),
-                        discriminant_after_check,
-                    }))),
-                ),
-            );
+            let check_reason = reason_of_t(discriminant_t);
+            match enum_exhaustive_check {
+                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
+                    possible_checks,
+                    checks,
+                    default_case_loc,
+                } => {
+                    check_possible_enum_exhaustive_check(
+                        cx,
+                        check_reason,
+                        &possible_checks,
+                        &checks,
+                        default_case_loc,
+                        &exhaustive_check_incomplete_out,
+                        discriminant_after_check.as_ref(),
+                        discriminant_t,
+                    )
+                    .unwrap();
+                }
+                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(reasons) => {
+                    check_invalid_enum_exhaustive_check(
+                        cx,
+                        check_reason,
+                        &reasons,
+                        &exhaustive_check_incomplete_out,
+                        discriminant_after_check.as_ref(),
+                        discriminant_t,
+                    )
+                    .unwrap();
+                }
+            };
             // We need to fully resolve all types attached to AST,
             // because the post inference pass might inspect them.
             tvar_resolver::resolve(
@@ -6268,10 +6289,8 @@ fn expression_<'a>(
                 lower: mk_expression_reason(&inner.expression),
                 upper: reason_of_t(&t).dupe(),
             }));
-            flow_js::flow_non_speculating(
-                cx,
-                (&infer_t, &UseT::new(UseTInner::TypeCastT(use_op, t.dupe()))),
-            );
+            tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
+            type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t).unwrap();
             expression::Expression::new(ExpressionInner::TypeCast {
                 loc: (loc, t),
                 inner: (expression::TypeCast {
@@ -6291,10 +6310,8 @@ fn expression_<'a>(
                 lower: mk_expression_reason(&inner.expression),
                 upper: reason_of_t(&t).dupe(),
             }));
-            flow_js::flow_non_speculating(
-                cx,
-                (&infer_t, &UseT::new(UseTInner::TypeCastT(use_op, t.dupe()))),
-            );
+            tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
+            type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t).unwrap();
             expression::Expression::new(ExpressionInner::AsExpression {
                 loc: (loc, t),
                 inner: (expression::AsExpression {
@@ -14697,9 +14714,16 @@ pub fn mk_class_sig<'a>(
                                                     lower: mk_expression_reason(&sub_expr_c),
                                                     upper: reason_of_t(&t_c).dupe(),
                                                 }));
-                                            let use_t =
-                                                UseT::new(UseTInner::TypeCastT(use_op, t_c.dupe()));
-                                            flow_js::flow_non_speculating(cx, (&infer_t, &use_t));
+                                            tvar_resolver::resolve(
+                                                cx,
+                                                tvar_resolver::default_no_lowers,
+                                                true,
+                                                &infer_t,
+                                            );
+                                            type_operation_utils::perform_type_cast(
+                                                cx, use_op, &infer_t, &t_c,
+                                            )
+                                            .unwrap();
                                             Ok(expression::Expression::new(
                                                 ExpressionInner::AsExpression {
                                                     loc: (loc, t_c),
@@ -14740,9 +14764,16 @@ pub fn mk_class_sig<'a>(
                                                     lower: mk_expression_reason(&sub_expr_c),
                                                     upper: reason_of_t(&t_c).dupe(),
                                                 }));
-                                            let use_t =
-                                                UseT::new(UseTInner::TypeCastT(use_op, t_c.dupe()));
-                                            flow_js::flow_non_speculating(cx, (&infer_t, &use_t));
+                                            tvar_resolver::resolve(
+                                                cx,
+                                                tvar_resolver::default_no_lowers,
+                                                true,
+                                                &infer_t,
+                                            );
+                                            type_operation_utils::perform_type_cast(
+                                                cx, use_op, &infer_t, &t_c,
+                                            )
+                                            .unwrap();
                                             Ok(expression::Expression::new(
                                                 ExpressionInner::TypeCast {
                                                     loc: (loc, t_c),
@@ -18424,12 +18455,353 @@ fn is_valid_enum_member_name(name: &str) -> bool {
     !name.is_empty() && !name.as_bytes()[0].is_ascii_lowercase()
 }
 
+fn flow_enum_exhaustive_check_incomplete<'cx>(
+    cx: &Context<'cx>,
+    check_reason: &Reason,
+    trigger: Option<&Type>,
+    exhaustive_check_incomplete_out: &Type,
+) -> Result<(), FlowJsException> {
+    let default_trigger = void::why(check_reason.dupe());
+    let trigger = trigger.unwrap_or(&default_trigger);
+    FlowJs::flow(
+        cx,
+        trigger,
+        &UseT::new(UseTInner::UseT(
+            unknown_use(),
+            exhaustive_check_incomplete_out.dupe(),
+        )),
+    )?;
+    Ok(())
+}
+
+fn check_possible_enum_exhaustive_check<'cx>(
+    cx: &Context<'cx>,
+    check_reason: &Reason,
+    possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
+    checks: &Rc<[EnumCheck]>,
+    default_case_loc: Option<ALoc>,
+    incomplete_out: &Type,
+    discriminant_after_check: Option<&Type>,
+    discriminant_t: &Type,
+) -> Result<(), FlowJsException> {
+    let concrete_discriminants = FlowJs::possible_concrete_types_for_enum_exhaustive_check(
+        cx,
+        check_reason,
+        discriminant_t,
+    )?;
+    for concrete in &concrete_discriminants {
+        match concrete.deref() {
+            TypeInner::IntersectionT(_, rep) => {
+                let cases: Vec<_> = rep
+                    .members_iter()
+                    .map(|member| {
+                        let member = member.dupe();
+                        let check_reason = check_reason.dupe();
+                        let possible_checks = possible_checks.clone();
+                        let checks = checks.clone();
+                        let default_case_loc = default_case_loc.dupe();
+                        let incomplete_out = incomplete_out.dupe();
+                        let discriminant_after_check = discriminant_after_check.map(|t| t.dupe());
+                        Box::new(move |cx: &Context<'cx>| {
+                            check_possible_enum_exhaustive_check(
+                                cx,
+                                &check_reason,
+                                &possible_checks,
+                                &checks,
+                                default_case_loc,
+                                &incomplete_out,
+                                discriminant_after_check.as_ref(),
+                                &member,
+                            )
+                        })
+                            as Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_>
+                    })
+                    .collect();
+                speculation_flow::try_custom(
+                    cx,
+                    None,
+                    None,
+                    None,
+                    check_reason.loc().dupe(),
+                    cases,
+                )?;
+            }
+            TypeInner::DefT(enum_reason, def_t)
+                if let DefTInner::EnumValueT(info) = def_t.deref()
+                    && let EnumInfoInner::ConcreteEnum(enum_info) = EnumInfo::deref(info) =>
+            {
+                perform_enum_exhaustive_check(
+                    cx,
+                    check_reason,
+                    enum_reason,
+                    enum_info,
+                    possible_checks,
+                    checks,
+                    default_case_loc.dupe(),
+                    incomplete_out,
+                )?;
+            }
+            TypeInner::DefT(enum_reason, def_t) if matches!(def_t.deref(), DefTInner::EnumValueT(info) if matches!(EnumInfo::deref(info), EnumInfoInner::AbstractEnum { .. })) =>
+            {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(Box::new(
+                        flow_typing_errors::error_message::EnumInvalidAbstractUseData {
+                            reason: check_reason.dupe(),
+                            enum_reason: enum_reason.dupe(),
+                        },
+                    ))),
+                )?;
+            }
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {}
+            _ => {
+                flow_enum_exhaustive_check_incomplete(
+                    cx,
+                    check_reason,
+                    discriminant_after_check,
+                    incomplete_out,
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn check_invalid_enum_exhaustive_check<'cx>(
+    cx: &Context<'cx>,
+    check_reason: &Reason,
+    reasons: &Rc<[ALoc]>,
+    incomplete_out: &Type,
+    discriminant_after_check: Option<&Type>,
+    discriminant_t: &Type,
+) -> Result<(), FlowJsException> {
+    let concrete_discriminants = FlowJs::possible_concrete_types_for_enum_exhaustive_check(
+        cx,
+        check_reason,
+        discriminant_t,
+    )?;
+    for concrete in &concrete_discriminants {
+        match concrete.deref() {
+            TypeInner::IntersectionT(_, rep) => {
+                let cases: Vec<_> = rep
+                    .members_iter()
+                    .map(|member| {
+                        let member = member.dupe();
+                        let check_reason = check_reason.dupe();
+                        let reasons = reasons.clone();
+                        let incomplete_out = incomplete_out.dupe();
+                        let discriminant_after_check = discriminant_after_check.map(|t| t.dupe());
+                        Box::new(move |cx: &Context<'cx>| {
+                            check_invalid_enum_exhaustive_check(
+                                cx,
+                                &check_reason,
+                                &reasons,
+                                &incomplete_out,
+                                discriminant_after_check.as_ref(),
+                                &member,
+                            )
+                        })
+                            as Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_>
+                    })
+                    .collect();
+                speculation_flow::try_custom(
+                    cx,
+                    None,
+                    None,
+                    None,
+                    check_reason.loc().dupe(),
+                    cases,
+                )?;
+            }
+            TypeInner::DefT(enum_reason, def_t)
+                if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
+            {
+                let example_member = match EnumInfo::deref(enum_info) {
+                    EnumInfoInner::ConcreteEnum(concrete) => {
+                        concrete.members.keys().next().map(|k| k.dupe())
+                    }
+                    EnumInfoInner::AbstractEnum { .. } => None,
+                };
+                for loc in reasons.iter() {
+                    flow_js_utils::add_output(
+                        cx,
+                        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(Box::new(
+                            flow_typing_errors::error_message::EnumInvalidCheckData {
+                                loc: loc.dupe(),
+                                enum_reason: enum_reason.dupe(),
+                                example_member: example_member.dupe(),
+                                from_match: false,
+                            },
+                        ))),
+                    )?;
+                }
+                flow_enum_exhaustive_check_incomplete(cx, check_reason, None, incomplete_out)?;
+            }
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {}
+            _ => {
+                flow_enum_exhaustive_check_incomplete(
+                    cx,
+                    check_reason,
+                    discriminant_after_check,
+                    incomplete_out,
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn enum_case_test_matches_discriminant<'cx>(
+    cx: &Context<'cx>,
+    enum_id_discriminant: &flow_aloc::ALocId,
+    members: &FlowOrdMap<FlowSmolStr, ALoc>,
+    member_name: &FlowSmolStr,
+    obj_t: &Type,
+) -> bool {
+    fn matches_single<'cx>(
+        cx: &Context<'cx>,
+        enum_id_discriminant: &flow_aloc::ALocId,
+        members: &FlowOrdMap<FlowSmolStr, ALoc>,
+        member_name: &FlowSmolStr,
+        t: &Type,
+    ) -> bool {
+        match t.deref() {
+            TypeInner::DefT(_, inner_def)
+                if let DefTInner::EnumObjectT { enum_info: ei, .. } = inner_def.deref()
+                    && let EnumInfoInner::ConcreteEnum(concrete) = EnumInfo::deref(ei)
+                    && concrete.enum_id == *enum_id_discriminant
+                    && members.contains_key(member_name) =>
+            {
+                true
+            }
+            TypeInner::IntersectionT(_, rep) => rep
+                .members_iter()
+                .any(|member| matches(cx, enum_id_discriminant, members, member_name, member)),
+            _ => false,
+        }
+    }
+    fn matches<'cx>(
+        cx: &Context<'cx>,
+        enum_id_discriminant: &flow_aloc::ALocId,
+        members: &FlowOrdMap<FlowSmolStr, ALoc>,
+        member_name: &FlowSmolStr,
+        t: &Type,
+    ) -> bool {
+        match FlowJs::possible_concrete_types_for_enum_exhaustive_check(
+            cx,
+            &reason_of_t(t).dupe(),
+            t,
+        ) {
+            Ok(ts) if ts.len() == 1 => {
+                matches_single(cx, enum_id_discriminant, members, member_name, &ts[0])
+            }
+            _ => false,
+        }
+    }
+    matches(cx, enum_id_discriminant, members, member_name, obj_t)
+}
+
+fn perform_enum_exhaustive_check<'cx>(
+    cx: &Context<'cx>,
+    check_reason: &Reason,
+    enum_reason: &Reason,
+    enum_info: &EnumConcreteInfo,
+    possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
+    checks: &[EnumCheck],
+    default_case_loc: Option<ALoc>,
+    incomplete_out: &Type,
+) -> Result<(), FlowJsException> {
+    let mut checks: Vec<EnumCheck> = checks.to_vec();
+    for (obj_t, check) in possible_checks {
+        let member_name = &check.member_name;
+        let enum_id_discriminant = &enum_info.enum_id;
+        let members = &enum_info.members;
+        let is_valid = enum_case_test_matches_discriminant(
+            cx,
+            enum_id_discriminant,
+            members,
+            member_name,
+            obj_t,
+        );
+        if is_valid {
+            checks.insert(0, check.clone());
+        }
+    }
+    let members = &enum_info.members;
+    let has_unknown_members = enum_info.has_unknown_members;
+    let mut members_remaining: FlowOrdMap<FlowSmolStr, ALoc> = members.dupe();
+    let mut seen: FlowOrdMap<FlowSmolStr, ALoc> = FlowOrdMap::new();
+    for check in &checks {
+        let EnumCheck {
+            case_test_loc,
+            member_name,
+        } = check;
+        if !members_remaining.contains_key(member_name) {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(Box::new(
+                    flow_typing_errors::error_message::EnumMemberAlreadyCheckedData {
+                        case_test_loc: case_test_loc.dupe(),
+                        prev_check_loc: seen[member_name].dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        member_name: member_name.dupe(),
+                    },
+                ))),
+            )?;
+        }
+        members_remaining.remove(member_name);
+        seen.insert(member_name.dupe(), case_test_loc.dupe());
+    }
+    let left_over = members_remaining;
+    match (left_over.is_empty(), default_case_loc, has_unknown_members) {
+        (false, default_case_loc, _) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(Box::new(
+                    flow_typing_errors::error_message::EnumNotAllCheckedData {
+                        reason: check_reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                        left_to_check: left_over.keys().duped().collect(),
+                        default_case_loc,
+                    },
+                ))),
+            )?;
+            flow_enum_exhaustive_check_incomplete(cx, check_reason, None, incomplete_out)?;
+        }
+        (true, None, true) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(Box::new(
+                    flow_typing_errors::error_message::EnumUnknownNotCheckedData {
+                        reason: check_reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
+            )?;
+            flow_enum_exhaustive_check_incomplete(cx, check_reason, None, incomplete_out)?;
+        }
+        (true, Some(_), true) => {}
+        (true, Some(default_case_loc), false) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(Box::new(
+                    flow_typing_errors::error_message::EnumAllMembersAlreadyCheckedData {
+                        loc: default_case_loc,
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ))),
+            )?;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 fn enum_exhaustive_check_of_switch_cases(
     cases_ast: &[statement::switch::Case<ALoc, (ALoc, Type)>],
 ) -> EnumPossibleExhaustiveCheckT {
     use std::collections::VecDeque;
     let mut exhaustive_check = EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-        tool: EnumExhaustiveCheckToolT::EnumResolveDiscriminant,
         possible_checks: VecDeque::new(),
         checks: Vec::new().into(),
         default_case_loc: None,
@@ -18449,7 +18821,6 @@ fn enum_exhaustive_check_of_switch_cases(
                 match exhaustive_check {
                     EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
                     EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                        tool,
                         mut possible_checks,
                         checks,
                         default_case_loc,
@@ -18463,7 +18834,6 @@ fn enum_exhaustive_check_of_switch_cases(
                         );
                         possible_checks.push_front(possible_check);
                         EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                            tool,
                             possible_checks,
                             checks,
                             default_case_loc,
@@ -18478,12 +18848,10 @@ fn enum_exhaustive_check_of_switch_cases(
             } => match exhaustive_check {
                 EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
                 EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                    tool,
                     possible_checks,
                     checks,
                     ..
                 } => EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                    tool,
                     possible_checks,
                     checks,
                     default_case_loc: Some(default_case_loc.dupe()),

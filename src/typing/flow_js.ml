@@ -690,68 +690,6 @@ struct
         | (AnnotT (r, t, use_desc), u) ->
           let t = reposition_reason ~trace cx r ~use_desc t in
           rec_flow cx trace (t, u)
-        (***************************)
-        (* type cast e.g. `(x: T)` *)
-        (***************************)
-        | (DefT (reason, EnumValueT enum_info), TypeCastT (use_op, cast_to_t)) ->
-          rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, enum_info) })
-        | (UnionT (_, rep), TypeCastT (use_op, (UnionT _ as u))) ->
-          union_to_union cx trace use_op l rep u
-        | (UnionT _, TypeCastT (use_op, AnnotT (r, t, use_desc))) ->
-          rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))
-        | (UnionT (_, rep1), TypeCastT (use_op, cast_to_t)) ->
-          (* For homogeneous enum unions, try a single representative member
-             speculatively. If it fails, emit just that one error (all members
-             would fail identically). If it succeeds, fall through to normal
-             distribution to catch members that might fail. *)
-          let flowed_single =
-            if not (UnionRep.is_optimized_finally rep1) then
-              UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep1;
-            match UnionRep.check_enum_with_tag rep1 with
-            | Some (enums, Some _) when UnionEnumSet.cardinal enums > 1 ->
-              let representative = UnionRep.members rep1 |> List.hd in
-              (match
-                 SpeculationKit.try_singleton_throw_on_failure
-                   cx
-                   trace
-                   representative
-                   (TypeCastT (use_op, cast_to_t))
-               with
-              | exception Flow_js_utils.SpeculationSingletonError ->
-                let use_op =
-                  Flow_js_utils.union_representative_use_op cx ~l ~representative use_op
-                in
-                rec_flow cx trace (representative, TypeCastT (use_op, cast_to_t));
-                true
-              | () -> false)
-            | _ -> false
-          in
-          if not flowed_single then flow_all_in_union cx trace rep1 u
-        | (_, TypeCastT (use_op, cast_to_t)) ->
-          (match FlowJs.singleton_concrete_type_for_inspection cx (reason_of_t l) l with
-          | DefT (reason, EnumValueT enum_info) ->
-            rec_flow cx trace (cast_to_t, EnumCastT { use_op; enum = (reason, enum_info) })
-          | _ -> rec_flow cx trace (l, UseT (use_op, cast_to_t)))
-        (**********************************************************************)
-        (* enum cast e.g. `(x: T)` where `x` is an `EnumValueT`                    *)
-        (* We allow enums to be explicitly cast to their representation type. *)
-        (* When we specialize `TypeCastT` when the LHS is an `EnumValueT`, the     *)
-        (* `cast_to_t` of `TypeCastT` must then be resolved. So we call flow  *)
-        (* with it on the LHS, and `EnumCastT` on the RHS. When we actually   *)
-        (* turn this into a `UseT`, it must placed back on the RHS.           *)
-        (**********************************************************************)
-        | ( cast_to_t,
-            EnumCastT
-              {
-                use_op;
-                enum =
-                  (_, (ConcreteEnum { representation_t; _ } | AbstractEnum { representation_t }));
-              }
-          )
-          when TypeUtil.quick_subtype representation_t cast_to_t ->
-          rec_flow cx trace (representation_t, UseT (use_op, cast_to_t))
-        | (cast_to_t, EnumCastT { use_op; enum = (reason, enum) }) ->
-          rec_flow cx trace (DefT (reason, EnumValueT enum), UseT (use_op, cast_to_t))
         (******************)
         (* Module exports *)
         (******************)
@@ -1525,6 +1463,11 @@ struct
           | _ -> ())
         (* Concretize types for type inspection purpose up to this point. The rest are
            recorded as lower bound to the target tvar. *)
+        | ( GenericT { reason; bound; _ },
+            ConcretizeT
+              { reason = _; kind = ConcretizeForEnumExhaustiveCheck; seen = _; collector = _ }
+          ) ->
+          rec_flow cx trace (reposition_reason cx reason bound, u)
         | (t, ConcretizeT { reason = _; kind = ConcretizeForInspection; seen = _; collector }) ->
           TypeCollector.add collector t
         (* helpers *)
@@ -1926,9 +1869,9 @@ struct
               {
                 reason = _;
                 kind =
-                  ( ConcretizeForOptionalChain | ConcretizeForOperatorsChecking
-                  | ConcretizeForComputedObjectKeys | ConcretizeForObjectAssign
-                  | ConcretizeForDestructuring );
+                  ( ConcretizeForOptionalChain | ConcretizeForEnumExhaustiveCheck
+                  | ConcretizeForOperatorsChecking | ConcretizeForComputedObjectKeys
+                  | ConcretizeForObjectAssign | ConcretizeForDestructuring );
                 seen = _;
                 collector;
               }
@@ -4562,6 +4505,10 @@ struct
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (reposition_reason cx reason bound, u)
+        | ( t,
+            ConcretizeT { reason = _; kind = ConcretizeForEnumExhaustiveCheck; seen = _; collector }
+          ) ->
+          TypeCollector.add collector t
         (************)
         (* GetEnumT *)
         (************)
@@ -4581,130 +4528,6 @@ struct
           rec_flow cx trace (enum_value_t, UseT (use_op, tout))
         | (_, GetEnumT { use_op; kind = `GetEnumValue; tout; _ }) ->
           rec_flow cx trace (l, UseT (use_op, tout))
-        (**********************************)
-        (* Flow Enums exhaustive checking *)
-        (**********************************)
-        (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
-        | ( DefT (enum_reason, EnumValueT (ConcreteEnum enum_info)),
-            EnumExhaustiveCheckT
-              {
-                reason = check_reason;
-                check =
-                  EnumExhaustiveCheckPossiblyValid
-                    { tool = EnumResolveDiscriminant; possible_checks; checks; default_case_loc };
-                incomplete_out;
-                discriminant_after_check;
-              }
-          ) ->
-          enum_exhaustive_check
-            cx
-            ~trace
-            ~check_reason
-            ~enum_reason
-            ~enum:enum_info
-            ~possible_checks
-            ~checks
-            ~default_case_loc
-            ~incomplete_out
-            ~discriminant_after_check
-        | (DefT (enum_reason, EnumValueT (AbstractEnum _)), EnumExhaustiveCheckT { reason; _ }) ->
-          add_output cx Error_message.(EEnumError (EnumInvalidAbstractUse { reason; enum_reason }))
-        (* Resolving the case tests. *)
-        | ( _,
-            EnumExhaustiveCheckT
-              {
-                reason = check_reason;
-                check =
-                  EnumExhaustiveCheckPossiblyValid
-                    {
-                      tool = EnumResolveCaseTest { discriminant_reason; discriminant_enum; check };
-                      possible_checks;
-                      checks;
-                      default_case_loc;
-                    };
-                incomplete_out;
-                discriminant_after_check;
-              }
-          ) ->
-          let (EnumCheck { member_name; _ }) = check in
-          let { enum_id = enum_id_discriminant; members; _ } = discriminant_enum in
-          let checks =
-            match l with
-            | DefT (_, EnumObjectT { enum_info = ConcreteEnum { enum_id = enum_id_check; _ }; _ })
-              when ALoc.equal_id enum_id_discriminant enum_id_check && SMap.mem member_name members
-              ->
-              check :: checks
-            (* If the check is not the same enum type, ignore it and continue. The user will
-             * still get an error as the comparison between discriminant and case test will fail. *)
-            | _ -> checks
-          in
-          enum_exhaustive_check
-            cx
-            ~trace
-            ~check_reason
-            ~enum_reason:discriminant_reason
-            ~enum:discriminant_enum
-            ~possible_checks
-            ~checks
-            ~default_case_loc
-            ~incomplete_out
-            ~discriminant_after_check
-        | ( DefT (enum_reason, EnumValueT enum_info),
-            EnumExhaustiveCheckT
-              {
-                reason;
-                check = EnumExhaustiveCheckInvalid reasons;
-                incomplete_out;
-                discriminant_after_check = _;
-              }
-          ) ->
-          let example_member =
-            match enum_info with
-            | ConcreteEnum { members; _ } -> SMap.choose_opt members |> Base.Option.map ~f:fst
-            | AbstractEnum _ -> None
-          in
-          List.iter
-            (fun loc ->
-              add_output
-                cx
-                Error_message.(
-                  EEnumError
-                    (EnumInvalidCheck { loc; enum_reason; example_member; from_match = false })
-                ))
-            reasons;
-          enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
-        (* If the discriminant is empty, the check is successful. *)
-        | ( DefT (_, EmptyT),
-            EnumExhaustiveCheckT
-              {
-                check =
-                  ( EnumExhaustiveCheckInvalid _
-                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
-                _;
-              }
-          ) ->
-          ()
-        (* Non-enum discriminants.
-         * If `discriminant_after_check` is empty (e.g. because the discriminant has been refined
-         * away by each case), then `trigger` will be empty, which will prevent the implicit void
-         * return that could occur otherwise. *)
-        | ( _,
-            EnumExhaustiveCheckT
-              {
-                reason;
-                check =
-                  ( EnumExhaustiveCheckInvalid _
-                  | EnumExhaustiveCheckPossiblyValid { tool = EnumResolveDiscriminant; _ } );
-                incomplete_out;
-                discriminant_after_check;
-              }
-          ) ->
-          enum_exhaustive_check_incomplete
-            cx
-            ~trace
-            ~reason
-            ?trigger:discriminant_after_check
-            incomplete_out
         (***************)
         (* unsupported *)
         (***************)
@@ -5308,7 +5131,6 @@ struct
     | UseT (_, DefT (_, TypeT _))
     | CondT _
     | ConditionalT _
-    | EnumExhaustiveCheckT _
     | FilterMaybeT _
     | ObjKitT _
     | OptionalIndexedAccessT _
@@ -5316,7 +5138,6 @@ struct
     | ReposUseT _
     | SealGenericT _
     | ResolveUnionT _
-    | EnumCastT _
     | ConvertEmptyPropsToMixedT _
     | HooklikeT _
     | SpecializeT _
@@ -5806,7 +5627,6 @@ struct
     | CondT _
     | ConstructorT _
     | ElemT _
-    | EnumExhaustiveCheckT _
     | ExtendsUseT _
     | ConditionalT _
     | GetElemT _
@@ -5886,8 +5706,6 @@ struct
     | SetPrivatePropT _
     | SetProtoT _
     | SuperT _
-    | TypeCastT _
-    | EnumCastT _
     | ConcretizeTypeAppsT _
     | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
       ->
@@ -7177,98 +6995,6 @@ struct
         )
     in
     rec_flow cx trace (tc, ThisSpecializeT (reason_tapp, this, k))
-
-  (*********)
-  (* enums *)
-  (*********)
-  and enum_exhaustive_check
-      cx
-      ~trace
-      ~check_reason
-      ~enum_reason
-      ~enum
-      ~possible_checks
-      ~checks
-      ~default_case_loc
-      ~incomplete_out
-      ~discriminant_after_check =
-    match possible_checks with
-    (* No possible checks left to resolve, analyze the exhaustive check. *)
-    | [] ->
-      let { members; has_unknown_members; _ } = enum in
-      let check_member (members_remaining, seen) (EnumCheck { case_test_loc; member_name }) =
-        if not @@ SMap.mem member_name members_remaining then
-          add_output
-            cx
-            Error_message.(
-              EEnumError
-                (EnumMemberAlreadyChecked
-                   {
-                     case_test_loc;
-                     prev_check_loc = SMap.find member_name seen;
-                     enum_reason;
-                     member_name;
-                   }
-                )
-            );
-        (SMap.remove member_name members_remaining, SMap.add member_name case_test_loc seen)
-      in
-      let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
-      (match (SMap.is_empty left_over, default_case_loc, has_unknown_members) with
-      | (false, _, _) ->
-        add_output
-          cx
-          Error_message.(
-            EEnumError
-              (EnumNotAllChecked
-                 {
-                   reason = check_reason;
-                   enum_reason;
-                   left_to_check = SMap.keys left_over;
-                   default_case_loc;
-                 }
-              )
-          );
-        enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
-      (* When we have unknown members, a default is required even when we've checked all known members. *)
-      | (true, None, true) ->
-        add_output
-          cx
-          Error_message.(EEnumError (EnumUnknownNotChecked { reason = check_reason; enum_reason }));
-        enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
-      | (true, Some _, true) -> ()
-      | (true, Some default_case_loc, false) ->
-        add_output
-          cx
-          Error_message.(
-            EEnumError (EnumAllMembersAlreadyChecked { loc = default_case_loc; enum_reason })
-          )
-      | _ -> ())
-    (* There are still possible checks to resolve, continue to resolve them. *)
-    | (obj_t, check) :: rest_possible_checks ->
-      let exhaustive_check =
-        EnumExhaustiveCheckT
-          {
-            reason = check_reason;
-            check =
-              EnumExhaustiveCheckPossiblyValid
-                {
-                  tool =
-                    EnumResolveCaseTest
-                      { discriminant_enum = enum; discriminant_reason = enum_reason; check };
-                  possible_checks = rest_possible_checks;
-                  checks;
-                  default_case_loc;
-                };
-            incomplete_out;
-            discriminant_after_check;
-          }
-      in
-      rec_flow cx trace (obj_t, exhaustive_check)
-
-  and enum_exhaustive_check_incomplete
-      cx ~trace ~reason ?(trigger = VoidT.why reason) incomplete_out =
-    rec_flow_t cx trace ~use_op:unknown_use (trigger, incomplete_out)
 
   and resolve_union cx trace reason id resolved unresolved l upper =
     let continue resolved =
@@ -9588,6 +9314,9 @@ struct
   and possible_concrete_types_for_inspection cx reason t =
     possible_concrete_types ConcretizeForInspection cx reason t
 
+  and possible_concrete_types_for_enum_exhaustive_check cx reason t =
+    possible_concrete_types ConcretizeForEnumExhaustiveCheck cx reason t
+
   and singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports cx reason t =
     singleton_concrete_type ConcretizeForCJSExtractNamedExportsAndTypeExports cx reason t
 
@@ -9596,6 +9325,20 @@ struct
 
   and singleton_concrete_type_for_inspection cx reason t =
     singleton_concrete_type ConcretizeForInspection cx reason t
+
+  and singleton_concrete_type_for_type_cast cx _reason t =
+    let rec resolve t =
+      match t with
+      | AnnotT (r, t, use_desc) -> resolve (reposition_reason cx r ~use_desc t)
+      | OpenT (_, id) ->
+        let (_, constraints) = Context.find_constraints cx id in
+        (match constraints with
+        | Constraint.Resolved t1 -> resolve t1
+        | Constraint.FullyResolved s1 -> resolve (Context.force_fully_resolved_tvar cx s1)
+        | Constraint.Unresolved _ -> t)
+      | t -> t
+    in
+    resolve t
 
   and add_specialized_callee_method_action cx trace l = function
     | CallM { specialized_callee; _ }

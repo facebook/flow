@@ -537,8 +537,7 @@ module Make (I : INPUT) : S = struct
           (match acc with
           | [] -> return Ty.NoUpper
           | hd :: tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl))))
-        | T.UseT (_, t) :: rest
-        | T.TypeCastT (_, t) :: rest ->
+        | T.UseT (_, t) :: rest ->
           let%bind t = cont ~env ~id:(TVarKey id) t in
           uses_t_aux (t :: acc) rest
         | T.ReposLowerT { use_t = u; _ } :: rest -> uses_t_aux acc (u :: rest)

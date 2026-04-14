@@ -34,7 +34,6 @@ use crate::type_::ConformToCommonInterfaceData;
 use crate::type_::ConstrainedAssignmentData;
 use crate::type_::ConstructorTData;
 use crate::type_::ElemTData;
-use crate::type_::EnumCastTData;
 use crate::type_::ExtendsUseTData;
 use crate::type_::FunCallData;
 use crate::type_::FunCallMethodData;
@@ -124,10 +123,6 @@ pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
         UseTInner::CallT(data) => &data.reason,
         UseTInner::ConstructorT(data) => &data.reason,
         UseTInner::ElemT(data) => &data.reason,
-        UseTInner::EnumCastT(box EnumCastTData {
-            enum_: (reason, _), ..
-        }) => reason,
-        UseTInner::EnumExhaustiveCheckT(data) => &data.reason,
         UseTInner::GetEnumT(data) => &data.reason,
         UseTInner::ConditionalT(data) => &data.reason,
         UseTInner::ExtendsUseT(data) => &data.reason,
@@ -167,7 +162,6 @@ pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
         UseTInner::ThisSpecializeT(reason, _, _) => reason,
         UseTInner::ToStringT { reason, .. } => reason,
         UseTInner::ValueToTypeReferenceT(data) => &data.reason,
-        UseTInner::TypeCastT(_, t) => reason_of_t(t),
         UseTInner::FilterOptionalT(_, t) => reason_of_t(t),
         UseTInner::FilterMaybeT(_, t) => reason_of_t(t),
         UseTInner::DeepReadOnlyT(tvar, _) => tvar.reason(),
@@ -797,19 +791,6 @@ pub fn util_use_op_of_use_t<T, CX>(
                 })))
             })
         }
-        UseTInner::TypeCastT(op, t) => {
-            let t = t.dupe();
-            call_util(op, &move |op| UseT::new(UseTInner::TypeCastT(op, t.dupe())))
-        }
-        UseTInner::EnumCastT(data) => {
-            let enum_ = data.enum_.clone();
-            call_util(&data.use_op, &move |use_op| {
-                UseT::new(UseTInner::EnumCastT(Box::new(EnumCastTData {
-                    use_op,
-                    enum_: enum_.clone(),
-                })))
-            })
-        }
         UseTInner::FilterOptionalT(op, t) => {
             let t = t.dupe();
             call_util(op, &move |op| {
@@ -1017,7 +998,6 @@ pub fn util_use_op_of_use_t<T, CX>(
         | UseTInner::CondT(..)
         | UseTInner::ResolveUnionT(..)
         | UseTInner::ExitRendersT { .. }
-        | UseTInner::EnumExhaustiveCheckT(..)
         | UseTInner::SealGenericT(..)
         | UseTInner::CheckUnusedPromiseT { .. }
         | UseTInner::EvalTypeDestructorT(..) => nope(u),

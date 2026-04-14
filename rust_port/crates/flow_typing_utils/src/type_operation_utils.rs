@@ -40,6 +40,7 @@ use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::EnumInfo;
 use flow_typing_type::type_::EnumInfoInner;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::MixedFlavor;
@@ -52,7 +53,10 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UnaryArithKind;
 use flow_typing_type::type_::UseOp;
+use flow_typing_type::type_::UseT;
+use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::arith_kind::ArithKind;
+use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 
 use crate::predicate_kit;
@@ -1884,6 +1888,168 @@ pub mod special_cased_functions {
             },
         )
         .unwrap()
+    }
+}
+
+pub fn perform_type_cast<'cx>(
+    cx: &Context<'cx>,
+    use_op: UseOp,
+    l: &Type,
+    cast_to_t: &Type,
+) -> Result<(), flow_typing_flow_common::flow_js_utils::SpeculativeError> {
+    let flow =
+        |source_t: &Type| -> Result<(), flow_typing_flow_common::flow_js_utils::SpeculativeError> {
+            FlowJs::flow(
+                cx,
+                source_t,
+                &UseT::new(UseTInner::UseT(use_op.dupe(), cast_to_t.dupe())),
+            )
+        };
+    let resolved_cast_to =
+        FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(cast_to_t), cast_to_t)?;
+    let should_short_circuit_empty_cast = match resolved_cast_to.deref() {
+        TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {
+            let resolved_l = FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(l), l)?;
+            match resolved_l.deref() {
+                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EnumValueT(_)) => {
+                    false
+                }
+                TypeInner::UnionT(_, rep) => rep.members_iter().all(|member| {
+                    let member = FlowJs::singleton_concrete_type_for_inspection(
+                        cx,
+                        reason_of_t(member),
+                        member,
+                    )
+                    .unwrap();
+                    flow_js_utils::object_like(&member)
+                }),
+                _ => true,
+            }
+        }
+        _ => false,
+    };
+    if should_short_circuit_empty_cast {
+        return flow(l);
+    }
+    let concrete_l = FlowJs::singleton_concrete_type_for_type_cast(cx, reason_of_t(l), l)?;
+    match concrete_l.deref() {
+        TypeInner::DefT(reason, def_t) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
+            let representation_t = match EnumInfo::deref(enum_info) {
+                EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
+                EnumInfoInner::AbstractEnum { representation_t } => representation_t,
+            };
+            if type_util::quick_subtype(None::<&fn(&Type)>, representation_t, cast_to_t)
+                || type_util::quick_subtype(None::<&fn(&Type)>, representation_t, &resolved_cast_to)
+            {
+                flow(representation_t)
+            } else {
+                flow(&Type::new(TypeInner::DefT(
+                    reason.dupe(),
+                    DefT::new(DefTInner::EnumValueT(enum_info.dupe())),
+                )))
+            }
+        }
+        TypeInner::UnionT(_, rep) => {
+            if matches!(resolved_cast_to.deref(), TypeInner::UnionT(_, _)) {
+                flow(&concrete_l)
+            } else {
+                let flowed_single = {
+                    if !rep.is_optimized_finally() {
+                        rep.optimize_enum_only(|ts| {
+                            flow_typing_visitors::type_mapper::union_flatten(cx, ts.duped())
+                        });
+                    }
+                    match rep.check_enum_with_tag() {
+                        Some((enums, Some(_))) if enums.len() > 1 => {
+                            let representative = rep.members_iter().next().unwrap().dupe();
+                            let cast_succeeds = {
+                                let resolved_repr = FlowJs::singleton_concrete_type_for_inspection(
+                                    cx,
+                                    reason_of_t(&representative),
+                                    &representative,
+                                )?;
+                                match resolved_repr.deref() {
+                                    TypeInner::DefT(_, def_t)
+                                        if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
+                                    {
+                                        let repr_t = match EnumInfo::deref(enum_info) {
+                                            EnumInfoInner::ConcreteEnum(concrete) => {
+                                                &concrete.representation_t
+                                            }
+                                            EnumInfoInner::AbstractEnum { representation_t } => {
+                                                representation_t
+                                            }
+                                        };
+                                        type_util::quick_subtype(
+                                            None::<&fn(&Type)>,
+                                            repr_t,
+                                            cast_to_t,
+                                        ) || type_util::quick_subtype(
+                                            None::<&fn(&Type)>,
+                                            repr_t,
+                                            &resolved_cast_to,
+                                        )
+                                    }
+                                    _ => FlowJs::speculative_subtyping_succeeds(
+                                        cx,
+                                        &representative,
+                                        cast_to_t,
+                                    ),
+                                }
+                            };
+                            if cast_succeeds {
+                                false
+                            } else {
+                                let use_op = flow_js_utils::union_representative_use_op(
+                                    cx,
+                                    &concrete_l,
+                                    &representative,
+                                    use_op.dupe(),
+                                );
+                                perform_type_cast(cx, use_op, &representative, cast_to_t)?;
+                                true
+                            }
+                        }
+                        _ => false,
+                    }
+                };
+                if !flowed_single {
+                    for member in rep.members_iter() {
+                        perform_type_cast(cx, use_op.dupe(), member, cast_to_t)?;
+                    }
+                }
+                Ok(())
+            }
+        }
+
+        _ => {
+            let resolved = FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(l), l)?;
+            match resolved.deref() {
+                TypeInner::DefT(reason, def_t)
+                    if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
+                {
+                    let representation_t = match EnumInfo::deref(enum_info) {
+                        EnumInfoInner::ConcreteEnum(concrete) => &concrete.representation_t,
+                        EnumInfoInner::AbstractEnum { representation_t } => representation_t,
+                    };
+                    if type_util::quick_subtype(None::<&fn(&Type)>, representation_t, cast_to_t)
+                        || type_util::quick_subtype(
+                            None::<&fn(&Type)>,
+                            representation_t,
+                            &resolved_cast_to,
+                        )
+                    {
+                        flow(representation_t)
+                    } else {
+                        flow(&Type::new(TypeInner::DefT(
+                            reason.dupe(),
+                            DefT::new(DefTInner::EnumValueT(enum_info.dupe())),
+                        )))
+                    }
+                }
+                _ => flow(l),
+            }
+        }
     }
 }
 

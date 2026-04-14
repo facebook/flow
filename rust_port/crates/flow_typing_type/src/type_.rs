@@ -1752,20 +1752,6 @@ pub struct ExtendsUseTData {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct EnumCastTData {
-    pub use_op: UseOp,
-    pub enum_: (Reason, EnumInfo),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct EnumExhaustiveCheckTData {
-    pub reason: Reason,
-    pub check: Box<EnumPossibleExhaustiveCheckT>,
-    pub incomplete_out: Type,
-    pub discriminant_after_check: Option<Type>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GetEnumTData {
     pub use_op: UseOp,
     pub reason: Reason,
@@ -2431,9 +2417,6 @@ pub enum UseTInner<CX = ()> {
     CondT(Box<CondTData>),
     ExtendsUseT(Box<ExtendsUseTData>),
     ResolveUnionT(Box<ResolveUnionTData<CX>>),
-    TypeCastT(UseOp, Type),
-    EnumCastT(Box<EnumCastTData>),
-    EnumExhaustiveCheckT(Box<EnumExhaustiveCheckTData>),
     GetEnumT(Box<GetEnumTData>),
     FilterOptionalT(UseOp, Type),
     FilterMaybeT(UseOp, Type),
@@ -2535,9 +2518,6 @@ impl<CX> Clone for UseTInner<CX> {
             UseTInner::CondT(a) => UseTInner::CondT(a.clone()),
             UseTInner::ExtendsUseT(a) => UseTInner::ExtendsUseT(a.clone()),
             UseTInner::ResolveUnionT(a) => UseTInner::ResolveUnionT(a.clone()),
-            UseTInner::TypeCastT(a, b) => UseTInner::TypeCastT(a.clone(), b.clone()),
-            UseTInner::EnumCastT(a) => UseTInner::EnumCastT(a.clone()),
-            UseTInner::EnumExhaustiveCheckT(a) => UseTInner::EnumExhaustiveCheckT(a.clone()),
             UseTInner::GetEnumT(a) => UseTInner::GetEnumT(a.clone()),
             UseTInner::FilterOptionalT(a, b) => UseTInner::FilterOptionalT(a.clone(), b.clone()),
             UseTInner::FilterMaybeT(a, b) => UseTInner::FilterMaybeT(a.clone(), b.clone()),
@@ -2657,9 +2637,6 @@ impl<CX> PartialEq for UseTInner<CX> {
             (UseTInner::CondT(a1), UseTInner::CondT(a2)) => a1 == a2,
             (UseTInner::ExtendsUseT(a1), UseTInner::ExtendsUseT(a2)) => a1 == a2,
             (UseTInner::ResolveUnionT(a1), UseTInner::ResolveUnionT(a2)) => a1 == a2,
-            (UseTInner::TypeCastT(a1, b1), UseTInner::TypeCastT(a2, b2)) => a1 == a2 && b1 == b2,
-            (UseTInner::EnumCastT(a1), UseTInner::EnumCastT(a2)) => a1 == a2,
-            (UseTInner::EnumExhaustiveCheckT(a1), UseTInner::EnumExhaustiveCheckT(a2)) => a1 == a2,
             (UseTInner::GetEnumT(a1), UseTInner::GetEnumT(a2)) => a1 == a2,
             (UseTInner::FilterOptionalT(a1, b1), UseTInner::FilterOptionalT(a2, b2)) => {
                 a1 == a2 && b1 == b2
@@ -2833,12 +2810,6 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
             UseTInner::CondT(a) => a.hash(state),
             UseTInner::ExtendsUseT(a) => a.hash(state),
             UseTInner::ResolveUnionT(a) => a.hash(state),
-            UseTInner::TypeCastT(a, b) => {
-                a.hash(state);
-                b.hash(state);
-            }
-            UseTInner::EnumCastT(a) => a.hash(state),
-            UseTInner::EnumExhaustiveCheckT(a) => a.hash(state),
             UseTInner::GetEnumT(a) => a.hash(state),
             UseTInner::FilterOptionalT(a, b) => {
                 a.hash(state);
@@ -2929,9 +2900,6 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::CondT(..) => 44,
                 UseTInner::ExtendsUseT(..) => 45,
                 UseTInner::ResolveUnionT(..) => 47,
-                UseTInner::TypeCastT(..) => 48,
-                UseTInner::EnumCastT(..) => 49,
-                UseTInner::EnumExhaustiveCheckT(..) => 50,
                 UseTInner::GetEnumT(..) => 51,
                 UseTInner::FilterOptionalT(..) => 52,
                 UseTInner::FilterMaybeT(..) => 53,
@@ -3071,13 +3039,6 @@ impl<CX> Ord for UseTInner<CX> {
             (UseTInner::CondT(a1), UseTInner::CondT(a2)) => a1.cmp(a2),
             (UseTInner::ExtendsUseT(a1), UseTInner::ExtendsUseT(a2)) => a1.cmp(a2),
             (UseTInner::ResolveUnionT(a1), UseTInner::ResolveUnionT(a2)) => a1.cmp(a2),
-            (UseTInner::TypeCastT(a1, b1), UseTInner::TypeCastT(a2, b2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2))
-            }
-            (UseTInner::EnumCastT(a1), UseTInner::EnumCastT(a2)) => a1.cmp(a2),
-            (UseTInner::EnumExhaustiveCheckT(a1), UseTInner::EnumExhaustiveCheckT(a2)) => {
-                a1.cmp(a2)
-            }
             (UseTInner::GetEnumT(a1), UseTInner::GetEnumT(a2)) => a1.cmp(a2),
             (UseTInner::FilterOptionalT(a1, b1), UseTInner::FilterOptionalT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
@@ -3237,11 +3198,6 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
             UseTInner::CondT(a) => f.debug_tuple("CondT").field(a).finish(),
             UseTInner::ExtendsUseT(a) => f.debug_tuple("ExtendsUseT").field(a).finish(),
             UseTInner::ResolveUnionT(a) => f.debug_tuple("ResolveUnionT").field(a).finish(),
-            UseTInner::TypeCastT(a, b) => f.debug_tuple("TypeCastT").field(a).field(b).finish(),
-            UseTInner::EnumCastT(a) => f.debug_tuple("EnumCastT").field(a).finish(),
-            UseTInner::EnumExhaustiveCheckT(a) => {
-                f.debug_tuple("EnumExhaustiveCheckT").field(a).finish()
-            }
             UseTInner::GetEnumT(a) => f.debug_tuple("GetEnumT").field(a).finish(),
             UseTInner::FilterOptionalT(a, b) => {
                 f.debug_tuple("FilterOptionalT").field(a).field(b).finish()
@@ -3354,23 +3310,9 @@ pub struct EnumCheck {
     pub case_test_loc: ALoc,
     pub member_name: FlowSmolStr,
 }
-// Valid state transitions are:
-// EnumResolveDiscriminant -> EnumResolveCaseTest (with discriminant info populated)
-// EnumResolveCaseTest -> EnumResolveCaseTest
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum EnumExhaustiveCheckToolT {
-    EnumResolveDiscriminant,
-    EnumResolveCaseTest {
-        discriminant_enum: EnumConcreteInfo,
-        discriminant_reason: Reason,
-        check: EnumCheck,
-    },
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum EnumPossibleExhaustiveCheckT {
     EnumExhaustiveCheckPossiblyValid {
-        tool: EnumExhaustiveCheckToolT,
         // We only convert a "possible check" into a "check" if it has the same
         // enum type as the discriminant.
         possible_checks: VecDeque<(Type, EnumCheck)>,
@@ -5689,6 +5631,7 @@ pub enum ConcretizationKind {
     ConcretizeForOptionalChain,
     ConcretizeForImportsExports,
     ConcretizeForInspection,
+    ConcretizeForEnumExhaustiveCheck,
     ConcretizeForPredicate(PredicateConcretetizerVariant),
     ConcretizeForOperatorsChecking,
     ConcretizeForComputedObjectKeys,
@@ -10496,8 +10439,6 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::CallT(..) => "CallT".to_string(),
         UseTInner::ConstructorT(..) => "ConstructorT".to_string(),
         UseTInner::ElemT(..) => "ElemT".to_string(),
-        UseTInner::EnumCastT(..) => "EnumCastT".to_string(),
-        UseTInner::EnumExhaustiveCheckT(..) => "EnumExhaustiveCheckT".to_string(),
         UseTInner::GetEnumT(..) => "GetEnumT".to_string(),
         UseTInner::ConditionalT(..) => "ConditionalT".to_string(),
         UseTInner::ExtendsUseT(..) => "ExtendsUseT".to_string(),
@@ -10524,6 +10465,9 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
             }
             ConcretizationKind::ConcretizeForInspection => {
                 "ConcretizeT ConcretizeForInspection".to_string()
+            }
+            ConcretizationKind::ConcretizeForEnumExhaustiveCheck => {
+                "ConcretizeT ConcretizeForEnumExhaustiveCheck".to_string()
             }
             ConcretizationKind::ConcretizeForPredicate(v) => {
                 format!(
@@ -10599,7 +10543,6 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::ThisSpecializeT(..) => "ThisSpecializeT".to_string(),
         UseTInner::ToStringT { .. } => "ToStringT".to_string(),
         UseTInner::ValueToTypeReferenceT(..) => "ValueToTypeReferenceT".to_string(),
-        UseTInner::TypeCastT(..) => "TypeCastT".to_string(),
         UseTInner::ConcretizeTypeAppsT(..) => "ConcretizeTypeAppsT".to_string(),
         UseTInner::CondT(..) => "CondT".to_string(),
         UseTInner::ResolveUnionT(..) => "ResolveUnionT".to_string(),

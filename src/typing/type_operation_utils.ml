@@ -763,6 +763,111 @@ module SpecialCasedFunctions = struct
     )
 end
 
+let rec perform_type_cast cx use_op l cast_to_t =
+  let flow source_t =
+    Flow.FlowJs.rec_flow cx DepthTrace.dummy_trace (source_t, UseT (use_op, cast_to_t))
+  in
+  let resolved_cast_to =
+    Flow.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t cast_to_t) cast_to_t
+  in
+  let concrete_l = Flow.singleton_concrete_type_for_type_cast cx (TypeUtil.reason_of_t l) l in
+  let should_short_circuit_empty_cast =
+    match resolved_cast_to with
+    | DefT (_, EmptyT) ->
+      (match concrete_l with
+      | DefT (_, EnumValueT _) -> false
+      | UnionT (_, rep) ->
+        Base.List.for_all (UnionRep.members rep) ~f:(fun member ->
+            let member =
+              Flow.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t member) member
+            in
+            Flow_js_utils.object_like member
+        )
+      | _ -> true)
+    | _ -> false
+  in
+  if should_short_circuit_empty_cast then
+    flow l
+  else
+    match concrete_l with
+    | DefT (reason, EnumValueT enum_info) ->
+      let representation_t =
+        match enum_info with
+        | ConcreteEnum { representation_t; _ }
+        | AbstractEnum { representation_t } ->
+          representation_t
+      in
+      if
+        TypeUtil.quick_subtype representation_t cast_to_t
+        || TypeUtil.quick_subtype representation_t resolved_cast_to
+      then
+        flow representation_t
+      else
+        flow (DefT (reason, EnumValueT enum_info))
+    | UnionT (_, rep) ->
+      if
+        match resolved_cast_to with
+        | UnionT _ -> true
+        | _ -> false
+      then
+        flow concrete_l
+      else
+        let flowed_single =
+          if not (UnionRep.is_optimized_finally rep) then
+            UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
+          match UnionRep.check_enum_with_tag rep with
+          | Some (enums, Some _) when UnionEnumSet.cardinal enums > 1 ->
+            let representative = UnionRep.members rep |> List.hd in
+            let cast_succeeds =
+              match
+                Flow.singleton_concrete_type_for_inspection
+                  cx
+                  (TypeUtil.reason_of_t representative)
+                  representative
+              with
+              | DefT (_, EnumValueT enum_info) ->
+                let repr_t =
+                  match enum_info with
+                  | ConcreteEnum { representation_t; _ }
+                  | AbstractEnum { representation_t } ->
+                    representation_t
+                in
+                TypeUtil.quick_subtype repr_t cast_to_t
+                || TypeUtil.quick_subtype repr_t resolved_cast_to
+              | _ -> Flow.FlowJs.speculative_subtyping_succeeds cx representative cast_to_t
+            in
+            if cast_succeeds then
+              false
+            else begin
+              let use_op =
+                Flow_js_utils.union_representative_use_op cx ~l:concrete_l ~representative use_op
+              in
+              perform_type_cast cx use_op representative cast_to_t;
+              true
+            end
+          | _ -> false
+        in
+        if not flowed_single then
+          UnionRep.members rep
+          |> List.iter (fun member -> perform_type_cast cx use_op member cast_to_t)
+    | _ ->
+      (match Flow.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t l) l with
+      | DefT (reason, EnumValueT enum_info) ->
+        let representation_t =
+          match enum_info with
+          | ConcreteEnum { representation_t; _ }
+          | AbstractEnum { representation_t } ->
+            representation_t
+        in
+        if
+          TypeUtil.quick_subtype representation_t cast_to_t
+          || TypeUtil.quick_subtype representation_t resolved_cast_to
+        then
+          flow representation_t
+        else
+          flow (DefT (reason, EnumValueT enum_info))
+      | _ -> flow l)
+
 module TypeAssertions = struct
   open Flow_js_utils
   open TypeUtil

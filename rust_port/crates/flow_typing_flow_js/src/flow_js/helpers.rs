@@ -344,7 +344,6 @@ pub(super) fn empty_success(u: &UseT<Context>) -> bool {
         }
         UseTInner::CondT(..) => false,
         UseTInner::ConditionalT(..) => false,
-        UseTInner::EnumExhaustiveCheckT(..) => false,
         UseTInner::FilterMaybeT(..) => false,
         UseTInner::ObjKitT(..) => false,
         UseTInner::OptionalIndexedAccessT(..) => false,
@@ -352,7 +351,6 @@ pub(super) fn empty_success(u: &UseT<Context>) -> bool {
         UseTInner::ReposUseT(..) => false,
         UseTInner::SealGenericT(..) => false,
         UseTInner::ResolveUnionT(..) => false,
-        UseTInner::EnumCastT(..) => false,
         UseTInner::ConvertEmptyPropsToMixedT(..) => false,
         UseTInner::HooklikeT(..) => false,
         UseTInner::SpecializeT(..) => false,
@@ -2387,6 +2385,19 @@ pub(super) fn possible_concrete_types_for_inspection<'cx>(
     possible_concrete_types(ConcretizationKind::ConcretizeForInspection, cx, reason, t)
 }
 
+pub(super) fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    t: &Type,
+) -> Result<Vec<Type>, SpeculativeError> {
+    possible_concrete_types(
+        ConcretizationKind::ConcretizeForEnumExhaustiveCheck,
+        cx,
+        reason,
+        t,
+    )
+}
+
 pub(super) fn singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
@@ -2419,6 +2430,35 @@ pub(super) fn singleton_concrete_type_for_inspection<'cx>(
     t: &Type,
 ) -> Result<Type, SpeculativeError> {
     singleton_concrete_type(ConcretizationKind::ConcretizeForInspection, cx, reason, t)
+}
+
+pub(super) fn singleton_concrete_type_for_type_cast<'cx>(
+    cx: &Context<'cx>,
+    _reason: &Reason,
+    t: &Type,
+) -> Result<Type, SpeculativeError> {
+    use flow_typing_type::type_::constraint::Constraints;
+    fn resolve<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+        match t.deref() {
+            TypeInner::AnnotT(r, inner, use_desc) => {
+                let repositioned = reposition_reason(cx, None, r, *use_desc, inner).unwrap();
+                resolve(cx, &repositioned)
+            }
+            TypeInner::OpenT(tvar) => {
+                let (_root_id, constraints) = cx.find_constraints(tvar.id() as i32);
+                match constraints {
+                    Constraints::Resolved(t1) => resolve(cx, &t1),
+                    Constraints::FullyResolved(s1) => {
+                        let t1 = cx.force_fully_resolved_tvar(&s1);
+                        resolve(cx, &t1)
+                    }
+                    Constraints::Unresolved(_) => t.dupe(),
+                }
+            }
+            _ => t.dupe(),
+        }
+    }
+    Ok(resolve(cx, t))
 }
 
 pub(super) fn add_specialized_callee_method_action<'cx>(

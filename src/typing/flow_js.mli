@@ -122,6 +122,11 @@ val possible_concrete_types_for_optional_chain : Context.t -> Reason.reason -> T
 
 val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 
+val singleton_concrete_type_for_type_cast : Context.t -> Reason.reason -> Type.t -> Type.t
+
+val possible_concrete_types_for_enum_exhaustive_check :
+  Context.t -> Reason.reason -> Type.t -> Type.t list
+
 val possible_concrete_types_for_imports_exports :
   Context.t -> Reason.reason -> Type.t -> Type.t list
 

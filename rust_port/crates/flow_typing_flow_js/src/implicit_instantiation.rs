@@ -620,9 +620,6 @@ fn t_of_use_t<'cx>(
         | UseTInner::MixinT(..)
         | UseTInner::ExtendsUseT(..)
         | UseTInner::ObjTestT(..)
-        | UseTInner::TypeCastT(..)
-        | UseTInner::EnumCastT(..)
-        | UseTInner::EnumExhaustiveCheckT(..)
         | UseTInner::GetEnumT { .. }
         | UseTInner::CondT(..)
         | UseTInner::CheckUnusedPromiseT { .. }

@@ -159,11 +159,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | CondT (_, _, _, t) -> resolve t
   | ExtendsUseT _ -> ()
   | ResolveUnionT { upper; _ } -> default_resolve_touts ~flow cx loc upper
-  | TypeCastT (_, t) -> resolve t
   | GetEnumT { tout; _ } -> resolve tout
-  | EnumCastT _
-  | EnumExhaustiveCheckT _ ->
-    ()
   | HooklikeT tvar
   | DeepReadOnlyT (tvar, _) ->
     resolve_tvar tvar

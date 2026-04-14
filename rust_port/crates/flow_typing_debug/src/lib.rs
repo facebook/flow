@@ -167,13 +167,10 @@ use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::ConditionalTData;
-use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::ElemTData;
-use flow_typing_type::type_::EnumCastTData;
-use flow_typing_type::type_::EnumExhaustiveCheckTData;
 use flow_typing_type::type_::EnumInfoInner;
 use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::ExtendsUseTData;
@@ -1453,32 +1450,6 @@ fn dump_use_t_<CX>(
             p(cx, use_t, true, &extra)
         }
         UseTInner::ConcretizeTypeAppsT(_, _, _, _) => p(cx, use_t, true, ""),
-        UseTInner::TypeCastT(_, arg) => {
-            let extra = kid(tvars, arg);
-            p(cx, use_t, false, &extra)
-        }
-        UseTInner::EnumCastT(box EnumCastTData {
-            enum_: (reason, enum_info),
-            ..
-        }) => {
-            let enum_t = Type::new(TypeInner::DefT(
-                reason.clone(),
-                DefT::new(DefTInner::EnumValueT(Rc::new(enum_info.clone()))),
-            ));
-            let extra = kid(tvars, &enum_t);
-            p(cx, use_t, false, &extra)
-        }
-        UseTInner::EnumExhaustiveCheckT(box EnumExhaustiveCheckTData { check, .. }) => {
-            let check_str = match check.as_ref() {
-                type_::EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                    ..
-                } => "EnumExhaustiveCheckPossiblyValid",
-                type_::EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid { .. } => {
-                    "EnumExhaustiveCheckInvalid"
-                }
-            };
-            p(cx, use_t, true, check_str)
-        }
         UseTInner::GetEnumT(box GetEnumTData { kind, .. }) => {
             let extra = match kind {
                 type_::GetEnumKind::GetEnumObject => "get enum object",

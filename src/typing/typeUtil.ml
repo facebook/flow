@@ -48,8 +48,6 @@ and reason_of_use_t = function
   | CallT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
   | ElemT { reason; _ } -> reason
-  | EnumCastT { enum = (reason, _); _ } -> reason
-  | EnumExhaustiveCheckT { reason; _ } -> reason
   | GetEnumT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
@@ -89,7 +87,6 @@ and reason_of_use_t = function
   | ThisSpecializeT (reason, _, _) -> reason
   | ToStringT { reason; _ } -> reason
   | ValueToTypeReferenceT (_, reason, _, _) -> reason
-  | TypeCastT (_, t) -> reason_of_t t
   | FilterOptionalT (_, t) -> reason_of_t t
   | FilterMaybeT (_, t) -> reason_of_t t
   | DeepReadOnlyT ((r, _), _) -> r
@@ -234,8 +231,6 @@ let rec util_use_op_of_use_t :
   | ToStringT { orig_t; reason; t_out } ->
     nested_util t_out (fun t_out -> ToStringT { orig_t; reason; t_out })
   | SpecializeT (op, r1, r2, ts, t) -> util op (fun op -> SpecializeT (op, r1, r2, ts, t))
-  | TypeCastT (op, t) -> util op (fun op -> TypeCastT (op, t))
-  | EnumCastT { use_op; enum } -> util use_op (fun use_op -> EnumCastT { use_op; enum })
   | FilterOptionalT (op, t) -> util op (fun op -> FilterOptionalT (op, t))
   | FilterMaybeT (op, t) -> util op (fun op -> FilterMaybeT (op, t))
   | ConcretizeTypeAppsT (u, (ts1, b1, op, r1), x2, b2) ->
@@ -272,7 +267,6 @@ let rec util_use_op_of_use_t :
   | CondT (_, _, _, _)
   | ResolveUnionT _
   | ExitRendersT _
-  | EnumExhaustiveCheckT _
   | SealGenericT _
   | CheckUnusedPromiseT _
   | EvalTypeDestructorT _ ->

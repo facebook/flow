@@ -62,6 +62,8 @@ module SpecialCasedFunctions : sig
   val object_assign : Context.t -> Type.use_op -> reason -> Type.t -> Type.call_arg list -> Type.t
 end
 
+val perform_type_cast : Context.t -> Type.use_op -> Type.t -> Type.t -> unit
+
 module TypeAssertions : sig
   val assert_binary_in_lhs : Context.t -> Type.t -> unit
 
