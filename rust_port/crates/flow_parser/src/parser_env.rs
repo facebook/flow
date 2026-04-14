@@ -501,7 +501,11 @@ impl<'a> ParserEnv<'a> {
 
     pub(crate) fn is_d_ts(&self) -> bool {
         match self.source() {
-            Some(file_key) => file_key.check_suffix(".d.ts"),
+            Some(file_key) => {
+                file_key.check_suffix(".d.ts")
+                    || file_key.check_suffix(".d.mts")
+                    || file_key.check_suffix(".d.cts")
+            }
             None => false,
         }
     }

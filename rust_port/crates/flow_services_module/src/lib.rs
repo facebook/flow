@@ -639,19 +639,25 @@ mod node {
                 && get_package().exports().is_none()
                 && (subpath.is_none() || subpath == Some("."))
             {
-                let decl_first_file_exts: Vec<FlowSmolStr> =
-                    if file_exts.iter().any(|ext| ext.as_str() == ".d.ts") {
-                        let mut exts = vec![FlowSmolStr::new(".d.ts")];
+                let decl_first_file_exts: Vec<FlowSmolStr> = {
+                    let decl_exts: Vec<_> = file_exts
+                        .iter()
+                        .filter(|ext| files::is_dts_ext(ext))
+                        .cloned()
+                        .collect();
+                    if !decl_exts.is_empty() {
+                        let mut exts = decl_exts;
                         exts.extend(
                             file_exts
                                 .iter()
-                                .filter(|ext| ext.as_str() != ".d.ts")
+                                .filter(|ext| !files::is_dts_ext(ext))
                                 .cloned(),
                         );
                         exts
                     } else {
                         file_exts.to_vec()
-                    };
+                    }
+                };
                 resolve_types_field(
                     shared_mem,
                     file_options,

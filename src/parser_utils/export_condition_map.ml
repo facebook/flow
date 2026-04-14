@@ -24,6 +24,10 @@ let create_from_shorthand_value ~value =
 
 let create_from_shorthand ~path = create_from_shorthand_value ~value:(Path path)
 
+(* "default" and "import" are unconditionally matched, matching TypeScript's
+   "bundler" module resolution mode. Flow does not distinguish between
+   `import` and `require()` at the module resolution level — both resolve
+   as ESM, so there is no "require" built-in condition. *)
 let is_targeted_condition valid_conditions canidate_condition =
   List.mem canidate_condition valid_conditions || canidate_condition = "default"
 

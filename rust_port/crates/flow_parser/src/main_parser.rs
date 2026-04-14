@@ -452,7 +452,7 @@ fn parse_program_inner(env: &mut ParserEnv) -> Result<ast::Program<Loc, Loc>, Ro
     // Set ambient context for .flow and .d.ts files, or if ambient parse option is set
     let should_use_ambient = env.parse_options().ambient
         || match env.source() {
-            Some(file_key) => file_key.check_suffix(".flow") || file_key.check_suffix(".d.ts"),
+            Some(file_key) => file_key.check_suffix(".flow") || env.is_d_ts(),
             None => false,
         };
     env.with_ambient_context(should_use_ambient, |env| {

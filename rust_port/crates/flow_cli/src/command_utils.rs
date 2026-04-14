@@ -405,8 +405,12 @@ pub(super) fn make_options(
 
     let log_file = std::path::PathBuf::from(&temp_dir).join(format!("{}.log", flowconfig_name));
 
-    if typescript_library_definition_support && !module_file_exts.contains(&".d.ts".into()) {
-        module_file_exts.push(".d.ts".into());
+    if typescript_library_definition_support {
+        for ext in [".d.ts", ".d.mts", ".d.cts"] {
+            if !module_file_exts.contains(&ext.into()) {
+                module_file_exts.push(ext.into());
+            }
+        }
     }
 
     let node_package_export_conditions = if typescript_library_definition_support {

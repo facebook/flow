@@ -151,7 +151,7 @@ function get_tests(root_dir) {
       case_.filename = path.join(root_dir, file);
     } else if (ext === 'json' && kind === 'tree') {
       case_.expected_ast = JSON.parse(content);
-    } else if (ext === 'ts') {
+    } else if (ext === 'ts' || ext === 'mts' || ext === 'cts') {
       case_.content = content;
       case_.filename = path.join(root_dir, file);
     } else if (ext === 'json' && kind === 'options') {

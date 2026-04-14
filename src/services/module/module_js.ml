@@ -333,9 +333,11 @@ module Node = struct
             && Option.is_none (Package_json.exports (Lazy.force package))
             && (subpath = None || subpath = Some ".")
           then
+            let is_decl_ext = Files.is_dts_ext in
             let decl_first_file_exts =
-              if Base.List.mem file_exts ".d.ts" ~equal:String.equal then
-                ".d.ts" :: List.filter (fun ext -> ext <> ".d.ts") file_exts
+              let decl_exts = List.filter is_decl_ext file_exts in
+              if decl_exts <> [] then
+                decl_exts @ List.filter (fun ext -> not (is_decl_ext ext)) file_exts
               else
                 file_exts
             in

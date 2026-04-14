@@ -32,6 +32,7 @@ use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
 use flow_common::docblock::JsxRuntimePragma;
 use flow_common::enclosing_context::EnclosingContext;
+use flow_common::files;
 use flow_common::files::FileOptions;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
@@ -944,7 +945,7 @@ impl<'cx> Context<'cx> {
     pub fn under_declaration_context(&self) -> bool {
         self.0.file.is_lib_file()
             || self.0.file.check_suffix(".flow")
-            || self.0.file.check_suffix(".d.ts")
+            || files::has_dts_ext(&self.0.file)
             || self.in_declare_module()
             || self.in_declare_namespace()
     }

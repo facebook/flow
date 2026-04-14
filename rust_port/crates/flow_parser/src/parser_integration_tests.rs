@@ -1347,8 +1347,8 @@ mod hardcoded_tests {
                             case.options.1.ambient = true;
                             test.cases.insert(case_name, case);
                         }
-                        // Handle .d.ts files (e.g., foo.d.ts -> foo)
-                        "ts" if case_name.ends_with(".d") => {
+                        // Handle .d.ts / .d.mts / .d.cts files (e.g., foo.d.ts -> foo)
+                        "ts" | "mts" | "cts" if case_name.ends_with(".d") => {
                             let case_name = case_name.strip_suffix(".d").unwrap().to_owned();
                             let mut case = test.cases.remove(&case_name).unwrap_or_default();
                             let content = fs::read_to_string(&file).unwrap();
@@ -1401,7 +1401,9 @@ mod hardcoded_tests {
         // the file type and enable d.ts-specific parsing (e.g., destructuring
         // in function type parameters). For other files, use the simpler path
         // that doesn't set a file key.
-        let is_d_ts = filename.is_some_and(|f| f.ends_with(".d.ts"));
+        let is_d_ts = filename.is_some_and(|f| {
+            f.ends_with(".d.ts") || f.ends_with(".d.mts") || f.ends_with(".d.cts")
+        });
         if is_d_ts {
             use crate::comment_utils;
             use crate::estree_translator;

@@ -140,20 +140,49 @@ pub fn chop_flow_ext(file: &FileKey) -> FileKey {
 }
 
 pub fn has_ts_ext(file: &FileKey) -> bool {
-    file.check_suffix(".ts") || file.check_suffix(".tsx")
+    file.check_suffix(".ts")
+        || file.check_suffix(".tsx")
+        || file.check_suffix(".mts")
+        || file.check_suffix(".cts")
 }
 
 pub const DTS_EXT: &str = ".d.ts";
 
+pub const DMTS_EXT: &str = ".d.mts";
+
+pub const DCTS_EXT: &str = ".d.cts";
+
+pub fn is_dts_ext(ext: &str) -> bool {
+    ext == DTS_EXT || ext == DMTS_EXT || ext == DCTS_EXT
+}
+
 pub fn has_dts_ext(file: &FileKey) -> bool {
-    file.check_suffix(DTS_EXT)
+    file.check_suffix(DTS_EXT) || file.check_suffix(DMTS_EXT) || file.check_suffix(DCTS_EXT)
 }
 
 pub fn chop_dts_ext(file: &FileKey) -> FileKey {
-    if has_dts_ext(file) {
+    if file.check_suffix(DTS_EXT) {
         file.chop_suffix(DTS_EXT)
+    } else if file.check_suffix(DMTS_EXT) {
+        file.chop_suffix(DMTS_EXT)
+    } else if file.check_suffix(DCTS_EXT) {
+        file.chop_suffix(DCTS_EXT)
     } else {
         file.dupe()
+    }
+}
+
+/// Maps a .d.ts / .d.mts / .d.cts file to its implementation counterpart
+/// (.js / .mjs / .cjs).
+pub fn dts_to_impl(file: &FileKey) -> FileKey {
+    // Assumption: callers are guarded by has_dts_ext
+    assert!(has_dts_ext(file));
+    if file.check_suffix(DMTS_EXT) {
+        file.chop_suffix(DMTS_EXT).with_suffix(".mjs")
+    } else if file.check_suffix(DCTS_EXT) {
+        file.chop_suffix(DCTS_EXT).with_suffix(".cjs")
+    } else {
+        chop_dts_ext(file).with_suffix(".js")
     }
 }
 
@@ -165,7 +194,7 @@ pub fn chop_declaration_ext(file: &FileKey) -> FileKey {
     if has_flow_ext(file) {
         chop_flow_ext(file)
     } else if has_dts_ext(file) {
-        chop_dts_ext(file).with_suffix(".js")
+        dts_to_impl(file)
     } else {
         file.dupe()
     }

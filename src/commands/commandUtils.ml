@@ -749,11 +749,14 @@ let file_options =
     in
     let module_file_exts =
       let exts = FlowConfig.module_file_exts flowconfig in
-      if
-        FlowConfig.typescript_library_definition_support flowconfig
-        && not (Base.List.mem exts ".d.ts" ~equal:String.equal)
-      then
-        exts @ [".d.ts"]
+      if FlowConfig.typescript_library_definition_support flowconfig then
+        let add ext acc =
+          if Base.List.mem acc ext ~equal:String.equal then
+            acc
+          else
+            acc @ [ext]
+        in
+        exts |> add ".d.ts" |> add ".d.mts" |> add ".d.cts"
       else
         exts
     in

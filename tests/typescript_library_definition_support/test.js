@@ -9,6 +9,8 @@ import { baz } from 'pkg-with-exports-types';
 import { qux } from 'pkg-with-exports-and-types';
 import { val } from 'pkg-with-types-extensionless';
 import { nested } from 'pkg-with-nested-export-types';
+import { mtsVal } from 'pkg-with-nested-export-types-mts';
+import { ctsVal } from 'pkg-with-nested-export-types-cts';
 
 // Extensionless and directory imports resolve
 greet("world") as string; // OK
@@ -51,3 +53,11 @@ val as string; // ERROR — number not string (index.d.ts says number)
 // package.json "exports" with "types" nested inside "import": resolves to types.d.ts
 nested as number;
 nested as string; // ERROR — number not string (types.d.ts says number)
+
+// package.json "exports" with "types" nested inside "import", .d.mts extension
+mtsVal as number;
+mtsVal as string; // ERROR — number not string (types.d.mts says number)
+
+// package.json "exports" with "types" nested inside "import", .d.cts extension
+ctsVal as number;
+ctsVal as string; // ERROR — number not string (types.d.cts says number)

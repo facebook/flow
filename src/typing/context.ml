@@ -532,7 +532,7 @@ let is_lib_file cx = File_key.is_lib_file cx.file
 let under_declaration_context cx =
   File_key.is_lib_file cx.file
   || File_key.check_suffix cx.file ".flow"
-  || File_key.check_suffix cx.file ".d.ts"
+  || Files.has_dts_ext cx.file
   || in_declare_module cx
   || in_declare_namespace cx
 

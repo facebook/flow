@@ -354,7 +354,10 @@ let should_parse_types env = env.parse_options.types
 
 let is_d_ts env =
   match env.source with
-  | Some file_key -> File_key.check_suffix file_key ".d.ts"
+  | Some file_key ->
+    File_key.check_suffix file_key ".d.ts"
+    || File_key.check_suffix file_key ".d.mts"
+    || File_key.check_suffix file_key ".d.cts"
   | None -> false
 
 (* mutators: *)

@@ -234,7 +234,10 @@ end = struct
                   { case with source = Some source; filename = Some (File_key.SourceFile file) }
                 in
                 SMap.add case_name case test.cases
-              | "ts" when Filename.check_suffix case_name ".d" ->
+              | "ts"
+              | "mts"
+              | "cts"
+                when Filename.check_suffix case_name ".d" ->
                 let case_name = Filename.chop_suffix case_name ".d" in
                 let case = find_case case_name test.cases in
                 let source = Sys_utils.cat file in
