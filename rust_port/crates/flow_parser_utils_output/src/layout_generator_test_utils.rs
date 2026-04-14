@@ -92,6 +92,19 @@ pub fn assert_statement_string(pretty: bool, opts: Option<&js_layout_generator::
     assert_output(pretty, s, &layout);
 }
 
+pub fn assert_statement_string_with_filename(
+    pretty: bool,
+    filename: &str,
+    opts: Option<&js_layout_generator::Opts>,
+    s: &str,
+) {
+    let ast = ast_builder::test_statement_of_string_with_filename(Some(filename), s);
+    let default_opts = js_layout_generator::default_opts();
+    let opts = opts.unwrap_or(&default_opts);
+    let layout = js_layout_generator::statement(opts, false, &ast);
+    assert_output(pretty, s, &layout);
+}
+
 pub fn assert_program_string(pretty: bool, s: &str) {
     let ast = ast_builder::test_program_of_string(s);
     let opts = js_layout_generator::default_opts();

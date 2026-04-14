@@ -1390,13 +1390,27 @@ class ['loc] mapper =
 
     method export_assignment _loc (assign : ('loc, 'loc) Ast.Statement.ExportAssignment.t) =
       let open Ast.Statement.ExportAssignment in
-      let { expression = expr; comments } = assign in
-      let expr' = this#expression expr in
+      let { rhs; comments } = assign in
+      let rhs' =
+        match rhs with
+        | Expression expr ->
+          let expr' = this#expression expr in
+          if expr == expr' then
+            rhs
+          else
+            Expression expr'
+        | DeclareFunction (loc, decl) ->
+          let decl' = this#declare_function loc decl in
+          if decl == decl' then
+            rhs
+          else
+            DeclareFunction (loc, decl')
+      in
       let comments' = this#syntax_opt comments in
-      if expr == expr' && comments == comments' then
+      if rhs == rhs' && comments == comments' then
         assign
       else
-        { expression = expr'; comments = comments' }
+        { rhs = rhs'; comments = comments' }
 
     method namespace_export_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.NamespaceExportDeclaration.t) =

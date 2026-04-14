@@ -2101,6 +2101,23 @@ let tests =
          (* TODO: Flow does not parse this but should
             assert_statement_string ~ctxt "export a,{b}from'a';";
             assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
+         ( "export_assignment_statement" >:: fun ctxt ->
+           assert_statement_string ~ctxt "export=foo;";
+           assert_statement_string ~ctxt "export={a:1,b:2};";
+           assert_statement_string ~ctxt ~pretty:true "export = foo;";
+           assert_statement_string ~ctxt ~pretty:true "export = { a: 1, b: 2 };";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:"test.d.cts"
+             "export = function foo(x: string): number;";
+           assert_statement_string
+             ~ctxt
+             ~filename:"test.d.cts"
+             "export=function foo(x:string):number;";
+           assert_statement_string ~ctxt "export=function foo(){};";
+           assert_statement_string ~ctxt ~pretty:true "export = function foo() {};"
+         );
          ( "namespace_export_declaration_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "export as namespace Foo;"
          );

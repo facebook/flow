@@ -3871,10 +3871,26 @@ and export_default_declaration
          );
        ]
 
-and export_assignment ~opts loc { Ast.Statement.ExportAssignment.expression = expr; comments } =
+and export_assignment ~opts loc { Ast.Statement.ExportAssignment.rhs; comments } =
   layout_node_with_comments_opt loc comments
-  @@ with_semicolon
-       (fuse [Atom "export"; pretty_space; Atom "="; pretty_space; expression ~opts expr])
+  @@
+  match rhs with
+  | Ast.Statement.ExportAssignment.Expression expr ->
+    with_semicolon
+      (fuse [Atom "export"; pretty_space; Atom "="; pretty_space; expression ~opts expr])
+  | Ast.Statement.ExportAssignment.DeclareFunction (fn_loc, decl) ->
+    with_semicolon
+      (fuse
+         [
+           Atom "export";
+           pretty_space;
+           Atom "=";
+           pretty_space;
+           source_location_with_comments
+             ?comments:decl.Ast.Statement.DeclareFunction.comments
+             (fn_loc, declare_function_body ~opts decl);
+         ]
+      )
 
 and namespace_export_declaration loc { Ast.Statement.NamespaceExportDeclaration.id; comments } =
   layout_node_with_comments_opt loc comments
@@ -5475,17 +5491,31 @@ and component_type_param ~opts ~optional loc name annot =
   in
   source_location_with_comments (loc, fuse [name_layout; type_ ~opts annot])
 
+and declare_function_body
+    ~opts { Ast.Statement.DeclareFunction.id; annot = (annot_loc, t); predicate; _ } =
+  fuse
+    [
+      Atom "function";
+      (match id with
+      | Some id -> fuse [space; identifier id]
+      | None -> Empty);
+      source_location_with_comments
+        ( annot_loc,
+          match t with
+          | (loc, Ast.Type.Function func) ->
+            source_location_with_comments (loc, type_function ~opts ~sep:(Atom ":") loc func)
+          | _ -> failwith "Invalid DeclareFunction"
+        );
+      (match predicate with
+      | Some pred -> fuse [pretty_space; type_predicate ~opts pred]
+      | None -> Empty);
+    ]
+
 and declare_function
     ?(s_type = Empty)
     ~opts
     loc
-    {
-      Ast.Statement.DeclareFunction.id;
-      annot = (annot_lot, t);
-      predicate;
-      comments;
-      implicit_declare;
-    } =
+    ({ Ast.Statement.DeclareFunction.comments; implicit_declare; _ } as decl) =
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
@@ -5496,22 +5526,7 @@ and declare_function
               fuse [Atom "declare"; space]
             );
             s_type;
-            Atom "function";
-            (match id with
-            | Some id -> fuse [space; identifier id]
-            | None -> Empty);
-            source_location_with_comments
-              ( annot_lot,
-                match t with
-                | (loc, Ast.Type.Function func) ->
-                  source_location_with_comments (loc, type_function ~opts ~sep:(Atom ":") loc func)
-                | _ -> failwith "Invalid DeclareFunction"
-              );
-            begin
-              match predicate with
-              | Some pred -> fuse [pretty_space; type_predicate ~opts pred]
-              | None -> Empty
-            end;
+            declare_function_body ~opts decl;
           ]
        )
 

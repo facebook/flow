@@ -434,8 +434,12 @@ with type t = Impl.t = struct
             ("declaration", declaration);
             ("exportKind", string (string_of_export_kind Statement.ExportValue));
           ]
-      | (loc, ExportAssignment { ExportAssignment.expression = expr; comments }) ->
-        node ?comments "ExportAssignment" loc [("expression", expression expr)]
+      | (loc, ExportAssignment { ExportAssignment.rhs; comments }) ->
+        (match rhs with
+        | ExportAssignment.Expression expr ->
+          node ?comments "ExportAssignment" loc [("expression", expression expr)]
+        | ExportAssignment.DeclareFunction (fn_loc, decl) ->
+          node ?comments "ExportAssignment" loc [("expression", declare_function (fn_loc, decl))])
       | (loc, NamespaceExportDeclaration { NamespaceExportDeclaration.id; comments }) ->
         node ?comments "NamespaceExportDeclaration" loc [("id", identifier id)]
       | ( loc,

@@ -848,17 +848,24 @@ fn statement(
                 ],
             )
         }
-        StatementInner::ExportAssignment { loc, inner } => node(
-            offset_table,
-            config,
-            "ExportAssignment",
-            loc,
-            inner.comments.as_ref(),
-            vec![(
-                "expression",
-                expression(offset_table, config, &inner.expression),
-            )],
-        ),
+        StatementInner::ExportAssignment { loc, inner } => {
+            let expr_value = match &inner.rhs {
+                ast::statement::ExportAssignmentRhs::Expression(expr) => {
+                    expression(offset_table, config, expr)
+                }
+                ast::statement::ExportAssignmentRhs::DeclareFunction(fn_loc, decl) => {
+                    declare_function(offset_table, config, fn_loc, decl)
+                }
+            };
+            node(
+                offset_table,
+                config,
+                "ExportAssignment",
+                loc,
+                inner.comments.as_ref(),
+                vec![("expression", expr_value)],
+            )
+        }
         StatementInner::NamespaceExportDeclaration { loc, inner } => node(
             offset_table,
             config,

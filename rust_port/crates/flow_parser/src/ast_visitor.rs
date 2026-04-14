@@ -9858,11 +9858,15 @@ pub fn export_assignment_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     _loc: &'ast Loc,
     assign: &'ast ast::statement::ExportAssignment<Loc, Type>,
 ) -> Result<(), E> {
-    let ast::statement::ExportAssignment {
-        expression,
-        comments,
-    } = assign;
-    visitor.expression(expression)?;
+    let ast::statement::ExportAssignment { rhs, comments } = assign;
+    match rhs {
+        ast::statement::ExportAssignmentRhs::Expression(expr) => {
+            visitor.expression(expr)?;
+        }
+        ast::statement::ExportAssignmentRhs::DeclareFunction(loc, decl) => {
+            visitor.declare_function(loc, decl)?;
+        }
+    }
     visitor.syntax_opt(comments.as_ref())?;
     Ok(())
 }
@@ -9872,14 +9876,21 @@ pub fn map_export_assignment_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     _loc: &'ast Loc,
     assign: &'ast ast::statement::ExportAssignment<Loc, Loc>,
 ) -> ast::statement::ExportAssignment<Loc, Loc> {
-    let ast::statement::ExportAssignment {
-        expression,
-        comments,
-    } = assign;
-    let expression_ = visitor.map_expression(expression);
+    let ast::statement::ExportAssignment { rhs, comments } = assign;
+    let rhs_ = match rhs {
+        ast::statement::ExportAssignmentRhs::Expression(expr) => {
+            ast::statement::ExportAssignmentRhs::Expression(visitor.map_expression(expr))
+        }
+        ast::statement::ExportAssignmentRhs::DeclareFunction(loc, decl) => {
+            ast::statement::ExportAssignmentRhs::DeclareFunction(
+                loc.dupe(),
+                visitor.map_declare_function(loc, decl),
+            )
+        }
+    };
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::statement::ExportAssignment {
-        expression: expression_,
+        rhs: rhs_,
         comments: comments_,
     }
 }

@@ -729,14 +729,24 @@ fn visit_toplevel_statement<'a>(
                 module_info::CjsExportsState::CJSModuleExports(exports_loc, t)
             });
         }
-        StatementInner::ExportAssignment { inner, .. } => {
-            let (exports_loc, t) = inner.expression.loc();
-            let exports_loc = exports_loc.dupe();
-            let t = t.dupe();
-            module_info::cjs_mod_export(info, move |_| {
-                module_info::CjsExportsState::CJSModuleExports(exports_loc, t)
-            });
-        }
+        StatementInner::ExportAssignment { inner, .. } => match &inner.rhs {
+            ast::statement::ExportAssignmentRhs::Expression(e) => {
+                let (exports_loc, t) = e.loc();
+                let exports_loc = exports_loc.dupe();
+                let t = t.dupe();
+                module_info::cjs_mod_export(info, move |_| {
+                    module_info::CjsExportsState::CJSModuleExports(exports_loc, t)
+                });
+            }
+            ast::statement::ExportAssignmentRhs::DeclareFunction(_, decl) => {
+                let (exports_loc, t) = decl.annot.annotation.loc();
+                let exports_loc = exports_loc.dupe();
+                let t = t.dupe();
+                module_info::cjs_mod_export(info, move |_| {
+                    module_info::CjsExportsState::CJSModuleExports(exports_loc, t)
+                });
+            }
+        },
         StatementInner::ExportNamedDeclaration { loc, inner } => {
             let ast::statement::ExportNamedDeclaration {
                 declaration,

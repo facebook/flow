@@ -1046,10 +1046,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method export_assignment (assign : ('M, 'T) Ast.Statement.ExportAssignment.t)
         : ('N, 'U) Ast.Statement.ExportAssignment.t =
       let open Ast.Statement.ExportAssignment in
-      let { expression = expr; comments } = assign in
-      let expression' = this#expression expr in
+      let { rhs; comments } = assign in
+      let rhs' =
+        match rhs with
+        | Expression expr -> Expression (this#expression expr)
+        | DeclareFunction (loc, decl) ->
+          DeclareFunction (this#on_loc_annot loc, this#declare_function decl)
+      in
       let comments' = this#syntax_opt comments in
-      { expression = expression'; comments = comments' }
+      { rhs = rhs'; comments = comments' }
 
     method namespace_export_declaration (decl : ('M, 'T) Ast.Statement.NamespaceExportDeclaration.t)
         : ('N, 'U) Ast.Statement.NamespaceExportDeclaration.t =

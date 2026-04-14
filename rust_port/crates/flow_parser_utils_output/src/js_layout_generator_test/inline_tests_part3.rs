@@ -785,6 +785,28 @@ fn default_export_declaration_statement() {
 }
 
 #[test]
+fn export_assignment_statement() {
+    assert_statement_string(false, None, "export=foo;");
+    assert_statement_string(false, None, "export={a:1,b:2};");
+    assert_statement_string(true, None, "export = foo;");
+    assert_statement_string(true, None, "export = { a: 1, b: 2 };");
+    assert_statement_string_with_filename(
+        true,
+        "test.d.cts",
+        None,
+        "export = function foo(x: string): number;",
+    );
+    assert_statement_string_with_filename(
+        false,
+        "test.d.cts",
+        None,
+        "export=function foo(x:string):number;",
+    );
+    assert_statement_string(false, None, "export=function foo(){};");
+    assert_statement_string(true, None, "export = function foo() {};");
+}
+
+#[test]
 fn type_alias_statement() {
     assert_statement_string(false, None, "type a=a;");
     assert_statement_string(false, None, "type a<a>=a;");

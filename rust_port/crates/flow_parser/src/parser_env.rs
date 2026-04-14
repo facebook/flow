@@ -499,7 +499,7 @@ impl<'a> ParserEnv<'a> {
         self.parse_options.types
     }
 
-    pub(crate) fn is_d_ts(&self) -> bool {
+    pub fn is_d_ts(&self) -> bool {
         match self.source() {
             Some(file_key) => {
                 file_key.check_suffix(".d.ts")
@@ -707,7 +707,7 @@ impl<'a> ParserEnv<'a> {
         result
     }
 
-    pub(crate) fn with_ambient_context<T, F: FnOnce(&mut ParserEnv<'a>) -> T>(
+    pub fn with_ambient_context<T, F: FnOnce(&mut ParserEnv<'a>) -> T>(
         &mut self,
         in_ambient_context: bool,
         f: F,

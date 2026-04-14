@@ -6647,19 +6647,39 @@ fn export_assignment(
     a1: &ast::statement::ExportAssignment<Loc, Loc>,
     a2: &ast::statement::ExportAssignment<Loc, Loc>,
 ) -> Vec<NodeChange> {
-    let expr_diff = diff_if_changed(
-        |e1, e2| {
-            expression(
-                &ExpressionNodeParent::StatementParentOfExpression(stmt2.dupe()),
-                e1,
-                e2,
-            )
-        },
-        &a1.expression,
-        &a2.expression,
-    );
+    let rhs_diff = match (&a1.rhs, &a2.rhs) {
+        (
+            ast::statement::ExportAssignmentRhs::Expression(expr1),
+            ast::statement::ExportAssignmentRhs::Expression(expr2),
+        ) => diff_if_changed(
+            |e1, e2| {
+                expression(
+                    &ExpressionNodeParent::StatementParentOfExpression(stmt2.dupe()),
+                    e1,
+                    e2,
+                )
+            },
+            expr1,
+            expr2,
+        ),
+        _ => {
+            let s1 = statement::Statement::new(StatementInner::ExportAssignment {
+                loc: loc.dupe(),
+                inner: Arc::new(a1.clone()),
+            });
+            let s2 = statement::Statement::new(StatementInner::ExportAssignment {
+                loc: loc.dupe(),
+                inner: Arc::new(a2.clone()),
+            });
+            vec![replace(
+                loc,
+                Node::Statement(s1, StatementNodeParent::TopLevelParentOfStatement),
+                Node::Statement(s2, StatementNodeParent::TopLevelParentOfStatement),
+            )]
+        }
+    };
     let comments_diff = syntax_opt(loc, &a1.comments, &a2.comments).unwrap_or_default();
-    let mut result = expr_diff;
+    let mut result = rhs_diff;
     result.extend(comments_diff);
     result
 }

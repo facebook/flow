@@ -1892,17 +1892,41 @@ module Statement
         ~start_loc
         (fun env ->
           Eat.token env;
-          let expression = Parse.assignment env in
-          let trailing =
-            match semicolon env with
-            | Explicit trailing -> trailing
-            | Implicit { trailing; _ } -> trailing
-          in
-          Statement.ExportAssignment
-            {
-              Statement.ExportAssignment.expression;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+          if in_ambient_context env && (Peek.is_function env || Peek.is_hook env) then
+            match Declaration._function env with
+            | (fn_loc, Statement.DeclareFunction decl_func) ->
+              Statement.ExportAssignment
+                {
+                  Statement.ExportAssignment.rhs =
+                    Statement.ExportAssignment.DeclareFunction (fn_loc, decl_func);
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+            | (fn_loc, Statement.FunctionDeclaration fn) ->
+              let trailing =
+                match semicolon env with
+                | Explicit trailing -> trailing
+                | Implicit { trailing; _ } -> trailing
+              in
+              Statement.ExportAssignment
+                {
+                  Statement.ExportAssignment.rhs =
+                    Statement.ExportAssignment.Expression (fn_loc, Ast.Expression.Function fn);
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                }
+            | _ ->
+              failwith "Declaration._function must return DeclareFunction or FunctionDeclaration"
+          else
+            let expression = Parse.assignment env in
+            let trailing =
+              match semicolon env with
+              | Explicit trailing -> trailing
+              | Implicit { trailing; _ } -> trailing
+            in
+            Statement.ExportAssignment
+              {
+                Statement.ExportAssignment.rhs = Statement.ExportAssignment.Expression expression;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              })
         env
     | T_IDENTIFIER { raw = "as"; _ }
       when match Peek.ith_token ~i:1 env with

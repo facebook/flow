@@ -16,6 +16,7 @@ use crate::ast::Identifier;
 use crate::ast::StringLiteral;
 use crate::ast::VariableKind;
 use crate::ast::class;
+use crate::ast::expression;
 use crate::ast::expression::ExpressionInner;
 use crate::ast::function;
 use crate::ast::match_;
@@ -2768,21 +2769,66 @@ fn export_declaration(
             // export = expr;
             TokenKind::TAssign => with_loc(Some(start_loc), env, |env| {
                 eat::token(env)?;
-                let expression = expression_parser::assignment(env)?;
-                let trailing = match semicolon(env, None, true)? {
-                    SemicolonType::Explicit(trailing) => trailing,
-                    SemicolonType::Implicit(result) => result.trailing,
-                };
-                Ok(StatementInner::ExportAssignment {
-                    loc: LOC_NONE,
-                    inner: Arc::new(statement::ExportAssignment {
-                        expression,
-                        comments: ast_utils::mk_comments_opt(
-                            Some(leading.into()),
-                            Some(trailing.into()),
-                        ),
-                    }),
-                })
+                if env.in_ambient_context() && (peek::is_function(env) || peek::is_hook(env)) {
+                    let fn_stmt = declaration_parser::parse_function(env)?;
+                    match fn_stmt.0.as_ref() {
+                        StatementInner::DeclareFunction { loc: fn_loc, inner: decl_func } => {
+                            Ok(StatementInner::ExportAssignment {
+                                loc: LOC_NONE,
+                                inner: Arc::new(statement::ExportAssignment {
+                                    rhs: statement::ExportAssignmentRhs::DeclareFunction(
+                                        fn_loc.dupe(),
+                                        decl_func.as_ref().clone(),
+                                    ),
+                                    comments: ast_utils::mk_comments_opt(
+                                        Some(leading.into()),
+                                        None,
+                                    ),
+                                }),
+                            })
+                        }
+                        StatementInner::FunctionDeclaration { loc: fn_loc, inner: func } => {
+                            let trailing = match semicolon(env, None, true)? {
+                                SemicolonType::Explicit(trailing) => trailing,
+                                SemicolonType::Implicit(result) => result.trailing,
+                            };
+                            Ok(StatementInner::ExportAssignment {
+                                loc: LOC_NONE,
+                                inner: Arc::new(statement::ExportAssignment {
+                                    rhs: statement::ExportAssignmentRhs::Expression(
+                                        expression::Expression::new(
+                                            expression::ExpressionInner::Function {
+                                                loc: fn_loc.dupe(),
+                                                inner: func.dupe(),
+                                            },
+                                        ),
+                                    ),
+                                    comments: ast_utils::mk_comments_opt(
+                                        Some(leading.into()),
+                                        Some(trailing.into()),
+                                    ),
+                                }),
+                            })
+                        }
+                        _ => panic!("Declaration._function must return DeclareFunction or FunctionDeclaration"),
+                    }
+                } else {
+                    let expression = expression_parser::assignment(env)?;
+                    let trailing = match semicolon(env, None, true)? {
+                        SemicolonType::Explicit(trailing) => trailing,
+                        SemicolonType::Implicit(result) => result.trailing,
+                    };
+                    Ok(StatementInner::ExportAssignment {
+                        loc: LOC_NONE,
+                        inner: Arc::new(statement::ExportAssignment {
+                            rhs: statement::ExportAssignmentRhs::Expression(expression),
+                            comments: ast_utils::mk_comments_opt(
+                                Some(leading.into()),
+                                Some(trailing.into()),
+                            ),
+                        }),
+                    })
+                }
             })
             .map(|(loc, mut inner)| {
                 *inner.loc_mut() = loc;

@@ -3629,11 +3629,51 @@ fn statement_<'a>(
                     v
                 }
             } else {
-                let expr = expression(None, None, None, cx, &inner.expression)?;
+                let rhs = match &inner.rhs {
+                    statement::ExportAssignmentRhs::Expression(e) => {
+                        statement::ExportAssignmentRhs::Expression(
+                            expression(None, None, None, cx, e)?,
+                        )
+                    }
+                    statement::ExportAssignmentRhs::DeclareFunction(fn_loc, decl) => {
+                        let (_, annot_ast) =
+                            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), &decl.annot);
+                        let (_, t) = annot_ast.annotation.loc();
+                        let id = decl.id.as_ref().map(|id_name| {
+                            ast::Identifier::new(ast::IdentifierInner {
+                                loc: (id_name.loc.dupe(), t.dupe()),
+                                name: id_name.name.dupe(),
+                                comments: id_name.comments.dupe(),
+                            })
+                        });
+                        let predicate = decl.predicate.as_ref().map(|p| {
+                            flow_js::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
+                                    p.loc.dupe(),
+                                    UnsupportedSyntax::PredicateFunction,
+                                ))),
+                            );
+                            let Ok(v) =
+                                polymorphic_ast_mapper::predicate(&mut typed_ast_utils::ErrorMapper, p);
+                            v
+                        });
+                        statement::ExportAssignmentRhs::DeclareFunction(
+                            fn_loc.dupe(),
+                            statement::DeclareFunction {
+                                id,
+                                annot: annot_ast,
+                                predicate,
+                                comments: decl.comments.dupe(),
+                                implicit_declare: decl.implicit_declare,
+                            },
+                        )
+                    }
+                };
                 statement::Statement::new(StatementInner::ExportAssignment {
                     loc,
                     inner: (statement::ExportAssignment {
-                        expression: expr,
+                        rhs,
                         comments: inner.comments.dupe(),
                     })
                     .into(),

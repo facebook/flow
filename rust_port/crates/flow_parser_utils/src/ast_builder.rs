@@ -2760,9 +2760,29 @@ pub fn test_ast_of_string<T>(
     parser: impl FnOnce(&mut flow_parser::ParserEnv) -> T,
     str: &str,
 ) -> T {
+    test_ast_of_string_with_filename(parser, None, str)
+}
+
+pub fn test_ast_of_string_with_filename<T>(
+    parser: impl FnOnce(&mut flow_parser::ParserEnv) -> T,
+    filename: Option<&str>,
+    str: &str,
+) -> T {
     let parse_options = Some(flow_parser::PERMISSIVE_PARSE_OPTIONS);
-    let env = flow_parser::init_env::<()>(None, parse_options, None, Ok(str));
-    let (ast, _) = flow_parser::do_parse(env, false, parser).unwrap();
+    let source = filename.map(|f| {
+        flow_parser::file_key::FileKey::new(flow_parser::file_key::FileKeyInner::SourceFile(
+            f.to_string(),
+        ))
+    });
+    let env = flow_parser::init_env::<()>(None, parse_options, source, Ok(str));
+    let (ast, _) = flow_parser::do_parse(env, false, |env| {
+        if env.is_d_ts() {
+            env.with_ambient_context(true, parser)
+        } else {
+            parser(env)
+        }
+    })
+    .unwrap();
     ast
 }
 
@@ -2771,12 +2791,20 @@ pub fn test_expression_of_string(str: &str) -> expression::Expression<Loc, Loc> 
 }
 
 pub fn test_statement_of_string(str: &str) -> statement::Statement<Loc, Loc> {
-    let ast_list = test_ast_of_string(
+    test_statement_of_string_with_filename(None, str)
+}
+
+pub fn test_statement_of_string_with_filename(
+    filename: Option<&str>,
+    str: &str,
+) -> statement::Statement<Loc, Loc> {
+    let ast_list = test_ast_of_string_with_filename(
         |env| {
             flow_parser::parse_module_body_with_directives(env)
                 .ok()
                 .unwrap()
         },
+        filename,
         str,
     );
     match ast_list.as_slice() {

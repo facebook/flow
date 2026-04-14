@@ -361,8 +361,13 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
         { Ast.Statement.DeclareModuleExports.annot = (exports_loc, ((_, t), _)); comments = _ }
     ) ->
     Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
-  | (_, ExportAssignment { ExportAssignment.expression = ((exports_loc, t), _); comments = _ }) ->
-    Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
+  | (_, ExportAssignment { ExportAssignment.rhs; comments = _ }) ->
+    (match rhs with
+    | ExportAssignment.Expression ((exports_loc, t), _) ->
+      Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
+    | ExportAssignment.DeclareFunction (_, { DeclareFunction.annot = (_, ((exports_loc, t), _)); _ })
+      ->
+      Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t)))
   | ( loc,
       ExportNamedDeclaration
         { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ }

@@ -2041,9 +2041,44 @@ module Make
            )
         );
       Tast_utils.error_mapper#statement s
-    | (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = e; comments }) ->
-      let expr = expression cx e in
-      (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = expr; comments })
+    | (loc, ExportAssignment { Ast.Statement.ExportAssignment.rhs; comments }) ->
+      let rhs' =
+        match rhs with
+        | Ast.Statement.ExportAssignment.Expression e ->
+          Ast.Statement.ExportAssignment.Expression (expression cx e)
+        | Ast.Statement.ExportAssignment.DeclareFunction (fn_loc, decl) ->
+          let {
+            Ast.Statement.DeclareFunction.id;
+            annot;
+            predicate;
+            comments = fn_comments;
+            implicit_declare;
+          } =
+            decl
+          in
+          let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+          let (_, ((_, t), _)) = annot_ast in
+          let id' = Base.Option.map id ~f:(fun (id_loc, id_name) -> ((id_loc, t), id_name)) in
+          Ast.Statement.ExportAssignment.DeclareFunction
+            ( fn_loc,
+              {
+                Ast.Statement.DeclareFunction.id = id';
+                annot = annot_ast;
+                predicate =
+                  Base.Option.map predicate ~f:(fun ((ploc, _) as p) ->
+                      Flow_js.add_output
+                        cx
+                        (Error_message.EUnsupportedSyntax
+                           (ploc, Flow_intermediate_error_types.PredicateFunction)
+                        );
+                      Tast_utils.error_mapper#predicate p
+                  );
+                comments = fn_comments;
+                implicit_declare;
+              }
+            )
+      in
+      (loc, ExportAssignment { Ast.Statement.ExportAssignment.rhs = rhs'; comments })
     | (loc, NamespaceExportDeclaration _) as s ->
       Flow_js_utils.add_output
         cx

@@ -963,6 +963,12 @@ let test_ast_of_string ~parser ?filename str =
   let parse_options = Some Parser_env.permissive_parse_options in
   let source = Base.Option.map filename ~f:(fun f -> File_key.SourceFile f) in
   let env = Parser_env.init_env ~token_sink:None ~parse_options source str in
+  let env =
+    if Parser_env.is_d_ts env then
+      Parser_env.with_ambient_context true env
+    else
+      env
+  in
   let (ast, _) = Parser_flow.do_parse env parser false in
   ast
 

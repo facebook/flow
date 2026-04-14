@@ -5818,9 +5818,14 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.DeclareModuleExports { S.DeclareModuleExports.annot = (_, t); comments = _ } ->
     let t = annot opts scope tbls SSet.empty t in
     Scope.cjs_clobber scope t
-  | S.ExportAssignment { S.ExportAssignment.expression = e; comments = _ } ->
-    let t = expression opts scope tbls e in
-    Scope.cjs_clobber scope t
+  | S.ExportAssignment { S.ExportAssignment.rhs; comments = _ } ->
+    (match rhs with
+    | S.ExportAssignment.Expression e ->
+      let t = expression opts scope tbls e in
+      Scope.cjs_clobber scope t
+    | S.ExportAssignment.DeclareFunction (_, { S.DeclareFunction.annot = (_, t); _ }) ->
+      let t = annot opts scope tbls SSet.empty t in
+      Scope.cjs_clobber scope t)
   | S.NamespaceExportDeclaration _ -> ()
   | S.ImportEqualsDeclaration
       { S.ImportEqualsDeclaration.id; module_reference; import_kind; is_export; comments = _ } ->

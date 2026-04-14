@@ -2905,8 +2905,24 @@ pub mod statement {
         serde::Serialize,
         serde::Deserialize
     )]
+    pub enum ExportAssignmentRhs<M: Dupe, T: Dupe> {
+        Expression(super::expression::Expression<M, T>),
+        DeclareFunction(M, DeclareFunction<M, T>),
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ExportAssignment<M: Dupe, T: Dupe> {
-        pub expression: super::expression::Expression<M, T>,
+        pub rhs: ExportAssignmentRhs<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 

@@ -3484,13 +3484,28 @@ fn export_assignment(
     layout_node_with_comments_opt(
         loc,
         assign.comments.as_ref(),
-        with_semicolon(fuse(vec![
-            atom("export"),
-            pretty_space(),
-            atom("="),
-            pretty_space(),
-            expression(opts, None, &assign.expression),
-        ])),
+        match &assign.rhs {
+            ast::statement::ExportAssignmentRhs::Expression(expr) => with_semicolon(fuse(vec![
+                atom("export"),
+                pretty_space(),
+                atom("="),
+                pretty_space(),
+                expression(opts, None, expr),
+            ])),
+            ast::statement::ExportAssignmentRhs::DeclareFunction(fn_loc, decl) => {
+                with_semicolon(fuse(vec![
+                    atom("export"),
+                    pretty_space(),
+                    atom("="),
+                    pretty_space(),
+                    source_location_with_comments(
+                        fn_loc,
+                        decl.comments.as_ref(),
+                        declare_function_body(opts, decl),
+                    ),
+                ]))
+            }
+        },
     )
 }
 
@@ -4498,6 +4513,35 @@ fn declare_component_with_type(
     )
 }
 
+fn declare_function_body(
+    opts: &Opts,
+    func: &ast::statement::DeclareFunction<Loc, Loc>,
+) -> LayoutNode {
+    fuse(vec![
+        atom("function"),
+        match &func.id {
+            Some(id) => fuse(vec![space(), identifier(id)]),
+            None => LayoutNode::empty(),
+        },
+        source_location_with_comments(
+            &func.annot.loc,
+            None::<&ast::Syntax<Loc, ()>>,
+            match &*func.annot.annotation {
+                ast::types::TypeInner::Function { inner: f, .. } => source_location_with_comments(
+                    func.annot.annotation.loc(),
+                    None::<&ast::Syntax<Loc, ()>>,
+                    type_function(opts, atom(":"), func.annot.annotation.loc(), f),
+                ),
+                _ => panic!("Invalid DeclareFunction"),
+            },
+        ),
+        match &func.predicate {
+            Some(pred) => fuse(vec![pretty_space(), type_predicate(opts, pred)]),
+            None => LayoutNode::empty(),
+        },
+    ])
+}
+
 fn declare_function_with_type(
     opts: &Opts,
     s_type: LayoutNode,
@@ -4514,29 +4558,7 @@ fn declare_function_with_type(
                 fuse(vec![atom("declare"), space()])
             },
             s_type,
-            atom("function"),
-            match &func.id {
-                Some(id) => fuse(vec![space(), identifier(id)]),
-                None => LayoutNode::empty(),
-            },
-            source_location_with_comments(
-                &func.annot.loc,
-                None::<&ast::Syntax<Loc, ()>>,
-                match &*func.annot.annotation {
-                    ast::types::TypeInner::Function { inner: f, .. } => {
-                        source_location_with_comments(
-                            func.annot.annotation.loc(),
-                            None::<&ast::Syntax<Loc, ()>>,
-                            type_function(opts, atom(":"), func.annot.annotation.loc(), f),
-                        )
-                    }
-                    _ => panic!("Invalid DeclareFunction"),
-                },
-            ),
-            match &func.predicate {
-                Some(pred) => fuse(vec![pretty_space(), type_predicate(opts, pred)]),
-                None => LayoutNode::empty(),
-            },
+            declare_function_body(opts, func),
         ])),
     )
 }

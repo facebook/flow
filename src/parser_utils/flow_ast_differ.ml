@@ -4201,17 +4201,29 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (loc : Loc.t)
       (a1 : (Loc.t, Loc.t) Ast.Statement.ExportAssignment.t)
       (a2 : (Loc.t, Loc.t) Ast.Statement.ExportAssignment.t) : node change list =
-    let open Ast.Statement.ExportAssignment in
-    let { expression = expr1; comments = comments1 } = a1 in
-    let { expression = expr2; comments = comments2 } = a2 in
-    let expr_diff =
-      diff_if_changed
-        (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.ExportAssignment a2)))
-        expr1
-        expr2
+    let { Ast.Statement.ExportAssignment.rhs = rhs1; comments = comments1 } = a1 in
+    let { Ast.Statement.ExportAssignment.rhs = rhs2; comments = comments2 } = a2 in
+    let rhs_diff =
+      match (rhs1, rhs2) with
+      | ( Ast.Statement.ExportAssignment.Expression expr1,
+          Ast.Statement.ExportAssignment.Expression expr2
+        ) ->
+        diff_if_changed
+          (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.ExportAssignment a2)))
+          expr1
+          expr2
+      | _ ->
+        let s1 = (loc, Ast.Statement.ExportAssignment a1) in
+        let s2 = (loc, Ast.Statement.ExportAssignment a2) in
+        [
+          ( loc,
+            Replace
+              (Statement (s1, TopLevelParentOfStatement), Statement (s2, TopLevelParentOfStatement))
+          );
+        ]
     in
     let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
-    expr_diff @ comments_diff
+    rhs_diff @ comments_diff
   and namespace_export_declaration
       (loc : Loc.t)
       (d1 : (Loc.t, Loc.t) Ast.Statement.NamespaceExportDeclaration.t)

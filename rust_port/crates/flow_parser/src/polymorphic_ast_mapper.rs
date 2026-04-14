@@ -4088,14 +4088,21 @@ fn export_assignment<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     assign: &ast::statement::ExportAssignment<M, T>,
 ) -> Result<ast::statement::ExportAssignment<N, U>, E> {
-    let ast::statement::ExportAssignment {
-        expression: expr,
-        comments,
-    } = assign;
-    let expr_ = expression(mapper, expr)?;
+    let ast::statement::ExportAssignment { rhs, comments } = assign;
+    let rhs_ = match rhs {
+        ast::statement::ExportAssignmentRhs::Expression(expr) => {
+            ast::statement::ExportAssignmentRhs::Expression(expression(mapper, expr)?)
+        }
+        ast::statement::ExportAssignmentRhs::DeclareFunction(loc, decl) => {
+            ast::statement::ExportAssignmentRhs::DeclareFunction(
+                mapper.on_loc_annot(loc)?,
+                declare_function(mapper, decl)?,
+            )
+        }
+    };
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::statement::ExportAssignment {
-        expression: expr_,
+        rhs: rhs_,
         comments: comments_,
     })
 }

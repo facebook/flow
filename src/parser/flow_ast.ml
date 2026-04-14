@@ -1289,8 +1289,13 @@ and Statement : sig
   end
 
   module ExportAssignment : sig
+    type ('M, 'T) rhs =
+      | Expression of ('M, 'T) Expression.t
+      | DeclareFunction of ('M * ('M, 'T) DeclareFunction.t)
+    [@@deriving show]
+
     type ('M, 'T) t = {
-      expression: ('M, 'T) Expression.t;
+      rhs: ('M, 'T) rhs;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

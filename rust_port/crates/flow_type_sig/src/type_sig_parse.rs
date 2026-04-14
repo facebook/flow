@@ -10676,12 +10676,23 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             scope::cjs_clobber(scopes, scope, t);
         }
         S::ExportAssignment { loc: _, inner } => {
-            let ast::statement::ExportAssignment {
-                expression: e,
-                comments: _,
-            } = inner.as_ref();
-            let t = expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, e);
-            scope::cjs_clobber(scopes, scope, t);
+            let ast::statement::ExportAssignment { rhs, comments: _ } = inner.as_ref();
+            match rhs {
+                ast::statement::ExportAssignmentRhs::Expression(e) => {
+                    let t = expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, e);
+                    scope::cjs_clobber(scopes, scope, t);
+                }
+                ast::statement::ExportAssignmentRhs::DeclareFunction(
+                    _,
+                    ast::statement::DeclareFunction {
+                        annot: annot_field, ..
+                    },
+                ) => {
+                    let mut xs = tparam_stack::TParamStack::new();
+                    let t = annot(opts, scope, scopes, tbls, &mut xs, &annot_field.annotation);
+                    scope::cjs_clobber(scopes, scope, t);
+                }
+            }
         }
         S::NamespaceExportDeclaration { .. } => {}
         S::ImportEqualsDeclaration { loc: _, inner } => {
