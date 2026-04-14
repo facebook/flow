@@ -1771,8 +1771,22 @@ module ImportNamedTKit = struct
       let t = AnyT.untyped reason in
       (None, t)
     | (ImportValue, None) when NameUtils.Map.mem (OrdinaryName export_name) type_exports_tmap ->
-      add_output cx (Error_message.EImportTypeAsValue (reason, export_name));
-      (None, AnyT.error reason)
+      if Files.has_ts_ext (Context.file cx) then
+        (* In .ts files, silently treat value import of type-only export as a type import *)
+        let { preferred_def_locs = _; name_loc; type_ } =
+          NameUtils.Map.find (OrdinaryName export_name) type_exports_tmap
+        in
+        ( name_loc,
+          with_concretized_type
+            cx
+            reason
+            (ImportTypeTKit.on_concrete_type cx reason export_name)
+            type_
+        )
+      else (
+        add_output cx (Error_message.EImportTypeAsValue (reason, export_name));
+        (None, AnyT.error reason)
+      )
     | (_, None) ->
       let exports_tmap =
         match import_kind with

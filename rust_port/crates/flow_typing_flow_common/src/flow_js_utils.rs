@@ -3878,17 +3878,39 @@ pub mod import_named_t_kit {
                 Ok((None, t))
             }
             (ImportKind::ImportValue, None) if type_exports_tmap.contains_key(&export_name_key) => {
-                add_output(
-                    cx,
-                    ErrorMessage::EImportTypeAsValue(Box::new((
+                if flow_common::files::has_ts_ext(cx.file()) {
+                    let ns = type_exports_tmap
+                        .get(&export_name_key)
+                        .expect("checked above");
+                    let cx = cx.dupe();
+                    let cx_for_f = cx.dupe();
+                    let t = with_concretized_type(
+                        &cx,
                         reason.dupe(),
-                        FlowSmolStr::new(export_name),
-                    ))),
-                )?;
-                Ok((
-                    None,
-                    Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None))),
-                ))
+                        &|t: &Type| {
+                            import_type_t_kit::on_concrete_type(
+                                &cx_for_f,
+                                reason.dupe(),
+                                export_name.as_str(),
+                                t.dupe(),
+                            )
+                        },
+                        ns.type_.dupe(),
+                    )?;
+                    Ok((ns.name_loc.dupe(), t))
+                } else {
+                    add_output(
+                        cx,
+                        ErrorMessage::EImportTypeAsValue(Box::new((
+                            reason.dupe(),
+                            FlowSmolStr::new(export_name),
+                        ))),
+                    )?;
+                    Ok((
+                        None,
+                        Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None))),
+                    ))
+                }
             }
             (_, None) => {
                 let combined_exports: exports::T = match import_kind {

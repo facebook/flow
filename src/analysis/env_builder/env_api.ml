@@ -101,6 +101,7 @@ module type S = sig
         imported: bool;
         type_only_namespace: bool;
       }
+    | TsImport
     | Value
     | Internal
 
@@ -539,6 +540,7 @@ module Make
         imported: bool;
         type_only_namespace: bool;
       }
+    | TsImport
     | Value
     | Internal
 

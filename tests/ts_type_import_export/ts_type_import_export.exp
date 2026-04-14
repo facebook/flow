@@ -1,0 +1,86 @@
+Error -------------------------------------------------------------------------------------------------- importer.js:1:9
+
+Cannot import the type `MyType` as a value. Use `import type` instead. [import-type-as-value]
+
+   1| import {MyType} from './exporter_js'; // ERROR: import-type-as-value
+              ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- importer.ts:6:1
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   importer.ts:6:1
+   6| x as string; // ERROR: number ~> string (proves the type was resolved)
+      ^
+
+References:
+   importer.ts:4:18
+   4| declare const x: MyType;
+                       ^^^^^^ [1]
+   importer.ts:6:6
+   6| x as string; // ERROR: number ~> string (proves the type was resolved)
+           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- importer.ts:9:1
+
+Cannot cast `y.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   importer.ts:9:1
+   9| y.x as number; // ERROR: string ~> number (proves the interface resolved)
+      ^^^
+
+References:
+   exporter.ts:2:35
+   2| export interface MyInterface { x: string }
+                                        ^^^^^^ [1]
+   importer.ts:9:8
+   9| y.x as number; // ERROR: string ~> number (proves the interface resolved)
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:10:11
+
+Cannot use type `MyType` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer.ts:10:11
+   10| const z = MyType; // ERROR: type used as value
+                 ^^^^^^
+
+References:
+   importer.ts:1:9
+    1| import {MyType} from './exporter';
+               ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:11:11
+
+Cannot use type `MyInterface` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer.ts:11:11
+   11| const w = MyInterface; // ERROR: type used as value
+                 ^^^^^^^^^^^
+
+References:
+   importer.ts:2:9
+    2| import {MyInterface} from './exporter';
+               ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:12:12
+
+Cannot use type `MyNamespace` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer.ts:12:12
+   12| const ns = MyNamespace; // ERROR: type used as value
+                  ^^^^^^^^^^^
+
+References:
+   importer.ts:3:9
+    3| import {MyNamespace} from './exporter';
+               ^^^^^^^^^^^ [1]
+
+
+
+Found 6 errors

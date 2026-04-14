@@ -359,6 +359,7 @@ let simplify ~cache def_loc val_binding_kind name value =
     match val_binding_kind with
     | SourceLevelBinding (Bindings.Type { imported; type_only_namespace }) ->
       Env_api.Type { imported; type_only_namespace }
+    | SourceLevelBinding Bindings.TsImport -> Env_api.TsImport
     | SourceLevelBinding _ -> Env_api.Value
     | InternalBinding -> Env_api.Internal
   in

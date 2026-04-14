@@ -609,6 +609,12 @@ let read_entry ~lookup_mode cx loc reason =
   match find_var_opt var_info loc with
   | Error loc -> Error loc
   | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
+    let ts_import_resolved_to_type_only t =
+      match Context.find_resolved cx t with
+      | Some resolved ->
+        Option.is_some (Flow_js_utils.ImportTypeTKit.canonicalize_imported_type cx reason resolved)
+      | None -> false
+    in
     (match (val_kind, name, def_loc, lookup_mode) with
     | (Env_api.Type { imported; type_only_namespace }, Some name, Some def_loc, ForValue) ->
       Flow_js.add_output
@@ -639,6 +645,22 @@ let read_entry ~lookup_mode cx loc reason =
            )
         );
       Ok (AnyT.at (AnyError None) loc)
+    | (Env_api.TsImport, Some name, Some def_loc, (ForValue | ForTypeof)) ->
+      let t = type_of_state ~lookup_mode ~val_kind cx loc reason write_locs id None in
+      if ts_import_resolved_to_type_only t then begin
+        Flow_js.add_output
+          cx
+          (Error_message.EBindingError
+             ( Error_message.ETypeInValuePosition
+                 { imported = false; type_only_namespace = false; name },
+               loc,
+               OrdinaryName name,
+               def_loc
+             )
+          );
+        Ok (AnyT.at (AnyError None) loc)
+      end else
+        Ok t
     | _ ->
       let t = type_of_state ~lookup_mode ~val_kind cx loc reason write_locs id None in
       Ok t)

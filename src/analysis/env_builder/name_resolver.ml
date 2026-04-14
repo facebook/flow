@@ -735,7 +735,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                binding_kind = Flow_intermediate_error_types.ComponentNameBinding;
              }
           )
-      | (Bindings.Import, AssignmentWrite) ->
+      | ((Bindings.Import | Bindings.TsImport), AssignmentWrite) ->
         Some
           Error_message.(
             EBindingError (EImportReassigned, assignment_loc, OrdinaryName name, def_loc)
@@ -763,7 +763,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
-      | ( Bindings.(Const | Let | Class | Record | Enum | Function | Component | Import | Type _),
+      | ( Bindings.(
+            Const | Let | Class | Record | Enum | Function | Component | Import | TsImport | Type _),
           ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
           | ComponentBinding )
         )
@@ -998,6 +999,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     let val_simplify = Val.simplify ~cache:(ref IMap.empty) in
 
     let enable_enums = Context.enable_enums cx in
+    let is_ts = Files.has_ts_ext (Context.file cx) in
     object (this)
       inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
@@ -1606,6 +1608,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               }
             | Bindings.Import ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+              let kind =
+                if is_ts then
+                  Bindings.TsImport
+                else
+                  kind
+              in
               {
                 val_ref = ref (Val.undeclared name loc);
                 havoc = Val.one reason;
@@ -1936,7 +1944,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               | Bindings.Component
               | Bindings.Parameter
               | Bindings.ComponentParameter
-              | Bindings.Import ->
+              | Bindings.Import
+              | Bindings.TsImport ->
                 Some
                   Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
               | _ -> None))

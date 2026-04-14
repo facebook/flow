@@ -33,6 +33,7 @@ pub enum Kind {
     Parameter,
     CatchParameter,
     Import,
+    TsImport,
     DeclaredFunction,
     Internal,
     GeneratorNext,

@@ -391,6 +391,7 @@ pub enum ValKind {
         imported: bool,
         type_only_namespace: bool,
     },
+    TsImport,
     Value,
     Internal,
 }

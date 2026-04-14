@@ -1288,6 +1288,47 @@ fn read_entry<'cx>(
                 );
                 Ok(any_t::at(AnySource::AnyError(None), loc))
             }
+            (
+                ValKind::TsImport,
+                Some(name),
+                Some(def_loc),
+                LookupMode::ForValue | LookupMode::ForTypeof,
+            ) => {
+                let t = type_of_state(
+                    lookup_mode,
+                    val_kind,
+                    cx,
+                    loc.dupe(),
+                    reason.dupe(),
+                    &write_locs,
+                    id,
+                    None,
+                );
+                let ts_import_resolved_to_type_only = match cx.find_resolved(&t) {
+                    Some(resolved) => {
+                        flow_typing_flow_common::flow_js_utils::import_type_t_kit::canonicalize_imported_type(cx, reason.dupe(), &resolved).is_some()
+                    }
+                    None => false,
+                };
+                if ts_import_resolved_to_type_only {
+                    flow_js::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EBindingError(Box::new((
+                            BindingError::ETypeInValuePosition {
+                                imported: false,
+                                type_only_namespace: false,
+                                name: name.dupe(),
+                            },
+                            loc.dupe(),
+                            Name::new(name.dupe()),
+                            def_loc.dupe(),
+                        ))),
+                    );
+                    Ok(any_t::at(AnySource::AnyError(None), loc))
+                } else {
+                    Ok(t)
+                }
+            }
             _ => {
                 let t = type_of_state(
                     lookup_mode,

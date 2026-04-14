@@ -27,6 +27,7 @@ type kind =
   | Parameter
   | CatchParameter
   | Import
+  | TsImport
   | DeclaredFunction
   | Internal
   | GeneratorNext

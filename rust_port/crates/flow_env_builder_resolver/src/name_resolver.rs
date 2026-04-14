@@ -1023,7 +1023,7 @@ fn error_for_assignment_kind(
             def_loc,
             AssignedConstLikeBindingType::RecordNameBinding,
         )),
-        (BK::Import, PatternWriteKind::AssignmentWrite) => Some(binding_error(
+        (BK::Import | BK::TsImport, PatternWriteKind::AssignmentWrite) => Some(binding_error(
             BindingError::EImportReassigned,
             assignment_loc,
             name.dupe(),
@@ -1067,7 +1067,8 @@ fn error_for_assignment_kind(
             | BK::Enum
             | BK::Function
             | BK::Component
-            | BK::Import,
+            | BK::Import
+            | BK::TsImport,
             PatternWriteKind::VarBinding
             | PatternWriteKind::LetBinding
             | PatternWriteKind::ClassBinding
@@ -1371,6 +1372,7 @@ struct NameResolver<'a, Cx: Context, Fl: Flow<Cx = Cx>> {
     cache: Rc<RefCell<ValCache<ALoc>>>,
     simplify_cache: RefCell<HashMap<usize, Vec<env_api::WriteLoc<ALoc>>>>,
     enable_enums: bool,
+    is_ts: bool,
     enable_const_params: bool,
     provider_info: Rc<provider_api::Info<ALoc>>,
     prepass_info: &'a flow_analysis::scope_api::ScopeInfo<ALoc>,
@@ -1408,6 +1410,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     ) -> Self {
         let (prepass_info, prepass_values, unbound_names) = prepass;
         let enable_enums = cx.enable_enums();
+        let is_ts = flow_common::files::has_ts_ext(&cx.file());
         let enable_const_params = cx.enable_const_params();
         let cache = Rc::new(RefCell::new(ValCache::new()));
         let (env, jsx_base_name) = initial_env(
@@ -1426,6 +1429,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             cache,
             simplify_cache: RefCell::new(HashMap::new()),
             enable_enums,
+            is_ts,
             enable_const_params,
             provider_info,
             prepass_info,
@@ -2275,6 +2279,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 BindingsKind::Import => {
                     let desc = VirtualReasonDesc::RIdentifier(Name::new(name.dupe()));
                     let reason = VirtualReason::new(desc, loc.dupe());
+                    let kind = if self.is_ts {
+                        BindingsKind::TsImport
+                    } else {
+                        *kind
+                    };
                     let val =
                         ssa_val::undeclared(&mut *self.cache.borrow_mut(), name.dupe(), loc.dupe());
                     EnvVal::new(EnvValInner {
@@ -2283,7 +2292,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         writes_by_closure_provider_val: None,
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
-                        kind: *kind,
+                        kind,
                     })
                 }
                 BindingsKind::Internal => {
@@ -7739,7 +7748,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     | BindingsKind::Component
                     | BindingsKind::Parameter
                     | BindingsKind::ComponentParameter
-                    | BindingsKind::Import => Some(ErrorMessage::EBindingError(Box::new((
+                    | BindingsKind::Import
+                    | BindingsKind::TsImport => Some(ErrorMessage::EBindingError(Box::new((
                         BindingError::ENameAlreadyBound,
                         loc.dupe(),
                         flow_common::reason::Name::new(name.to_string()),
