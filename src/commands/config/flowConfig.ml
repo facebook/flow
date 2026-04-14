@@ -58,6 +58,7 @@ module Opts = struct
     casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
     async_component_syntax: bool;
+    async_component_syntax_includes: string list;
     component_syntax: bool;
     deprecated_utilities: string list SMap.t;
     deprecated_utilities_excludes: string list;
@@ -223,6 +224,7 @@ module Opts = struct
       casting_syntax_only_support_as_excludes = [];
       channel_mode = None;
       async_component_syntax = false;
+      async_component_syntax_includes = [];
       component_syntax = false;
       deprecated_utilities = SMap.empty;
       deprecated_utilities_excludes = [];
@@ -1109,6 +1111,17 @@ module Opts = struct
       ( "experimental.async_component_syntax",
         boolean (fun opts v -> Ok { opts with async_component_syntax = v })
       );
+      ( "experimental.async_component_syntax.includes",
+        string
+          ~init:(fun opts -> { opts with async_component_syntax_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                async_component_syntax_includes = v :: opts.async_component_syntax_includes;
+              })
+      );
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
       ("experimental.component_syntax.hook_compatibility", hook_compatibility_parser);
@@ -1981,6 +1994,8 @@ let casting_syntax_only_support_as_excludes c =
 let channel_mode c = c.options.Opts.channel_mode
 
 let async_component_syntax c = c.options.Opts.async_component_syntax
+
+let async_component_syntax_includes c = c.options.Opts.async_component_syntax_includes
 
 let component_syntax c = c.options.Opts.component_syntax
 

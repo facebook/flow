@@ -179,6 +179,7 @@ pub struct Options {
     pub channel_mode: ChannelMode,
     pub component_syntax: bool,
     pub async_component_syntax: bool,
+    pub async_component_syntax_includes: Arc<[Regex]>,
     pub debug: bool,
     pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub deprecated_utilities_excludes: Arc<[Regex]>,

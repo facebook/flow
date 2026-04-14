@@ -91,6 +91,7 @@ type metadata = {
   casting_syntax: Options.CastingSyntax.t;
   casting_syntax_only_support_as_excludes: Str.regexp list;
   async_component_syntax: bool;
+  async_component_syntax_includes: Str.regexp list;
   component_syntax: bool;
   deprecated_utilities: string list SMap.t;
   deprecated_utilities_excludes: Str.regexp list;

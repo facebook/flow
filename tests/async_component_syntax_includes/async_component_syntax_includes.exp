@@ -1,0 +1,25 @@
+Error --------------------------------------------------------------------------------------------- excluded/test.js:4:1
+
+Async component syntax is not supported. [unsupported-syntax]
+
+      v----------------------------------------------------------------
+   4| async component AsyncComp() { // ERROR: not in included directory
+   5|   await Promise.resolve();
+   6|   return <div />;
+   7| }
+      ^
+
+
+Error --------------------------------------------------------------------------------------------- excluded/test.js:9:1
+
+Async hook syntax is not supported. [unsupported-syntax]
+
+       v-----------------------------------------------------------------------------
+    9| async hook useAsyncHook(): Promise<void> { // ERROR: not in included directory
+   10|   await Promise.resolve();
+   11| }
+       ^
+
+
+
+Found 2 errors

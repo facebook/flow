@@ -117,6 +117,7 @@ pub(super) fn make_options(
                 channel_mode,
                 component_syntax,
                 async_component_syntax,
+                async_component_syntax_includes,
                 dev_only_refinement_info_as_errors,
                 emoji: _emoji,
                 enable_const_params,
@@ -328,6 +329,12 @@ pub(super) fn make_options(
         .into();
 
     let hook_compatibility_includes: Arc<[Regex]> = hook_compatibility_includes
+        .iter()
+        .map(|s| expand_and_make_regexp(&root, s))
+        .collect::<Vec<_>>()
+        .into();
+
+    let async_component_syntax_includes: Arc<[Regex]> = async_component_syntax_includes
         .iter()
         .map(|s| expand_and_make_regexp(&root, s))
         .collect::<Vec<_>>()
@@ -575,6 +582,7 @@ pub(super) fn make_options(
         channel_mode,
         component_syntax,
         async_component_syntax,
+        async_component_syntax_includes,
         debug: false, // Not in flowconfig, set to false
         deprecated_utilities,
         deprecated_utilities_excludes,

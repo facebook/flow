@@ -864,10 +864,7 @@ fn resolve_annotated_function<'cx>(
             flow_typing_errors::error_message::ErrorMessage::ENestedHook(reason.dupe()),
         );
     }
-    if function_.async_
-        && *effect_ == ast::function::Effect::Hook
-        && !cx.metadata().frozen.async_component_syntax
-    {
+    if function_.async_ && *effect_ == ast::function::Effect::Hook && !cx.async_component_syntax() {
         flow_js_utils::add_output_non_speculating(
             cx,
             flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -1114,7 +1111,7 @@ fn resolve_annotated_component<'cx>(
                 flow_typing_errors::error_message::ErrorMessage::ENestedComponent(reason.dupe()),
             );
         }
-        if component.async_ && !cx.metadata().frozen.async_component_syntax {
+        if component.async_ && !cx.async_component_syntax() {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -2039,7 +2036,7 @@ fn resolve_inferred_function<'cx>(
     }
     if function_.async_
         && function_.effect_ == ast::function::Effect::Hook
-        && !cx.metadata().frozen.async_component_syntax
+        && !cx.async_component_syntax()
     {
         flow_js_utils::add_output_non_speculating(
             cx,

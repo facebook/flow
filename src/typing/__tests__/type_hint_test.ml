@@ -34,6 +34,7 @@ let metadata =
     casting_syntax_only_support_as_excludes = [];
     component_syntax = true;
     async_component_syntax = false;
+    async_component_syntax_includes = [];
     deprecated_colon_extends = [];
     deprecated_colon_extends_excludes = [];
     deprecated_utilities = SMap.empty;

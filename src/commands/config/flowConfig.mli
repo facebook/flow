@@ -93,6 +93,8 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val async_component_syntax : config -> bool
 
+val async_component_syntax_includes : config -> string list
+
 val component_syntax : config -> bool
 
 val deprecated_utilities : config -> string list SMap.t

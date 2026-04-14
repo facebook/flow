@@ -82,6 +82,7 @@ pub mod opts {
         pub channel_mode: Option<ChannelMode>,
         pub component_syntax: bool,
         pub async_component_syntax: bool,
+        pub async_component_syntax_includes: Vec<String>,
         pub dev_only_refinement_info_as_errors: bool,
         pub emoji: Option<bool>,
         pub enable_const_params: Option<bool>,
@@ -228,6 +229,7 @@ pub mod opts {
             channel_mode: None,
             component_syntax: false,
             async_component_syntax: false,
+            async_component_syntax_includes: Vec::new(),
             dev_only_refinement_info_as_errors: false,
             emoji: None,
             enable_const_params: None,
@@ -1097,6 +1099,26 @@ pub mod opts {
                 opts.hook_compatibility = v;
                 Ok(())
             },
+            values,
+            config,
+        )
+    }
+
+    fn async_component_syntax_includes_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        fn init_fn(opts: &mut Opts) {
+            opts.async_component_syntax_includes = Vec::new();
+        }
+        parse_string(
+            |opts, v| {
+                opts.async_component_syntax_includes
+                    .push(ocaml_str_to_rust_regex(&v));
+                Ok(())
+            },
+            Some(init_fn),
+            true,
             values,
             config,
         )
@@ -2111,6 +2133,9 @@ pub mod opts {
                     values,
                     config,
                 )),
+                "experimental.async_component_syntax.includes" => {
+                    Some(async_component_syntax_includes_parser(values, config))
+                }
                 "experimental.component_syntax.hook_compatibility" => {
                     Some(hook_compatibility_parser(values, config))
                 }

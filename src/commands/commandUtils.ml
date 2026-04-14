@@ -1494,6 +1494,11 @@ let make_options
         (FlowConfig.casting_syntax_only_support_as_excludes flowconfig);
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_async_component_syntax = FlowConfig.async_component_syntax flowconfig;
+    opt_async_component_syntax_includes =
+      Base.List.map
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
+        (FlowConfig.async_component_syntax_includes flowconfig);
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
     opt_debug = options_flags.debug;
     opt_deprecated_utilities =

@@ -157,6 +157,7 @@ pub struct FrozenMetadata {
     pub casting_syntax_only_support_as_excludes: Arc<[Regex]>,
     pub component_syntax: bool,
     pub async_component_syntax: bool,
+    pub async_component_syntax_includes: Arc<[Regex]>,
     pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub deprecated_utilities_excludes: Arc<[Regex]>,
     pub dev_only_refinement_info_as_errors: bool,
@@ -222,6 +223,7 @@ impl Default for FrozenMetadata {
             casting_syntax_only_support_as_excludes: Arc::from([]),
             component_syntax: true,
             async_component_syntax: false,
+            async_component_syntax_includes: Arc::from([]),
             deprecated_utilities: Arc::new(BTreeMap::new()),
             deprecated_utilities_excludes: Arc::from([]),
             dev_only_refinement_info_as_errors: false,
@@ -579,6 +581,7 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
                 .dupe(),
             component_syntax: options.component_syntax,
             async_component_syntax: options.async_component_syntax,
+            async_component_syntax_includes: options.async_component_syntax_includes.dupe(),
             deprecated_utilities_excludes: options.deprecated_utilities_excludes.dupe(),
             hook_compatibility_excludes: options.hook_compatibility_excludes.dupe(),
             hook_compatibility_includes: options.hook_compatibility_includes.dupe(),
@@ -1002,6 +1005,11 @@ impl<'cx> Context<'cx> {
 
     pub fn component_syntax(&self) -> bool {
         self.0.metadata.frozen.component_syntax || self.0.file.is_lib_file()
+    }
+
+    pub fn async_component_syntax(&self) -> bool {
+        self.in_dirlist(&self.0.metadata.frozen.async_component_syntax_includes)
+            || self.0.metadata.frozen.async_component_syntax
     }
 
     pub fn hook_compatibility(&self) -> bool {
