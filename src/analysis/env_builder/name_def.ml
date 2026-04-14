@@ -800,6 +800,15 @@ type deferred_visit =
       var_id: (ALoc.t, ALoc.t) Ast.Identifier.t;
       hooklike: bool;
     }
+  | ClassDecl of {
+      loc: ALoc.t;
+      class_: (ALoc.t, ALoc.t) Ast.Class.t;
+      kind: ClassKind.t;
+    }
+  | DeclareClassDecl of {
+      loc: ALoc.t;
+      decl: (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t;
+    }
 
 type function_state = {
   statics: Env_api.EnvKey.t option SMap.t;
@@ -1013,6 +1022,34 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! statement_list stmts =
       let stmts = Flow_ast_utils.hoist_function_and_component_declarations stmts in
+      (* Like has_assigning_write, but excludes GlobalWrite. GlobalWrite occurs
+         for all declarations in lib/builtin files. Deferring those declarations
+         changes their processing order and causes spurious type errors. *)
+      let has_local_assigning_write kind_and_loc =
+        match Env_api.EnvMap.find_opt kind_and_loc env_info.Env_api.env_entries with
+        | Some (Env_api.AssigningWrite _) -> true
+        | _ -> false
+      in
+      (* Pre-scan for declare namespace names. Only classes/declare classes whose
+         name matches a declare namespace should be deferred for merging. Deferring
+         all classes causes their static property assignments (ClassName.prop = value)
+         to be intercepted by the function statics pattern, which loses contextual
+         typing and produces spurious errors. *)
+      let namespace_names =
+        List.fold_left
+          (fun acc (_, stmt) ->
+            match stmt with
+            | Ast.Statement.DeclareNamespace
+                {
+                  Ast.Statement.DeclareNamespace.id =
+                    Ast.Statement.DeclareNamespace.Local (_, { Ast.Identifier.name; _ });
+                  _;
+                } ->
+              SSet.add name acc
+            | _ -> acc)
+          SSet.empty
+          stmts
+      in
       let rec loop state stmts =
         match stmts with
         | [] ->
@@ -1042,7 +1079,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                       ~arrow
                       ~hooklike
                       loc
-                      func)
+                      func
+                  | ClassDecl { loc; class_; kind } ->
+                    ignore @@ this#class_internal ~kind ~namespace_types loc class_
+                  | DeclareClassDecl { loc; decl } ->
+                    this#visit_declare_class ~namespace_types loc decl)
                 deferred_visits;
               if SMap.is_empty namespace_types then
                 Base.List.iter
@@ -1424,6 +1465,108 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ignore @@ this#statement stmt;
             loop state xs
           )
+        (* class Foo {}; export class Foo {}; export default class Foo {} *)
+        | ( ( ( loc,
+                Ast.Statement.ClassDeclaration
+                  ({ Ast.Class.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as class_)
+              )
+            | ( _,
+                Ast.Statement.ExportNamedDeclaration
+                  {
+                    Ast.Statement.ExportNamedDeclaration.declaration =
+                      Some
+                        ( loc,
+                          Ast.Statement.ClassDeclaration
+                            ( { Ast.Class.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as
+                            class_
+                            )
+                        );
+                    Ast.Statement.ExportNamedDeclaration.export_kind = Ast.Statement.ExportValue;
+                    Ast.Statement.ExportNamedDeclaration.specifiers = None;
+                    Ast.Statement.ExportNamedDeclaration.source = None;
+                    _;
+                  }
+              )
+            | ( _,
+                Ast.Statement.ExportDefaultDeclaration
+                  {
+                    Ast.Statement.ExportDefaultDeclaration.declaration =
+                      Ast.Statement.ExportDefaultDeclaration.Declaration
+                        ( loc,
+                          Ast.Statement.ClassDeclaration
+                            ( { Ast.Class.id = Some (id_loc, { Ast.Identifier.name; _ }); _ } as
+                            class_
+                            )
+                        );
+                    _;
+                  }
+              ) ) as stmt
+          )
+          :: xs ->
+          let state =
+            if
+              SSet.mem name namespace_names
+              && has_local_assigning_write (Env_api.OrdinaryNameLoc, id_loc)
+            then
+              SMap.update
+                name
+                (function
+                  | None ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc empty_function_state) with
+                        deferred_visits = [ClassDecl { loc; class_; kind = ClassKind.Class }];
+                      }
+                  | Some function_state ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc function_state) with
+                        deferred_visits =
+                          function_state.deferred_visits
+                          @ [ClassDecl { loc; class_; kind = ClassKind.Class }];
+                      })
+                state
+            else (
+              ignore @@ this#statement stmt;
+              state
+            )
+          in
+          loop state xs
+        (* declare class Foo {} *)
+        | ( ( loc,
+              Ast.Statement.DeclareClass
+                ({ Ast.Statement.DeclareClass.id = (id_loc, { Ast.Identifier.name; _ }); _ } as decl)
+            ) as stmt
+          )
+          :: xs ->
+          let state =
+            if
+              SSet.mem name namespace_names
+              && has_local_assigning_write (Env_api.OrdinaryNameLoc, id_loc)
+            then
+              SMap.update
+                name
+                (function
+                  | None ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc empty_function_state) with
+                        deferred_visits = [DeclareClassDecl { loc; decl }];
+                      }
+                  | Some function_state ->
+                    Some
+                      {
+                        (record_merge_candidate id_loc function_state) with
+                        deferred_visits =
+                          function_state.deferred_visits @ [DeclareClassDecl { loc; decl }];
+                      })
+                state
+            else (
+              ignore @@ this#statement stmt;
+              state
+            )
+          in
+          loop state xs
         | x :: xs ->
           ignore @@ this#statement x;
           loop state xs
@@ -2242,9 +2385,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         scope_kind
         ()
 
-    method! class_ loc expr = this#class_internal ~kind:ClassKind.Class loc expr
+    method! class_ loc expr =
+      this#class_internal ~kind:ClassKind.Class ~namespace_types:SMap.empty loc expr
 
-    method private class_internal ~kind loc expr =
+    method private class_internal ~kind ~namespace_types loc expr =
       let open Ast.Class in
       let {
         id;
@@ -2316,13 +2460,17 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               this#add_ordinary_binding
                 id_loc
                 reason
-                (Class { class_loc = loc; class_ = expr; this_super_write_locs; kind })
+                (Class
+                   { class_loc = loc; class_ = expr; this_super_write_locs; kind; namespace_types }
+                )
             | None ->
               let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
               this#add_ordinary_binding
                 loc
                 reason
-                (Class { class_loc = loc; class_ = expr; this_super_write_locs; kind })
+                (Class
+                   { class_loc = loc; class_ = expr; this_super_write_locs; kind; namespace_types }
+                )
           end;
           expr
       )
@@ -2553,14 +2701,18 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | None -> ());
       super#declare_function loc decl
 
-    method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
+    method private visit_declare_class ~namespace_types loc decl =
       let open Ast.Statement.DeclareClass in
       let { id = (id_loc, { Ast.Identifier.name; _ }); _ } = decl in
       this#add_ordinary_binding
         id_loc
         (mk_reason (RClass (RIdentifier (OrdinaryName name))) loc)
-        (DeclaredClass (loc, decl));
-      super#declare_class loc decl
+        (DeclaredClass (loc, decl, namespace_types));
+      ignore @@ super#declare_class loc decl
+
+    method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
+      this#visit_declare_class ~namespace_types:SMap.empty loc decl;
+      decl
 
     method! declare_component loc (decl : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
       let open Ast.Statement.DeclareComponent in

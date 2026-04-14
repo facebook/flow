@@ -2610,7 +2610,13 @@ impl<'a> DefFinder<'a> {
         });
     }
 
-    fn class_internal(&mut self, kind: ClassKind, loc: ALoc, expr: &ast::class::Class<ALoc, ALoc>) {
+    fn class_internal(
+        &mut self,
+        kind: ClassKind,
+        namespace_types: &NamespaceTypesMap,
+        loc: ALoc,
+        expr: &ast::class::Class<ALoc, ALoc>,
+    ) {
         let id = &expr.id;
         let body = &expr.body;
         let class_tparams = &expr.tparams;
@@ -2701,6 +2707,7 @@ impl<'a> DefFinder<'a> {
                             class_: expr.clone(),
                             this_super_write_locs,
                             kind,
+                            namespace_types: namespace_types.clone(),
                         })),
                     );
                 }
@@ -2717,11 +2724,38 @@ impl<'a> DefFinder<'a> {
                             class_: expr.clone(),
                             this_super_write_locs,
                             kind,
+                            namespace_types: namespace_types.clone(),
                         })),
                     );
                 }
             }
         });
+    }
+
+    fn visit_declare_class(
+        &mut self,
+        namespace_types: &NamespaceTypesMap,
+        loc: ALoc,
+        decl: &ast::statement::DeclareClass<ALoc, ALoc>,
+    ) {
+        let id_loc = decl.id.loc.dupe();
+        let name = &decl.id.name;
+
+        self.add_ordinary_binding(
+            id_loc,
+            mk_reason(
+                VirtualReasonDesc::RClass(
+                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())).into(),
+                ),
+                loc.dupe(),
+            ),
+            Def::DeclaredClass(Box::new(DeclaredClassDefData {
+                loc: loc.dupe(),
+                decl: decl.clone(),
+                namespace_types: namespace_types.clone(),
+            })),
+        );
+        let Ok(()) = ast_visitor::declare_class_default(self, &loc, decl);
     }
 
     fn visit_class_property_value(
@@ -4469,6 +4503,23 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         // Function statics
         let stmts = hoist_function_and_component_declarations(stmts.to_vec());
 
+        // Pre-scan for declare namespace names. Only classes/declare classes whose
+        // name matches a declare namespace should be deferred for merging. Deferring
+        // all classes causes their static property assignments (ClassName.prop = value)
+        // to be intercepted by the function statics pattern, which loses contextual
+        // typing and produces spurious errors.
+        let namespace_names: BTreeSet<FlowSmolStr> = stmts
+            .iter()
+            .filter_map(|stmt| {
+                if let StatementInner::DeclareNamespace { inner, .. } = stmt.deref() {
+                    if let ast::statement::declare_namespace::Id::Local(id) = &inner.id {
+                        return Some(id.name.dupe());
+                    }
+                }
+                None
+            })
+            .collect();
+
         enum DeferredVisit {
             FunctionDecl {
                 loc: ALoc,
@@ -4480,6 +4531,15 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 arrow: bool,
                 var_id: ast::Identifier<ALoc, ALoc>,
                 hooklike: bool,
+            },
+            ClassDecl {
+                loc: ALoc,
+                class_: ast::class::Class<ALoc, ALoc>,
+                kind: ClassKind,
+            },
+            DeclareClassDecl {
+                loc: ALoc,
+                decl: ast::statement::DeclareClass<ALoc, ALoc>,
             },
         }
 
@@ -4760,6 +4820,150 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     }
                 }
 
+                // class Foo {}
+                StatementInner::ClassDeclaration { loc, inner } if inner.id.is_some() => {
+                    let class_ = inner.as_ref();
+                    let id = class_.id.as_ref().unwrap();
+                    let id_loc = id.loc.dupe();
+                    let name = &id.name;
+                    if namespace_names.contains(name)
+                        && crate::env_api::has_non_global_assigning_write(
+                            EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
+                            &self.env_info.env_entries,
+                        )
+                    {
+                        let deferred = DeferredVisit::ClassDecl {
+                            loc: loc.dupe(),
+                            class_: class_.clone(),
+                            kind: ClassKind::Class,
+                        };
+                        let function_state =
+                            state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                        function_state.record_merge_candidate(&id_loc);
+                        function_state.deferred_visits.push(deferred);
+                    } else {
+                        let Ok(()) = self.statement(stmt);
+                    }
+                }
+
+                // export class Foo {}
+                StatementInner::ExportNamedDeclaration { inner, .. }
+                    if matches!(
+                        inner.as_ref(),
+                        ast::statement::ExportNamedDeclaration {
+                            declaration: Some(decl),
+                            export_kind: ExportKind::ExportValue,
+                            specifiers: None,
+                            source: None,
+                            ..
+                        } if matches!(decl.deref() , StatementInner::ClassDeclaration { inner: class_inner, .. } if class_inner.id.is_some())
+                    ) =>
+                {
+                    let export_decl = inner.as_ref();
+                    if let Some(decl) = &export_decl.declaration {
+                        if let StatementInner::ClassDeclaration {
+                            loc,
+                            inner: class_inner,
+                        } = decl.deref()
+                        {
+                            let class_ = class_inner.as_ref();
+                            let id = class_.id.as_ref().unwrap();
+                            let id_loc = id.loc.dupe();
+                            let name = &id.name;
+                            if namespace_names.contains(name)
+                                && crate::env_api::has_non_global_assigning_write(
+                                    EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
+                                    &self.env_info.env_entries,
+                                )
+                            {
+                                let deferred = DeferredVisit::ClassDecl {
+                                    loc: loc.dupe(),
+                                    class_: class_.clone(),
+                                    kind: ClassKind::Class,
+                                };
+                                let function_state =
+                                    state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                                function_state.record_merge_candidate(&id_loc);
+                                function_state.deferred_visits.push(deferred);
+                            } else {
+                                let Ok(()) = self.statement(stmt);
+                            }
+                        }
+                    }
+                }
+
+                // export default class Foo {}
+                StatementInner::ExportDefaultDeclaration { inner, .. }
+                    if matches!(
+                        inner.as_ref(),
+                        ast::statement::ExportDefaultDeclaration {
+                            declaration: ast::statement::export_default_declaration::Declaration::Declaration(
+                                decl
+                            ),
+                            ..
+                        } if matches!(decl.deref() , StatementInner::ClassDeclaration { inner: class_inner, .. } if class_inner.id.is_some())
+                    ) =>
+                {
+                    let export_decl = inner.as_ref();
+                    if let ast::statement::export_default_declaration::Declaration::Declaration(
+                        decl,
+                    ) = &export_decl.declaration
+                    {
+                        if let StatementInner::ClassDeclaration {
+                            loc,
+                            inner: class_inner,
+                        } = decl.deref()
+                        {
+                            let class_ = class_inner.as_ref();
+                            let id = class_.id.as_ref().unwrap();
+                            let id_loc = id.loc.dupe();
+                            let name = &id.name;
+                            if namespace_names.contains(name)
+                                && crate::env_api::has_non_global_assigning_write(
+                                    EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
+                                    &self.env_info.env_entries,
+                                )
+                            {
+                                let deferred = DeferredVisit::ClassDecl {
+                                    loc: loc.dupe(),
+                                    class_: class_.clone(),
+                                    kind: ClassKind::Class,
+                                };
+                                let function_state =
+                                    state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                                function_state.record_merge_candidate(&id_loc);
+                                function_state.deferred_visits.push(deferred);
+                            } else {
+                                let Ok(()) = self.statement(stmt);
+                            }
+                        }
+                    }
+                }
+
+                // declare class Foo {}
+                StatementInner::DeclareClass { loc, inner } => {
+                    let decl = inner.as_ref();
+                    let id_loc = decl.id.loc.dupe();
+                    let name = &decl.id.name;
+                    if namespace_names.contains(name)
+                        && crate::env_api::has_non_global_assigning_write(
+                            EnvKey::new(DefLocType::OrdinaryNameLoc, id_loc.dupe()),
+                            &self.env_info.env_entries,
+                        )
+                    {
+                        let deferred = DeferredVisit::DeclareClassDecl {
+                            loc: loc.dupe(),
+                            decl: decl.clone(),
+                        };
+                        let function_state =
+                            state.entry(name.dupe()).or_insert_with(FunctionState::new);
+                        function_state.record_merge_candidate(&id_loc);
+                        function_state.deferred_visits.push(deferred);
+                    } else {
+                        let Ok(()) = self.statement(stmt);
+                    }
+                }
+
                 StatementInner::DeclareNamespace { inner, .. } => {
                     if let ast::statement::declare_namespace::Id::Local(id) = &inner.id {
                         let should_merge = state
@@ -4960,6 +5164,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             loc,
                             &func,
                         );
+                    }
+                    DeferredVisit::ClassDecl { loc, class_, kind } => {
+                        self.class_internal(kind, &namespace_types, loc, &class_);
+                    }
+                    DeferredVisit::DeclareClassDecl { loc, decl } => {
+                        self.visit_declare_class(&namespace_types, loc.dupe(), &decl);
                     }
                 }
             }
@@ -5310,7 +5520,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
     }
 
     fn class_(&mut self, loc: &ALoc, cls: &ast::class::Class<ALoc, ALoc>) -> Result<(), !> {
-        self.class_internal(ClassKind::Class, loc.dupe(), cls);
+        self.class_internal(ClassKind::Class, &BTreeMap::new(), loc.dupe(), cls);
         Ok(())
     }
 
@@ -5430,20 +5640,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         loc: &ALoc,
         decl: &ast::statement::DeclareClass<ALoc, ALoc>,
     ) -> Result<(), !> {
-        let id_loc = decl.id.loc.dupe();
-        let name = &decl.id.name;
-
-        self.add_ordinary_binding(
-            id_loc,
-            mk_reason(
-                VirtualReasonDesc::RClass(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())).into(),
-                ),
-                loc.dupe(),
-            ),
-            Def::DeclaredClass(loc.dupe(), decl.clone()),
-        );
-        ast_visitor::declare_class_default(self, loc, decl)
+        self.visit_declare_class(&BTreeMap::new(), loc.dupe(), decl);
+        Ok(())
     }
 
     fn declare_component(

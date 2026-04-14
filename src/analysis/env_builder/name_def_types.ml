@@ -227,6 +227,7 @@ type def =
       (* A set of this and super write locations that can be resolved by resolving the class. *)
       this_super_write_locs: Env_api.EnvSet.t;
       kind: ClassKind.t;
+      namespace_types: Env_api.EnvKey.t SMap.t;
     }
   | Record of {
       record: (ALoc.t, ALoc.t) Ast.Statement.RecordDeclaration.t;
@@ -235,7 +236,8 @@ type def =
       this_super_write_locs: Env_api.EnvSet.t;
       defaulted_props: SSet.t;
     }
-  | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
+  | DeclaredClass of
+      ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t * Env_api.EnvKey.t SMap.t
   | DeclaredComponent of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
@@ -356,12 +358,20 @@ module Print = struct
           _;
         } ->
       spf "component %s" name
-    | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
+    | DeclaredClass (_, { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }, _)
+      ->
       spf "declared class %s" name
     | DeclaredComponent
         (_, { Ast.Statement.DeclareComponent.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared component %s" name
-    | Class { class_ = { Ast.Class.id; _ }; kind; class_loc = _; this_super_write_locs = _ } ->
+    | Class
+        {
+          class_ = { Ast.Class.id; _ };
+          kind;
+          class_loc = _;
+          this_super_write_locs = _;
+          namespace_types = _;
+        } ->
       let kind =
         match kind with
         | ClassKind.Class -> "class"

@@ -2244,12 +2244,16 @@ let merge_def ~const_decl file reason = function
       TypeUtil.class_type t
     in
     merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
-  | ClassBinding { id_loc; name; def } ->
+  | ClassBinding { id_loc; name; def; namespace_types } ->
     let id = Context.make_aloc_id file.cx id_loc in
-    merge_class (mk_merge_env SMap.empty) file reason (Some name) id def
-  | DeclareClassBinding { id_loc = _; nominal_id_loc; name; def } ->
+    let env = mk_merge_env SMap.empty in
+    let class_t = merge_class env file reason (Some name) id def in
+    wrap_with_namespace_types file.cx reason name id_loc class_t namespace_types env file
+  | DeclareClassBinding { id_loc = _; nominal_id_loc; name; def; namespace_types } ->
     let nominal_id = Context.make_aloc_id file.cx nominal_id_loc in
-    merge_declare_class file reason name nominal_id def
+    let env = mk_merge_env SMap.empty in
+    let class_t = merge_declare_class file reason name nominal_id def in
+    wrap_with_namespace_types file.cx reason name nominal_id_loc class_t namespace_types env file
   | RecordBinding { id_loc; name; def; defaulted_props } ->
     let id = Context.make_aloc_id file.cx id_loc in
     merge_record (mk_merge_env SMap.empty) file reason (Some name) id def defaulted_props

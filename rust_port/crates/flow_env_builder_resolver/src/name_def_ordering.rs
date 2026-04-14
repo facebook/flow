@@ -40,6 +40,7 @@ use flow_env_builder::name_def_types::Binding;
 use flow_env_builder::name_def_types::ClassDefData;
 use flow_env_builder::name_def_types::ComponentDefData;
 use flow_env_builder::name_def_types::ContextualData;
+use flow_env_builder::name_def_types::DeclaredClassDefData;
 use flow_env_builder::name_def_types::DeclaredFunctionDefData;
 use flow_env_builder::name_def_types::Def;
 use flow_env_builder::name_def_types::EmptyArrayData;
@@ -3283,15 +3284,33 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             class_loc: _,
             this_super_write_locs: _,
             kind: _,
-        }) => depends_of_class::<Cx, Fl>(
-            cx,
-            this_super_dep_loc_map,
-            env_values,
-            env_entries,
-            providers,
-            refinement_of_id,
-            class_,
-        ),
+            namespace_types,
+        }) => {
+            let state = depends_of_class::<Cx, Fl>(
+                cx,
+                this_super_dep_loc_map,
+                env_values,
+                env_entries,
+                providers,
+                refinement_of_id,
+                class_,
+            );
+            depends_of_node::<Cx, Fl>(
+                cx,
+                this_super_dep_loc_map,
+                env_values,
+                env_entries,
+                providers,
+                refinement_of_id,
+                false,
+                state,
+                |visitor| {
+                    for (_, env_key) in namespace_types.iter() {
+                        visitor.add(id_loc.dupe(), env_key.dupe());
+                    }
+                },
+            )
+        }
         Def::Record(box RecordDefData {
             record,
             record_loc: _,
@@ -3306,15 +3325,36 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             refinement_of_id,
             record,
         ),
-        Def::DeclaredClass(_, decl) => depends_of_declared_class::<Cx, Fl>(
-            cx,
-            this_super_dep_loc_map,
-            env_values,
-            env_entries,
-            providers,
-            refinement_of_id,
+        Def::DeclaredClass(box DeclaredClassDefData {
+            loc: _,
             decl,
-        ),
+            namespace_types,
+        }) => {
+            let state = depends_of_declared_class::<Cx, Fl>(
+                cx,
+                this_super_dep_loc_map,
+                env_values,
+                env_entries,
+                providers,
+                refinement_of_id,
+                decl,
+            );
+            depends_of_node::<Cx, Fl>(
+                cx,
+                this_super_dep_loc_map,
+                env_values,
+                env_entries,
+                providers,
+                refinement_of_id,
+                false,
+                state,
+                |visitor| {
+                    for (_, env_key) in namespace_types.iter() {
+                        visitor.add(id_loc.dupe(), env_key.dupe());
+                    }
+                },
+            )
+        }
         Def::DeclaredComponent(loc, decl) => depends_of_declared_component::<Cx, Fl>(
             cx,
             this_super_dep_loc_map,

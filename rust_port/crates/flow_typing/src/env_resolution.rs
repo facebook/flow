@@ -36,6 +36,7 @@ use flow_env_builder::name_def_types::Binding;
 use flow_env_builder::name_def_types::ClassDefData;
 use flow_env_builder::name_def_types::ComponentDefData;
 use flow_env_builder::name_def_types::ContextualData;
+use flow_env_builder::name_def_types::DeclaredClassDefData;
 use flow_env_builder::name_def_types::Def;
 use flow_env_builder::name_def_types::EmptyArrayData;
 use flow_env_builder::name_def_types::FunctionDefData;
@@ -2620,14 +2621,26 @@ fn resolve<'cx>(
             class_loc,
             kind,
             this_super_write_locs: _,
-        }) => resolve_class(
-            cx,
-            id_loc.dupe(),
-            def_reason,
-            kind,
-            class_loc.dupe(),
-            class_,
-        )?,
+            namespace_types,
+        }) => {
+            let class_t = resolve_class(
+                cx,
+                id_loc.dupe(),
+                def_reason,
+                kind,
+                class_loc.dupe(),
+                class_,
+            )?;
+            if namespace_types.is_empty() {
+                class_t
+            } else {
+                let (name, name_loc) = match &class_.id {
+                    Some(id) => (id.name.dupe(), id.loc.dupe()),
+                    None => (FlowSmolStr::new(""), class_loc.dupe()),
+                };
+                wrap_with_namespace_types(cx, &name, name_loc, class_t, namespace_types)
+            }
+        }
         Def::Record(box RecordDefData {
             record,
             record_loc,
@@ -2673,7 +2686,16 @@ fn resolve<'cx>(
             import,
         ),
         Def::Interface(loc, inter) => resolve_interface(cx, loc.dupe(), inter),
-        Def::DeclaredClass(loc, class_) => resolve_declare_class(cx, loc.dupe(), class_),
+        Def::DeclaredClass(box DeclaredClassDefData {
+            loc,
+            decl,
+            namespace_types,
+        }) => {
+            let class_t = resolve_declare_class(cx, loc.dupe(), decl);
+            let id_name = &decl.id.name;
+            let id_loc = decl.id.loc.dupe();
+            wrap_with_namespace_types(cx, id_name, id_loc, class_t, namespace_types)
+        }
         Def::DeclaredComponent(loc, comp) => resolve_declare_component(cx, loc.dupe(), comp),
         Def::Enum(box (enum_loc, name, enum_)) => resolve_enum(
             cx,

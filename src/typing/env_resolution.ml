@@ -1399,8 +1399,14 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         function_
     | DeclaredFunction { declarations; statics; namespace_types } ->
       resolve_declared_function cx declarations statics namespace_types
-    | Class { class_; class_loc; kind; this_super_write_locs = _ } ->
-      resolve_class cx id_loc def_reason ~kind class_loc class_
+    | Class { class_; class_loc; kind; this_super_write_locs = _; namespace_types } ->
+      let class_t = resolve_class cx id_loc def_reason ~kind class_loc class_ in
+      let (name, name_loc) =
+        match class_.Ast.Class.id with
+        | Some (loc, { Ast.Identifier.name; _ }) -> (name, loc)
+        | None -> ("", class_loc)
+      in
+      wrap_with_namespace_types cx name name_loc class_t namespace_types
     | Record { record; record_loc; this_super_write_locs = _; defaulted_props } ->
       resolve_record cx id_loc def_reason record_loc defaulted_props record
     | MemberAssign { member_loc = _; member = _; rhs } -> expression cx rhs
@@ -1412,7 +1418,10 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Import { import_kind; source; source_loc; import } ->
       resolve_import cx id_loc def_reason import_kind source source_loc import
     | Interface (loc, inter) -> resolve_interface cx loc inter
-    | DeclaredClass (loc, class_) -> resolve_declare_class cx loc class_
+    | DeclaredClass (loc, class_, namespace_types) ->
+      let class_t = resolve_declare_class cx loc class_ in
+      let (id_loc, { Ast.Identifier.name; _ }) = class_.Ast.Statement.DeclareClass.id in
+      wrap_with_namespace_types cx name id_loc class_t namespace_types
     | DeclaredComponent (loc, comp) -> resolve_declare_component cx loc comp
     | Enum (enum_loc, name, enum) -> resolve_enum cx id_loc def_reason enum_loc name enum
     | TypeParam _ -> resolve_type_param cx id_loc

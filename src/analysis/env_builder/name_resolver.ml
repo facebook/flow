@@ -6908,7 +6908,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         (match id with
         | Ast.Statement.DeclareNamespace.Global _ -> ()
         | Ast.Statement.DeclareNamespace.Local ((id_loc, { Ast.Identifier.name; _ }) as id) ->
-          let merged_with_function =
+          let merged_with_declaration =
             Base.Option.value_map
               ~default:false
               ~f:(fun { def_loc; kind; _ } ->
@@ -6916,12 +6916,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 &&
                 match kind with
                 | Bindings.Function
-                | Bindings.DeclaredFunction ->
+                | Bindings.DeclaredFunction
+                | Bindings.Class
+                | Bindings.DeclaredClass ->
                   true
                 | _ -> false)
               (this#env_read_opt name)
           in
-          if not merged_with_function then
+          if not merged_with_declaration then
             if
               Flow_ast_utils.is_type_only_declaration_statement
                 (loc, Ast.Statement.DeclareNamespace m)

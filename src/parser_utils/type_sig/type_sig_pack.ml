@@ -336,15 +336,31 @@ and pack_local_binding cx = function
     in
     let def = Value (FunExpr { loc; async; generator; def; statics }) in
     Variable { id_loc; name; def }
-  | P.ClassBinding { id_loc; name; def } ->
+  | P.ClassBinding { id_loc; name; def; namespace_types } ->
     let id_loc = pack_loc id_loc in
     let def = pack_class cx (Lazy.force def) in
-    ClassBinding { id_loc; name; def }
-  | P.DeclareClassBinding { id_loc; nominal_id_loc; name; def } ->
+    let namespace_types =
+      SMap.map
+        (fun (id_loc, t) ->
+          let id_loc = pack_loc id_loc in
+          let t = pack_parsed cx t in
+          (id_loc, t))
+        namespace_types
+    in
+    ClassBinding { id_loc; name; def; namespace_types }
+  | P.DeclareClassBinding { id_loc; nominal_id_loc; name; def; namespace_types } ->
     let id_loc = pack_loc id_loc in
     let nominal_id_loc = pack_loc nominal_id_loc in
     let def = pack_declare_class cx (Lazy.force def) in
-    DeclareClassBinding { id_loc; nominal_id_loc; name; def }
+    let namespace_types =
+      SMap.map
+        (fun (id_loc, t) ->
+          let id_loc = pack_loc id_loc in
+          let t = pack_parsed cx t in
+          (id_loc, t))
+        namespace_types
+    in
+    DeclareClassBinding { id_loc; nominal_id_loc; name; def; namespace_types }
   | P.RecordBinding { id_loc; name; def; defaulted_props } ->
     let id_loc = pack_loc id_loc in
     (match def with

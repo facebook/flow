@@ -126,13 +126,23 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
         mark_component ~locs_to_dirtify ~visit_loc def
       | None -> ()
     end
-  | P.ClassBinding { id_loc; name = _; def } ->
+  | P.ClassBinding { id_loc; name = _; def; namespace_types } ->
     mark_loc ~visit_loc id_loc;
-    mark_class ~locs_to_dirtify ~visit_loc (Lazy.force def)
-  | P.DeclareClassBinding { id_loc; nominal_id_loc; name = _; def } ->
+    mark_class ~locs_to_dirtify ~visit_loc (Lazy.force def);
+    SMap.iter
+      (fun _ (id_loc, def) ->
+        mark_loc ~visit_loc id_loc;
+        mark_parsed ~locs_to_dirtify ~visit_loc def)
+      namespace_types
+  | P.DeclareClassBinding { id_loc; nominal_id_loc; name = _; def; namespace_types } ->
     mark_loc ~visit_loc id_loc;
     mark_loc ~visit_loc nominal_id_loc;
-    mark_declare_class ~locs_to_dirtify ~visit_loc (Lazy.force def)
+    mark_declare_class ~locs_to_dirtify ~visit_loc (Lazy.force def);
+    SMap.iter
+      (fun _ (id_loc, def) ->
+        mark_loc ~visit_loc id_loc;
+        mark_parsed ~locs_to_dirtify ~visit_loc def)
+      namespace_types
   | P.RecordBinding { id_loc; name = _; def; defaulted_props = _ } ->
     mark_loc ~visit_loc id_loc;
     (match def with

@@ -88,3 +88,21 @@ declare namespace merged_runtime_fn {
 merged_runtime_fn.foo as empty; // error: string ~> empty
 '' as merged_runtime_fn.T; // ok
 1 as merged_runtime_fn.T; // error: number ~> string
+
+class MergedClass {
+  foo(): string { return ""; }
+}
+declare namespace MergedClass {
+  type T = string;
+}
+'' as MergedClass.T; // ok
+1 as MergedClass.T; // error: number ~> string
+
+declare class MergedDeclaredClass {
+  foo(): string;
+}
+declare namespace MergedDeclaredClass {
+  type T = string;
+}
+'' as MergedDeclaredClass.T; // ok
+1 as MergedDeclaredClass.T; // error: number ~> string

@@ -256,12 +256,14 @@ pub(super) enum LocalBinding<'arena, 'ast> {
         id_loc: LocNode<'arena>,
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, ClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     },
     DeclareClassBinding {
         id_loc: LocNode<'arena>,
         nominal_id_loc: LocNode<'arena>,
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     },
     RecordBinding {
         id_loc: LocNode<'arena>,
@@ -1582,6 +1584,7 @@ pub(super) mod scope {
                 id_loc,
                 name: name.clone(),
                 def,
+                namespace_types: BTreeMap::new(),
             },
             k,
         );
@@ -1611,6 +1614,7 @@ pub(super) mod scope {
                         nominal_id_loc: id_loc,
                         name: name.clone(),
                         def,
+                        namespace_types: BTreeMap::new(),
                     };
                     let node = tbls.push_local_def(def);
                     k(scopes, &name, node.dupe());
@@ -2684,6 +2688,24 @@ pub(super) mod scope {
                 ..
             } => {
                 merge_namespace_entries(tbls, existing_values, existing_types, ns_values, ns_types);
+                true
+            }
+            LocalBinding::ClassBinding {
+                namespace_types: existing_types,
+                ..
+            }
+            | LocalBinding::DeclareClassBinding {
+                namespace_types: existing_types,
+                ..
+            } => {
+                let mut dummy_values = BTreeMap::new();
+                merge_namespace_entries(
+                    tbls,
+                    &mut dummy_values,
+                    existing_types,
+                    ns_values,
+                    ns_types,
+                );
                 true
             }
             _ => false,

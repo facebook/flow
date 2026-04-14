@@ -217,12 +217,14 @@ and 'loc local_binding =
       id_loc: 'loc loc_node;
       name: string;
       def: ('loc loc_node, 'loc parsed) class_sig Lazy.t;
+      namespace_types: ('loc loc_node * 'loc parsed) smap;
     }
   | DeclareClassBinding of {
       id_loc: 'loc loc_node;
       nominal_id_loc: 'loc loc_node;
       name: string;
       def: ('loc loc_node, 'loc parsed) declare_class_sig Lazy.t;
+      namespace_types: ('loc loc_node * 'loc parsed) smap;
     }
   | RecordBinding of {
       id_loc: 'loc loc_node;
@@ -965,14 +967,21 @@ module Scope = struct
     )
 
   let bind_class scope tbls id_loc name def =
-    bind_local ~type_only:false scope tbls name id_loc (ClassBinding { id_loc; name; def })
+    bind_local
+      ~type_only:false
+      scope
+      tbls
+      name
+      id_loc
+      (ClassBinding { id_loc; name; def; namespace_types = SMap.empty })
 
   let bind_declare_class scope tbls id_loc name def k =
     bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | None ->
           let def : _ local_binding =
-            DeclareClassBinding { id_loc; nominal_id_loc = id_loc; name; def }
+            DeclareClassBinding
+              { id_loc; nominal_id_loc = id_loc; name; def; namespace_types = SMap.empty }
           in
           let node = push_local_def tbls def in
           k name node;
@@ -989,8 +998,10 @@ module Scope = struct
           (match scope with
           | Global _ ->
             Local_defs.modify node (function
-                | DeclareClassBinding { id_loc = old_id_loc; nominal_id_loc = _; name; def } ->
-                  DeclareClassBinding { id_loc = old_id_loc; nominal_id_loc = id_loc; name; def }
+                | DeclareClassBinding
+                    { id_loc = old_id_loc; nominal_id_loc = _; name; def; namespace_types } ->
+                  DeclareClassBinding
+                    { id_loc = old_id_loc; nominal_id_loc = id_loc; name; def; namespace_types }
                 | def -> def
                 )
           | _ -> ());
@@ -1443,6 +1454,18 @@ module Scope = struct
           merged := true;
           DeclareFunBinding
             { binding with statics = !existing_values; namespace_types = !existing_types }
+        | ClassBinding ({ namespace_types = existing_types; _ } as binding) ->
+          let existing_values = ref SMap.empty in
+          let existing_types = ref existing_types in
+          merge_namespace_entries tbls existing_values existing_types values types;
+          merged := true;
+          ClassBinding { binding with namespace_types = !existing_types }
+        | DeclareClassBinding ({ namespace_types = existing_types; _ } as binding) ->
+          let existing_values = ref SMap.empty in
+          let existing_types = ref existing_types in
+          merge_namespace_entries tbls existing_values existing_types values types;
+          merged := true;
+          DeclareClassBinding { binding with namespace_types = !existing_types }
         | binding -> binding
     );
     !merged

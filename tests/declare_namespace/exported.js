@@ -42,6 +42,20 @@ default_merged.foo as empty; // error: string ~> empty
 '' as default_merged.T; // ok
 1 as default_merged.T; // error: number ~> string
 
+export class ExportedMergedClass {}
+declare namespace ExportedMergedClass {
+  type T = string;
+}
+'' as ExportedMergedClass.T; // ok
+1 as ExportedMergedClass.T; // error: number ~> string
+
+declare class ExportedMergedDeclareClass {}
+declare namespace ExportedMergedDeclareClass {
+  type T = string;
+}
+'' as ExportedMergedDeclareClass.T; // ok
+1 as ExportedMergedDeclareClass.T; // error: number ~> string
+
 // Test declare export namespace syntax
 declare export namespace direct_export_ns {
   declare const x: number;

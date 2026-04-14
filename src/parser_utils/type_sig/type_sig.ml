@@ -309,6 +309,7 @@ type ('loc, 'a) def =
       id_loc: 'loc;
       name: string;
       def: ('loc, 'a) class_sig;
+      namespace_types: ('loc * 'a) smap;
     }
   | RecordBinding of {
       id_loc: 'loc;
@@ -325,6 +326,7 @@ type ('loc, 'a) def =
       nominal_id_loc: 'loc;
       name: string;
       def: ('loc, 'a) declare_class_sig;
+      namespace_types: ('loc * 'a) smap;
     }
   | FunBinding of {
       id_loc: 'loc;

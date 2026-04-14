@@ -312,6 +312,14 @@ pub struct ClassDefData {
     /// A set of this and super write locations that can be resolved by resolving the class.
     pub this_super_write_locs: EnvSet<ALoc>,
     pub kind: ClassKind,
+    pub namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
+}
+
+#[derive(Clone)]
+pub struct DeclaredClassDefData {
+    pub loc: ALoc,
+    pub decl: ast::statement::DeclareClass<ALoc, ALoc>,
+    pub namespace_types: BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
 }
 
 #[derive(Clone)]
@@ -354,7 +362,7 @@ pub enum Def {
     Component(Box<ComponentDefData>),
     Class(Box<ClassDefData>),
     Record(Box<RecordDefData>),
-    DeclaredClass(ALoc, ast::statement::DeclareClass<ALoc, ALoc>),
+    DeclaredClass(Box<DeclaredClassDefData>),
     DeclaredComponent(ALoc, ast::statement::DeclareComponent<ALoc, ALoc>),
     TypeAlias(ALoc, ast::statement::TypeAlias<ALoc, ALoc>),
     OpaqueType(ALoc, ast::statement::OpaqueType<ALoc, ALoc>),
@@ -534,8 +542,8 @@ pub mod print {
             Def::Component(data) => {
                 format!("component {}", data.component.id.name)
             }
-            Def::DeclaredClass(_, decl) => {
-                format!("declared class {}", decl.id.name)
+            Def::DeclaredClass(data) => {
+                format!("declared class {}", data.decl.id.name)
             }
             Def::DeclaredComponent(_, decl) => {
                 format!("declared component {}", decl.id.name)

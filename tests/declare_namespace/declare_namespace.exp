@@ -235,13 +235,41 @@ References:
             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:53:3
+Error ------------------------------------------------------------------------------------------------- exported.js:50:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   exported.js:50:1
+   50| 1 as ExportedMergedClass.T; // error: number ~> string
+       ^ [1]
+
+References:
+   exported.js:50:6
+   50| 1 as ExportedMergedClass.T; // error: number ~> string
+            ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:57:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   exported.js:57:1
+   57| 1 as ExportedMergedDeclareClass.T; // error: number ~> string
+       ^ [1]
+
+References:
+   exported.js:57:6
+   57| 1 as ExportedMergedDeclareClass.T; // error: number ~> string
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:67:3
 
 Cannot use type-only namespace `empty` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
 [type-as-value]
 
-   exported.js:53:3
-   53|   empty, // error: empty is type-only
+   exported.js:67:3
+   67|   empty, // error: empty is type-only
          ^^^^^
 
 References:
@@ -250,141 +278,141 @@ References:
                          ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:58:1
+Error ------------------------------------------------------------------------------------------------- exported.js:72:1
 
 Cannot cast `exported_ns.bar1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   exported.js:58:1
-   58| exported_ns.bar1 as empty; // error: number ~> empty
+   exported.js:72:1
+   72| exported_ns.bar1 as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:2:30
     2|   declare export const bar1: number;
                                     ^^^^^^ [1]
-   exported.js:58:21
-   58| exported_ns.bar1 as empty; // error: number ~> empty
+   exported.js:72:21
+   72| exported_ns.bar1 as empty; // error: number ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:59:1
+Error ------------------------------------------------------------------------------------------------- exported.js:73:1
 
 Cannot cast `exported_ns.bar2` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
-   exported.js:59:1
-   59| exported_ns.bar2 as empty; // error: boolean ~> empty
+   exported.js:73:1
+   73| exported_ns.bar2 as empty; // error: boolean ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:3:23
     3|   declare const bar2: boolean;
                              ^^^^^^^ [1]
-   exported.js:59:21
-   59| exported_ns.bar2 as empty; // error: boolean ~> empty
+   exported.js:73:21
+   73| exported_ns.bar2 as empty; // error: boolean ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:60:1
+Error ------------------------------------------------------------------------------------------------- exported.js:74:1
 
 Cannot cast `exported_ns.bar3` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   exported.js:60:1
-   60| exported_ns.bar3 as empty; // error: string ~> empty
+   exported.js:74:1
+   74| exported_ns.bar3 as empty; // error: string ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:4:21
     4|   declare var bar3: string;
                            ^^^^^^ [1]
-   exported.js:60:21
-   60| exported_ns.bar3 as empty; // error: string ~> empty
+   exported.js:74:21
+   74| exported_ns.bar3 as empty; // error: string ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:61:1
+Error ------------------------------------------------------------------------------------------------- exported.js:75:1
 
 Cannot cast `exported_ns.f(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   exported.js:61:1
-   61| exported_ns.f(3) as empty; // error: number ~> empty
+   exported.js:75:1
+   75| exported_ns.f(3) as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^
 
 References:
    exported.js:6:34
     6|   declare function f(a: number): number;
                                         ^^^^^^ [1]
-   exported.js:61:21
-   61| exported_ns.f(3) as empty; // error: number ~> empty
+   exported.js:75:21
+   75| exported_ns.f(3) as empty; // error: number ~> empty
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:62:1
+Error ------------------------------------------------------------------------------------------------- exported.js:76:1
 
 Cannot cast `1` to `Baz` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   exported.js:62:1
-   62| 1 as exported_ns.Baz; // error: number ~> string
+   exported.js:76:1
+   76| 1 as exported_ns.Baz; // error: number ~> string
        ^ [1]
 
 References:
-   exported.js:62:6
-   62| 1 as exported_ns.Baz; // error: number ~> string
+   exported.js:76:6
+   76| 1 as exported_ns.Baz; // error: number ~> string
             ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:63:1
+Error ------------------------------------------------------------------------------------------------- exported.js:77:1
 
 Cannot cast `1` to `Baz2` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   exported.js:63:1
-   63| 1 as exported_ns.Baz2; // error: number ~> string
+   exported.js:77:1
+   77| 1 as exported_ns.Baz2; // error: number ~> string
        ^ [1]
 
 References:
-   exported.js:63:6
-   63| 1 as exported_ns.Baz2; // error: number ~> string
+   exported.js:77:6
+   77| 1 as exported_ns.Baz2; // error: number ~> string
             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:64:1
+Error ------------------------------------------------------------------------------------------------- exported.js:78:1
 
 Cannot cast `1` to `Baz3` because number literal `1` [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You
 can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
-   exported.js:64:1
-   64| 1 as exported_ns.Baz3; // error: number ~> interface {}
+   exported.js:78:1
+   78| 1 as exported_ns.Baz3; // error: number ~> interface {}
        ^ [1]
 
 References:
-   exported.js:64:6
-   64| 1 as exported_ns.Baz3; // error: number ~> interface {}
+   exported.js:78:6
+   78| 1 as exported_ns.Baz3; // error: number ~> interface {}
             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:65:1
+Error ------------------------------------------------------------------------------------------------- exported.js:79:1
 
 Cannot cast `exported_ns.B.C` to empty because `B` [1] is incompatible with empty [2]. [incompatible-type]
 
-   exported.js:65:1
-   65| exported_ns.B.C as empty; // error: enum ~> empty
+   exported.js:79:1
+   79| exported_ns.B.C as empty; // error: enum ~> empty
        ^^^^^^^^^^^^^^^
 
 References:
    exported.js:8:8
     8|   enum B { C, D }
               ^ [1]
-   exported.js:65:20
-   65| exported_ns.B.C as empty; // error: enum ~> empty
+   exported.js:79:20
+   79| exported_ns.B.C as empty; // error: enum ~> empty
                           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:66:13
+Error ------------------------------------------------------------------------------------------------ exported.js:80:13
 
 Cannot get `exported_ns.React` because property `React` is missing in namespace exported_ns [1]. [prop-missing]
 
-   exported.js:66:13
-   66| exported_ns.React; // error: prop-missing
+   exported.js:80:13
+   80| exported_ns.React; // error: prop-missing
                    ^^^^^
 
 References:
@@ -393,27 +421,27 @@ References:
                          ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:67:1
+Error ------------------------------------------------------------------------------------------------- exported.js:81:1
 
 Cannot cast `exported_ns.CONSTANT` to empty because `void` (due to access of non-existent property `CONSTANT`) [1] is
 incompatible with empty [2]. [incompatible-type]
 
-   exported.js:67:1
-   67| exported_ns.CONSTANT as empty; // prop-missing
+   exported.js:81:1
+   81| exported_ns.CONSTANT as empty; // prop-missing
        ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   exported.js:67:25
-   67| exported_ns.CONSTANT as empty; // prop-missing
+   exported.js:81:25
+   81| exported_ns.CONSTANT as empty; // prop-missing
                                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:67:13
+Error ------------------------------------------------------------------------------------------------ exported.js:81:13
 
 Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in namespace exported_ns [1]. [prop-missing]
 
-   exported.js:67:13
-   67| exported_ns.CONSTANT as empty; // prop-missing
+   exported.js:81:13
+   81| exported_ns.CONSTANT as empty; // prop-missing
                    ^^^^^^^^
 
 References:
@@ -422,34 +450,34 @@ References:
                          ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:70:1
+Error ------------------------------------------------------------------------------------------------- exported.js:84:1
 
 Cannot cast `direct_export_ns.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   exported.js:70:1
-   70| direct_export_ns.x as empty; // error: number ~> empty
+   exported.js:84:1
+   84| direct_export_ns.x as empty; // error: number ~> empty
        ^^^^^^^^^^^^^^^^^^
 
 References:
-   exported.js:47:20
-   47|   declare const x: number;
+   exported.js:61:20
+   61|   declare const x: number;
                           ^^^^^^ [1]
-   exported.js:70:23
-   70| direct_export_ns.x as empty; // error: number ~> empty
+   exported.js:84:23
+   84| direct_export_ns.x as empty; // error: number ~> empty
                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- exported.js:71:1
+Error ------------------------------------------------------------------------------------------------- exported.js:85:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   exported.js:71:1
-   71| 1 as direct_export_ns.T; // error: number ~> string
+   exported.js:85:1
+   85| 1 as direct_export_ns.T; // error: number ~> string
        ^ [1]
 
 References:
-   exported.js:71:6
-   71| 1 as direct_export_ns.T; // error: number ~> string
+   exported.js:85:6
+   85| 1 as direct_export_ns.T; // error: number ~> string
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -934,8 +962,8 @@ Cannot cast `direct_export_ns.x` to empty because number [1] is incompatible wit
        ^^^^^^^^^^^^^^^^^^
 
 References:
-   exported.js:47:20
-   47|   declare const x: number;
+   exported.js:61:20
+   61|   declare const x: number;
                           ^^^^^^ [1]
    typing_test.js:44:23
    44| direct_export_ns.x as empty; // error: number ~> empty
@@ -1174,8 +1202,36 @@ References:
             ^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- typing_test.js:99:1
 
-Found 82 errors
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   typing_test.js:99:1
+   99| 1 as MergedClass.T; // error: number ~> string
+       ^ [1]
+
+References:
+   typing_test.js:99:6
+   99| 1 as MergedClass.T; // error: number ~> string
+            ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:108:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   typing_test.js:108:1
+   108| 1 as MergedDeclaredClass.T; // error: number ~> string
+        ^ [1]
+
+References:
+   typing_test.js:108:6
+   108| 1 as MergedDeclaredClass.T; // error: number ~> string
+             ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 86 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

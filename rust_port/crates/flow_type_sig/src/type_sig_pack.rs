@@ -790,16 +790,30 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 def,
             }))
         }
-        parse::LocalBinding::ClassBinding { id_loc, name, def } => {
+        parse::LocalBinding::ClassBinding {
+            id_loc,
+            name,
+            def,
+            namespace_types,
+        } => {
             let id_loc = pack_loc(id_loc);
             let def = {
                 let parsed = def.as_already_forced();
                 pack_class(cx, parsed)
             };
+            let namespace_types = namespace_types
+                .iter()
+                .map(|(k, (id_loc, t))| {
+                    let id_loc = pack_loc(id_loc);
+                    let t = pack_parsed(cx, t);
+                    (k.dupe(), (id_loc, t))
+                })
+                .collect();
             Def::ClassBinding(Box::new(DefClassBinding {
                 id_loc,
                 name: name.dupe(),
                 def,
+                namespace_types,
             }))
         }
         parse::LocalBinding::DeclareClassBinding {
@@ -807,6 +821,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             nominal_id_loc,
             name,
             def,
+            namespace_types,
         } => {
             let id_loc = pack_loc(id_loc);
             let nominal_id_loc = pack_loc(nominal_id_loc);
@@ -814,11 +829,20 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 let parsed = def.as_already_forced();
                 pack_declare_class(cx, parsed)
             };
+            let namespace_types = namespace_types
+                .iter()
+                .map(|(k, (id_loc, t))| {
+                    let id_loc = pack_loc(id_loc);
+                    let t = pack_parsed(cx, t);
+                    (k.dupe(), (id_loc, t))
+                })
+                .collect();
             Def::DeclareClassBinding(Box::new(DefDeclareClassBinding {
                 id_loc,
                 nominal_id_loc,
                 name: name.dupe(),
                 def,
+                namespace_types,
             }))
         }
         parse::LocalBinding::RecordBinding {

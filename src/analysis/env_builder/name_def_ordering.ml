@@ -1455,11 +1455,22 @@ struct
         depends_of_declared_fun declarations ~statics ~namespace_types
       | Component { tparams_map; component; component_loc = _ } ->
         depends_of_component tparams_map component EnvMap.empty
-      | Class { class_; class_loc = _; this_super_write_locs = _; kind = _ } ->
-        depends_of_class class_
+      | Class { class_; class_loc = _; this_super_write_locs = _; kind = _; namespace_types } ->
+        let state = depends_of_class class_ in
+        depends_of_node
+          (fun visitor ->
+            SMap.iter (fun _ -> visitor#add ~why:id_loc) namespace_types;
+            ())
+          state
       | Record { record; record_loc = _; this_super_write_locs = _; defaulted_props = _ } ->
         depends_of_record record
-      | DeclaredClass (_, decl) -> depends_of_declared_class decl
+      | DeclaredClass (_, decl, namespace_types) ->
+        let state = depends_of_declared_class decl in
+        depends_of_node
+          (fun visitor ->
+            SMap.iter (fun _ -> visitor#add ~why:id_loc) namespace_types;
+            ())
+          state
       | DeclaredComponent (loc, decl) -> depends_of_declared_component loc decl
       | TypeAlias (_, alias) -> depends_of_alias alias
       | OpaqueType (_, alias) -> depends_of_opaque alias

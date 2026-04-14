@@ -316,21 +316,31 @@ fn mark_local_binding<'arena, 'ast>(
             id_loc,
             name: _,
             def,
+            namespace_types,
         } => {
             mark_loc(marker, id_loc);
             let def = def.get_forced(opts, scopes, tbls);
             mark_class(opts, scopes, tbls, marker, def);
+            for (id_loc, def) in namespace_types.values() {
+                mark_loc(marker, id_loc);
+                mark_parsed(opts, scopes, tbls, marker, def);
+            }
         }
         parse::LocalBinding::DeclareClassBinding {
             id_loc,
             nominal_id_loc,
             name: _,
             def,
+            namespace_types,
         } => {
             mark_loc(marker, id_loc);
             mark_loc(marker, nominal_id_loc);
             let def = def.get_forced(opts, scopes, tbls);
             mark_declare_class(opts, scopes, tbls, marker, def);
+            for (id_loc, def) in namespace_types.values() {
+                mark_loc(marker, id_loc);
+                mark_parsed(opts, scopes, tbls, marker, def);
+            }
         }
         parse::LocalBinding::RecordBinding {
             id_loc,

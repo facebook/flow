@@ -573,6 +573,22 @@ where
     }
 }
 
+/// Like has_assigning_write, but excludes GlobalWrite. GlobalWrite occurs
+/// for all declarations in lib/builtin files. Deferring those declarations
+/// changes their processing order and causes spurious type errors.
+pub fn has_non_global_assigning_write<L>(
+    key: EnvKey<L>,
+    env_entries: &EnvMap<L, EnvEntry<L>>,
+) -> bool
+where
+    L: Dupe + Eq + Ord + Hash,
+{
+    match env_entries.get(&key) {
+        Some(EnvEntry::AssigningWrite(_)) => true,
+        _ => false,
+    }
+}
+
 pub fn is_global_var<L>(read: &Read<L>) -> bool
 where
     L: Dupe + Eq + Ord + Hash,
