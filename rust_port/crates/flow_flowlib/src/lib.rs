@@ -95,3 +95,48 @@ pub fn extract(libdir: &LibDir) {
         write_flowlib(path, entry);
     }
 }
+
+pub fn extract_if_missing(libdir: &LibDir) {
+    let sentinel_name = match libdir {
+        LibDir::Flowlib(_) => "core.js",
+        LibDir::Prelude(_) => "prelude.js",
+    };
+    let libdir_path = path_of_libdir(libdir);
+    let sentinel = libdir_path.join(sentinel_name);
+    if !sentinel.exists() {
+        extract(libdir);
+    }
+}
+
+fn libdir_from_files_libdir(files_libdir: &flow_common::files::LibDir) -> LibDir {
+    match files_libdir {
+        flow_common::files::LibDir::Prelude(path) => LibDir::Prelude(path.clone()),
+        flow_common::files::LibDir::Flowlib(path) => LibDir::Flowlib(path.clone()),
+    }
+}
+
+pub fn extract_if_missing_or_exit(files_libdir_opt: Option<&flow_common::files::LibDir>) {
+    let Some(files_libdir) = files_libdir_opt else {
+        return;
+    };
+    let libdir = libdir_from_files_libdir(files_libdir);
+    match std::panic::catch_unwind(|| extract_if_missing(&libdir)) {
+        Ok(()) => {}
+        Err(err) => {
+            let panic_msg = err
+                .downcast_ref::<&str>()
+                .copied()
+                .or_else(|| err.downcast_ref::<String>().map(|s| s.as_str()))
+                .unwrap_or("unknown error");
+            let libdir_path = path_of_libdir(&libdir);
+            eprintln!(
+                "Could not extract flowlib files into {}: {}",
+                libdir_path.display(),
+                panic_msg
+            );
+            flow_common_exit_status::exit(
+                flow_common_exit_status::FlowExitStatus::CouldNotExtractFlowlibs,
+            )
+        }
+    }
+}

@@ -149,6 +149,10 @@ let recheck
     let should_print_summary = Options.should_profile options in
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
         send_start_recheck env;
+        (* Re-extract flowlib if temp dir was cleaned up (e.g. macOS /tmp cleanup).
+           Only needed when a lib change triggers reinit, which re-parses flowlib files. *)
+        if incompatible_lib_change then
+          Flowlib.extract_if_missing_or_exit (Files.default_lib_dir (Options.file_options options));
         let%lwt (log_recheck_event, recheck_stats, find_ref_results, env) =
           Types_js.recheck
             ~profiling

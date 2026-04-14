@@ -6,6 +6,7 @@
   flow_config
   flow_common
   flow_exit_status
+  flow_flowlib
   flow_server_env
   flow_server_error_collator
   flow_server_files

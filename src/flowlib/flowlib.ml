@@ -59,3 +59,30 @@ let extract libdir =
     | Flowlib path -> (path, false)
   in
   Array.iter (write_flowlib path) (contents no_flowlib)
+
+let extract_if_missing libdir =
+  let sentinel_name =
+    match libdir with
+    | Flowlib _ -> "core.js"
+    | Prelude _ -> "prelude.js"
+  in
+  let libdir_path = path_of_libdir libdir |> File_path.to_string in
+  let sentinel = Filename.concat libdir_path sentinel_name in
+  if not (Sys.file_exists sentinel) then extract libdir
+
+let libdir_of_files_libdir = function
+  | Files.Prelude path -> Prelude path
+  | Files.Flowlib path -> Flowlib path
+
+let extract_if_missing_or_exit files_libdir_opt =
+  match files_libdir_opt with
+  | Some files_libdir ->
+    let libdir = libdir_of_files_libdir files_libdir in
+    (try extract_if_missing libdir with
+    | e ->
+      let e = Exception.wrap e in
+      let err = Exception.get_ctor_string e in
+      let libdir_str = libdir |> path_of_libdir |> File_path.to_string in
+      let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
+      Exit.(exit ~msg Could_not_extract_flowlibs))
+  | None -> ()

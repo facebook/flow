@@ -16,3 +16,7 @@ val libdir : no_flowlib:bool -> File_path.t -> libdir
 val path_of_libdir : libdir -> File_path.t
 
 val extract : libdir -> unit
+
+val extract_if_missing : libdir -> unit
+
+val extract_if_missing_or_exit : Files.lib_dir option -> unit

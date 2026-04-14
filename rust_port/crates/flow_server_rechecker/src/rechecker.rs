@@ -137,6 +137,12 @@ fn recheck(
 
     send_start_recheck(&env);
 
+    // Re-extract flowlib if temp dir was cleaned up (e.g. macOS /tmp cleanup).
+    // Only needed when a lib change triggers reinit, which re-parses flowlib files.
+    if incompatible_lib_change {
+        flow_flowlib::extract_if_missing_or_exit(options.file_options.default_lib_dir.as_ref());
+    }
+
     let recheck_result = type_service::recheck(
         workers,
         &genv.shared_mem,
