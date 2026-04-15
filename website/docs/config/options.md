@@ -1031,7 +1031,7 @@ Type: `unsigned integer`
 
 This affects Linux only.
 
-As explained in the [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string)
+As explained in the [`sharedmemory.dirs`](#toc-sharedmemory-dirs)
 option's description, Flow needs to create a file on a filesystem for older
 kernels. `sharedmemory.dirs` specifies a list of locations where the shared
 memory file can be created. For each location, Flow will check to make sure the

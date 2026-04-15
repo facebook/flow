@@ -42,7 +42,7 @@ function func(str: string, bool?: boolean, ...nums: Array<number>): void {
 }
 ```
 
-### Arrow Functions
+### Arrow Functions {#toc-arrow-functions}
 
 ```js flow-check
 let func = (str: string, bool?: boolean, ...nums: Array<number>): void => {
