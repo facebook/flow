@@ -4,6 +4,11 @@ short-title: "Private Props w/ Opaque Types"
 author: "Jordan Brown"
 medium-link: "https://medium.com/flow-type/private-object-properties-using-flows-opaque-type-aliases-e0100e9b0282"
 ---
+
+:::info[Historical]
+This post announced private object properties using opaque types when it was introduced. For current syntax and behavior, see the [Opaque Types](/en/docs/types/opaque-types) documentation.
+:::
+
 In the last few weeks, a proposal for [private class fields in Javascript](https://github.com/tc39/proposal-class-fields) reached
 stage 3. This is going to be a great way to hide implementation details away
 from users of your classes. However, locking yourself in to an OOP style of

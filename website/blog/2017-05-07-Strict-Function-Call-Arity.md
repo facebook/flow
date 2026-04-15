@@ -5,6 +5,10 @@ author: "Gabe Levi"
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced strict function call arity when it was introduced. For current syntax and behavior, see the [Functions](/en/docs/types/functions) documentation.
+:::
+
 One of Flow's original goals was to be able to understand idiomatic JavaScript.
 In JavaScript, you can call a function with more arguments than the function
 expects. Therefore, Flow never complained about calling a function with

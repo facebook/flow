@@ -5,6 +5,10 @@ author: "Sam Goldman"
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced union and intersection types when it was introduced. For current syntax and behavior, see the [Unions](/en/docs/types/unions) and [Intersections](/en/docs/types/intersections) documentation.
+:::
+
 ### Summary
 
 Before Flow 0.28, the implementation of union/intersection types had serious

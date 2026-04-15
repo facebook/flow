@@ -5,6 +5,10 @@ author: "Gabe Levi"
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced Windows support when it was introduced. For current syntax and behavior, see the [Getting Started](/en/docs/getting-started) documentation.
+:::
+
 We are excited to announce that Flow is now officially available on 64-bit
 Windows! Starting with
 [Flow v0.30.0](https://github.com/facebook/flow/releases/tag/v0.30.0), we will

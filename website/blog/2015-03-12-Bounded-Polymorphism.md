@@ -5,6 +5,10 @@ author: Avik Chaudhuri
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced bounded polymorphism when it was introduced. For current syntax and behavior, see the [Generics](/en/docs/types/generics) documentation.
+:::
+
 As of Flow 0.5.0, you can define polymorphic functions and classes with bounds on their type parameters. This is extremely useful for writing functions and classes that need some constraints on their type parameters. Flow's bounded polymorphism syntax looks like
 
 ```JavaScript

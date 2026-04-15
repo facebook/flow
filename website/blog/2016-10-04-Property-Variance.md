@@ -5,6 +5,10 @@ author: "Sam Goldman"
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced property variance when it was introduced. For current syntax and behavior, see the [Variance](/en/docs/lang/variance) documentation.
+:::
+
 The next release of Flow, 0.34, will include a few important changes to object
 types:
 

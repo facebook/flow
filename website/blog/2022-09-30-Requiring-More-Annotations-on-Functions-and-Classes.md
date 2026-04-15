@@ -4,4 +4,9 @@ short-title: "Functions and Classes Annotation Requirements"
 author: "Sam Zhou"
 medium-link: "https://medium.com/flow-type/requiring-more-annotations-to-functions-and-classes-in-flow-e8aa9b1d76bd"
 ---
+
+:::info[Historical]
+This post announced increased annotation requirements for functions and classes when it was introduced. For current syntax and behavior, see the [Annotation Requirement](/en/docs/lang/annotation-requirement) documentation.
+:::
+
 Flow will now require more annotations to functions and classes.

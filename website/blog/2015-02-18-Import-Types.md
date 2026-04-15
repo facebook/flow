@@ -5,6 +5,10 @@ author: Jeff Morrison
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced import types when it was introduced. For current syntax and behavior, see the [Module Types](/en/docs/types/modules) documentation.
+:::
+
 As of Flow 0.3.0, it's now possible to import types from another module. So, for example, if you're only importing a class for purposes of referencing it in a type annotation, you can now use the new `import type` syntax to do this.
 
 ## Motivation

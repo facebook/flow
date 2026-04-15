@@ -4,4 +4,9 @@ short-title: "Types-First only supported mode"
 author: "Panagiotis Vekris"
 medium-link: "https://medium.com/flow-type/types-first-the-only-supported-mode-in-flow-jan-2021-3c4cb14d7b6c"
 ---
+
+:::info[Historical]
+This post announced Types-First becoming the only supported mode when it was introduced. Syntax and behavior may have changed since this post was written.
+:::
+
 Types-First will become the only mode in Flow in v0.143 (mid Jan 2021).

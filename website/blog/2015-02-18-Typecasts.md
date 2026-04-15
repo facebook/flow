@@ -5,6 +5,10 @@ author: Basil Hosmer
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced typecasts when it was introduced. For current syntax and behavior, see the [Type Casting](/en/docs/types/casting) documentation.
+:::
+
 As of version 0.3.0, Flow supports typecast expression.
 
 A typecast expression is a simple way to type-annotate any JavaScript expression. Here are some examples of typecasts:

@@ -5,6 +5,10 @@ author: Gabe Levi
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced Flow comment syntax when it was introduced. For current syntax and behavior, see the [Comment Types](/en/docs/types/comments) documentation.
+:::
+
 As of Flow 0.4.0, you can put your Flow-specific syntax in special comments. If you use these special comments then you do not need to transform away Flow-specific syntax before running your code. While we strongly recommend that you write your code without the special comments, this feature will help people who can't fit a Flow-stripping transformation into their setup. This was one of our [most requested features](https://github.com/facebook/flow/issues/3) and hopefully it will enable even more people to use Flow!
 
 This feature introduces 3 special comments: `/*:`, `/*::`, and `/*flow-include`. Flow will read the code inside these special comments and treat the code as if the special comment tokens didn't exist. These special comments are valid JavaScript block comments, so your JavaScript engine will ignore the code inside the comments.

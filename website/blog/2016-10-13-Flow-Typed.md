@@ -5,6 +5,10 @@ author: "Jeff Morrison"
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced flow-typed when it was introduced. For current syntax and behavior, see the [Library Definitions](/en/docs/libdefs) documentation.
+:::
+
 Having high-quality and community-driven library definitions (“libdefs”) are
 important for having a great experience with Flow. Today, we are introducing
 **flow-typed**: A [repository](https://github.com/flowtype/flow-typed/) and

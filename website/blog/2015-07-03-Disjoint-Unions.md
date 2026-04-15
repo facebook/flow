@@ -5,6 +5,10 @@ author: Avik Chaudhuri
 hide_table_of_contents: true
 ---
 
+:::info[Historical]
+This post announced disjoint unions when it was introduced. For current syntax and behavior, see the [Union Types](/en/docs/types/unions) documentation.
+:::
+
 Sometimes programs need to deal with different kinds of data all at once, where the shape of the data can be different based on what kind of data the code is looking at. This kind of programming is so common in functional programming languages that almost all such languages come with a way of:
 
 * Specifying such data by a set of disjoint cases, distinguished by “tags”, where each tag is associated with a different “record” of properties. (These descriptions are called “disjoint union” or “variant” types.)
