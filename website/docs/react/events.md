@@ -11,7 +11,7 @@ types like this:
 import {useState} from 'react';
 import * as React from 'react';
 
-function MyComponent(): React.Node {
+component MyComponent() {
   const [state, setState] = useState({count: 0});
 
   const handleClick = (event: SyntheticEvent<HTMLButtonElement>) => {

@@ -183,7 +183,10 @@ or calling `useState` from the React library:
 const set = new Set([1, 2, 3]);
 
 import {useState} from 'react';
-const [num, setNum] = useState(42);
+component Example() {
+  const [num, setNum] = useState(42);
+  return null;
+}
 ```
 Flow here infers that the type of `set` is `Set<number>`, and that `num` and `setNum`
 are `number` and `(number) => void`, respectively.
@@ -291,10 +294,13 @@ call is correct for the call itself, but not indicative of the expected use late
 For example, consider
 ```js flow-check
 import {useState} from 'react';
-const [str, setStr] = useState("");
+component Example() {
+  const [str, setStr] = useState("");
 
-declare const maybeString: ?string;
-setStr(maybeString); // Error
+  declare const maybeString: ?string;
+  setStr(maybeString); // Error
+  return null;
+}
 ```
 Passing the string `""` to the call to `useState` makes Flow infer `string` as the type
 of the state. So `setStr` will also expect a `string` as input when called later on,

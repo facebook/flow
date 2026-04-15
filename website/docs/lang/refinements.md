@@ -240,7 +240,7 @@ x as string; // Works
 You can create a reusable refinement by defining a function which is a [type guard](../../types/type-guards/).
 
 ```js flow-check
-function nonMaybe<T>(x: ?T): x is T {
+function nonMaybe<T>(x: ?T): implies x is T {
   return x != null;
 }
 
