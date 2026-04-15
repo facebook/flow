@@ -93,7 +93,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:5:15
 
-Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
+Cannot use `new` on function [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
 
    invalid.js:5:15
    5| const c = new C(1); // ERROR

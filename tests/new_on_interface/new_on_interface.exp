@@ -1,0 +1,53 @@
+Error ----------------------------------------------------------------------------------------- new_on_interface.js:16:7
+
+Cannot call `B` with `"hello"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   new_on_interface.js:16:7
+   16| new B("hello"); // ERROR
+             ^^^^^^^ [1]
+
+References:
+   new_on_interface.js:12:13
+   12|     new (x: number): Bar;
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- new_on_interface.js:20:20
+
+Return type annotation is required for `declare class` methods. [unsupported-syntax]
+
+   20|     new (x: string); // ERROR: return annotation required, but works
+                          
+
+
+Error ----------------------------------------------------------------------------------------- new_on_interface.js:25:7
+
+Cannot call `Z` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   new_on_interface.js:25:7
+   25| new Z(42); // ERROR
+             ^^ [1]
+
+References:
+   new_on_interface.js:20:13
+   20|     new (x: string); // ERROR: return annotation required, but works
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- new_on_interface.js:32:5
+
+Cannot use `new` on `NotConstructable` [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
+
+   new_on_interface.js:32:5
+   32| new nc(); // ERROR
+           ^^
+
+References:
+   new_on_interface.js:31:19
+   31| declare const nc: NotConstructable;
+                         ^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 4 errors

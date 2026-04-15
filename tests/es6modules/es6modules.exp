@@ -259,7 +259,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es6modules.js:64:5
 
-Cannot use `new` on module `./CommonJS_Clobbering_Class` [1]. Only classes can be constructed. [invalid-constructor]
+Cannot use `new` on module `./CommonJS_Clobbering_Class` [1]. Only classes and interfaces with a construct signature can
+be constructed. [invalid-constructor]
 
    es6modules.js:64:5
    64| new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable

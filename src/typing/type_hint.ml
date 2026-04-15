@@ -440,25 +440,35 @@ and type_of_hint_decomposition cx opts op reason t =
               (Flow_js.get_builtin_typeapp cx reason "Promise" [t], tout)
         )
       | Decomp_CallNew ->
-        (* For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
-           it, so that we can access the `constructor` method (which is considered an instance
-           method). *)
-        let get_this_t t =
-          Tvar.mk_where cx reason (fun t' ->
-              SpeculationFlow.resolved_lower_flow_t_unsafe cx reason (t, DefT (reason, ClassT t'))
-          )
-          |> get_t cx
-        in
-        let this_t =
-          match get_t cx t with
-          | DefT (reason, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
-            DefT
-              ( reason,
-                PolyT { tparams_loc; tparams; t_out = get_this_t t_out; id = Poly.generate_id () }
-              )
-          | t -> get_this_t t
-        in
-        get_constructor_type this_t
+        (* For interfaces with construct signatures (method named "new"), look up the "new" method
+           directly. If "new" does not exist, the lookup will produce an actionable error. *)
+        (match get_t cx t with
+        | DefT (_, InstanceT _) ->
+          SpeculationFlow.get_method_type_unsafe
+            cx
+            t
+            reason
+            (mk_named_prop ~reason (OrdinaryName "new"))
+        | _ ->
+          (* For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
+             it, so that we can access the `constructor` method (which is considered an instance
+             method). *)
+          let get_this_t t =
+            Tvar.mk_where cx reason (fun t' ->
+                SpeculationFlow.resolved_lower_flow_t_unsafe cx reason (t, DefT (reason, ClassT t'))
+            )
+            |> get_t cx
+          in
+          let this_t =
+            match get_t cx t with
+            | DefT (reason, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+              DefT
+                ( reason,
+                  PolyT { tparams_loc; tparams; t_out = get_this_t t_out; id = Poly.generate_id () }
+                )
+            | t -> get_this_t t
+          in
+          get_constructor_type this_t)
       | Decomp_CallSuper -> get_constructor_type t
       | Decomp_FuncParam (xs, i, type_guard) ->
         if i > List.length xs then

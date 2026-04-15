@@ -3005,7 +3005,7 @@ let to_printable_error :
         code "new";
         text " on ";
         ref reason;
-        text ". Only classes can be constructed.";
+        text ". Only classes and interfaces with a construct signature can be constructed.";
       ]
     | MessageCannotUseAsPrototype reason ->
       [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."]

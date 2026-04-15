@@ -1030,51 +1030,68 @@ fn type_of_hint_decomposition<'cx>(
                 )?)
             }
             ConcrHintDecompositionInner::DecompCallNew => {
-                // For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
-                // it, so that we can access the `constructor` method (which is considered an instance
-                // method).
-                let get_this_t = |t: &Type| -> Result<Type, SandboxError> {
-                    let t = t.dupe();
-                    let reason2 = reason.dupe();
-                    let tvar_result = flow_typing_tvar::mk_where_result(
-                        cx,
-                        reason.dupe(),
-                        move |cx, t_prime| {
-                            let class_t = Type::new(TypeInner::DefT(
-                                reason2.dupe(),
-                                DefT::new(DefTInner::ClassT(t_prime.dupe())),
-                            ));
-                            speculation_flow::resolved_lower_flow_t_unsafe(
+                // For interfaces with construct signatures (method named "new"), look up
+                // the "new" method directly. If "new" does not exist, the lookup will
+                // produce an actionable error.
+                match get_t(cx, t.dupe()).deref() {
+                    TypeInner::DefT(_, def_t)
+                        if let DefTInner::InstanceT(_inst_t) = def_t.deref() =>
+                    {
+                        Ok(speculation_flow::get_method_type_unsafe(
+                            cx,
+                            &t,
+                            reason.dupe(),
+                            type_util::mk_named_prop(reason.dupe(), false, Name::new("new")),
+                        )?)
+                    }
+                    _ => {
+                        // For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
+                        // it, so that we can access the `constructor` method (which is considered an instance
+                        // method).
+                        let get_this_t = |t: &Type| -> Result<Type, SandboxError> {
+                            let t = t.dupe();
+                            let reason2 = reason.dupe();
+                            let tvar_result = flow_typing_tvar::mk_where_result(
                                 cx,
-                                &reason2,
-                                (&t, &class_t),
+                                reason.dupe(),
+                                move |cx, t_prime| {
+                                    let class_t = Type::new(TypeInner::DefT(
+                                        reason2.dupe(),
+                                        DefT::new(DefTInner::ClassT(t_prime.dupe())),
+                                    ));
+                                    speculation_flow::resolved_lower_flow_t_unsafe(
+                                        cx,
+                                        &reason2,
+                                        (&t, &class_t),
+                                    )?;
+                                    Ok::<(), FlowJsException>(())
+                                },
                             )?;
-                            Ok::<(), FlowJsException>(())
-                        },
-                    )?;
-                    Ok(get_t(cx, tvar_result))
-                };
-                let this_t = match get_t(cx, t.dupe()).deref() {
-                    TypeInner::DefT(poly_reason, def) => match def.deref() {
-                        DefTInner::PolyT(box PolyTData {
-                            tparams_loc,
-                            tparams,
-                            t_out,
-                            id: _,
-                        }) => Type::new(TypeInner::DefT(
-                            poly_reason.dupe(),
-                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
-                                tparams_loc: tparams_loc.dupe(),
-                                tparams: tparams.dupe(),
-                                t_out: get_this_t(t_out)?,
-                                id: poly::Id::generate_id(),
-                            }))),
-                        )),
-                        _ => get_this_t(&get_t(cx, t))?,
-                    },
-                    _ => get_this_t(&get_t(cx, t))?,
-                };
-                Ok(get_constructor_type(&this_t)?)
+                            Ok(get_t(cx, tvar_result))
+                        };
+                        let this_t = match get_t(cx, t.dupe()).deref() {
+                            TypeInner::DefT(poly_reason, def) => match def.deref() {
+                                DefTInner::PolyT(box PolyTData {
+                                    tparams_loc,
+                                    tparams,
+                                    t_out,
+                                    id: _,
+                                }) => Type::new(TypeInner::DefT(
+                                    poly_reason.dupe(),
+                                    DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                        tparams_loc: tparams_loc.dupe(),
+                                        tparams: tparams.dupe(),
+                                        t_out: get_this_t(t_out)?,
+                                        id: poly::Id::generate_id(),
+                                    }))),
+                                )),
+                                _ => get_this_t(&get_t(cx, t))?,
+                            },
+                            _ => get_this_t(&get_t(cx, t))?,
+                        };
+                        Ok(get_constructor_type(&this_t)?)
+                    }
+                }
             }
             ConcrHintDecompositionInner::DecompCallSuper => Ok(get_constructor_type(&t)?),
             ConcrHintDecompositionInner::DecompFuncParam(xs, i, type_guard) => {

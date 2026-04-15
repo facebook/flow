@@ -2911,6 +2911,48 @@ struct
             (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.why src reason_op)))
             args;
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t)
+        (* Interfaces with construct signatures (method named "new") can be constructed.
+           We speculatively check for "new" through the constraint system. If the property
+           exists, dispatch the real method call. If not, produce a clear error. *)
+        | ( DefT (reason, InstanceT _),
+            ConstructorT
+              { use_op; reason = reason_op; targs; args; tout = t; return_hint; specialized_ctor }
+          ) ->
+          let reason_o = replace_desc_reason RConstructorVoidReturn reason in
+          let propref = mk_named_prop ~reason:reason_o (OrdinaryName "new") in
+          (* Speculatively probe for "new" without calling it *)
+          let probe_u =
+            MethodT (use_op, reason_op, reason_o, propref, NoMethodAction (Tvar.mk cx reason_op))
+          in
+          (match SpeculationKit.try_singleton_throw_on_failure cx trace l probe_u with
+          | () ->
+            (* "new" exists; dispatch the real method call *)
+            let ret =
+              Tvar.mk_no_wrap_where cx reason_op (fun tout ->
+                  let funtype = mk_methodcalltype targs args tout in
+                  rec_flow
+                    cx
+                    trace
+                    ( l,
+                      MethodT
+                        ( use_op,
+                          reason_op,
+                          reason_o,
+                          propref,
+                          CallM
+                            {
+                              methodcalltype = funtype;
+                              return_hint;
+                              specialized_callee = specialized_ctor;
+                            }
+                        )
+                    )
+              )
+            in
+            rec_flow_t cx trace ~use_op (ret, t)
+          | exception Flow_js_utils.SpeculationSingletonError ->
+            add_output cx Error_message.(EInvalidConstructor (reason_of_t l));
+            rec_flow_t cx trace ~use_op (AnyT.error reason_op, t))
         (* Only classes (and `any`) can be constructed. *)
         | ( _,
             ConstructorT
@@ -5326,8 +5368,14 @@ struct
       | ConstructorT
           { use_op; reason = reason_op; targs; args; tout; return_hint; specialized_ctor } ->
         if is_concrete bound then
-          match bound with
-          | DefT (_, ClassT _) ->
+          let has_construct_sig =
+            match bound with
+            | DefT (_, ClassT _)
+            | DefT (_, InstanceT _) ->
+              true
+            | _ -> false
+          in
+          if has_construct_sig then begin
             narrow_generic
               (fun tout' ->
                 ConstructorT
@@ -5342,7 +5390,8 @@ struct
                   })
               tout;
             true
-          | _ -> false
+          end else
+            false
         else
           wait_for_concrete_bound ()
       | ElemT _ ->

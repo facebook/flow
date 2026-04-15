@@ -800,32 +800,39 @@ pub(super) fn handle_generic<'cx>(
         }
         UseTInner::ConstructorT(data) => {
             if is_concrete(bound) {
-                match bound.deref() {
-                    TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::ClassT(_)) => {
-                        let ctor_use_op = data.use_op.dupe();
-                        let reason_op = data.reason.dupe();
-                        let targs = data.targs.clone();
-                        let args = data.args.clone();
-                        let return_hint = data.return_hint.clone();
-                        let specialized_ctor = data.specialized_ctor.clone();
-                        narrow_generic(
-                            None,
-                            &|tout_prime: Type| -> UseT<Context<'cx>> {
-                                UseT::new(UseTInner::ConstructorT(Box::new(ConstructorTData {
-                                    use_op: ctor_use_op.dupe(),
-                                    reason: reason_op.dupe(),
-                                    targs: targs.clone(),
-                                    args: args.clone(),
-                                    tout: tout_prime,
-                                    return_hint: return_hint.clone(),
-                                    specialized_ctor: specialized_ctor.clone(),
-                                })))
-                            },
-                            &data.tout,
-                        )?;
-                        Ok(true)
+                let has_construct_sig = match bound.deref() {
+                    TypeInner::DefT(_, def_t)
+                        if matches!(&**def_t, DefTInner::ClassT(_) | DefTInner::InstanceT(_)) =>
+                    {
+                        true
                     }
-                    _ => Ok(false),
+                    _ => false,
+                };
+                if has_construct_sig {
+                    let ctor_use_op = data.use_op.dupe();
+                    let reason_op = data.reason.dupe();
+                    let targs = data.targs.clone();
+                    let args = data.args.clone();
+                    let return_hint = data.return_hint.clone();
+                    let specialized_ctor = data.specialized_ctor.clone();
+                    narrow_generic(
+                        None,
+                        &|tout_prime: Type| -> UseT<Context<'cx>> {
+                            UseT::new(UseTInner::ConstructorT(Box::new(ConstructorTData {
+                                use_op: ctor_use_op.dupe(),
+                                reason: reason_op.dupe(),
+                                targs: targs.clone(),
+                                args: args.clone(),
+                                tout: tout_prime,
+                                return_hint: return_hint.clone(),
+                                specialized_ctor: specialized_ctor.clone(),
+                            })))
+                        },
+                        &data.tout,
+                    )?;
+                    Ok(true)
+                } else {
+                    Ok(false)
                 }
             } else {
                 wait_for_concrete_bound(None)

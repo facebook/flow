@@ -5896,7 +5896,9 @@ where
                 code("new"),
                 text(" on "),
                 ref_(reason),
-                text(". Only classes can be constructed."),
+                text(
+                    ". Only classes and interfaces with a construct signature can be constructed.",
+                ),
             ]),
             MessageCannotUseAsPrototype(reason) => friendly::Message(vec![
                 text("Cannot use "),

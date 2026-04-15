@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ json.js:2:5
 
-Cannot use `new` on object type [1]. Only classes can be constructed. [invalid-constructor]
+Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
 
    json.js:2:5
       2| new JSON(); // ERROR

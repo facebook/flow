@@ -1107,7 +1107,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:48:7
 
-Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
+Cannot use `new` on function [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
 
    expression.js:48:7
    48| ((new f(): empty): T).p as empty;
@@ -1138,7 +1139,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:49:7
 
-Cannot use `new` on function [1]. Only classes can be constructed. [invalid-constructor]
+Cannot use `new` on function [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
 
    expression.js:49:7
    49| ((new f(42): empty): T).p as empty;
