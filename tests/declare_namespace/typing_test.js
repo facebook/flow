@@ -106,3 +106,34 @@ declare namespace MergedDeclaredClass {
 }
 '' as MergedDeclaredClass.T; // ok
 1 as MergedDeclaredClass.T; // error: number ~> string
+
+// Test: class + interface with same name inside a merged namespace.
+// Previously caused a crash (Leader_not_found / Missing location entry)
+// because the declaration-merged interface was collected as a namespace
+// type member but lacked an env entry.
+declare class NsWithDeclMerge {
+  x: number;
+}
+declare namespace NsWithDeclMerge {
+  declare class Inner { y: string }
+  // TODO: TS allows class+interface declaration merging, so this
+  // name-already-bound error is a false positive. DeclaredFunction
+  // doesn't trigger this error (see fnWithDeclMerge below), so
+  // DeclaredClass should be made consistent.
+  interface Inner { z: boolean } // error: name-already-bound
+  type T = string;
+}
+(new NsWithDeclMerge().x) as empty; // error: number ~> empty
+1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
+'' as NsWithDeclMerge.T; // ok
+1 as NsWithDeclMerge.T; // error: number ~> string
+
+// Test: function + interface with same name inside a merged namespace.
+declare function fnWithDeclMerge(): void;
+declare namespace fnWithDeclMerge {
+  declare function Router(): void;
+  interface Router { route: string } // no error (DeclaredFunction allows this)
+  type T = string;
+}
+'' as fnWithDeclMerge.T; // ok
+1 as fnWithDeclMerge.T; // error: number ~> string

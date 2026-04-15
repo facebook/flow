@@ -1230,8 +1230,81 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- typing_test.js:123:13
 
-Found 86 errors
+Cannot declare `Inner` [1] because the name is already bound. [name-already-bound]
+
+   typing_test.js:123:13
+   123|   interface Inner { z: boolean } // error: name-already-bound
+                    ^^^^^
+
+References:
+   typing_test.js:118:17
+   118|   declare class Inner { y: string }
+                        ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:126:2
+
+Cannot cast `(new NsWithDeclMerge()).x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   typing_test.js:126:2
+   126| (new NsWithDeclMerge().x) as empty; // error: number ~> empty
+         ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typing_test.js:115:6
+   115|   x: number;
+             ^^^^^^ [1]
+   typing_test.js:126:30
+   126| (new NsWithDeclMerge().x) as empty; // error: number ~> empty
+                                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:127:1
+
+Cannot cast `1` to `Inner` because number [1] is incompatible with `Inner` [2]. [incompatible-type]
+
+   typing_test.js:127:1
+   127| 1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
+        ^ [1]
+
+References:
+   typing_test.js:127:6
+   127| 1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
+             ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:129:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   typing_test.js:129:1
+   129| 1 as NsWithDeclMerge.T; // error: number ~> string
+        ^ [1]
+
+References:
+   typing_test.js:129:6
+   129| 1 as NsWithDeclMerge.T; // error: number ~> string
+             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:139:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   typing_test.js:139:1
+   139| 1 as fnWithDeclMerge.T; // error: number ~> string
+        ^ [1]
+
+References:
+   typing_test.js:139:6
+   139| 1 as fnWithDeclMerge.T; // error: number ~> string
+             ^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 91 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

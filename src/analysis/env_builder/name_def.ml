@@ -904,6 +904,13 @@ let collect_declared_namespace_members statements =
         (add_namespace_member values name loc, types)
       | Ast.Statement.DeclareClass
           { Ast.Statement.DeclareClass.id = (loc, { Ast.Identifier.name; _ }); _ }
+      | Ast.Statement.ClassDeclaration { Ast.Class.id = Some (loc, { Ast.Identifier.name; _ }); _ }
+        ->
+        (* Classes introduce both value and type bindings. Adding to types
+           prevents a declaration-merged interface from supplying its location,
+           which may lack an env entry. SMap.add overwrites any earlier
+           interface entry so the class location always wins. *)
+        (add_namespace_member values name loc, SMap.add name (Env_api.OrdinaryNameLoc, loc) types)
       | Ast.Statement.DeclareComponent
           { Ast.Statement.DeclareComponent.id = (loc, { Ast.Identifier.name; _ }); _ }
       | Ast.Statement.DeclareEnum
@@ -1451,7 +1458,17 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                         (fun member_name env_key ->
                           SMap.update member_name (function
                               | Some existing -> Some existing
-                              | None -> Some env_key
+                              | None ->
+                                (* Declaration-merged interfaces (e.g. `interface Foo`
+                                   after `class Foo` or `function Foo`) are marked as
+                                   NonAssigningWrite and have no env entry, which causes
+                                   a crash in resolve_namespace_types. Only add namespace
+                                   type entries that have an assigning write. *)
+                                if Env_api.has_assigning_write env_key env_info.Env_api.env_entries
+                                then
+                                  Some env_key
+                                else
+                                  None
                               ))
                         namespace_types
                         function_state.namespace_types

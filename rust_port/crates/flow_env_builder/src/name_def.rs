@@ -1532,7 +1532,25 @@ fn collect_declared_namespace_members(
                 }
             }
             StatementInner::DeclareClass { inner, .. } => {
+                // Classes introduce both value and type bindings. Adding to types
+                // prevents a declaration-merged interface from supplying its location,
+                // which may lack an env entry. insert overwrites any earlier
+                // interface entry so the class location always wins.
                 add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+                types.insert(
+                    inner.id.name.dupe(),
+                    EnvKey::new(DefLocType::OrdinaryNameLoc, inner.id.loc.dupe()),
+                );
+            }
+            StatementInner::ClassDeclaration { inner, .. } => {
+                if let Some(id) = &inner.id {
+                    // Classes introduce both value and type bindings.
+                    add_namespace_member(&mut values, &id.name, &id.loc);
+                    types.insert(
+                        id.name.dupe(),
+                        EnvKey::new(DefLocType::OrdinaryNameLoc, id.loc.dupe()),
+                    );
+                }
             }
             StatementInner::DeclareComponent { inner, .. } => {
                 add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
@@ -4981,10 +4999,21 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                         .or_insert(Some(env_key));
                                 }
                                 for (member_name, env_key) in namespace_types {
-                                    function_state
-                                        .namespace_types
-                                        .entry(member_name)
-                                        .or_insert(env_key);
+                                    // Declaration-merged interfaces (e.g. `interface Foo`
+                                    // after `class Foo` or `function Foo`) are marked as
+                                    // NonAssigningWrite and have no env entry, which causes
+                                    // a crash in resolve_namespace_types. Only add namespace
+                                    // type entries that have an assigning write.
+                                    if let std::collections::btree_map::Entry::Vacant(entry) =
+                                        function_state.namespace_types.entry(member_name)
+                                    {
+                                        if crate::env_api::has_assigning_write(
+                                            env_key.dupe(),
+                                            &self.env_info.env_entries,
+                                        ) {
+                                            entry.insert(env_key);
+                                        }
+                                    }
                                 }
                             }
                             self.visit_merged_declare_namespace_body(inner);
