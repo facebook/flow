@@ -113,7 +113,7 @@ hook useOnlineStatus(): boolean {
 
 component StatusBar(shouldShowOnlineStatus: boolean) {
   if (shouldShowOnlineStatus) {
-    const onlineStatus = useOnlineStatus();
+    const onlineStatus = useOnlineStatus(); // Error
   }
 
   return null;
@@ -136,7 +136,7 @@ hook useMultiplier(x: number): number {
 }
 
 component Mapper(args: Array<number>) {
-  const multArgs = args.map(useMultiplier);
+  const multArgs = args.map(useMultiplier); // Error
   
   return multArgs;
 }

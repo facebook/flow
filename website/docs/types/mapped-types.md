@@ -159,8 +159,8 @@ For now, the only supported property modifier on array input is the optionality 
 ```js flow-check
 type Tuple = [+a: number, b?: string];
 type Supported = {[K in keyof Tuple]?: string};
-type Unsupported1 = {+[K in keyof Tuple]: string};
-type Unsupported2 = {-[K in keyof Tuple]: string};
+type Unsupported1 = {+[K in keyof Tuple]: string}; // Error
+type Unsupported2 = {-[K in keyof Tuple]: string}; // Error
 ```
 
 ## Adoption {#toc-adoption}

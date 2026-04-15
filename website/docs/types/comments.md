@@ -19,7 +19,7 @@ function method(value /*: MyAlias */) /*: boolean */ {
   return value.bar;
 }
 
-method({foo: 1, bar: true, baz: ["oops"]});
+method({foo: 1, bar: true, baz: ["oops"]}); // Error
 ```
 
 These comments allow Flow to work in plain JavaScript files without any

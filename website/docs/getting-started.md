@@ -253,7 +253,7 @@ Now that all the setup and initialization is complete, you are ready to write ac
 ```js flow-check
 function foo(x: ?number): string {
   if (x) {
-    return x;
+    return x; // Error
   }
   return "default string";
 }

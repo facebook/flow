@@ -16,7 +16,7 @@ type Param = {
 function myFunc(foo: Param): string {
   if (foo.bar) {
     console.log("checked!");
-    return foo.bar; // Flow errors. If you remove the console.log, it works
+    return foo.bar; // Error: if you remove the console.log, it works
   }
 
   return "default string";
@@ -55,7 +55,7 @@ function f() {
 
 if (typeof x === 'string') {
   f();
-  x as string;
+  x as string; // Error
 }
 ```
 
@@ -87,7 +87,7 @@ const people = [{age: 12}, {age: 18}, {age: 24}];
 const oldPerson: {age: ?number} = {age: 70};
 if (oldPerson.age) {
   people.forEach(person => {
-    console.log(`The person is ${person.age} and the old one is ${oldPerson.age}`);
+    console.log(`The person is ${person.age} and the old one is ${oldPerson.age}`); // Error
   })
 }
 ```
@@ -119,7 +119,7 @@ const add = (first: number, second: number) => first + second;
 const val: string | number = 1;
 const isNumber = (x: unknown): boolean => typeof x === 'number';
 if (isNumber(val)) {
-  add(val, 2);
+  add(val, 2); // Error
 }
 ```
 
@@ -248,7 +248,7 @@ Flow requires type annotations at module boundaries to make sure it can scale. T
 The most common case you'll encounter is when exporting a function or React component. Flow requires you to annotate inputs. For instance in this example, Flow will complain:
 
 ```js flow-check
-export const add = a => a + 1;
+export const add = a => a + 1; // Error
 ```
 
 The fix here is to add types to the parameters of `add`:
@@ -263,7 +263,7 @@ There are other cases where this happens, and they might be harder to understand
 
 ```js flow-check
 const array = ['a', 'b']
-export const genericArray = array.map(a => a)
+export const genericArray = array.map(a => a) // Error
 ```
 
 Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. The type of `Array.prototype.map` is `map<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any): Array<U>`. The `<U>` corresponds to what is called a [generic](../types/generics/), to express the fact that the type of the function passed to map is linked to the type of the array.

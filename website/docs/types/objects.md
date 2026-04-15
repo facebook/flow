@@ -318,7 +318,7 @@ type Inexact = {
 
 type ObjB = { // Error!
   c: boolean,
-  ...Inexact,
+  ...Inexact, // Error
 };
 
 const x: ObjB = {a:1, b: 'hi', c: true};

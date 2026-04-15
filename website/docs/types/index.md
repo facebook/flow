@@ -20,7 +20,7 @@ Still, there are places where you'll want to add types.
 Imagine the following `concat` function for concatenating two strings together.
 
 ```js flow-check
-function concat(a, b) {
+function concat(a, b) { // Error
   return a + b;
 }
 ```

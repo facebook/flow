@@ -100,7 +100,7 @@ type ReturnType<T: (...args: ReadonlyArray<empty>) => unknown> =
   T extends (...args: ReadonlyArray<empty>) => infer Return ? Return : any;
 
 1 as ReturnType<(string) => number>;
-1 as ReturnType<string>;
+1 as ReturnType<string>; // Error
 ```
 
 ## Distributive Conditional Types {#toc-distributive-conditional-type}

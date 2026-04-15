@@ -241,13 +241,13 @@ enum Status {
 }
 const status: Status = Status.Active;
 
-switch (status) {
+switch (status) { // Error
   case Status.Active: break;
   case Status.Paused: break;
   case Status.Off: break;
 }
 
-match (status) {
+match (status) { // Error
   Status.Active => {}
   Status.Paused => {}
   Status.Off => {}

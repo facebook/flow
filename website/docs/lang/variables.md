@@ -105,8 +105,8 @@ declare const other_props: OtherProps;
  * checked against the types that Flow infers for the initializers, and if
  * conflicting types are assigned, Flow will signal an error. */
 
-product = 'Our new product is...';
-Component = ({prop}: OtherProps): React.Node => {
+product = 'Our new product is...'; // Error
+Component = ({prop}: OtherProps): React.Node => { // Error
   return <div />;
 };
 element = <OtherComponent {...other_props} />;

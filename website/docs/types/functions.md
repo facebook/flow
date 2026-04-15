@@ -192,7 +192,7 @@ This prevents you from accidentally not returning a value under certain
 conditions.
 
 ```js flow-check
-function func(): boolean {
+function func(): boolean { // Error
   if (Math.random() > 0.5) {
     return true;
   }

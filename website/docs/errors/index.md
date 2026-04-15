@@ -73,7 +73,7 @@ In order to prevent suppressions from suppressing different kinds of type errors
 would report no errors, but
 ```js flow-check
 // $FlowFixMe[prop-missing]
-3 as string;
+3 as string; // Error
 ```
 would still report a type incompatibility.
 

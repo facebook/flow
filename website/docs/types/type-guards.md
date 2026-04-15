@@ -58,7 +58,7 @@ function test(x: AorB) {
     const stringData: string = x.data;
 
     // As a sanity check, the following assignment to B will error
-    const error: B = x;
+    const error: B = x; // Error
   }
 }
 ```
@@ -214,19 +214,19 @@ To ensure that refinement with type guard functions is sound, Flow runs a number
 
 In a type guard annotation of the form `parameter is Type`, `parameter` needs to belong to the current function's parameter list.
 ```js flow-check
-function missing(param: unknown): prop is number {
+function missing(param: unknown): prop is number { // Error
   return typeof param === "number";
 }
 ```
 
 It cannot be a parameter bound in a destructuring pattern, or a rest parameter:
 ```js flow-check
-function destructuring({prop}: {prop: unknown}): prop is number {
+function destructuring({prop}: {prop: unknown}): prop is number { // Error
   return typeof prop === "number";
 }
 ```
 ```js flow-check
-function rest(...value: Array<unknown>): value is Array<unknown> {
+function rest(...value: Array<unknown>): value is Array<unknown> { // Error
   return Array.isArray(value);
 }
 ```
@@ -240,7 +240,7 @@ function isT(x: ParamType): x is Type {
 ```
 Flow will check that `Type` is a subtype of `ParamType`. So the following will be an error:
 ```js flow-check
-function isNumber(x: string): x is number {
+function isNumber(x: string): x is number { // Error
   return typeof x === "number";
 }
 ```
@@ -249,11 +249,11 @@ function isNumber(x: string): x is number {
 
 A type guard function needs to return a boolean expression. The following are invalid declarations:
 ```js flow-check
-function isNumberNoReturn(x: string): x is string {}
+function isNumberNoReturn(x: string): x is string {} // Error
 ```
 ```js flow-check
 function nonMaybe<V: {...}>(x: ?V): x is V {
-  return x;
+  return x; // Error
 }
 ```
 A correct version of `nonMaybe` would be
@@ -288,7 +288,7 @@ function numOrStrWithException(x: unknown): x is number | string {
 But in the following Flow will raise errors:
 ```js flow-check
 function numOrStrError(x: unknown): x is number | string {
-  return (typeof x === "number" || typeof x === "boolean");
+  return (typeof x === "number" || typeof x === "boolean"); // Error
 }
 ```
 
@@ -308,7 +308,7 @@ if (isNumber(value)) {
 Therefore, the inverse form of the first requirement also needs to hold. Specifically, if we negate the predicate encoded in the function, and use it to refine the input, then the result must not overlap with the type guard at all. This condition is equivalent to checking that the type guard refined with the negation of the function predicate is a subtype of `empty`. For example the following raises an error:
 ```js flow-check
 function isPosNum(x: unknown): x is number {
-    return typeof x === 'number' && x > 0;
+    return typeof x === 'number' && x > 0; // Error
 }
 ```
 This is because the negation of the predicate of `isPosNum` is "`x` is not a number or `x<=0`". This predicate is equivalent to the empty predicate and does not refine the input type it is applied to.
@@ -321,11 +321,11 @@ If you're seeing errors related to this check, consider using a one-sided type g
 ```js flow-check
 function isNumberError1(x: unknown): x is number {
   x = 1;
-  return typeof x === "number";
+  return typeof x === "number"; // Error
 }
 ```
 ```js flow-check
-function isNumberError2(x: unknown): x is number {
+function isNumberError2(x: unknown): x is number { // Error
   function foo() {
     x = 1;
   }

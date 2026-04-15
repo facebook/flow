@@ -223,7 +223,7 @@ For example:
 // flowlint sketchy-null:error
 
 const x: ?number = 5;
-if (x) {} // sketchy because x could be either null or 0.
+if (x) {} // Error: sketchy because x could be either null or 0.
 
 const y: number = 5;
 if (y) {} // not sketchy because y can't be null, only 0.
@@ -312,7 +312,7 @@ Note that this lint does not trigger when we know a condition is always `false`.
 declare function invariant(boolean): void;
 
 declare const x: Array<string>; // Array is truthy
-invariant(x);
+invariant(x); // Error
 ```
 
 ### `unnecessary-optional-chain` {#toc-unnecessary-optional-chain}

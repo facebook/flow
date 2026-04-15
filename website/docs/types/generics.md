@@ -422,7 +422,7 @@ The example above could not be accomplished without the `+` variance sigil:
 type GenericBoxError<T> = T;
 
 const x: GenericBoxError<number> = 3;
-x as GenericBoxError<number| string>; // number | string is not compatible with number.
+x as GenericBoxError<number| string>; // Error: number | string is not compatible with number.
 ```
 
 Note that if you annotate your generic with variance sigils then Flow will
@@ -431,5 +431,5 @@ that variance sigil. For example, you cannot declare a generic type parameter
 to behave covariantly and use it in a contravariant position:
 
 ```js flow-check
-type NotActuallyCovariant<+T> = (T) => void;
+type NotActuallyCovariant<+T> = (T) => void; // Error
 ```

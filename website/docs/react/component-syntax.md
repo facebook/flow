@@ -157,7 +157,7 @@ component InvalidReturnValue() {
   return new Object(); // ERROR: Value does not match `React.Node` type
 }
 
-component ImplicitReturn(someCond: boolean) {
+component ImplicitReturn(someCond: boolean) { // ERROR
   if (someCond) {
     return <h1>Hello World!</h1>;
   }

@@ -60,7 +60,7 @@ behavior, and so is avoided. Instead, Flow requires that function parameters are
 provide such a type annotation manifests as a `[missing-local-annot]` error on the parameter `x`,
 and the body of the function is checked with `x: any`:
 ```js flow-check
-function getLength(x) {
+function getLength(x) { // Error
   return x.length;
 }
 
@@ -77,7 +77,7 @@ The same requirement holds for class methods
 ```js flow-check
 class WrappedString {
   data: string;
-  setStringNoAnnotation(x) {
+  setStringNoAnnotation(x) { // Error
     this.data = x;
   }
   setString(x: string) {
@@ -107,7 +107,7 @@ const fn1: (x: number) => number = x => x + 1;
 However, it is also possible that an annotation cannot be used as a function
 parameter hint:
 ```js flow-check
-const fn2: unknown = x => x + 1;
+const fn2: unknown = x => x + 1; // Error
 ```
 In this example the `unknown` type simply does not include enough information to
 extract a candidate type for `x`.
@@ -115,7 +115,7 @@ extract a candidate type for `x`.
 Flow can infer the types for unannotated parameters even when they are nested within
 other expressions like objects. For example in
 ```js flow-check
-const fn3: {f: (number) => void} = {f: (x) => {x as string}};
+const fn3: {f: (number) => void} = {f: (x) => {x as string}}; // Error
 ```
 Flow will infer `number` as the type of `x`, and so the cast fails.
 
@@ -131,7 +131,7 @@ that returns the internal `data` property:
 ```js flow-check
 class WrappedString {
   data: string;
-  getString(x: string) {
+  getString(x: string) { // Error
     return this.data;
   }
 }
@@ -140,7 +140,7 @@ Flow would complain that `getString` is missing an annotation on the return.
 
 The second exception is recursive definitions. A trivial example of this would be
 ```js flow-check
-function foo() {
+function foo() { // Error
   return bar();
 }
 
@@ -230,7 +230,7 @@ Let's examine again a call to the builtin generic
 [`Set` class](https://github.com/facebook/flow/blob/82f88520f2bfe0fa13748b5ead711432941f4cb9/lib/core.js#L1799-L1801)
 constructor, this time without passing any arguments:
 ```js flow-check
-const set = new Set();
+const set = new Set(); // Error
 set.add("abc");
 ```
 During the call to `new Set`, we are not providing enough information for Flow to
@@ -281,7 +281,7 @@ code later on.
 For example, if we had the following call to `map`:
 ```js flow-check
 declare function map<T, U>(f: (T) => U, array: ReadonlyArray<T>): Array<U>;
-map(x => x + 1, [{}]);
+map(x => x + 1, [{}]); // Error
 ```
 Flow will infer `T` as `{}`, and therefore type `x` as `{}`. This will cause an error when checking the arrow function
 since the `+` operation is not allowed on objects.
@@ -294,7 +294,7 @@ import {useState} from 'react';
 const [str, setStr] = useState("");
 
 declare const maybeString: ?string;
-setStr(maybeString);
+setStr(maybeString); // Error
 ```
 Passing the string `""` to the call to `useState` makes Flow infer `string` as the type
 of the state. So `setStr` will also expect a `string` as input when called later on,
