@@ -1,7 +1,7 @@
 ---
 title: "Introducing: Local Type Inference for Flow"
 short-title: "Introducing Local Type Inference"
-author: "Michael Vitousek"
+authors: [michael-vitousek]
 medium-link: "https://medium.com/flow-type/introducing-local-type-inference-for-flow-6af65b7830aa"
 ---
 

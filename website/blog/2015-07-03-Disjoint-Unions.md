@@ -1,7 +1,7 @@
 ---
 title: Announcing Disjoint Unions
 short-title: Disjoint Unions
-author: Avik Chaudhuri
+authors: [avik-chaudhuri]
 hide_table_of_contents: true
 ---
 

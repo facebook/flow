@@ -1,7 +1,7 @@
 ---
 title: Announcing Typecasts
 short-title: Typecasts
-author: Basil Hosmer
+authors: [basil-hosmer]
 hide_table_of_contents: true
 ---
 

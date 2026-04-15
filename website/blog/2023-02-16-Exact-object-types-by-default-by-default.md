@@ -1,7 +1,7 @@
 ---
 title: "Exact object types by default, by default"
 short-title: "Exact object types by default, by default"
-author: "George Zahariev"
+authors: [george-zahariev]
 medium-link: "https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "New Flow Language Features for React"
 short-title: "New Flow Language Features for React"
-author: "Alex Taylor & Jordan Brown"
+authors: [alex-taylor, jordan-brown]
 medium-link: "https://medium.com/flow-type/announcing-component-syntax-b6c5285660d0"
 ---
 

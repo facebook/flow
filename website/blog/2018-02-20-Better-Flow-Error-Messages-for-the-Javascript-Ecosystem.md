@@ -1,7 +1,7 @@
 ---
 title: "Better Flow Error Messages for the JavaScript Ecosystem"
 short-title: "Better Error Messages"
-author: "Caleb Meredith"
+authors: [caleb-meredith]
 medium-link: "https://medium.com/flow-type/better-flow-error-messages-for-the-javascript-ecosystem-73b6da948ae2"
 ---
 

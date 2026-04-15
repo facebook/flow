@@ -1,7 +1,7 @@
 ---
 title: "Property Variance and Other Upcoming Changes"
 short-title: "Property Variance"
-author: "Sam Goldman"
+authors: [sam-goldman]
 hide_table_of_contents: true
 ---
 

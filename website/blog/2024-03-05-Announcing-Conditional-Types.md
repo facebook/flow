@@ -1,7 +1,7 @@
 ---
 title: "Announcing Conditional Types"
 short-title: "Announcing Conditional Types"
-author: "Sam Zhou"
+authors: [sam-zhou]
 medium-link: "https://medium.com/flow-type/announcing-conditional-types-765b421f3a87"
 ---
 

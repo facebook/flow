@@ -1,7 +1,7 @@
 ---
 title: Announcing Import Type
 short-title: Import Type
-author: Jeff Morrison
+authors: [jeff-morrison]
 hide_table_of_contents: true
 ---
 

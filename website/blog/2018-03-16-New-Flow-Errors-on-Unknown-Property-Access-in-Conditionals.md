@@ -1,7 +1,7 @@
 ---
 title: "New Flow Errors on Unknown Property Access in Conditionals"
 short-title: "Unknown Props in Conditionals"
-author: "Gabe Levi"
+authors: [gabe-levi]
 medium-link: "https://medium.com/flow-type/new-flow-errors-on-unknown-property-access-in-conditionals-461da66ea10"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Even Better Support for React in Flow"
 short-title: "Even Better React Support"
-author: "Caleb Meredith"
+authors: [caleb-meredith]
 medium-link: "https://medium.com/flow-type/even-better-support-for-react-in-flow-25b0a3485627"
 ---
 

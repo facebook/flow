@@ -1,7 +1,7 @@
 ---
 title: "Introducing Flow-Typed"
 short-title: "Introducing Flow-Typed"
-author: "Jeff Morrison"
+authors: [jeff-morrison]
 hide_table_of_contents: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Announcing Flow Comments
 short-title: Flow Comments
-author: Gabe Levi
+authors: [gabe-levi]
 hide_table_of_contents: true
 ---
 

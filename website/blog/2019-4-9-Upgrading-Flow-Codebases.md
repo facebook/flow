@@ -1,7 +1,7 @@
 ---
 title: "Upgrading Flow Codebases"
 short-title: "Upgrading Flow Codebases"
-author: "Jordan Brown"
+authors: [jordan-brown]
 medium-link: "https://medium.com/flow-type/upgrading-flow-codebases-40ef8dd3ccd8"
 ---
 

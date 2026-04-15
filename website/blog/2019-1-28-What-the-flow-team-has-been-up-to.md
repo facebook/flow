@@ -1,7 +1,7 @@
 ---
 title: "What the Flow Team Has Been Up To"
 short-title: "What the Flow Team Has Been Up To"
-author: "Avik Chaudhuri"
+authors: [avik-chaudhuri]
 medium-link: "https://medium.com/flow-type/what-the-flow-team-has-been-up-to-54239c62004f"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Windows Support is Here!"
 short-title: "Windows Support"
-author: "Gabe Levi"
+authors: [gabe-levi]
 hide_table_of_contents: true
 ---
 

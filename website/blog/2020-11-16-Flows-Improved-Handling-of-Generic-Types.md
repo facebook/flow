@@ -1,7 +1,7 @@
 ---
 title: "Flow's Improved Handling of Generic Types"
 short-title: "Generic Types Improvements"
-author: "Michael Vitousek"
+authors: [michael-vitousek]
 medium-link: "https://medium.com/flow-type/flows-improved-handling-of-generic-types-b5909cc5e3c5"
 ---
 

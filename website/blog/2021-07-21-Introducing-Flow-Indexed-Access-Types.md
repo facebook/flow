@@ -1,7 +1,7 @@
 ---
 title: "Introducing Flow Indexed Access Types"
 short-title: "Flow Indexed Access Types"
-author: "George Zahariev"
+authors: [george-zahariev]
 medium-link: "https://medium.com/flow-type/introducing-flow-indexed-access-types-b27175251fd0"
 ---
 

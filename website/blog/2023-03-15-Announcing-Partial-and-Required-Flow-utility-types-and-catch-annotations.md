@@ -1,7 +1,7 @@
 ---
 title: "Announcing Partial & Required Flow utility types + catch annotations"
 short-title: "Announcing Partial & Required Flow utility types"
-author: "George Zahariev"
+authors: [george-zahariev]
 medium-link: "https://medium.com/flow-type/announcing-partial-required-flow-utility-types-catch-annotations-3a32f0bf2a20"
 ---
 

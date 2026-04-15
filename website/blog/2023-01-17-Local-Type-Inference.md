@@ -1,7 +1,7 @@
 ---
 title: "Local Type Inference for Flow"
 short-title: "Local Type Inference"
-author: "Sam Zhou"
+authors: [sam-zhou]
 medium-link: "https://medium.com/flow-type/local-type-inference-for-flow-aaa65d071347"
 ---
 

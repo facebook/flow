@@ -1,7 +1,7 @@
 ---
 title: "Opaque Type Aliases"
 short-title: "Opaque Type Aliases"
-author: "Jordan Brown"
+authors: [jordan-brown]
 medium-link: "https://medium.com/flow-type/hiding-implementation-details-with-flows-new-opaque-type-aliases-feature-40e188c2a3f9"
 ---
 

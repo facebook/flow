@@ -167,6 +167,51 @@ code {
   color: white;
 }
 
+/* ── Blog post author: compact single-line display ── */
+
+/* Authors container: inline flow instead of grid columns */
+article .row:has(.avatar) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+}
+
+/* Remove column sizing so authors sit next to each other */
+article .row:has(.avatar) > [class*='col'] {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+/* Separator between multiple authors */
+article .row:has(.avatar) > [class*='col'] + [class*='col']::before {
+  content: ', ';
+  white-space: pre;
+  align-self: flex-start;
+  line-height: 1.25;
+}
+
+/* Compact avatar: single line, no bottom margin */
+article .avatar {
+  margin-bottom: 0;
+}
+
+/* Make author info inline (name + socials on one line) */
+article .avatar__intro {
+  flex-direction: row;
+  align-items: center;
+}
+
+/* Space before social links */
+article .avatar__intro [class*='authorSocials'] a {
+  margin-left: 0.5rem;
+}
+
 .gh-btn {
   position: relative;
   vertical-align: middle;

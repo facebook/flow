@@ -1,7 +1,7 @@
 ---
 title: "Types-First: A Scalable New Architecture for Flow"
 short-title: "Types-First: A Scalable New"
-author: "Panagiotis Vekris"
+authors: [panagiotis-vekris]
 medium-link: "https://medium.com/flow-type/types-first-a-scalable-new-architecture-for-flow-3d8c7ba1d4eb"
 ---
 

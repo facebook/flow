@@ -1,7 +1,7 @@
 ---
 title: "Improved handling of the empty object in Flow"
 short-title: "Improvements to empty object"
-author: "George Zahariev"
+authors: [george-zahariev]
 medium-link: "https://medium.com/flow-type/improved-handling-of-the-empty-object-in-flow-ead91887e40c"
 ---
 

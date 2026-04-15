@@ -1,7 +1,7 @@
 ---
 title: "What we’re building in 2020"
 short-title: "What we’re building in 2020"
-author: "Andrew Pardoe"
+authors: [andrew-pardoe]
 medium-link: "https://medium.com/flow-type/what-were-building-in-2020-bcb92f620c75"
 ---
 

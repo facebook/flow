@@ -1,7 +1,7 @@
 ---
 title: "Linting in Flow"
 short-title: "Linting in Flow"
-author: "Roger Ballard"
+authors: [roger-ballard]
 medium-link: "https://medium.com/flow-type/linting-in-flow-7709d7a7e969"
 ---
 

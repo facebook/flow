@@ -1,7 +1,7 @@
 ---
 title: "Supporting React.forwardRef and Beyond"
 short-title: "Supporting React.forwardRef"
-author: "Jordan Brown"
+authors: [jordan-brown]
 medium-link: "https://medium.com/flow-type/supporting-react-forwardref-and-beyond-f8dd88f35544"
 ---
 

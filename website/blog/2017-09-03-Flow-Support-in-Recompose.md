@@ -1,7 +1,7 @@
 ---
 title: "Typing Higher-Order Components in Recompose With Flow"
 short-title: "Flow Support in Recompose"
-author: "Ivan Starkov"
+authors: [ivan-starkov]
 medium-link: "https://medium.com/flow-type/flow-support-in-recompose-1b76f58f4cfc"
 ---
 

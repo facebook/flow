@@ -1,7 +1,7 @@
 ---
 title: "Asking for Required Annotations"
 short-title: "Asking for Required Annotations"
-author: "Sam Goldman"
+authors: [sam-goldman]
 medium-link: "https://medium.com/flow-type/asking-for-required-annotations-64d4f9c1edf8"
 ---
 

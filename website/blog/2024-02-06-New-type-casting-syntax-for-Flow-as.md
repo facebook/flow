@@ -1,7 +1,7 @@
 ---
 title: "New type casting syntax for Flow: 'as'"
 short-title: "New type casting syntax for Flow"
-author: "George Zahariev"
+authors: [george-zahariev]
 medium-link: "https://medium.com/flow-type/new-type-casting-syntax-for-flow-as-3ef41567ff3e"
 ---
 

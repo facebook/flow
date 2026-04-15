@@ -1,7 +1,7 @@
 ---
 title: "Flow can now detect unused Promises"
 short-title: "Flow can now detect unused Promises"
-author: "David Richey"
+authors: [david-richey]
 medium-link: "https://medium.com/flow-type/flow-can-now-detect-unused-promises-b49341256640"
 ---
 

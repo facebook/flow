@@ -1,7 +1,7 @@
 ---
 title: "Coming Soon: Changes to Object Spreads"
 short-title: "Changes to Object Spreads"
-author: "Jordan Brown"
+authors: [jordan-brown]
 medium-link: "https://medium.com/flow-type/coming-soon-changes-to-object-spreads-73204aef84e1"
 ---
 

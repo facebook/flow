@@ -1,7 +1,7 @@
 ---
 title: "Sound Typing for 'this' in Flow"
 short-title: "Sound Typing for 'this'"
-author: "Daniel Sainati"
+authors: [daniel-sainati]
 medium-link: "https://medium.com/flow-type/sound-typing-for-this-in-flow-d62db2af969e"
 ---
 

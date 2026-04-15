@@ -1,7 +1,7 @@
 ---
 title: "Introducing Flow Enums"
 short-title: "Introducing Flow Enums"
-author: "George Zahariev"
+authors: [george-zahariev]
 medium-link: "https://medium.com/flow-type/introducing-flow-enums-16d4239b3180"
 ---
 

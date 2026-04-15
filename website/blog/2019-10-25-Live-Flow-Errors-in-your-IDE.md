@@ -1,7 +1,7 @@
 ---
 title: "Live Flow errors in your IDE"
 short-title: "Live Flow errors in your IDE"
-author: "Gabe Levi"
+authors: [gabe-levi]
 medium-link: "https://medium.com/flow-type/live-flow-errors-in-your-ide-bcbeda0b316"
 ---
 

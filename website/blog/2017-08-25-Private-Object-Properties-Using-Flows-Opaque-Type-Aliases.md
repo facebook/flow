@@ -1,7 +1,7 @@
 ---
 title: "Private Object Properties Using Flow’s Opaque Type Aliases"
 short-title: "Private Props w/ Opaque Types"
-author: "Jordan Brown"
+authors: [jordan-brown]
 medium-link: "https://medium.com/flow-type/private-object-properties-using-flows-opaque-type-aliases-e0100e9b0282"
 ---
 

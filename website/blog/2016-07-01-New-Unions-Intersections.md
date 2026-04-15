@@ -1,7 +1,7 @@
 ---
 title: "New Implementation of Unions and Intersections"
 short-title: "New Unions and Intersections"
-author: "Sam Goldman"
+authors: [sam-goldman]
 hide_table_of_contents: true
 ---
 

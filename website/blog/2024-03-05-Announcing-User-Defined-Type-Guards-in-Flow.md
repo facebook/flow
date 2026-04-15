@@ -1,7 +1,7 @@
 ---
 title: "Announcing User Defined Type Guards in Flow"
 short-title: "Announcing User Defined Type Guards in Flow"
-author: "Panagiotis Vekris"
+authors: [panagiotis-vekris]
 medium-link: "https://medium.com/flow-type/announcing-user-defined-type-guards-in-flow-b979bb2e78cf"
 ---
 

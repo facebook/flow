@@ -1,7 +1,7 @@
 ---
 title: "Strict Checking of Function Call Arity"
 short-title: "Strict Function Call Arity"
-author: "Gabe Levi"
+authors: [gabe-levi]
 hide_table_of_contents: true
 ---
 

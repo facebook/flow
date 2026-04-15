@@ -1,7 +1,7 @@
 ---
 title: "New Flow Language Rule: Constrained Writes"
 short-title: "Introducing Constrained Writes"
-author: "Jordan Brown"
+authors: [jordan-brown]
 medium-link: "https://medium.com/flow-type/new-flow-language-rule-constrained-writes-4c70e375d190"
 ---
 

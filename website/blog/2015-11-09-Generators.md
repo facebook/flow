@@ -1,7 +1,7 @@
 ---
 title: Typing Generators with Flow
 short-title: Generators
-author: Sam Goldman
+authors: [sam-goldman]
 hide_table_of_contents: true
 ---
 
