@@ -4096,8 +4096,13 @@ fn annot_with_loc<'arena, 'ast>(
             }
             Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
-        TypeInner::ConstructorType { .. } => {
-            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
+        TypeInner::ConstructorType { inner: func, .. } => {
+            use interface_acc::InterfaceAcc;
+            let def = function_type(opts, scope, scopes, tbls, xs, func);
+            let mut acc = InterfaceAcc::empty();
+            acc.append_method("new".into(), loc.dupe(), loc.dupe(), def);
+            let def = acc.interface_def(vec![]);
+            Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
         }
         TypeInner::Exists { .. } => Parsed::Annot(Box::new(ParsedAnnot::Exists(Box::new(loc)))),
     };

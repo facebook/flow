@@ -3204,18 +3204,72 @@ fn convert_inner<'a>(
             let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
             v
         }
-        TypeInner::ConstructorType { loc, .. } => {
-            flow_js_utils::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
+        TypeInner::ConstructorType {
+            loc,
+            abstract_,
+            inner: func,
+        } => {
+            if !cx.tslib_syntax() {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                            TsLibSyntaxKind::ConstructorType,
+                        ),
+                    ))),
+                );
+                let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
+                v
+            } else {
+                // Desugar `new (params) => T` to an inline interface: `interface { new(params): T }`
+                let reason =
+                    reason::mk_annot_reason(reason::VirtualReasonDesc::RInterfaceType, loc.dupe());
+                let id = cx.make_aloc_id(loc);
+                let super_ = func_class_sig_types::class::Super::Interface(
+                    func_class_sig_types::class::InterfaceSuper {
+                        inline: true,
+                        extends: vec![],
+                        callable: false,
+                    },
+                );
+                let mut iface_sig = class_sig::empty(
+                    id,
+                    None,
                     loc.dupe(),
-                    intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                        TsLibSyntaxKind::ConstructorType,
-                    ),
-                ))),
-            );
-            let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
-            v
+                    reason.dupe(),
+                    None,
+                    env.tparams_map
+                        .iter()
+                        .map(|(k, v)| (k.dupe(), v.dupe()))
+                        .collect(),
+                    super_,
+                );
+                let (fsig, func_ast) = mk_method_func_sig(
+                    cx,
+                    env,
+                    MethodKind::MethodKind { is_static: false },
+                    loc.dupe(),
+                    func,
+                );
+                class_sig::append_method(
+                    false,
+                    "new".into(),
+                    loc.dupe(),
+                    None,
+                    fsig,
+                    None,
+                    None,
+                    &mut iface_sig,
+                );
+                class_sig::check_signature_compatibility(cx, reason.dupe(), &iface_sig);
+                let iface_t = class_sig::thistype(cx, &iface_sig);
+                ast::types::Type::new(TypeInner::ConstructorType {
+                    loc: (loc.dupe(), iface_t),
+                    abstract_: *abstract_,
+                    inner: func_ast.into(),
+                })
+            }
         }
         TypeInner::Exists { loc, comments } => {
             flow_js_utils::add_output_non_speculating(

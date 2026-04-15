@@ -1692,15 +1692,42 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
            (loc, Flow_intermediate_error_types.(TSLibSyntax TemplateLiteralType))
         );
       Tast_utils.error_mapper#type_ t
-    | (loc, ConstructorType _) as t ->
-      Flow_js_utils.add_output
-        env.cx
-        (Error_message.EUnsupportedSyntax
-           ( loc,
-             Flow_intermediate_error_types.TSLibSyntax Flow_intermediate_error_types.ConstructorType
-           )
-        );
-      Tast_utils.error_mapper#type_ t
+    | (loc, ConstructorType { ConstructorType.abstract_; func }) as t ->
+      if not (Context.tslib_syntax env.cx) then (
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             ( loc,
+               Flow_intermediate_error_types.TSLibSyntax
+                 Flow_intermediate_error_types.ConstructorType
+             )
+          );
+        Tast_utils.error_mapper#type_ t
+      ) else
+        (* Desugar `new (params) => T` to an inline interface: `interface { new(params): T }` *)
+        let reason = mk_annot_reason RInterfaceType loc in
+        let id = Context.make_aloc_id env.cx loc in
+        let super =
+          Class_type_sig.Types.Interface
+            { Class_type_sig.Types.inline = true; extends = []; callable = false }
+        in
+        let iface_sig = Class_type_sig.empty id None loc reason None env.tparams_map super in
+        let (fsig, func_ast) =
+          mk_method_func_sig ~meth_kind:(MethodKind { static = false }) env loc func
+        in
+        let iface_sig =
+          Class_type_sig.append_method
+            ~static:false
+            "new"
+            ~id_loc:loc
+            ~this_write_loc:None
+            ~func_sig:fsig
+            iface_sig
+        in
+        Class_type_sig.check_signature_compatibility env.cx reason iface_sig;
+        ( (loc, Class_type_sig.thistype env.cx iface_sig),
+          ConstructorType { ConstructorType.abstract_; func = func_ast }
+        )
     | (loc, (Exists _ as t_ast)) ->
       Flow_js_utils.add_output
         env.cx

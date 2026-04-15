@@ -2118,7 +2118,12 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Null _ -> Annot (Null loc)
     | T.Symbol _ -> Annot (Symbol loc)
     | T.UniqueSymbol _ -> Annot (UniqueSymbol loc)
-    | T.ConstructorType _ -> Annot (Any loc)
+    | T.ConstructorType { T.ConstructorType.abstract_ = _; func } ->
+      let def = function_type opts scope tbls xs func in
+      let acc = InterfaceAcc.empty in
+      let acc = InterfaceAcc.append_method "new" loc loc def acc in
+      let def = InterfaceAcc.interface_def [] acc in
+      Annot (InlineInterface (loc, def))
     | T.Number _ -> Annot (Number loc)
     | T.BigInt _ -> Annot (BigInt loc)
     | T.String _ -> Annot (String loc)
