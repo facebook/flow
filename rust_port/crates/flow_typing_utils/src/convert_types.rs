@@ -15,11 +15,16 @@ use flow_parser::loc_sig::LocSig;
 use flow_typing_context::Context;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EnumInfoInner;
@@ -44,6 +49,7 @@ use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -324,7 +330,7 @@ pub fn type_to_json<'cx>(cx: &Context<'cx>, depth: i32, t: &Type) -> Json {
         } => {
             let underlying_t_json = match &nominal_type.underlying_t {
                 nominal::UnderlyingT::FullyOpaque => Json::Null,
-                nominal::UnderlyingT::CustomError { t, .. }
+                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. })
                 | nominal::UnderlyingT::OpaqueWithLocal { t, .. } => type_to_json(cx, depth - 1, t),
             };
             let super_t_json = match &nominal_type.upper_t {
@@ -739,20 +745,20 @@ fn json_of_dicttype<'cx>(cx: &Context<'cx>, depth: i32, dicttype: &DictType) -> 
 // Convert arrtype to JSON
 fn arrtype_to_json<'cx>(cx: &Context<'cx>, depth: i32, arrtype: &ArrType) -> Json {
     match arrtype {
-        ArrType::ArrayAT {
+        ArrType::ArrayAT(box ArrayATData {
             react_dro: _,
             elem_t,
             tuple_view: _,
-        } => {
+        }) => {
             json!({"kind": "ArrayAT", "elem_t": type_to_json(cx, depth - 1, elem_t)})
         }
-        ArrType::TupleAT {
+        ArrType::TupleAT(box TupleATData {
             react_dro: _,
             elem_t,
             elements,
             arity: (min_arity, max_arity),
             inexact,
-        } => {
+        }) => {
             json!({
                 "kind": "TupleAT",
                 "elem_t": type_to_json(cx, depth - 1, elem_t),
@@ -762,7 +768,7 @@ fn arrtype_to_json<'cx>(cx: &Context<'cx>, depth: i32, arrtype: &ArrType) -> Jso
                 "inexact": inexact,
             })
         }
-        ArrType::ROArrayAT(elem_t, _) => {
+        ArrType::ROArrayAT(box (elem_t, _)) => {
             json!({"kind": "ROArrayAT", "elem_t": type_to_json(cx, depth - 1, elem_t)})
         }
     }
@@ -886,7 +892,11 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
         Destructor::ReadOnlyType => json!({"kind": "ReadOnlyType"}),
         Destructor::PartialType => json!({"kind": "PartialType"}),
         Destructor::RequiredType => json!({"kind": "RequiredType"}),
-        Destructor::SpreadType(target, operands, operand_slice_opt) => {
+        Destructor::SpreadType(box DestructorSpreadTypeData(
+            target,
+            operands,
+            operand_slice_opt,
+        )) => {
             let target_json = match target {
                 object::spread::Target::Value { make_seal } => {
                     let seal_str = match make_seal {
@@ -922,13 +932,13 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
                 "operand_slice": operand_slice_json,
             })
         }
-        Destructor::SpreadTupleType {
+        Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
             reason_tuple: _,
             reason_spread: _,
             inexact,
             resolved: resolved_rev,
             unresolved,
-        } => {
+        }) => {
             json!({
                 "kind": "SpreadTupleType",
                 "inexact": inexact,
@@ -954,13 +964,13 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
             })
         }
         Destructor::ValuesType => json!({"kind": "ValuesType"}),
-        Destructor::ConditionalType {
+        Destructor::ConditionalType(box DestructorConditionalTypeData {
             distributive_tparam_name,
             infer_tparams,
             extends_t,
             true_t,
             false_t,
-        } => {
+        }) => {
             let dist_name_json = match distributive_tparam_name {
                 None => Json::Null,
                 Some(name) => Json::String(name.string_of_subst_name().to_string()),
@@ -1000,12 +1010,12 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
             };
             json!({"kind": "ReactDRO", "dro_type": dro_type_str})
         }
-        Destructor::MappedType {
+        Destructor::MappedType(box DestructorMappedTypeData {
             homomorphic,
             distributive_tparam_name,
             property_type,
             mapped_type_flags,
-        } => {
+        }) => {
             let homomorphic_json = match homomorphic {
                 MappedTypeHomomorphicFlag::Homomorphic => json_with_type("Homomorphic", vec![]),
                 MappedTypeHomomorphicFlag::Unspecialized => json_with_type("Unspecialized", vec![]),

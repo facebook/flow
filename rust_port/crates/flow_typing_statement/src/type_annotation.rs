@@ -924,17 +924,18 @@ fn convert_inner<'a>(
                 let elem_t = argument_ast.loc().1.dupe();
                 let arr_t = Type::new(type_::TypeInner::DefT(
                     reason::mk_annot_reason(reason::VirtualReasonDesc::RROArrayType, loc.dupe()),
-                    type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT {
-                        react_dro: None,
-                        elem_t: elem_t.dupe(),
-                        tuple_view: None,
-                    }))),
+                    type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT(
+                        Box::new(ArrayATData {
+                            react_dro: None,
+                            elem_t: elem_t.dupe(),
+                            tuple_view: None,
+                        }),
+                    )))),
                 ));
                 let ro_t = Type::new(type_::TypeInner::DefT(
                     reason::mk_annot_reason(reason::VirtualReasonDesc::RROArrayType, loc.dupe()),
                     type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
-                        elem_t.dupe(),
-                        None,
+                        Box::new((elem_t.dupe(), None)),
                     )))),
                 ));
                 ast::types::Type::new(TypeInner::ReadOnly {
@@ -1019,11 +1020,13 @@ fn convert_inner<'a>(
             let elem_t = t_ast.loc().1.dupe();
             let rt = Type::new(type_::TypeInner::DefT(
                 r,
-                type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT {
-                    elem_t,
-                    tuple_view: None,
-                    react_dro: None,
-                }))),
+                type_::DefT::new(type_::DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT(
+                    Box::new(ArrayATData {
+                        elem_t,
+                        tuple_view: None,
+                        react_dro: None,
+                    }),
+                )))),
             ));
             ast::types::Type::new(TypeInner::Array {
                 loc: (loc.dupe(), rt),
@@ -1098,13 +1101,14 @@ fn convert_inner<'a>(
             let false_type_ast = convert_inner(cx, env, &inner.false_type);
             let false_t = false_type_ast.loc().1.dupe();
             let reason = reason::mk_reason(reason::VirtualReasonDesc::RConditionalType, loc.dupe());
-            let destructor = type_::Destructor::ConditionalType {
-                distributive_tparam_name,
-                infer_tparams: infer_tparams.into(),
-                extends_t,
-                true_t,
-                false_t,
-            };
+            let destructor =
+                type_::Destructor::ConditionalType(Box::new(DestructorConditionalTypeData {
+                    distributive_tparam_name,
+                    infer_tparams: infer_tparams.into(),
+                    extends_t,
+                    true_t,
+                    false_t,
+                }));
             let t = FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                 cx,
                 type_::unknown_use(),
@@ -1680,11 +1684,11 @@ fn convert_inner<'a>(
                                         loc.dupe(),
                                     ),
                                     type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
-                                        type_::ArrType::ArrayAT {
+                                        type_::ArrType::ArrayAT(Box::new(ArrayATData {
                                             react_dro: None,
                                             elem_t,
                                             tuple_view: None,
-                                        },
+                                        })),
                                     ))),
                                 )),
                                 None,
@@ -1715,7 +1719,7 @@ fn convert_inner<'a>(
                                         loc.dupe(),
                                     ),
                                     type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
-                                        type_::ArrType::ROArrayAT(elemt, None),
+                                        type_::ArrType::ROArrayAT(Box::new((elemt, None))),
                                     ))),
                                 )),
                                 None,
@@ -1867,16 +1871,19 @@ fn convert_inner<'a>(
                                     mapped_use_op,
                                     &reason,
                                     &t2,
-                                    &type_::Destructor::MappedType {
-                                        homomorphic:
-                                            type_::MappedTypeHomomorphicFlag::Unspecialized,
-                                        property_type: type_::mixed_t::make(reason.dupe()),
-                                        mapped_type_flags: type_::MappedTypeFlags {
-                                            optional: type_::MappedTypeOptionality::KeepOptionality,
-                                            variance: type_::MappedTypeVariance::KeepVariance,
+                                    &type_::Destructor::MappedType(Box::new(
+                                        DestructorMappedTypeData {
+                                            homomorphic:
+                                                type_::MappedTypeHomomorphicFlag::Unspecialized,
+                                            property_type: type_::mixed_t::make(reason.dupe()),
+                                            mapped_type_flags: type_::MappedTypeFlags {
+                                                optional:
+                                                    type_::MappedTypeOptionality::KeepOptionality,
+                                                variance: type_::MappedTypeVariance::KeepVariance,
+                                            },
+                                            distributive_tparam_name: None,
                                         },
-                                        distributive_tparam_name: None,
-                                    },
+                                    )),
                                     type_::eval::Id::generate_id(),
                                 )
                                 .expect("mk_type_destructor should not fail");
@@ -1956,10 +1963,10 @@ fn convert_inner<'a>(
                                     use_op(&reason),
                                     &reason,
                                     &tp,
-                                    &type_::Destructor::ReactDRO(type_::ReactDro(
+                                    &type_::Destructor::ReactDRO(Box::new(type_::ReactDro(
                                         loc.dupe(),
                                         type_::DroType::DebugAnnot,
-                                    )),
+                                    ))),
                                     mk_eval_id(cx, loc.dupe()),
                                 )
                                 .expect("mk_type_destructor should not fail");
@@ -2412,7 +2419,7 @@ fn convert_inner<'a>(
                                             loc.dupe(),
                                         ),
                                         type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
-                                            type_::ArrType::ROArrayAT(elemt, None),
+                                            type_::ArrType::ROArrayAT(Box::new((elemt, None))),
                                         ))),
                                     )),
                                     None,
@@ -2969,7 +2976,7 @@ fn convert_inner<'a>(
                             use_op,
                             &reason,
                             &source_type_t,
-                            &type_::Destructor::MappedType {
+                            &type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
                                 homomorphic,
                                 property_type: poly_prop_type.dupe(),
                                 mapped_type_flags: type_::MappedTypeFlags {
@@ -3013,7 +3020,7 @@ fn convert_inner<'a>(
                                     },
                                 },
                                 distributive_tparam_name,
-                            },
+                            })),
                             type_::eval::Id::generate_id(),
                         )
                         .expect("mk_type_destructor not in speculation");
@@ -4557,7 +4564,11 @@ fn convert_object<'a>(
                         type_::unknown_use(),
                         &reason,
                         &t.dupe(),
-                        &Destructor::SpreadType(target, operands.into(), None),
+                        &Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
+                            target,
+                            operands.into(),
+                            None,
+                        ))),
                         eval::Id::generate_id(),
                     )
                     .expect("mk_type_destructor should not fail")
@@ -4592,7 +4603,11 @@ fn convert_object<'a>(
                         type_::unknown_use(),
                         &reason,
                         &spread_t,
-                        &Destructor::SpreadType(target, operands.into(), Some(head_slice_val)),
+                        &Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
+                            target,
+                            operands.into(),
+                            Some(head_slice_val),
+                        ))),
                         eval::Id::generate_id(),
                     )
                     .expect("mk_type_destructor should not fail")
@@ -4647,7 +4662,12 @@ fn convert_tuple_element<'a>(
                     *optional,
                     flow_common::polarity::Polarity::Neutral,
                 );
-                (type_::UnresolvedParam::UnresolvedArg(te, None), element_ast)
+                (
+                    type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
+                        te, None,
+                    ))),
+                    element_ast,
+                )
             } else {
                 let annot_ast = convert_inner(cx, env, annot);
                 let (_, annot_t) = annot_ast.loc();
@@ -4671,7 +4691,12 @@ fn convert_tuple_element<'a>(
                     *optional,
                     flow_common::polarity::Polarity::Neutral,
                 );
-                (type_::UnresolvedParam::UnresolvedArg(te, None), element_ast)
+                (
+                    type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
+                        te, None,
+                    ))),
+                    element_ast,
+                )
             }
         }
         Element::LabeledElement {
@@ -4722,7 +4747,10 @@ fn convert_tuple_element<'a>(
                 optional: *optional,
                 reason,
             };
-            (type_::UnresolvedParam::UnresolvedArg(te, None), element_ast)
+            (
+                type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(te, None))),
+                element_ast,
+            )
         }
         Element::SpreadElement {
             element:

@@ -476,7 +476,9 @@ pub fn needs_resolution(t: &Type) -> bool {
         TypeInner::NominalT { nominal_type, .. } => {
             matches!(
                 nominal_type.underlying_t,
-                flow_typing_type::type_::nominal::UnderlyingT::CustomError { .. }
+                flow_typing_type::type_::nominal::UnderlyingT::CustomError(
+                    box flow_typing_type::type_::nominal::CustomErrorData { .. },
+                )
             )
         }
         _ => false,
@@ -913,12 +915,16 @@ pub fn error_message_kind_of_upper<CX>(
 
 pub fn use_op_of_lookup_action(action: &flow_typing_type::type_::LookupAction) -> UseOp {
     use flow_typing_type::type_::LookupAction;
+    use flow_typing_type::type_::LookupActionMatchPropData;
+    use flow_typing_type::type_::LookupPropForSubtypingData;
+    use flow_typing_type::type_::ReadPropData;
+    use flow_typing_type::type_::WritePropData;
     match action {
-        LookupAction::ReadProp { use_op, .. }
-        | LookupAction::WriteProp { use_op, .. }
-        | LookupAction::LookupPropForSubtyping { use_op, .. }
-        | LookupAction::SuperProp(use_op, _)
-        | LookupAction::MatchProp { use_op, .. } => use_op.dupe(),
+        LookupAction::ReadProp(box ReadPropData { use_op, .. })
+        | LookupAction::WriteProp(box WritePropData { use_op, .. })
+        | LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData { use_op, .. })
+        | LookupAction::SuperProp(box (use_op, _))
+        | LookupAction::MatchProp(box LookupActionMatchPropData { use_op, .. }) => use_op.dupe(),
         LookupAction::LookupPropForTvarPopulation { .. } => unknown_use(),
     }
 }
@@ -5123,6 +5129,7 @@ pub mod get_prop_t_kit {
     use flow_typing_type::type_::GenericTData;
     use flow_typing_type::type_::InstType;
     use flow_typing_type::type_::LookupKind;
+    use flow_typing_type::type_::NonstrictReturningData;
     use flow_typing_type::type_::NumberLiteral;
     use flow_typing_type::type_::ObjType;
     use flow_typing_type::type_::PropRef;
@@ -5635,10 +5642,10 @@ pub mod get_prop_t_kit {
                                     lookup_default_tout.dupe(),
                                 ))
                             };
-                            LookupKind::NonstrictReturning(
+                            LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
                                 lookup_default,
                                 Some((*id, (reason_prop.dupe(), reason_obj.dupe()))),
-                            )
+                            )))
                         }
                         _ => LookupKind::Strict(reason_obj.dupe()),
                     };
@@ -5776,8 +5783,10 @@ pub fn array_elem_check<'cx>(
     use flow_common::polarity::Polarity;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_type::type_::ArrType;
+    use flow_typing_type::type_::ArrayATData;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::ReactDro;
+    use flow_typing_type::type_::TupleATData;
     use flow_typing_type::type_::TupleElement;
     use flow_typing_type::type_::VirtualFrameUseOp;
     use flow_typing_type::type_::VirtualUseOp;
@@ -5813,22 +5822,22 @@ pub fn array_elem_check<'cx>(
         bool,
         Option<ReactDro>,
     ) = match arrtype {
-        ArrType::ArrayAT {
+        ArrType::ArrayAT(box ArrayATData {
             elem_t,
             tuple_view,
             react_dro,
-        } => {
+        }) => {
             let elements = tuple_view.as_ref().map(|tv| tv.elements.dupe());
             let elem_t = union_void_if_instructed(elem_t.dupe());
             (elem_t, elements, false, false, false, react_dro.clone())
         }
-        ArrType::TupleAT {
+        ArrType::TupleAT(box TupleATData {
             elem_t,
             elements,
             arity: _,
             inexact,
             react_dro,
-        } => {
+        }) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
             (
                 elem_t,
@@ -5839,7 +5848,7 @@ pub fn array_elem_check<'cx>(
                 react_dro.clone(),
             )
         }
-        ArrType::ROArrayAT(elem_t, react_dro) => {
+        ArrType::ROArrayAT(box (elem_t, react_dro)) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
             (elem_t, None, true, false, false, react_dro.clone())
         }
@@ -5991,10 +6000,10 @@ pub fn array_elem_check<'cx>(
                 ErrorMessage::EROArrayWrite(
                     (reason.dupe(), reason_tup.dupe()),
                     VirtualUseOp::Frame(
-                        std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                        std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                             dro.0.dupe(),
                             dro.1.clone(),
-                        )),
+                        )))),
                         std::sync::Arc::new(use_op.dupe()),
                     ),
                 ),
@@ -6569,6 +6578,7 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
     ) -> bool {
         use flow_typing_type::type_::DefTInner;
         use flow_typing_type::type_::Destructor;
+        use flow_typing_type::type_::DestructorConditionalTypeData;
         use flow_typing_type::type_::PolyTData;
         use flow_typing_type::type_::constraint::Constraints;
 
@@ -6589,7 +6599,7 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
                 id: _,
             } if matches!(
                 defer_use_t.2.deref(),
-                Destructor::ConditionalType { true_t, .. } if matches!(true_t.deref(), TypeInner::GenericT(..))
+                Destructor::ConditionalType(box DestructorConditionalTypeData { true_t, .. }) if matches!(true_t.deref(), TypeInner::GenericT(..))
             ) =>
             {
                 true
@@ -6600,7 +6610,7 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
                 id: _,
             } if matches!(
                 defer_use_t.2.deref(),
-                Destructor::ConditionalType { false_t, .. } if matches!(false_t.deref(), TypeInner::GenericT(..))
+                Destructor::ConditionalType(box DestructorConditionalTypeData { false_t, .. }) if matches!(false_t.deref(), TypeInner::GenericT(..))
             ) =>
             {
                 true
@@ -6621,7 +6631,15 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
                 type_: _,
                 defer_use_t,
                 id: _,
-            } if matches!(defer_use_t.2.deref(), Destructor::MappedType { .. }) => true,
+            } if matches!(
+                defer_use_t.2.deref(),
+                Destructor::MappedType(box flow_typing_type::type_::DestructorMappedTypeData {
+                    ..
+                })
+            ) =>
+            {
+                true
+            }
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::TypeT(_, inner_t) => loop_inner(cx, inner_t, seen_open_id, seen_eval_id),
                 DefTInner::PolyT(box PolyTData { t_out, .. }) => {
@@ -6741,8 +6759,12 @@ where
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::Destructor;
+    use flow_typing_type::type_::DestructorSpreadTupleTypeData;
+    use flow_typing_type::type_::ResolvedArgData;
     use flow_typing_type::type_::ResolvedParam;
+    use flow_typing_type::type_::TupleATData;
     use flow_typing_type::type_::TupleElement;
+    use flow_typing_type::type_::UnresolvedArgData;
     use flow_typing_type::type_::UnresolvedParam;
     use flow_typing_type::type_::any_t;
     use flow_typing_type::type_::mixed_t;
@@ -6756,7 +6778,7 @@ where
 
     for el in elements {
         match (&el, &first_spread) {
-            (UnresolvedParam::UnresolvedArg(tuple_el, generic), None) => {
+            (UnresolvedParam::UnresolvedArg(box UnresolvedArgData(tuple_el, generic)), None) => {
                 resolved.push((tuple_el.clone(), generic.clone()));
             }
             (UnresolvedParam::UnresolvedSpreadArg(t), None) => {
@@ -6772,7 +6794,9 @@ where
         Some((reason_spread, spread_t)) => {
             let resolved: Vec<ResolvedParam> = resolved
                 .into_iter()
-                .map(|(el, generic)| ResolvedParam::ResolvedArg(el, generic))
+                .map(|(el, generic)| {
+                    ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(el, generic)))
+                })
                 .collect();
 
             mk_type_destructor(
@@ -6780,13 +6804,13 @@ where
                 unknown_use(),
                 reason.dupe(),
                 spread_t,
-                Destructor::SpreadTupleType {
+                Destructor::SpreadTupleType(Box::new(DestructorSpreadTupleTypeData {
                     reason_tuple: reason,
                     reason_spread,
                     inexact,
                     resolved: resolved.into(),
                     unresolved: unresolved.into(),
-                },
+                })),
                 id,
             )
         }
@@ -6810,13 +6834,15 @@ where
                 };
                 Ok(Type::new(TypeInner::DefT(
                     reason,
-                    DefT::new(DefTInner::ArrT(std::rc::Rc::new(ArrType::TupleAT {
-                        elem_t,
-                        elements: elements.into(),
-                        arity,
-                        inexact,
-                        react_dro: None,
-                    }))),
+                    DefT::new(DefTInner::ArrT(std::rc::Rc::new(ArrType::TupleAT(
+                        Box::new(TupleATData {
+                            elem_t,
+                            elements: elements.into(),
+                            arity,
+                            inexact,
+                            react_dro: None,
+                        }),
+                    )))),
                 )))
             } else {
                 Ok(any_t::error(reason))
@@ -7537,7 +7563,7 @@ pub mod callee_recorder {
         match &**u {
             UseTInner::CallT(box CallTData { call_action, .. }) => match call_action.as_ref() {
                 flow_typing_type::type_::CallAction::Funcalltype(
-                    flow_typing_type::type_::FuncallType {
+                    box flow_typing_type::type_::FuncallType {
                         call_specialized_callee,
                         ..
                     },

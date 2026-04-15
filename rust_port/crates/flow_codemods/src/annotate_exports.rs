@@ -119,7 +119,7 @@ pub mod signature_verification {
                 Errno::CheckError => (tot_errors, acc),
                 Errno::BindingValidationError(_) => (tot_errors, acc),
                 Errno::SigError(err) => {
-                    let loc_index: Index<Loc> = match &err {
+                    let loc_index: Index<Loc> = match err.as_ref() {
                         SignatureError::ExpectedAnnotation(loc, _) => loc.clone(),
                         SignatureError::UnexpectedExpression(loc, _) => loc.clone(),
                         SignatureError::UnexpectedObjectKey(loc, _) => loc.clone(),
@@ -129,7 +129,7 @@ pub mod signature_verification {
                         SignatureError::UnexpectedArrayHole(loc) => loc.clone(),
                     };
                     let loc = locs.get(loc_index).clone();
-                    match err {
+                    match *err {
                         SignatureError::ExpectedAnnotation(_, _)
                         | SignatureError::UnexpectedExpression(_, _)
                         | SignatureError::UnexpectedObjectKey(_, _)

@@ -170,6 +170,9 @@ use flow_typing_type::type_::ConditionalTData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
 use flow_typing_type::type_::ElemTData;
 use flow_typing_type::type_::EnumInfoInner;
 use flow_typing_type::type_::EvalTypeDestructorTData;
@@ -254,13 +257,17 @@ pub fn string_of_destructor(destructor: &Destructor) -> String {
         Destructor::PartialType => "PartialType".to_string(),
         Destructor::RequiredType => "RequiredType".to_string(),
         Destructor::SpreadType(..) => "Spread".to_string(),
-        Destructor::SpreadTupleType { .. } => "SpreadTupleType".to_string(),
+        Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData { .. }) => {
+            "SpreadTupleType".to_string()
+        }
         Destructor::RestType(..) => "Rest".to_string(),
         Destructor::ValuesType => "Values".to_string(),
-        Destructor::ConditionalType { .. } => "ConditionalType".to_string(),
+        Destructor::ConditionalType(box DestructorConditionalTypeData { .. }) => {
+            "ConditionalType".to_string()
+        }
         Destructor::TypeMap(TypeMap::ObjectKeyMirror) => "ObjectKeyMirror".to_string(),
         Destructor::ReactElementConfigType => "ReactElementConfig".to_string(),
-        Destructor::MappedType { .. } => "MappedType".to_string(),
+        Destructor::MappedType(box DestructorMappedTypeData { .. }) => "MappedType".to_string(),
         Destructor::ReactDRO(_) => "ReactDRO".to_string(),
     }
 }
@@ -473,32 +480,34 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
             }
             DefTInner::ArrT(arr) => {
                 use flow_typing_type::type_::ArrType;
+                use flow_typing_type::type_::ArrayATData;
+                use flow_typing_type::type_::TupleATData;
                 match arr.as_ref() {
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         elem_t,
                         tuple_view: None,
                         ..
-                    } => {
+                    }) => {
                         let extra = format!("Array {}", kid(tvars, elem_t));
                         p(cx, t, true, &extra)
                     }
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         elem_t,
                         tuple_view: Some(tv),
                         ..
-                    } => {
+                    }) => {
                         let elems_str = tuple_elements(tvars, &tv.elements, tv.inexact);
                         let extra = format!("Array {}, [{}]", kid(tvars, elem_t), elems_str);
                         p(cx, t, true, &extra)
                     }
-                    ArrType::TupleAT {
+                    ArrType::TupleAT(box TupleATData {
                         elements, inexact, ..
-                    } => {
+                    }) => {
                         let elems_str = tuple_elements(tvars, elements, *inexact);
                         let extra = format!("Tuple [{}]", elems_str);
                         p(cx, t, true, &extra)
                     }
-                    ArrType::ROArrayAT(elem_t, _) => {
+                    ArrType::ROArrayAT(box (elem_t, _)) => {
                         let extra = format!("ReadOnlyArray {}", kid(tvars, elem_t));
                         p(cx, t, true, &extra)
                     }
@@ -609,10 +618,10 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                 nominal::UnderlyingT::OpaqueWithLocal { t } => {
                     format!(" ({})", kid(tvars, t))
                 }
-                nominal::UnderlyingT::CustomError {
+                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                     t,
                     custom_error_loc,
-                } => {
+                }) => {
                     format!(
                         " ({}, custom_error_loc={})",
                         kid(tvars, t),
@@ -788,7 +797,10 @@ fn dump_use_t_<CX>(
 
     let lookup_kind = |tvars: &mut BTreeSet<i32>, kind: &type_::LookupKind| -> String {
         match kind {
-            type_::LookupKind::NonstrictReturning(default_opt, testid_opt) => {
+            type_::LookupKind::NonstrictReturning(box type_::NonstrictReturningData(
+                default_opt,
+                testid_opt,
+            )) => {
                 let default_str = match default_opt {
                     Some((t, _)) => format!(" returning {}", kid(tvars, t)),
                     None => String::new(),
@@ -807,14 +819,14 @@ fn dump_use_t_<CX>(
 
     let lookup_action = |tvars: &mut BTreeSet<i32>, action: &type_::LookupAction| -> String {
         match action {
-            type_::LookupAction::ReadProp { tout, .. } => {
+            type_::LookupAction::ReadProp(box type_::ReadPropData { tout, .. }) => {
                 format!(
                     "Read ({}, {})",
                     string_of_reason(cx, tout.reason()),
                     tvar(tvars, tout.id() as i32)
                 )
             }
-            type_::LookupAction::WriteProp { tin, .. } => {
+            type_::LookupAction::WriteProp(box type_::WritePropData { tin, .. }) => {
                 format!("Write {}", kid(tvars, tin))
             }
             type_::LookupAction::LookupPropForTvarPopulation { tout, polarity } => {
@@ -824,17 +836,21 @@ fn dump_use_t_<CX>(
                     kid(tvars, tout)
                 )
             }
-            type_::LookupAction::LookupPropForSubtyping { use_op, prop, .. } => {
+            type_::LookupAction::LookupPropForSubtyping(
+                box type_::LookupPropForSubtypingData { use_op, prop, .. },
+            ) => {
                 format!(
                     "LookupPropForSubtyping ({}, {})",
                     string_of_use_op(use_op),
                     normalized_prop(tvars, prop)
                 )
             }
-            type_::LookupAction::SuperProp(_, p) => {
+            type_::LookupAction::SuperProp(box (_, p)) => {
                 format!("Super {}", normalized_prop(tvars, p))
             }
-            type_::LookupAction::MatchProp { prop_t, .. } => {
+            type_::LookupAction::MatchProp(box type_::LookupActionMatchPropData {
+                prop_t, ..
+            }) => {
                 format!("Match {}", kid(tvars, prop_t))
             }
         }
@@ -842,9 +858,11 @@ fn dump_use_t_<CX>(
 
     let react_kit = |tvars: &mut BTreeSet<i32>, tool: &type_::react::Tool<CX>| -> String {
         match tool {
-            type_::react::Tool::CreateElement {
-                jsx_props, tout, ..
-            } => {
+            type_::react::Tool::CreateElement(box type_::react::CreateElementData {
+                jsx_props,
+                tout,
+                ..
+            }) => {
                 let jsx_str = kid(tvars, jsx_props);
                 let tout_str = tvar(tvars, tout.id() as i32);
                 format!("CreateElement ({}) => {}", jsx_str, tout_str)
@@ -1054,21 +1072,24 @@ fn dump_use_t_<CX>(
             type_::object::Tool::Partial => "Partial".to_string(),
             type_::object::Tool::Required => "Required".to_string(),
             type_::object::Tool::ObjectRep => "ObjectRep".to_string(),
-            type_::object::Tool::Spread(target, state) => spread_fn(tvars, target, state),
-            type_::object::Tool::Rest(merge_mode, state) => rest_fn(tvars, merge_mode, state),
-            type_::object::Tool::ReactConfig {
+            type_::object::Tool::Spread(box (target, state)) => spread_fn(tvars, target, state),
+            type_::object::Tool::Rest(box (merge_mode, state)) => rest_fn(tvars, merge_mode, state),
+            type_::object::Tool::ReactConfig(box type_::object::ObjectToolReactConfigData {
                 state,
                 ref_manipulation,
-            } => react_props_fn(state, ref_manipulation),
-            type_::object::Tool::ObjectMap { prop_type, .. } => object_map_fn(tvars, prop_type),
+            }) => react_props_fn(state, ref_manipulation),
+            type_::object::Tool::ObjectMap(box type_::object::ObjectToolObjectMapData {
+                prop_type,
+                ..
+            }) => object_map_fn(tvars, prop_type),
         };
         format!("({}, {})", resolve_tool_str, tool_str)
     };
 
     let method_action = |tvars: &mut BTreeSet<i32>, action: &type_::MethodAction<CX>| -> String {
         match action {
-            type_::MethodAction::CallM { methodcalltype, .. }
-            | type_::MethodAction::ChainM { methodcalltype, .. } => {
+            type_::MethodAction::CallM(box type_::CallMData { methodcalltype, .. })
+            | type_::MethodAction::ChainM(box type_::ChainMData { methodcalltype, .. }) => {
                 let this_str = match &methodcalltype.meth_generic_this {
                     Some(t) => kid(tvars, t),
                     None => "None".to_string(),
@@ -1349,7 +1370,9 @@ fn dump_use_t_<CX>(
                         kid(tvars, tout)
                     )
                 }
-                type_::SpreadResolve::ResolveSpreadsToMultiflowPartial(_, _, _, tout) => {
+                type_::SpreadResolve::ResolveSpreadsToMultiflowPartial(
+                    box type_::ResolveSpreadsToMultiflowPartialData(_, _, _, tout),
+                ) => {
                     format!("{}, {}", string_of_use_op(use_op), kid(tvars, tout))
                 }
                 type_::SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, _)

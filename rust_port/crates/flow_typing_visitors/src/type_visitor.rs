@@ -12,6 +12,7 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CallArgInner;
 use flow_typing_type::type_::DefT;
@@ -30,6 +31,7 @@ use flow_typing_type::type_::Selector;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -300,9 +302,9 @@ pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
                     });
             let acc = match &nominal_type.underlying_t {
                 flow_typing_type::type_::nominal::UnderlyingT::OpaqueWithLocal { t }
-                | flow_typing_type::type_::nominal::UnderlyingT::CustomError { t, .. } => {
-                    visitor.type_(cx, pole, acc, t)
-                }
+                | flow_typing_type::type_::nominal::UnderlyingT::CustomError(
+                    box flow_typing_type::type_::nominal::CustomErrorData { t, .. },
+                ) => visitor.type_(cx, pole, acc, t),
                 flow_typing_type::type_::nominal::UnderlyingT::FullyOpaque => acc,
             };
             let acc = if let Some(t) = &nominal_type.lower_t {
@@ -522,10 +524,10 @@ pub fn predicate_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         TruthyP
         | NullP
         | MaybeP
-        | SingletonBoolP(_, _)
-        | SingletonStrP(_, _, _)
-        | SingletonNumP(_, _, _)
-        | SingletonBigIntP(_, _, _)
+        | SingletonBoolP(_)
+        | SingletonStrP(_)
+        | SingletonNumP(_)
+        | SingletonBigIntP(_)
         | BoolP(_)
         | FunP
         | NumP(_)
@@ -605,7 +607,7 @@ pub fn destructor_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
             .values()
             .fold(acc, |acc, prop| visitor.prop(cx, pole_todo(), acc, prop)),
         ElementType { index_type, .. } => visitor.type_(cx, pole_todo(), acc, index_type),
-        SpreadType(_, ts, head_slice) => {
+        SpreadType(box flow_typing_type::type_::DestructorSpreadTypeData(_, ts, head_slice)) => {
             let acc = ts.iter().fold(acc, |acc, operand| {
                 visitor.object_kit_spread_operand(cx, acc, operand)
             });
@@ -615,23 +617,29 @@ pub fn destructor_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
                 acc
             }
         }
-        SpreadTupleType {
+        SpreadTupleType(box flow_typing_type::type_::DestructorSpreadTupleTypeData {
             resolved,
             unresolved,
             ..
-        } => {
+        }) => {
             let acc = resolved.iter().fold(acc, |acc, resolved_el| {
                 use flow_typing_type::type_::ResolvedParam::*;
                 match resolved_el {
-                    ResolvedArg(element, _) => visitor.tuple_element(cx, pole_todo(), acc, element),
-                    ResolvedSpreadArg(_, arr, _) => visitor.arr_type(cx, pole_todo(), acc, arr),
+                    ResolvedArg(box flow_typing_type::type_::ResolvedArgData(element, _)) => {
+                        visitor.tuple_element(cx, pole_todo(), acc, element)
+                    }
+                    ResolvedSpreadArg(box flow_typing_type::type_::ResolvedSpreadArgData(
+                        _,
+                        arr,
+                        _,
+                    )) => visitor.arr_type(cx, pole_todo(), acc, arr),
                     ResolvedAnySpreadArg(..) => acc,
                 }
             });
             unresolved.iter().fold(acc, |acc, unresolved_el| {
                 use flow_typing_type::type_::UnresolvedParam::*;
                 match unresolved_el {
-                    UnresolvedArg(element, _) => {
+                    UnresolvedArg(box flow_typing_type::type_::UnresolvedArgData(element, _)) => {
                         visitor.tuple_element(cx, pole_todo(), acc, element)
                     }
                     UnresolvedSpreadArg(t) => visitor.type_(cx, pole_todo(), acc, t),
@@ -639,13 +647,13 @@ pub fn destructor_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
             })
         }
         RestType(_, t) => visitor.type_(cx, pole_todo(), acc, t),
-        ConditionalType {
+        ConditionalType(box flow_typing_type::type_::DestructorConditionalTypeData {
             infer_tparams,
             extends_t,
             true_t,
             false_t,
             ..
-        } => {
+        }) => {
             let acc = infer_tparams
                 .iter()
                 .fold(acc, |acc, tp| visitor.type_param(cx, pole_todo(), acc, tp));
@@ -654,11 +662,11 @@ pub fn destructor_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
             visitor.type_(cx, pole_todo(), acc, false_t)
         }
         TypeMap(flow_typing_type::type_::TypeMap::ObjectKeyMirror) => acc,
-        MappedType {
+        MappedType(box flow_typing_type::type_::DestructorMappedTypeData {
             property_type,
             homomorphic,
             ..
-        } => {
+        }) => {
             let acc = visitor.type_(cx, pole_todo(), acc, property_type);
             match homomorphic {
                 flow_typing_type::type_::MappedTypeHomomorphicFlag::SemiHomomorphic(t) => {
@@ -888,31 +896,31 @@ pub fn arr_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     arr: &ArrType,
 ) -> Acc {
     match arr {
-        ArrType::ArrayAT {
+        ArrType::ArrayAT(box ArrayATData {
             elem_t,
             tuple_view: None,
             ..
-        } => visitor.type_(cx, Polarity::Neutral, acc, elem_t),
-        ArrType::ArrayAT {
+        }) => visitor.type_(cx, Polarity::Neutral, acc, elem_t),
+        ArrType::ArrayAT(box ArrayATData {
             elem_t,
             tuple_view: Some(tuple_view),
             ..
-        } => {
+        }) => {
             let acc = visitor.type_(cx, Polarity::Neutral, acc, elem_t);
             tuple_view
                 .elements
                 .iter()
                 .fold(acc, |acc, el| visitor.tuple_element(cx, pole, acc, el))
         }
-        ArrType::TupleAT {
+        ArrType::TupleAT(box TupleATData {
             elem_t, elements, ..
-        } => {
+        }) => {
             let acc = visitor.type_(cx, Polarity::Neutral, acc, elem_t);
             elements
                 .iter()
                 .fold(acc, |acc, el| visitor.tuple_element(cx, pole, acc, el))
         }
-        ArrType::ROArrayAT(t, _) => visitor.type_(cx, pole, acc, t),
+        ArrType::ROArrayAT(box (t, _)) => visitor.type_(cx, pole, acc, t),
     }
 }
 

@@ -34,17 +34,21 @@ use flow_typing_speculation_state::Branch as SpeculationBranch;
 use flow_typing_speculation_state::Case as SpeculationCase;
 use flow_typing_speculation_state::InformationForSynthesisLogging;
 use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ChainMData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::FuncallType;
 use flow_typing_type::type_::LookupAction;
+use flow_typing_type::type_::LookupActionMatchPropData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::SpecState;
+use flow_typing_type::type_::SpeculationHintSetData;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -119,12 +123,18 @@ fn log_synthesis_result<'cx>(
                         .map(|branch| branch.speculation_id)
                         .collect();
                     spec_id_path.push(speculation_id);
-                    SpeculationHintState::SpeculationHintSet(spec_id_path.into(), lhs_t.dupe())
+                    SpeculationHintState::SpeculationHintSet(Box::new(SpeculationHintSetData(
+                        spec_id_path.into(),
+                        lhs_t.dupe(),
+                    )))
                 }
                 SpeculationHintState::SpeculationHintInvalid => {
                     SpeculationHintState::SpeculationHintInvalid
                 }
-                SpeculationHintState::SpeculationHintSet(old_spec_id_path, old_t) => {
+                SpeculationHintState::SpeculationHintSet(box SpeculationHintSetData(
+                    old_spec_id_path,
+                    old_t,
+                )) => {
                     if old_spec_id_path.contains(&speculation_id) {
                         // We are moving back a successful speculation path.
                         old_callee_hint.clone()
@@ -146,7 +156,7 @@ fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation
     match use_t.deref() {
         UseTInner::CallT(box CallTData {
             call_action:
-                box CallAction::Funcalltype(FuncallType {
+                box CallAction::Funcalltype(box FuncallType {
                     call_specialized_callee: Some(c),
                     ..
                 }),
@@ -154,22 +164,22 @@ fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation
         })
         | UseTInner::MethodT(box MethodTData {
             method_action:
-                box MethodAction::CallM {
+                box MethodAction::CallM(box CallMData {
                     specialized_callee: Some(c),
                     ..
-                }
-                | box MethodAction::ChainM {
+                })
+                | box MethodAction::ChainM(box ChainMData {
                     specialized_callee: Some(c),
                     ..
-                },
+                }),
             ..
         })
         | UseTInner::ReactKitT(box ReactKitTData {
             tool:
-                box react::Tool::CreateElement {
+                box react::Tool::CreateElement(box react::CreateElementData {
                     specialized_component: Some(c),
                     ..
-                },
+                }),
             ..
         }) => {
             let spec_id = SpecState {
@@ -593,7 +603,10 @@ fn long_path_speculative_matches<'cx>(
                     }
                     UseTInner::LookupT(box LookupTData {
                         reason,
-                        lookup_action: box LookupAction::MatchProp { use_op, .. },
+                        lookup_action:
+                            box LookupAction::MatchProp(box LookupActionMatchPropData {
+                                use_op, ..
+                            }),
                         ..
                     }) => {
                         let mut op_reasons = Vec1::new(r.dupe());
@@ -630,7 +643,7 @@ fn long_path_speculative_matches<'cx>(
         let information_for_synthesis_logging = match &case_spec {
             CaseSpec::FlowCase(lhs_t, use_t)
                 if let UseTInner::CallT(box CallTData {
-                    call_action: box CallAction::Funcalltype(funcalltype),
+                    call_action: box CallAction::Funcalltype(box funcalltype),
                     ..
                 }) = use_t.deref() =>
             {

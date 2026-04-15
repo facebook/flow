@@ -28,18 +28,22 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
+use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
 use flow_typing_type::type_::ConstrainedAssignmentData;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::FunCallData;
 use flow_typing_type::type_::FunCallMethodData;
+use flow_typing_type::type_::FunImplicitReturnData;
+use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::ReactCreateElementCallData;
 use flow_typing_type::type_::RecordCreateData;
+use flow_typing_type::type_::SetPropertyData;
 use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
@@ -194,7 +198,7 @@ fn score_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(use_op: &Virtual
                 // count FunCompatibility.
                 VirtualFrameUseOp::FunCompatibility { .. } => 0,
                 // FunMissingArg means the error is *less* likely to be correct.
-                VirtualFrameUseOp::FunMissingArg { .. } => 0,
+                VirtualFrameUseOp::FunMissingArg(..) => 0,
                 // Higher signal then PropertyCompatibility, for example.
                 VirtualFrameUseOp::TypeArgCompatibility(..) => TYPE_ARG_FRAME_SCORE,
                 VirtualFrameUseOp::ArrayElementCompatibility { .. } => TYPE_ARG_FRAME_SCORE,
@@ -421,7 +425,7 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         | TypeParamBound { .. }
         | OpaqueTypeLowerBound { .. }
         | OpaqueTypeUpperBound { .. }
-        | FunMissingArg { .. }
+        | FunMissingArg(..)
         | ImplicitTypeParam
         | ReactGetConfig { .. }
         | OpaqueTypeCustomErrorCompatibility(..)
@@ -911,7 +915,7 @@ where
         >(
             root: &VirtualRootUseOp<L>,
         ) -> bool {
-            matches!(root, VirtualRootUseOp::FunImplicitReturn { .. })
+            matches!(root, VirtualRootUseOp::FunImplicitReturn(..))
         }
 
         fn loop_flip<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug>(
@@ -1031,7 +1035,7 @@ where
                                 VirtualRootUseOp::AssignVar { var: Some(_), .. }
                                 | VirtualRootUseOp::Cast { .. }
                                 | VirtualRootUseOp::ClassExtendsCheck { .. }
-                                | VirtualRootUseOp::ClassImplementsCheck { .. } => None,
+                                | VirtualRootUseOp::ClassImplementsCheck(..) => None,
                                 _ => Some(pair.dupe()),
                             },
                             _ => Some(pair.dupe()),
@@ -1046,7 +1050,7 @@ where
                     match use_op {
                         VirtualUseOp::Op(root) => match root.as_ref() {
                             VirtualRootUseOp::ClassExtendsCheck { .. }
-                            | VirtualRootUseOp::ClassImplementsCheck { .. } => loc,
+                            | VirtualRootUseOp::ClassImplementsCheck(..) => loc,
                             _ => loc_of_aloc(&reason.loc),
                         },
                         _ => loc_of_aloc(&reason.loc),
@@ -1422,9 +1426,11 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::ClassImplementsCheck {
-                                implements, def, ..
-                            } => root(
+                            VirtualRootUseOp::ClassImplementsCheck(
+                                box ClassImplementsCheckData {
+                                    implements, def, ..
+                                },
+                            ) => root(
                                 loc,
                                 frames,
                                 def,
@@ -1615,11 +1621,11 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::FunImplicitReturn {
+                            VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
                                 upper,
                                 fn_,
                                 type_guard: true,
-                            } => root(
+                            }) => root(
                                 loc,
                                 frames,
                                 upper,
@@ -1630,7 +1636,11 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::FunImplicitReturn { upper, fn_, .. } => root(
+                            VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
+                                upper,
+                                fn_,
+                                ..
+                            }) => root(
                                 loc,
                                 frames,
                                 upper,
@@ -1761,9 +1771,12 @@ where
                                 custom_error_message,
                             ),
 
-                            VirtualRootUseOp::SetProperty {
-                                prop, value, lhs, ..
-                            } => {
+                            VirtualRootUseOp::SetProperty(box SetPropertyData {
+                                prop,
+                                value,
+                                lhs,
+                                ..
+                            }) => {
                                 let loc_reason = if loc_of_aloc(&lhs.loc).contains(&loc) {
                                     &lhs
                                 } else {
@@ -2107,7 +2120,7 @@ where
 
                         VirtualFrameUseOp::OpaqueTypeLowerBound { .. }
                         | VirtualFrameUseOp::OpaqueTypeUpperBound { .. }
-                        | VirtualFrameUseOp::FunMissingArg { .. }
+                        | VirtualFrameUseOp::FunMissingArg(..)
                         | VirtualFrameUseOp::ImplicitTypeParam
                         | VirtualFrameUseOp::ReactConfigCheck
                         | VirtualFrameUseOp::ReactGetConfig { .. }
@@ -2125,17 +2138,19 @@ where
                             speculation,
                         ),
 
-                        VirtualFrameUseOp::ReactDeepReadOnly(_, DroType::DebugAnnot) => loop_impl(
-                            loc,
-                            frames,
-                            inner.as_ref().clone(),
-                            custom_error_message,
-                            loc_of_aloc,
-                            loc_of_prop_compatibility_reason,
-                            loop_to_form_access_chain,
-                            opt_incompatibility_pair,
-                            speculation,
-                        ),
+                        VirtualFrameUseOp::ReactDeepReadOnly(box (_, DroType::DebugAnnot)) => {
+                            loop_impl(
+                                loc,
+                                frames,
+                                inner.as_ref().clone(),
+                                custom_error_message,
+                                loc_of_aloc,
+                                loc_of_prop_compatibility_reason,
+                                loop_to_form_access_chain,
+                                opt_incompatibility_pair,
+                                speculation,
+                            )
+                        }
 
                         VirtualFrameUseOp::FunReturn { lower, upper } => {
                             let (mut all_frames, explanations) = frames;
@@ -2222,7 +2237,7 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::ReactDeepReadOnly(props_loc, DroType::Props) => {
+                        VirtualFrameUseOp::ReactDeepReadOnly(box (props_loc, DroType::Props)) => {
                             let (all_frames, mut explanations) = frames;
                             explanations.insert(
                                 0,
@@ -2243,7 +2258,7 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::ReactDeepReadOnly(props_loc, DroType::HookArg) => {
+                        VirtualFrameUseOp::ReactDeepReadOnly(box (props_loc, DroType::HookArg)) => {
                             let (all_frames, mut explanations) = frames;
                             explanations.insert(
                                 0,
@@ -2262,7 +2277,10 @@ where
                             )
                         }
 
-                        VirtualFrameUseOp::ReactDeepReadOnly(hook_loc, DroType::HookReturn) => {
+                        VirtualFrameUseOp::ReactDeepReadOnly(box (
+                            hook_loc,
+                            DroType::HookReturn,
+                        )) => {
                             let (all_frames, mut explanations) = frames;
                             explanations.insert(
                                 0,
@@ -3131,10 +3149,10 @@ where
                 _ => {
                     let root_use_op = root_of_use_op(&use_op);
                     match root_use_op {
-                        VirtualRootUseOp::FunImplicitReturn {
+                        VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
                             upper: return_reason,
                             ..
-                        } => {
+                        }) => {
                             if upper.loc() == return_reason.loc() {
                                 let upper_desc = upper.desc(is_scalar_reason(&upper)).clone();
                                 make_error(
@@ -3213,7 +3231,7 @@ where
                     )
                 }
 
-                VirtualFrameUseOp::FunMissingArg { def, op, .. } => {
+                VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) => {
                     let message = match inner_use_op.as_ref() {
                         VirtualUseOp::Op(inner_root) => match inner_root.as_ref() {
                             VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..) => {
@@ -3268,10 +3286,10 @@ where
                 _ => {
                     let root_use_op = root_of_use_op(&use_op);
                     match root_use_op {
-                        VirtualRootUseOp::FunImplicitReturn {
+                        VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
                             upper: return_reason,
                             ..
-                        } => {
+                        }) => {
                             if upper.loc() == return_reason.loc() {
                                 let upper_desc = upper.desc(is_scalar_reason(&upper)).clone();
                                 make_error(

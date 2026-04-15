@@ -61,6 +61,7 @@ use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ReactDro;
 use flow_typing_type::type_::ThisInstanceTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeDestructorT;
@@ -75,6 +76,8 @@ use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::mk_objecttype;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::object;
+use flow_typing_type::type_::object::ObjectToolObjectMapData;
+use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_::str_module_t;
@@ -772,7 +775,7 @@ pub fn spread_mk_object<'cx>(
                 defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
                     unknown_use(),
                     reason.dupe(),
-                    Rc::new(Destructor::ReactDRO(react_dro.clone())),
+                    Rc::new(Destructor::ReactDRO(Box::new(react_dro.clone()))),
                 )),
                 id: eval::Id::generate_id(),
             }),
@@ -963,7 +966,7 @@ pub fn object_spread<'cx, A>(
                     union_reason: None,
                     curr_resolve_idx,
                 };
-                let tool = object::Tool::Spread(options.clone(), state);
+                let tool = object::Tool::Spread(Box::new((options.clone(), state)));
                 return recurse(cx, use_op.dupe(), &reason, resolve_tool, tool, t.dupe());
             }
             object::spread::Operand::Slice(operand_slice) => {
@@ -1472,7 +1475,7 @@ pub fn object_rest<'cx, A>(
         object::rest::State::One(t) => {
             let resolve_tool = object::ResolveTool::Resolve(object::Resolve::Next);
             let state = object::rest::State::Done(object::Resolved(x));
-            let tool = object::Tool::Rest(*options, state);
+            let tool = object::Tool::Rest(Box::new((*options, state)));
             recurse(cx, use_op, reason, resolve_tool, tool, t.dupe())
         }
         object::rest::State::Done(base) => {
@@ -2203,7 +2206,7 @@ pub fn resolve<'cx, A>(
                     Rc::new(resolve_tool.clone()),
                 );
                 return match (tool, inst_kind) {
-                    (object::Tool::Spread(_, _), InstanceKind::InterfaceKind { .. }) => {
+                    (object::Tool::Spread(box (_, _)), InstanceKind::InterfaceKind { .. }) => {
                         add_output(
                             cx,
                             ErrorMessage::ECannotSpreadInterface(Box::new(
@@ -2216,7 +2219,7 @@ pub fn resolve<'cx, A>(
                         )?;
                         return_(cx, use_op, any_t::error(reason.dupe()))
                     }
-                    (object::Tool::Spread(_, _), InstanceKind::RecordKind { .. }) => {
+                    (object::Tool::Spread(box (_, _)), InstanceKind::RecordKind { .. }) => {
                         recurse(cx, use_op, reason, resolve_tool_inner, tool, super_t.dupe())
                     }
                     (_, InstanceKind::RecordKind { .. }) => {
@@ -2259,7 +2262,7 @@ pub fn resolve<'cx, A>(
                     object::Tool::Partial
                         | object::Tool::Required
                         | object::Tool::MakeExact
-                        | object::Tool::ObjectMap { .. }
+                        | object::Tool::ObjectMap(box ObjectToolObjectMapData { .. })
                 ) =>
             {
                 return return_(cx, use_op, t.dupe());
@@ -2288,7 +2291,7 @@ pub fn resolve<'cx, A>(
             // They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
             // copying/spreading an object.
             DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
-                if matches!(tool, object::Tool::Spread(_, _)) =>
+                if matches!(tool, object::Tool::Spread(box (_, _))) =>
             {
                 let flags = Flags {
                     obj_kind: ObjKind::Exact,
@@ -2318,17 +2321,19 @@ pub fn resolve<'cx, A>(
                     react_dro: None,
                 };
                 let x = match tool {
-                    object::Tool::Spread(_, _)
+                    object::Tool::Spread(box (_, _))
                     | object::Tool::ObjectRep
-                    | object::Tool::ReactConfig { .. } => Vec1::new(object::Slice {
-                        reason: reason.dupe(),
-                        props: object::Props::new(),
-                        flags,
-                        frozen: true,
-                        generics: t_generic_id.clone(),
-                        interface: None,
-                        reachable_targs: Rc::from([]),
-                    }),
+                    | object::Tool::ReactConfig(box ObjectToolReactConfigData { .. }) => {
+                        Vec1::new(object::Slice {
+                            reason: reason.dupe(),
+                            props: object::Props::new(),
+                            flags,
+                            frozen: true,
+                            generics: t_generic_id.clone(),
+                            interface: None,
+                            reachable_targs: Rc::from([]),
+                        })
+                    }
                     _ => {
                         let flags = Flags {
                             obj_kind: ObjKind::Indexed(DictType {
@@ -2353,13 +2358,13 @@ pub fn resolve<'cx, A>(
                 return resolved(next, recurse, cx, use_op, reason, resolve_tool, tool, x);
             }
             DefTInner::ArrT(arr) => match arr.deref() {
-                ArrType::TupleAT {
+                ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity,
                     inexact,
                     react_dro,
-                } if matches!(tool, object::Tool::ReadOnly) => {
+                }) if matches!(tool, object::Tool::ReadOnly) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
                         .map(|elem| TupleElement {
@@ -2379,23 +2384,25 @@ pub fn resolve<'cx, A>(
                         use_op,
                         Type::new(TypeInner::DefT(
                             def_reason,
-                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                elem_t: elem_t.dupe(),
-                                elements: elements.into(),
-                                arity: *arity,
-                                inexact: *inexact,
-                                react_dro: react_dro.clone(),
-                            }))),
+                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                TupleATData {
+                                    elem_t: elem_t.dupe(),
+                                    elements: elements.into(),
+                                    arity: *arity,
+                                    inexact: *inexact,
+                                    react_dro: react_dro.clone(),
+                                },
+                            ))))),
                         )),
                     );
                 }
-                ArrType::TupleAT {
+                ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity,
                     inexact,
                     react_dro,
-                } if matches!(tool, object::Tool::Partial) => {
+                }) if matches!(tool, object::Tool::Partial) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
                         .map(|elem| {
@@ -2425,23 +2432,25 @@ pub fn resolve<'cx, A>(
                         use_op,
                         Type::new(TypeInner::DefT(
                             def_reason,
-                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                elem_t,
-                                elements: elements.into(),
-                                arity,
-                                inexact: *inexact,
-                                react_dro: react_dro.clone(),
-                            }))),
+                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                TupleATData {
+                                    elem_t,
+                                    elements: elements.into(),
+                                    arity,
+                                    inexact: *inexact,
+                                    react_dro: react_dro.clone(),
+                                },
+                            ))))),
                         )),
                     );
                 }
-                ArrType::TupleAT {
+                ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity,
                     inexact,
                     react_dro,
-                } if matches!(tool, object::Tool::Required) => {
+                }) if matches!(tool, object::Tool::Required) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
                         .map(|elem| {
@@ -2474,13 +2483,15 @@ pub fn resolve<'cx, A>(
                         use_op,
                         Type::new(TypeInner::DefT(
                             def_reason,
-                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                elem_t,
-                                elements: elements.into(),
-                                arity,
-                                inexact: *inexact,
-                                react_dro: react_dro.clone(),
-                            }))),
+                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                TupleATData {
+                                    elem_t,
+                                    elements: elements.into(),
+                                    arity,
+                                    inexact: *inexact,
+                                    react_dro: react_dro.clone(),
+                                },
+                            ))))),
                         )),
                     );
                 }
@@ -2497,10 +2508,10 @@ pub fn resolve<'cx, A>(
             let members_filtered =
                 flow_typing_visitors::type_mapper::union_flatten(cx, rep.members_iter().duped());
             let tool = match tool {
-                object::Tool::Spread(options, state) => {
+                object::Tool::Spread(box (options, state)) => {
                     let mut state = state.clone();
                     state.union_reason = Some(union_reason.dupe());
-                    object::Tool::Spread(options.clone(), state)
+                    object::Tool::Spread(Box::new((options.clone(), state)))
                 }
                 _ => tool.clone(),
             };

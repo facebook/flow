@@ -60,22 +60,25 @@ pub fn swap_reason(t2: &Type, t1: &Type) -> Type {
 
             let underlying_t = match (repr1, repr2) {
                 (
-                    nominal::UnderlyingT::CustomError { t: t1_inner, .. },
-                    nominal::UnderlyingT::CustomError {
+                    nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                        t: t1_inner,
+                        ..
+                    }),
+                    nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                         t: t2_inner,
                         custom_error_loc,
-                    },
-                ) => nominal::UnderlyingT::CustomError {
+                    }),
+                ) => nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                     custom_error_loc: custom_error_loc.dupe(),
                     t: swap_reason(t2_inner, t1_inner),
-                },
+                })),
                 (
                     nominal::UnderlyingT::OpaqueWithLocal { t: t1_inner },
                     nominal::UnderlyingT::OpaqueWithLocal { t: t2_inner },
                 ) => nominal::UnderlyingT::OpaqueWithLocal {
                     t: swap_reason(t2_inner, t1_inner),
                 },
-                _ => repr2.dupe(),
+                _ => repr2.clone(),
             };
             let lower_t = match (l1, l2) {
                 (Some(t1_inner), Some(t2_inner)) => Some(swap_reason(t2_inner, t1_inner)),

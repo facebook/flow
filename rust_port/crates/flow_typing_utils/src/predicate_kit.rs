@@ -46,6 +46,7 @@ use flow_typing_type::type_::PredicateConcretetizerVariant;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::Targ;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
@@ -401,7 +402,7 @@ fn predicate_no_concretization<'cx>(
                 // (*********************)
                 // (* _ ~ "some string" *)
                 // (*********************)
-                PredicateInner::SingletonStrP(_, _, lit) => {
+                PredicateInner::SingletonStrP(box (_, _, lit)) => {
                     let filtered_str =
                         type_filter::not_string_literal(Name::new(lit.as_str()), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_str, result_collector);
@@ -410,7 +411,7 @@ fn predicate_no_concretization<'cx>(
                 // (*********************)
                 // (* _ ~ some number n *)
                 // (*********************)
-                PredicateInner::SingletonNumP(_, _, lit) => {
+                PredicateInner::SingletonNumP(box (_, _, lit)) => {
                     let filtered_num = type_filter::not_number_literal(lit.clone(), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_num, result_collector);
                     Ok(())
@@ -428,7 +429,7 @@ fn predicate_no_concretization<'cx>(
                 // (*********************)
                 // (* _ ~ some bigint n *)
                 // (*********************)
-                PredicateInner::SingletonBigIntP(_, _, lit) => {
+                PredicateInner::SingletonBigIntP(box (_, _, lit)) => {
                     let filtered_bigint = type_filter::not_bigint_literal(lit.clone(), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_bigint, result_collector);
                     Ok(())
@@ -510,7 +511,7 @@ fn predicate_no_concretization<'cx>(
                 // (********)
                 // (* true *)
                 // (********)
-                PredicateInner::SingletonBoolP(_, true) => {
+                PredicateInner::SingletonBoolP(box (_, true)) => {
                     let filtered = type_filter::not_true(l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
@@ -518,7 +519,7 @@ fn predicate_no_concretization<'cx>(
                 // (*********)
                 // (* false *)
                 // (*********)
-                PredicateInner::SingletonBoolP(_, false) => {
+                PredicateInner::SingletonBoolP(box (_, false)) => {
                     let filtered = type_filter::not_false(l.dupe());
                     report_filtering_result_to_predicate_result(filtered, result_collector);
                     Ok(())
@@ -630,7 +631,7 @@ fn predicate_no_concretization<'cx>(
         // (***********************)
         // (* typeof _ ~ "boolean" *)
         // (***********************)
-        PredicateInner::BoolP(loc) => {
+        PredicateInner::BoolP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::boolean(loc.dupe(), l.dupe()),
                 result_collector,
@@ -640,7 +641,7 @@ fn predicate_no_concretization<'cx>(
         // (***********************)
         // (* typeof _ ~ "string" *)
         // (***********************)
-        PredicateInner::StrP(loc) => {
+        PredicateInner::StrP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::string(loc.dupe(), l.dupe()),
                 result_collector,
@@ -650,7 +651,7 @@ fn predicate_no_concretization<'cx>(
         // (***********************)
         // (* typeof _ ~ "symbol" *)
         // (***********************)
-        PredicateInner::SymbolP(loc) => {
+        PredicateInner::SymbolP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::symbol(loc.dupe(), l.dupe()),
                 result_collector,
@@ -660,7 +661,7 @@ fn predicate_no_concretization<'cx>(
         // (*********************)
         // (* _ ~ "some string" *)
         // (*********************)
-        PredicateInner::SingletonStrP(expected_loc, _sense, lit) => {
+        PredicateInner::SingletonStrP(box (expected_loc, _sense, lit)) => {
             let filtered_str =
                 type_filter::string_literal(expected_loc.dupe(), Name::new(lit.as_str()), l.dupe());
             report_filtering_result_to_predicate_result(filtered_str, result_collector);
@@ -669,7 +670,7 @@ fn predicate_no_concretization<'cx>(
         // (*********************)
         // (* _ ~ some number n *)
         // (*********************)
-        PredicateInner::SingletonNumP(expected_loc, _sense, lit) => {
+        PredicateInner::SingletonNumP(box (expected_loc, _sense, lit)) => {
             let filtered_num =
                 type_filter::number_literal(expected_loc.dupe(), lit.clone(), l.dupe());
             report_filtering_result_to_predicate_result(filtered_num, result_collector);
@@ -678,7 +679,7 @@ fn predicate_no_concretization<'cx>(
         // (***********************)
         // (* typeof _ ~ "number" *)
         // (***********************)
-        PredicateInner::NumP(loc) => {
+        PredicateInner::NumP(box loc) => {
             //   report_filtering_result_to_predicate_result (Type_filter.number loc l) result_collector
             report_filtering_result_to_predicate_result(
                 type_filter::number(loc.dupe(), l.dupe()),
@@ -689,7 +690,7 @@ fn predicate_no_concretization<'cx>(
         // (*********************)
         // (* _ ~ some bigint n *)
         // (*********************)
-        PredicateInner::SingletonBigIntP(expected_loc, _sense, lit) => {
+        PredicateInner::SingletonBigIntP(box (expected_loc, _sense, lit)) => {
             //   let filtered_bigint = Type_filter.bigint_literal expected_loc lit l in
             let filtered_bigint =
                 type_filter::bigint_literal(expected_loc.dupe(), lit.clone(), l.dupe());
@@ -700,7 +701,7 @@ fn predicate_no_concretization<'cx>(
         // (***********************)
         // (* typeof _ ~ "bigint" *)
         // (***********************)
-        PredicateInner::BigIntP(loc) => {
+        PredicateInner::BigIntP(box loc) => {
             report_filtering_result_to_predicate_result(
                 type_filter::bigint(loc.dupe(), l.dupe()),
                 result_collector,
@@ -774,7 +775,7 @@ fn predicate_no_concretization<'cx>(
         // (********)
         // (* true *)
         // (********)
-        PredicateInner::SingletonBoolP(_, true) => {
+        PredicateInner::SingletonBoolP(box (_, true)) => {
             let filtered = type_filter::true_(l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
@@ -782,7 +783,7 @@ fn predicate_no_concretization<'cx>(
         // (*********)
         // (* false *)
         // (*********)
-        PredicateInner::SingletonBoolP(_, false) => {
+        PredicateInner::SingletonBoolP(box (_, false)) => {
             let filtered = type_filter::false_(l.dupe());
             report_filtering_result_to_predicate_result(filtered, result_collector);
             Ok(())
@@ -1319,13 +1320,15 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
                     });
                     let underlying_t = match &nominal_type.underlying_t {
                         nominal::UnderlyingT::FullyOpaque => nominal::UnderlyingT::FullyOpaque,
-                        nominal::UnderlyingT::CustomError {
+                        nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                             custom_error_loc,
                             t: inner_t,
-                        } => nominal::UnderlyingT::CustomError {
-                            custom_error_loc: custom_error_loc.dupe(),
-                            t: intersect(cx, inner_t.dupe(), t2.dupe()),
-                        },
+                        }) => {
+                            nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
+                                custom_error_loc: custom_error_loc.dupe(),
+                                t: intersect(cx, inner_t.dupe(), t2.dupe()),
+                            }))
+                        }
                         nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                             nominal::UnderlyingT::OpaqueWithLocal {
                                 t: intersect(cx, inner_t.dupe(), t2.dupe()),
@@ -1710,7 +1713,7 @@ fn prop_exists_test_generic<'cx>(
                     }
                 }
                 DefTInner::ArrT(arr_t)
-                    if let ArrType::TupleAT { elements, .. } = arr_t.deref()
+                    if let ArrType::TupleAT(box TupleATData { elements, .. }) = arr_t.deref()
                         && flow_js_utils::is_str_intlike(key) =>
                 {
                     let i: usize = key.parse().unwrap();
@@ -2273,7 +2276,8 @@ fn sentinel_prop_test_generic<'cx>(
                         }
                         // tuple.length ===/!== literal value
                         DefTInner::ArrT(arr_t)
-                            if let ArrType::TupleAT { arity, inexact, .. } = arr_t.deref()
+                            if let ArrType::TupleAT(box TupleATData { arity, inexact, .. }) =
+                                arr_t.deref()
                                 && key == "length" =>
                         {
                             let reason = reason_of_t(obj).dupe();
@@ -2290,7 +2294,8 @@ fn sentinel_prop_test_generic<'cx>(
                             )?;
                         }
                         DefTInner::ArrT(arr_t)
-                            if let ArrType::TupleAT { elements, .. } = arr_t.deref()
+                            if let ArrType::TupleAT(box TupleATData { elements, .. }) =
+                                arr_t.deref()
                                 && flow_js_utils::is_str_intlike(key) =>
                         {
                             flow_sentinel_tuple(sense, elements, obj, &s)?;

@@ -20,7 +20,9 @@ use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallElemTData;
+use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ChainMData;
 use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::ConditionalTData;
 use flow_typing_type::type_::Cont;
@@ -32,6 +34,7 @@ use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::LookupAction;
+use flow_typing_type::type_::LookupActionMatchPropData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodAction;
@@ -39,7 +42,10 @@ use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::OptionalIndexedAccessTData;
 use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ReadElemData;
+use flow_typing_type::type_::ReadPropData;
 use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::SetElemTData;
@@ -53,6 +59,8 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
+use flow_typing_type::type_::WriteElemData;
+use flow_typing_type::type_::WritePropData;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::react;
@@ -102,23 +110,23 @@ pub fn default_resolve_touts<'cx>(
     let resolve_method_action =
         |action: &MethodAction<Context<'cx>>| -> Result<(), FlowJsException> {
             match action {
-                MethodAction::ChainM {
+                MethodAction::ChainM(box ChainMData {
                     exp_reason: _,
                     lhs_reason: _,
                     methodcalltype,
                     voided_out_collector: _,
                     return_hint: _,
                     specialized_callee,
-                } => {
+                }) => {
                     resolve_tvar(&methodcalltype.meth_tout)?;
                     resolve_specialized_callee(specialized_callee);
                     Ok(())
                 }
-                MethodAction::CallM {
+                MethodAction::CallM(box CallMData {
                     methodcalltype,
                     return_hint: _,
                     specialized_callee,
-                } => {
+                }) => {
                     resolve_tvar(&methodcalltype.meth_tout)?;
                     resolve_specialized_callee(specialized_callee);
                     Ok(())
@@ -128,24 +136,26 @@ pub fn default_resolve_touts<'cx>(
         };
     let resolve_lookup_action = |action: &LookupAction| -> Result<(), FlowJsException> {
         match action {
-            LookupAction::ReadProp { tout, .. } => resolve_tvar(tout),
-            LookupAction::WriteProp { prop_tout, .. } => map_opt(prop_tout),
+            LookupAction::ReadProp(box ReadPropData { tout, .. }) => resolve_tvar(tout),
+            LookupAction::WriteProp(box WritePropData { prop_tout, .. }) => map_opt(prop_tout),
             LookupAction::LookupPropForTvarPopulation { .. }
-            | LookupAction::LookupPropForSubtyping { .. }
+            | LookupAction::LookupPropForSubtyping(..)
             | LookupAction::SuperProp(..)
-            | LookupAction::MatchProp { .. } => Ok(()),
+            | LookupAction::MatchProp(box LookupActionMatchPropData { .. }) => Ok(()),
         }
     };
     let resolve_elem_action = |action: &ElemAction<Context<'cx>>| -> Result<(), FlowJsException> {
         match action {
-            ElemAction::ReadElem { tout, .. } => resolve_tvar(tout),
-            ElemAction::WriteElem { tout, .. } => map_opt(tout),
+            ElemAction::ReadElem(box ReadElemData { tout, .. }) => resolve_tvar(tout),
+            ElemAction::WriteElem(box WriteElemData { tout, .. }) => map_opt(tout),
             ElemAction::CallElem(_, action) => resolve_method_action(action),
         }
     };
     let resolve_react_tool = |tool: &react::Tool<Context<'cx>>| -> Result<(), FlowJsException> {
         match tool {
-            react::Tool::CreateElement { tout, .. } => resolve_tvar(tout),
+            react::Tool::CreateElement(box react::CreateElementData { tout, .. }) => {
+                resolve_tvar(tout)
+            }
             react::Tool::ConfigCheck { props } => resolve(props.dupe()),
             react::Tool::GetConfig { tout } => resolve(tout.dupe()),
         }
@@ -156,7 +166,9 @@ pub fn default_resolve_touts<'cx>(
             SpreadResolve::ResolveSpreadsToArrayLiteral { tout, .. } => resolve(tout.dupe()),
             SpreadResolve::ResolveSpreadsToArray(_, t) => resolve(t.dupe()),
             SpreadResolve::ResolveSpreadsToMultiflowCallFull(..) => Ok(()),
-            SpreadResolve::ResolveSpreadsToMultiflowPartial(_, _, _, t) => resolve(t.dupe()),
+            SpreadResolve::ResolveSpreadsToMultiflowPartial(
+                box ResolveSpreadsToMultiflowPartialData(_, _, _, t),
+            ) => resolve(t.dupe()),
             SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(..) => Ok(()),
         }
     };
@@ -173,7 +185,7 @@ pub fn default_resolve_touts<'cx>(
             ..
         }) => resolve_tvar(&funcalltype.call_tout),
         UseTInner::CallT(box CallTData {
-            call_action: box CallAction::Funcalltype(funcalltype),
+            call_action: box CallAction::Funcalltype(box funcalltype),
             ..
         }) => {
             resolve_tvar(&funcalltype.call_tout)?;

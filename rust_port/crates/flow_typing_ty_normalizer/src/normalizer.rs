@@ -46,17 +46,26 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
 use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
+use flow_typing_type::type_::ResolvedArgData;
+use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::eval as type_eval;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_util;
@@ -661,15 +670,15 @@ fn should_force_eval_to_avoid_giant_types<'cx>(
         | D::PartialType
         | D::RequiredType
         | D::SpreadType(..)
-        | D::SpreadTupleType { .. }
+        | D::SpreadTupleType(..)
         | D::RestType(..)
         | D::ValuesType
-        | D::ConditionalType { .. }
+        | D::ConditionalType(..)
         | D::TypeMap(..)
         | D::ReactElementConfigType
         | D::ReactCheckComponentConfig { .. }
         | D::ReactDRO(..)
-        | D::MappedType { .. }
+        | D::MappedType(box DestructorMappedTypeData { .. })
         | D::EnumType => false,
     }
 }
@@ -694,20 +703,20 @@ fn should_evaluate_destructor<'cx>(
         || match env.evaluate_type_destructors() {
             EvaluateTypeDestructorsMode::EvaluateNone => false,
             EvaluateTypeDestructorsMode::EvaluateSome => match d {
-                D::MappedType { .. }
+                D::MappedType(box DestructorMappedTypeData { .. })
                 | D::NonMaybeType
                 | D::PropertyType { .. }
                 | D::ElementType { .. }
                 | D::OptionalIndexedAccessNonMaybeType { .. }
                 | D::OptionalIndexedAccessResultType { .. }
-                | D::ConditionalType { .. } => true,
+                | D::ConditionalType(..) => true,
                 D::ExactType
                 | D::ReadOnlyType
                 | D::ReactDRO(..)
                 | D::PartialType
                 | D::RequiredType
                 | D::SpreadType(..)
-                | D::SpreadTupleType { .. }
+                | D::SpreadTupleType(..)
                 | D::RestType(..)
                 | D::ReactCheckComponentConfig { .. }
                 | D::ValuesType
@@ -1823,24 +1832,26 @@ mod type_converter {
     ) -> Result<ALocTy, Error> {
         use flow_common::reason::VirtualReasonDesc;
         use flow_typing_type::type_::ArrType;
+        use flow_typing_type::type_::ArrayATData;
+        use flow_typing_type::type_::TupleATData;
         let desc = reason.desc(true);
         match (arr, desc) {
             (
-                ArrType::ArrayAT {
+                ArrType::ArrayAT(box ArrayATData {
                     tuple_view: Some(_),
                     ..
-                },
+                }),
                 VirtualReasonDesc::RRestArrayLit(_),
             )
-            | (ArrType::TupleAT { .. }, _) => {
+            | (ArrType::TupleAT(box TupleATData { .. }), _) => {
                 let (elements, inexact) = match arr {
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         tuple_view: Some(tv),
                         ..
-                    } => (&tv.elements, tv.inexact),
-                    ArrType::TupleAT {
+                    }) => (&tv.elements, tv.inexact),
+                    ArrType::TupleAT(box TupleATData {
                         elements, inexact, ..
-                    } => (elements, *inexact),
+                    }) => (elements, *inexact),
                     _ => unreachable!(),
                 };
                 // Heuristic to use $ReadOnly<> instead of repeating the polarity symbol
@@ -1877,14 +1888,14 @@ mod type_converter {
                     Ok(Arc::new(tup))
                 }
             }
-            (ArrType::ArrayAT { elem_t, .. }, _) => {
+            (ArrType::ArrayAT(box ArrayATData { elem_t, .. }), _) => {
                 let arr_elt_t = type__::<I>(env, state, None, elem_t)?;
                 Ok(Arc::new(ty::Ty::Arr(ty::ArrT {
                     arr_readonly: false,
                     arr_elt_t,
                 })))
             }
-            (ArrType::ROArrayAT(elem_t, _), _) => {
+            (ArrType::ROArrayAT(box (elem_t, _)), _) => {
                 let arr_elt_t = type__::<I>(env, state, None, elem_t)?;
                 Ok(Arc::new(ty::Ty::Arr(ty::ArrT {
                     arr_readonly: true,
@@ -2424,7 +2435,10 @@ mod type_converter {
     ) -> Result<ALocTy, Error> {
         use flow_typing_type::type_::nominal::Id as NominalId;
         match &nominal.nominal_id {
-            NominalId::UserDefinedOpaqueTypeId(_, name) => {
+            NominalId::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                _,
+                name,
+            )) => {
                 let opaque_symbol = symbol_from_reason(env, reason, Name::new(name.dupe()));
                 let targs = if nominal.nominal_type_args.is_empty() {
                     None
@@ -2733,7 +2747,7 @@ mod type_converter {
         let mut head: Vec<ty::TupleElement<ALoc>> = Vec::new();
         for resolved in resolved_rev.iter().rev() {
             match resolved {
-                ResolvedParam::ResolvedArg(elem, _) => {
+                ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) => {
                     let t = type__::<I>(env, state, None, &elem.t)?;
                     head.push(ty::TupleElement::TupleElement {
                         name: elem.name.clone(),
@@ -2742,8 +2756,9 @@ mod type_converter {
                         optional: elem.optional,
                     });
                 }
-                ResolvedParam::ResolvedSpreadArg(r, arr, _) => match arr {
-                    ArrType::TupleAT { elements, .. } => {
+                ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(r, arr, _)) => match arr
+                {
+                    ArrType::TupleAT(box TupleATData { elements, .. }) => {
                         for elem in elements.iter() {
                             let t = type__::<I>(env, state, None, &elem.t)?;
                             head.push(ty::TupleElement::TupleElement {
@@ -2771,7 +2786,7 @@ mod type_converter {
         let mut tail: Vec<ty::TupleElement<ALoc>> = Vec::new();
         for u in unresolved {
             match u {
-                UnresolvedParam::UnresolvedArg(elem, _) => {
+                UnresolvedParam::UnresolvedArg(box UnresolvedArgData(elem, _)) => {
                     let t = type__::<I>(env, state, None, &elem.t)?;
                     tail.push(ty::TupleElement::TupleElement {
                         name: elem.name.dupe(),
@@ -2929,13 +2944,13 @@ mod type_converter {
                 }))
             }
             D::OptionalIndexedAccessResultType { .. } => Ok(ty),
-            D::ConditionalType {
+            D::ConditionalType(box DestructorConditionalTypeData {
                 infer_tparams,
                 extends_t,
                 true_t,
                 false_t,
                 ..
-            } => {
+            }) => {
                 let check_type = ty;
                 let old_infer = std::mem::replace(&mut env.infer_tparams, infer_tparams.dupe());
                 let extends_type = type__::<I>(env, state, None, extends_t)?;
@@ -2964,15 +2979,15 @@ mod type_converter {
                 let ty_prime = type__::<I>(env, state, None, t_prime)?;
                 Ok(Arc::new(ty::Ty::Utility(ty::Utility::Omit(ty, ty_prime))))
             }
-            D::SpreadType(target, operands, head_slice) => {
+            D::SpreadType(box DestructorSpreadTypeData(target, operands, head_slice)) => {
                 spread::<I>(env, state, ty, target, operands, head_slice.as_ref())
             }
-            D::SpreadTupleType {
+            D::SpreadTupleType(box DestructorSpreadTupleTypeData {
                 inexact,
                 resolved,
                 unresolved,
                 ..
-            } => tuple_spread::<I>(env, state, ty, *inexact, resolved, unresolved),
+            }) => tuple_spread::<I>(env, state, ty, *inexact, resolved, unresolved),
             D::ReactCheckComponentConfig { props, .. } => {
                 check_component::<I>(env, state, ty, props)
             }
@@ -2983,12 +2998,12 @@ mod type_converter {
                 let msg = flow_typing_debug::string_of_destructor(d);
                 Err(terr(ErrorKind::BadEvalT, Some(&msg), None))
             }
-            D::MappedType {
+            D::MappedType(box DestructorMappedTypeData {
                 property_type,
                 mapped_type_flags,
                 homomorphic,
                 distributive_tparam_name,
-            } => {
+            }) => {
                 let (property_type, homomorphic) =
                     flow_typing_flow_common::flow_js_utils::substitute_mapped_type_distributive_tparams(
                         env.genv.cx,
@@ -3140,7 +3155,10 @@ pub mod element_converter {
         tparams: Option<Vec<ty::TypeParam<ALoc>>>,
     ) -> Result<ty::Decl<ALoc>, Error> {
         let name_str = match &nominal_type.nominal_id {
-            nominal::Id::UserDefinedOpaqueTypeId(_, name) => name.dupe(),
+            nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                _,
+                name,
+            )) => name.dupe(),
             // The following cases should error, for the same reason as in nominal_t
             nominal::Id::InternalEnforceUnionOptimized => {
                 return Err(terr(
@@ -3174,7 +3192,7 @@ pub mod element_converter {
                 // Otherwise, display the underlying/super type.
                 Some(t)
             }
-            nominal::UnderlyingT::CustomError { t, .. } => Some(t),
+            nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) => Some(t),
             _ => {
                 if Some(current_source) == opaque_source {
                     // declare opaque type B: number;
@@ -4000,20 +4018,20 @@ mod expand_members {
         a: &flow_typing_type::type_::ArrType,
     ) -> Result<ALocTy, Error> {
         let builtin = match a {
-            flow_typing_type::type_::ArrType::ArrayAT { .. } => "Array",
-            flow_typing_type::type_::ArrType::ROArrayAT(..)
-            | flow_typing_type::type_::ArrType::TupleAT { .. } => "$ReadOnlyArray",
+            flow_typing_type::type_::ArrType::ArrayAT(box ArrayATData { .. }) => "Array",
+            flow_typing_type::type_::ArrType::ROArrayAT(box (..))
+            | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => "$ReadOnlyArray",
         };
         let t = match a {
-            flow_typing_type::type_::ArrType::ArrayAT { .. } => {
+            flow_typing_type::type_::ArrType::ArrayAT(box ArrayATData { .. }) => {
                 flow_typing_flow_common::flow_js_utils::lookup_builtin_value(
                     env.genv.cx,
                     "Array",
                     r.dupe(),
                 )
             }
-            flow_typing_type::type_::ArrType::ROArrayAT(..)
-            | flow_typing_type::type_::ArrType::TupleAT { .. } => {
+            flow_typing_type::type_::ArrType::ROArrayAT(box (..))
+            | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => {
                 flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
                     env.genv.cx,
                     "$ReadOnlyArray",
@@ -4345,19 +4363,22 @@ mod expand_members {
                     t,
                 )
             }
-            (flow_typing_type::type_::nominal::UnderlyingT::CustomError { t, .. }, _) => {
-                type__::<I>(
-                    env,
-                    state,
-                    None,
-                    inherited,
-                    source,
-                    imode,
-                    force_instance,
-                    allowed_prop_names,
-                    t,
-                )
-            }
+            (
+                flow_typing_type::type_::nominal::UnderlyingT::CustomError(
+                    box flow_typing_type::type_::nominal::CustomErrorData { t, .. },
+                ),
+                _,
+            ) => type__::<I>(
+                env,
+                state,
+                None,
+                inherited,
+                source,
+                imode,
+                force_instance,
+                allowed_prop_names,
+                t,
+            ),
             (_, Some(t)) => type__::<I>(
                 env,
                 state,

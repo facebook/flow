@@ -8978,7 +8978,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             Self::EPropNotReadable(box EPropNotReadableData { use_op, .. }) => {
                 matches!(
                     use_op,
-                    VirtualUseOp::Frame(frame, _) if matches!(frame.as_ref(), VirtualFrameUseOp::ReactDeepReadOnly(_, _))
+                    VirtualUseOp::Frame(frame, _) if matches!(frame.as_ref(), VirtualFrameUseOp::ReactDeepReadOnly(..))
                 )
             }
 
@@ -8996,12 +8996,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         ) -> Option<ErrorCode> {
             use flow_common_errors::error_codes::ErrorCode::*;
             match frame {
-                VirtualFrameUseOp::ReactDeepReadOnly(_, DroType::HookReturn) => {
+                VirtualFrameUseOp::ReactDeepReadOnly(box (_, DroType::HookReturn)) => {
                     Some(ReactRuleHookMutation)
                 }
-                VirtualFrameUseOp::ReactDeepReadOnly(_, DroType::Props | DroType::HookArg) => {
-                    Some(ReactRuleUnsafeMutation)
-                }
+                VirtualFrameUseOp::ReactDeepReadOnly(box (
+                    _,
+                    DroType::Props | DroType::HookArg,
+                )) => Some(ReactRuleUnsafeMutation),
                 _ => acc,
             }
         }
@@ -9026,7 +9027,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 | VirtualRootUseOp::FunCall(..)
                 | VirtualRootUseOp::FunCallMethod(..)
                 | VirtualRootUseOp::FunReturnStatement { .. }
-                | VirtualRootUseOp::FunImplicitReturn { .. } => Some(IncompatibleType),
+                | VirtualRootUseOp::FunImplicitReturn(..) => Some(IncompatibleType),
                 VirtualRootUseOp::TypeGuardIncompatibility { .. }
                 | VirtualRootUseOp::PositiveTypeGuardConsistency(..) => Some(IncompatibleTypeGuard),
                 _ => None,

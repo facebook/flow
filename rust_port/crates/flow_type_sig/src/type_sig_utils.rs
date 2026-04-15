@@ -71,7 +71,11 @@ fn create_pack_cx(additional_errors: Vec<BindingValidation<parse::LocNode<'_>>>)
     pack::Cx::new(
         additional_errors
             .into_iter()
-            .map(|e| Errno::BindingValidationError(e.map(&mut (), |_, node| node.0.index_exn())))
+            .map(|e| {
+                Errno::BindingValidationError(Box::new(
+                    e.map(&mut (), |_, node| node.0.index_exn()),
+                ))
+            })
             .collect(),
     )
 }

@@ -188,15 +188,23 @@ pub mod exports_helper {
         ref_: &type_sig_pack::PackedRef<Index<Index<ALoc>>>,
     ) -> flow_data_structure_wrapper::smol_str::FlowSmolStr {
         match ref_ {
-            type_sig_pack::PackedRef::LocalRef { index, .. } => {
+            type_sig_pack::PackedRef::LocalRef(box type_sig_pack::PackedRefLocal {
+                index, ..
+            }) => {
                 let def = type_sig.local_defs.get(*index);
                 def.name().dupe()
             }
-            type_sig_pack::PackedRef::RemoteRef { index, .. } => {
+            type_sig_pack::PackedRef::RemoteRef(box type_sig_pack::PackedRefRemote {
+                index,
+                ..
+            }) => {
                 let remote_ref = type_sig.remote_refs.get(*index);
                 remote_ref.name().dupe()
             }
-            type_sig_pack::PackedRef::BuiltinRef { name, .. } => name.dupe(),
+            type_sig_pack::PackedRef::BuiltinRef(box type_sig_pack::PackedRefBuiltin {
+                name,
+                ..
+            }) => name.dupe(),
         }
     }
 
@@ -215,7 +223,7 @@ pub mod exports_helper {
                     default: true,
                 })
             }
-            Some(type_sig_pack::Packed::TyRef(type_sig_pack::TyRef::Unqualified(ref_)))
+            Some(type_sig_pack::Packed::TyRef(box type_sig_pack::TyRef::Unqualified(ref_)))
                 if packed_ref_name(type_sig, ref_).as_str() == remote_name =>
             {
                 let import_kind = statement::ImportKind::ImportTypeof;
@@ -257,7 +265,10 @@ pub mod exports_helper {
     ) -> Option<ImportInfo> {
         let mut default_index = None;
         for export in exports {
-            if let type_sig_pack::Export::ExportDefaultBinding { index, .. } = export {
+            if let type_sig_pack::Export::ExportDefaultBinding(
+                box type_sig_pack::ExportDefaultBindingData { index, .. },
+            ) = export
+            {
                 default_index = Some(*index);
             }
         }

@@ -149,47 +149,52 @@ impl<Loc> RemoteRef<Loc> {
 
 #[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum PackedRef<Loc> {
-    LocalRef {
-        ref_loc: Loc,
-        index: Index<PackedDef<Loc>>,
-    },
-    RemoteRef {
-        ref_loc: Loc,
-        index: Index<RemoteRef<Loc>>,
-    },
-    BuiltinRef {
-        ref_loc: Loc,
-        type_ref: bool,
-        name: FlowSmolStr,
-    },
+    LocalRef(Box<PackedRefLocal<Loc>>),
+    RemoteRef(Box<PackedRefRemote<Loc>>),
+    BuiltinRef(Box<PackedRefBuiltin<Loc>>),
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PackedRefLocal<Loc> {
+    pub ref_loc: Loc,
+    pub index: Index<PackedDef<Loc>>,
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PackedRefRemote<Loc> {
+    pub ref_loc: Loc,
+    pub index: Index<RemoteRef<Loc>>,
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PackedRefBuiltin<Loc> {
+    pub ref_loc: Loc,
+    pub type_ref: bool,
+    pub name: FlowSmolStr,
 }
 
 impl<Loc> PackedRef<Loc> {
     pub fn map<Loc2>(&self, f: &impl Fn(&Loc) -> Loc2) -> PackedRef<Loc2> {
         match self {
-            PackedRef::LocalRef { ref_loc, index } => PackedRef::LocalRef {
-                ref_loc: f(ref_loc),
+            PackedRef::LocalRef(inner) => PackedRef::LocalRef(Box::new(PackedRefLocal {
+                ref_loc: f(&inner.ref_loc),
                 index: Index {
-                    index: index.index,
+                    index: inner.index.index,
                     _phantom: std::marker::PhantomData,
                 },
-            },
-            PackedRef::RemoteRef { ref_loc, index } => PackedRef::RemoteRef {
-                ref_loc: f(ref_loc),
+            })),
+            PackedRef::RemoteRef(inner) => PackedRef::RemoteRef(Box::new(PackedRefRemote {
+                ref_loc: f(&inner.ref_loc),
                 index: Index {
-                    index: index.index,
+                    index: inner.index.index,
                     _phantom: std::marker::PhantomData,
                 },
-            },
-            PackedRef::BuiltinRef {
-                ref_loc,
-                type_ref,
-                name,
-            } => PackedRef::BuiltinRef {
-                ref_loc: f(ref_loc),
-                type_ref: *type_ref,
-                name: name.dupe(),
-            },
+            })),
+            PackedRef::BuiltinRef(inner) => PackedRef::BuiltinRef(Box::new(PackedRefBuiltin {
+                ref_loc: f(&inner.ref_loc),
+                type_ref: inner.type_ref,
+                name: inner.name.dupe(),
+            })),
         }
     }
 }
@@ -197,29 +202,27 @@ impl<Loc> PackedRef<Loc> {
 #[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TyRef<Loc> {
     Unqualified(PackedRef<Loc>),
-    Qualified {
-        loc: Loc,
-        id_loc: Loc,
-        name: FlowSmolStr,
-        qualification: Box<TyRef<Loc>>,
-    },
+    Qualified(Box<TyRefQualified<Loc>>),
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct TyRefQualified<Loc> {
+    pub loc: Loc,
+    pub id_loc: Loc,
+    pub name: FlowSmolStr,
+    pub qualification: Box<TyRef<Loc>>,
 }
 
 impl<Loc> TyRef<Loc> {
     pub fn map<Loc2>(&self, f: &impl Fn(&Loc) -> Loc2) -> TyRef<Loc2> {
         match self {
             TyRef::Unqualified(r) => TyRef::Unqualified(r.map(f)),
-            TyRef::Qualified {
-                loc,
-                id_loc,
-                name,
-                qualification,
-            } => TyRef::Qualified {
-                loc: f(loc),
-                id_loc: f(id_loc),
-                name: name.dupe(),
-                qualification: Box::new(qualification.map(f)),
-            },
+            TyRef::Qualified(inner) => TyRef::Qualified(Box::new(TyRefQualified {
+                loc: f(&inner.loc),
+                id_loc: f(&inner.id_loc),
+                name: inner.name.dupe(),
+                qualification: Box::new(inner.qualification.map(f)),
+            })),
         }
     }
 }
@@ -229,32 +232,36 @@ pub enum Packed<Loc> {
     Annot(Box<PackedAnnot<Loc>>),
     Value(Box<PackedValue<Loc>>),
     Ref(PackedRef<Loc>),
-    TyRef(TyRef<Loc>),
-    TyRefApp {
-        loc: Loc,
-        name: TyRef<Loc>,
-        targs: Vec<Packed<Loc>>,
-    },
-    AsyncVoidReturn(Loc),
+    TyRef(Box<TyRef<Loc>>),
+    TyRefApp(Box<PackedTyRefApp<Loc>>),
+    AsyncVoidReturn(Box<Loc>),
     Pattern(Index<Pattern<Loc>>),
-    Err(Loc),
-    Eval(Loc, Box<Packed<Loc>>, Op<Box<Packed<Loc>>>),
-    Require {
-        loc: Loc,
-        index: Index<FlowImportSpecifier>,
-    },
-    ImportDynamic {
-        loc: Loc,
-        index: Index<FlowImportSpecifier>,
-    },
-    ModuleRef {
-        loc: Loc,
-        index: Index<FlowImportSpecifier>,
-    },
-    ImportTypeAnnot {
-        loc: Loc,
-        index: Index<FlowImportSpecifier>,
-    },
+    Err(Box<Loc>),
+    Eval(Box<PackedEval<Loc>>),
+    Require(Box<PackedLocIndex<Loc>>),
+    ImportDynamic(Box<PackedLocIndex<Loc>>),
+    ModuleRef(Box<PackedLocIndex<Loc>>),
+    ImportTypeAnnot(Box<PackedLocIndex<Loc>>),
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PackedTyRefApp<Loc> {
+    pub loc: Loc,
+    pub name: TyRef<Loc>,
+    pub targs: Vec<Packed<Loc>>,
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PackedEval<Loc> {
+    pub loc: Loc,
+    pub packed: Box<Packed<Loc>>,
+    pub op: Op<Box<Packed<Loc>>>,
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PackedLocIndex<Loc> {
+    pub loc: Loc,
+    pub index: Index<FlowImportSpecifier>,
 }
 
 pub type PackedValue<Loc> = Value<Loc, Packed<Loc>>;
@@ -275,39 +282,39 @@ impl<Loc> Packed<Loc> {
                 &|_: &mut (), t: &Packed<Loc>| t.map(f),
             ))),
             Packed::Ref(r) => Packed::Ref(r.map(f)),
-            Packed::TyRef(r) => Packed::TyRef(r.map(f)),
-            Packed::TyRefApp { loc, name, targs } => Packed::TyRefApp {
-                loc: f(loc),
-                name: name.map(f),
-                targs: targs.iter().map(|t| t.map(f)).collect(),
-            },
-            Packed::AsyncVoidReturn(loc) => Packed::AsyncVoidReturn(f(loc)),
+            Packed::TyRef(r) => Packed::TyRef(Box::new(r.map(f))),
+            Packed::TyRefApp(inner) => Packed::TyRefApp(Box::new(PackedTyRefApp {
+                loc: f(&inner.loc),
+                name: inner.name.map(f),
+                targs: inner.targs.iter().map(|t| t.map(f)).collect(),
+            })),
+            Packed::AsyncVoidReturn(loc) => Packed::AsyncVoidReturn(Box::new(f(loc))),
             Packed::Pattern(index) => Packed::Pattern(Index {
                 index: index.index,
                 _phantom: std::marker::PhantomData,
             }),
-            Packed::Err(loc) => Packed::Err(f(loc)),
-            Packed::Eval(loc, t, op) => Packed::Eval(
-                f(loc),
-                Box::new(t.map(f)),
-                op.map(&mut (), |_: &mut (), t| Box::new(t.map(f))),
-            ),
-            Packed::Require { loc, index } => Packed::Require {
-                loc: f(loc),
-                index: *index,
-            },
-            Packed::ImportDynamic { loc, index } => Packed::ImportDynamic {
-                loc: f(loc),
-                index: *index,
-            },
-            Packed::ModuleRef { loc, index } => Packed::ModuleRef {
-                loc: f(loc),
-                index: *index,
-            },
-            Packed::ImportTypeAnnot { loc, index } => Packed::ImportTypeAnnot {
-                loc: f(loc),
-                index: *index,
-            },
+            Packed::Err(loc) => Packed::Err(Box::new(f(loc))),
+            Packed::Eval(inner) => Packed::Eval(Box::new(PackedEval {
+                loc: f(&inner.loc),
+                packed: Box::new(inner.packed.map(f)),
+                op: inner.op.map(&mut (), |_: &mut (), t| Box::new(t.map(f))),
+            })),
+            Packed::Require(inner) => Packed::Require(Box::new(PackedLocIndex {
+                loc: f(&inner.loc),
+                index: inner.index,
+            })),
+            Packed::ImportDynamic(inner) => Packed::ImportDynamic(Box::new(PackedLocIndex {
+                loc: f(&inner.loc),
+                index: inner.index,
+            })),
+            Packed::ModuleRef(inner) => Packed::ModuleRef(Box::new(PackedLocIndex {
+                loc: f(&inner.loc),
+                index: inner.index,
+            })),
+            Packed::ImportTypeAnnot(inner) => Packed::ImportTypeAnnot(Box::new(PackedLocIndex {
+                loc: f(&inner.loc),
+                index: inner.index,
+            })),
         }
     }
 }
@@ -320,17 +327,19 @@ impl<Loc> Export<Loc> {
                 index: index.index,
                 _phantom: std::marker::PhantomData,
             }),
-            Export::ExportDefault { default_loc, def } => Export::ExportDefault {
-                default_loc: f(default_loc),
-                def: def.map(f),
-            },
-            Export::ExportDefaultBinding { default_loc, index } => Export::ExportDefaultBinding {
-                default_loc: f(default_loc),
-                index: Index {
-                    index: index.index,
-                    _phantom: std::marker::PhantomData,
-                },
-            },
+            Export::ExportDefault(inner) => Export::ExportDefault(Box::new(ExportDefaultData {
+                default_loc: f(&inner.default_loc),
+                def: inner.def.map(f),
+            })),
+            Export::ExportDefaultBinding(inner) => {
+                Export::ExportDefaultBinding(Box::new(ExportDefaultBindingData {
+                    default_loc: f(&inner.default_loc),
+                    index: Index {
+                        index: inner.index.index,
+                        _phantom: std::marker::PhantomData,
+                    },
+                }))
+            }
             Export::ExportFrom(index) => Export::ExportFrom(Index {
                 index: index.index,
                 _phantom: std::marker::PhantomData,
@@ -391,15 +400,21 @@ impl<Loc> ESModuleInfo<Loc> {
 pub enum Export<Loc> {
     ExportRef(PackedRef<Loc>),
     ExportBinding(Index<PackedDef<Loc>>),
-    ExportDefault {
-        default_loc: Loc,
-        def: Packed<Loc>,
-    },
-    ExportDefaultBinding {
-        default_loc: Loc,
-        index: Index<PackedDef<Loc>>,
-    },
+    ExportDefault(Box<ExportDefaultData<Loc>>),
+    ExportDefaultBinding(Box<ExportDefaultBindingData<Loc>>),
     ExportFrom(Index<RemoteRef<Loc>>),
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct ExportDefaultData<Loc> {
+    pub default_loc: Loc,
+    pub def: Packed<Loc>,
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub struct ExportDefaultBindingData<Loc> {
+    pub default_loc: Loc,
+    pub index: Index<PackedDef<Loc>>,
 }
 
 #[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
@@ -582,55 +597,59 @@ pub(crate) fn pack_parsed<'arena, 'ast>(
     match parsed {
         parse::Parsed::Annot(t) => Packed::Annot(Box::new(pack_annot(cx, t))),
         parse::Parsed::Value(def) => Packed::Value(Box::new(pack_value(cx, def))),
-        parse::Parsed::TyRef(name) => Packed::TyRef(pack_tyname(name)),
+        parse::Parsed::TyRef(name) => Packed::TyRef(Box::new(pack_tyname(name))),
         parse::Parsed::TyRefApp { loc, name, targs } => pack_tyapp(cx, loc, name, targs),
-        parse::Parsed::AsyncVoidReturn(loc) => Packed::AsyncVoidReturn(pack_loc(loc)),
+        parse::Parsed::AsyncVoidReturn(loc) => Packed::AsyncVoidReturn(Box::new(pack_loc(loc))),
         parse::Parsed::BuiltinTyRef { ref_loc, name } => {
             let ref_loc = pack_loc(ref_loc);
-            Packed::TyRef(TyRef::Unqualified(PackedRef::BuiltinRef {
-                ref_loc,
-                type_ref: true,
-                name: name.dupe(),
-            }))
+            Packed::TyRef(Box::new(TyRef::Unqualified(PackedRef::BuiltinRef(
+                Box::new(PackedRefBuiltin {
+                    ref_loc,
+                    type_ref: true,
+                    name: name.dupe(),
+                }),
+            ))))
         }
         parse::Parsed::Err(loc, err) => {
             let loc = pack_loc(loc);
             let e = err.map(cx, |_cx, loc| pack_loc(loc));
             cx.errs.push(e);
-            Packed::Err(loc)
+            Packed::Err(Box::new(loc))
         }
         parse::Parsed::ValRef { type_only, ref_ } => Packed::Ref(pack_ref(*type_only, ref_)),
         parse::Parsed::Pattern(p) => Packed::Pattern(p.0.index_exn()),
-        parse::Parsed::Eval(loc, t, op) => {
-            Packed::Eval(pack_loc(loc), Box::new(pack_parsed(cx, t)), pack_op(cx, op))
-        }
+        parse::Parsed::Eval(loc, t, op) => Packed::Eval(Box::new(PackedEval {
+            loc: pack_loc(loc),
+            packed: Box::new(pack_parsed(cx, t)),
+            op: pack_op(cx, op),
+        })),
         parse::Parsed::Require { loc, mref } => {
             let loc = pack_loc(loc);
-            Packed::Require {
+            Packed::Require(Box::new(PackedLocIndex {
                 loc,
                 index: mref.0.index_exn(),
-            }
+            }))
         }
         parse::Parsed::ImportDynamic { loc, mref } => {
             let loc = pack_loc(loc);
-            Packed::ImportDynamic {
+            Packed::ImportDynamic(Box::new(PackedLocIndex {
                 loc,
                 index: mref.0.index_exn(),
-            }
+            }))
         }
         parse::Parsed::ModuleRef { loc, mref } => {
             let loc = pack_loc(loc);
-            Packed::ModuleRef {
+            Packed::ModuleRef(Box::new(PackedLocIndex {
                 loc,
                 index: mref.0.index_exn(),
-            }
+            }))
         }
         parse::Parsed::ImportTypeAnnot { loc, mref } => {
             let loc = pack_loc(loc);
-            Packed::ImportTypeAnnot {
+            Packed::ImportTypeAnnot(Box::new(PackedLocIndex {
                 loc,
                 index: mref.0.index_exn(),
-            }
+            }))
         }
     }
 }
@@ -644,7 +663,7 @@ fn pack_tyapp<'arena, 'ast>(
     let loc = pack_loc(loc);
     let name = pack_tyname(name);
     let targs = targs.iter().map(|t| pack_parsed(cx, t)).collect();
-    Packed::TyRefApp { loc, name, targs }
+    Packed::TyRefApp(Box::new(PackedTyRefApp { loc, name, targs }))
 }
 
 fn pack_tyname<'arena, 'ast>(name: &parse::TyName<'arena, 'ast>) -> TyRef<Index<Loc>> {
@@ -658,12 +677,12 @@ fn pack_tyname<'arena, 'ast>(name: &parse::TyName<'arena, 'ast>) -> TyRef<Index<
         } => {
             let loc = pack_loc(loc);
             let id_loc = pack_loc(id_loc);
-            TyRef::Qualified {
+            TyRef::Qualified(Box::new(TyRefQualified {
                 loc,
                 id_loc,
                 name: name.dupe(),
                 qualification: Box::new(pack_tyname(qualification)),
-            }
+            }))
         }
     }
 }
@@ -677,19 +696,23 @@ fn pack_ref(type_ref: bool, ref_: &parse::Ref<'_, '_>) -> PackedRef<Index<Loc>> 
     } = ref_;
     let ref_loc = pack_loc(ref_loc);
     match resolved.get() {
-        Some(Some(parse::BindingNode::LocalBinding(b))) => PackedRef::LocalRef {
-            ref_loc,
-            index: b.0.index_exn(),
-        },
-        Some(Some(parse::BindingNode::RemoteBinding(b))) => PackedRef::RemoteRef {
-            ref_loc,
-            index: b.0.index_exn(),
-        },
-        _ => PackedRef::BuiltinRef {
+        Some(Some(parse::BindingNode::LocalBinding(b))) => {
+            PackedRef::LocalRef(Box::new(PackedRefLocal {
+                ref_loc,
+                index: b.0.index_exn(),
+            }))
+        }
+        Some(Some(parse::BindingNode::RemoteBinding(b))) => {
+            PackedRef::RemoteRef(Box::new(PackedRefRemote {
+                ref_loc,
+                index: b.0.index_exn(),
+            }))
+        }
+        _ => PackedRef::BuiltinRef(Box::new(PackedRefBuiltin {
             ref_loc,
             type_ref,
             name: name.dupe(),
-        },
+        })),
     }
 }
 
@@ -1229,7 +1252,7 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                     let t = pack_parsed(cx, t);
                     (
                         k.dupe(),
-                        ObjValueProp::ObjValueField(id_loc, t, Polarity::Neutral),
+                        ObjValueProp::ObjValueField(Box::new((id_loc, t, Polarity::Neutral))),
                     )
                 })
                 .collect();
@@ -1259,13 +1282,13 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                 .iter()
                 .map(|(k, binding)| {
                     let index = binding.0.index_exn();
-                    let t = Packed::Ref(PackedRef::LocalRef {
+                    let t = Packed::Ref(PackedRef::LocalRef(Box::new(PackedRefLocal {
                         ref_loc: file_loc,
                         index,
-                    });
+                    })));
                     (
                         k.dupe(),
-                        ObjValueProp::ObjValueField(file_loc, t, Polarity::Positive),
+                        ObjValueProp::ObjValueField(Box::new((file_loc, t, Polarity::Positive))),
                     )
                 })
                 .collect();
@@ -1334,7 +1357,7 @@ fn pack_export<'arena, 'ast>(
         parse::Export::ExportDefault { default_loc, def } => {
             let default_loc = pack_loc(default_loc);
             let def = pack_parsed(cx, def);
-            Export::ExportDefault { default_loc, def }
+            Export::ExportDefault(Box::new(ExportDefaultData { default_loc, def }))
         }
         parse::Export::ExportDefaultBinding {
             default_loc,
@@ -1343,7 +1366,7 @@ fn pack_export<'arena, 'ast>(
         } => {
             let default_loc = pack_loc(default_loc);
             let index = binding.0.index_exn();
-            Export::ExportDefaultBinding { default_loc, index }
+            Export::ExportDefaultBinding(Box::new(ExportDefaultBindingData { default_loc, index }))
         }
         parse::Export::ExportFrom(ref_) => {
             let index = ref_.0.index_exn();

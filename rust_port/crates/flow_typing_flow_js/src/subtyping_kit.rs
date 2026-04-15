@@ -55,6 +55,7 @@ use flow_typing_flow_common::speculation;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
@@ -76,10 +77,12 @@ use flow_typing_type::type_::InstanceTInner;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
+use flow_typing_type::type_::LookupPropForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
+use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
@@ -97,6 +100,7 @@ use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::Tvar;
@@ -809,20 +813,22 @@ fn flow_obj_to_obj<'cx>(
                                 &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                     reason: ureason.dupe(),
                                     lookup_kind: Box::new(LookupKind::NonstrictReturning(
-                                        None, None,
+                                        Box::new(NonstrictReturningData(None, None)),
                                     )),
                                     try_ts_on_failure: vec![].into(),
                                     propref: Box::new(mk_propref()),
-                                    lookup_action: Box::new(LookupAction::LookupPropForSubtyping {
-                                        use_op: use_op.dupe(),
-                                        prop: PropertyType::OrdinaryField {
-                                            type_: fd.type_.dupe(),
-                                            polarity: Polarity::Positive,
-                                        },
-                                        prop_name: name.dupe(),
-                                        reason_lower: lreason.dupe(),
-                                        reason_upper: ureason.dupe(),
-                                    }),
+                                    lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
+                                        Box::new(LookupPropForSubtypingData {
+                                            use_op: use_op.dupe(),
+                                            prop: PropertyType::OrdinaryField {
+                                                type_: fd.type_.dupe(),
+                                                polarity: Polarity::Positive,
+                                            },
+                                            prop_name: name.dupe(),
+                                            reason_lower: lreason.dupe(),
+                                            reason_upper: ureason.dupe(),
+                                        }),
+                                    )),
                                     method_accessible: true,
                                     ids: None,
                                     ignore_dicts: false,
@@ -843,7 +849,9 @@ fn flow_obj_to_obj<'cx>(
                             _ => {
                                 let lookup_kind = match &ldict {
                                     None => LookupKind::Strict(lreason.dupe()),
-                                    _ => LookupKind::NonstrictReturning(None, None),
+                                    _ => LookupKind::NonstrictReturning(Box::new(
+                                        NonstrictReturningData(None, None),
+                                    )),
                                 };
                                 FlowJs::rec_flow(
                                     cx,
@@ -855,13 +863,15 @@ fn flow_obj_to_obj<'cx>(
                                         try_ts_on_failure: vec![].into(),
                                         propref: Box::new(mk_propref()),
                                         lookup_action: Box::new(
-                                            LookupAction::LookupPropForSubtyping {
-                                                use_op: use_op.dupe(),
-                                                prop: property::type_(up),
-                                                prop_name: name.dupe(),
-                                                reason_lower: lreason.dupe(),
-                                                reason_upper: ureason.dupe(),
-                                            },
+                                            LookupAction::LookupPropForSubtyping(Box::new(
+                                                LookupPropForSubtypingData {
+                                                    use_op: use_op.dupe(),
+                                                    prop: property::type_(up),
+                                                    prop_name: name.dupe(),
+                                                    reason_lower: lreason.dupe(),
+                                                    reason_upper: ureason.dupe(),
+                                                },
+                                            )),
                                         ),
                                         method_accessible: true,
                                         ids: None,
@@ -1948,8 +1958,14 @@ pub fn rec_sub_t<'cx>(
                 nominal_type: unom,
             },
         ) if let (
-            nominal::Id::UserDefinedOpaqueTypeId(id1, name1),
-            nominal::Id::UserDefinedOpaqueTypeId(id2, name2),
+            nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                id1,
+                name1,
+            )),
+            nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                id2,
+                name2,
+            )),
         ) = (&lnom.nominal_id, &unom.nominal_id)
             && type_util::nominal_id_have_same_logical_module(
                 &cx.file_options(),
@@ -2039,11 +2055,18 @@ pub fn rec_sub_t<'cx>(
         ) if matches!(
             (&lnom.nominal_id, &lnom.underlying_t),
             (
-                nominal::Id::UserDefinedOpaqueTypeId(_, _),
+                nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                    _,
+                    _,
+                )),
                 nominal::UnderlyingT::OpaqueWithLocal { .. },
             )
         ) && {
-            if let nominal::Id::UserDefinedOpaqueTypeId(nominal_id, _) = &lnom.nominal_id {
+            if let nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                nominal_id,
+                _,
+            )) = &lnom.nominal_id
+            {
                 nominal_id.0.source() == Some(cx.file())
             } else {
                 false
@@ -2065,11 +2088,18 @@ pub fn rec_sub_t<'cx>(
         ) if matches!(
             (&unom.nominal_id, &unom.underlying_t),
             (
-                nominal::Id::UserDefinedOpaqueTypeId(_, _),
+                nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                    _,
+                    _,
+                )),
                 nominal::UnderlyingT::OpaqueWithLocal { .. },
             )
         ) && {
-            if let nominal::Id::UserDefinedOpaqueTypeId(nominal_id, _) = &unom.nominal_id {
+            if let nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(
+                nominal_id,
+                _,
+            )) = &unom.nominal_id
+            {
                 nominal_id.0.source() == Some(cx.file())
             } else {
                 false
@@ -2087,7 +2117,9 @@ pub fn rec_sub_t<'cx>(
                 nominal_type: lnom, ..
             },
             _,
-        ) if let nominal::UnderlyingT::CustomError { t, .. } = &lnom.underlying_t => {
+        ) if let nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) =
+            &lnom.underlying_t =>
+        {
             FlowJs::rec_flow_t(cx, trace, use_op, t, u)
         }
         (
@@ -2097,11 +2129,11 @@ pub fn rec_sub_t<'cx>(
                 nominal_type: unom,
             },
         ) if let (
-            nominal::Id::UserDefinedOpaqueTypeId(_, name),
-            nominal::UnderlyingT::CustomError {
+            nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(_, name)),
+            nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                 t,
                 custom_error_loc,
-            },
+            }),
         ) = (&unom.nominal_id, &unom.underlying_t) =>
         {
             let use_op = VirtualUseOp::Frame(
@@ -4225,7 +4257,9 @@ pub fn rec_sub_t<'cx>(
                         None => {
                             let lookup_kind = if let PropertyInner::Field(fd) = up.deref() {
                                 if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) {
-                                    LookupKind::NonstrictReturning(None, None)
+                                    LookupKind::NonstrictReturning(Box::new(
+                                        NonstrictReturningData(None, None),
+                                    ))
                                 } else {
                                     LookupKind::Strict(lreason.dupe())
                                 }
@@ -4246,13 +4280,15 @@ pub fn rec_sub_t<'cx>(
                                             try_ts_on_failure: vec![].into(),
                                             propref: Box::new(propref.clone()),
                                             lookup_action: Box::new(
-                                                LookupAction::LookupPropForSubtyping {
-                                                    use_op: use_op.dupe(),
-                                                    prop: property::type_(up),
-                                                    prop_name: name.dupe(),
-                                                    reason_lower: lreason.dupe(),
-                                                    reason_upper: ureason.dupe(),
-                                                },
+                                                LookupAction::LookupPropForSubtyping(Box::new(
+                                                    LookupPropForSubtypingData {
+                                                        use_op: use_op.dupe(),
+                                                        prop: property::type_(up),
+                                                        prop_name: name.dupe(),
+                                                        reason_lower: lreason.dupe(),
+                                                        reason_upper: ureason.dupe(),
+                                                    },
+                                                )),
                                             ),
                                             method_accessible: false,
                                             ids: Some(
@@ -4376,16 +4412,16 @@ pub fn rec_sub_t<'cx>(
             if let DefTInner::ArrT(arr1) = ld.deref()
                 && let DefTInner::ArrT(arr2) = ud.deref()
                 && let (
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         elem_t: t1,
                         tuple_view: tv1,
                         ..
-                    },
-                    ArrType::ArrayAT {
+                    }),
+                    ArrType::ArrayAT(box ArrayATData {
                         elem_t: t2,
                         tuple_view: tv2,
                         ..
-                    },
+                    }),
                 ) = (arr1.as_ref(), arr2.as_ref()) =>
         {
             let use_op = VirtualUseOp::Frame(
@@ -4424,18 +4460,18 @@ pub fn rec_sub_t<'cx>(
             if let DefTInner::ArrT(arr1) = ld.deref()
                 && let DefTInner::ArrT(arr2) = ud.deref()
                 && let (
-                    ArrType::TupleAT {
+                    ArrType::TupleAT(box TupleATData {
                         elements: elements1,
                         arity: lower_arity,
                         inexact: lower_inexact,
                         ..
-                    },
-                    ArrType::TupleAT {
+                    }),
+                    ArrType::TupleAT(box TupleATData {
                         elements: elements2,
                         arity: upper_arity,
                         inexact: upper_inexact,
                         ..
-                    },
+                    }),
                 ) = (arr1.as_ref(), arr2.as_ref()) =>
         {
             let fresh = flow_common::reason::is_literal_array_reason(r1);
@@ -4593,12 +4629,12 @@ pub fn rec_sub_t<'cx>(
         // Arrays with known elements can flow to tuples
         (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
             if let DefTInner::ArrT(arr1) = ld.deref()
-                && let ArrType::ArrayAT {
+                && let ArrType::ArrayAT(box ArrayATData {
                     elem_t: t1,
                     tuple_view,
                     react_dro,
-                } = arr1.as_ref()
-                && matches!(ud.deref(), DefTInner::ArrT(arr) if matches!(arr.as_ref(), ArrType::TupleAT { .. })) =>
+                }) = arr1.as_ref()
+                && matches!(ud.deref(), DefTInner::ArrT(arr) if matches!(arr.as_ref(), ArrType::TupleAT(box TupleATData { .. }))) =>
         {
             match tuple_view {
                 None => {
@@ -4610,13 +4646,15 @@ pub fn rec_sub_t<'cx>(
                 Some(tv) => {
                     let tuple_t = Type::new(TypeInner::DefT(
                         r1.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                            elem_t: t1.dupe(),
-                            elements: tv.elements.dupe(),
-                            arity: tv.arity,
-                            inexact: tv.inexact,
-                            react_dro: react_dro.clone(),
-                        }))),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                            TupleATData {
+                                elem_t: t1.dupe(),
+                                elements: tv.elements.dupe(),
+                                arity: tv.arity,
+                                inexact: tv.inexact,
+                                react_dro: react_dro.clone(),
+                            },
+                        ))))),
                     ));
                     FlowJs::rec_flow_t(cx, trace, use_op, &tuple_t, u)?;
                 }
@@ -4628,11 +4666,12 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
             if let DefTInner::ArrT(arr1) = ld.deref()
                 && let DefTInner::ArrT(arr2) = ud.deref()
-                && let ArrType::ROArrayAT(t2, _) = arr2.as_ref() =>
+                && let ArrType::ROArrayAT(box (t2, _)) = arr2.as_ref() =>
         {
             let t1 = match arr1.as_ref() {
-                ArrType::ArrayAT { elem_t, .. } | ArrType::TupleAT { elem_t, .. } => elem_t,
-                ArrType::ROArrayAT(t, _) => t,
+                ArrType::ArrayAT(box ArrayATData { elem_t, .. })
+                | ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t,
+                ArrType::ROArrayAT(box (t, _)) => t,
             };
             let use_op = VirtualUseOp::Frame(
                 Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
@@ -4651,7 +4690,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(_, ld), TypeInner::DefT(r2, ud))
             if matches!(ld.deref(), DefTInner::InstanceT(_))
                 && let DefTInner::ArrT(arr2) = ud.deref()
-                && let ArrType::ArrayAT { elem_t, .. } = arr2.as_ref() =>
+                && let ArrType::ArrayAT(box ArrayATData { elem_t, .. }) = arr2.as_ref() =>
         {
             let arrt = FlowJs::get_builtin_typeapp(cx, r2, None, "Array", vec![elem_t.dupe()]);
             FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
@@ -4659,7 +4698,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(_, ld), TypeInner::DefT(r2, ud))
             if matches!(ld.deref(), DefTInner::InstanceT(_))
                 && let DefTInner::ArrT(arr2) = ud.deref()
-                && let ArrType::ROArrayAT(elemt, _) = arr2.as_ref() =>
+                && let ArrType::ROArrayAT(box (elemt, _)) = arr2.as_ref() =>
         {
             let arrt =
                 FlowJs::get_builtin_typeapp(cx, r2, None, "$ReadOnlyArray", vec![elemt.dupe()]);

@@ -233,7 +233,10 @@ fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
                     TypeInner::NominalT { nominal_type, .. }
                         if let Some(t) = match &nominal_type.underlying_t {
                             nominal::UnderlyingT::OpaqueWithLocal { t }
-                            | nominal::UnderlyingT::CustomError { t, .. } => Some(t),
+                            | nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                                t,
+                                ..
+                            }) => Some(t),
                             _ => None,
                         } =>
                     {

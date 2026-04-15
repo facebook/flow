@@ -116,9 +116,9 @@ pub fn check_ref_use<'a>(
                     nominal::UnderlyingT::OpaqueWithLocal { t } => {
                         recur_id(cx, rrid, in_hook, var_reason, kind, seen, t)
                     }
-                    nominal::UnderlyingT::CustomError { t, .. } => {
-                        recur_id(cx, rrid, in_hook, var_reason, kind, seen, t)
-                    }
+                    nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                        t, ..
+                    }) => recur_id(cx, rrid, in_hook, var_reason, kind, seen, t),
                     nominal::UnderlyingT::FullyOpaque => vec![],
                 };
                 if let Some(upper_t) = &nominal_type.upper_t {
@@ -299,7 +299,12 @@ fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
             TypeInner::NominalT { nominal_type, .. } => {
                 match (&nominal_type.underlying_t, &nominal_type.upper_t) {
                     (nominal::UnderlyingT::OpaqueWithLocal { t }, _) => recur_id(cx, seen, t),
-                    (nominal::UnderlyingT::CustomError { t, .. }, _) => recur_id(cx, seen, t),
+                    (
+                        nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                            t, ..
+                        }),
+                        _,
+                    ) => recur_id(cx, seen, t),
                     (nominal::UnderlyingT::FullyOpaque, Some(t)) => recur_id(cx, seen, t),
                     _ => HookResult::AnyCallee,
                 }

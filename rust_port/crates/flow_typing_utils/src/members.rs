@@ -27,6 +27,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DictType;
@@ -41,6 +42,7 @@ use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleView;
 use flow_typing_type::type_::Type;
@@ -311,7 +313,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
             (DefTInner::ArrT(arr1), DefTInner::ArrT(arr2)) => {
                 match (arr1.deref(), arr2.deref()) {
                     (
-                        ArrType::ArrayAT {
+                        ArrType::ArrayAT(box ArrayATData {
                             elem_t: et1,
                             tuple_view:
                                 Some(TupleView {
@@ -320,8 +322,8 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     inexact: inexact1,
                                 }),
                             react_dro: dro1,
-                        },
-                        ArrType::ArrayAT {
+                        }),
+                        ArrType::ArrayAT(box ArrayATData {
                             elem_t: et2,
                             tuple_view:
                                 Some(TupleView {
@@ -330,7 +332,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     inexact: inexact2,
                                 }),
                             react_dro: dro2,
-                        },
+                        }),
                     ) if arity1 == arity2
                         && inexact1 == inexact2
                         && elements1.len() == elements2.len()
@@ -363,59 +365,63 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                             .collect();
                         Type::new(TypeInner::DefT(
                             locationless_reason(VirtualReasonDesc::RArray),
-                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
+                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                                ArrayATData {
+                                    elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
+                                    tuple_view: Some(TupleView {
+                                        elements: elements.into(),
+                                        arity: *arity1,
+                                        inexact: *inexact1,
+                                    }),
+                                    react_dro: if dro1.is_some() && dro2.is_some() {
+                                        dro1.clone()
+                                    } else {
+                                        None
+                                    },
+                                },
+                            ))))),
+                        ))
+                    }
+                    (
+                        ArrType::ArrayAT(box ArrayATData {
+                            elem_t: et1,
+                            react_dro: dro1,
+                            ..
+                        }),
+                        ArrType::ArrayAT(box ArrayATData {
+                            elem_t: et2,
+                            react_dro: dro2,
+                            ..
+                        }),
+                    ) => Type::new(TypeInner::DefT(
+                        locationless_reason(VirtualReasonDesc::RArray),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                            ArrayATData {
                                 elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
-                                tuple_view: Some(TupleView {
-                                    elements: elements.into(),
-                                    arity: *arity1,
-                                    inexact: *inexact1,
-                                }),
+                                tuple_view: None,
                                 react_dro: if dro1.is_some() && dro2.is_some() {
                                     dro1.clone()
                                 } else {
                                     None
                                 },
-                            }))),
-                        ))
-                    }
-                    (
-                        ArrType::ArrayAT {
-                            elem_t: et1,
-                            react_dro: dro1,
-                            ..
-                        },
-                        ArrType::ArrayAT {
-                            elem_t: et2,
-                            react_dro: dro2,
-                            ..
-                        },
-                    ) => Type::new(TypeInner::DefT(
-                        locationless_reason(VirtualReasonDesc::RArray),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                            elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
-                            tuple_view: None,
-                            react_dro: if dro1.is_some() && dro2.is_some() {
-                                dro1.clone()
-                            } else {
-                                None
                             },
-                        }))),
+                        ))))),
                     )),
                     (
-                        ArrType::TupleAT {
+                        ArrType::TupleAT(box TupleATData {
                             elem_t: et1,
                             elements: ts1,
                             arity: arity1,
                             inexact: inexact1,
                             react_dro: dro1,
-                        },
-                        ArrType::TupleAT {
+                        }),
+                        ArrType::TupleAT(box TupleATData {
                             elem_t: et2,
                             elements: ts2,
                             arity: arity2,
                             inexact: inexact2,
                             react_dro: dro2,
-                        },
+                        }),
                     ) if arity1 == arity2
                         && inexact1 == inexact2
                         && ts1.len() == ts2.len()
@@ -425,54 +431,58 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                     {
                         Type::new(TypeInner::DefT(
                             locationless_reason(VirtualReasonDesc::RTupleType),
-                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
-                                react_dro: if dro1.is_some() && dro2.is_some() {
-                                    dro1.clone()
-                                } else {
-                                    None
+                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                TupleATData {
+                                    elem_t: merge_type(cx, (et1.dupe(), et2.dupe())),
+                                    react_dro: if dro1.is_some() && dro2.is_some() {
+                                        dro1.clone()
+                                    } else {
+                                        None
+                                    },
+                                    elements: ts1
+                                        .iter()
+                                        .zip(ts2.iter())
+                                        .map(|(e1, e2)| {
+                                            let name = if e1.name == e2.name {
+                                                e1.name.clone()
+                                            } else {
+                                                None
+                                            };
+                                            let t = merge_type(cx, (e1.t.dupe(), e2.t.dupe()));
+                                            let reason = locationless_reason(
+                                                VirtualReasonDesc::RTupleElement {
+                                                    name: name.clone(),
+                                                },
+                                            );
+                                            TupleElement {
+                                                name,
+                                                t,
+                                                polarity: e1.polarity,
+                                                optional: e1.optional,
+                                                reason,
+                                            }
+                                        })
+                                        .collect(),
+                                    arity: *arity1,
+                                    inexact: *inexact1,
                                 },
-                                elements: ts1
-                                    .iter()
-                                    .zip(ts2.iter())
-                                    .map(|(e1, e2)| {
-                                        let name = if e1.name == e2.name {
-                                            e1.name.clone()
-                                        } else {
-                                            None
-                                        };
-                                        let t = merge_type(cx, (e1.t.dupe(), e2.t.dupe()));
-                                        let reason =
-                                            locationless_reason(VirtualReasonDesc::RTupleElement {
-                                                name: name.clone(),
-                                            });
-                                        TupleElement {
-                                            name,
-                                            t,
-                                            polarity: e1.polarity,
-                                            optional: e1.optional,
-                                            reason,
-                                        }
-                                    })
-                                    .collect(),
-                                arity: *arity1,
-                                inexact: *inexact1,
-                            }))),
+                            ))))),
                         ))
                     }
-                    (ArrType::ROArrayAT(elemt1, dro1), ArrType::ROArrayAT(elemt2, dro2)) => {
-                        Type::new(TypeInner::DefT(
-                            locationless_reason(VirtualReasonDesc::RArrayType),
-                            DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
-                                merge_type(cx, (elemt1.dupe(), elemt2.dupe())),
-                                if dro1.is_some() && dro2.is_some() {
-                                    dro1.clone()
-                                } else {
-                                    None
-                                },
-                            )))),
-                        ))
-                    }
+                    (
+                        ArrType::ROArrayAT(box (elemt1, dro1)),
+                        ArrType::ROArrayAT(box (elemt2, dro2)),
+                    ) => Type::new(TypeInner::DefT(
+                        locationless_reason(VirtualReasonDesc::RArrayType),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
+                            merge_type(cx, (elemt1.dupe(), elemt2.dupe())),
+                            if dro1.is_some() && dro2.is_some() {
+                                dro1.clone()
+                            } else {
+                                None
+                            },
+                        )))))),
+                    )),
                     // Non-matching ArrT pairs
                     _ => create_union(union_rep::make(
                         None,
@@ -862,7 +872,9 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
         }
         TypeInner::NominalT { nominal_type, .. } => match &nominal_type.underlying_t {
             nominal::UnderlyingT::OpaqueWithLocal { t } => extract_type(cx, t.dupe()),
-            nominal::UnderlyingT::CustomError { t, .. } => extract_type(cx, t.dupe()),
+            nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) => {
+                extract_type(cx, t.dupe())
+            }
             _ => match &nominal_type.upper_t {
                 Some(t) => extract_type(cx, t.dupe()),
                 None => GenericT::FailureUnhandledType(this_t),
@@ -955,15 +967,15 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
             DefTInner::RendersT(_) => GenericT::Success(this_t),
             DefTInner::ArrT(arrtype) => {
                 let (builtin, elem_t) = match arrtype.deref() {
-                    ArrType::ArrayAT { elem_t, .. } => (
+                    ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => (
                         flow_js_utils::lookup_builtin_value(cx, "Array", reason.dupe()),
                         elem_t.dupe(),
                     ),
-                    ArrType::TupleAT { elem_t, .. } => (
+                    ArrType::TupleAT(box TupleATData { elem_t, .. }) => (
                         flow_js_utils::lookup_builtin_type(cx, "$ReadOnlyArray", reason.dupe()),
                         elem_t.dupe(),
                     ),
-                    ArrType::ROArrayAT(elem_t, _) => (
+                    ArrType::ROArrayAT(box (elem_t, _)) => (
                         flow_js_utils::lookup_builtin_type(cx, "$ReadOnlyArray", reason.dupe()),
                         elem_t.dupe(),
                     ),

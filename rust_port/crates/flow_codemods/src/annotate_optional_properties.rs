@@ -28,6 +28,7 @@ fn data_of_prop_missing_error(
     use flow_typing_errors::error_message::EIncompatiblePropData;
     use flow_typing_errors::error_message::EPropNotFoundInLookupData;
     use flow_typing_errors::error_message::ErrorMessage;
+    use flow_typing_type::type_::SetPropertyData;
     use flow_typing_type::type_::VirtualRootUseOp;
     let msg = error.msg_of_error();
     let op = flow_typing_errors::error_message::util_use_op_of_msg(
@@ -38,7 +39,7 @@ fn data_of_prop_missing_error(
     let root = flow_typing_type::type_::root_of_use_op(&op);
     match (root, msg) {
         (
-            VirtualRootUseOp::SetProperty { value, .. },
+            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. }),
             ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 reason_obj,
                 prop: Some(name),
@@ -46,7 +47,7 @@ fn data_of_prop_missing_error(
             }),
         )
         | (
-            VirtualRootUseOp::SetProperty { value, .. },
+            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. }),
             ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 reason_obj,
                 prop_name: Some(name),

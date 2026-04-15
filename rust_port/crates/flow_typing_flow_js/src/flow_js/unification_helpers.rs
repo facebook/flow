@@ -189,16 +189,16 @@ fn __unify_inner<'cx>(
                 (DefTInner::ArrT(arr1), DefTInner::ArrT(arr2)) => {
                     match (arr1.deref(), arr2.deref()) {
                         (
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(box ArrayATData {
                                 elem_t: elem_t1,
                                 tuple_view: tv1,
                                 react_dro: _,
-                            },
-                            ArrType::ArrayAT {
+                            }),
+                            ArrType::ArrayAT(box ArrayATData {
                                 elem_t: elem_t2,
                                 tuple_view: tv2,
                                 react_dro: _,
-                            },
+                            }),
                         ) => {
                             let ts1 = tv1
                                 .as_ref()
@@ -212,20 +212,20 @@ fn __unify_inner<'cx>(
                             return Ok(());
                         }
                         (
-                            ArrType::TupleAT {
+                            ArrType::TupleAT(box TupleATData {
                                 elem_t: _,
                                 elements: elements1,
                                 arity: lower_arity,
                                 inexact: lower_inexact,
                                 react_dro: _,
-                            },
-                            ArrType::TupleAT {
+                            }),
+                            ArrType::TupleAT(box TupleATData {
                                 elem_t: _,
                                 elements: elements2,
                                 arity: upper_arity,
                                 inexact: upper_inexact,
                                 react_dro: _,
-                            },
+                            }),
                         ) => {
                             let (num_req1, num_total1) = lower_arity;
                             let (num_req2, num_total2) = upper_arity;

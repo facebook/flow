@@ -29,6 +29,7 @@ use flow_typing_context::TypingMode;
 use flow_typing_flow_common::type_subst;
 use flow_typing_tvar;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -40,6 +41,7 @@ use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TvarSeenSet;
 use flow_typing_type::type_::Type;
@@ -664,11 +666,11 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
         match t.deref() {
             TypeInner::DefT(r, def_t) if let DefTInner::ArrT(arr) = def_t.deref() => {
                 match arr.deref() {
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         elem_t,
                         tuple_view: Some(tv),
                         ..
-                    } => {
+                    }) => {
                         if is_literal_array_reason(r) && self.reason_def_loc_within_call(r) {
                             let elem_t_prime = self.type_(cx, map_cx, elem_t.dupe());
                             let elements: Vec<TupleElement> = tv
@@ -688,13 +690,15 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
                             let r = r.dupe().replace_desc(VirtualReasonDesc::RConstArrayLit);
                             Type::new(TypeInner::DefT(
                                 r,
-                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                    elem_t: elem_t_prime,
-                                    elements: elements.into(),
-                                    react_dro: None,
-                                    arity: tv.arity,
-                                    inexact: false,
-                                }))),
+                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                    TupleATData {
+                                        elem_t: elem_t_prime,
+                                        elements: elements.into(),
+                                        react_dro: None,
+                                        arity: tv.arity,
+                                        inexact: false,
+                                    },
+                                ))))),
                             ))
                         } else {
                             t

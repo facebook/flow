@@ -1257,11 +1257,13 @@ fn check_implements<'a, C: crate::func_params_intf::Config>(
                         targs.clone(),
                     ),
                 };
-                let use_op = UseOp::Op(Arc::new(RootUseOp::ClassImplementsCheck {
-                    def: def_reason.dupe(),
-                    name: reason.dupe(),
-                    implements: type_util::reason_of_t(&i).dupe(),
-                }));
+                let use_op = UseOp::Op(Arc::new(RootUseOp::ClassImplementsCheck(Box::new(
+                    ClassImplementsCheckData {
+                        def: def_reason.dupe(),
+                        name: reason.dupe(),
+                        implements: type_util::reason_of_t(&i).dupe(),
+                    },
+                ))));
                 cx.add_post_inference_validation_flow(
                     i,
                     UseT::new(UseTInner::ImplementsT(use_op, this.dupe())),

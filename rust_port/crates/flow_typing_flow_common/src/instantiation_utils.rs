@@ -17,7 +17,9 @@ use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -104,9 +106,11 @@ pub mod type_app_expansion {
     impl RootsCollector {
         fn arrtype(&self, r: &Reason, arr: &ArrType) -> Root {
             match arr {
-                ArrType::ArrayAT { .. } => Root::Array(r.dupe()),
-                ArrType::ROArrayAT(..) => Root::ROArray(r.dupe()),
-                ArrType::TupleAT { elements, .. } => Root::Tuple(r.dupe(), elements.len()),
+                ArrType::ArrayAT(box ArrayATData { .. }) => Root::Array(r.dupe()),
+                ArrType::ROArrayAT(box (..)) => Root::ROArray(r.dupe()),
+                ArrType::TupleAT(box TupleATData { elements, .. }) => {
+                    Root::Tuple(r.dupe(), elements.len())
+                }
             }
         }
     }

@@ -26,10 +26,13 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::slice_utils;
 use flow_typing_type::type_;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
@@ -715,7 +718,7 @@ pub fn elab_t<'cx>(
                     let t = make_readonly(cx, use_op, reason, inner_t.dupe());
                     elab_t(cx, dst_cx, None, t, op)
                 }
-                Destructor::ReactDRO(react_dro) => {
+                Destructor::ReactDRO(box react_dro) => {
                     let t = elab_t(
                         cx,
                         dst_cx,
@@ -743,7 +746,11 @@ pub fn elab_t<'cx>(
                     let t = make_required(cx, use_op, reason, inner_t.dupe());
                     elab_t(cx, dst_cx, None, t, op)
                 }
-                Destructor::SpreadType(target, todo_rev, head_slice) => {
+                Destructor::SpreadType(box DestructorSpreadTypeData(
+                    target,
+                    todo_rev,
+                    head_slice,
+                )) => {
                     let acc: Rc<[flow_typing_type::type_::object::spread::AccElement]> =
                         match head_slice {
                             Some(x) => vec![
@@ -1217,8 +1224,9 @@ fn elab_t_concrete<'cx>(
         }
         //   elab_t cx ~seen t op
         (TypeInner::NominalT { nominal_type, .. }, _)
-            if let type_::nominal::UnderlyingT::CustomError { t: inner_t, .. } =
-                &nominal_type.underlying_t =>
+            if let type_::nominal::UnderlyingT::CustomError(
+                box type_::nominal::CustomErrorData { t: inner_t, .. },
+            ) = &nominal_type.underlying_t =>
         {
             elab_t(cx, dst_cx, Some(seen), inner_t.dupe(), op)
         }
@@ -1880,7 +1888,9 @@ fn elab_t_concrete<'cx>(
         // ******
         (_, OpInner::AnnotDeepReadOnlyT(data)) => {
             use flow_typing_type::type_::ArrType;
+            use flow_typing_type::type_::ArrayATData;
             use flow_typing_type::type_::ReactDro;
+            use flow_typing_type::type_::TupleATData;
 
             let dro = Some(ReactDro(data.loc.dupe(), data.dro_type.clone()));
 
@@ -1895,39 +1905,42 @@ fn elab_t_concrete<'cx>(
                         ))
                     }
                     DefTInner::ArrT(arr) => match arr.deref() {
-                        ArrType::TupleAT {
+                        ArrType::TupleAT(box TupleATData {
                             elem_t,
                             elements,
                             arity,
                             inexact,
                             react_dro: _,
-                        } => Type::new(TypeInner::DefT(
+                        }) => Type::new(TypeInner::DefT(
                             r.dupe(),
-                            type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                react_dro: dro,
-                                elem_t: elem_t.dupe(),
-                                elements: elements.dupe(),
-                                arity: *arity,
-                                inexact: *inexact,
-                            }))),
+                            type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                TupleATData {
+                                    react_dro: dro,
+                                    elem_t: elem_t.dupe(),
+                                    elements: elements.dupe(),
+                                    arity: *arity,
+                                    inexact: *inexact,
+                                },
+                            ))))),
                         )),
-                        ArrType::ArrayAT {
+                        ArrType::ArrayAT(box ArrayATData {
                             elem_t,
                             tuple_view,
                             react_dro: _,
-                        } => Type::new(TypeInner::DefT(
+                        }) => Type::new(TypeInner::DefT(
                             r.dupe(),
-                            type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                                react_dro: dro,
-                                elem_t: elem_t.dupe(),
-                                tuple_view: tuple_view.clone(),
-                            }))),
+                            type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                                ArrayATData {
+                                    react_dro: dro,
+                                    elem_t: elem_t.dupe(),
+                                    tuple_view: tuple_view.clone(),
+                                },
+                            ))))),
                         )),
-                        ArrType::ROArrayAT(inner_t, _) => Type::new(TypeInner::DefT(
+                        ArrType::ROArrayAT(box (inner_t, _)) => Type::new(TypeInner::DefT(
                             r.dupe(),
                             type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
-                                inner_t.dupe(),
-                                dro,
+                                Box::new((inner_t.dupe(), dro)),
                             )))),
                         )),
                     },
@@ -2201,9 +2214,11 @@ fn elab_t_concrete<'cx>(
                 // **********************
                 TypeInner::DefT(reason, def_t)
                     if let DefTInner::ArrT(arr) = def_t.deref()
-                        && let flow_typing_type::type_::ArrType::TupleAT {
-                            arity, inexact, ..
-                        } = arr.deref()
+                        && let flow_typing_type::type_::ArrType::TupleAT(box TupleATData {
+                            arity,
+                            inexact,
+                            ..
+                        }) = arr.deref()
                         && let type_::PropRef::Named { name, .. } = propref
                         && name == &Name::new("length") =>
                 {
@@ -2222,7 +2237,7 @@ fn elab_t_concrete<'cx>(
                 TypeInner::DefT(reason, def_t) if let DefTInner::ArrT(arr) = def_t.deref() => {
                     use flow_typing_type::type_::ArrType;
                     match arr.as_ref() {
-                        ArrType::ArrayAT { elem_t, .. } => {
+                        ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => {
                             let arr_t = get_builtin_typeapp(
                                 cx,
                                 reason.dupe(),
@@ -2231,7 +2246,8 @@ fn elab_t_concrete<'cx>(
                             );
                             elab_t(cx, dst_cx, Some(seen), arr_t, op)
                         }
-                        ArrType::TupleAT { .. } | ArrType::ROArrayAT(_, _) => {
+                        ArrType::TupleAT(box TupleATData { .. })
+                        | ArrType::ROArrayAT(box (_, _)) => {
                             let elem_t = type_::elemt_of_arrtype(arr.as_ref());
                             let arr_t = get_builtin_typeapp(
                                 cx,
@@ -3320,6 +3336,8 @@ fn object_kit_concrete<'cx>(
 ) -> Type {
     use flow_typing_flow_common::flow_js_utils::FlowJsException;
     use flow_typing_type::type_::object;
+    use flow_typing_type::type_::object::ObjectToolObjectMapData;
+    use flow_typing_type::type_::object::ObjectToolReactConfigData;
 
     let add_output = |cx: &Context<'cx>,
                       msg: flow_typing_errors::error_message::ErrorMessage<flow_aloc::ALoc>|
@@ -3358,7 +3376,7 @@ fn object_kit_concrete<'cx>(
      -> Result<Type, FlowJsException> {
         match tool {
             object::Tool::MakeExact => slice_utils::object_make_exact(cx, reason, x),
-            object::Tool::Spread(options, state) => slice_utils::object_spread(
+            object::Tool::Spread(box (options, state)) => slice_utils::object_spread(
                 &|_cx, _use_op, _d1, _d2| Ok(()),
                 &add_output,
                 &return_,
@@ -3372,7 +3390,7 @@ fn object_kit_concrete<'cx>(
                 reason,
                 x,
             ),
-            object::Tool::Rest(options, state) => {
+            object::Tool::Rest(box (options, state)) => {
                 let rest_return =
                     |_cx: &Context<'cx>,
                      _use_op: Box<dyn Fn(flow_common::polarity::Polarity) -> UseOp>,
@@ -3411,7 +3429,9 @@ fn object_kit_concrete<'cx>(
                 x,
             )),
             object::Tool::ReadOnly => Ok(slice_utils::object_read_only(cx, reason, x)),
-            object::Tool::ReactConfig { .. } => Ok(error_internal(cx, dst_cx, "ReactConfig", &op2)),
+            object::Tool::ReactConfig(box ObjectToolReactConfigData { .. }) => {
+                Ok(error_internal(cx, dst_cx, "ReactConfig", &op2))
+            }
             object::Tool::ReactCheckComponentConfig {
                 props,
                 allow_ref_in_spread,
@@ -3427,7 +3447,9 @@ fn object_kit_concrete<'cx>(
             ),
             object::Tool::ObjectRep => Ok(error_internal(cx, dst_cx, "ObjectRep", &op2)),
             // TODO(jmbrown): Annotation inference for Mapped Types
-            object::Tool::ObjectMap { .. } => Ok(error_internal(cx, dst_cx, "ObjectMap", &op2)),
+            object::Tool::ObjectMap(box ObjectToolObjectMapData { .. }) => {
+                Ok(error_internal(cx, dst_cx, "ObjectMap", &op2))
+            }
         }
     };
     slice_utils::run(
@@ -3478,7 +3500,7 @@ pub fn object_spread<'cx>(
     t: Type,
 ) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
-    let tool = type_::object::Tool::Spread(target, state);
+    let tool = type_::object::Tool::Spread(Box::new((target, state)));
     object_kit(
         cx,
         &effective_dst_cx(cx),
@@ -3499,7 +3521,7 @@ fn object_rest_internal<'cx>(
     t: Type,
 ) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
-    let tool = type_::object::Tool::Rest(target, state);
+    let tool = type_::object::Tool::Rest(Box::new((target, state)));
     object_kit(
         cx,
         &effective_dst_cx(cx),

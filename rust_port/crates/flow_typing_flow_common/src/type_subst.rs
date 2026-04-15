@@ -21,6 +21,8 @@ use flow_typing_context::Context;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetSetData;
@@ -124,13 +126,13 @@ impl TypeVisitor<FvAcc> for FreeVarVisitor {
 
     fn destructor<'cx>(&mut self, cx: &Context<'cx>, acc: FvAcc, t: &Destructor) -> FvAcc {
         match t {
-            Destructor::ConditionalType {
+            Destructor::ConditionalType(box DestructorConditionalTypeData {
                 distributive_tparam_name,
                 infer_tparams,
                 extends_t,
                 true_t,
                 false_t,
-            } => self.with_distributive_tparam_name(
+            }) => self.with_distributive_tparam_name(
                 acc,
                 distributive_tparam_name,
                 |this, mut acc| {
@@ -144,12 +146,12 @@ impl TypeVisitor<FvAcc> for FreeVarVisitor {
                     this.type_(cx, pole, acc, true_t)
                 },
             ),
-            Destructor::MappedType {
+            Destructor::MappedType(box DestructorMappedTypeData {
                 distributive_tparam_name,
                 property_type,
                 homomorphic,
                 ..
-            } => self.with_distributive_tparam_name(
+            }) => self.with_distributive_tparam_name(
                 acc,
                 distributive_tparam_name,
                 |this, mut acc| {
@@ -971,13 +973,13 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
     ) -> Rc<Destructor> {
         let (map, _, placeholder_no_infer, purpose, _) = map_cx;
         match t.deref() {
-            Destructor::ConditionalType {
+            Destructor::ConditionalType(box DestructorConditionalTypeData {
                 distributive_tparam_name,
                 infer_tparams,
                 extends_t,
                 true_t,
                 false_t,
-            } => {
+            }) => {
                 let (distributive_tparam_name_new, mut current_map) =
                     self.subst_distributive_tparam_name(cx, distributive_tparam_name, map.dupe());
                 let false_t_prime = self.type_(
@@ -1041,23 +1043,25 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                     || !true_t.ptr_eq(&true_t_prime)
                     || !false_t.ptr_eq(&false_t_prime)
                 {
-                    Rc::new(Destructor::ConditionalType {
-                        distributive_tparam_name: distributive_tparam_name_new,
-                        infer_tparams: tparams.into(),
-                        extends_t: extends_t_prime,
-                        true_t: true_t_prime,
-                        false_t: false_t_prime,
-                    })
+                    Rc::new(Destructor::ConditionalType(Box::new(
+                        DestructorConditionalTypeData {
+                            distributive_tparam_name: distributive_tparam_name_new,
+                            infer_tparams: tparams.into(),
+                            extends_t: extends_t_prime,
+                            true_t: true_t_prime,
+                            false_t: false_t_prime,
+                        },
+                    )))
                 } else {
                     t
                 }
             }
-            Destructor::MappedType {
+            Destructor::MappedType(box DestructorMappedTypeData {
                 distributive_tparam_name,
                 property_type,
                 mapped_type_flags,
                 homomorphic,
-            } => {
+            }) => {
                 let (distributive_tparam_name_new, new_map) =
                     self.subst_distributive_tparam_name(cx, distributive_tparam_name, map.dupe());
                 let property_type_prime = self.type_(
@@ -1087,12 +1091,12 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                 if property_type.ptr_eq(&property_type_prime) && !homomorphic_changed {
                     t
                 } else {
-                    Rc::new(Destructor::MappedType {
+                    Rc::new(Destructor::MappedType(Box::new(DestructorMappedTypeData {
                         distributive_tparam_name: distributive_tparam_name_new,
                         property_type: property_type_prime,
                         mapped_type_flags: *mapped_type_flags,
                         homomorphic: homomorphic_prime,
-                    })
+                    })))
                 }
             }
             _ => type_mapper::destructor_default(self, cx, map_cx, t),

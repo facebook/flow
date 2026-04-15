@@ -731,6 +731,74 @@ impl EnumInfo {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ClassImplementsCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub def: VirtualReason<L>,
+    pub name: VirtualReason<L>,
+    pub implements: VirtualReason<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct FunMissingArgData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub n: i32,
+    pub op: VirtualReason<L>,
+    pub def: VirtualReason<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct FunImplicitReturnData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub fn_: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+    pub type_guard: bool,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct SetPropertyData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub lhs: VirtualReason<L>,
+    pub prop: VirtualReason<L>,
+    pub value: VirtualReason<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ClassOwnProtoCheckData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub prop: Name,
     pub own_loc: Option<L>,
@@ -1007,11 +1075,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         def: VirtualReason<L>,
         extends: VirtualReason<L>,
     },
-    ClassImplementsCheck {
-        def: VirtualReason<L>,
-        name: VirtualReason<L>,
-        implements: VirtualReason<L>,
-    },
+    ClassImplementsCheck(Box<ClassImplementsCheckData<L>>),
     ClassOwnProtoCheck(Box<ClassOwnProtoCheckData<L>>),
     ClassMethodDefinition {
         def: VirtualReason<L>,
@@ -1037,11 +1101,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     FunReturnStatement {
         value: VirtualReason<L>,
     },
-    FunImplicitReturn {
-        fn_: VirtualReason<L>,
-        upper: VirtualReason<L>,
-        type_guard: bool,
-    },
+    FunImplicitReturn(Box<FunImplicitReturnData<L>>),
     GeneratorYield {
         value: VirtualReason<L>,
     },
@@ -1072,11 +1132,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     TypeApplication {
         type_: VirtualReason<L>,
     },
-    SetProperty {
-        lhs: VirtualReason<L>,
-        prop: VirtualReason<L>,
-        value: VirtualReason<L>,
-    },
+    SetProperty(Box<SetPropertyData<L>>),
     UpdateProperty {
         lhs: VirtualReason<L>,
         prop: VirtualReason<L>,
@@ -1120,7 +1176,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     RendersCompatibility,
     UnifyFlip,
     ConstrainedAssignment(Box<ConstrainedAssignmentData<L>>),
-    ReactDeepReadOnly(L, DroType),
+    ReactDeepReadOnly(Box<(L, DroType)>),
     ArrayElementCompatibility {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
@@ -1129,11 +1185,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
-    FunMissingArg {
-        n: i32,
-        op: VirtualReason<L>,
-        def: VirtualReason<L>,
-    },
+    FunMissingArg(Box<FunMissingArgData<L>>),
     FunParam(Box<FunParamData<L>>),
     FunRestParam {
         lower: VirtualReason<L>,
@@ -3311,20 +3363,23 @@ pub struct EnumCheck {
     pub member_name: FlowSmolStr,
 }
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumExhaustiveCheckPossiblyValidData {
+    // We only convert a "possible check" into a "check" if it has the same
+    // enum type as the discriminant.
+    pub possible_checks: VecDeque<(Type, EnumCheck)>,
+    pub checks: Rc<[EnumCheck]>,
+    pub default_case_loc: Option<ALoc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum EnumPossibleExhaustiveCheckT {
-    EnumExhaustiveCheckPossiblyValid {
-        // We only convert a "possible check" into a "check" if it has the same
-        // enum type as the discriminant.
-        possible_checks: VecDeque<(Type, EnumCheck)>,
-        checks: Rc<[EnumCheck]>,
-        default_case_loc: Option<ALoc>,
-    },
+    EnumExhaustiveCheckPossiblyValid(Box<EnumExhaustiveCheckPossiblyValidData>),
     EnumExhaustiveCheckInvalid(Rc<[ALoc]>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CallAction {
-    Funcalltype(FuncallType),
+    Funcalltype(Box<FuncallType>),
     ConcretizeCallee(Tvar),
 }
 
@@ -3767,50 +3822,54 @@ pub enum OptState {
     AssertChain,
 }
 
+pub struct CallMData<CX = ()> {
+    pub methodcalltype: MethodCallType,
+    pub return_hint: LazyHintT<CX>,
+    pub specialized_callee: Option<SpecializedCallee>,
+}
+
+pub struct ChainMData<CX = ()> {
+    pub exp_reason: Reason,
+    pub lhs_reason: Reason,
+    pub methodcalltype: MethodCallType,
+    pub voided_out_collector: Option<type_collector::TypeCollector>,
+    pub return_hint: LazyHintT<CX>,
+    pub specialized_callee: Option<SpecializedCallee>,
+}
+
 pub enum MethodAction<CX = ()> {
-    CallM {
-        methodcalltype: MethodCallType,
-        return_hint: LazyHintT<CX>,
-        specialized_callee: Option<SpecializedCallee>,
-    },
-    ChainM {
-        exp_reason: Reason,
-        lhs_reason: Reason,
-        methodcalltype: MethodCallType,
-        voided_out_collector: Option<type_collector::TypeCollector>,
-        return_hint: LazyHintT<CX>,
-        specialized_callee: Option<SpecializedCallee>,
-    },
+    CallM(Box<CallMData<CX>>),
+    ChainM(Box<ChainMData<CX>>),
     NoMethodAction(Type),
 }
 
 impl<CX> Clone for MethodAction<CX> {
     fn clone(&self) -> Self {
         match self {
-            MethodAction::CallM {
+            MethodAction::CallM(box CallMData {
                 methodcalltype,
                 return_hint,
                 specialized_callee,
-            } => MethodAction::CallM {
+            }) => MethodAction::CallM(Box::new(CallMData {
                 methodcalltype: methodcalltype.clone(),
                 return_hint: return_hint.clone(),
                 specialized_callee: specialized_callee.clone(),
-            },
-            MethodAction::ChainM {
+            })),
+            MethodAction::ChainM(box ChainMData {
                 exp_reason,
                 lhs_reason,
                 methodcalltype,
                 voided_out_collector,
                 return_hint,
                 specialized_callee,
-            } => MethodAction::ChainM {
+            }) => MethodAction::ChainM(Box::new(ChainMData {
                 exp_reason: exp_reason.clone(),
                 lhs_reason: lhs_reason.clone(),
                 methodcalltype: methodcalltype.clone(),
                 voided_out_collector: voided_out_collector.clone(),
                 return_hint: return_hint.clone(),
                 specialized_callee: specialized_callee.clone(),
-            },
+            })),
             MethodAction::NoMethodAction(a) => MethodAction::NoMethodAction(a.clone()),
         }
     }
@@ -3820,34 +3879,34 @@ impl<CX> PartialEq for MethodAction<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                MethodAction::CallM {
+                MethodAction::CallM(box CallMData {
                     methodcalltype: a1,
                     return_hint: b1,
                     specialized_callee: c1,
-                },
-                MethodAction::CallM {
+                }),
+                MethodAction::CallM(box CallMData {
                     methodcalltype: a2,
                     return_hint: b2,
                     specialized_callee: c2,
-                },
+                }),
             ) => a1 == a2 && b1 == b2 && c1 == c2,
             (
-                MethodAction::ChainM {
+                MethodAction::ChainM(box ChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
                     methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
                     specialized_callee: f1,
-                },
-                MethodAction::ChainM {
+                }),
+                MethodAction::ChainM(box ChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
                     methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
                     specialized_callee: f2,
-                },
+                }),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
             (MethodAction::NoMethodAction(a1), MethodAction::NoMethodAction(a2)) => a1 == a2,
             _ => false,
@@ -3861,23 +3920,23 @@ impl<CX> std::hash::Hash for MethodAction<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            MethodAction::CallM {
+            MethodAction::CallM(box CallMData {
                 methodcalltype,
                 return_hint,
                 specialized_callee,
-            } => {
+            }) => {
                 methodcalltype.hash(state);
                 return_hint.hash(state);
                 specialized_callee.hash(state);
             }
-            MethodAction::ChainM {
+            MethodAction::ChainM(box ChainMData {
                 exp_reason,
                 lhs_reason,
                 methodcalltype,
                 voided_out_collector,
                 return_hint,
                 specialized_callee,
-            } => {
+            }) => {
                 exp_reason.hash(state);
                 lhs_reason.hash(state);
                 methodcalltype.hash(state);
@@ -3902,8 +3961,8 @@ impl<CX> Ord for MethodAction<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         fn variant_index<CX>(v: &MethodAction<CX>) -> u32 {
             match v {
-                MethodAction::CallM { .. } => 0,
-                MethodAction::ChainM { .. } => 1,
+                MethodAction::CallM(..) => 0,
+                MethodAction::ChainM(..) => 1,
                 MethodAction::NoMethodAction(..) => 2,
             }
         }
@@ -3913,34 +3972,34 @@ impl<CX> Ord for MethodAction<CX> {
         }
         match (self, other) {
             (
-                MethodAction::CallM {
+                MethodAction::CallM(box CallMData {
                     methodcalltype: a1,
                     return_hint: b1,
                     specialized_callee: c1,
-                },
-                MethodAction::CallM {
+                }),
+                MethodAction::CallM(box CallMData {
                     methodcalltype: a2,
                     return_hint: b2,
                     specialized_callee: c2,
-                },
+                }),
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
             (
-                MethodAction::ChainM {
+                MethodAction::ChainM(box ChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
                     methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
                     specialized_callee: f1,
-                },
-                MethodAction::ChainM {
+                }),
+                MethodAction::ChainM(box ChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
                     methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
                     specialized_callee: f2,
-                },
+                }),
             ) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
@@ -3957,24 +4016,24 @@ impl<CX> Ord for MethodAction<CX> {
 impl<CX> std::fmt::Debug for MethodAction<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MethodAction::CallM {
+            MethodAction::CallM(box CallMData {
                 methodcalltype,
                 return_hint,
                 specialized_callee,
-            } => f
+            }) => f
                 .debug_struct("CallM")
                 .field("methodcalltype", methodcalltype)
                 .field("return_hint", return_hint)
                 .field("specialized_callee", specialized_callee)
                 .finish(),
-            MethodAction::ChainM {
+            MethodAction::ChainM(box ChainMData {
                 exp_reason,
                 lhs_reason,
                 methodcalltype,
                 voided_out_collector,
                 return_hint,
                 specialized_callee,
-            } => f
+            }) => f
                 .debug_struct("ChainM")
                 .field("exp_reason", exp_reason)
                 .field("lhs_reason", lhs_reason)
@@ -3988,50 +4047,54 @@ impl<CX> std::fmt::Debug for MethodAction<CX> {
     }
 }
 
+pub struct OptCallMData<CX = ()> {
+    pub opt_methodcalltype: OptMethodCallType,
+    pub return_hint: LazyHintT<CX>,
+    pub specialized_callee: Option<SpecializedCallee>,
+}
+
+pub struct OptChainMData<CX = ()> {
+    pub exp_reason: Reason,
+    pub lhs_reason: Reason,
+    pub opt_methodcalltype: OptMethodCallType,
+    pub voided_out_collector: Option<type_collector::TypeCollector>,
+    pub return_hint: LazyHintT<CX>,
+    pub specialized_callee: Option<SpecializedCallee>,
+}
+
 pub enum OptMethodAction<CX = ()> {
-    OptCallM {
-        opt_methodcalltype: OptMethodCallType,
-        return_hint: LazyHintT<CX>,
-        specialized_callee: Option<SpecializedCallee>,
-    },
-    OptChainM {
-        exp_reason: Reason,
-        lhs_reason: Reason,
-        opt_methodcalltype: OptMethodCallType,
-        voided_out_collector: Option<type_collector::TypeCollector>,
-        return_hint: LazyHintT<CX>,
-        specialized_callee: Option<SpecializedCallee>,
-    },
+    OptCallM(Box<OptCallMData<CX>>),
+    OptChainM(Box<OptChainMData<CX>>),
     OptNoMethodAction(Type),
 }
 
 impl<CX> Clone for OptMethodAction<CX> {
     fn clone(&self) -> Self {
         match self {
-            OptMethodAction::OptCallM {
+            OptMethodAction::OptCallM(box OptCallMData {
                 opt_methodcalltype,
                 return_hint,
                 specialized_callee,
-            } => OptMethodAction::OptCallM {
+            }) => OptMethodAction::OptCallM(Box::new(OptCallMData {
                 opt_methodcalltype: opt_methodcalltype.clone(),
                 return_hint: return_hint.clone(),
                 specialized_callee: specialized_callee.clone(),
-            },
-            OptMethodAction::OptChainM {
+            })),
+            OptMethodAction::OptChainM(box OptChainMData {
                 exp_reason,
                 lhs_reason,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint,
                 specialized_callee,
-            } => OptMethodAction::OptChainM {
+            }) => OptMethodAction::OptChainM(Box::new(OptChainMData {
                 exp_reason: exp_reason.clone(),
                 lhs_reason: lhs_reason.clone(),
                 opt_methodcalltype: opt_methodcalltype.clone(),
                 voided_out_collector: voided_out_collector.clone(),
                 return_hint: return_hint.clone(),
                 specialized_callee: specialized_callee.clone(),
-            },
+            })),
             OptMethodAction::OptNoMethodAction(a) => OptMethodAction::OptNoMethodAction(a.clone()),
         }
     }
@@ -4041,34 +4104,34 @@ impl<CX> PartialEq for OptMethodAction<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                OptMethodAction::OptCallM {
+                OptMethodAction::OptCallM(box OptCallMData {
                     opt_methodcalltype: a1,
                     return_hint: b1,
                     specialized_callee: c1,
-                },
-                OptMethodAction::OptCallM {
+                }),
+                OptMethodAction::OptCallM(box OptCallMData {
                     opt_methodcalltype: a2,
                     return_hint: b2,
                     specialized_callee: c2,
-                },
+                }),
             ) => a1 == a2 && b1 == b2 && c1 == c2,
             (
-                OptMethodAction::OptChainM {
+                OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
                     opt_methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
                     specialized_callee: f1,
-                },
-                OptMethodAction::OptChainM {
+                }),
+                OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
                     opt_methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
                     specialized_callee: f2,
-                },
+                }),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
             (OptMethodAction::OptNoMethodAction(a1), OptMethodAction::OptNoMethodAction(a2)) => {
                 a1 == a2
@@ -4084,23 +4147,23 @@ impl<CX> std::hash::Hash for OptMethodAction<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            OptMethodAction::OptCallM {
+            OptMethodAction::OptCallM(box OptCallMData {
                 opt_methodcalltype,
                 return_hint,
                 specialized_callee,
-            } => {
+            }) => {
                 opt_methodcalltype.hash(state);
                 return_hint.hash(state);
                 specialized_callee.hash(state);
             }
-            OptMethodAction::OptChainM {
+            OptMethodAction::OptChainM(box OptChainMData {
                 exp_reason,
                 lhs_reason,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint,
                 specialized_callee,
-            } => {
+            }) => {
                 exp_reason.hash(state);
                 lhs_reason.hash(state);
                 opt_methodcalltype.hash(state);
@@ -4125,8 +4188,8 @@ impl<CX> Ord for OptMethodAction<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         fn variant_index<CX>(v: &OptMethodAction<CX>) -> u32 {
             match v {
-                OptMethodAction::OptCallM { .. } => 0,
-                OptMethodAction::OptChainM { .. } => 1,
+                OptMethodAction::OptCallM(..) => 0,
+                OptMethodAction::OptChainM(..) => 1,
                 OptMethodAction::OptNoMethodAction(..) => 2,
             }
         }
@@ -4136,34 +4199,34 @@ impl<CX> Ord for OptMethodAction<CX> {
         }
         match (self, other) {
             (
-                OptMethodAction::OptCallM {
+                OptMethodAction::OptCallM(box OptCallMData {
                     opt_methodcalltype: a1,
                     return_hint: b1,
                     specialized_callee: c1,
-                },
-                OptMethodAction::OptCallM {
+                }),
+                OptMethodAction::OptCallM(box OptCallMData {
                     opt_methodcalltype: a2,
                     return_hint: b2,
                     specialized_callee: c2,
-                },
+                }),
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
             (
-                OptMethodAction::OptChainM {
+                OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
                     opt_methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
                     specialized_callee: f1,
-                },
-                OptMethodAction::OptChainM {
+                }),
+                OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
                     opt_methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
                     specialized_callee: f2,
-                },
+                }),
             ) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
@@ -4182,24 +4245,24 @@ impl<CX> Ord for OptMethodAction<CX> {
 impl<CX> std::fmt::Debug for OptMethodAction<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            OptMethodAction::OptCallM {
+            OptMethodAction::OptCallM(box OptCallMData {
                 opt_methodcalltype,
                 return_hint,
                 specialized_callee,
-            } => f
+            }) => f
                 .debug_struct("OptCallM")
                 .field("opt_methodcalltype", opt_methodcalltype)
                 .field("return_hint", return_hint)
                 .field("specialized_callee", specialized_callee)
                 .finish(),
-            OptMethodAction::OptChainM {
+            OptMethodAction::OptChainM(box OptChainMData {
                 exp_reason,
                 lhs_reason,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint,
                 specialized_callee,
-            } => f
+            }) => f
                 .debug_struct("OptChainM")
                 .field("exp_reason", exp_reason)
                 .field("lhs_reason", lhs_reason)
@@ -4224,17 +4287,17 @@ pub enum PredicateInner {
     TruthyP,
     NullP,
     MaybeP,
-    SingletonBoolP(ALoc, bool),
-    SingletonStrP(ALoc, bool, String),
-    SingletonNumP(ALoc, bool, NumberLiteral),
-    SingletonBigIntP(ALoc, bool, BigIntLiteral),
-    BoolP(ALoc),
+    SingletonBoolP(Box<(ALoc, bool)>),
+    SingletonStrP(Box<(ALoc, bool, String)>),
+    SingletonNumP(Box<(ALoc, bool, NumberLiteral)>),
+    SingletonBigIntP(Box<(ALoc, bool, BigIntLiteral)>),
+    BoolP(Box<ALoc>),
     FunP,
-    NumP(ALoc),
-    BigIntP(ALoc),
+    NumP(Box<ALoc>),
+    BigIntP(Box<ALoc>),
     ObjP,
-    StrP(ALoc),
-    SymbolP(ALoc),
+    StrP(Box<ALoc>),
+    SymbolP(Box<ALoc>),
     VoidP,
     ArrP,
     ArrLenP {
@@ -4435,10 +4498,13 @@ pub enum ThisStatus {
 /// will only accept the overload if all sibling branches agree on the result.
 /// Otherwise the result is deemed "invalid".
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SpeculationHintSetData(pub Rc<[i32]>, pub Type);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SpeculationHintState {
     SpeculationHintUnset,
     SpeculationHintInvalid,
-    SpeculationHintSet(Rc<[i32]>, Type),
+    SpeculationHintSet(Box<SpeculationHintSetData>),
 }
 
 #[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4679,28 +4745,34 @@ pub struct TupleView {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ArrayATData {
+    ///Should elements of this array be treated as propagating read-only, and if so, what location is responsible
+    pub react_dro: Option<ReactDro>,
+    pub elem_t: Type,
+    pub tuple_view: Option<TupleView>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TupleATData {
+    pub react_dro: Option<ReactDro>,
+    pub elem_t: Type,
+    pub elements: Rc<[TupleElement]>,
+    /// Arity represents the range of valid arities, considering optional elements.
+    /// It ranges from the number of required elements, to the total number of elements.
+    pub arity: (i32, i32),
+    pub inexact: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ArrType {
-    ArrayAT {
-        ///Should elements of this array be treated as propagating read-only, and if so, what location is responsible  
-        react_dro: Option<ReactDro>,
-        elem_t: Type,
-        tuple_view: Option<TupleView>,
-    },
+    ArrayAT(Box<ArrayATData>),
     /// TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
     /// that they don't need to recompute their general type when you do
     /// `myTuple[expr]`
-    TupleAT {
-        react_dro: Option<ReactDro>,
-        elem_t: Type,
-        elements: Rc<[TupleElement]>,
-        /// Arity represents the range of valid arities, considering optional elements.
-        /// It ranges from the number of required elements, to the total number of elements.
-        arity: (i32, i32),
-        inexact: bool,
-    },
+    TupleAT(Box<TupleATData>),
     /// ROArrayAT(elemt) is the super type for all tuples and arrays for which
     /// elemt is a supertype of every element type
-    ROArrayAT(Type, Option<ReactDro>),
+    ROArrayAT(Box<(Type, Option<ReactDro>)>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4840,43 +4912,58 @@ pub struct DerivedType {
 ///   If the property is not found, unify a default type with the *original*
 ///   tvar from the lookup. *)
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NonstrictReturningData(
+    pub Option<(Type, Type)>,
+    pub Option<(i32, (Reason, Reason))>,
+);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LookupKind {
     Strict(Reason),
-    NonstrictReturning(Option<(Type, Type)>, Option<(i32, (Reason, Reason))>),
+    NonstrictReturning(Box<NonstrictReturningData>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReadPropData {
+    pub use_op: UseOp,
+    pub obj_t: Type,
+    pub tout: Tvar,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WritePropData {
+    pub use_op: UseOp,
+    pub obj_t: Type,
+    pub prop_tout: Option<Type>,
+    pub tin: Type,
+    pub write_ctx: WriteCtx,
+    pub mode: SetMode,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LookupPropForSubtypingData {
+    pub use_op: UseOp,
+    pub prop: PropertyType,
+    pub prop_name: Name,
+    pub reason_lower: Reason,
+    pub reason_upper: Reason,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LookupActionMatchPropData {
+    pub use_op: UseOp,
+    pub drop_generic: bool,
+    pub prop_t: Type,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LookupAction {
-    ReadProp {
-        use_op: UseOp,
-        obj_t: Type,
-        tout: Tvar,
-    },
-    WriteProp {
-        use_op: UseOp,
-        obj_t: Type,
-        prop_tout: Option<Type>,
-        tin: Type,
-        write_ctx: WriteCtx,
-        mode: SetMode,
-    },
-    LookupPropForTvarPopulation {
-        polarity: Polarity,
-        tout: Type,
-    },
-    LookupPropForSubtyping {
-        use_op: UseOp,
-        prop: PropertyType,
-        prop_name: Name,
-        reason_lower: Reason,
-        reason_upper: Reason,
-    },
-    SuperProp(UseOp, PropertyType),
-    MatchProp {
-        use_op: UseOp,
-        drop_generic: bool,
-        prop_t: Type,
-    },
+    ReadProp(Box<ReadPropData>),
+    WriteProp(Box<WritePropData>),
+    LookupPropForTvarPopulation { polarity: Polarity, tout: Type },
+    LookupPropForSubtyping(Box<LookupPropForSubtypingData>),
+    SuperProp(Box<(UseOp, PropertyType)>),
+    MatchProp(Box<LookupActionMatchPropData>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4917,43 +5004,49 @@ pub enum PropertySource {
 /// In particular, a computed property in the object initializer users SetElemT
 /// to initialize the property value, but in order to avoid race conditions we
 /// need to ensure that reads happen after writes.
+pub struct ReadElemData {
+    pub id: Option<i32>,
+    pub from_annot: bool,
+    pub skip_optional: bool,
+    pub access_iterables: bool,
+    pub tout: Tvar,
+}
+
+pub struct WriteElemData {
+    pub tin: Type,
+    pub tout: Option<Type>,
+    pub mode: SetMode,
+}
+
 pub enum ElemAction<CX = ()> {
-    ReadElem {
-        id: Option<i32>,
-        from_annot: bool,
-        skip_optional: bool,
-        access_iterables: bool,
-        tout: Tvar,
-    },
-    WriteElem {
-        tin: Type,
-        tout: Option<Type>,
-        mode: SetMode,
-    },
+    ReadElem(Box<ReadElemData>),
+    WriteElem(Box<WriteElemData>),
     CallElem(Reason, Box<MethodAction<CX>>),
 }
 
 impl<CX> Clone for ElemAction<CX> {
     fn clone(&self) -> Self {
         match self {
-            ElemAction::ReadElem {
+            ElemAction::ReadElem(box ReadElemData {
                 id,
                 from_annot,
                 skip_optional,
                 access_iterables,
                 tout,
-            } => ElemAction::ReadElem {
+            }) => ElemAction::ReadElem(Box::new(ReadElemData {
                 id: *id,
                 from_annot: *from_annot,
                 skip_optional: *skip_optional,
                 access_iterables: *access_iterables,
                 tout: tout.clone(),
-            },
-            ElemAction::WriteElem { tin, tout, mode } => ElemAction::WriteElem {
-                tin: tin.clone(),
-                tout: tout.clone(),
-                mode: mode.clone(),
-            },
+            })),
+            ElemAction::WriteElem(box WriteElemData { tin, tout, mode }) => {
+                ElemAction::WriteElem(Box::new(WriteElemData {
+                    tin: tin.clone(),
+                    tout: tout.clone(),
+                    mode: mode.clone(),
+                }))
+            }
             ElemAction::CallElem(a, b) => ElemAction::CallElem(a.clone(), b.clone()),
         }
     }
@@ -4963,32 +5056,32 @@ impl<CX> PartialEq for ElemAction<CX> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                ElemAction::ReadElem {
+                ElemAction::ReadElem(box ReadElemData {
                     id: a1,
                     from_annot: b1,
                     skip_optional: c1,
                     access_iterables: d1,
                     tout: e1,
-                },
-                ElemAction::ReadElem {
+                }),
+                ElemAction::ReadElem(box ReadElemData {
                     id: a2,
                     from_annot: b2,
                     skip_optional: c2,
                     access_iterables: d2,
                     tout: e2,
-                },
+                }),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
             (
-                ElemAction::WriteElem {
+                ElemAction::WriteElem(box WriteElemData {
                     tin: a1,
                     tout: b1,
                     mode: c1,
-                },
-                ElemAction::WriteElem {
+                }),
+                ElemAction::WriteElem(box WriteElemData {
                     tin: a2,
                     tout: b2,
                     mode: c2,
-                },
+                }),
             ) => a1 == a2 && b1 == b2 && c1 == c2,
             (ElemAction::CallElem(a1, b1), ElemAction::CallElem(a2, b2)) => a1 == a2 && b1 == b2,
             _ => false,
@@ -5002,20 +5095,20 @@ impl<CX> std::hash::Hash for ElemAction<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            ElemAction::ReadElem {
+            ElemAction::ReadElem(box ReadElemData {
                 id,
                 from_annot,
                 skip_optional,
                 access_iterables,
                 tout,
-            } => {
+            }) => {
                 id.hash(state);
                 from_annot.hash(state);
                 skip_optional.hash(state);
                 access_iterables.hash(state);
                 tout.hash(state);
             }
-            ElemAction::WriteElem { tin, tout, mode } => {
+            ElemAction::WriteElem(box WriteElemData { tin, tout, mode }) => {
                 tin.hash(state);
                 tout.hash(state);
                 mode.hash(state);
@@ -5038,8 +5131,8 @@ impl<CX> Ord for ElemAction<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         fn variant_index<CX>(v: &ElemAction<CX>) -> u32 {
             match v {
-                ElemAction::ReadElem { .. } => 0,
-                ElemAction::WriteElem { .. } => 1,
+                ElemAction::ReadElem(..) => 0,
+                ElemAction::WriteElem(..) => 1,
                 ElemAction::CallElem(..) => 2,
             }
         }
@@ -5049,20 +5142,20 @@ impl<CX> Ord for ElemAction<CX> {
         }
         match (self, other) {
             (
-                ElemAction::ReadElem {
+                ElemAction::ReadElem(box ReadElemData {
                     id: a1,
                     from_annot: b1,
                     skip_optional: c1,
                     access_iterables: d1,
                     tout: e1,
-                },
-                ElemAction::ReadElem {
+                }),
+                ElemAction::ReadElem(box ReadElemData {
                     id: a2,
                     from_annot: b2,
                     skip_optional: c2,
                     access_iterables: d2,
                     tout: e2,
-                },
+                }),
             ) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
@@ -5070,16 +5163,16 @@ impl<CX> Ord for ElemAction<CX> {
                 .then_with(|| d1.cmp(d2))
                 .then_with(|| e1.cmp(e2)),
             (
-                ElemAction::WriteElem {
+                ElemAction::WriteElem(box WriteElemData {
                     tin: a1,
                     tout: b1,
                     mode: c1,
-                },
-                ElemAction::WriteElem {
+                }),
+                ElemAction::WriteElem(box WriteElemData {
                     tin: a2,
                     tout: b2,
                     mode: c2,
-                },
+                }),
             ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
             (ElemAction::CallElem(a1, b1), ElemAction::CallElem(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
@@ -5092,13 +5185,13 @@ impl<CX> Ord for ElemAction<CX> {
 impl<CX> std::fmt::Debug for ElemAction<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ElemAction::ReadElem {
+            ElemAction::ReadElem(box ReadElemData {
                 id,
                 from_annot,
                 skip_optional,
                 access_iterables,
                 tout,
-            } => f
+            }) => f
                 .debug_struct("ReadElem")
                 .field("id", id)
                 .field("from_annot", from_annot)
@@ -5106,7 +5199,7 @@ impl<CX> std::fmt::Debug for ElemAction<CX> {
                 .field("access_iterables", access_iterables)
                 .field("tout", tout)
                 .finish(),
-            ElemAction::WriteElem { tin, tout, mode } => f
+            ElemAction::WriteElem(box WriteElemData { tin, tout, mode }) => f
                 .debug_struct("WriteElem")
                 .field("tin", tin)
                 .field("tout", tout)
@@ -5527,6 +5620,41 @@ pub enum Selector {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DestructorSpreadTypeData(
+    pub object::spread::Target,
+    pub Rc<[object::spread::Operand]>,
+    pub Option<object::spread::OperandSlice>,
+);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DestructorSpreadTupleTypeData {
+    pub reason_tuple: Reason,
+    pub reason_spread: Reason,
+    pub inexact: bool,
+    pub resolved: Rc<[ResolvedParam]>,
+    pub unresolved: Rc<[UnresolvedParam]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DestructorConditionalTypeData {
+    pub distributive_tparam_name: Option<SubstName>,
+    pub infer_tparams: Rc<[TypeParam]>,
+    pub extends_t: Type,
+    pub true_t: Type,
+    pub false_t: Type,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DestructorMappedTypeData {
+    /// Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
+    /// bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T}
+    pub homomorphic: MappedTypeHomomorphicFlag,
+    pub distributive_tparam_name: Option<SubstName>,
+    pub property_type: Type,
+    pub mapped_type_flags: MappedTypeFlags,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Destructor {
     NonMaybeType,
     ExactType,
@@ -5548,40 +5676,17 @@ pub enum Destructor {
     OptionalIndexedAccessResultType {
         void_reason: Reason,
     },
-    SpreadType(
-        object::spread::Target,
-        Rc<[object::spread::Operand]>,
-        Option<object::spread::OperandSlice>,
-    ),
-    SpreadTupleType {
-        reason_tuple: Reason,
-        reason_spread: Reason,
-        inexact: bool,
-        resolved: Rc<[ResolvedParam]>,
-        unresolved: Rc<[UnresolvedParam]>,
-    },
+    SpreadType(Box<DestructorSpreadTypeData>),
+    SpreadTupleType(Box<DestructorSpreadTupleTypeData>),
     RestType(object::rest::MergeMode, Type),
-    ConditionalType {
-        distributive_tparam_name: Option<SubstName>,
-        infer_tparams: Rc<[TypeParam]>,
-        extends_t: Type,
-        true_t: Type,
-        false_t: Type,
-    },
+    ConditionalType(Box<DestructorConditionalTypeData>),
     TypeMap(TypeMap),
     ReactCheckComponentConfig {
         props: properties::PropertiesMap,
         allow_ref_in_spread: bool,
     },
-    ReactDRO(ReactDro),
-    MappedType {
-        /// Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
-        /// bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T}
-        homomorphic: MappedTypeHomomorphicFlag,
-        distributive_tparam_name: Option<SubstName>,
-        property_type: Type,
-        mapped_type_flags: MappedTypeFlags,
-    },
+    ReactDRO(Box<ReactDro>),
+    MappedType(Box<DestructorMappedTypeData>),
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5654,17 +5759,39 @@ pub struct ResolveSpreadType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnresolvedArgData(
+    pub TupleElement,
+    pub Option<flow_typing_generics::GenericId>,
+);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UnresolvedParam {
-    UnresolvedArg(TupleElement, Option<flow_typing_generics::GenericId>),
+    UnresolvedArg(Box<UnresolvedArgData>),
     UnresolvedSpreadArg(Type),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ResolvedArgData(
+    pub TupleElement,
+    pub Option<flow_typing_generics::GenericId>,
+);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ResolvedSpreadArgData(
+    pub Reason,
+    pub ArrType,
+    pub Option<flow_typing_generics::GenericId>,
+);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ResolvedParam {
-    ResolvedArg(TupleElement, Option<flow_typing_generics::GenericId>),
-    ResolvedSpreadArg(Reason, ArrType, Option<flow_typing_generics::GenericId>),
+    ResolvedArg(Box<ResolvedArgData>),
+    ResolvedSpreadArg(Box<ResolvedSpreadArgData>),
     ResolvedAnySpreadArg(Reason, AnySource),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ResolveSpreadsToMultiflowPartialData(pub i32, pub FunType, pub Reason, pub Type);
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SpreadResolve {
@@ -5685,12 +5812,12 @@ pub enum SpreadResolve {
     ResolveSpreadsToArray(Type, Type), // elem type, array type
     /// Once we've finished resolving spreads for a function's arguments, call the
     /// function with those arguments *)
-    ResolveSpreadsToMultiflowCallFull(i32, FunType),
-    ResolveSpreadsToMultiflowSubtypeFull(i32, FunType),
+    ResolveSpreadsToMultiflowCallFull(i32, Box<FunType>),
+    ResolveSpreadsToMultiflowSubtypeFull(i32, Box<FunType>),
     /// Once we've finished resolving spreads for a function's arguments,
     /// partially apply the arguments to the function and return the resulting
     /// function (basically what func.bind(that, ...args) does)
-    ResolveSpreadsToMultiflowPartial(i32, FunType, Reason, Type),
+    ResolveSpreadsToMultiflowPartial(Box<ResolveSpreadsToMultiflowPartialData>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -6435,12 +6562,15 @@ pub mod nominal {
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct UserDefinedOpaqueTypeIdData(pub ALocId, pub FlowSmolStr);
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub enum Id {
         /// Special nominal type to test t ~> union optimization
         InternalEnforceUnionOptimized,
         /// We also track the name so that we can do common interface conformance check, where we check
         /// the structural subtyping for nominal constructs defined in impl and interface files.
-        UserDefinedOpaqueTypeId(ALocId, FlowSmolStr),
+        UserDefinedOpaqueTypeId(Box<UserDefinedOpaqueTypeIdData>),
         /// Stuck evaluation with kind
         StuckEval(StuckEvalKind),
     }
@@ -6448,7 +6578,7 @@ pub mod nominal {
     impl std::fmt::Display for Id {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                Id::UserDefinedOpaqueTypeId(aloc_id, name) => {
+                Id::UserDefinedOpaqueTypeId(box UserDefinedOpaqueTypeIdData(aloc_id, name)) => {
                     write!(f, "user-defined {} ({})", name, aloc_id)
                 }
                 Id::InternalEnforceUnionOptimized => write!(f, "InternalEnforceUnionOptimized"),
@@ -6491,13 +6621,19 @@ pub mod nominal {
     }
 
     #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct CustomErrorData {
+        pub custom_error_loc: ALoc,
+        pub t: Type,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub enum UnderlyingT {
         /// Fully opaque type with no underlying representation
         FullyOpaque,
         /// Opaque with local underlying type
         OpaqueWithLocal { t: Type },
         /// Custom error with location and underlying type
-        CustomError { custom_error_loc: ALoc, t: Type },
+        CustomError(Box<CustomErrorData>),
     }
 }
 
@@ -6818,10 +6954,10 @@ pub mod union_rep {
         EnumUnion(UnionEnumSet, Option<UnionEnumTag>),
         PartiallyOptimizedUnionEnum(UnionEnumSet),
         AlmostDisjointUnionWithPossiblyNonUniqueKeys(
-            BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Type>>>,
+            Box<BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Type>>>>,
         ),
         PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(
-            BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Type>>>,
+            Box<BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Type>>>>,
         ),
         Empty,
         Singleton(Type),
@@ -6842,7 +6978,7 @@ pub mod union_rep {
                     set.hash(state);
                 }
                 FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(map) => {
-                    for (k, v) in map {
+                    for (k, v) in map.iter() {
                         k.hash(state);
                         for (k2, v2) in v {
                             k2.hash(state);
@@ -6851,7 +6987,7 @@ pub mod union_rep {
                     }
                 }
                 FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(map) => {
-                    for (k, v) in map {
+                    for (k, v) in map.iter() {
                         k.hash(state);
                         for (k2, v2) in v {
                             k2.hash(state);
@@ -7538,9 +7674,9 @@ pub mod union_rep {
                         } else {
                             let hybrid_map = almost_unique(&reasonless_eq, idx);
                             if partial {
-                                Ok(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(hybrid_map))
+                                Ok(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(Box::new(hybrid_map)))
                             } else {
-                                Ok(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(hybrid_map))
+                                Ok(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(Box::new(hybrid_map)))
                             }
                         }
                     }
@@ -8037,27 +8173,33 @@ pub mod object {
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ObjectToolReactConfigData {
+        pub state: react_config::State,
+        pub ref_manipulation: react_config::RefManipulation,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ObjectToolObjectMapData {
+        pub prop_type: Type,
+        pub mapped_type_flags: MappedTypeFlags,
+        pub selected_keys_opt: Option<Type>,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub enum Tool {
         MakeExact,
         ReadOnly,
         Partial,
         Required,
-        Spread(spread::Target, spread::State),
-        Rest(rest::MergeMode, rest::State),
-        ReactConfig {
-            state: react_config::State,
-            ref_manipulation: react_config::RefManipulation,
-        },
+        Spread(Box<(spread::Target, spread::State)>),
+        Rest(Box<(rest::MergeMode, rest::State)>),
+        ReactConfig(Box<ObjectToolReactConfigData>),
         ReactCheckComponentConfig {
             props: properties::PropertiesMap,
             allow_ref_in_spread: bool,
         },
         ObjectRep,
-        ObjectMap {
-            prop_type: Type,
-            mapped_type_flags: MappedTypeFlags,
-            selected_keys_opt: Option<Type>,
-        },
+        ObjectMap(Box<ObjectToolObjectMapData>),
     }
 
     pub type GenericSpreadId = flow_typing_generics::SpreadId;
@@ -8066,30 +8208,28 @@ pub mod object {
 pub mod react {
     use super::*;
 
+    pub struct CreateElementData<CX = ()> {
+        pub component: Type,
+        pub jsx_props: Type,
+        pub tout: Tvar,
+        pub targs: Option<Rc<[Targ]>>,
+        pub should_generalize: bool,
+        pub return_hint: LazyHintT<CX>,
+        pub record_monomorphized_result: bool,
+        pub inferred_targs: Option<Rc<[(Type, SubstName)]>>,
+        pub specialized_component: Option<SpecializedCallee>,
+    }
+
     pub enum Tool<CX = ()> {
-        CreateElement {
-            component: Type,
-            jsx_props: Type,
-            tout: Tvar,
-            targs: Option<Rc<[Targ]>>,
-            should_generalize: bool,
-            return_hint: LazyHintT<CX>,
-            record_monomorphized_result: bool,
-            inferred_targs: Option<Rc<[(Type, SubstName)]>>,
-            specialized_component: Option<SpecializedCallee>,
-        },
-        ConfigCheck {
-            props: Type,
-        },
-        GetConfig {
-            tout: Type,
-        },
+        CreateElement(Box<CreateElementData<CX>>),
+        ConfigCheck { props: Type },
+        GetConfig { tout: Type },
     }
 
     impl<CX> Clone for Tool<CX> {
         fn clone(&self) -> Self {
             match self {
-                Tool::CreateElement {
+                Tool::CreateElement(box CreateElementData {
                     component,
                     jsx_props,
                     tout,
@@ -8099,7 +8239,7 @@ pub mod react {
                     record_monomorphized_result,
                     inferred_targs,
                     specialized_component,
-                } => Tool::CreateElement {
+                }) => Tool::CreateElement(Box::new(CreateElementData {
                     component: component.clone(),
                     jsx_props: jsx_props.clone(),
                     tout: tout.clone(),
@@ -8109,7 +8249,7 @@ pub mod react {
                     record_monomorphized_result: *record_monomorphized_result,
                     inferred_targs: inferred_targs.clone(),
                     specialized_component: specialized_component.clone(),
-                },
+                })),
                 Tool::ConfigCheck { props } => Tool::ConfigCheck {
                     props: props.clone(),
                 },
@@ -8122,7 +8262,7 @@ pub mod react {
         fn eq(&self, other: &Self) -> bool {
             match (self, other) {
                 (
-                    Tool::CreateElement {
+                    Tool::CreateElement(box CreateElementData {
                         component: a1,
                         jsx_props: b1,
                         tout: c1,
@@ -8132,8 +8272,8 @@ pub mod react {
                         record_monomorphized_result: g1,
                         inferred_targs: h1,
                         specialized_component: i1,
-                    },
-                    Tool::CreateElement {
+                    }),
+                    Tool::CreateElement(box CreateElementData {
                         component: a2,
                         jsx_props: b2,
                         tout: c2,
@@ -8143,7 +8283,7 @@ pub mod react {
                         record_monomorphized_result: g2,
                         inferred_targs: h2,
                         specialized_component: i2,
-                    },
+                    }),
                 ) => {
                     a1 == a2
                         && b1 == b2
@@ -8168,7 +8308,7 @@ pub mod react {
         fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
             std::mem::discriminant(self).hash(state);
             match self {
-                Tool::CreateElement {
+                Tool::CreateElement(box CreateElementData {
                     component,
                     jsx_props,
                     tout,
@@ -8178,7 +8318,7 @@ pub mod react {
                     record_monomorphized_result,
                     inferred_targs,
                     specialized_component,
-                } => {
+                }) => {
                     component.hash(state);
                     jsx_props.hash(state);
                     tout.hash(state);
@@ -8209,7 +8349,7 @@ pub mod react {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
             fn variant_index<CX>(v: &Tool<CX>) -> u32 {
                 match v {
-                    Tool::CreateElement { .. } => 0,
+                    Tool::CreateElement(..) => 0,
                     Tool::ConfigCheck { .. } => 1,
                     Tool::GetConfig { .. } => 2,
                 }
@@ -8220,7 +8360,7 @@ pub mod react {
             }
             match (self, other) {
                 (
-                    Tool::CreateElement {
+                    Tool::CreateElement(box CreateElementData {
                         component: a1,
                         jsx_props: b1,
                         tout: c1,
@@ -8230,8 +8370,8 @@ pub mod react {
                         record_monomorphized_result: g1,
                         inferred_targs: h1,
                         specialized_component: i1,
-                    },
-                    Tool::CreateElement {
+                    }),
+                    Tool::CreateElement(box CreateElementData {
                         component: a2,
                         jsx_props: b2,
                         tout: c2,
@@ -8241,7 +8381,7 @@ pub mod react {
                         record_monomorphized_result: g2,
                         inferred_targs: h2,
                         specialized_component: i2,
-                    },
+                    }),
                 ) => a1
                     .cmp(a2)
                     .then_with(|| b1.cmp(b2))
@@ -8262,7 +8402,7 @@ pub mod react {
     impl<CX> std::fmt::Debug for Tool<CX> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                Tool::CreateElement {
+                Tool::CreateElement(box CreateElementData {
                     component,
                     jsx_props,
                     tout,
@@ -8272,7 +8412,7 @@ pub mod react {
                     record_monomorphized_result,
                     inferred_targs,
                     specialized_component,
-                } => f
+                }) => f
                     .debug_struct("CreateElement")
                     .field("component", component)
                     .field("jsx_props", jsx_props)
@@ -10313,7 +10453,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::AssignVar { .. } => "AssignVar",
         VirtualRootUseOp::Cast { .. } => "Cast",
         VirtualRootUseOp::ClassExtendsCheck { .. } => "ClassExtendsCheck",
-        VirtualRootUseOp::ClassImplementsCheck { .. } => "ClassImplementsCheck",
+        VirtualRootUseOp::ClassImplementsCheck(..) => "ClassImplementsCheck",
         VirtualRootUseOp::ClassOwnProtoCheck(..) => "ClassOwnProtoCheck",
         VirtualRootUseOp::ClassMethodDefinition { .. } => "ClassMethodDefinition",
         VirtualRootUseOp::Coercion { .. } => "Coercion",
@@ -10323,7 +10463,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::DeleteVar { .. } => "DeleteVar",
         VirtualRootUseOp::FunCall(..) => "FunCall",
         VirtualRootUseOp::FunCallMethod(..) => "FunCallMethod",
-        VirtualRootUseOp::FunImplicitReturn { .. } => "FunImplicitReturn",
+        VirtualRootUseOp::FunImplicitReturn(..) => "FunImplicitReturn",
         VirtualRootUseOp::FunReturnStatement { .. } => "FunReturnStatement",
         VirtualRootUseOp::GeneratorYield { .. } => "GeneratorYield",
         VirtualRootUseOp::GetExport { .. } => "GetExport",
@@ -10336,7 +10476,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::RecordCreate(..) => "RecordCreate",
         VirtualRootUseOp::Speculation { .. } => "Speculation",
         VirtualRootUseOp::TypeApplication { .. } => "TypeApplication",
-        VirtualRootUseOp::SetProperty { .. } => "SetProperty",
+        VirtualRootUseOp::SetProperty(..) => "SetProperty",
         VirtualRootUseOp::UpdateProperty { .. } => "UpdateProperty",
         VirtualRootUseOp::RefinementCheck { .. } => "RefinementCheck",
         VirtualRootUseOp::SwitchRefinementCheck(..) => "SwitchRefinementCheck",
@@ -10359,7 +10499,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::ReactDeepReadOnly { .. } => "ReactDeepReadOnly",
         VirtualFrameUseOp::ArrayElementCompatibility { .. } => "ArrayElementCompatibility",
         VirtualFrameUseOp::FunCompatibility { .. } => "FunCompatibility",
-        VirtualFrameUseOp::FunMissingArg { .. } => "FunMissingArg",
+        VirtualFrameUseOp::FunMissingArg(..) => "FunMissingArg",
         VirtualFrameUseOp::FunParam(..) => "FunParam",
         VirtualFrameUseOp::FunRestParam { .. } => "FunRestParam",
         VirtualFrameUseOp::FunReturn { .. } => "FunReturn",
@@ -10522,13 +10662,13 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
             SpreadResolve::ResolveSpreadsToArrayLiteral { id, .. } => {
                 format!("ResolveSpreadT(ResolveSpreadsToArrayLiteral ({}))", id)
             }
-            SpreadResolve::ResolveSpreadsToMultiflowCallFull { .. } => {
+            SpreadResolve::ResolveSpreadsToMultiflowCallFull(..) => {
                 "ResolveSpreadT(ResolveSpreadsToMultiflowCallFull)".to_string()
             }
-            SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull { .. } => {
+            SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(..) => {
                 "ResolveSpreadT(ResolveSpreadsToMultiflowSubtypeFull)".to_string()
             }
-            SpreadResolve::ResolveSpreadsToMultiflowPartial { .. } => {
+            SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
                 "ResolveSpreadT(ResolveSpreadsToMultiflowPartial)".to_string()
             }
         },
@@ -10595,11 +10735,13 @@ pub fn string_of_predicate(pred: &Predicate) -> String {
         PredicateInner::TruthyP => "truthy".to_string(),
         PredicateInner::NullP => "null".to_string(),
         PredicateInner::MaybeP => "null or undefined".to_string(),
-        PredicateInner::SingletonBoolP(_, false) => "false".to_string(),
-        PredicateInner::SingletonBoolP(_, true) => "true".to_string(),
-        PredicateInner::SingletonStrP(_, _, value) => format!("string `{}`", value),
-        PredicateInner::SingletonNumP(_, _, NumberLiteral(_, raw)) => format!("number `{}`", raw),
-        PredicateInner::SingletonBigIntP(_, _, BigIntLiteral(_, raw)) => {
+        PredicateInner::SingletonBoolP(box (_, false)) => "false".to_string(),
+        PredicateInner::SingletonBoolP(box (_, true)) => "true".to_string(),
+        PredicateInner::SingletonStrP(box (_, _, value)) => format!("string `{}`", value),
+        PredicateInner::SingletonNumP(box (_, _, NumberLiteral(_, raw))) => {
+            format!("number `{}`", raw)
+        }
+        PredicateInner::SingletonBigIntP(box (_, _, BigIntLiteral(_, raw))) => {
             format!("bigint `{}`", raw)
         }
         PredicateInner::VoidP => "undefined".to_string(),
@@ -10693,15 +10835,15 @@ pub fn extract_getter_type(t: &Type) -> Type {
 
 pub fn elemt_of_arrtype(arrtype: &ArrType) -> Type {
     match arrtype {
-        ArrType::ArrayAT { elem_t, .. }
-        | ArrType::ROArrayAT(elem_t, _)
-        | ArrType::TupleAT { elem_t, .. } => elem_t.dupe(),
+        ArrType::ArrayAT(box ArrayATData { elem_t, .. })
+        | ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t.dupe(),
+        ArrType::ROArrayAT(box (elem_t, _)) => elem_t.dupe(),
     }
 }
 
 pub fn ro_of_arrtype(arrtype: &ArrType) -> flow_typing_generics::array_spread::RoStatus {
     match arrtype {
-        ArrType::ArrayAT { .. } => flow_typing_generics::array_spread::RoStatus::NonROSpread,
+        ArrType::ArrayAT(..) => flow_typing_generics::array_spread::RoStatus::NonROSpread,
         _ => flow_typing_generics::array_spread::RoStatus::ROSpread,
     }
 }
@@ -10994,7 +11136,7 @@ pub fn apply_opt_funcalltype(
     t_out: Tvar,
 ) -> CallAction {
     let (this, targs, args, strict, t_callee) = opt;
-    CallAction::Funcalltype(FuncallType {
+    CallAction::Funcalltype(Box::new(FuncallType {
         call_this_t: this,
         call_targs: targs,
         call_args_tlist: args,
@@ -11002,7 +11144,7 @@ pub fn apply_opt_funcalltype(
         call_strict_arity: strict,
         call_speculation_hint_state: None,
         call_specialized_callee: t_callee,
-    })
+    }))
 }
 
 pub fn apply_opt_methodcalltype(opt: OptMethodCallType, meth_tout: Tvar) -> MethodCallType {
@@ -11025,30 +11167,30 @@ pub fn create_intersection(rep: inter_rep::InterRep) -> Type {
 
 pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodAction<CX> {
     match action {
-        OptMethodAction::OptCallM {
+        OptMethodAction::OptCallM(box OptCallMData {
             opt_methodcalltype,
             return_hint,
             specialized_callee,
-        } => MethodAction::CallM {
+        }) => MethodAction::CallM(Box::new(CallMData {
             methodcalltype: apply_opt_methodcalltype(opt_methodcalltype, t_out),
             return_hint,
             specialized_callee,
-        },
-        OptMethodAction::OptChainM {
+        })),
+        OptMethodAction::OptChainM(box OptChainMData {
             exp_reason,
             lhs_reason,
             opt_methodcalltype,
             voided_out_collector,
             return_hint,
             specialized_callee,
-        } => MethodAction::ChainM {
+        }) => MethodAction::ChainM(Box::new(ChainMData {
             exp_reason,
             lhs_reason,
             methodcalltype: apply_opt_methodcalltype(opt_methodcalltype, t_out),
             voided_out_collector,
             return_hint,
             specialized_callee,
-        },
+        })),
         OptMethodAction::OptNoMethodAction(t) => MethodAction::NoMethodAction(t),
     }
 }
@@ -11371,5 +11513,33 @@ mod tests {
             std::cmp::Ordering::Equal,
             "UnionEnum::Num ordering should delegate to NumberLiteral"
         );
+    }
+
+    #[test]
+    fn check_enum_sizes() {
+        use std::mem::size_of;
+        assert_eq!(size_of::<super::CanonicalRendersForm>(), 48);
+        assert_eq!(size_of::<super::ComponentKind>(), 48);
+        assert_eq!(size_of::<super::ReactEffectType>(), 32);
+        assert_eq!(size_of::<super::VirtualRootUseOp<flow_aloc::ALoc>>(), 24);
+        assert_eq!(size_of::<super::VirtualFrameUseOp<flow_aloc::ALoc>>(), 24);
+        assert_eq!(size_of::<super::PredicateInner>(), 32);
+        assert_eq!(size_of::<super::ArrType>(), 16);
+        assert_eq!(size_of::<super::ObjKind>(), 32);
+        assert_eq!(size_of::<super::Destructor>(), 24);
+        assert_eq!(size_of::<super::UnresolvedParam>(), 16);
+        assert_eq!(size_of::<super::ResolvedParam>(), 16);
+        assert_eq!(size_of::<super::SpreadResolve>(), 24);
+        assert_eq!(size_of::<super::LookupKind>(), 16);
+        assert_eq!(size_of::<super::ElemAction>(), 24);
+        assert_eq!(size_of::<super::SpeculationHintState>(), 16);
+        assert_eq!(size_of::<super::EnumPossibleExhaustiveCheckT>(), 16);
+        assert_eq!(size_of::<super::union_rep::FinallyOptimizedRep>(), 24);
+        assert_eq!(size_of::<super::nominal::Id>(), 16);
+        assert_eq!(size_of::<super::nominal::UnderlyingT>(), 16);
+        assert_eq!(size_of::<super::object::Tool>(), 16);
+        assert_eq!(size_of::<super::react::Tool>(), 16);
+        assert_eq!(size_of::<super::ObjAssignKind>(), 1);
+        assert_eq!(size_of::<super::LookupAction>(), 16);
     }
 }

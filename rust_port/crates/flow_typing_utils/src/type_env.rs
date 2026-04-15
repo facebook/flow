@@ -649,38 +649,46 @@ fn predicate_of_refinement<'cx>(
                 };
                 Some(Predicate::new(PredicateInner::ArrLenP { op, n: *n }))
             }
-            RefinementKind::BoolR(loc) => Some(Predicate::new(PredicateInner::BoolP(loc.dupe()))),
+            RefinementKind::BoolR(loc) => {
+                Some(Predicate::new(PredicateInner::BoolP(Box::new(loc.dupe()))))
+            }
             RefinementKind::FunctionR => Some(Predicate::new(PredicateInner::FunP)),
-            RefinementKind::NumberR(loc) => Some(Predicate::new(PredicateInner::NumP(loc.dupe()))),
-            RefinementKind::BigIntR(loc) => {
-                Some(Predicate::new(PredicateInner::BigIntP(loc.dupe())))
+            RefinementKind::NumberR(loc) => {
+                Some(Predicate::new(PredicateInner::NumP(Box::new(loc.dupe()))))
             }
+            RefinementKind::BigIntR(loc) => Some(Predicate::new(PredicateInner::BigIntP(
+                Box::new(loc.dupe()),
+            ))),
             RefinementKind::ObjectR => Some(Predicate::new(PredicateInner::ObjP)),
-            RefinementKind::StringR(loc) => Some(Predicate::new(PredicateInner::StrP(loc.dupe()))),
-            RefinementKind::SymbolR(loc) => {
-                Some(Predicate::new(PredicateInner::SymbolP(loc.dupe())))
+            RefinementKind::StringR(loc) => {
+                Some(Predicate::new(PredicateInner::StrP(Box::new(loc.dupe()))))
             }
+            RefinementKind::SymbolR(loc) => Some(Predicate::new(PredicateInner::SymbolP(
+                Box::new(loc.dupe()),
+            ))),
             RefinementKind::SingletonBoolR { loc, sense: _, lit } => Some(Predicate::new(
-                PredicateInner::SingletonBoolP(loc.dupe(), *lit),
+                PredicateInner::SingletonBoolP(Box::new((loc.dupe(), *lit))),
             )),
-            RefinementKind::SingletonStrR { loc, sense, lit } => Some(Predicate::new(
-                PredicateInner::SingletonStrP(loc.dupe(), *sense, lit.as_str().to_string()),
-            )),
+            RefinementKind::SingletonStrR { loc, sense, lit } => {
+                Some(Predicate::new(PredicateInner::SingletonStrP(Box::new((
+                    loc.dupe(),
+                    *sense,
+                    lit.as_str().to_string(),
+                )))))
+            }
             RefinementKind::SingletonNumR { loc, sense, lit } => {
                 use flow_typing_type::type_::NumberLiteral;
-                Some(Predicate::new(PredicateInner::SingletonNumP(
+                Some(Predicate::new(PredicateInner::SingletonNumP(Box::new((
                     loc.dupe(),
                     *sense,
                     NumberLiteral(lit.0, lit.1.dupe()),
-                )))
+                )))))
             }
             RefinementKind::SingletonBigIntR { loc, sense, lit } => {
                 use flow_typing_type::type_::BigIntLiteral;
-                Some(Predicate::new(PredicateInner::SingletonBigIntP(
-                    loc.dupe(),
-                    *sense,
-                    BigIntLiteral(lit.0, lit.1.dupe()),
-                )))
+                Some(Predicate::new(PredicateInner::SingletonBigIntP(Box::new(
+                    (loc.dupe(), *sense, BigIntLiteral(lit.0, lit.1.dupe())),
+                ))))
             }
             RefinementKind::SentinelR { prop, other_loc } => {
                 flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {

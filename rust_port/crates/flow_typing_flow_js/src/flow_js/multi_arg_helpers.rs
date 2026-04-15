@@ -10,9 +10,14 @@ use std::sync::Arc;
 
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
+use flow_typing_type::type_::ResolvedArgData;
+use flow_typing_type::type_::ResolvedSpreadArgData;
+use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::dummy_this;
 use flow_typing_type::type_::mk_methodtype;
 
@@ -33,7 +38,7 @@ pub(super) fn multiflow_call<'cx>(
 ) -> Result<(), FlowJsException> {
     let resolve_to = SpreadResolve::ResolveSpreadsToMultiflowCallFull(
         flow_common::reason::mk_id() as i32,
-        ft.clone(),
+        Box::new(ft.clone()),
     );
     resolve_call_list(
         cx,
@@ -55,7 +60,7 @@ pub(super) fn multiflow_subtype<'cx>(
 ) -> Result<(), FlowJsException> {
     let resolve_to = SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(
         flow_common::reason::mk_id() as i32,
-        funtype.clone(),
+        Box::new(funtype.clone()),
     );
     resolve_call_list(
         cx,
@@ -97,11 +102,13 @@ pub(super) fn multiflow_full<'cx>(
     let mut n = (parlist_len as i32) - (unused_parameters.len() as i32) + 1;
     for (_, param) in &unused_parameters {
         let use_op = VirtualUseOp::Frame(
-            Arc::new(VirtualFrameUseOp::FunMissingArg {
-                n,
-                op: reason_op.dupe(),
-                def: def_reason.dupe(),
-            }),
+            Arc::new(VirtualFrameUseOp::FunMissingArg(Box::new(
+                FunMissingArgData {
+                    n,
+                    op: reason_op.dupe(),
+                    def: def_reason.dupe(),
+                },
+            ))),
             Arc::new(use_op.dupe()),
         );
         rec_flow(
@@ -252,7 +259,7 @@ pub(super) fn multiflow_partial<'cx>(
                         VirtualReasonDesc::RArrayElement,
                         reason_of_t(arg).loc().dupe(),
                     );
-                    UnresolvedParam::UnresolvedArg(
+                    UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
                         flow_typing_type::type_util::mk_tuple_element(
                             reason,
                             arg.dupe(),
@@ -261,7 +268,7 @@ pub(super) fn multiflow_partial<'cx>(
                             Polarity::Neutral,
                         ),
                         generic.clone(),
-                    )
+                    )))
                 })
                 .collect();
 
@@ -379,7 +386,7 @@ pub(super) fn resolve_call_list<'cx>(
                     VirtualReasonDesc::RArrayElement,
                     loc_of_t(t).dupe(),
                 );
-                UnresolvedParam::UnresolvedArg(
+                UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
                     flow_typing_type::type_util::mk_tuple_element(
                         reason,
                         t.dupe(),
@@ -388,7 +395,7 @@ pub(super) fn resolve_call_list<'cx>(
                         Polarity::Neutral,
                     ),
                     None,
-                )
+                )))
             }
             CallArgInner::SpreadArg(t) => UnresolvedParam::UnresolvedSpreadArg(t.dupe()),
         })
@@ -424,8 +431,10 @@ pub(super) fn resolve_spread_list_rec<'cx>(
             return finish_resolve_spread_list(cx, trace, use_op, reason_op, resolved, resolve_to);
         };
         match next {
-            UnresolvedParam::UnresolvedArg(next_elem, generic) => {
-                resolved.push(ResolvedParam::ResolvedArg(next_elem, generic));
+            UnresolvedParam::UnresolvedArg(box UnresolvedArgData(next_elem, generic)) => {
+                resolved.push(ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
+                    next_elem, generic,
+                ))));
             }
             UnresolvedParam::UnresolvedSpreadArg(next_t) => {
                 return flow_opt(
@@ -461,8 +470,10 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     use ResolvedParam;
     use flow_typing_generics::array_spread;
     use flow_typing_type::type_::ArrType;
+    use flow_typing_type::type_::ArrayATData;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::SpreadArrayResolveTo;
+    use flow_typing_type::type_::TupleATData;
     use flow_typing_type::type_::TupleElement;
     use flow_typing_type::type_::TupleView;
     use flow_typing_type::type_::any_t;
@@ -474,13 +485,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
 
     fn propagate_dro<'cx>(cx: &Context<'cx>, elem: Type, arrtype: &ArrType) -> Type {
         match arrtype {
-            ArrType::ROArrayAT(_, Some(l))
-            | ArrType::ArrayAT {
+            ArrType::ROArrayAT(box (_, Some(l)))
+            | ArrType::ArrayAT(box ArrayATData {
                 react_dro: Some(l), ..
-            }
-            | ArrType::TupleAT {
+            })
+            | ArrType::TupleAT(box TupleATData {
                 react_dro: Some(l), ..
-            } => mk_react_dro(cx, unknown_use(), l.clone(), elem),
+            }) => mk_react_dro(cx, unknown_use(), l.clone(), elem),
             _ => elem,
         }
     }
@@ -505,34 +516,38 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                 }
                 // match arg with
                 match arg {
-                    ResolvedParam::ResolvedSpreadArg(_, arrtype, generic) => {
+                    ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                        _,
+                        arrtype,
+                        generic,
+                    )) => {
                         let spread_after_opt = spread_after_opt || seen_opt;
                         let (args, seen_opt, inexact_spread) = match arrtype {
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(box ArrayATData {
                                 tuple_view: None, ..
-                            } => {
+                            }) => {
                                 args.push(arg.clone());
                                 (args, seen_opt, inexact_spread)
                             }
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(box ArrayATData {
                                 tuple_view: Some(tv),
                                 ..
-                            } if tv.elements.is_empty() => {
+                            }) if tv.elements.is_empty() => {
                                 // The latter two cases corresponds to the empty array.
                                 let inexact = tv.inexact;
                                 args.push(arg.clone());
                                 (args, seen_opt, inexact_spread || inexact)
                             }
-                            ArrType::TupleAT {
+                            ArrType::TupleAT(box TupleATData {
                                 elements, inexact, ..
-                            } if elements.is_empty() => {
+                            }) if elements.is_empty() => {
                                 args.push(arg.clone());
                                 (args, seen_opt, inexact_spread || *inexact)
                             }
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(box ArrayATData {
                                 tuple_view: Some(tv),
                                 ..
-                            } => {
+                            }) => {
                                 let elements = &tv.elements;
                                 let inexact = tv.inexact;
                                 let (args, seen_opt) = elements.iter().fold(
@@ -542,18 +557,17 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                             t: propagate_dro(cx, elem.t.dupe(), arrtype),
                                             ..elem.clone()
                                         };
-                                        args.push(ResolvedParam::ResolvedArg(
-                                            new_elem,
-                                            generic.clone(),
-                                        ));
+                                        args.push(ResolvedParam::ResolvedArg(Box::new(
+                                            ResolvedArgData(new_elem, generic.clone()),
+                                        )));
                                         (args, seen_opt || elem.optional)
                                     },
                                 );
                                 (args, seen_opt, inexact_spread || inexact)
                             }
-                            ArrType::TupleAT {
+                            ArrType::TupleAT(box TupleATData {
                                 elements, inexact, ..
-                            } => {
+                            }) => {
                                 let (args, seen_opt) = elements.iter().fold(
                                     (args, seen_opt),
                                     |(mut args, seen_opt), elem| {
@@ -561,16 +575,15 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                             t: propagate_dro(cx, elem.t.dupe(), arrtype),
                                             ..elem.clone()
                                         };
-                                        args.push(ResolvedParam::ResolvedArg(
-                                            new_elem,
-                                            generic.clone(),
-                                        ));
+                                        args.push(ResolvedParam::ResolvedArg(Box::new(
+                                            ResolvedArgData(new_elem, generic.clone()),
+                                        )));
                                         (args, seen_opt || elem.optional)
                                     },
                                 );
                                 (args, seen_opt, inexact_spread || *inexact)
                             }
-                            ArrType::ROArrayAT(_, _) => {
+                            ArrType::ROArrayAT(box (_, _)) => {
                                 args.push(arg.clone());
                                 (args, seen_opt, inexact_spread)
                             }
@@ -581,7 +594,10 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         args.push(arg.clone());
                         Ok((args, spread_after_opt, seen_opt, inexact_spread))
                     }
-                    ResolvedParam::ResolvedArg(TupleElement { optional, .. }, _) => {
+                    ResolvedParam::ResolvedArg(box ResolvedArgData(
+                        TupleElement { optional, .. },
+                        _,
+                    )) => {
                         let optional = *optional;
                         args.push(arg.clone());
                         Ok((args, spread_after_opt, seen_opt || optional, inexact_spread))
@@ -595,7 +611,8 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     fn spread_resolved_to_any_src(resolved: &[ResolvedParam]) -> Option<AnySource> {
         resolved.iter().find_map(|arg| match arg {
             ResolvedParam::ResolvedAnySpreadArg(_, src) => Some(*src),
-            ResolvedParam::ResolvedArg(_, _) | ResolvedParam::ResolvedSpreadArg(_, _, _) => None,
+            ResolvedParam::ResolvedArg(box ResolvedArgData(_, _))
+            | ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(_, _, _)) => None,
         })
     }
 
@@ -614,11 +631,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                 // Array<any> is a good enough any type for arrays
                 SpreadArrayResolveTo::ResolveToArray => Type::new(TypeInner::DefT(
                     reason_op.dupe(),
-                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                        elem_t: any_t::why(any_src, reason_op.dupe()),
-                        tuple_view: None,
-                        react_dro: None,
-                    }))),
+                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                        ArrayATData {
+                            elem_t: any_t::why(any_src, reason_op.dupe()),
+                            tuple_view: None,
+                            react_dro: None,
+                        },
+                    ))))),
                 )),
                 // Array literals can flow to a tuple. Arrays can't. So if the presence
                 // of an `any` forces us to degrade an array literal to Array<any> then
@@ -648,27 +667,31 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         let mut tuple_elements = Vec::new();
                         for elem in &elems {
                             match elem {
-                                ResolvedParam::ResolvedSpreadArg(
+                                ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                                     _,
-                                    ArrType::ArrayAT {
+                                    ArrType::ArrayAT(box ArrayATData {
                                         tuple_view: Some(TupleView { elements, .. }),
                                         ..
-                                    },
+                                    }),
                                     _,
-                                )
-                                | ResolvedParam::ResolvedSpreadArg(
+                                ))
+                                | ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                                     _,
-                                    ArrType::TupleAT { elements, .. },
+                                    ArrType::TupleAT(box TupleATData { elements, .. }),
                                     _,
-                                ) if elements.is_empty() => {
+                                )) if elements.is_empty() => {
                                     // Spread of empty array/tuple results
                                     // in same tuple elements as before.
                                 }
-                                ResolvedParam::ResolvedSpreadArg(_, _, _) => {
+                                ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                                    _,
+                                    _,
+                                    _,
+                                )) => {
                                     early_break = true;
                                     break;
                                 }
-                                ResolvedParam::ResolvedArg(elem, _) => {
+                                ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) => {
                                     let TupleElement {
                                         t,
                                         optional,
@@ -710,12 +733,19 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     (type_ex_set::empty(), array_spread::T::Bottom),
                     |(mut tset, generic_state), elem| {
                         let (elem_t_val, generic_id, ro) = match elem {
-                            ResolvedParam::ResolvedSpreadArg(_, arrtype, generic) => (
+                            ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                                _,
+                                arrtype,
+                                generic,
+                            )) => (
                                 propagate_dro(cx, elemt_of_arrtype(arrtype), arrtype),
                                 generic.as_ref(),
                                 ro_of_arrtype(arrtype),
                             ),
-                            ResolvedParam::ResolvedArg(TupleElement { t: et, .. }, generic) => (
+                            ResolvedParam::ResolvedArg(box ResolvedArgData(
+                                TupleElement { t: et, .. },
+                                generic,
+                            )) => (
                                 et.dupe(),
                                 generic.as_ref(),
                                 array_spread::RoStatus::NonROSpread,
@@ -803,13 +833,15 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         Ok(if valid {
                             Type::new(TypeInner::DefT(
                                 reason_op.dupe(),
-                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                                    elem_t: elem_t.dupe(),
-                                    elements: elements.into(),
-                                    arity,
-                                    inexact,
-                                    react_dro: None,
-                                }))),
+                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                                    TupleATData {
+                                        elem_t: elem_t.dupe(),
+                                        elements: elements.into(),
+                                        arity,
+                                        inexact,
+                                        react_dro: None,
+                                    },
+                                ))))),
                             ))
                         } else {
                             any_t::error(reason_op.dupe())
@@ -820,13 +852,13 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     | (SpreadArrayResolveTo::ResolveToArrayLiteral { .. }, None, _)
                     | (SpreadArrayResolveTo::ResolveToArrayLiteral { .. }, _, true) => {
                         let arrtype = if as_const {
-                            ArrType::ROArrayAT(elem_t.dupe(), None)
+                            ArrType::ROArrayAT(Box::new((elem_t.dupe(), None)))
                         } else {
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(Box::new(ArrayATData {
                                 elem_t: elem_t.dupe(),
                                 tuple_view: None,
                                 react_dro: None,
-                            }
+                            }))
                         };
                         Type::new(TypeInner::DefT(
                             reason_op.dupe(),
@@ -844,24 +876,28 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         if valid {
                             Type::new(TypeInner::DefT(
                                 reason_op.dupe(),
-                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                                    elem_t: elem_t.dupe(),
-                                    tuple_view: Some(TupleView {
-                                        elements: elements.clone().into(),
-                                        arity,
-                                        inexact: inexact_spread,
-                                    }),
-                                    react_dro: None,
-                                }))),
+                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                                    ArrayATData {
+                                        elem_t: elem_t.dupe(),
+                                        tuple_view: Some(TupleView {
+                                            elements: elements.clone().into(),
+                                            arity,
+                                            inexact: inexact_spread,
+                                        }),
+                                        react_dro: None,
+                                    },
+                                ))))),
                             ))
                         } else {
                             Type::new(TypeInner::DefT(
                                 reason_op.dupe(),
-                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                                    elem_t: elem_t.dupe(),
-                                    tuple_view: None,
-                                    react_dro: None,
-                                }))),
+                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                                    ArrayATData {
+                                        elem_t: elem_t.dupe(),
+                                        tuple_view: None,
+                                        react_dro: None,
+                                    },
+                                ))))),
                             ))
                         }
                     }
@@ -925,13 +961,16 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             match spread {
                 None => {
                     match &resolved[0] {
-                        ResolvedParam::ResolvedArg(TupleElement { t, .. }, generic) => {
+                        ResolvedParam::ResolvedArg(box ResolvedArgData(
+                            TupleElement { t, .. },
+                            generic,
+                        )) => {
                             args.push((t.dupe(), generic.clone()));
                             flatten(cx, args, None, &resolved[1..])
                         }
-                        ResolvedParam::ResolvedSpreadArg(
+                        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                             _,
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(box ArrayATData {
                                 tuple_view:
                                     Some(TupleView {
                                         elements,
@@ -939,16 +978,16 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         inexact,
                                     }),
                                 ..
-                            },
+                            }),
                             generic,
-                        )
-                        | ResolvedParam::ResolvedSpreadArg(
+                        ))
+                        | ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                             _,
-                            ArrType::TupleAT {
+                            ArrType::TupleAT(box TupleATData {
                                 elements, inexact, ..
-                            },
+                            }),
                             generic,
-                        ) => {
+                        )) => {
                             let inexact = *inexact;
                             let mapped: Vec<_> = elements
                                 .iter()
@@ -965,7 +1004,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 flatten(cx, args, None, &resolved[1..])
                             }
                         }
-                        ResolvedParam::ResolvedSpreadArg(_, _, _)
+                        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(_, _, _))
                         | ResolvedParam::ResolvedAnySpreadArg(_, _) => {
                             // We weren't able to flatten the call argument list to remove all
                             // spreads. This means we need to build a spread argument, with
@@ -979,7 +1018,10 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                 // | Some (tset, last_inexact_tuple, generic) ->
                 Some((mut tset, last_inexact_tuple, generic)) => {
                     let (tset_new, lit_new, g_prime, ro, rest) = match &resolved[0] {
-                        ResolvedParam::ResolvedArg(TupleElement { t, .. }, generic) => {
+                        ResolvedParam::ResolvedArg(box ResolvedArgData(
+                            TupleElement { t, .. },
+                            generic,
+                        )) => {
                             type_ex_set::add(t.dupe(), &mut tset);
                             (
                                 tset,
@@ -989,10 +1031,16 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 &resolved[1..],
                             )
                         }
-                        ResolvedParam::ResolvedSpreadArg(_, arrtype, generic_val)
-                            if resolved.len() == 1
-                                && matches!(arrtype, ArrType::TupleAT { inexact: true, .. })
-                                && tset.is_empty() =>
+                        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                            _,
+                            arrtype,
+                            generic_val,
+                        )) if resolved.len() == 1
+                            && matches!(
+                                arrtype,
+                                ArrType::TupleAT(box TupleATData { inexact: true, .. })
+                            )
+                            && tset.is_empty() =>
                         {
                             (
                                 tset,
@@ -1002,7 +1050,11 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 &resolved[1..],
                             )
                         }
-                        ResolvedParam::ResolvedSpreadArg(_, arrtype, generic_val) => {
+                        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                            _,
+                            arrtype,
+                            generic_val,
+                        )) => {
                             type_ex_set::add(elemt_of_arrtype(arrtype), &mut tset);
                             (
                                 tset,
@@ -1061,11 +1113,11 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         }
                         Ok::<(), FlowJsException>(())
                     })?;
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
-                    }
+                    }))
                 }
             };
             Some((r, arrtype, generic))
@@ -1223,18 +1275,18 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             &elem_t,
             &tout,
         ),
-        SpreadResolve::ResolveSpreadsToMultiflowPartial(_, ft, call_reason, tout) => {
-            finish_multiflow_partial(
-                cx,
-                trace,
-                use_op,
-                reason_op,
-                &ft,
-                &call_reason,
-                &resolved,
-                &tout,
-            )
-        }
+        SpreadResolve::ResolveSpreadsToMultiflowPartial(
+            box ResolveSpreadsToMultiflowPartialData(_, ft, call_reason, tout),
+        ) => finish_multiflow_partial(
+            cx,
+            trace,
+            use_op,
+            reason_op,
+            &ft,
+            &call_reason,
+            &resolved,
+            &tout,
+        ),
         SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, ft) => {
             finish_multiflow_full(cx, trace, use_op, reason_op, true, &ft, &resolved)
         }

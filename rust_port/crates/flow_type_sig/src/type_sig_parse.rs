@@ -648,11 +648,11 @@ fn val_ref<'arena, 'ast>(
 
 fn merge_accessors<Loc, T>(a: Accessor<Loc, T>, b: Accessor<Loc, T>) -> Accessor<Loc, T> {
     match (a, b) {
-        (Accessor::Get(get_loc, get_t), Accessor::Set(set_loc, set_t))
-        | (Accessor::Set(set_loc, set_t), Accessor::Get(get_loc, get_t))
-        | (Accessor::GetSet(get_loc, get_t, _, _), Accessor::Set(set_loc, set_t))
-        | (Accessor::GetSet(_, _, set_loc, set_t), Accessor::Get(get_loc, get_t)) => {
-            Accessor::GetSet(get_loc, get_t, set_loc, set_t)
+        (Accessor::Get(box (get_loc, get_t)), Accessor::Set(box (set_loc, set_t)))
+        | (Accessor::Set(box (set_loc, set_t)), Accessor::Get(box (get_loc, get_t)))
+        | (Accessor::GetSet(box (get_loc, get_t, _, _)), Accessor::Set(box (set_loc, set_t)))
+        | (Accessor::GetSet(box (_, _, set_loc, set_t)), Accessor::Get(box (get_loc, get_t))) => {
+            Accessor::GetSet(Box::new((get_loc, get_t, set_loc, set_t)))
         }
         (_, x) => x,
     }
@@ -1347,7 +1347,7 @@ pub(super) mod scope {
     fn tparams_arity(tparams: &TParams<LocNode<'_>, Parsed<'_, '_>>) -> usize {
         match tparams {
             TParams::Mono => 0,
-            TParams::Poly(_, params) => params.len(),
+            TParams::Poly(box (_, params)) => params.len(),
         }
     }
 
@@ -1355,14 +1355,16 @@ pub(super) mod scope {
         prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
     ) -> LocNode<'arena> {
         match prop {
-            InterfaceProp::InterfaceField(Some(loc), _, _) => loc.dupe(),
-            InterfaceProp::InterfaceField(None, _, _) => {
+            InterfaceProp::InterfaceField(box (Some(loc), _, _)) => loc.dupe(),
+            InterfaceProp::InterfaceField(box (None, _, _)) => {
                 panic!("InterfaceField should always have a location")
             }
-            InterfaceProp::InterfaceAccess(Accessor::Get(loc, _))
-            | InterfaceProp::InterfaceAccess(Accessor::Set(loc, _))
-            | InterfaceProp::InterfaceAccess(Accessor::GetSet(loc, _, _, _)) => loc.dupe(),
-            InterfaceProp::InterfaceMethod(ms) => ms.first().0.dupe(),
+            InterfaceProp::InterfaceAccess(box Accessor::Get(box (loc, _)))
+            | InterfaceProp::InterfaceAccess(box Accessor::Set(box (loc, _)))
+            | InterfaceProp::InterfaceAccess(box Accessor::GetSet(box (loc, _, _, _))) => {
+                loc.dupe()
+            }
+            InterfaceProp::InterfaceMethod(box ms) => ms.first().0.dupe(),
         }
     }
 
@@ -1388,7 +1390,7 @@ pub(super) mod scope {
                         let mut merged: Vec<_> = old_sigs.iter().cloned().collect();
                         merged.extend(new_sigs.iter().cloned());
                         let merged = Vec1::try_from_vec(merged).unwrap();
-                        *e.get_mut() = InterfaceProp::InterfaceMethod(merged);
+                        *e.get_mut() = InterfaceProp::InterfaceMethod(Box::new(merged));
                     } else {
                         // first wins + error
                         tbls.additional_errors.push(
@@ -2949,11 +2951,11 @@ mod obj_annot_acc {
         }
 
         fn empty_slice() -> ObjSpreadAnnotElem<LocNode<'arena>, Parsed<'arena, 'ast>> {
-            ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+            ObjSpreadAnnotElem::ObjSpreadAnnotSlice(Box::new(ObjSpreadAnnotSliceData {
                 dict: None,
                 props: BTreeMap::new(),
                 computed_props: Vec::new(),
-            }
+            }))
         }
 
         fn head_slice(
@@ -2962,11 +2964,13 @@ mod obj_annot_acc {
             if self.dict.is_none() && self.props.is_empty() && self.computed_props.is_empty() {
                 None
             } else {
-                Some(ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
-                    dict: self.dict.take(),
-                    props: std::mem::take(&mut self.props),
-                    computed_props: std::mem::take(&mut self.computed_props),
-                })
+                Some(ObjSpreadAnnotElem::ObjSpreadAnnotSlice(Box::new(
+                    ObjSpreadAnnotSliceData {
+                        dict: self.dict.take(),
+                        props: std::mem::take(&mut self.props),
+                        computed_props: std::mem::take(&mut self.computed_props),
+                    },
+                )))
             }
         }
 
@@ -2977,8 +2981,10 @@ mod obj_annot_acc {
             polarity: Polarity,
             t: Parsed<'arena, 'ast>,
         ) {
-            self.props
-                .insert(name, ObjAnnotProp::ObjAnnotField(id_loc, t, polarity));
+            self.props.insert(
+                name,
+                ObjAnnotProp::ObjAnnotField(Box::new((id_loc, t, polarity))),
+            );
         }
 
         pub(super) fn add_method(
@@ -2990,11 +2996,11 @@ mod obj_annot_acc {
         ) {
             self.props.insert(
                 name,
-                ObjAnnotProp::ObjAnnotMethod {
+                ObjAnnotProp::ObjAnnotMethod(Box::new(ObjAnnotMethodData {
                     id_loc,
                     fn_loc,
                     def,
-                },
+                })),
             );
         }
 
@@ -3006,11 +3012,12 @@ mod obj_annot_acc {
             if let Some(ObjAnnotProp::ObjAnnotAccess(x_prime)) = self.props.remove(&name) {
                 self.props.insert(
                     name,
-                    ObjAnnotProp::ObjAnnotAccess(super::merge_accessors(x_prime, x)),
+                    ObjAnnotProp::ObjAnnotAccess(Box::new(super::merge_accessors(*x_prime, x))),
                 );
                 return;
             }
-            self.props.insert(name, ObjAnnotProp::ObjAnnotAccess(x));
+            self.props
+                .insert(name, ObjAnnotProp::ObjAnnotAccess(Box::new(x)));
         }
 
         pub(super) fn add_computed_field(
@@ -3020,8 +3027,10 @@ mod obj_annot_acc {
             polarity: Polarity,
             t: Parsed<'arena, 'ast>,
         ) {
-            self.computed_props
-                .push((key, ObjAnnotProp::ObjAnnotField(id_loc, t, polarity)));
+            self.computed_props.push((
+                key,
+                ObjAnnotProp::ObjAnnotField(Box::new((id_loc, t, polarity))),
+            ));
         }
 
         pub(super) fn add_computed_method(
@@ -3033,11 +3042,11 @@ mod obj_annot_acc {
         ) {
             self.computed_props.push((
                 key,
-                ObjAnnotProp::ObjAnnotMethod {
+                ObjAnnotProp::ObjAnnotMethod(Box::new(ObjAnnotMethodData {
                     id_loc,
                     fn_loc,
                     def,
-                },
+                })),
             ));
         }
 
@@ -3068,7 +3077,8 @@ mod obj_annot_acc {
             if let Some(slice) = self.head_slice() {
                 self.tail.push(slice);
             }
-            self.tail.push(ObjSpreadAnnotElem::ObjSpreadAnnotElem(t));
+            self.tail
+                .push(ObjSpreadAnnotElem::ObjSpreadAnnotElem(Box::new(t)));
             self.dict = None;
             self.props = BTreeMap::new();
             self.computed_props = Vec::new();
@@ -3088,21 +3098,21 @@ mod obj_annot_acc {
                 (last, self.tail)
             };
             if tail.is_empty()
-                && let ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                && let ObjSpreadAnnotElem::ObjSpreadAnnotSlice(box ObjSpreadAnnotSliceData {
                     dict,
                     props,
                     computed_props,
-                } = last
+                }) = last
             {
                 let proto = if let Ok(calls) = Vec1::try_from_vec(self.calls) {
-                    ObjAnnotProto::ObjAnnotCallable { ts: calls }
+                    ObjAnnotProto::ObjAnnotCallable(Box::new(calls))
                 } else if let Some((loc, t)) = self.proto {
-                    ObjAnnotProto::ObjAnnotExplicitProto(loc, t)
+                    ObjAnnotProto::ObjAnnotExplicitProto(Box::new((loc, t)))
                 } else {
                     ObjAnnotProto::ObjAnnotImplicitProto
                 };
                 let obj_kind = match dict {
-                    Some(d) => ObjKind::IndexedObj(d),
+                    Some(d) => ObjKind::IndexedObj(Box::new(d)),
                     None => {
                         if exact {
                             ObjKind::ExactObj
@@ -3164,7 +3174,7 @@ mod class_acc {
             polarity: Polarity,
             t: Parsed<'arena, 'ast>,
         ) {
-            let prop = ObjValueProp::ObjValueField(id_loc, t, polarity);
+            let prop = ObjValueProp::ObjValueField(Box::new((id_loc, t, polarity)));
             if static_ {
                 self.static_.insert(name, prop);
             } else {
@@ -3182,13 +3192,13 @@ mod class_acc {
             generator: bool,
             def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         ) {
-            let prop = ObjValueProp::ObjValueMethod {
+            let prop = ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
                 id_loc,
                 fn_loc,
                 async_,
                 generator,
                 def,
-            };
+            }));
             if static_ {
                 self.static_.insert(name, prop);
             } else {
@@ -3213,11 +3223,11 @@ mod class_acc {
                 if let Some(ObjValueProp::ObjValueAccess(x_prime)) = props.remove(&name) {
                     props.insert(
                         name,
-                        ObjValueProp::ObjValueAccess(super::merge_accessors(x_prime, x)),
+                        ObjValueProp::ObjValueAccess(Box::new(super::merge_accessors(*x_prime, x))),
                     );
                     return;
                 }
-                props.insert(name, ObjValueProp::ObjValueAccess(x));
+                props.insert(name, ObjValueProp::ObjValueAccess(Box::new(x)));
             }
 
             if static_ {
@@ -3317,7 +3327,7 @@ mod declare_class_acc {
             polarity: Polarity,
             t: Parsed<'arena, 'ast>,
         ) {
-            let prop = InterfaceProp::InterfaceField(Some(id_loc), t, polarity);
+            let prop = InterfaceProp::InterfaceField(Box::new((Some(id_loc), t, polarity)));
             if static_ {
                 self.static_.insert(name, prop);
             } else {
@@ -3349,7 +3359,7 @@ mod declare_class_acc {
         ) {
             self.proto.insert(
                 name,
-                InterfaceProp::InterfaceField(Some(id_loc), t, polarity),
+                InterfaceProp::InterfaceField(Box::new((Some(id_loc), t, polarity))),
             );
         }
 
@@ -3375,7 +3385,7 @@ mod declare_class_acc {
                     }
                 }
                 std::collections::btree_map::Entry::Vacant(e) => {
-                    e.insert(InterfaceProp::InterfaceMethod(Vec1::new(m)));
+                    e.insert(InterfaceProp::InterfaceMethod(Box::new(Vec1::new(m))));
                 }
             }
         }
@@ -3397,11 +3407,13 @@ mod declare_class_acc {
                 if let Some(InterfaceProp::InterfaceAccess(x_prime)) = props.remove(&name) {
                     props.insert(
                         name,
-                        InterfaceProp::InterfaceAccess(super::merge_accessors(x_prime, x)),
+                        InterfaceProp::InterfaceAccess(Box::new(super::merge_accessors(
+                            *x_prime, x,
+                        ))),
                     );
                     return;
                 }
-                props.insert(name, InterfaceProp::InterfaceAccess(x));
+                props.insert(name, InterfaceProp::InterfaceAccess(Box::new(x)));
             }
 
             if static_ {
@@ -3420,7 +3432,7 @@ mod declare_class_acc {
             polarity: Polarity,
             t: Parsed<'arena, 'ast>,
         ) {
-            let prop = InterfaceProp::InterfaceField(Some(id_loc), t, polarity);
+            let prop = InterfaceProp::InterfaceField(Box::new((Some(id_loc), t, polarity)));
             if proto {
                 self.computed_proto.push((key, prop));
             } else if static_ {
@@ -3438,7 +3450,7 @@ mod declare_class_acc {
             fn_loc: LocNode<'arena>,
             def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         ) {
-            let prop = InterfaceProp::InterfaceMethod(Vec1::new((id_loc, fn_loc, def)));
+            let prop = InterfaceProp::InterfaceMethod(Box::new(Vec1::new((id_loc, fn_loc, def))));
             if static_ {
                 self.computed_static.push((key, prop));
             } else {
@@ -3526,7 +3538,7 @@ mod interface_acc {
         ) {
             self.props.insert(
                 name,
-                InterfaceProp::InterfaceField(Some(id_loc), t, polarity),
+                InterfaceProp::InterfaceField(Box::new((Some(id_loc), t, polarity))),
             );
         }
 
@@ -3552,7 +3564,7 @@ mod interface_acc {
                     }
                 }
                 std::collections::btree_map::Entry::Vacant(e) => {
-                    e.insert(InterfaceProp::InterfaceMethod(Vec1::new(m)));
+                    e.insert(InterfaceProp::InterfaceMethod(Box::new(Vec1::new(m))));
                 }
             }
         }
@@ -3565,11 +3577,12 @@ mod interface_acc {
             if let Some(InterfaceProp::InterfaceAccess(x_prime)) = self.props.remove(&name) {
                 self.props.insert(
                     name,
-                    InterfaceProp::InterfaceAccess(super::merge_accessors(x_prime, x)),
+                    InterfaceProp::InterfaceAccess(Box::new(super::merge_accessors(*x_prime, x))),
                 );
                 return;
             }
-            self.props.insert(name, InterfaceProp::InterfaceAccess(x));
+            self.props
+                .insert(name, InterfaceProp::InterfaceAccess(Box::new(x)));
         }
 
         pub(super) fn add_computed_field(
@@ -3581,7 +3594,7 @@ mod interface_acc {
         ) {
             self.computed_props.push((
                 key,
-                InterfaceProp::InterfaceField(Some(id_loc), t, polarity),
+                InterfaceProp::InterfaceField(Box::new((Some(id_loc), t, polarity))),
             ));
         }
 
@@ -3594,7 +3607,7 @@ mod interface_acc {
         ) {
             self.computed_props.push((
                 key,
-                InterfaceProp::InterfaceMethod(Vec1::new((id_loc, fn_loc, def))),
+                InterfaceProp::InterfaceMethod(Box::new(Vec1::new((id_loc, fn_loc, def)))),
             ));
         }
 
@@ -3650,8 +3663,8 @@ mod object_literal_acc {
             if self.props.is_empty() {
                 None
             } else {
-                Some(ObjValueSpreadElem::ObjValueSpreadSlice(std::mem::take(
-                    &mut self.props,
+                Some(ObjValueSpreadElem::ObjValueSpreadSlice(Box::new(
+                    std::mem::take(&mut self.props),
                 )))
             }
         }
@@ -3667,8 +3680,10 @@ mod object_literal_acc {
             t: Parsed<'arena, 'ast>,
             polarity: Polarity,
         ) {
-            self.props
-                .insert(name, ObjValueProp::ObjValueField(id_loc, t, polarity));
+            self.props.insert(
+                name,
+                ObjValueProp::ObjValueField(Box::new((id_loc, t, polarity))),
+            );
         }
 
         pub(super) fn add_method(
@@ -3682,13 +3697,13 @@ mod object_literal_acc {
         ) {
             self.props.insert(
                 name,
-                ObjValueProp::ObjValueMethod {
+                ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
                     id_loc,
                     fn_loc,
                     async_,
                     generator,
                     def,
-                },
+                })),
             );
         }
 
@@ -3700,11 +3715,12 @@ mod object_literal_acc {
             if let Some(ObjValueProp::ObjValueAccess(x_prime)) = self.props.remove(&name) {
                 self.props.insert(
                     name,
-                    ObjValueProp::ObjValueAccess(super::merge_accessors(x_prime, x)),
+                    ObjValueProp::ObjValueAccess(Box::new(super::merge_accessors(*x_prime, x))),
                 );
                 return;
             }
-            self.props.insert(name, ObjValueProp::ObjValueAccess(x));
+            self.props
+                .insert(name, ObjValueProp::ObjValueAccess(Box::new(x)));
         }
 
         pub(super) fn add_spread(&mut self, t: Parsed<'arena, 'ast>) {
@@ -3712,7 +3728,8 @@ mod object_literal_acc {
                 self.tail.push(slice);
             }
             self.props = BTreeMap::new();
-            self.tail.push(ObjValueSpreadElem::ObjValueSpreadElem(t));
+            self.tail
+                .push(ObjValueSpreadElem::ObjValueSpreadElem(Box::new(t)));
         }
 
         pub(super) fn object_lit(
@@ -3737,8 +3754,8 @@ mod object_literal_acc {
                 }))));
             }
             if elems.len() == 1
-                && matches!(&elems[0], ObjValueSpreadElem::ObjValueSpreadSlice(_))
-                && let Some(ObjValueSpreadElem::ObjValueSpreadSlice(props)) = elems.pop()
+                && matches!(&elems[0], ObjValueSpreadElem::ObjValueSpreadSlice(box _))
+                && let Some(ObjValueSpreadElem::ObjValueSpreadSlice(box props)) = elems.pop()
             {
                 return Parsed::Value(Box::new(ParsedValue::ObjLit(Box::new(ValueObjLit {
                     loc,
@@ -3786,22 +3803,20 @@ fn expression_for_computed_key<'arena, 'ast>(
                 ast::expression::member::Property::PropertyIdentifier(id) => Parsed::Eval(
                     loc,
                     Box::new(base),
-                    Box::new(Op::GetProp(id_name(id).clone())),
+                    Box::new(Op::GetProp(Box::new(id_name(id).clone()))),
                 ),
                 _ => Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                        loc.dupe(),
-                        loc,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedObjectKey(loc.dupe(), loc),
                     )),
                 ),
             }
         }
         _ => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                loc.dupe(),
-                loc,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedObjectKey(loc.dupe(), loc),
             )),
         ),
     }
@@ -3902,20 +3917,22 @@ fn annot_with_loc<'arena, 'ast>(
     let loc = tbls.push_loc(raw_loc.clone());
     let loc_return = loc.dupe();
     let annot = match t.deref() {
-        TypeInner::Any { .. } => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
-        TypeInner::Mixed { .. } => Parsed::Annot(Box::new(ParsedAnnot::Mixed(loc))),
-        TypeInner::Empty { .. } => Parsed::Annot(Box::new(ParsedAnnot::Empty(loc))),
-        TypeInner::Void { .. } => Parsed::Annot(Box::new(ParsedAnnot::Void(loc))),
-        TypeInner::Null { .. } => Parsed::Annot(Box::new(ParsedAnnot::Null(loc))),
-        TypeInner::Symbol { .. } => Parsed::Annot(Box::new(ParsedAnnot::Symbol(loc))),
-        TypeInner::Number { .. } => Parsed::Annot(Box::new(ParsedAnnot::Number(loc))),
-        TypeInner::BigInt { .. } => Parsed::Annot(Box::new(ParsedAnnot::BigInt(loc))),
-        TypeInner::String { .. } => Parsed::Annot(Box::new(ParsedAnnot::String(loc))),
-        TypeInner::Boolean { .. } => Parsed::Annot(Box::new(ParsedAnnot::Boolean(loc))),
-        TypeInner::Unknown { .. } => Parsed::Annot(Box::new(ParsedAnnot::Mixed(loc))),
-        TypeInner::Never { .. } => Parsed::Annot(Box::new(ParsedAnnot::Empty(loc))),
-        TypeInner::Undefined { .. } => Parsed::Annot(Box::new(ParsedAnnot::Void(loc))),
-        TypeInner::UniqueSymbol { .. } => Parsed::Annot(Box::new(ParsedAnnot::UniqueSymbol(loc))),
+        TypeInner::Any { .. } => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
+        TypeInner::Mixed { .. } => Parsed::Annot(Box::new(ParsedAnnot::Mixed(Box::new(loc)))),
+        TypeInner::Empty { .. } => Parsed::Annot(Box::new(ParsedAnnot::Empty(Box::new(loc)))),
+        TypeInner::Void { .. } => Parsed::Annot(Box::new(ParsedAnnot::Void(Box::new(loc)))),
+        TypeInner::Null { .. } => Parsed::Annot(Box::new(ParsedAnnot::Null(Box::new(loc)))),
+        TypeInner::Symbol { .. } => Parsed::Annot(Box::new(ParsedAnnot::Symbol(Box::new(loc)))),
+        TypeInner::Number { .. } => Parsed::Annot(Box::new(ParsedAnnot::Number(Box::new(loc)))),
+        TypeInner::BigInt { .. } => Parsed::Annot(Box::new(ParsedAnnot::BigInt(Box::new(loc)))),
+        TypeInner::String { .. } => Parsed::Annot(Box::new(ParsedAnnot::String(Box::new(loc)))),
+        TypeInner::Boolean { .. } => Parsed::Annot(Box::new(ParsedAnnot::Boolean(Box::new(loc)))),
+        TypeInner::Unknown { .. } => Parsed::Annot(Box::new(ParsedAnnot::Mixed(Box::new(loc)))),
+        TypeInner::Never { .. } => Parsed::Annot(Box::new(ParsedAnnot::Empty(Box::new(loc)))),
+        TypeInner::Undefined { .. } => Parsed::Annot(Box::new(ParsedAnnot::Void(Box::new(loc)))),
+        TypeInner::UniqueSymbol { .. } => {
+            Parsed::Annot(Box::new(ParsedAnnot::UniqueSymbol(Box::new(loc))))
+        }
         TypeInner::StringLiteral { literal, .. } => Parsed::Annot(Box::new(
             ParsedAnnot::SingletonString(Box::new((loc, literal.value.dupe()))),
         )),
@@ -3925,9 +3942,9 @@ fn annot_with_loc<'arena, 'ast>(
         TypeInner::BigIntLiteral { literal, .. } => Parsed::Annot(Box::new(
             ParsedAnnot::SingletonBigInt(Box::new((loc, literal.value, literal.raw.dupe()))),
         )),
-        TypeInner::BooleanLiteral { literal, .. } => {
-            Parsed::Annot(Box::new(ParsedAnnot::SingletonBoolean(loc, literal.value)))
-        }
+        TypeInner::BooleanLiteral { literal, .. } => Parsed::Annot(Box::new(
+            ParsedAnnot::SingletonBoolean(Box::new((loc, literal.value))),
+        )),
         TypeInner::Nullable { inner, .. } => {
             let arg = annot(opts, scope, scopes, tbls, xs, &inner.argument);
             Parsed::Annot(Box::new(ParsedAnnot::Maybe(Box::new((loc, arg)))))
@@ -4071,16 +4088,18 @@ fn annot_with_loc<'arena, 'ast>(
                 let t = annot(opts, scope, scopes, tbls, xs, &arr.argument);
                 Parsed::Annot(Box::new(ParsedAnnot::ReadOnlyArray(Box::new((loc, t)))))
             }
-            _ => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+            _ => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
         },
         TypeInner::TemplateLiteral { inner, .. } => {
             for t in inner.types.iter() {
                 annot(opts, scope, scopes, tbls, xs, t);
             }
-            Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
-        TypeInner::ConstructorType { .. } => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
-        TypeInner::Exists { .. } => Parsed::Annot(Box::new(ParsedAnnot::Exists(loc))),
+        TypeInner::ConstructorType { .. } => {
+            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
+        }
+        TypeInner::Exists { .. } => Parsed::Annot(Box::new(ParsedAnnot::Exists(Box::new(loc)))),
     };
     (loc_return, annot)
 }
@@ -4109,7 +4128,11 @@ fn typeof_<'arena, 'ast>(
     ) -> Parsed<'arena, 'ast> {
         for (id_loc, x) in chain.into_iter().rev() {
             let id_loc = tbls.push_loc(id_loc);
-            t = Parsed::Eval(id_loc, Box::new(t), Box::new(Op::GetProp(x.clone())));
+            t = Parsed::Eval(
+                id_loc,
+                Box::new(t),
+                Box::new(Op::GetProp(Box::new(x.clone()))),
+            );
             qname.push(x);
         }
         let targs = targs.as_ref().map(|targs| {
@@ -4197,38 +4220,38 @@ fn tuple_element<'arena, 'ast>(
         } => {
             let t = annot(opts, scope, scopes, tbls, xs, type_);
             let t = if *optional {
-                Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
             } else {
                 t
             };
-            TupleElement::TupleElement {
+            TupleElement::TupleElement(Box::new(TupleElementData {
                 loc,
                 name: None,
                 t,
                 polarity: Polarity::Neutral,
                 optional: *optional,
-            }
+            }))
         }
         ast::types::tuple::Element::LabeledElement { element, .. } => {
             let t = annot(opts, scope, scopes, tbls, xs, &element.annot);
             let t = if element.optional {
-                Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
             } else {
                 t
             };
             let name = Some(id_name(&element.name).clone());
-            TupleElement::TupleElement {
+            TupleElement::TupleElement(Box::new(TupleElementData {
                 loc,
                 name,
                 t,
                 polarity: polarity(element.variance.as_ref().map(|v| (v.loc.dupe(), v.clone()))),
                 optional: element.optional,
-            }
+            }))
         }
         ast::types::tuple::Element::SpreadElement { element, .. } => {
             let t = annot(opts, scope, scopes, tbls, xs, &element.annot);
             let name = element.name.as_ref().map(|n| id_name(n).clone());
-            TupleElement::TupleSpread { loc, name, t }
+            TupleElement::TupleSpread(Box::new(TupleSpreadData { loc, name, t }))
         }
     }
 }
@@ -4288,11 +4311,17 @@ fn return_annot<'arena, 'ast>(
                     one_sided,
                 },
             );
-            (Parsed::Annot(Box::new(ParsedAnnot::Boolean(loc))), guard)
+            (
+                Parsed::Annot(Box::new(ParsedAnnot::Boolean(Box::new(loc)))),
+                guard,
+            )
         }
         ast::types::function::ReturnAnnotation::Missing(loc) => {
             let loc = tbls.push_loc(loc.dupe());
-            (Parsed::Annot(Box::new(ParsedAnnot::Void(loc))), None)
+            (
+                Parsed::Annot(Box::new(ParsedAnnot::Void(Box::new(loc)))),
+                None,
+            )
         }
     }
 }
@@ -4306,7 +4335,7 @@ fn convert_effect<Loc>(
     use ast::function::Effect;
     match (effect_, fun_loc_opt) {
         (Effect::Hook, Some(loc)) if opts.component_syntax_enabled_in_config => {
-            ReactEffect::HookDecl(loc)
+            ReactEffect::HookDecl(Box::new(loc))
         }
         (Effect::Hook, None) if opts.component_syntax_enabled_in_config => ReactEffect::HookAnnot,
         (Effect::Hook, _) => ReactEffect::ArbitraryEffect,
@@ -4359,7 +4388,7 @@ fn function_component_type_param<'arena, 'ast>(
 ) -> Parsed<'arena, 'ast> {
     let t = annot(opts, scope, scopes, tbls, xs, t);
     if optional {
-        Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
     } else {
         t
     }
@@ -4479,7 +4508,9 @@ fn component_type<'arena, 'ast>(
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let loc = tbls.push_loc(loc.dupe());
-            Parsed::Annot(Box::new(ParsedAnnot::ComponentMissingRenders(loc)))
+            Parsed::Annot(Box::new(ParsedAnnot::ComponentMissingRenders(Box::new(
+                loc,
+            ))))
         }
     };
     xs.pop_frame();
@@ -4502,10 +4533,10 @@ fn getter_type<'arena, 'ast>(
     id_loc: LocNode<'arena>,
     f: &ast::types::Function<Loc, Loc>,
 ) -> Accessor<LocNode<'arena>, Parsed<'arena, 'ast>> {
-    Accessor::Get(
+    Accessor::Get(Box::new((
         id_loc,
         return_annot(opts, scope, scopes, tbls, xs, &f.return_).0,
-    )
+    )))
 }
 
 fn setter_type<'arena, 'ast>(
@@ -4523,11 +4554,11 @@ fn setter_type<'arena, 'ast>(
         let (_, annot_t, optional) = flow_parser::ast_utils::function_type_param_parts(&p.param);
         let t = annot(opts, scope, scopes, tbls, xs, annot_t);
         let t = if optional {
-            Parsed::Annot(Box::new(Annot::Optional(t)))
+            Parsed::Annot(Box::new(Annot::Optional(Box::new(t))))
         } else {
             t
         };
-        Accessor::Set(id_loc, t)
+        Accessor::Set(Box::new((id_loc, t)))
     } else {
         panic!("unexpected setter")
     }
@@ -4545,7 +4576,7 @@ fn indexer<'arena, 'ast>(
     let key = annot(opts, scope, scopes, tbls, xs, &dict.key);
     let value = annot(opts, scope, scopes, tbls, xs, &dict.value);
     let value = if dict.optional {
-        Parsed::Annot(Box::new(ParsedAnnot::Optional(value)))
+        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(value))))
     } else {
         value
     };
@@ -4577,8 +4608,8 @@ fn optional_method_as_field<'arena, 'ast>(
     let fn_loc = tbls.push_loc(fn_loc.dupe());
     let id_loc = tbls.push_loc(id_loc.dupe());
     let def = function_type(opts, scope, scopes, tbls, xs, func);
-    let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(Box::new(
-        ParsedAnnot::FunAnnot(Box::new((fn_loc, def))),
+    let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(Parsed::Annot(
+        Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
     )))));
     (id_loc, t)
 }
@@ -4648,8 +4679,10 @@ fn object_type<'arena, 'ast>(
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
                         let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
-                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                                Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
+                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
+                                Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                                    fn_loc, def,
+                                ))))),
                             ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -4664,7 +4697,7 @@ fn object_type<'arena, 'ast>(
                 let (key_ref, ref_loc) = build_key(tbls, scopes);
                 let mut t = annot(opts, scope, scopes, tbls, xs, t);
                 if p.optional {
-                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                 }
                 let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
                 acc.add_computed_field(key_ref, ref_loc, polarity_val, t);
@@ -4710,7 +4743,7 @@ fn object_type<'arena, 'ast>(
                                 acc.add_proto((value_loc, t));
                             } else {
                                 if p.optional {
-                                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                                 }
                                 let polarity_val = polarity(
                                     p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())),
@@ -4769,12 +4802,12 @@ fn object_type<'arena, 'ast>(
                                 let loc = tbls.push_loc(loc);
                                 let key_ref = Parsed::Err(
                                     loc.dupe(),
-                                    Errno::SigError(
+                                    Errno::SigError(Box::new(
                                         signature_error::SignatureError::UnexpectedObjectKey(
                                             loc.dupe(),
                                             loc.dupe(),
                                         ),
-                                    ),
+                                    )),
                                 );
                                 (key_ref, loc)
                             },
@@ -4827,7 +4860,7 @@ fn object_type<'arena, 'ast>(
         let loc = tbls.push_loc(loc.dupe());
 
         match name_type {
-            Some(_) => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+            Some(_) => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
             None => {
                 // The source type does not have the key_tparam in scope, but we need to parse locs in syntax
                 // order or we will violate type sig invariants.
@@ -4874,7 +4907,7 @@ fn object_type<'arena, 'ast>(
                             },
                         ))))
                     }
-                    _ => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+                    _ => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
                 }
             }
         }
@@ -4917,7 +4950,7 @@ fn object_type<'arena, 'ast>(
                 if name.as_str() == "call" {
                     let t = annot(opts, scope, scopes, tbls, xs, &p.value);
                     let t = if p.optional {
-                        Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
                     } else {
                         t
                     };
@@ -5023,7 +5056,7 @@ fn interface_props<'arena, 'ast>(
                     let id_loc = tbls.push_loc(id_loc);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
-                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                     }
                     let polarity_val =
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5066,8 +5099,10 @@ fn interface_props<'arena, 'ast>(
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
                         let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
-                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                                Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
+                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
+                                Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                                    fn_loc, def,
+                                ))))),
                             ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5082,7 +5117,7 @@ fn interface_props<'arena, 'ast>(
                     let (key_ref, ref_loc) = build_key(tbls, scopes);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
-                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                     }
                     let polarity_val =
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5115,9 +5150,11 @@ fn interface_props<'arena, 'ast>(
                     (
                         Parsed::Err(
                             loc.dupe(),
-                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                                loc.dupe(),
-                                loc.dupe(),
+                            Errno::SigError(Box::new(
+                                signature_error::SignatureError::UnexpectedObjectKey(
+                                    loc.dupe(),
+                                    loc.dupe(),
+                                ),
                             )),
                         ),
                         loc,
@@ -5149,7 +5186,7 @@ fn interface_props<'arena, 'ast>(
                 if name.as_str() == "call" {
                     let t = annot(opts, scope, scopes, tbls, xs, &p.value);
                     let t = if p.optional {
-                        Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
                     } else {
                         t
                     };
@@ -5182,7 +5219,7 @@ fn literal_expr_to_annot<'arena, 'ast>(
             ParsedAnnot::SingletonBigInt(Box::new((loc, inner.value, inner.raw.dupe()))),
         ))),
         ExpressionInner::BooleanLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
-            ParsedAnnot::SingletonBoolean(loc, inner.value),
+            ParsedAnnot::SingletonBoolean(Box::new((loc, inner.value))),
         ))),
         ExpressionInner::Unary { inner, .. }
             if inner.operator == ast::expression::UnaryOperator::Minus =>
@@ -5292,7 +5329,7 @@ fn declare_class_props<'arena, 'ast>(
                     let id_loc = tbls.push_loc(id_loc);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
-                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                     }
                     let polarity_val =
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5307,7 +5344,7 @@ fn declare_class_props<'arena, 'ast>(
                         let id_loc = tbls.push_loc(id_loc);
                         if let Some(mut t) = literal_expr_to_annot(id_loc.dupe(), init_expr) {
                             if p.optional {
-                                t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                                t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                             }
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5355,8 +5392,10 @@ fn declare_class_props<'arena, 'ast>(
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
                         let def = function_type(opts, scope, scopes, tbls, xs, inner.as_ref());
                         if p.optional {
-                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                                Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc, def)))),
+                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
+                                Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                                    fn_loc, def,
+                                ))))),
                             ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5378,7 +5417,7 @@ fn declare_class_props<'arena, 'ast>(
                     let (key_ref, ref_loc) = build_key(tbls, scopes);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
-                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                     }
                     let polarity_val =
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5389,7 +5428,7 @@ fn declare_class_props<'arena, 'ast>(
                         let (key_ref, ref_loc) = build_key(tbls, scopes);
                         if let Some(mut t) = literal_expr_to_annot(ref_loc.dupe(), init_expr) {
                             if p.optional {
-                                t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                                t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))));
                             }
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
@@ -5431,9 +5470,11 @@ fn declare_class_props<'arena, 'ast>(
                     (
                         Parsed::Err(
                             loc.dupe(),
-                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                                loc.dupe(),
-                                loc.dupe(),
+                            Errno::SigError(Box::new(
+                                signature_error::SignatureError::UnexpectedObjectKey(
+                                    loc.dupe(),
+                                    loc.dupe(),
+                                ),
                             )),
                         ),
                         loc,
@@ -5465,7 +5506,7 @@ fn declare_class_props<'arena, 'ast>(
                 if name.as_str() == "call" {
                     let t = annot(opts, scope, scopes, tbls, xs, &p.value);
                     let t = if p.optional {
-                        Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
                     } else {
                         t
                     };
@@ -5554,7 +5595,7 @@ fn handle_import_type<'arena, 'ast>(
     };
     chain.into_iter().fold(base, |t, (id_loc, name)| {
         let id_loc = tbls.push_loc(id_loc);
-        Parsed::Eval(id_loc, Box::new(t), Box::new(Op::GetProp(name)))
+        Parsed::Eval(id_loc, Box::new(t), Box::new(Op::GetProp(Box::new(name))))
     })
 }
 
@@ -5735,17 +5776,17 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             _ => Parsed::Err(loc, Errno::CheckError),
         },
         "Function" | "function" | "Object" => match targs {
-            None => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+            None => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
         "Function$Prototype$Bind" => match targs {
-            None => Parsed::Annot(Box::new(ParsedAnnot::FunctionBind(loc))),
+            None => Parsed::Annot(Box::new(ParsedAnnot::FunctionBind(Box::new(loc)))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
         "NoInfer" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                Parsed::Annot(Box::new(ParsedAnnot::NoInfer(t)))
+                Parsed::Annot(Box::new(ParsedAnnot::NoInfer(Box::new(t))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
@@ -5777,7 +5818,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
-        "$Shape" => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+        "$Shape" => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
         "$Omit" => match targs {
             Some(type_args) if type_args.arguments.len() == 2 => {
                 let t1 = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
@@ -5793,7 +5834,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
-        "$Partial" => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+        "$Partial" => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
         "Partial" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
@@ -5832,7 +5873,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
             } else {
-                Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
             }
         }
         "$Exact" => match targs {
@@ -5987,7 +6028,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
             } else {
-                Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
             }
         }
         "ReadonlyArray" => {
@@ -6000,7 +6041,7 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
             } else {
-                Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
             }
         }
         "NonNullable" => {
@@ -6013,14 +6054,14 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                     _ => Parsed::Err(loc, Errno::CheckError),
                 }
             } else {
-                Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
             }
         }
         "ReadonlyMap" if !(opts.enable_ts_syntax || opts.enable_ts_utility_syntax) => {
-            Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
         "ReadonlySet" if !(opts.enable_ts_syntax || opts.enable_ts_utility_syntax) => {
-            Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
         _ => {
             let name = TyName::Unqualified(Box::new(Ref {
@@ -6103,7 +6144,7 @@ fn tparams<'arena, 'ast>(
                 acc.push(tp_val);
             }
             if let Ok(tps) = Vec1::try_from_vec(acc) {
-                TParams::Poly(tparams_loc, tps)
+                TParams::Poly(Box::new((tparams_loc, tps)))
             } else {
                 TParams::Mono
             }
@@ -6173,7 +6214,7 @@ fn conditional_type<'arena, 'ast>(
     let infer_tparams = match scopes.get(extends_scope) {
         scope::Scope::ConditionalTypeExtends(cond_scope) => {
             if let Ok(tparams) = Vec1::try_from_vec(cond_scope.infer_tparams.to_vec()) {
-                TParams::Poly(extends_type_loc, tparams)
+                TParams::Poly(Box::new((extends_type_loc, tparams)))
             } else {
                 TParams::Mono
             }
@@ -6212,7 +6253,7 @@ fn infer_type<'arena, 'ast>(
     let tp_loc = &t.tparam.loc;
     let name = &t.tparam.name.name;
     match scope::scope_of_infer_name(scopes, scope, name, tp_loc) {
-        None => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+        None => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
         Some(infer_scope) => {
             let name_loc = if let Some(name_loc) = infer_scope
                 .infer_tparams
@@ -6307,8 +6348,8 @@ fn annot_or_hint<'arena, 'ast>(
             };
             Parsed::Err(
                 err_loc.dupe(),
-                Errno::SigError(signature_error::SignatureError::ExpectedAnnotation(
-                    err_loc, sort,
+                Errno::SigError(Box::new(
+                    signature_error::SignatureError::ExpectedAnnotation(err_loc, sort),
                 )),
             )
         }
@@ -6332,7 +6373,7 @@ fn function_return_annot<'arena, 'ast>(
         ast::function::ReturnAnnot::TypeGuard(type_guard) => {
             // This is only used for getters, where type guards are not allowed
             let loc = tbls.push_loc(type_guard.loc.dupe());
-            Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
         ast::function::ReturnAnnot::Missing(loc) => {
             let err_loc = if let Some(l) = err_loc {
@@ -6342,8 +6383,8 @@ fn function_return_annot<'arena, 'ast>(
             };
             Parsed::Err(
                 err_loc.dupe(),
-                Errno::SigError(signature_error::SignatureError::ExpectedAnnotation(
-                    err_loc, sort,
+                Errno::SigError(Box::new(
+                    signature_error::SignatureError::ExpectedAnnotation(err_loc, sort),
                 )),
             )
         }
@@ -6396,7 +6437,7 @@ fn getter_def<'arena, 'ast>(
         xs,
         &f.return_,
     );
-    Accessor::Get(id_loc, t)
+    Accessor::Get(Box::new((id_loc, t)))
 }
 
 fn setter_def<'arena, 'ast>(
@@ -6432,7 +6473,7 @@ fn setter_def<'arena, 'ast>(
                         xs,
                         &ident_pattern.annot,
                     );
-                    Accessor::Set(id_loc, t)
+                    Accessor::Set(Box::new((id_loc, t)))
                 }
                 _ => panic!("unexpected setter"),
             },
@@ -6477,7 +6518,7 @@ fn template_literal<'arena, 'ast>(
 ) -> Parsed<'arena, 'ast> {
     match quasis {
         [element] => string_literal(FrozenKind::NotFrozen, loc, &element.value.cooked),
-        _ => Parsed::Value(Box::new(ParsedValue::StringVal(loc))),
+        _ => Parsed::Value(Box::new(ParsedValue::StringVal(Box::new(loc)))),
     }
 }
 
@@ -6493,7 +6534,7 @@ fn graphql_literal<'arena, 'ast>(
             let mref = tbls.push_module_ref(Userland::from_smol_str(FlowSmolStr::new(module_name)));
             Parsed::Require { loc, mref }
         }
-        Err(_) => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+        Err(_) => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
     }
 }
 
@@ -6526,8 +6567,8 @@ fn key_mirror<'arena, 'ast>(
                         let prop_loc = tbls.push_loc(key_loc.dupe());
                         return Parsed::Err(
                             loc.dupe(),
-                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                                loc, prop_loc,
+                            Errno::SigError(Box::new(
+                                signature_error::SignatureError::UnexpectedObjectKey(loc, prop_loc),
                             )),
                         );
                     }
@@ -6535,8 +6576,8 @@ fn key_mirror<'arena, 'ast>(
                         let prop_loc = tbls.push_loc(computed.loc.dupe());
                         return Parsed::Err(
                             loc.dupe(),
-                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                                loc, prop_loc,
+                            Errno::SigError(Box::new(
+                                signature_error::SignatureError::UnexpectedObjectKey(loc, prop_loc),
                             )),
                         );
                     }
@@ -6544,8 +6585,8 @@ fn key_mirror<'arena, 'ast>(
                         let prop_loc = tbls.push_loc(pn.loc.dupe());
                         return Parsed::Err(
                             loc.dupe(),
-                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                                loc, prop_loc,
+                            Errno::SigError(Box::new(
+                                signature_error::SignatureError::UnexpectedObjectKey(loc, prop_loc),
                             )),
                         );
                     }
@@ -6563,8 +6604,8 @@ fn key_mirror<'arena, 'ast>(
                 let prop_loc = tbls.push_loc(normal_prop.loc().dupe());
                 return Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                        loc, prop_loc,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedObjectKey(loc, prop_loc),
                     )),
                 );
             }
@@ -6572,8 +6613,8 @@ fn key_mirror<'arena, 'ast>(
                 let prop_loc = tbls.push_loc(spread_prop.loc.dupe());
                 return Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                        loc, prop_loc,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedObjectKey(loc, prop_loc),
                     )),
                 );
             }
@@ -6600,9 +6641,11 @@ fn jsx_element<'arena, 'ast>(
         }
         _ => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::JSXElement,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::JSXElement,
+                ),
             )),
         ),
     }
@@ -6625,7 +6668,9 @@ fn binary<'arena, 'ast>(
         | BinaryOperator::GreaterThan
         | BinaryOperator::GreaterThanEqual
         | BinaryOperator::In
-        | BinaryOperator::Instanceof => Parsed::Value(Box::new(ParsedValue::BooleanVal(loc))),
+        | BinaryOperator::Instanceof => {
+            Parsed::Value(Box::new(ParsedValue::BooleanVal(Box::new(loc))))
+        }
         BinaryOperator::LShift
         | BinaryOperator::RShift
         | BinaryOperator::RShift3
@@ -6637,9 +6682,11 @@ fn binary<'arena, 'ast>(
         | BinaryOperator::BitOr
         | BinaryOperator::Xor
         | BinaryOperator::BitAnd
-        | BinaryOperator::Plus => {
-            Parsed::Eval(loc, Box::new(lhs_t), Box::new(Op::Arith(*op, rhs_t)))
-        }
+        | BinaryOperator::Plus => Parsed::Eval(
+            loc,
+            Box::new(lhs_t),
+            Box::new(Op::Arith(Box::new((*op, rhs_t)))),
+        ),
     }
 }
 
@@ -6688,17 +6735,25 @@ fn expression<'arena: 'ast, 'ast>(
         }
         E::BooleanLiteral { inner, .. } => {
             if frozen == FrozenKind::FrozenProp {
-                Parsed::Annot(Box::new(ParsedAnnot::SingletonBoolean(loc, inner.value)))
+                Parsed::Annot(Box::new(ParsedAnnot::SingletonBoolean(Box::new((
+                    loc,
+                    inner.value,
+                )))))
             } else {
-                Parsed::Value(Box::new(ParsedValue::BooleanLit(loc, inner.value)))
+                Parsed::Value(Box::new(ParsedValue::BooleanLit(Box::new((
+                    loc,
+                    inner.value,
+                )))))
             }
         }
-        E::NullLiteral { .. } => Parsed::Value(Box::new(ParsedValue::NullLit(loc))),
+        E::NullLiteral { .. } => Parsed::Value(Box::new(ParsedValue::NullLit(Box::new(loc)))),
         E::RegExpLiteral { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Literal,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Literal,
+                ),
             )),
         ),
         E::ModuleRefLiteral { inner, .. } => module_ref_literal(tbls, loc, inner.as_ref()),
@@ -6844,7 +6899,7 @@ fn expression<'arena: 'ast, 'ast>(
             } = inner.expression.deref()
             {
                 if array_inner.elements.is_empty() {
-                    return Parsed::Value(Box::new(ParsedValue::EmptyConstArrayLit(loc)));
+                    return Parsed::Value(Box::new(ParsedValue::EmptyConstArrayLit(Box::new(loc))));
                 }
             }
 
@@ -6864,9 +6919,11 @@ fn expression<'arena: 'ast, 'ast>(
         }
         E::TSSatisfies { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Satisfies,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Satisfies,
+                ),
             )),
         ),
         E::Object { inner, .. } => {
@@ -6880,7 +6937,7 @@ fn expression<'arena: 'ast, 'ast>(
                     loc.dupe(),
                     ast_utils::expression_sort::ExpressionSort::Unary,
                 );
-                Parsed::Err(loc, Errno::SigError(e))
+                Parsed::Err(loc, Errno::SigError(Box::new(e)))
             }
             _ => {
                 let t = expression(opts, scope, scopes, tbls, frozen, &inner.argument);
@@ -6922,9 +6979,11 @@ fn expression<'arena: 'ast, 'ast>(
                 }
                 Some(_) => Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                        loc,
-                        ast_utils::expression_sort::ExpressionSort::Assignment,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedExpression(
+                            loc,
+                            ast_utils::expression_sort::ExpressionSort::Assignment,
+                        ),
                     )),
                 ),
             }
@@ -6955,7 +7014,7 @@ fn expression<'arena: 'ast, 'ast>(
                         }
                         None => {
                             // error cases: explicit targs / non-literal require
-                            Parsed::Annot(Box::new(ParsedAnnot::Any(loc)))
+                            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
                         }
                     };
                 }
@@ -7053,15 +7112,17 @@ fn expression<'arena: 'ast, 'ast>(
             // Default case: unexpected call expression
             Parsed::Err(
                 loc.dupe(),
-                Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                    loc,
-                    ast_utils::expression_sort::ExpressionSort::Call,
+                Errno::SigError(Box::new(
+                    signature_error::SignatureError::UnexpectedExpression(
+                        loc,
+                        ast_utils::expression_sort::ExpressionSort::Call,
+                    ),
                 )),
             )
         }
         E::JSXElement { inner, .. } => jsx_element(opts, tbls, loc, inner.as_ref()),
         E::Import { inner, .. } => match extract_string_literal(&inner.argument) {
-            None => Parsed::Annot(Box::new(ParsedAnnot::Any(loc))),
+            None => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
             Some(mref) => {
                 let mref = Userland::from_smol_str(mref.clone());
                 let mref = tbls.push_module_ref(mref);
@@ -7070,93 +7131,119 @@ fn expression<'arena: 'ast, 'ast>(
         },
         E::Conditional { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Conditional,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Conditional,
+                ),
             )),
         ),
         E::JSXFragment { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::JSXFragment,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::JSXFragment,
+                ),
             )),
         ),
         E::Logical { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Logical,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Logical,
+                ),
             )),
         ),
         E::Match { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Match,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Match,
+                ),
             )),
         ),
         E::MetaProperty { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::MetaProperty,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::MetaProperty,
+                ),
             )),
         ),
         E::New { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::New,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::New,
+                ),
             )),
         ),
         E::OptionalCall { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::OptionalCall,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::OptionalCall,
+                ),
             )),
         ),
         E::OptionalMember { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::OptionalMember,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::OptionalMember,
+                ),
             )),
         ),
         E::Super { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Super,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Super,
+                ),
             )),
         ),
         E::TaggedTemplate { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::TaggedTemplate,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::TaggedTemplate,
+                ),
             )),
         ),
         E::This { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::This,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::This,
+                ),
             )),
         ),
         E::Yield { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Yield,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Yield,
+                ),
             )),
         ),
         E::Record { .. } => Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                loc,
-                ast_utils::expression_sort::ExpressionSort::Record,
+            Errno::SigError(Box::new(
+                signature_error::SignatureError::UnexpectedExpression(
+                    loc,
+                    ast_utils::expression_sort::ExpressionSort::Record,
+                ),
             )),
         ),
     }
@@ -7362,11 +7449,11 @@ fn member<'arena: 'ast, 'ast>(
     ) -> Op<Parsed<'arena, 'ast>> {
         match property {
             ast::expression::member::Property::PropertyIdentifier(id) => {
-                Op::GetProp(id_name(id).clone())
+                Op::GetProp(Box::new(id_name(id).clone()))
             }
             ast::expression::member::Property::PropertyExpression(expr) => {
                 let t = expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, expr);
-                Op::GetElem(t)
+                Op::GetElem(Box::new(t))
             }
             ast::expression::member::Property::PropertyPrivateName(_) => {
                 panic!("unexpected private name outside class")
@@ -7410,9 +7497,11 @@ fn member<'arena: 'ast, 'ast>(
             _ => {
                 return Parsed::Err(
                     toplevel_loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedExpression(
-                        toplevel_loc,
-                        ast_utils::expression_sort::ExpressionSort::Member,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedExpression(
+                            toplevel_loc,
+                            ast_utils::expression_sort::ExpressionSort::Member,
+                        ),
                     )),
                 );
             }
@@ -7451,12 +7540,12 @@ fn param<'arena: 'ast, 'ast>(
                 &ident_pattern.annot,
             );
             let name_t = if ident_pattern.optional && default.is_none() {
-                Parsed::Annot(Box::new(ParsedAnnot::Optional(t.clone())))
+                Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t.clone()))))
             } else {
                 t.clone()
             };
             let t = if ident_pattern.optional || default.is_some() {
-                Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
             } else {
                 t
             };
@@ -7529,7 +7618,7 @@ fn param<'arena: 'ast, 'ast>(
             };
 
             let t = if optional || default.is_some() {
-                Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
             } else {
                 t
             };
@@ -7586,7 +7675,7 @@ fn param<'arena: 'ast, 'ast>(
             };
 
             let t = if optional || default.is_some() {
-                Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
+                Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(t))))
             } else {
                 t
             };
@@ -7776,7 +7865,10 @@ fn function_def_helper<'arena: 'ast, 'ast>(
             ast::function::ReturnAnnot::Available(a) => tbls.push_loc(a.loc.dupe()),
             ast::function::ReturnAnnot::TypeGuard(tg) => tbls.push_loc(tg.loc.dupe()),
         };
-        (Parsed::Annot(Box::new(ParsedAnnot::Void(loc_node))), None)
+        (
+            Parsed::Annot(Box::new(ParsedAnnot::Void(Box::new(loc_node)))),
+            None,
+        )
     } else {
         match r {
             ast::function::ReturnAnnot::Available(a) => (
@@ -7788,16 +7880,21 @@ fn function_def_helper<'arena: 'ast, 'ast>(
                 if *generator || !signature_utils::procedure_decider::is_procedure(body) {
                     let err = Parsed::Err(
                         loc_node.dupe(),
-                        Errno::SigError(signature_error::SignatureError::ExpectedAnnotation(
-                            loc_node,
-                            ExpectedAnnotationSort::FunctionReturn,
+                        Errno::SigError(Box::new(
+                            signature_error::SignatureError::ExpectedAnnotation(
+                                loc_node,
+                                ExpectedAnnotationSort::FunctionReturn,
+                            ),
                         )),
                     );
                     (err, None)
                 } else if *async_ {
                     (Parsed::AsyncVoidReturn(loc_node), None)
                 } else {
-                    (Parsed::Annot(Box::new(ParsedAnnot::Void(loc_node))), None)
+                    (
+                        Parsed::Annot(Box::new(ParsedAnnot::Void(Box::new(loc_node)))),
+                        None,
+                    )
                 }
             }
             ast::function::ReturnAnnot::TypeGuard(guard_annot) => {
@@ -7805,7 +7902,7 @@ fn function_def_helper<'arena: 'ast, 'ast>(
                 let guard_opt =
                     type_guard_opt(opts, rest_scope, scopes, tbls, xs, &guard_annot.guard);
                 (
-                    Parsed::Annot(Box::new(ParsedAnnot::Boolean(loc_node))),
+                    Parsed::Annot(Box::new(ParsedAnnot::Boolean(Box::new(loc_node)))),
                     guard_opt,
                 )
             }
@@ -7926,7 +8023,9 @@ fn component_sig_helper<'arena: 'ast, 'ast>(
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let loc_node = tbls.push_loc(loc.clone());
-            Parsed::Annot(Box::new(ParsedAnnot::ComponentMissingRenders(loc_node)))
+            Parsed::Annot(Box::new(ParsedAnnot::ComponentMissingRenders(Box::new(
+                loc_node,
+            ))))
         }
     };
     ComponentSig {
@@ -8008,18 +8107,14 @@ fn class_def<'arena: 'ast, 'ast>(
                 &extends_info.expr,
             );
             match &extends_info.targs {
-                None => ClassExtends::ClassExplicitExtends { loc: loc_node, t },
+                None => ClassExtends::ClassExplicitExtends(Box::new((loc_node, t))),
                 Some(type_args) => {
                     let targs = type_args
                         .arguments
                         .iter()
                         .map(|arg| annot(opts, scope, scopes, tbls, &mut xs, arg))
                         .collect();
-                    ClassExtends::ClassExplicitExtendsApp {
-                        loc: loc_node,
-                        t,
-                        targs,
-                    }
+                    ClassExtends::ClassExplicitExtendsApp(Box::new((loc_node, t, targs)))
                 }
             }
         }
@@ -8136,12 +8231,12 @@ fn class_def<'arena: 'ast, 'ast>(
                                 class::property::Value::Declared
                                 | class::property::Value::Uninitialized => Parsed::Err(
                                     prop_loc_node.dupe(),
-                                    Errno::SigError(
+                                    Errno::SigError(Box::new(
                                         signature_error::SignatureError::ExpectedAnnotation(
                                             prop_loc_node,
                                             ExpectedAnnotationSort::Property { name: name.clone() },
                                         ),
-                                    ),
+                                    )),
                                 ),
                             };
                             (id_loc_node, res)
@@ -8183,8 +8278,11 @@ fn class_def<'arena: 'ast, 'ast>(
                         let id_loc_node = tbls.push_loc(id.loc.dupe());
                         let fn_loc_node = tbls.push_loc(annot_loc.dupe());
                         let def = function_type(opts, scope, scopes, tbls, &mut xs, f.as_ref());
-                        let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
-                            Box::new(ParsedAnnot::FunAnnot(Box::new((fn_loc_node, def)))),
+                        let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(
+                            Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                                fn_loc_node,
+                                def,
+                            ))))),
                         ))));
                         let polarity = Polarity::Neutral;
                         acc.add_field(*is_static, name, id_loc_node, polarity, t);
@@ -8511,8 +8609,8 @@ fn object_literal<'arena: 'ast, 'ast>(
                 let prop_loc = tbls.push_loc(prop_loc.dupe());
                 return Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
-                        loc, prop_loc,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedObjectKey(loc, prop_loc),
                     )),
                 );
             }
@@ -8549,7 +8647,9 @@ fn array_literal<'arena: 'ast, 'ast>(
             ast::expression::ArrayElement::Hole(_) => {
                 return Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedArrayHole(loc)),
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedArrayHole(loc),
+                    )),
                 );
             }
             ast::expression::ArrayElement::Expression(expr) => {
@@ -8560,8 +8660,8 @@ fn array_literal<'arena: 'ast, 'ast>(
                 let spread_loc = tbls.push_loc(spread.loc.dupe());
                 return Parsed::Err(
                     loc.dupe(),
-                    Errno::SigError(signature_error::SignatureError::UnexpectedArraySpread(
-                        loc, spread_loc,
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::UnexpectedArraySpread(loc, spread_loc),
                     )),
                 );
             }
@@ -8571,7 +8671,7 @@ fn array_literal<'arena: 'ast, 'ast>(
     if acc.is_empty() {
         Parsed::Err(
             loc.dupe(),
-            Errno::SigError(signature_error::SignatureError::EmptyArray(loc)),
+            Errno::SigError(Box::new(signature_error::SignatureError::EmptyArray(loc))),
         )
     } else {
         let first = acc.remove(0);
@@ -8598,7 +8698,11 @@ fn member_expr_of_generic_id<'arena, 'ast>(
                 let name = id.name.dupe();
                 let mut t = val_ref(true, scope, ref_loc, name);
                 for (loc, name) in chain.into_iter().rev() {
-                    t = Parsed::Eval(loc.dupe(), Box::new(t), Box::new(Op::GetProp(name.clone())));
+                    t = Parsed::Eval(
+                        loc.dupe(),
+                        Box::new(t),
+                        Box::new(Op::GetProp(Box::new(name.clone()))),
+                    );
                 }
                 return t;
             }
@@ -8612,7 +8716,11 @@ fn member_expr_of_generic_id<'arena, 'ast>(
                     mref,
                 };
                 let t = chain.into_iter().rev().fold(base, |t, (loc, name)| {
-                    Parsed::Eval(loc.dupe(), Box::new(t), Box::new(Op::GetProp(name)))
+                    Parsed::Eval(
+                        loc.dupe(),
+                        Box::new(t),
+                        Box::new(Op::GetProp(Box::new(name))),
+                    )
                 });
                 return t;
             }
@@ -8664,14 +8772,14 @@ fn declare_class_def<'arena, 'ast>(
             let loc = tbls.push_loc(loc.dupe());
             let t = member_expr_of_generic_id(scope, tbls, Vec::new(), &generic.id);
             match &generic.targs {
-                None => ClassExtends::ClassExplicitExtends { loc, t },
+                None => ClassExtends::ClassExplicitExtends(Box::new((loc, t))),
                 Some(type_args) => {
                     let targs = type_args
                         .arguments
                         .iter()
                         .map(|arg| annot(opts, scope, scopes, tbls, &mut xs, arg))
                         .collect();
-                    ClassExtends::ClassExplicitExtendsApp { loc, t, targs }
+                    ClassExtends::ClassExplicitExtendsApp(Box::new((loc, t, targs)))
                 }
             }
         }
@@ -8685,14 +8793,14 @@ fn declare_class_def<'arena, 'ast>(
         let loc = tbls.push_loc(loc.dupe());
         let t = member_expr_of_generic_id(scope, tbls, Vec::new(), &mixin.id);
         let mixin_val = match &mixin.targs {
-            None => ClassMixins::ClassMixin { loc, t },
+            None => ClassMixins::ClassMixin(Box::new((loc, t))),
             Some(type_args) => {
                 let targs = type_args
                     .arguments
                     .iter()
                     .map(|arg| annot(opts, scope, scopes, tbls, &mut xs, arg))
                     .collect();
-                ClassMixins::ClassMixinApp { loc, t, targs }
+                ClassMixins::ClassMixinApp(Box::new((loc, t, targs)))
             }
         };
         parsed_mixins.push(mixin_val);
@@ -9469,7 +9577,7 @@ fn declare_variable_decl<'arena: 'ast, 'ast>(
                         None => {
                             let id_loc_node_for_bind = id_loc_node.dupe();
                             let def = Lazy::new(Box::new(move |_, _, _| {
-                                Parsed::Annot(Box::new(ParsedAnnot::Any(id_loc_node)))
+                                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(id_loc_node))))
                             }));
                             scope::bind_var(
                                 scope,
@@ -10757,7 +10865,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                 ast::statement::import_equals_declaration::ModuleReference::Identifier(_) => {
                     let id_loc_for_any = id_loc.dupe();
                     let def = Lazy::new(Box::new(move |_, _, _| {
-                        Parsed::Annot(Box::new(ParsedAnnot::Any(id_loc_for_any)))
+                        Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(id_loc_for_any))))
                     }));
                     scope::bind_var(
                         scope,

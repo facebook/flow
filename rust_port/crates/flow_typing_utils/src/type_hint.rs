@@ -46,6 +46,7 @@ use flow_typing_flow_js::implicit_instantiation;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::BinaryTest;
 use flow_typing_type::type_::CallAction;
@@ -73,6 +74,7 @@ use flow_typing_type::type_::PrivateMethodTData;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::SpeculationHintSetData;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::ThisInstanceTData;
@@ -259,7 +261,7 @@ fn synthesis_speculation_call<'cx>(
     let tout = Tvar::new(call_reason.dupe(), tout_id as u32);
     let call_speculation_hint_state =
         Rc::new(RefCell::new(SpeculationHintState::SpeculationHintUnset));
-    let call_action = Box::new(CallAction::Funcalltype(FuncallType {
+    let call_action = Box::new(CallAction::Funcalltype(Box::new(FuncallType {
         call_this_t: unsoundness::bound_fn_this_any(reason.dupe()),
         call_targs: targs.map(|v| v.into()),
         call_args_tlist: argts.into(),
@@ -267,7 +269,7 @@ fn synthesis_speculation_call<'cx>(
         call_strict_arity: true,
         call_speculation_hint_state: Some(call_speculation_hint_state.dupe()),
         call_specialized_callee: None,
-    }));
+    })));
     let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
         use_op,
         reason: call_reason.dupe(),
@@ -289,7 +291,7 @@ fn synthesis_speculation_call<'cx>(
             )?;
             Ok(any_t::error(reason.dupe()))
         }
-        SpeculationHintState::SpeculationHintSet(_, t) => Ok(t.dupe()),
+        SpeculationHintState::SpeculationHintSet(box SpeculationHintSetData(_, t)) => Ok(t.dupe()),
     }
 }
 
@@ -987,11 +989,11 @@ fn type_of_hint_decomposition<'cx>(
                     let arr_t = Type::new(TypeInner::DefT(
                         reason.dupe(),
                         DefT::new(DefTInner::ArrT(Rc::new(
-                            flow_typing_type::type_::ArrType::ArrayAT {
+                            flow_typing_type::type_::ArrType::ArrayAT(Box::new(ArrayATData {
                                 elem_t: elem_t.dupe(),
                                 tuple_view: Some(empty_tuple_view()),
                                 react_dro: None,
-                            },
+                            })),
                         ))),
                     ));
                     cx.run_in_implicit_instantiation_mode(|| {

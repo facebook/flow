@@ -37,6 +37,7 @@ use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -48,6 +49,7 @@ use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::SwitchRefinementCheckData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
@@ -1658,18 +1660,18 @@ pub mod special_cased_functions {
                     if let DefTInner::ArrT(arrtype) = def_t.deref() =>
                 {
                     match arrtype.deref() {
-                        ArrType::ArrayAT {
+                        ArrType::ArrayAT(box ArrayATData {
                             elem_t,
                             tuple_view: None,
                             ..
-                        }
-                        | ArrType::ArrayAT {
+                        })
+                        | ArrType::ArrayAT(box ArrayATData {
                             elem_t,
                             tuple_view:
                                 Some(flow_typing_type::type_::TupleView { inexact: true, .. }),
                             ..
-                        }
-                        | ArrType::ROArrayAT(elem_t, _) => {
+                        })
+                        | ArrType::ROArrayAT(box (elem_t, _)) => {
                             // Object.assign(o, ...Array<x>) -> Object.assign(o, x)
                             let default_kind = flow_typing_type::type_::default_obj_assign_kind();
                             assign_from(
@@ -1684,7 +1686,7 @@ pub mod special_cased_functions {
                                 &default_kind,
                             )
                         }
-                        ArrType::TupleAT { elements, .. } => {
+                        ArrType::TupleAT(box TupleATData { elements, .. }) => {
                             // Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z)
                             for (n, elem) in elements.iter().enumerate() {
                                 if !Polarity::compat(elem.polarity, Polarity::Positive) {
@@ -1716,10 +1718,10 @@ pub mod special_cased_functions {
                             }
                             Ok(())
                         }
-                        ArrType::ArrayAT {
+                        ArrType::ArrayAT(box ArrayATData {
                             tuple_view: Some(tuple_view),
                             ..
-                        } => {
+                        }) => {
                             // Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z)
                             let ts = flow_typing_type::type_util::tuple_ts_of_elements(
                                 &tuple_view.elements,
@@ -2413,7 +2415,7 @@ pub mod type_assertions {
             {
                 Ok(())
             }
-            (TypeInner::DefT(_, def_t), _) if matches!(def_t.deref(), DefTInner::ArrT(arr) if matches!(arr.deref(), ArrType::ROArrayAT(_, _) | ArrType::ArrayAT { .. })) => {
+            (TypeInner::DefT(_, def_t), _) if matches!(def_t.deref(), DefTInner::ArrT(arr) if matches!(arr.deref(), ArrType::ROArrayAT(box (_, _)) | ArrType::ArrayAT(box ArrayATData { .. }))) => {
                 Ok(())
             }
             (TypeInner::DefT(_, def_t), Some(prop_name))
@@ -2544,7 +2546,7 @@ pub mod type_assertions {
                     DefTInner::ArrT(arr) => {
                         matches!(
                             arr.deref(),
-                            ArrType::ArrayAT { .. } | ArrType::ROArrayAT(_, _)
+                            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box (_, _))
                         )
                     }
                     _ => false,

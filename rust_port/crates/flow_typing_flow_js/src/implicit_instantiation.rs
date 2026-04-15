@@ -36,6 +36,7 @@ use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ComponentKind;
@@ -44,6 +45,10 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FunParam;
@@ -69,6 +74,7 @@ use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::ResolvedParam;
 use flow_typing_type::type_::SpreadResolve;
 use flow_typing_type::type_::Targ;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -88,6 +94,8 @@ use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::num_module_t;
 use flow_typing_type::type_::object;
+use flow_typing_type::type_::object::ObjectToolObjectMapData;
+use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::open_tvar;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::react;
@@ -421,9 +429,9 @@ fn t_of_use_t<'cx>(
                 | box Destructor::OptionalIndexedAccessNonMaybeType { .. }
                 | box Destructor::OptionalIndexedAccessResultType { .. }
                 | box Destructor::ValuesType
-                | box Destructor::ConditionalType { .. }
+                | box Destructor::ConditionalType(box DestructorConditionalTypeData { .. })
                 | box Destructor::TypeMap(_)
-                | box Destructor::MappedType { .. } => {
+                | box Destructor::MappedType(box DestructorMappedTypeData { .. }) => {
                     // Mapped Type reversals
                     Ok(UseTResult::UpperEmpty)
                 }
@@ -505,7 +513,11 @@ fn t_of_use_t<'cx>(
                         use_t_result_of_t_option(merge_lower_bounds(cx, &reversed))
                     })
                 }
-                box Destructor::SpreadType(_, todo_rev, head_slice) => {
+                box Destructor::SpreadType(box DestructorSpreadTypeData(
+                    _,
+                    todo_rev,
+                    head_slice,
+                )) => {
                     let acc_elements: Vec<object::spread::AccElement> = match head_slice {
                         Some(x) => vec![object::spread::AccElement::InlineSlice(x.clone())],
                         None => vec![],
@@ -517,13 +529,13 @@ fn t_of_use_t<'cx>(
                         use_t_result_of_t_option(merge_lower_bounds(cx, &reversed))
                     })
                 }
-                box Destructor::SpreadTupleType {
+                box Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
                     reason_tuple: _,
                     inexact,
                     reason_spread,
                     resolved: resolved_rev,
                     unresolved,
-                } => {
+                }) => {
                     fn is_spread(rp: &ResolvedParam) -> bool {
                         match rp {
                             ResolvedParam::ResolvedArg(..) => false,
@@ -566,15 +578,17 @@ fn t_of_use_t<'cx>(
                 && let DefTInner::ArrT(arr_t) = def_t.deref()
             {
                 match arr_t.as_ref() {
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         tuple_view: None, ..
+                    })
+                    | ArrType::ROArrayAT(box (..)) => {
+                        identity_reverse_upper_bound(cx, seen, tvar, tout)
                     }
-                    | ArrType::ROArrayAT(..) => identity_reverse_upper_bound(cx, seen, tvar, tout),
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         tuple_view: Some(_),
                         ..
-                    }
-                    | ArrType::TupleAT { .. }
+                    })
+                    | ArrType::TupleAT(box TupleATData { .. })
                         if *i == 0 =>
                     {
                         identity_reverse_upper_bound(cx, seen, tvar, tout)
@@ -688,14 +702,14 @@ fn t_of_use_t<'cx>(
             | object::Tool::Partial
             | object::Tool::Required
             | object::Tool::ObjectRep => identity_reverse_upper_bound(cx, seen, tvar, tout),
-            object::Tool::ReactConfig {
+            object::Tool::ReactConfig(box ObjectToolReactConfigData {
                 ref_manipulation: object::react_config::RefManipulation::KeepRef,
                 ..
-            } => identity_reverse_upper_bound(cx, seen, tvar, tout),
-            object::Tool::ReactConfig {
+            }) => identity_reverse_upper_bound(cx, seen, tvar, tout),
+            object::Tool::ReactConfig(box ObjectToolReactConfigData {
                 ref_manipulation: object::react_config::RefManipulation::AddRef(ref_t),
                 ..
-            } => {
+            }) => {
                 let solution = merge_upper_bounds(cx, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
@@ -741,8 +755,10 @@ fn t_of_use_t<'cx>(
                     }
                 }
             }
-            object::Tool::ObjectMap { .. } => Ok(UseTResult::UpperEmpty),
-            object::Tool::Spread(_, state) => {
+            object::Tool::ObjectMap(box ObjectToolObjectMapData { .. }) => {
+                Ok(UseTResult::UpperEmpty)
+            }
+            object::Tool::Spread(box (_, state)) => {
                 let solution = merge_upper_bounds(cx, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
@@ -759,7 +775,7 @@ fn t_of_use_t<'cx>(
                     }
                 }
             }
-            object::Tool::Rest(_, object::rest::State::One(t_rest)) => {
+            object::Tool::Rest(box (_, object::rest::State::One(t_rest))) => {
                 let result = merge_upper_bounds(cx, seen, tout)?;
                 let t_rest = t_rest.dupe();
                 bind_use_t_result(result, &|t: Type| {
@@ -773,7 +789,7 @@ fn t_of_use_t<'cx>(
                     }
                 })
             }
-            object::Tool::Rest(_, object::rest::State::Done(_)) => {
+            object::Tool::Rest(box (_, object::rest::State::Done(_))) => {
                 Ok(UseTResult::UpperNonT(u.dupe()))
             }
         },
@@ -870,10 +886,10 @@ fn reverse_obj_spread<'cx>(
                 unknown_use(),
                 r.dupe(),
                 Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
-                Box::new(object::Tool::Rest(
+                Box::new(object::Tool::Rest(Box::new((
                     object::rest::MergeMode::SpreadReversal,
                     object::rest::State::One(rest),
-                )),
+                )))),
                 tout.dupe(),
             );
             FlowJs::flow(cx, &l, &UseT::new(u_inner))?;
@@ -920,10 +936,10 @@ fn reverse_component_check_config<'cx>(
             unknown_use(),
             reason.dupe(),
             Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
-            Box::new(object::Tool::Rest(
+            Box::new(object::Tool::Rest(Box::new((
                 object::rest::MergeMode::SpreadReversal,
                 object::rest::State::One(rest),
-            )),
+            )))),
             t_prime.dupe(),
         );
         FlowJs::flow(cx, tout, &UseT::new(u_inner))?;
@@ -957,7 +973,7 @@ fn reverse_obj_kit_rest<'cx>(
             unknown_use(),
             reason.dupe(),
             Box::new(tool),
-            Box::new(object::Tool::Spread(options, state)),
+            Box::new(object::Tool::Spread(Box::new((options, state)))),
             open_t_prime,
         );
         FlowJs::flow(cx, tout, &UseT::new(u_inner))?;
@@ -1005,13 +1021,13 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                 )),
             };
             let len = tuple_ts.len() as i32;
-            let t = ArrType::TupleAT {
+            let t = ArrType::TupleAT(Box::new(TupleATData {
                 elem_t,
                 elements: tuple_elements.into(),
                 arity: (len, len),
                 inexact: false,
                 react_dro: None,
-            };
+            }));
             let reason_out = reason
                 .dupe()
                 .update_desc(|_| flow_common::reason::VirtualReasonDesc::RTupleType);
@@ -1048,11 +1064,11 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                     ),
                 )),
             };
-            let t = ArrType::ArrayAT {
+            let t = ArrType::ArrayAT(Box::new(ArrayATData {
                 elem_t,
                 tuple_view: None,
                 react_dro: None,
-            };
+            }));
             let reason_out = reason
                 .dupe()
                 .update_desc(|_| flow_common::reason::VirtualReasonDesc::RArray);
@@ -1483,11 +1499,11 @@ fn check_instantiation<'cx, Obs: Observer>(
             let call_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                call_action: Box::new(CallAction::Funcalltype(FuncallType {
+                call_action: Box::new(CallAction::Funcalltype(Box::new(FuncallType {
                     call_targs: Some(call_targs.into()),
                     call_tout: Tvar::new(reason_op.dupe(), new_tout as u32),
                     ..calltype.clone()
-                })),
+                }))),
                 return_hint: hint_unavailable(),
             })));
             (
@@ -1559,17 +1575,19 @@ fn check_instantiation<'cx, Obs: Observer>(
             let react_kit_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement {
-                    component: component.dupe(),
-                    jsx_props: jsx_props.dupe(),
-                    targs: None,
-                    tout: new_tout_tvar,
-                    should_generalize: *should_generalize,
-                    return_hint: hint_unavailable(),
-                    record_monomorphized_result: false,
-                    inferred_targs: None,
-                    specialized_component: None,
-                }),
+                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement(Box::new(
+                    react::CreateElementData {
+                        component: component.dupe(),
+                        jsx_props: jsx_props.dupe(),
+                        targs: None,
+                        tout: new_tout_tvar,
+                        should_generalize: *should_generalize,
+                        return_hint: hint_unavailable(),
+                        record_monomorphized_result: false,
+                        inferred_targs: None,
+                        specialized_component: None,
+                    },
+                ))),
             })));
             let lower = FlowJs::mk_typeapp_instance_annot(
                 cx,

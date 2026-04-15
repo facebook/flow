@@ -70,6 +70,7 @@ use flow_typing_statement::statement;
 use flow_typing_statement::type_annotation;
 use flow_typing_type::type_;
 use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Tvar;
@@ -238,7 +239,7 @@ fn resolve_annotation<'cx>(
                     name_def_types::DroAnnot::Comp => type_::DroType::Props,
                 };
                 let react_dro = type_::ReactDro(param_loc, dro_type);
-                let destructor = Rc::new(type_::Destructor::ReactDRO(react_dro));
+                let destructor = Rc::new(type_::Destructor::ReactDRO(Box::new(react_dro)));
                 let eval_id = type_::eval::Id::generate_id();
                 flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(
                     cx,
@@ -593,16 +594,18 @@ fn resolve_hint<'cx>(
                                 reason::VirtualReasonDesc::RArrayElement,
                                 hint_loc.dupe(),
                             );
-                            type_::UnresolvedParam::UnresolvedArg(
-                                type_util::mk_tuple_element(
-                                    elem_reason,
-                                    t,
+                            type_::UnresolvedParam::UnresolvedArg(Box::new(
+                                type_::UnresolvedArgData(
+                                    type_util::mk_tuple_element(
+                                        elem_reason,
+                                        t,
+                                        None,
+                                        false,
+                                        flow_common::polarity::Polarity::Neutral,
+                                    ),
                                     None,
-                                    false,
-                                    flow_common::polarity::Polarity::Neutral,
                                 ),
-                                None,
-                            )
+                            ))
                         }
                         ArrayElementPatternHint::ArrayRestElementPatternHint(h) => {
                             type_::UnresolvedParam::UnresolvedSpreadArg(resolve_hint_node(
@@ -1310,11 +1313,13 @@ fn resolve_binding<'cx>(
                         let (_, elem_t) = statement::empty_array(cx, loc.dupe());
                         Type::new(TypeInner::DefT(
                             reason.dupe(),
-                            DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT {
-                                elem_t,
-                                tuple_view: Some(type_::empty_tuple_view()),
-                                react_dro: None,
-                            }))),
+                            DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT(Box::new(
+                                ArrayATData {
+                                    elem_t,
+                                    tuple_view: Some(type_::empty_tuple_view()),
+                                    react_dro: None,
+                                },
+                            ))))),
                         ))
                     }
                     ast::expression::ExpressionInner::Array { loc, inner: arr } => {
@@ -1340,16 +1345,18 @@ fn resolve_binding<'cx>(
                                             reason::VirtualReasonDesc::RArrayElement,
                                             e_loc.dupe(),
                                         );
-                                        Ok(type_::UnresolvedParam::UnresolvedArg(
-                                            type_util::mk_tuple_element(
-                                                elem_reason,
-                                                t,
+                                        Ok(type_::UnresolvedParam::UnresolvedArg(Box::new(
+                                            type_::UnresolvedArgData(
+                                                type_util::mk_tuple_element(
+                                                    elem_reason,
+                                                    t,
+                                                    None,
+                                                    false,
+                                                    flow_common::polarity::Polarity::Neutral,
+                                                ),
                                                 None,
-                                                false,
-                                                flow_common::polarity::Polarity::Neutral,
                                             ),
-                                            None,
-                                        ))
+                                        )))
                                     }
                                     ArrayElement::Hole(hole_loc) => {
                                         let t = type_::empty_t::at(loc.dupe());
@@ -1357,16 +1364,18 @@ fn resolve_binding<'cx>(
                                             reason::VirtualReasonDesc::RArrayElement,
                                             hole_loc.dupe(),
                                         );
-                                        Ok(type_::UnresolvedParam::UnresolvedArg(
-                                            type_util::mk_tuple_element(
-                                                elem_reason,
-                                                t,
+                                        Ok(type_::UnresolvedParam::UnresolvedArg(Box::new(
+                                            type_::UnresolvedArgData(
+                                                type_util::mk_tuple_element(
+                                                    elem_reason,
+                                                    t,
+                                                    None,
+                                                    false,
+                                                    flow_common::polarity::Polarity::Neutral,
+                                                ),
                                                 None,
-                                                false,
-                                                flow_common::polarity::Polarity::Neutral,
                                             ),
-                                            None,
-                                        ))
+                                        )))
                                     }
                                     ArrayElement::Spread(spread) => {
                                         let t = synthesizable_expression(
@@ -1737,11 +1746,13 @@ fn resolve_binding<'cx>(
             };
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
-                DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT {
-                    elem_t,
-                    tuple_view,
-                    react_dro: None,
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ArrayAT(Box::new(
+                    ArrayATData {
+                        elem_t,
+                        tuple_view,
+                        react_dro: None,
+                    },
+                ))))),
             ));
             let cache = cx.node_cache();
             let exp: ast::expression::Expression<ALoc, (ALoc, Type)> =

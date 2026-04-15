@@ -10,17 +10,23 @@ use std::rc::Rc;
 
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::ConditionalTData;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
+use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::OptionalIndexedAccessTData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ResolveSpreadTData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::object::ObjectToolObjectMapData;
 
 // Disambiguate helpers vs mod re-exports
 use super::helpers::mk_typeapp_instance_annot;
@@ -44,6 +50,7 @@ pub(super) fn eval_selector<'cx>(
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::LookupAction;
     use flow_typing_type::type_::LookupKind;
+    use flow_typing_type::type_::ReadPropData;
     use flow_typing_type::type_::hint_unavailable;
     use flow_typing_type::type_util::mk_named_prop;
 
@@ -52,11 +59,11 @@ pub(super) fn eval_selector<'cx>(
             let name = Name::new(name_str.dupe());
             let lookup_ub = || -> Result<UseT<Context<'cx>>, FlowJsException> {
                 let use_op = unknown_use();
-                let action = LookupAction::ReadProp {
+                let action = LookupAction::ReadProp(Box::new(ReadPropData {
                     use_op: use_op.dupe(),
                     obj_t: curr_t.dupe(),
                     tout: tvar.dupe(),
-                };
+                }));
                 // LookupT unifies with the default with tvar. To get around that, we can create some
                 // indirection with a fresh tvar in between to ensure that we only add a lower bound
                 let default_tout =
@@ -75,13 +82,13 @@ pub(super) fn eval_selector<'cx>(
                         Ok::<(), FlowJsException>(())
                     })?;
                 let void_reason = tvar.reason().dupe().replace_desc(VirtualReasonDesc::RVoid);
-                let lookup_kind = LookupKind::NonstrictReturning(
+                let lookup_kind = LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
                     Some((
                         Type::new(TypeInner::DefT(void_reason, DefT::new(DefTInner::VoidT))),
                         default_tout,
                     )),
                     None,
-                );
+                )));
                 Ok(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason.dupe(),
                     lookup_kind: Box::new(lookup_kind),
@@ -434,12 +441,12 @@ pub(super) fn eval_destructor<'cx>(
     d: &Destructor,
     tout: &Tvar,
 ) -> Result<(), FlowJsException> {
-    if let Destructor::MappedType {
+    if let Destructor::MappedType(box DestructorMappedTypeData {
         homomorphic: MappedTypeHomomorphicFlag::Unspecialized,
         mapped_type_flags,
         property_type,
         distributive_tparam_name: _,
-    } = d
+    }) = d
     {
         // Non-homomorphic mapped types have their own special resolution code, so they do not fit well
         // into the structure of the rest of this function. We handle them upfront instead.
@@ -537,13 +544,13 @@ pub(super) fn eval_destructor<'cx>(
 
             let underlying_t = match &nominal_type.underlying_t {
                 nominal::UnderlyingT::FullyOpaque => nominal::UnderlyingT::FullyOpaque,
-                nominal::UnderlyingT::CustomError {
+                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                     t: inner_t,
                     custom_error_loc,
-                } => nominal::UnderlyingT::CustomError {
+                }) => nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                     t: eval_t(inner_t)?,
                     custom_error_loc: custom_error_loc.dupe(),
-                },
+                })),
                 nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                     nominal::UnderlyingT::OpaqueWithLocal {
                         t: eval_t(inner_t)?,
@@ -578,10 +585,10 @@ pub(super) fn eval_destructor<'cx>(
 
     let should_destruct_union = || -> bool {
         match d {
-            Destructor::ConditionalType {
+            Destructor::ConditionalType(box DestructorConditionalTypeData {
                 distributive_tparam_name,
                 ..
-            } => distributive_tparam_name.is_some(),
+            }) => distributive_tparam_name.is_some(),
             Destructor::ReactDRO(_) if let TypeInner::UnionT(_, rep) = t.deref() => {
                 if !rep.is_optimized_finally() {
                     rep.optimize_enum_only(|members| {
@@ -607,7 +614,7 @@ pub(super) fn eval_destructor<'cx>(
         ) if let TypeInner::NominalT { nominal_type, .. } = bound.deref()
             && let nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } =
                 &nominal_type.underlying_t
-            && matches!(&nominal_type.nominal_id, nominal::Id::UserDefinedOpaqueTypeId(aloc_id, _)
+            && matches!(&nominal_type.nominal_id, nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(aloc_id, _))
                 if aloc_id.0.source() == Some(cx.file())) =>
         {
             let new_generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -629,10 +636,10 @@ pub(super) fn eval_destructor<'cx>(
             }),
             _,
         ) if let TypeInner::NominalT { nominal_type, .. } = bound.deref()
-            && let nominal::UnderlyingT::CustomError {
+            && let nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                 t: inner_t,
                 custom_error_loc: _,
-            } = &nominal_type.underlying_t =>
+            }) = &nominal_type.underlying_t =>
         {
             let new_generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
                 bound: inner_t.dupe(),
@@ -656,7 +663,7 @@ pub(super) fn eval_destructor<'cx>(
                 nominal_type,
             },
             _,
-        ) if matches!(&nominal_type.nominal_id, nominal::Id::UserDefinedOpaqueTypeId(aloc_id, _)
+        ) if matches!(&nominal_type.nominal_id, nominal::Id::UserDefinedOpaqueTypeId(box nominal::UserDefinedOpaqueTypeIdData(aloc_id, _))
                     if aloc_id.0.source() == Some(cx.file()))
             && let nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } =
                 &nominal_type.underlying_t =>
@@ -671,11 +678,11 @@ pub(super) fn eval_destructor<'cx>(
             _,
         ) if matches!(
             &nominal_type.nominal_id,
-            nominal::Id::UserDefinedOpaqueTypeId(_, _)
-        ) && let nominal::UnderlyingT::CustomError {
+            nominal::Id::UserDefinedOpaqueTypeId(_)
+        ) && let nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
             t: inner_t,
             custom_error_loc: _,
-        } = &nominal_type.underlying_t =>
+        }) = &nominal_type.underlying_t =>
         {
             eval_destructor(cx, trace, use_op, reason, inner_t, d, tout)
         }
@@ -1044,7 +1051,11 @@ pub(super) fn eval_destructor<'cx>(
                     })));
                     rec_flow(cx, trace, (t, &u))
                 }
-                Destructor::SpreadType(options, todo_rev, head_slice) => {
+                Destructor::SpreadType(box DestructorSpreadTypeData(
+                    options,
+                    todo_rev,
+                    head_slice,
+                )) => {
                     use flow_typing_type::type_::object;
                     let tool = object::ResolveTool::Resolve(object::Resolve::Next);
                     let acc: Rc<[object::spread::AccElement]> = match head_slice {
@@ -1062,18 +1073,18 @@ pub(super) fn eval_destructor<'cx>(
                         use_op.dupe(),
                         reason.dupe(),
                         Box::new(tool),
-                        Box::new(object::Tool::Spread(options.clone(), state)),
+                        Box::new(object::Tool::Spread(Box::new((options.clone(), state)))),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
                     rec_flow(cx, trace, (t, &u))
                 }
-                Destructor::SpreadTupleType {
+                Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
                     reason_tuple,
                     reason_spread: _,
                     inexact,
                     resolved: resolved_rev,
                     unresolved,
-                } => {
+                }) => {
                     let elem_t = flow_typing_tvar::mk(cx, reason_tuple.dupe());
                     let u = UseT::new(UseTInner::ResolveSpreadT(Box::new(ResolveSpreadTData {
                         use_op: use_op.dupe(),
@@ -1117,7 +1128,7 @@ pub(super) fn eval_destructor<'cx>(
                         use_op.dupe(),
                         reason.dupe(),
                         Box::new(tool),
-                        Box::new(object::Tool::Rest(options.clone(), state)),
+                        Box::new(object::Tool::Rest(Box::new((options.clone(), state)))),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
                     rec_flow(cx, trace, (t, &u))
@@ -1156,7 +1167,7 @@ pub(super) fn eval_destructor<'cx>(
                         ),
                     )
                 }
-                Destructor::ReactDRO(react_dro) => rec_flow(
+                Destructor::ReactDRO(box react_dro) => rec_flow(
                     cx,
                     trace,
                     (
@@ -1212,13 +1223,13 @@ pub(super) fn eval_destructor<'cx>(
                         )),
                     ),
                 ),
-                Destructor::ConditionalType {
+                Destructor::ConditionalType(box DestructorConditionalTypeData {
                     distributive_tparam_name,
                     infer_tparams,
                     extends_t,
                     true_t,
                     false_t,
-                } => {
+                }) => {
                     let u = UseT::new(UseTInner::ConditionalT(Box::new(ConditionalTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
@@ -1258,12 +1269,12 @@ pub(super) fn eval_destructor<'cx>(
                         }))),
                     ),
                 ),
-                Destructor::MappedType {
+                Destructor::MappedType(box DestructorMappedTypeData {
                     property_type,
                     mapped_type_flags,
                     homomorphic,
                     distributive_tparam_name,
-                } => {
+                }) => {
                     let (property_type, homomorphic) =
                         flow_js_utils::substitute_mapped_type_distributive_tparams(
                             cx,
@@ -1282,11 +1293,11 @@ pub(super) fn eval_destructor<'cx>(
                         use_op.dupe(),
                         reason.dupe(),
                         Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
-                        Box::new(object::Tool::ObjectMap {
+                        Box::new(object::Tool::ObjectMap(Box::new(ObjectToolObjectMapData {
                             prop_type: property_type,
                             mapped_type_flags: *mapped_type_flags,
                             selected_keys_opt,
-                        }),
+                        }))),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
                     rec_flow(cx, trace, (t, &u))
@@ -1624,7 +1635,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                         None,
                     );
                 }
-                Destructor::ReactDRO(ReactDro(_loc, dro_type)) => {
+                Destructor::ReactDRO(box ReactDro(_loc, dro_type)) => {
                     try_evaluate(
                         nominal::StuckEvalKind::StuckEvalForReactDRO(dro_type.clone()),
                         vec![t.dupe()],

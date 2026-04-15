@@ -839,9 +839,11 @@ mod value_union_builder {
         t: &Type,
     ) -> value_union::ValueUnion<'cx, Context<'cx>> {
         use flow_typing_type::type_::ArrType;
+        use flow_typing_type::type_::ArrayATData;
         use flow_typing_type::type_::EnumInfoInner;
         use flow_typing_type::type_::InstanceKind;
         use flow_typing_type::type_::ObjKind as TypeObjKind;
+        use flow_typing_type::type_::TupleATData;
 
         let possible = possible_concrete_types(cx, true, t);
         let mut ts: Vec<Type> = Vec::new();
@@ -948,12 +950,12 @@ mod value_union_builder {
                             ));
                         }
                         DefTInner::ArrT(arr_rc) => match arr_rc.deref() {
-                            ArrType::TupleAT {
+                            ArrType::TupleAT(box TupleATData {
                                 elements,
                                 arity: (num_req, num_total),
                                 inexact,
                                 ..
-                            } => {
+                            }) => {
                                 let reason = enum_reason;
                                 let rest = if *inexact { Some(reason.dupe()) } else { None };
                                 let props_list: Vec<_> = elements
@@ -1019,7 +1021,8 @@ mod value_union_builder {
                                     value_union.tuples.push(tuple);
                                 }
                             }
-                            ArrType::ArrayAT { .. } | ArrType::ROArrayAT(_, _) => {
+                            ArrType::ArrayAT(box ArrayATData { .. })
+                            | ArrType::ROArrayAT(box (_, _)) => {
                                 let reason = enum_reason;
                                 let arr = value_object::ValueObject(
                                     reason.dupe(),
@@ -1919,7 +1922,7 @@ fn visit_mixed<'cx>(
         let arr_t = Type::new(TypeInner::DefT(
             reason.dupe(),
             flow_typing_type::type_::DefT::new(DefTInner::ArrT(std::rc::Rc::new(
-                flow_typing_type::type_::ArrType::ROArrayAT(mixed_t, None),
+                flow_typing_type::type_::ArrType::ROArrayAT(Box::new((mixed_t, None))),
             ))),
         ));
         let mixed_array = value_object::ValueObject(

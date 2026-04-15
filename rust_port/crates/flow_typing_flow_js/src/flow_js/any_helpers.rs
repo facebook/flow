@@ -22,23 +22,25 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::ArrT(arr) => match arr.deref() {
-                ArrType::ArrayAT { .. } => {
+                ArrType::ArrayAT(box ArrayATData { .. }) => {
                     return Type::new(TypeInner::DefT(
                         r.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                            elem_t: any.dupe(),
-                            tuple_view: None,
-                            react_dro: None,
-                        }))),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                            ArrayATData {
+                                elem_t: any.dupe(),
+                                tuple_view: None,
+                                react_dro: None,
+                            },
+                        ))))),
                     ));
                 }
-                ArrType::TupleAT {
+                ArrType::TupleAT(box TupleATData {
                     elements,
                     arity,
                     inexact,
                     react_dro,
                     ..
-                } => {
+                }) => {
                     let new_elements = elements
                         .iter()
                         .map(|te| {
@@ -54,13 +56,15 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                         .collect();
                     return Type::new(TypeInner::DefT(
                         r.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                            react_dro: react_dro.clone(),
-                            elem_t: any.dupe(),
-                            elements: new_elements,
-                            arity: arity.clone(),
-                            inexact: *inexact,
-                        }))),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                            TupleATData {
+                                react_dro: react_dro.clone(),
+                                elem_t: any.dupe(),
+                                elements: new_elements,
+                                arity: arity.clone(),
+                                inexact: *inexact,
+                            },
+                        ))))),
                     ));
                 }
                 _ => {}
@@ -73,13 +77,13 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
         } => {
             let underlying_t = match &nominal_type.underlying_t {
                 nominal::UnderlyingT::FullyOpaque => nominal::UnderlyingT::FullyOpaque,
-                nominal::UnderlyingT::CustomError {
+                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                     t: inner_t,
                     custom_error_loc,
-                } => nominal::UnderlyingT::CustomError {
+                }) => nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                     t: only_any(inner_t),
                     custom_error_loc: custom_error_loc.dupe(),
-                },
+                })),
                 nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                     nominal::UnderlyingT::OpaqueWithLocal {
                         t: only_any(inner_t),
@@ -345,7 +349,7 @@ pub(super) fn any_propagated<'cx>(
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::ArrT(arr_t) => {
                     // read-only arrays are covariant
-                    if let ArrType::ROArrayAT(elem_t, _) = arr_t.deref() {
+                    if let ArrType::ROArrayAT(box (elem_t, _)) = arr_t.deref() {
                         covariant_flow(use_op, elem_t)?;
                         Ok(true)
                     } else {
@@ -526,7 +530,7 @@ pub(super) fn any_propagated_use<'cx>(
                 Ok(true)
             }
 
-            DefTInner::ArrT(arr_t) if let ArrType::ROArrayAT(elem_t, _) = arr_t.deref() => {
+            DefTInner::ArrT(arr_t) if let ArrType::ROArrayAT(box (elem_t, _)) = arr_t.deref() => {
                 covariant_flow(use_op, elem_t)?;
                 Ok(true)
             }

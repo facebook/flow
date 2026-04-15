@@ -25,10 +25,13 @@ use flow_typing_errors::error_message::EnumModificationData;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallElemTData;
+use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::ConditionalTData;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::ElemTData;
 use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::ExtendsUseTData;
@@ -40,12 +43,16 @@ use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::OptionalIndexedAccessTData;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ReactKitTData;
+use flow_typing_type::type_::ReadElemData;
 use flow_typing_type::type_::ReposUseTData;
 use flow_typing_type::type_::ResolveSpreadTData;
+use flow_typing_type::type_::ResolveSpreadsToMultiflowPartialData;
 use flow_typing_type::type_::ResolveUnionTData;
+use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::SetElemTData;
 use flow_typing_type::type_::SpecializeTData;
@@ -55,6 +62,8 @@ use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
+use flow_typing_type::type_::WriteElemData;
+use flow_typing_type::type_::object::ObjectToolObjectMapData;
 
 use super::any_helpers::*;
 use super::constraint_helpers::*;
@@ -1183,59 +1192,63 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::TupleAT {
+                && let ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity,
                     inexact,
                     react_dro: _,
-                } = arr.as_ref() =>
+                }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(TypeInner::DefT(
                 r.dupe(),
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                    react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
-                    elem_t: elem_t.dupe(),
-                    elements: elements.dupe(),
-                    arity: *arity,
-                    inexact: *inexact,
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                    TupleATData {
+                        react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
+                        elem_t: elem_t.dupe(),
+                        elements: elements.dupe(),
+                        arity: *arity,
+                        inexact: *inexact,
+                    },
+                ))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::ArrayAT {
+                && let ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view,
                     react_dro: _,
-                } = arr.as_ref() =>
+                }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(TypeInner::DefT(
                 r.dupe(),
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                    react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
-                    elem_t: elem_t.dupe(),
-                    tuple_view: tuple_view.clone(),
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                    ArrayATData {
+                        react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
+                        elem_t: elem_t.dupe(),
+                        tuple_view: tuple_view.clone(),
+                    },
+                ))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::ROArrayAT(t, _) = arr.as_ref() =>
+                && let ArrType::ROArrayAT(box (t, _)) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
             let new_l = Type::new(TypeInner::DefT(
                 r.dupe(),
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
                     t.dupe(),
                     Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
-                )))),
+                )))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
@@ -1435,10 +1448,10 @@ fn __flow_impl<'cx>(
                             reason_prop: reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(use_op.dupe()),
                             ),
                         })),
@@ -1454,10 +1467,10 @@ fn __flow_impl<'cx>(
                             reason_prop: data.reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(data.use_op.dupe()),
                             ),
                         })),
@@ -1483,10 +1496,10 @@ fn __flow_impl<'cx>(
                     let new_u = type_util::mod_use_op_of_use_t(
                         |use_op: &UseOp| {
                             UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(use_op.dupe()),
                             )
                         },
@@ -1538,10 +1551,10 @@ fn __flow_impl<'cx>(
                             reason_prop: reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(use_op.dupe()),
                             ),
                         })),
@@ -1557,10 +1570,10 @@ fn __flow_impl<'cx>(
                             reason_prop: data.reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(data.use_op.dupe()),
                             ),
                         })),
@@ -1580,10 +1593,10 @@ fn __flow_impl<'cx>(
                     let new_u = type_util::mod_use_op_of_use_t(
                         |use_op: &UseOp| {
                             UseOp::Frame(
-                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                                Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(use_op.dupe()),
                             )
                         },
@@ -2167,7 +2180,9 @@ fn __flow_impl<'cx>(
                 reason: to_string_reason,
                 t_out,
             },
-        ) if let nominal::Id::UserDefinedOpaqueTypeId(nominal_id, _) = &nominal_type.nominal_id
+        ) if let nominal::Id::UserDefinedOpaqueTypeId(
+            box nominal::UserDefinedOpaqueTypeIdData(nominal_id, _),
+        ) = &nominal_type.nominal_id
             && nominal_id.0.source() == Some(cx.file())
             && let nominal::UnderlyingT::OpaqueWithLocal { t } = &nominal_type.underlying_t =>
         {
@@ -2194,11 +2209,11 @@ fn __flow_impl<'cx>(
                 reason: to_string_reason,
                 t_out,
             },
-        ) if let nominal::Id::UserDefinedOpaqueTypeId(_, _) = &nominal_type.nominal_id
-            && let nominal::UnderlyingT::CustomError {
+        ) if let nominal::Id::UserDefinedOpaqueTypeId(_) = &nominal_type.nominal_id
+            && let nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                 t,
                 custom_error_loc: _,
-            } = &nominal_type.underlying_t =>
+            }) = &nominal_type.underlying_t =>
         {
             rec_flow(
                 cx,
@@ -2253,19 +2268,22 @@ fn __flow_impl<'cx>(
         // If the type is still in the same file it was defined, we allow it to
         // expose its underlying type information
         (TypeInner::NominalT { nominal_type, .. }, _)
-            if let nominal::Id::UserDefinedOpaqueTypeId(nominal_id, _) =
-                &nominal_type.nominal_id
+            if let nominal::Id::UserDefinedOpaqueTypeId(
+                box nominal::UserDefinedOpaqueTypeIdData(nominal_id, _),
+            ) = &nominal_type.nominal_id
                 && nominal_id.0.source() == Some(cx.file())
                 && let nominal::UnderlyingT::OpaqueWithLocal { t } = &nominal_type.underlying_t =>
         {
             rec_flow(cx, trace, (t, u))?;
         }
         (TypeInner::NominalT { nominal_type, .. }, _)
-            if let nominal::Id::UserDefinedOpaqueTypeId(_, _) = &nominal_type.nominal_id
-                && let nominal::UnderlyingT::CustomError {
+            if let nominal::Id::UserDefinedOpaqueTypeId(
+                box nominal::UserDefinedOpaqueTypeIdData(_, _),
+            ) = &nominal_type.nominal_id
+                && let nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                     t,
                     custom_error_loc: _,
-                } = &nominal_type.underlying_t =>
+                }) = &nominal_type.underlying_t =>
         {
             rec_flow(cx, trace, (t, u))?;
         }
@@ -2709,7 +2727,7 @@ fn __flow_impl<'cx>(
                 use_op,
                 reason,
                 obj,
-                action: box ElemAction::ReadElem { tout, .. },
+                action: box ElemAction::ReadElem(box ReadElemData { tout, .. }),
             }),
         ) if let TypeInner::DefT(_, obj_def) = obj.deref()
             && let DefTInner::ObjT(obj_t) = obj_def.deref()
@@ -2733,7 +2751,10 @@ fn __flow_impl<'cx>(
             let value = match &flags.react_dro {
                 Some(dro) => {
                     let frame_use_op = VirtualUseOp::Frame(
-                        Arc::new(FrameUseOp::ReactDeepReadOnly(dro.0.dupe(), dro.1.clone())),
+                        Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
+                            dro.0.dupe(),
+                            dro.1.clone(),
+                        )))),
                         Arc::new(use_op.dupe()),
                     );
                     mk_react_dro(cx, frame_use_op, dro.clone(), value)
@@ -2750,13 +2771,13 @@ fn __flow_impl<'cx>(
                 reason,
                 obj,
                 action:
-                    box ElemAction::ReadElem {
+                    box ElemAction::ReadElem(box ReadElemData {
                         id,
                         from_annot: true,
                         skip_optional,
                         access_iterables,
                         tout,
-                    },
+                    }),
             }),
         ) => {
             let distribute = || -> Result<(), FlowJsException> {
@@ -2771,13 +2792,13 @@ fn __flow_impl<'cx>(
                         reason.dupe(),
                         |cx, tvar_reason, tvar_id| {
                             let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                            let action = ElemAction::ReadElem {
+                            let action = ElemAction::ReadElem(Box::new(ReadElemData {
                                 id: *id,
                                 from_annot: true,
                                 skip_optional: *skip_optional,
                                 access_iterables: *access_iterables,
                                 tout: tvar,
-                            };
+                            }));
                             rec_flow(
                                 cx,
                                 trace,
@@ -3039,18 +3060,22 @@ fn __flow_impl<'cx>(
             for t in rep.members_iter() {
                 let u_inner = match use_op {
                     VirtualUseOp::Op(root)
-                        if let VirtualRootUseOp::ClassImplementsCheck {
-                            def,
-                            name,
-                            implements: _,
-                        } = root.deref() =>
+                        if let VirtualRootUseOp::ClassImplementsCheck(
+                            box ClassImplementsCheckData {
+                                def,
+                                name,
+                                implements: _,
+                            },
+                        ) = root.deref() =>
                     {
                         let new_use_op =
-                            VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassImplementsCheck {
-                                def: def.dupe(),
-                                name: name.dupe(),
-                                implements: reason_of_t(t).dupe(),
-                            }));
+                            VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassImplementsCheck(
+                                Box::new(ClassImplementsCheckData {
+                                    def: def.dupe(),
+                                    name: name.dupe(),
+                                    implements: reason_of_t(t).dupe(),
+                                }),
+                            )));
                         UseT::new(UseTInner::ImplementsT(new_use_op, this.dupe()))
                     }
                     _ => u.dupe(),
@@ -3226,10 +3251,10 @@ fn __flow_impl<'cx>(
                     match (&resolve_spread.rrt_resolve_to, arrtype.as_ref()) {
                         (
                             SpreadResolve::ResolveSpreadsToTupleType { .. },
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(box ArrayATData {
                                 tuple_view: None, ..
-                            }
-                            | ArrType::ROArrayAT(_, _),
+                            })
+                            | ArrType::ROArrayAT(box (_, _)),
                         ) => {
                             // Only tuples can be spread into tuple types.
                             flow_js_utils::add_output(
@@ -3241,11 +3266,11 @@ fn __flow_impl<'cx>(
                                     },
                                 )),
                             )?;
-                            ArrType::ArrayAT {
+                            ArrType::ArrayAT(Box::new(ArrayATData {
                                 elem_t: any_t::error(reason.dupe()),
                                 tuple_view: None,
                                 react_dro: None,
-                            }
+                            }))
                         }
                         _ => (**arrtype).clone(),
                     }
@@ -3266,7 +3291,7 @@ fn __flow_impl<'cx>(
                         SpreadResolve::ResolveSpreadsToArray(_, _)
                         | SpreadResolve::ResolveSpreadsToArrayLiteral { .. }
                         | SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, _)
-                        | SpreadResolve::ResolveSpreadsToMultiflowPartial(_, _, _, _) => {
+                        | SpreadResolve::ResolveSpreadsToMultiflowPartial(..) => {
                             // Babel's "loose mode" array spread transform deviates from
                             // the spec by assuming the spread argument is always an
                             // array. If the babel_loose_array_spread option is set, model
@@ -3298,10 +3323,9 @@ fn __flow_impl<'cx>(
                             );
                             Type::new(TypeInner::DefT(
                                 arr_reason,
-                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
-                                    elem_t.dupe(),
-                                    None,
-                                )))),
+                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                                    (elem_t.dupe(), None),
+                                ))))),
                             ))
                         }
                         ResolveTo::Tuple => {
@@ -3318,11 +3342,11 @@ fn __flow_impl<'cx>(
                         }
                     };
                     rec_flow_t(cx, trace, unknown_use(), (l, &resolve_to_type))?;
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
-                    }
+                    }))
                 }
             };
             let elemt = elemt_of_arrtype(&arrtype);
@@ -3369,11 +3393,13 @@ fn __flow_impl<'cx>(
                                 0 => {
                                     // The first time we see this, we process it normally
                                     let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(
-                                        reason.dupe(),
-                                        arrtype.clone(),
-                                        generic.clone(),
-                                    ));
+                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
+                                        ResolvedSpreadArgData(
+                                            reason.dupe(),
+                                            arrtype.clone(),
+                                            generic.clone(),
+                                        ),
+                                    )));
                                     resolve_spread_list_rec(
                                         cx,
                                         Some(trace),
@@ -3426,7 +3452,9 @@ fn __flow_impl<'cx>(
                 }
                 SpreadResolve::ResolveSpreadsToMultiflowCallFull(cfe_id, _)
                 | SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(cfe_id, _)
-                | SpreadResolve::ResolveSpreadsToMultiflowPartial(cfe_id, _, _, _) => {
+                | SpreadResolve::ResolveSpreadsToMultiflowPartial(
+                    box ResolveSpreadsToMultiflowPartialData(cfe_id, _, _, _),
+                ) => {
                     let reason_elemt = reason_of_t(&elemt);
                     let pos = resolve_spread.rrt_resolved.len() as i32;
                     const_fold_expansion::guard(
@@ -3438,11 +3466,13 @@ fn __flow_impl<'cx>(
                                 0 => {
                                     // The first time we see this, we process it normally *)
                                     let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(
-                                        reason.dupe(),
-                                        arrtype.clone(),
-                                        generic.clone(),
-                                    ));
+                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
+                                        ResolvedSpreadArgData(
+                                            reason.dupe(),
+                                            arrtype.clone(),
+                                            generic.clone(),
+                                        ),
+                                    )));
                                     resolve_spread_list_rec(
                                         cx,
                                         Some(trace),
@@ -3471,34 +3501,39 @@ fn __flow_impl<'cx>(
                                     // tuples or array literals into simple arrays.
                                     let new_arrtype = match &arrtype {
                                         // These can get us into constant folding loops
-                                        ArrType::ArrayAT {
+                                        ArrType::ArrayAT(box ArrayATData {
                                             elem_t,
                                             tuple_view: Some(_),
                                             react_dro,
-                                        } => ArrType::ArrayAT {
+                                        }) => ArrType::ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
-                                        },
-                                        ArrType::TupleAT {
-                                            elem_t, react_dro, ..
-                                        } => ArrType::ArrayAT {
+                                        })),
+                                        ArrType::TupleAT(box TupleATData {
+                                            elem_t,
+                                            react_dro,
+                                            ..
+                                        }) => ArrType::ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
-                                        },
+                                        })),
                                         // These cannot
-                                        ArrType::ArrayAT {
-                                            tuple_view: None, ..
-                                        }
-                                        | ArrType::ROArrayAT(_, _) => arrtype.clone(),
+                                        ArrType::ArrayAT(box ArrayATData {
+                                            tuple_view: None,
+                                            ..
+                                        })
+                                        | ArrType::ROArrayAT(box (_, _)) => arrtype.clone(),
                                     };
                                     let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(
-                                        reason.dupe(),
-                                        new_arrtype,
-                                        generic.clone(),
-                                    ));
+                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
+                                        ResolvedSpreadArgData(
+                                            reason.dupe(),
+                                            new_arrtype,
+                                            generic.clone(),
+                                        ),
+                                    )));
                                     resolve_spread_list_rec(
                                         cx,
                                         Some(trace),
@@ -3518,11 +3553,9 @@ fn __flow_impl<'cx>(
                 // no caching
                 SpreadResolve::ResolveSpreadsToArray(_, _) => {
                     let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(
-                        reason.dupe(),
-                        arrtype.clone(),
-                        generic.clone(),
-                    ));
+                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
+                        ResolvedSpreadArgData(reason.dupe(), arrtype.clone(), generic.clone()),
+                    )));
                     resolve_spread_list_rec(
                         cx,
                         Some(trace),
@@ -4057,7 +4090,7 @@ fn __flow_impl<'cx>(
             UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
-                call_action: box CallAction::Funcalltype(calltype),
+                call_action: box CallAction::Funcalltype(box calltype),
                 return_hint,
             }),
         ) if let DefTInner::PolyT(box PolyTData {
@@ -4107,7 +4140,7 @@ fn __flow_impl<'cx>(
             let new_u = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                call_action: Box::new(CallAction::Funcalltype(new_calltype)),
+                call_action: Box::new(CallAction::Funcalltype(Box::new(new_calltype))),
                 return_hint: return_hint.clone(),
             })));
             rec_flow(cx, trace, (&t_, &new_u))?;
@@ -4179,7 +4212,7 @@ fn __flow_impl<'cx>(
             t_out: t,
             ..
         }) = def_t.deref()
-            && let react::Tool::CreateElement {
+            && let react::Tool::CreateElement(box react::CreateElementData {
                 component,
                 jsx_props,
                 should_generalize,
@@ -4188,7 +4221,7 @@ fn __flow_impl<'cx>(
                 tout,
                 specialized_component,
                 ..
-            } = &**tool =>
+            }) = &**tool =>
         {
             let lparts = (
                 reason_tapp.dupe(),
@@ -4233,17 +4266,19 @@ fn __flow_impl<'cx>(
             let new_u = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
-                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement {
-                    component: component.dupe(),
-                    jsx_props: jsx_props.dupe(),
-                    should_generalize: *should_generalize,
-                    return_hint: return_hint.clone(),
-                    targs: None,
-                    tout: tout.dupe(),
-                    record_monomorphized_result: true,
-                    inferred_targs: Some(inferred_targs.into()),
-                    specialized_component: specialized_component.clone(),
-                }),
+                tool: Box::new(react::Tool::<Context<'cx>>::CreateElement(Box::new(
+                    react::CreateElementData {
+                        component: component.dupe(),
+                        jsx_props: jsx_props.dupe(),
+                        should_generalize: *should_generalize,
+                        return_hint: return_hint.clone(),
+                        targs: None,
+                        tout: tout.dupe(),
+                        record_monomorphized_result: true,
+                        inferred_targs: Some(inferred_targs.into()),
+                        specialized_component: specialized_component.clone(),
+                    },
+                ))),
             })));
             rec_flow(cx, trace, (&t_, &new_u))?;
         }
@@ -4258,7 +4293,7 @@ fn __flow_impl<'cx>(
             && obj.call_t.is_some()
             && matches!(
                 &**tool,
-                react::Tool::CreateElement { .. }
+                react::Tool::CreateElement(..)
                     | react::Tool::GetConfig { .. }
                     | react::Tool::ConfigCheck { .. }
             )
@@ -4477,7 +4512,7 @@ fn __flow_impl<'cx>(
             UseTInner::CallT(box CallTData {
                 use_op,
                 reason,
-                call_action: box CallAction::Funcalltype(calltype),
+                call_action: box CallAction::Funcalltype(box calltype),
                 ..
             }),
         ) if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT(box _)) => {
@@ -4511,7 +4546,7 @@ fn __flow_impl<'cx>(
             UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_callsite,
-                call_action: box CallAction::Funcalltype(calltype),
+                call_action: box CallAction::Funcalltype(box calltype),
                 return_hint: _,
             }),
         ) if let DefTInner::FunT(_, funtype) = def_t.deref() => {
@@ -4521,10 +4556,10 @@ fn __flow_impl<'cx>(
                         flow_common::options::ReactRule::DeepReadOnlyHookReturns,
                     ) {
                         let ret_reason = reason_of_t(&funtype.return_t);
-                        let destructor = Destructor::ReactDRO(ReactDro(
+                        let destructor = Destructor::ReactDRO(Box::new(ReactDro(
                             reason_fundef.def_loc().dupe(),
                             DroType::HookReturn,
-                        ));
+                        )));
                         Type::new(TypeInner::EvalT {
                             type_: funtype.return_t.dupe(),
                             defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
@@ -4625,7 +4660,7 @@ fn __flow_impl<'cx>(
             UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
-                call_action: box CallAction::Funcalltype(calltype),
+                call_action: box CallAction::Funcalltype(box calltype),
                 return_hint: _,
             }),
         ) => {
@@ -4802,11 +4837,13 @@ fn __flow_impl<'cx>(
             {
                 if type_util::is_in_common_interface_conformance_check(use_op) {
                     let implements_use_op =
-                        VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassImplementsCheck {
-                            def: reason.dupe(),
-                            name: reason.dupe(),
-                            implements: reason_u.dupe(),
-                        }));
+                        VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ClassImplementsCheck(
+                            Box::new(ClassImplementsCheckData {
+                                def: reason.dupe(),
+                                name: reason.dupe(),
+                                implements: reason_u.dupe(),
+                            }),
+                        )));
                     // We need to ensure that the shape of the class instances match.
                     let obj1 = inst_type_to_obj_type(
                         cx,
@@ -4836,11 +4873,12 @@ fn __flow_impl<'cx>(
                     // We need to ensure that the shape of the class statics match.
                     let spread_of = |reason: &Reason, t: &Type| -> Type {
                         let id = eval::Id::generate_id();
-                        let destructor = Rc::new(Destructor::SpreadType(
-                            object::spread::Target::Annot { make_exact: false },
-                            vec![].into(),
-                            None,
-                        ));
+                        let destructor =
+                            Rc::new(Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
+                                object::spread::Target::Annot { make_exact: false },
+                                vec![].into(),
+                                None,
+                            ))));
                         Type::new(TypeInner::EvalT {
                             type_: t.dupe(),
                             defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
@@ -4956,11 +4994,11 @@ fn __flow_impl<'cx>(
                                 reason: reason_op.dupe(),
                                 prop_reason: reason_o.dupe(),
                                 propref: Box::new(propref),
-                                method_action: Box::new(MethodAction::CallM {
+                                method_action: Box::new(MethodAction::CallM(Box::new(CallMData {
                                     methodcalltype: funtype,
                                     return_hint: return_hint.clone(),
                                     specialized_callee: specialized_ctor.clone(),
-                                }),
+                                }))),
                             }))),
                         ),
                     )?;
@@ -5058,11 +5096,13 @@ fn __flow_impl<'cx>(
                                         reason: reason_op.dupe(),
                                         prop_reason: reason_o.dupe(),
                                         propref: Box::new(propref.clone()),
-                                        method_action: Box::new(MethodAction::CallM {
-                                            methodcalltype: funtype,
-                                            return_hint: return_hint.clone(),
-                                            specialized_callee: specialized_ctor.clone(),
-                                        }),
+                                        method_action: Box::new(MethodAction::CallM(Box::new(
+                                            CallMData {
+                                                methodcalltype: funtype,
+                                                return_hint: return_hint.clone(),
+                                                specialized_callee: specialized_ctor.clone(),
+                                            },
+                                        ))),
                                     }))),
                                 ),
                             )?;
@@ -5127,11 +5167,11 @@ fn __flow_impl<'cx>(
                 prop_reason: _,
                 propref: _,
                 method_action:
-                    box MethodAction::CallM {
+                    box MethodAction::CallM(box CallMData {
                         methodcalltype,
                         specialized_callee,
                         ..
-                    },
+                    }),
             }),
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
@@ -5157,11 +5197,11 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, trace, unknown_use(), (&any, &open_tout))?;
         }
         (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
-            if let MethodAction::CallM {
+            if let MethodAction::CallM(box CallMData {
                 methodcalltype,
                 specialized_callee,
                 ..
-            } = pm_data.method_action.as_ref() =>
+            }) = pm_data.method_action.as_ref() =>
         {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.reason.dupe());
@@ -5195,7 +5235,7 @@ fn __flow_impl<'cx>(
                 reason: reason_op,
                 prop_reason: _,
                 propref: _,
-                method_action: box chain @ MethodAction::ChainM { .. },
+                method_action: box chain @ MethodAction::ChainM(..),
             }),
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
@@ -5211,7 +5251,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
-            if let chain @ MethodAction::ChainM { .. } = pm_data.method_action.as_ref() =>
+            if let chain @ MethodAction::ChainM(..) = pm_data.method_action.as_ref() =>
         {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.reason.dupe());
@@ -5371,7 +5411,11 @@ fn __flow_impl<'cx>(
                         &hint_unavailable(),
                         p,
                     )?;
-                    if let LookupKind::NonstrictReturning(_, Some((id, _))) = &**kind {
+                    if let LookupKind::NonstrictReturning(box NonstrictReturningData(
+                        _,
+                        Some((id, _)),
+                    )) = &**kind
+                    {
                         cx.test_prop_hit(*id);
                     }
                     let property_type = property::type_(&p);
@@ -5429,10 +5473,10 @@ fn __flow_impl<'cx>(
             let reason_prop = type_util::reason_of_propref(propref);
             let prop_name = name_of_propref(propref);
             let use_op = UseOp::Frame(
-                std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                     dro_loc.dupe(),
                     dro_type.clone(),
-                )),
+                )))),
                 Arc::new(use_op.dupe()),
             );
             add_output(
@@ -5448,14 +5492,14 @@ fn __flow_impl<'cx>(
             TypeInner::DefT(reason_instance, def_t),
             UseTInner::SetPropT(use_op, reason_op, propref, mode, write_ctx, tin, prop_tout),
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
-            let lookup_action = LookupAction::WriteProp {
+            let lookup_action = LookupAction::WriteProp(Box::new(WritePropData {
                 use_op: use_op.dupe(),
                 obj_t: l.dupe(),
                 prop_tout: prop_tout.as_ref().map(|t| t.dupe()),
                 tin: tin.dupe(),
                 write_ctx: write_ctx.clone(),
                 mode: mode.clone(),
-            };
+            }));
             let method_accessible = true;
             let lookup_kind = instance_lookup_kind(
                 cx,
@@ -5544,14 +5588,14 @@ fn __flow_impl<'cx>(
                         )?;
                     }
                     Some(p) => {
-                        let action = LookupAction::WriteProp {
+                        let action = LookupAction::WriteProp(Box::new(WritePropData {
                             use_op: spp_data.use_op.dupe(),
                             obj_t: l.dupe(),
                             prop_tout: spp_data.tout.as_ref().map(|t| t.dupe()),
                             tin: spp_data.tin.dupe(),
                             write_ctx: spp_data.write_ctx.clone(),
                             mode: spp_data.set_mode.clone(),
-                        };
+                        }));
                         let propref = mk_named_prop(spp_data.reason.dupe(), false, name);
                         perform_lookup_action(
                             cx,
@@ -5589,11 +5633,11 @@ fn __flow_impl<'cx>(
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let method_accessible = data.from_annot;
-            let lookup_action = LookupAction::ReadProp {
+            let lookup_action = LookupAction::ReadProp(Box::new(ReadPropData {
                 use_op: data.use_op.dupe(),
                 obj_t: l.dupe(),
                 tout: (*data.tout).dupe(),
-            };
+            }));
             let lookup_kind = instance_lookup_kind(
                 cx,
                 trace,
@@ -5659,11 +5703,11 @@ fn __flow_impl<'cx>(
                 reason_lookup.dupe(),
                 |cx, reason_tout, tout| {
                     let tout_tvar = Tvar::new(reason_tout.dupe(), tout as u32);
-                    let lookup_action = LookupAction::ReadProp {
+                    let lookup_action = LookupAction::ReadProp(Box::new(ReadPropData {
                         use_op: use_op.dupe(),
                         obj_t: l.dupe(),
                         tout: tout_tvar.dupe(),
-                    };
+                    }));
                     let method_accessible = true;
                     let lookup_kind = instance_lookup_kind(
                         cx,
@@ -5862,7 +5906,10 @@ fn __flow_impl<'cx>(
                             use_op.dupe(),
                             reason_op.dupe(),
                             Box::new(spread_tool.clone()),
-                            Box::new(object::Tool::Spread(spread_target, spread_state.clone())),
+                            Box::new(object::Tool::Spread(Box::new((
+                                spread_target,
+                                spread_state.clone(),
+                            )))),
                             tvar.dupe(),
                         )),
                     ),
@@ -5924,7 +5971,11 @@ fn __flow_impl<'cx>(
                 reason_op,
             )? {
                 Some((p, target_kind)) => {
-                    if let LookupKind::NonstrictReturning(_, Some((id, _))) = &**lookup_kind {
+                    if let LookupKind::NonstrictReturning(box NonstrictReturningData(
+                        _,
+                        Some((id, _)),
+                    )) = &**lookup_kind
+                    {
                         cx.test_prop_hit(*id);
                     }
                     perform_lookup_action(
@@ -5975,7 +6026,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             match action {
-                box LookupAction::SuperProp(_, lp)
+                box LookupAction::SuperProp(box (_, lp))
                     if property::write_t_of_property_type(lp, None).is_none() =>
                 {
                     // Without this exception, we will call rec_flow_p where
@@ -5989,7 +6040,11 @@ fn __flow_impl<'cx>(
                         type_: any_t::why(src, reason_op.dupe()),
                         polarity: Polarity::Neutral,
                     };
-                    if let LookupKind::NonstrictReturning(_, Some((id, _))) = &**lookup_kind {
+                    if let LookupKind::NonstrictReturning(box NonstrictReturningData(
+                        _,
+                        Some((id, _)),
+                    )) = &**lookup_kind
+                    {
                         cx.test_prop_hit(*id);
                     }
                     perform_lookup_action(
@@ -6020,10 +6075,10 @@ fn __flow_impl<'cx>(
             let prop_name = name_of_propref(propref);
             let use_op = match &o.flags.react_dro {
                 Some(ReactDro(loc, dro_type)) => UseOp::Frame(
-                    std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                    std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                         loc.dupe(),
                         dro_type.clone(),
-                    )),
+                    )))),
                     Arc::new(use_op.dupe()),
                 ),
                 None => use_op.dupe(),
@@ -6269,11 +6324,11 @@ fn __flow_impl<'cx>(
             DefTInner::ObjT(_) | DefTInner::ArrT(_) | DefTInner::InstanceT(_)
         ) =>
         {
-            let action = ElemAction::WriteElem {
+            let action = ElemAction::WriteElem(Box::new(WriteElemData {
                 tin: tin.dupe(),
                 tout: tout.as_ref().map(|t| t.dupe()),
                 mode: mode.clone(),
-            };
+            }));
             rec_flow(
                 cx,
                 trace,
@@ -6299,11 +6354,11 @@ fn __flow_impl<'cx>(
                 tout,
             }),
         ) => {
-            let action = ElemAction::WriteElem {
+            let action = ElemAction::WriteElem(Box::new(WriteElemData {
                 tin: tin.dupe(),
                 tout: tout.as_ref().map(|t| t.dupe()),
                 mode: mode.clone(),
-            };
+            }));
             rec_flow(
                 cx,
                 trace,
@@ -6335,13 +6390,13 @@ fn __flow_impl<'cx>(
             DefTInner::ObjT(_) | DefTInner::ArrT(_) | DefTInner::InstanceT(_)
         ) =>
         {
-            let action = ElemAction::ReadElem {
+            let action = ElemAction::ReadElem(Box::new(ReadElemData {
                 id: *id,
                 from_annot: *from_annot,
                 skip_optional: *skip_optional,
                 access_iterables: *access_iterables,
                 tout: (**tout).dupe(),
-            };
+            }));
             rec_flow(
                 cx,
                 trace,
@@ -6369,13 +6424,13 @@ fn __flow_impl<'cx>(
                 tout,
             }),
         ) => {
-            let action = ElemAction::ReadElem {
+            let action = ElemAction::ReadElem(Box::new(ReadElemData {
                 id: *id,
                 from_annot: *from_annot,
                 skip_optional: *skip_optional,
                 access_iterables: *access_iterables,
                 tout: (**tout).dupe(),
-            };
+            }));
             rec_flow(
                 cx,
                 trace,
@@ -6452,11 +6507,11 @@ fn __flow_impl<'cx>(
                 use_op,
                 obj,
                 action:
-                    box ElemAction::ReadElem {
+                    box ElemAction::ReadElem(box ReadElemData {
                         access_iterables: true,
                         tout,
                         ..
-                    },
+                    }),
                 ..
             }),
         ) if matches!(
@@ -6515,29 +6570,29 @@ fn __flow_impl<'cx>(
         {
             let react_dro = match (action, arrtype.as_ref()) {
                 (
-                    box ElemAction::WriteElem { .. },
-                    ArrType::ROArrayAT(_, _)
-                    | ArrType::TupleAT {
+                    box ElemAction::WriteElem(..),
+                    ArrType::ROArrayAT(box (_, _))
+                    | ArrType::TupleAT(box TupleATData {
                         react_dro: Some(_), ..
-                    }
-                    | ArrType::ArrayAT {
+                    })
+                    | ArrType::ArrayAT(box ArrayATData {
                         react_dro: Some(_), ..
-                    },
+                    }),
                 ) => {
                     let reasons = (reason_op.dupe(), reason_tup.dupe());
                     let use_op_for_err = match arrtype.as_ref() {
-                        ArrType::TupleAT {
+                        ArrType::TupleAT(box TupleATData {
                             react_dro: Some(dro),
                             ..
-                        }
-                        | ArrType::ArrayAT {
+                        })
+                        | ArrType::ArrayAT(box ArrayATData {
                             react_dro: Some(dro),
                             ..
-                        } => UseOp::Frame(
-                            std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(
+                        }) => UseOp::Frame(
+                            std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                                 dro.0.dupe(),
                                 dro.1.clone(),
-                            )),
+                            )))),
                             Arc::new(use_op.dupe()),
                         ),
                         _ => use_op.dupe(),
@@ -6546,10 +6601,10 @@ fn __flow_impl<'cx>(
                     None
                 }
                 (
-                    box ElemAction::ReadElem { .. },
-                    ArrType::ROArrayAT(_, react_dro)
-                    | ArrType::TupleAT { react_dro, .. }
-                    | ArrType::ArrayAT { react_dro, .. },
+                    box ElemAction::ReadElem(..),
+                    ArrType::ROArrayAT(box (_, react_dro))
+                    | ArrType::TupleAT(box TupleATData { react_dro, .. })
+                    | ArrType::ArrayAT(box ArrayATData { react_dro, .. }),
                 ) => react_dro.clone(),
                 _ => None,
             };
@@ -6585,9 +6640,11 @@ fn __flow_impl<'cx>(
         {
             let (write_action, read_action, never_union_void_on_computed_prop_access) = match action
             {
-                box ElemAction::ReadElem { from_annot, .. } => (false, true, *from_annot),
+                box ElemAction::ReadElem(box ReadElemData { from_annot, .. }) => {
+                    (false, true, *from_annot)
+                }
                 box ElemAction::CallElem(_, _) => (false, false, false),
-                box ElemAction::WriteElem { .. } => (true, false, true),
+                box ElemAction::WriteElem(..) => (true, false, true),
             };
             let (value, is_tuple, use_op_out, react_dro) = flow_js_utils::array_elem_check(
                 cx,
@@ -6656,22 +6713,22 @@ fn __flow_impl<'cx>(
         ) if let DefTInner::ArrT(arrtype) = def_t.deref() => {
             let i = *i as usize;
             let arrtype = match arrtype.deref() {
-                ArrType::ArrayAT {
+                ArrType::ArrayAT(box ArrayATData {
                     tuple_view: None, ..
-                }
-                | ArrType::ROArrayAT(_, _) => arrtype.deref().clone(),
-                ArrType::ArrayAT {
+                })
+                | ArrType::ROArrayAT(box (_, _)) => arrtype.deref().clone(),
+                ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view: Some(tuple_view),
                     react_dro,
-                } => {
+                }) => {
                     let elements = tuple_view.elements[i.min(tuple_view.elements.len())..].to_vec();
                     let (num_req, num_total) = tuple_view.arity;
                     let arity = (
                         (num_req as i64 - i as i64).max(0) as i32,
                         (num_total as i64 - i as i64).max(0) as i32,
                     );
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t: elem_t.dupe(),
                         tuple_view: Some(TupleView {
                             elements: elements.into(),
@@ -6679,15 +6736,15 @@ fn __flow_impl<'cx>(
                             inexact: tuple_view.inexact,
                         }),
                         react_dro: react_dro.clone(),
-                    }
+                    }))
                 }
-                ArrType::TupleAT {
+                ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity: (num_req, num_total),
                     inexact,
                     react_dro,
-                } => ArrType::TupleAT {
+                }) => ArrType::TupleAT(Box::new(TupleATData {
                     elem_t: elem_t.dupe(),
                     elements: elements[i.min(elements.len())..].to_vec().into(),
                     arity: (
@@ -6696,7 +6753,7 @@ fn __flow_impl<'cx>(
                     ),
                     inexact: *inexact,
                     react_dro: react_dro.clone(),
-                },
+                })),
             };
             let a = Type::new(TypeInner::DefT(
                 reason.dupe(),
@@ -6766,22 +6823,22 @@ fn __flow_impl<'cx>(
             }),
             UseTInner::ObjKitT(use_op, reason_op, resolve_tool, tool, tout),
         ) if let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
-            && let object::Tool::ObjectMap {
+            && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type,
                 mapped_type_flags,
                 selected_keys_opt: None,
                 ..
-            } = &**tool
+            }) = &**tool
             && {
                 let roarray_bound = Type::new(TypeInner::DefT(
                     reason.dupe(),
-                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
+                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
                         Type::new(TypeInner::DefT(
                             reason.dupe(),
                             DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
                         )),
                         None,
-                    )))),
+                    )))))),
                 ));
                 speculative_subtyping_succeeds(cx, bound, &roarray_bound)
             } =>
@@ -6819,11 +6876,13 @@ fn __flow_impl<'cx>(
                                 use_op.dupe(),
                                 reason_op.dupe(),
                                 Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
-                                Box::new(object::Tool::ObjectMap {
-                                    prop_type: prop_type.dupe(),
-                                    mapped_type_flags: mapped_type_flags.clone(),
-                                    selected_keys_opt: None,
-                                }),
+                                Box::new(object::Tool::ObjectMap(Box::new(
+                                    ObjectToolObjectMapData {
+                                        prop_type: prop_type.dupe(),
+                                        mapped_type_flags: mapped_type_flags.clone(),
+                                        selected_keys_opt: None,
+                                    },
+                                ))),
                                 tout_inner.dupe(),
                             )),
                         ),
@@ -6850,12 +6909,12 @@ fn __flow_impl<'cx>(
             UseTInner::ObjKitT(use_op, reason_op, resolve_tool, tool, tout),
         ) if let DefTInner::ArrT(arrtype) = def_t.deref()
             && let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
-            && let object::Tool::ObjectMap {
+            && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type: property_type,
                 mapped_type_flags,
                 selected_keys_opt: None,
                 ..
-            } = &**tool
+            }) = &**tool
             && let TypeInner::OpenT(tout_tvar) = tout.deref() =>
         {
             let mapped_type_variance = &mapped_type_flags.variance;
@@ -6893,11 +6952,11 @@ fn __flow_impl<'cx>(
                 )?;
             }
             let new_arrtype = match arrtype.deref() {
-                ArrType::ArrayAT {
+                ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view,
                     react_dro,
-                } => ArrType::ArrayAT {
+                }) => ArrType::ArrayAT(Box::new(ArrayATData {
                     elem_t: f(elem_t, None, false),
                     react_dro: react_dro.clone(),
                     tuple_view: tuple_view.as_ref().map(|tv| {
@@ -6919,14 +6978,14 @@ fn __flow_impl<'cx>(
                             inexact: tv.inexact,
                         }
                     }),
-                },
-                ArrType::TupleAT {
+                })),
+                ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
                     arity,
                     inexact,
                     react_dro,
-                } => ArrType::TupleAT {
+                }) => ArrType::TupleAT(Box::new(TupleATData {
                     elem_t: f(elem_t, None, false),
                     react_dro: react_dro.clone(),
                     elements: elements
@@ -6942,9 +7001,9 @@ fn __flow_impl<'cx>(
                         .collect(),
                     arity: *arity,
                     inexact: *inexact,
-                },
-                ArrType::ROArrayAT(elemt, dro) => {
-                    ArrType::ROArrayAT(f(elemt, None, false), dro.clone())
+                })),
+                ArrType::ROArrayAT(box (elemt, dro)) => {
+                    ArrType::ROArrayAT(Box::new((f(elemt, None, false), dro.clone())))
                 }
             };
             let t = {
@@ -6994,7 +7053,7 @@ fn __flow_impl<'cx>(
             UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
-                call_action: box CallAction::Funcalltype(funtype),
+                call_action: box CallAction::Funcalltype(box funtype),
                 return_hint: _,
             }),
         ) if !funtype.call_args_tlist.is_empty() => {
@@ -7058,12 +7117,14 @@ fn __flow_impl<'cx>(
             );
             // TODO: closure
             rec_flow_t(cx, trace, use_op.dupe(), (o2, o1))?;
-            let resolve_to = SpreadResolve::ResolveSpreadsToMultiflowPartial(
-                flow_common::reason::mk_id() as i32,
-                ft.clone(),
-                reason_op.dupe(),
-                Type::new(TypeInner::OpenT(call_tout.dupe())),
-            );
+            let resolve_to = SpreadResolve::ResolveSpreadsToMultiflowPartial(Box::new(
+                ResolveSpreadsToMultiflowPartialData(
+                    flow_common::reason::mk_id() as i32,
+                    ft.clone(),
+                    reason_op.dupe(),
+                    Type::new(TypeInner::OpenT(call_tout.dupe())),
+                ),
+            ));
             resolve_call_list(
                 cx,
                 Some(trace),
@@ -8035,7 +8096,10 @@ fn __flow_impl<'cx>(
                     ))
                 }
             };
-            let lookup_kind = LookupKind::NonstrictReturning(lookup_default, test_info);
+            let lookup_kind = LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
+                lookup_default,
+                test_info,
+            )));
             let method_accessible = match l.deref() {
                 TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::InstanceT(_)) => false,
                 _ => true,
@@ -8050,11 +8114,11 @@ fn __flow_impl<'cx>(
                         lookup_kind: Box::new(lookup_kind),
                         try_ts_on_failure: vec![].into(),
                         propref: propref.clone(),
-                        lookup_action: Box::new(LookupAction::ReadProp {
+                        lookup_action: Box::new(LookupAction::ReadProp(Box::new(ReadPropData {
                             use_op: use_op.dupe(),
                             obj_t: l.dupe(),
                             tout: (**tout).dupe(),
-                        }),
+                        }))),
                         method_accessible,
                         ids: Some(Default::default()),
                         ignore_dicts: false,
@@ -8329,11 +8393,11 @@ fn __flow_impl<'cx>(
                 try_ts_on_failure,
                 propref: box PropRef::Named { name, .. },
                 lookup_action:
-                    box LookupAction::ReadProp {
+                    box LookupAction::ReadProp(box ReadPropData {
                         use_op: _,
                         obj_t: lookup_l,
                         tout,
-                    },
+                    }),
                 ids: _,
                 method_accessible: _,
                 ignore_dicts: _,
@@ -8360,14 +8424,14 @@ fn __flow_impl<'cx>(
                 try_ts_on_failure,
                 propref: box PropRef::Named { name, .. },
                 lookup_action:
-                    box LookupAction::WriteProp {
+                    box LookupAction::WriteProp(box WritePropData {
                         use_op: _,
                         obj_t: lookup_l,
                         prop_tout: _,
                         tin,
                         write_ctx: _,
                         mode: _,
-                    },
+                    }),
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
@@ -8437,13 +8501,13 @@ fn __flow_impl<'cx>(
                 prop_typo_suggestion(cx, &ids_vec, name.as_str())
             });
             let error_message = match action {
-                box LookupAction::LookupPropForSubtyping {
+                box LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
                     use_op,
                     prop: _,
                     prop_name,
                     reason_lower,
                     reason_upper,
-                } => {
+                }) => {
                     ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                         prop_name: Some(prop_name.dupe()),
                         suggestion,
@@ -8504,13 +8568,13 @@ fn __flow_impl<'cx>(
                 prop_typo_suggestion(cx, &ids_vec, name.as_str())
             });
             let error_message = match action {
-                box LookupAction::LookupPropForSubtyping {
+                box LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
                     use_op,
                     prop: _,
                     prop_name,
                     reason_lower,
                     reason_upper,
-                } => {
+                }) => {
                     ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                         prop_name: Some(prop_name.dupe()),
                         suggestion,
@@ -8605,13 +8669,15 @@ fn __flow_impl<'cx>(
                 _ => {
                     let reason_prop = reason_op;
                     let error_message = match action {
-                        box LookupAction::LookupPropForSubtyping {
-                            use_op,
-                            prop: _,
-                            prop_name,
-                            reason_lower,
-                            reason_upper,
-                        } => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                        box LookupAction::LookupPropForSubtyping(
+                            box LookupPropForSubtypingData {
+                                use_op,
+                                prop: _,
+                                prop_name,
+                                reason_lower,
+                                reason_upper,
+                            },
+                        ) => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
                                 prop_name: Some(prop_name.dupe()),
                                 suggestion: None,
@@ -8695,13 +8761,15 @@ fn __flow_impl<'cx>(
                 _ => {
                     let reason_prop = reason_op;
                     let error_message = match action {
-                        box LookupAction::LookupPropForSubtyping {
-                            use_op,
-                            prop: _,
-                            prop_name,
-                            reason_lower,
-                            reason_upper,
-                        } => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
+                        box LookupAction::LookupPropForSubtyping(
+                            box LookupPropForSubtypingData {
+                                use_op,
+                                prop: _,
+                                prop_name,
+                                reason_lower,
+                                reason_upper,
+                            },
+                        ) => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
                                 prop_name: Some(prop_name.dupe()),
                                 suggestion: None,
@@ -8730,7 +8798,8 @@ fn __flow_impl<'cx>(
         (
             _,
             UseTInner::LookupT(box LookupTData {
-                lookup_kind: box LookupKind::NonstrictReturning(t_opt, test_opt),
+                lookup_kind:
+                    box LookupKind::NonstrictReturning(box NonstrictReturningData(t_opt, test_opt)),
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -9110,11 +9179,11 @@ fn __flow_impl<'cx>(
         // **********************
         (TypeInner::DefT(reason, def_t), _)
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::ArrayAT {
+                && let ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     react_dro: Some(ReactDro(dro_loc, dro_type)),
                     tuple_view,
-                } = arr.deref()
+                }) = arr.deref()
                 && matches!(
                     u.deref(),
                     UseTInner::GetPropT(..)
@@ -9141,21 +9210,23 @@ fn __flow_impl<'cx>(
                             reason_prop: method_reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: VirtualUseOp::Frame(
-                                Arc::new(FrameUseOp::ReactDeepReadOnly(
+                                Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(use_op.dupe()),
                             ),
                         })),
                     )?;
                     let arr_no_dro = Type::new(TypeInner::DefT(
                         reason.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                            elem_t: elem_t.dupe(),
-                            react_dro: None,
-                            tuple_view: tuple_view.clone(),
-                        }))),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                            ArrayATData {
+                                elem_t: elem_t.dupe(),
+                                react_dro: None,
+                                tuple_view: tuple_view.clone(),
+                            },
+                        ))))),
                     ));
                     rec_flow(cx, trace, (&arr_no_dro, u))?;
                 }
@@ -9179,21 +9250,23 @@ fn __flow_impl<'cx>(
                             reason_prop: data.reason.dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: VirtualUseOp::Frame(
-                                Arc::new(FrameUseOp::ReactDeepReadOnly(
+                                Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(data.use_op.dupe()),
                             ),
                         })),
                     )?;
                     let arr_no_dro = Type::new(TypeInner::DefT(
                         reason.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                            elem_t: elem_t.dupe(),
-                            react_dro: None,
-                            tuple_view: tuple_view.clone(),
-                        }))),
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                            ArrayATData {
+                                elem_t: elem_t.dupe(),
+                                react_dro: None,
+                                tuple_view: tuple_view.clone(),
+                            },
+                        ))))),
                     ));
                     rec_flow(cx, trace, (&arr_no_dro, u))?;
                 }
@@ -9214,10 +9287,10 @@ fn __flow_impl<'cx>(
                     let u_mod = type_util::mod_use_op_of_use_t(
                         |use_op: &UseOp| {
                             VirtualUseOp::Frame(
-                                Arc::new(FrameUseOp::ReactDeepReadOnly(
+                                Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
                                     dro_loc.dupe(),
                                     dro_type.clone(),
-                                )),
+                                )))),
                                 Arc::new(use_op.dupe()),
                             )
                         },
@@ -9229,7 +9302,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(reason, def_t), _)
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::ArrayAT { elem_t, .. } = arr.deref()
+                && let ArrType::ArrayAT(box ArrayATData { elem_t, .. }) = arr.deref()
                 && matches!(
                     u.deref(),
                     UseTInner::GetPropT(..)
@@ -9246,7 +9319,7 @@ fn __flow_impl<'cx>(
         // *************************
         (TypeInner::DefT(reason, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::ArrT(arr) = def_t.deref()
-                && let ArrType::TupleAT { arity, inexact, .. } = arr.deref()
+                && let ArrType::TupleAT(box TupleATData { arity, inexact, .. }) = arr.deref()
                 && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name == &Name::new("length")) =>
         {
             flow_js_utils::get_prop_t_kit::on_array_length::<FlowJs>(
@@ -9262,10 +9335,10 @@ fn __flow_impl<'cx>(
             if let DefTInner::ArrT(arr) = def_t.deref()
                 && matches!(
                     arr.deref(),
-                    ArrType::TupleAT {
+                    ArrType::TupleAT(box TupleATData {
                         react_dro: Some(_),
                         ..
-                    } | ArrType::ROArrayAT(_, Some(_))
+                    }) | ArrType::ROArrayAT(box (_, Some(_)))
                 )
                 && matches!(
                     u.deref(),
@@ -9276,22 +9349,22 @@ fn __flow_impl<'cx>(
                 ) =>
         {
             let (elem_t, dro) = match arr.deref() {
-                ArrType::TupleAT {
+                ArrType::TupleAT(box TupleATData {
                     elem_t,
                     react_dro: Some(dro),
                     ..
-                } => (elem_t, dro),
-                ArrType::ROArrayAT(elem_t, Some(dro)) => (elem_t, dro),
+                }) => (elem_t, dro),
+                ArrType::ROArrayAT(box (elem_t, Some(dro))) => (elem_t, dro),
                 _ => unreachable!(),
             };
             let ReactDro(dro_loc, dro_type) = dro;
             let u_mod = type_util::mod_use_op_of_use_t(
                 |use_op: &UseOp| {
                     VirtualUseOp::Frame(
-                        Arc::new(FrameUseOp::ReactDeepReadOnly(
+                        Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
                             dro_loc.dupe(),
                             dro_type.clone(),
-                        )),
+                        )))),
                         Arc::new(use_op.dupe()),
                     )
                 },
@@ -9311,7 +9384,7 @@ fn __flow_impl<'cx>(
             if let DefTInner::ArrT(arr) = def_t.deref()
                 && matches!(
                     arr.deref(),
-                    ArrType::TupleAT { .. } | ArrType::ROArrayAT(_, _)
+                    ArrType::TupleAT(box TupleATData { .. }) | ArrType::ROArrayAT(box (_, _))
                 )
                 && matches!(
                     u.deref(),

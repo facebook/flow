@@ -28,6 +28,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use crate::type_::ArrRestTData;
 use crate::type_::BindTData;
 use crate::type_::CallTData;
+use crate::type_::ClassImplementsCheckData;
 use crate::type_::ClassOwnProtoCheckData;
 use crate::type_::ConditionalTData;
 use crate::type_::ConformToCommonInterfaceData;
@@ -37,6 +38,8 @@ use crate::type_::ElemTData;
 use crate::type_::ExtendsUseTData;
 use crate::type_::FunCallData;
 use crate::type_::FunCallMethodData;
+use crate::type_::FunImplicitReturnData;
+use crate::type_::FunMissingArgData;
 use crate::type_::FunParamData;
 use crate::type_::GenericTData;
 use crate::type_::GetElemTData;
@@ -62,6 +65,7 @@ use crate::type_::ResolveSpreadTData;
 use crate::type_::RootUseOp;
 use crate::type_::SetElemTData;
 use crate::type_::SetPrivatePropTData;
+use crate::type_::SetPropertyData;
 use crate::type_::SpecializeTData;
 use crate::type_::SuperTData;
 use crate::type_::SwitchRefinementCheckData;
@@ -1098,15 +1102,15 @@ where
                 def: mod_reason(def),
                 name: mod_reason(name),
             },
-            ClassImplementsCheck {
+            ClassImplementsCheck(box ClassImplementsCheckData {
                 def,
                 name,
                 implements,
-            } => ClassImplementsCheck {
+            }) => ClassImplementsCheck(Box::new(ClassImplementsCheckData {
                 def: mod_reason(def),
                 name: mod_reason(name),
                 implements: mod_reason(implements),
-            },
+            })),
             ClassOwnProtoCheck(box ClassOwnProtoCheckData {
                 own_loc,
                 proto_loc,
@@ -1164,15 +1168,15 @@ where
             FunReturnStatement { value } => FunReturnStatement {
                 value: mod_reason(value),
             },
-            FunImplicitReturn {
+            FunImplicitReturn(box FunImplicitReturnData {
                 fn_,
                 upper,
                 type_guard,
-            } => FunImplicitReturn {
+            }) => FunImplicitReturn(Box::new(FunImplicitReturnData {
                 fn_: mod_reason(fn_),
                 upper: mod_reason(upper),
                 type_guard,
-            },
+            })),
             GeneratorYield { value } => GeneratorYield {
                 value: mod_reason(value),
             },
@@ -1217,11 +1221,13 @@ where
             TypeApplication { type_ } => TypeApplication {
                 type_: mod_reason(type_),
             },
-            SetProperty { lhs, prop, value } => SetProperty {
-                lhs: mod_reason(lhs),
-                prop: mod_reason(prop),
-                value: mod_reason(value),
-            },
+            SetProperty(box SetPropertyData { lhs, prop, value }) => {
+                SetProperty(Box::new(SetPropertyData {
+                    lhs: mod_reason(lhs),
+                    prop: mod_reason(prop),
+                    value: mod_reason(value),
+                }))
+            }
             UpdateProperty { lhs, prop } => UpdateProperty {
                 lhs: mod_reason(lhs),
                 prop: mod_reason(prop),
@@ -1292,7 +1298,7 @@ where
                 declaration: f(declaration),
                 providers: providers.iter().map(|p| f(p.dupe())).collect(),
             })),
-            ReactDeepReadOnly(loc, l) => ReactDeepReadOnly(f(loc), l),
+            ReactDeepReadOnly(box (loc, l)) => ReactDeepReadOnly(Box::new((f(loc), l))),
             ArrayElementCompatibility { lower, upper } => ArrayElementCompatibility {
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
@@ -1301,11 +1307,13 @@ where
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
             },
-            FunMissingArg { n, op, def } => FunMissingArg {
-                n,
-                op: mod_reason(op),
-                def: mod_reason(def),
-            },
+            FunMissingArg(box FunMissingArgData { n, op, def }) => {
+                FunMissingArg(Box::new(FunMissingArgData {
+                    n,
+                    op: mod_reason(op),
+                    def: mod_reason(def),
+                }))
+            }
             FunParam(box FunParamData {
                 n,
                 name,
@@ -2466,9 +2474,9 @@ pub fn reason_of_resolved_param(param: &crate::type_::ResolvedParam) -> &Reason 
     use crate::type_::ResolvedParam::*;
 
     match param {
-        ResolvedSpreadArg(reason, _, _) => reason,
+        ResolvedSpreadArg(box crate::type_::ResolvedSpreadArgData(reason, _, _)) => reason,
         ResolvedAnySpreadArg(reason, _) => reason,
-        ResolvedArg(tuple_elem, _) => &tuple_elem.reason,
+        ResolvedArg(box crate::type_::ResolvedArgData(tuple_elem, _)) => &tuple_elem.reason,
     }
 }
 
@@ -2495,16 +2503,18 @@ pub fn name_of_singleton_string_type(t: &Type) -> Option<&Name> {
 
 pub fn dro_of_type(t: &Type) -> Option<&crate::type_::ReactDro> {
     use crate::type_::ArrType;
+    use crate::type_::ArrayATData;
     use crate::type_::DefTInner;
+    use crate::type_::TupleATData;
 
     match t.deref() {
         TypeInner::DefT(_, def_t) => match &**def_t {
             DefTInner::ObjT(obj) => obj.flags.react_dro.as_ref(),
             DefTInner::InstanceT(inst) => inst.inst.inst_react_dro.as_ref(),
             DefTInner::ArrT(arr) => match arr.as_ref() {
-                ArrType::ArrayAT { react_dro, .. } => react_dro.as_ref(),
-                ArrType::TupleAT { react_dro, .. } => react_dro.as_ref(),
-                ArrType::ROArrayAT(_, react_dro) => react_dro.as_ref(),
+                ArrType::ArrayAT(box ArrayATData { react_dro, .. }) => react_dro.as_ref(),
+                ArrType::TupleAT(box TupleATData { react_dro, .. }) => react_dro.as_ref(),
+                ArrType::ROArrayAT(box (_, react_dro)) => react_dro.as_ref(),
             },
             _ => None,
         },
@@ -2519,6 +2529,7 @@ pub fn normalize_jsx_children_prop(
     use flow_common::reason::mk_reason;
 
     use crate::type_::ArrType;
+    use crate::type_::ArrayATData;
     use crate::type_::DefT;
     use crate::type_::DefTInner as D;
     use crate::type_::TupleElement;
@@ -2550,15 +2561,17 @@ pub fn normalize_jsx_children_prop(
                 .collect();
             Some(Type::new(TypeInner::DefT(
                 r.dupe(),
-                DefT::new(D::ArrT(std::rc::Rc::new(ArrType::ArrayAT {
-                    elem_t: union_of_ts(r, jsx_children, None),
-                    tuple_view: Some(TupleView {
-                        elements: elements.into(),
-                        arity: (arity, arity),
-                        inexact: false,
-                    }),
-                    react_dro: None,
-                }))),
+                DefT::new(D::ArrT(std::rc::Rc::new(ArrType::ArrayAT(Box::new(
+                    ArrayATData {
+                        elem_t: union_of_ts(r, jsx_children, None),
+                        tuple_view: Some(TupleView {
+                            elements: elements.into(),
+                            arity: (arity, arity),
+                            inexact: false,
+                        }),
+                        react_dro: None,
+                    },
+                ))))),
             )))
         }
     }

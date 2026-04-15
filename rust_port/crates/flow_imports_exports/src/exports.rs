@@ -27,14 +27,20 @@ use flow_type_sig::type_sig::ValueObjLit;
 use flow_type_sig::type_sig_pack::CJSModuleInfo;
 use flow_type_sig::type_sig_pack::ESModuleInfo;
 use flow_type_sig::type_sig_pack::Export as TypeSigExport;
+use flow_type_sig::type_sig_pack::ExportDefaultBindingData;
+use flow_type_sig::type_sig_pack::ExportDefaultData;
 use flow_type_sig::type_sig_pack::ModuleKind;
 use flow_type_sig::type_sig_pack::Packed;
 use flow_type_sig::type_sig_pack::PackedAnnot;
 use flow_type_sig::type_sig_pack::PackedDef;
+use flow_type_sig::type_sig_pack::PackedEval;
 use flow_type_sig::type_sig_pack::PackedRef;
+use flow_type_sig::type_sig_pack::PackedRefLocal;
+use flow_type_sig::type_sig_pack::PackedTyRefApp;
 use flow_type_sig::type_sig_pack::PackedValue;
 use flow_type_sig::type_sig_pack::Pattern;
 use flow_type_sig::type_sig_pack::TyRef;
+use flow_type_sig::type_sig_pack::TyRefQualified;
 use flow_type_sig::type_sig_pack::TypeExport;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -163,7 +169,7 @@ mod eval {
 
     fn seen_ref<Loc>(seen: &mut HashSet<usize>, r: &PackedRef<Index<Loc>>) -> bool {
         match r {
-            PackedRef::LocalRef { index, .. } => {
+            PackedRef::LocalRef(box PackedRefLocal { index, .. }) => {
                 let index_val = index.as_usize();
                 let dupe = seen.contains(&index_val);
                 seen.insert(index_val);
@@ -179,9 +185,9 @@ mod eval {
     ) -> Option<&'a Packed<Index<Loc>>> {
         // Looks up an object field by name. Returns None if the name doesn't exist or isn't a field.
         match props.get(name)? {
-            ObjValueProp::ObjValueField(_, field, _) => Some(field),
+            ObjValueProp::ObjValueField(box (_, field, _)) => Some(field),
             // Accessors and methods don't have any sub-properties to contribute
-            ObjValueProp::ObjValueAccess(_) | ObjValueProp::ObjValueMethod { .. } => None,
+            ObjValueProp::ObjValueAccess(_) | ObjValueProp::ObjValueMethod(_) => None,
         }
     }
 
@@ -220,21 +226,21 @@ mod eval {
         match (r, name) {
             // This case is a heuristic to identify React.AbstractComponent exports, which can be used as types
             (
-                TyRef::Qualified {
+                TyRef::Qualified(box TyRefQualified {
                     name: tyname,
                     qualification,
                     ..
-                },
+                }),
                 Some(n),
             ) if (tyname.as_str() == "AbstractComponent" || tyname.as_str() == "ComponentType")
                 && matches!(
                     **qualification,
-                    TyRef::Unqualified(PackedRef::RemoteRef { .. } | PackedRef::BuiltinRef { .. })
+                    TyRef::Unqualified(PackedRef::RemoteRef(_) | PackedRef::BuiltinRef(_))
                 ) =>
             {
                 Evaled::ComponentDecl(n)
             }
-            (TyRef::Qualified { qualification, .. }, _) => {
+            (TyRef::Qualified(box TyRefQualified { qualification, .. }), _) => {
                 match tyref(export_sig, seen, None, qualification) {
                     Evaled::Annot(_, _) => {
                         // TODO: get `_qual._name`
@@ -265,13 +271,13 @@ mod eval {
         }
 
         match r {
-            PackedRef::LocalRef { index, .. } => {
+            PackedRef::LocalRef(box PackedRefLocal { index, .. }) => {
                 let d = super::local_def_of_index(export_sig, *index);
                 def(export_sig, seen, d)
             }
             // TODO: remember these cross-module aliases. if the remote thing matches,
             // we can also suggest everything that aliases to it.
-            PackedRef::RemoteRef { .. } | PackedRef::BuiltinRef { .. } => Evaled::Nothing,
+            PackedRef::RemoteRef(_) | PackedRef::BuiltinRef(_) => Evaled::Nothing,
         }
     }
 
@@ -327,24 +333,24 @@ mod eval {
             Packed::Annot(box x) => Evaled::Annot(x, name),
             Packed::Ref(r) => ref_(export_sig, seen, r),
             Packed::TyRef(r) => tyref(export_sig, seen, name, r),
-            Packed::TyRefApp {
+            Packed::TyRefApp(box PackedTyRefApp {
                 name: tyref_name, ..
-            } => tyref(export_sig, seen, name, tyref_name),
-            Packed::Eval(_, x, op) => eval(export_sig, seen, x, op),
+            }) => tyref(export_sig, seen, name, tyref_name),
+            Packed::Eval(box PackedEval { packed: x, op, .. }) => eval(export_sig, seen, x, op),
             Packed::Pattern(index) => {
                 let pat = super::pattern_of_index(export_sig, *index);
                 pattern(export_sig, seen, pat)
             }
-            Packed::Require { .. } | Packed::ImportDynamic { .. } => {
+            Packed::Require(_) | Packed::ImportDynamic(_) => {
                 // TODO: remember these cross-module aliases. if the remote thing matches,
                 // we can also suggest everything that aliases to it.
                 Evaled::Nothing
             }
             Packed::Err(_) => Evaled::Nothing,
             // TODO?
-            Packed::ModuleRef { .. }
-            | Packed::AsyncVoidReturn(_)
-            | Packed::ImportTypeAnnot { .. } => Evaled::Nothing,
+            Packed::ModuleRef(_) | Packed::AsyncVoidReturn(_) | Packed::ImportTypeAnnot(_) => {
+                Evaled::Nothing
+            }
         }
     }
 
@@ -470,14 +476,14 @@ mod esm {
                 add_named_type(acc, name, &evaled);
                 acc.0.push(Export::Named(name.dupe()));
             }
-            TypeSigExport::ExportDefault { def, .. } => {
+            TypeSigExport::ExportDefault(box ExportDefaultData { def, .. }) => {
                 let mut seen = empty_seen();
                 let evaled = eval::packed(export_sig, &mut seen, None, def);
                 let opt_name = evaled.opt_name();
                 add_default_type(acc, opt_name, &evaled);
                 acc.0.push(Export::Default(opt_name.map(|n| n.dupe())));
             }
-            TypeSigExport::ExportDefaultBinding { index, .. } => {
+            TypeSigExport::ExportDefaultBinding(box ExportDefaultBindingData { index, .. }) => {
                 let def = local_def_of_index(export_sig, *index);
                 let mut seen = empty_seen();
                 let evaled = eval::def(export_sig, &mut seen, def);
@@ -564,14 +570,14 @@ mod cjs {
                 for (name, obj_value) in props {
                     if string_is_valid_identifier_name(name.as_str()) {
                         match obj_value {
-                            ObjValueProp::ObjValueField(
+                            ObjValueProp::ObjValueField(box (
                                 _,
                                 Packed::Value(box PackedValue::ClassExpr(_)),
                                 _,
-                            ) => {
+                            )) => {
                                 acc.0.push(Export::NamedType(name.dupe()));
                             }
-                            ObjValueProp::ObjValueField(_, Packed::Ref(r), _) => {
+                            ObjValueProp::ObjValueField(box (_, Packed::Ref(r), _)) => {
                                 let mut seen = empty_seen();
                                 let evaled = eval::ref_(export_sig, &mut seen, r);
                                 add_named_type(acc, name, &evaled);

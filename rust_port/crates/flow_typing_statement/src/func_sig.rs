@@ -694,11 +694,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         ) = match kind {
             Kind::Ordinary | Kind::Ctor => {
                 let t = type_::void::at(loc.dupe());
-                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn {
-                    fn_: reason_fn.dupe(),
-                    upper: type_util::reason_of_t(&return_t).dupe(),
-                    type_guard: false,
-                }));
+                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn(Box::new(
+                    type_::FunImplicitReturnData {
+                        fn_: reason_fn.dupe(),
+                        upper: type_util::reason_of_t(&return_t).dupe(),
+                        type_guard: false,
+                    },
+                ))));
                 (use_op, t, None)
             }
             Kind::Async => {
@@ -714,11 +716,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     "Promise",
                     vec![void_t_val],
                 );
-                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn {
-                    fn_: reason_fn.dupe(),
-                    upper: type_util::reason_of_t(&return_t).dupe(),
-                    type_guard: false,
-                }));
+                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn(Box::new(
+                    type_::FunImplicitReturnData {
+                        fn_: reason_fn.dupe(),
+                        upper: type_util::reason_of_t(&return_t).dupe(),
+                        type_guard: false,
+                    },
+                ))));
                 let use_op = UseOp::Frame(
                     Arc::new(type_::FrameUseOp::ImplicitTypeParam),
                     Arc::new(use_op),
@@ -738,11 +742,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     "Generator",
                     vec![yield_t.dupe(), void_t_val, next_t.dupe()],
                 );
-                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn {
-                    fn_: reason_fn.dupe(),
-                    upper: type_util::reason_of_t(&return_t).dupe(),
-                    type_guard: false,
-                }));
+                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn(Box::new(
+                    type_::FunImplicitReturnData {
+                        fn_: reason_fn.dupe(),
+                        upper: type_util::reason_of_t(&return_t).dupe(),
+                        type_guard: false,
+                    },
+                ))));
                 let use_op = UseOp::Frame(
                     Arc::new(type_::FrameUseOp::ImplicitTypeParam),
                     Arc::new(use_op),
@@ -762,11 +768,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     "AsyncGenerator",
                     vec![yield_t.dupe(), void_t_val, next_t.dupe()],
                 );
-                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn {
-                    fn_: reason_fn.dupe(),
-                    upper: type_util::reason_of_t(&return_t).dupe(),
-                    type_guard: false,
-                }));
+                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn(Box::new(
+                    type_::FunImplicitReturnData {
+                        fn_: reason_fn.dupe(),
+                        upper: type_util::reason_of_t(&return_t).dupe(),
+                        type_guard: false,
+                    },
+                ))));
                 let use_op = UseOp::Frame(
                     Arc::new(type_::FrameUseOp::ImplicitTypeParam),
                     Arc::new(use_op),
@@ -791,11 +799,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             }
             Kind::TypeGuard(_) => {
                 let t = type_::void::at(loc.dupe());
-                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn {
-                    fn_: reason_fn.dupe(),
-                    upper: type_util::reason_of_t(&return_t).dupe(),
-                    type_guard: true,
-                }));
+                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunImplicitReturn(Box::new(
+                    type_::FunImplicitReturnData {
+                        fn_: reason_fn.dupe(),
+                        upper: type_util::reason_of_t(&return_t).dupe(),
+                        type_guard: true,
+                    },
+                ))));
                 (use_op, t, None)
             }
         };

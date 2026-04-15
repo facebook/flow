@@ -45,6 +45,8 @@ use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::num_module_t;
 use flow_typing_type::type_::object;
+use flow_typing_type::type_::object::ObjectToolObjectMapData;
+use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::str_module_t;
 use flow_typing_type::type_::symbol_t;
@@ -909,10 +911,12 @@ pub fn run<'cx>(
                         use_op,
                         reason.dupe(),
                         Box::new(resolve_tool),
-                        Box::new(object::Tool::ReactConfig {
-                            state: new_state,
-                            ref_manipulation: ref_manipulation.clone(),
-                        }),
+                        Box::new(object::Tool::ReactConfig(Box::new(
+                            ObjectToolReactConfigData {
+                                state: new_state,
+                                ref_manipulation: ref_manipulation.clone(),
+                            },
+                        ))),
                         tout.dupe(),
                     )),
                 )?;
@@ -1032,18 +1036,18 @@ pub fn run<'cx>(
      -> Result<(), FlowJsException> {
         match tool {
             object::Tool::MakeExact => object_make_exact(cx, use_op, reason, x, tout),
-            object::Tool::Spread(options, state) => {
+            object::Tool::Spread(box (options, state)) => {
                 object_spread(options, state, cx, use_op, reason, x, tout)?;
                 Ok(())
             }
-            object::Tool::Rest(options, state) => {
+            object::Tool::Rest(box (options, state)) => {
                 object_rest(options, state, cx, use_op, reason, x, tout)?;
                 Ok(())
             }
-            object::Tool::ReactConfig {
+            object::Tool::ReactConfig(box ObjectToolReactConfigData {
                 state,
                 ref_manipulation,
-            } => react_config(ref_manipulation, state, cx, use_op, reason, x, tout),
+            }) => react_config(ref_manipulation, state, cx, use_op, reason, x, tout),
             object::Tool::ReadOnly => object_read_only(cx, use_op, reason, x, tout),
             object::Tool::Partial => object_partial(cx, use_op, reason, x, tout),
             object::Tool::Required => object_required(cx, use_op, reason, x, tout),
@@ -1052,11 +1056,11 @@ pub fn run<'cx>(
                 props: pmap,
                 allow_ref_in_spread,
             } => check_component_config(*allow_ref_in_spread, pmap, cx, use_op, reason, x, tout),
-            object::Tool::ObjectMap {
+            object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type,
                 mapped_type_flags,
                 selected_keys_opt,
-            } => object_map(
+            }) => object_map(
                 prop_type,
                 mapped_type_flags,
                 selected_keys_opt,

@@ -10,6 +10,8 @@ use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::ReadElemData;
+use flow_typing_type::type_::WriteElemData;
 
 use super::helpers::*;
 use super::*;
@@ -81,11 +83,11 @@ impl flow_js_utils::GetPropHelper for FlowJs {
                         lookup_kind: Box::new(lookup_kind),
                         try_ts_on_failure: Rc::from([]),
                         propref: Box::new(propref),
-                        lookup_action: Box::new(LookupAction::ReadProp {
+                        lookup_action: Box::new(LookupAction::ReadProp(Box::new(ReadPropData {
                             use_op,
                             obj_t,
                             tout,
-                        }),
+                        }))),
                         method_accessible,
                         ids: Some(ids),
                         ignore_dicts: false,
@@ -207,11 +209,11 @@ pub(super) fn get_private_prop<'cx>(
             } else {
                 let name = Name::new(prop_name.dupe());
                 let do_lookup = |p: PropertyType| -> Result<(), FlowJsException> {
-                    let action = LookupAction::ReadProp {
+                    let action = LookupAction::ReadProp(Box::new(ReadPropData {
                         use_op: use_op.dupe(),
                         obj_t: l.dupe(),
                         tout: tout.dupe(),
-                    };
+                    }));
                     let propref = mk_named_prop(reason_op.dupe(), false, name.dupe());
                     perform_lookup_action(
                         cx,
@@ -284,13 +286,13 @@ pub(super) fn elem_action_on_obj<'cx>(
 ) -> Result<(), FlowJsException> {
     let propref = flow_js_utils::propref_for_elem_t(cx, l);
     match action {
-        ElemAction::ReadElem {
+        ElemAction::ReadElem(box ReadElemData {
             id,
             from_annot,
             skip_optional,
             tout,
             ..
-        } => rec_flow(
+        }) => rec_flow(
             cx,
             trace,
             (
@@ -307,7 +309,7 @@ pub(super) fn elem_action_on_obj<'cx>(
                 }))),
             ),
         ),
-        ElemAction::WriteElem { tin, tout, mode } => {
+        ElemAction::WriteElem(box WriteElemData { tin, tout, mode }) => {
             rec_flow(
                 cx,
                 trace,
@@ -468,14 +470,14 @@ pub(super) fn write_obj_prop<'cx>(
         reason_obj.dupe(),
         DefT::new(DefTInner::ObjT(Rc::new(o.clone()))),
     ));
-    let action = LookupAction::WriteProp {
+    let action = LookupAction::WriteProp(Box::new(WritePropData {
         use_op: use_op.dupe(),
         obj_t: obj_t.dupe(),
         prop_tout: prop_tout.dupe(),
         tin: tin.dupe(),
         write_ctx: WriteCtx::Normal,
         mode: mode.clone(),
-    };
+    }));
     match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
         cx, &trace, use_op, false, true, o, propref, reason_op,
     )? {

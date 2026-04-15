@@ -24,6 +24,7 @@ use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::DefT;
@@ -32,6 +33,7 @@ use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::RendersVariant;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseOp;
@@ -511,16 +513,16 @@ pub fn non_renders_to_renders<'cx>(
         ) if matches!(
             &**def_t,
             DefTInner::ArrT(arr) if matches!(arr.deref(),
-                ArrType::ArrayAT { .. }
-                | ArrType::TupleAT { .. }
-                | ArrType::ROArrayAT(..))
+                ArrType::ArrayAT(box ArrayATData { .. })
+                | ArrType::TupleAT(box TupleATData { .. })
+                | ArrType::ROArrayAT(box (..)))
         ) =>
         {
             if let DefTInner::ArrT(arr) = def_t.deref() {
                 let t = match arr.deref() {
-                    ArrType::ArrayAT { elem_t: t, .. }
-                    | ArrType::TupleAT { elem_t: t, .. }
-                    | ArrType::ROArrayAT(t, _) => t,
+                    ArrType::ArrayAT(box ArrayATData { elem_t: t, .. })
+                    | ArrType::TupleAT(box TupleATData { elem_t: t, .. })
+                    | ArrType::ROArrayAT(box (t, _)) => t,
                 };
                 FlowJs::rec_flow_t(
                     cx,
@@ -781,9 +783,9 @@ pub fn try_synthesize_render_type<'cx>(
                     }
                     DefTInner::ArrT(arr) => {
                         let arr_elem_t = match arr.deref() {
-                            ArrType::ArrayAT { elem_t, .. } => elem_t,
-                            ArrType::TupleAT { elem_t, .. } => elem_t,
-                            ArrType::ROArrayAT(t, _) => t,
+                            ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => elem_t,
+                            ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t,
+                            ArrType::ROArrayAT(box (t, _)) => t,
                         };
                         let concrete = FlowJs::possible_concrete_types_for_inspection(
                             cx,

@@ -24,6 +24,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
 use flow_typing_flow_common::obj_type;
+use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::DefT;
@@ -35,12 +36,14 @@ use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
+use flow_typing_type::type_::LookupPropForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::MethodCallType;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
+use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::PropRef;
@@ -66,6 +69,7 @@ use flow_typing_type::type_::eval;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::object;
+use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::react;
 use flow_typing_type::type_::unknown_use;
@@ -252,7 +256,7 @@ pub fn subtype_class_component_render<'cx>(
         .replace_desc(VirtualReasonDesc::RMethod(Some(name.dupe())));
     let propref = mk_named_prop(reason_prop, false, Name::new(name));
     let tvar = flow_typing_tvar::mk_no_wrap(cx, reason_op);
-    let action = MethodAction::CallM {
+    let action = MethodAction::CallM(Box::new(CallMData {
         methodcalltype: MethodCallType {
             meth_generic_this: None,
             meth_targs: None,
@@ -262,7 +266,7 @@ pub fn subtype_class_component_render<'cx>(
         },
         return_hint: hint_unavailable(),
         specialized_callee: None,
-    };
+    }));
     // Call the `render` method.
     FlowJs::rec_flow(
         cx,
@@ -302,13 +306,13 @@ fn lookup_defaults<'cx>(
     let reason_prop = reason_op
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
-    let lookup_kind = LookupKind::NonstrictReturning(
+    let lookup_kind = LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
         Some((
             Type::new(TypeInner::DefT(reason_missing, DefT::new(DefTInner::VoidT))),
             upper.dupe(),
         )),
         None,
-    );
+    )));
     let propref = mk_named_prop(reason_prop, false, name);
     let action = LookupAction::LookupPropForTvarPopulation {
         tout: upper.dupe(),
@@ -379,18 +383,20 @@ fn add_optional_ref_prop_to_props<'cx>(
             unknown_use(),
             reason_op.dupe(),
             Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
-            Box::new(object::Tool::ReactConfig {
-                state: object::react_config::State::Config {
-                    component_default_props: None,
-                },
-                ref_manipulation: object::react_config::RefManipulation::AddRef(Type::new(
-                    TypeInner::OptionalT {
-                        reason: reason_op.dupe(),
-                        use_desc: false,
-                        type_: ref_setter_type,
+            Box::new(object::Tool::ReactConfig(Box::new(
+                ObjectToolReactConfigData {
+                    state: object::react_config::State::Config {
+                        component_default_props: None,
                     },
-                )),
-            }),
+                    ref_manipulation: object::react_config::RefManipulation::AddRef(Type::new(
+                        TypeInner::OptionalT {
+                            reason: reason_op.dupe(),
+                            use_desc: false,
+                            type_: ref_setter_type,
+                        },
+                    )),
+                },
+            ))),
             tout,
         )),
     )?;
@@ -686,10 +692,10 @@ pub fn get_config<'cx>(
                     use_op,
                     reason_op.dupe(),
                     Box::new(tool),
-                    Box::new(object::Tool::Rest(
+                    Box::new(object::Tool::Rest(Box::new((
                         object::rest::MergeMode::ReactConfigMerge(pole),
                         state,
-                    )),
+                    )))),
                     tout.dupe(),
                 )),
             )?;
@@ -938,12 +944,14 @@ pub fn run<'cx>(
                 use_op,
                 reason,
                 Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
-                Box::new(object::Tool::ReactConfig {
-                    state: object::react_config::State::Config {
-                        component_default_props,
+                Box::new(object::Tool::ReactConfig(Box::new(
+                    ObjectToolReactConfigData {
+                        state: object::react_config::State::Config {
+                            component_default_props,
+                        },
+                        ref_manipulation,
                     },
-                    ref_manipulation,
-                }),
+                ))),
                 component_props,
             )),
         )?;
@@ -1037,19 +1045,21 @@ pub fn run<'cx>(
                 None,
                 false,
             );
-            let lookup_kind = LookupKind::NonstrictReturning(None, None);
+            let lookup_kind =
+                LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(None, None)));
             let prop_name = Name::new("key");
             let propref = mk_named_prop(reason_key.dupe(), false, prop_name.dupe());
-            let action = LookupAction::LookupPropForSubtyping {
-                use_op: use_op.dupe(),
-                prop: PropertyType::OrdinaryField {
-                    type_: key_t,
-                    polarity: Polarity::Positive,
-                },
-                prop_name: prop_name.dupe(),
-                reason_lower: type_util::reason_of_t(&normalized_jsx_props).dupe(),
-                reason_upper: reason_key.dupe(),
-            };
+            let action =
+                LookupAction::LookupPropForSubtyping(Box::new(LookupPropForSubtypingData {
+                    use_op: use_op.dupe(),
+                    prop: PropertyType::OrdinaryField {
+                        type_: key_t,
+                        polarity: Polarity::Positive,
+                    },
+                    prop_name: prop_name.dupe(),
+                    reason_lower: type_util::reason_of_t(&normalized_jsx_props).dupe(),
+                    reason_upper: reason_key.dupe(),
+                }));
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -1118,7 +1128,7 @@ pub fn run<'cx>(
                         reason: elem_reason.dupe(),
                         nominal_type: Rc::new(NominalType::new(NominalTypeInner {
                             nominal_id: opq.nominal_id.clone(),
-                            underlying_t: opq.underlying_t.dupe(),
+                            underlying_t: opq.underlying_t.clone(),
                             lower_t: opq.lower_t.dupe(),
                             upper_t: Some(Type::new(TypeInner::DefT(
                                 super_r.dupe(),
@@ -1236,7 +1246,7 @@ pub fn run<'cx>(
     }
 
     match u {
-        react::Tool::CreateElement {
+        react::Tool::CreateElement(box react::CreateElementData {
             component,
             jsx_props,
             tout,
@@ -1246,7 +1256,7 @@ pub fn run<'cx>(
             record_monomorphized_result,
             inferred_targs,
             specialized_component,
-        } => create_element(
+        }) => create_element(
             cx,
             trace,
             use_op,

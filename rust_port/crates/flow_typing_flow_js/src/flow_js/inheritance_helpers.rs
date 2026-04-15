@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_type::type_::LookupTData;
+use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
 
 use super::helpers::*;
@@ -280,22 +281,23 @@ pub(super) fn inst_structural_subtype<'cx>(
                         lower,
                         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_struct.dupe(),
-                            lookup_kind: Box::new(LookupKind::NonstrictReturning(
-                                nonstrict_returning,
-                                None,
-                            )),
+                            lookup_kind: Box::new(LookupKind::NonstrictReturning(Box::new(
+                                NonstrictReturningData(nonstrict_returning, None),
+                            ))),
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref),
-                            lookup_action: Box::new(LookupAction::LookupPropForSubtyping {
-                                use_op: use_op.dupe(),
-                                prop: PropertyType::OrdinaryField {
-                                    type_: t.dupe(),
-                                    polarity,
-                                },
-                                prop_name: name.dupe(),
-                                reason_lower: lreason.dupe(),
-                                reason_upper: reason_struct.dupe(),
-                            }),
+                            lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
+                                Box::new(LookupPropForSubtypingData {
+                                    use_op: use_op.dupe(),
+                                    prop: PropertyType::OrdinaryField {
+                                        type_: t.dupe(),
+                                        polarity,
+                                    },
+                                    prop_name: name.dupe(),
+                                    reason_lower: lreason.dupe(),
+                                    reason_upper: reason_struct.dupe(),
+                                }),
+                            )),
                             method_accessible: true,
                             ids: Some(properties::Set::new()),
                             ignore_dicts: false,
@@ -318,13 +320,15 @@ pub(super) fn inst_structural_subtype<'cx>(
                             lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref),
-                            lookup_action: Box::new(LookupAction::LookupPropForSubtyping {
-                                use_op: use_op.dupe(),
-                                prop: read_only_if_lit(p),
-                                prop_name: name.dupe(),
-                                reason_lower: lreason.dupe(),
-                                reason_upper: reason_struct.dupe(),
-                            }),
+                            lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
+                                Box::new(LookupPropForSubtypingData {
+                                    use_op: use_op.dupe(),
+                                    prop: read_only_if_lit(p),
+                                    prop_name: name.dupe(),
+                                    reason_lower: lreason.dupe(),
+                                    reason_upper: reason_struct.dupe(),
+                                }),
+                            )),
                             method_accessible: true,
                             ids: Some(properties::Set::new()),
                             ignore_dicts: false,
@@ -349,13 +353,15 @@ pub(super) fn inst_structural_subtype<'cx>(
                     lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
                     try_ts_on_failure: vec![].into(),
                     propref: Box::new(propref),
-                    lookup_action: Box::new(LookupAction::LookupPropForSubtyping {
-                        use_op: use_op.dupe(),
-                        prop: read_only_if_lit(p),
-                        prop_name: name.dupe(),
-                        reason_lower: lreason.dupe(),
-                        reason_upper: reason_struct.dupe(),
-                    }),
+                    lookup_action: Box::new(LookupAction::LookupPropForSubtyping(Box::new(
+                        LookupPropForSubtypingData {
+                            use_op: use_op.dupe(),
+                            prop: read_only_if_lit(p),
+                            prop_name: name.dupe(),
+                            reason_lower: lreason.dupe(),
+                            reason_upper: reason_struct.dupe(),
+                        },
+                    ))),
                     method_accessible: true,
                     ids: Some(properties::Set::new()),
                     ignore_dicts: false,
@@ -435,7 +441,7 @@ pub(super) fn check_super<'cx>(
     let reason_prop = lreason
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
-    let action = LookupAction::SuperProp(use_op.dupe(), property::type_(p));
+    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), property::type_(p))));
     let t = if flow_js_utils::is_munged_prop_name(cx, x) {
         // munge names beginning with single _
         Type::new(TypeInner::ObjProtoT(reason_of_t(t).dupe()))
@@ -450,7 +456,9 @@ pub(super) fn check_super<'cx>(
             &t,
             &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                 reason: lreason.dupe(),
-                lookup_kind: Box::new(LookupKind::NonstrictReturning(None, None)),
+                lookup_kind: Box::new(LookupKind::NonstrictReturning(Box::new(
+                    NonstrictReturningData(None, None),
+                ))),
                 try_ts_on_failure: vec![].into(),
                 propref: Box::new(propref),
                 lookup_action: Box::new(action),

@@ -16,17 +16,27 @@ use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::SpeculativeError;
+use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ChainMData;
+use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::LookupActionMatchPropData;
+use flow_typing_type::type_::LookupPropForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
+use flow_typing_type::type_::ReadElemData;
+use flow_typing_type::type_::ReadPropData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::SpecializeTData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
+use flow_typing_type::type_::WriteElemData;
+use flow_typing_type::type_::WritePropData;
 
 use super::constraint_helpers::resolve_id;
 use super::dispatch::__flow;
@@ -141,13 +151,13 @@ pub(super) fn perform_lookup_action<'cx>(
                 },
             )?;
         }
-        LookupAction::LookupPropForSubtyping {
+        LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
             use_op,
             prop: up,
             prop_name,
             reason_lower,
             reason_upper,
-        } => {
+        }) => {
             let use_op = UseOp::Frame(
                 Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
                     PropertyCompatibilityData {
@@ -170,7 +180,7 @@ pub(super) fn perform_lookup_action<'cx>(
                 up,
             )?;
         }
-        LookupAction::SuperProp(use_op, lp) => {
+        LookupAction::SuperProp(box (use_op, lp)) => {
             subtyping_kit::rec_flow_p(
                 cx,
                 Some(trace),
@@ -183,11 +193,11 @@ pub(super) fn perform_lookup_action<'cx>(
                 p,
             )?;
         }
-        LookupAction::ReadProp {
+        LookupAction::ReadProp(box ReadPropData {
             use_op,
             obj_t,
             tout,
-        } => {
+        }) => {
             let react_dro = match obj_t.deref() {
                 TypeInner::OpenT(_) => panic!("Expected concrete type"),
                 TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst) = def_t.deref() => {
@@ -210,14 +220,14 @@ pub(super) fn perform_lookup_action<'cx>(
                 tout,
             )?;
         }
-        LookupAction::WriteProp {
+        LookupAction::WriteProp(box WritePropData {
             use_op,
             obj_t: _,
             tin,
             write_ctx,
             prop_tout,
             mode,
-        } => {
+        }) => {
             match (
                 property::write_t_of_property_type(p, Some(*write_ctx)),
                 target_kind,
@@ -252,11 +262,11 @@ pub(super) fn perform_lookup_action<'cx>(
                 }
             }
         }
-        LookupAction::MatchProp {
+        LookupAction::MatchProp(box LookupActionMatchPropData {
             use_op,
             drop_generic: drop_generic_,
             prop_t: tin,
-        } => match property::read_t_of_property_type(p) {
+        }) => match property::read_t_of_property_type(p) {
             Some(t) => {
                 let t = if *drop_generic_ { drop_generic(t) } else { t };
                 rec_flow(
@@ -290,7 +300,7 @@ pub(super) fn mk_react_dro<'cx>(_cx: &Context<'cx>, use_op: UseOp, dro: ReactDro
         defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
             use_op,
             reason,
-            Rc::new(Destructor::ReactDRO(dro)),
+            Rc::new(Destructor::ReactDRO(Box::new(dro))),
         )),
         id,
     })
@@ -315,7 +325,10 @@ pub(super) fn lookup_prop_type_direct<'cx>(
             let type_ = match react_dro {
                 Some(dro) => {
                     let frame_use_op = VirtualUseOp::Frame(
-                        Arc::new(FrameUseOp::ReactDeepReadOnly(dro.0.dupe(), dro.1.clone())),
+                        Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
+                            dro.0.dupe(),
+                            dro.1.clone(),
+                        )))),
                         Arc::new(use_op.dupe()),
                     );
                     mk_react_dro(cx, frame_use_op, dro.clone(), type_)
@@ -495,26 +508,26 @@ pub(super) fn handle_generic<'cx>(
     let update_action_meth_generic_this =
         |l: Type, action: &MethodAction<Context<'cx>>| -> MethodAction<Context<'cx>> {
             match action {
-                MethodAction::CallM {
+                MethodAction::CallM(box CallMData {
                     methodcalltype,
                     return_hint,
                     specialized_callee,
-                } => MethodAction::CallM {
+                }) => MethodAction::CallM(Box::new(CallMData {
                     methodcalltype: MethodCallType {
                         meth_generic_this: Some(l),
                         ..methodcalltype.clone()
                     },
                     return_hint: return_hint.clone(),
                     specialized_callee: specialized_callee.clone(),
-                },
-                MethodAction::ChainM {
+                })),
+                MethodAction::ChainM(box ChainMData {
                     exp_reason,
                     lhs_reason,
                     methodcalltype,
                     voided_out_collector,
                     return_hint,
                     specialized_callee,
-                } => MethodAction::ChainM {
+                }) => MethodAction::ChainM(Box::new(ChainMData {
                     exp_reason: exp_reason.dupe(),
                     lhs_reason: lhs_reason.dupe(),
                     methodcalltype: MethodCallType {
@@ -524,7 +537,7 @@ pub(super) fn handle_generic<'cx>(
                     voided_out_collector: voided_out_collector.dupe(),
                     return_hint: return_hint.clone(),
                     specialized_callee: specialized_callee.clone(),
-                },
+                })),
                 MethodAction::NoMethodAction(t) => MethodAction::NoMethodAction(t.dupe()),
             }
         };
@@ -1097,14 +1110,14 @@ pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> U
                     | VirtualRootUseOp::Coercion { .. }
                     | VirtualRootUseOp::DeleteVar { .. }
                     | VirtualRootUseOp::DeleteProperty { .. }
-                    | VirtualRootUseOp::FunImplicitReturn { .. }
+                    | VirtualRootUseOp::FunImplicitReturn(..)
                     | VirtualRootUseOp::FunReturnStatement { .. }
                     | VirtualRootUseOp::GetExport(..)
                     | VirtualRootUseOp::GetProperty(..)
                     | VirtualRootUseOp::IndexedTypeAccess { .. }
                     | VirtualRootUseOp::InferBoundCompatibilityCheck { .. }
                     | VirtualRootUseOp::EvalMappedType { .. }
-                    | VirtualRootUseOp::SetProperty { .. }
+                    | VirtualRootUseOp::SetProperty(..)
                     | VirtualRootUseOp::UpdateProperty { .. }
                     | VirtualRootUseOp::JSXCreateElement { .. }
                     | VirtualRootUseOp::ObjectAddComputedProperty { .. }
@@ -1119,7 +1132,9 @@ pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> U
                     | VirtualRootUseOp::SwitchRefinementCheck(..)
                     | VirtualRootUseOp::ClassExtendsCheck { .. }
                     | VirtualRootUseOp::ClassMethodDefinition { .. }
-                    | VirtualRootUseOp::ClassImplementsCheck { .. }
+                    | VirtualRootUseOp::ClassImplementsCheck(box ClassImplementsCheckData {
+                        ..
+                    })
                     | VirtualRootUseOp::ClassOwnProtoCheck(..)
                     | VirtualRootUseOp::ConformToCommonInterface(..)
                     | VirtualRootUseOp::DeclareComponentRef { .. }
@@ -1162,31 +1177,31 @@ pub(super) fn apply_method_action<'cx>(
     action: &MethodAction<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     match action {
-        MethodAction::CallM {
+        MethodAction::CallM(box CallMData {
             methodcalltype: app,
             return_hint,
             specialized_callee,
-        } => {
+        }) => {
             let u = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason_call,
-                call_action: Box::new(CallAction::Funcalltype(call_of_method_app(
+                call_action: Box::new(CallAction::Funcalltype(Box::new(call_of_method_app(
                     this_arg,
                     specialized_callee.clone(),
                     app.clone(),
-                ))),
+                )))),
                 return_hint: return_hint.clone(),
             })));
             rec_flow(cx, trace, (l, &u))
         }
-        MethodAction::ChainM {
+        MethodAction::ChainM(box ChainMData {
             exp_reason,
             lhs_reason,
             methodcalltype: app,
             voided_out_collector,
             return_hint,
             specialized_callee,
-        } => crate::optional_chain_kit::run(
+        }) => crate::optional_chain_kit::run(
             cx,
             trace,
             l,
@@ -1195,11 +1210,11 @@ pub(super) fn apply_method_action<'cx>(
             &UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason_call,
-                call_action: Box::new(CallAction::Funcalltype(call_of_method_app(
+                call_action: Box::new(CallAction::Funcalltype(Box::new(call_of_method_app(
                     this_arg,
                     specialized_callee.clone(),
                     app.clone(),
-                ))),
+                )))),
                 return_hint: return_hint.clone(),
             }))),
             voided_out_collector,
@@ -1219,7 +1234,7 @@ pub(super) fn perform_elem_action<'cx>(
     action: &ElemAction<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     match (action, restrict_deletes) {
-        (ElemAction::ReadElem { tout, .. }, _) => {
+        (ElemAction::ReadElem(box ReadElemData { tout, .. }), _) => {
             let loc = reason_op.loc().dupe();
             rec_flow_t(
                 cx,
@@ -1232,19 +1247,19 @@ pub(super) fn perform_elem_action<'cx>(
             )?;
         }
         (
-            ElemAction::WriteElem {
+            ElemAction::WriteElem(box WriteElemData {
                 tin,
                 tout,
                 mode: SetMode::Assign,
-            },
+            }),
             _,
         )
         | (
-            ElemAction::WriteElem {
+            ElemAction::WriteElem(box WriteElemData {
                 tin,
                 tout,
                 mode: SetMode::Delete,
-            },
+            }),
             true,
         ) => {
             rec_flow(
@@ -1260,11 +1275,11 @@ pub(super) fn perform_elem_action<'cx>(
             }
         }
         (
-            ElemAction::WriteElem {
+            ElemAction::WriteElem(box WriteElemData {
                 tin,
                 tout,
                 mode: SetMode::Delete,
-            },
+            }),
             false,
         ) => {
             // Ok to delete arbitrary elements on arrays, not OK for tuples
@@ -1559,7 +1574,9 @@ pub(super) fn instance_lookup_kind<'cx>(
                     Ok::<(), FlowJsException>(())
                 })?;
             let lookup_default = (instance_t.dupe(), lookup_default_second);
-            Ok(LookupKind::NonstrictReturning(Some(lookup_default), None))
+            Ok(LookupKind::NonstrictReturning(Box::new(
+                NonstrictReturningData(Some(lookup_default), None),
+            )))
         }
     }
 }
@@ -1828,27 +1845,27 @@ pub(super) fn reposition<'cx>(
             } => {
                 let r = mod_reason(r.dupe());
                 let underlying_t = match &nominal_type.underlying_t {
-                    nominal::UnderlyingT::FullyOpaque => nominal_type.underlying_t.dupe(),
+                    nominal::UnderlyingT::FullyOpaque => nominal_type.underlying_t.clone(),
                     nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                         let t_prime = recurse(cx, trace, desc, mod_reason, seen, inner_t)?;
                         if Type::ptr_eq(inner_t, &t_prime) {
-                            nominal_type.underlying_t.dupe()
+                            nominal_type.underlying_t.clone()
                         } else {
                             nominal::UnderlyingT::OpaqueWithLocal { t: t_prime }
                         }
                     }
-                    nominal::UnderlyingT::CustomError {
+                    nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                         t: inner_t,
                         custom_error_loc,
-                    } => {
+                    }) => {
                         let t_prime = recurse(cx, trace, desc, mod_reason, seen, inner_t)?;
                         if Type::ptr_eq(inner_t, &t_prime) {
-                            nominal_type.underlying_t.dupe()
+                            nominal_type.underlying_t.clone()
                         } else {
-                            nominal::UnderlyingT::CustomError {
+                            nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                                 t: t_prime,
                                 custom_error_loc: custom_error_loc.dupe(),
-                            }
+                            }))
                         }
                     }
                 };
@@ -2475,12 +2492,12 @@ pub(super) fn add_specialized_callee_method_action<'cx>(
     action: &MethodAction<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     match action {
-        MethodAction::CallM {
+        MethodAction::CallM(box CallMData {
             specialized_callee, ..
-        }
-        | MethodAction::ChainM {
+        })
+        | MethodAction::ChainM(box ChainMData {
             specialized_callee, ..
-        } => {
+        }) => {
             callee_recorder::add_callee(
                 cx,
                 callee_recorder::Kind::All,

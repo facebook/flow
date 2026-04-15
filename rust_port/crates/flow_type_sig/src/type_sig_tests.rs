@@ -233,18 +233,20 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    NumberLit(
-                        (
-                            1,
-                            0.0,
-                            "0",
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        NumberLit(
+                            (
+                                1,
+                                0.0,
+                                "0",
+                            ),
                         ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -291,20 +293,22 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    BigIntLit(
-                        (
-                            1,
-                            Some(
-                                0,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        BigIntLit(
+                            (
+                                1,
+                                Some(
+                                    0,
+                                ),
+                                "0n",
                             ),
-                            "0n",
                         ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -352,26 +356,30 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Eval(
-                    1,
-                    Value(
-                        BigIntLit(
-                            (
-                                2,
-                                Some(
-                                    0,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Eval(
+                        PackedEval {
+                            loc: 1,
+                            packed: Value(
+                                BigIntLit(
+                                    (
+                                        2,
+                                        Some(
+                                            0,
+                                        ),
+                                        "0n",
+                                    ),
                                 ),
-                                "0n",
                             ),
-                        ),
+                            op: Unary(
+                                Minus,
+                            ),
+                        },
                     ),
-                    Unary(
-                        Minus,
-                    ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -412,43 +420,45 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: Annot(
-                                            Number(
-                                                2,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
                                             ),
+                                            t: Annot(
+                                                Number(
+                                                    2,
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Number(
+                                            3,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Number(
-                                        3,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -489,41 +499,43 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: Err(
+                                                2,
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Number(
+                                            3,
                                         ),
-                                        t: Err(
-                                            2,
-                                        ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Number(
-                                        3,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -544,7 +556,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(2, Identifier))
 "#;
@@ -567,41 +578,43 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: Annot(
-                                            Number(
-                                                2,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
                                             ),
-                                        ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Err(
-                                    3,
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                            t: Annot(
+                                                Number(
+                                                    2,
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Err(
+                                        3,
+                                    ),
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -622,7 +635,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(3, FunctionReturn))
 "#;
@@ -648,15 +660,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 4,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 4,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 5,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -736,15 +752,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 4,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 4,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 5,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -824,15 +844,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 4,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 4,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 5,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -887,7 +911,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(3, FunctionReturn))
 "#;
@@ -941,17 +964,19 @@ Module {
                 fn_loc: 0,
                 def: FunSig {
                     tparams: Poly(
-                        2,
-                        [
-                            TParam {
-                                name_loc: 3,
-                                name: "X",
-                                polarity: Neutral,
-                                bound: None,
-                                default: None,
-                                is_const: false,
-                            },
-                        ],
+                        (
+                            2,
+                            [
+                                TParam {
+                                    name_loc: 3,
+                                    name: "X",
+                                    polarity: Neutral,
+                                    bound: None,
+                                    default: None,
+                                    is_const: false,
+                                },
+                            ],
+                        ),
                     ),
                     params: [
                         FunParam {
@@ -979,10 +1004,12 @@ Module {
                                             "x",
                                         ],
                                         t: Ref(
-                                            LocalRef {
-                                                ref_loc: 7,
-                                                index: 1,
-                                            },
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 7,
+                                                    index: 1,
+                                                },
+                                            ),
                                         ),
                                         targs: None,
                                     },
@@ -1017,17 +1044,19 @@ Module {
                     ),
                 ),
                 tparams: Poly(
-                    2,
-                    [
-                        TParam {
-                            name_loc: 3,
-                            name: "X",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        },
-                    ],
+                    (
+                        2,
+                        [
+                            TParam {
+                                name_loc: 3,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
                 ),
             },
         ),
@@ -1119,10 +1148,12 @@ Module {
                                     "b",
                                 ],
                                 t: Ref(
-                                    LocalRef {
-                                        ref_loc: 6,
-                                        index: 1,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 6,
+                                            index: 1,
+                                        },
+                                    ),
                                 ),
                                 targs: None,
                             },
@@ -1204,17 +1235,19 @@ Module {
                 fn_loc: 0,
                 def: FunSig {
                     tparams: Poly(
-                        2,
-                        [
-                            TParam {
-                                name_loc: 3,
-                                name: "X",
-                                polarity: Neutral,
-                                bound: None,
-                                default: None,
-                                is_const: false,
-                            },
-                        ],
+                        (
+                            2,
+                            [
+                                TParam {
+                                    name_loc: 3,
+                                    name: "X",
+                                    polarity: Neutral,
+                                    bound: None,
+                                    default: None,
+                                    is_const: false,
+                                },
+                            ],
+                        ),
                     ),
                     params: [
                         FunParam {
@@ -1241,10 +1274,12 @@ Module {
                                     "x",
                                 ],
                                 t: Ref(
-                                    LocalRef {
-                                        ref_loc: 7,
-                                        index: 1,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 7,
+                                            index: 1,
+                                        },
+                                    ),
                                 ),
                                 targs: None,
                             },
@@ -1270,17 +1305,19 @@ Module {
                     ),
                 ),
                 tparams: Poly(
-                    2,
-                    [
-                        TParam {
-                            name_loc: 3,
-                            name: "X",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        },
-                    ],
+                    (
+                        2,
+                        [
+                            TParam {
+                                name_loc: 3,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
                 ),
             },
         ),
@@ -1311,47 +1348,49 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "p",
-                                        ),
-                                        t: Annot(
-                                            Optional(
-                                                Annot(
-                                                    String(
-                                                        2,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "p",
+                                            ),
+                                            t: Annot(
+                                                Optional(
+                                                    Annot(
+                                                        String(
+                                                            2,
+                                                        ),
                                                     ),
                                                 ),
                                             ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Void(
+                                            3,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Void(
-                                        3,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -1381,7 +1420,8 @@ fn function_param_default() {
     let input = r#"
             export default function(p: string = "foo"): void {};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:7-14]
 1. [1:15-51]
 2. [1:27-33]
@@ -1391,47 +1431,49 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "p",
-                                        ),
-                                        t: Annot(
-                                            Optional(
-                                                Annot(
-                                                    String(
-                                                        2,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "p",
+                                            ),
+                                            t: Annot(
+                                                Optional(
+                                                    Annot(
+                                                        String(
+                                                            2,
+                                                        ),
                                                     ),
                                                 ),
                                             ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Void(
+                                            3,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Void(
-                                        3,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -1472,45 +1514,47 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "p",
-                                        ),
-                                        t: Annot(
-                                            Optional(
-                                                Err(
-                                                    2,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "p",
+                                            ),
+                                            t: Annot(
+                                                Optional(
+                                                    Err(
+                                                        2,
+                                                    ),
                                                 ),
                                             ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Void(
+                                            3,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Void(
-                                        3,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -1565,113 +1609,123 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 2,
-                def: Value(
-                    FunExpr(
-                        ValueFunExpr {
-                            loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "bar",
-                                        ),
-                                        t: Annot(
-                                            Typeof(
-                                                AnnotTypeof {
-                                                    loc: 5,
-                                                    qname: [
-                                                        "bar",
-                                                    ],
-                                                    t: Ref(
-                                                        LocalRef {
-                                                            ref_loc: 6,
-                                                            index: 0,
-                                                        },
-                                                    ),
-                                                    targs: None,
-                                                },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 2,
+                    def: Value(
+                        FunExpr(
+                            ValueFunExpr {
+                                loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "bar",
                                             ),
-                                        ),
-                                    },
-                                    FunParam {
-                                        name: Some(
-                                            "baz",
-                                        ),
-                                        t: Annot(
-                                            Typeof(
-                                                AnnotTypeof {
-                                                    loc: 8,
-                                                    qname: [
-                                                        "bar",
-                                                    ],
-                                                    t: Ref(
-                                                        LocalRef {
-                                                            ref_loc: 9,
-                                                            index: 1,
-                                                        },
-                                                    ),
-                                                    targs: None,
-                                                },
+                                            t: Annot(
+                                                Typeof(
+                                                    AnnotTypeof {
+                                                        loc: 5,
+                                                        qname: [
+                                                            "bar",
+                                                        ],
+                                                        t: Ref(
+                                                            LocalRef(
+                                                                PackedRefLocal {
+                                                                    ref_loc: 6,
+                                                                    index: 0,
+                                                                },
+                                                            ),
+                                                        ),
+                                                        targs: None,
+                                                    },
+                                                ),
                                             ),
-                                        ),
-                                    },
-                                    FunParam {
-                                        name: None,
-                                        t: Annot(
-                                            ObjAnnot(
-                                                AnnotObjAnnot {
-                                                    loc: 10,
-                                                    obj_kind: InexactObj,
-                                                    props: {
-                                                        "boz": ObjAnnotField(
-                                                            11,
-                                                            Annot(
-                                                                Typeof(
-                                                                    AnnotTypeof {
-                                                                        loc: 12,
-                                                                        qname: [
-                                                                            "baz",
-                                                                        ],
-                                                                        t: Ref(
-                                                                            LocalRef {
-                                                                                ref_loc: 13,
-                                                                                index: 2,
+                                        },
+                                        FunParam {
+                                            name: Some(
+                                                "baz",
+                                            ),
+                                            t: Annot(
+                                                Typeof(
+                                                    AnnotTypeof {
+                                                        loc: 8,
+                                                        qname: [
+                                                            "bar",
+                                                        ],
+                                                        t: Ref(
+                                                            LocalRef(
+                                                                PackedRefLocal {
+                                                                    ref_loc: 9,
+                                                                    index: 1,
+                                                                },
+                                                            ),
+                                                        ),
+                                                        targs: None,
+                                                    },
+                                                ),
+                                            ),
+                                        },
+                                        FunParam {
+                                            name: None,
+                                            t: Annot(
+                                                ObjAnnot(
+                                                    AnnotObjAnnot {
+                                                        loc: 10,
+                                                        obj_kind: InexactObj,
+                                                        props: {
+                                                            "boz": ObjAnnotField(
+                                                                (
+                                                                    11,
+                                                                    Annot(
+                                                                        Typeof(
+                                                                            AnnotTypeof {
+                                                                                loc: 12,
+                                                                                qname: [
+                                                                                    "baz",
+                                                                                ],
+                                                                                t: Ref(
+                                                                                    LocalRef(
+                                                                                        PackedRefLocal {
+                                                                                            ref_loc: 13,
+                                                                                            index: 2,
+                                                                                        },
+                                                                                    ),
+                                                                                ),
+                                                                                targs: None,
                                                                             },
                                                                         ),
-                                                                        targs: None,
-                                                                    },
+                                                                    ),
+                                                                    Neutral,
                                                                 ),
                                                             ),
-                                                            Neutral,
-                                                        ),
+                                                        },
+                                                        computed_props: [],
+                                                        proto: ObjAnnotImplicitProto,
                                                     },
-                                                    computed_props: [],
-                                                    proto: ObjAnnotImplicitProto,
-                                                },
+                                                ),
                                             ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Void(
+                                            14,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Void(
-                                        14,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
+                                statics: {},
                             },
-                            statics: {},
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -1709,10 +1763,12 @@ Module {
                                 "bar",
                             ],
                             t: Ref(
-                                LocalRef {
-                                    ref_loc: 6,
-                                    index: 0,
-                                },
+                                LocalRef(
+                                    PackedRefLocal {
+                                        ref_loc: 6,
+                                        index: 0,
+                                    },
+                                ),
                             ),
                             targs: None,
                         },
@@ -1733,10 +1789,12 @@ Module {
                                 "bar",
                             ],
                             t: Ref(
-                                LocalRef {
-                                    ref_loc: 9,
-                                    index: 1,
-                                },
+                                LocalRef(
+                                    PackedRefLocal {
+                                        ref_loc: 9,
+                                        index: 1,
+                                    },
+                                ),
                             ),
                             targs: None,
                         },
@@ -1762,7 +1820,8 @@ fn component_param_typeof_reference() {
             declare const bar: string;
     export component C(bar: typeof bar, baz: typeof bar, booz as {boz}: {boz: typeof baz}) {}
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:22-25]
 1. [1:27-33]
 2. [2:7-86]
@@ -1833,10 +1892,12 @@ Module {
                                             "bar",
                                         ],
                                         t: Ref(
-                                            LocalRef {
-                                                ref_loc: 7,
-                                                index: 0,
-                                            },
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 7,
+                                                    index: 0,
+                                                },
+                                            ),
                                         ),
                                         targs: None,
                                     },
@@ -1854,10 +1915,12 @@ Module {
                                             "bar",
                                         ],
                                         t: Ref(
-                                            LocalRef {
-                                                ref_loc: 10,
-                                                index: 0,
-                                            },
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 10,
+                                                    index: 0,
+                                                },
+                                            ),
                                         ),
                                         targs: None,
                                     },
@@ -1874,26 +1937,30 @@ Module {
                                         obj_kind: InexactObj,
                                         props: {
                                             "boz": ObjAnnotField(
-                                                13,
-                                                Annot(
-                                                    Typeof(
-                                                        AnnotTypeof {
-                                                            loc: 14,
-                                                            qname: [
-                                                                "baz",
-                                                            ],
-                                                            t: Ref(
-                                                                BuiltinRef {
-                                                                    ref_loc: 15,
-                                                                    type_ref: false,
-                                                                    name: "baz",
-                                                                },
-                                                            ),
-                                                            targs: None,
-                                                        },
+                                                (
+                                                    13,
+                                                    Annot(
+                                                        Typeof(
+                                                            AnnotTypeof {
+                                                                loc: 14,
+                                                                qname: [
+                                                                    "baz",
+                                                                ],
+                                                                t: Ref(
+                                                                    BuiltinRef(
+                                                                        PackedRefBuiltin {
+                                                                            ref_loc: 15,
+                                                                            type_ref: false,
+                                                                            name: "baz",
+                                                                        },
+                                                                    ),
+                                                                ),
+                                                                targs: None,
+                                                            },
+                                                        ),
                                                     ),
+                                                    Neutral,
                                                 ),
-                                                Neutral,
                                             ),
                                         },
                                         computed_props: [],
@@ -1939,33 +2006,37 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    ObjLit(
-                        ValueObjLit {
-                            loc: 1,
-                            frozen: false,
-                            proto: None,
-                            props: {
-                                "p": ObjValueField(
-                                    2,
-                                    Value(
-                                        NumberLit(
-                                            (
-                                                3,
-                                                0.0,
-                                                "0",
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        ObjLit(
+                            ValueObjLit {
+                                loc: 1,
+                                frozen: false,
+                                proto: None,
+                                props: {
+                                    "p": ObjValueField(
+                                        (
+                                            2,
+                                            Value(
+                                                NumberLit(
+                                                    (
+                                                        3,
+                                                        0.0,
+                                                        "0",
+                                                    ),
+                                                ),
                                             ),
+                                            Neutral,
                                         ),
                                     ),
-                                    Neutral,
-                                ),
+                                },
                             },
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -1996,7 +2067,8 @@ fn export_object_literal_property_reference() {
             var x: number = 0;
     export default { p: x };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:15-21]
 2. [2:7-14]
@@ -2008,30 +2080,36 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 2,
-                def: Value(
-                    ObjLit(
-                        ValueObjLit {
-                            loc: 3,
-                            frozen: false,
-                            proto: None,
-                            props: {
-                                "p": ObjValueField(
-                                    4,
-                                    Ref(
-                                        LocalRef {
-                                            ref_loc: 5,
-                                            index: 0,
-                                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 2,
+                    def: Value(
+                        ObjLit(
+                            ValueObjLit {
+                                loc: 3,
+                                frozen: false,
+                                proto: None,
+                                props: {
+                                    "p": ObjValueField(
+                                        (
+                                            4,
+                                            Ref(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 5,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                            Neutral,
+                                        ),
                                     ),
-                                    Neutral,
-                                ),
+                                },
                             },
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2086,30 +2164,36 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 1,
-                def: Value(
-                    ObjLit(
-                        ValueObjLit {
-                            loc: 2,
-                            frozen: false,
-                            proto: None,
-                            props: {
-                                "p": ObjValueField(
-                                    3,
-                                    Ref(
-                                        LocalRef {
-                                            ref_loc: 4,
-                                            index: 0,
-                                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 1,
+                    def: Value(
+                        ObjLit(
+                            ValueObjLit {
+                                loc: 2,
+                                frozen: false,
+                                proto: None,
+                                props: {
+                                    "p": ObjValueField(
+                                        (
+                                            3,
+                                            Ref(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 4,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                            Neutral,
+                                        ),
                                     ),
-                                    Neutral,
-                                ),
+                                },
                             },
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2160,19 +2244,21 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    ObjLit(
-                        ValueObjLit {
-                            loc: 1,
-                            frozen: false,
-                            proto: None,
-                            props: {},
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        ObjLit(
+                            ValueObjLit {
+                                loc: 1,
+                                frozen: false,
+                                proto: None,
+                                props: {},
+                            },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2215,42 +2301,50 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    ObjLit(
-                        ValueObjLit {
-                            loc: 1,
-                            frozen: false,
-                            proto: None,
-                            props: {
-                                "1": ObjValueField(
-                                    2,
-                                    Value(
-                                        BooleanLit(
-                                            3,
-                                            true,
-                                        ),
-                                    ),
-                                    Neutral,
-                                ),
-                                "2": ObjValueField(
-                                    4,
-                                    Value(
-                                        StringLit(
-                                            (
-                                                5,
-                                                "hello",
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        ObjLit(
+                            ValueObjLit {
+                                loc: 1,
+                                frozen: false,
+                                proto: None,
+                                props: {
+                                    "1": ObjValueField(
+                                        (
+                                            2,
+                                            Value(
+                                                BooleanLit(
+                                                    (
+                                                        3,
+                                                        true,
+                                                    ),
+                                                ),
                                             ),
+                                            Neutral,
                                         ),
                                     ),
-                                    Neutral,
-                                ),
+                                    "2": ObjValueField(
+                                        (
+                                            4,
+                                            Value(
+                                                StringLit(
+                                                    (
+                                                        5,
+                                                        "hello",
+                                                    ),
+                                                ),
+                                            ),
+                                            Neutral,
+                                        ),
+                                    ),
+                                },
                             },
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2284,7 +2378,8 @@ fn export_class_reference() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:6-7]
 1. [2:2-3]
 2. [2:5-11]
@@ -2299,15 +2394,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 7,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 7,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2332,46 +2431,50 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: Annot(
-                                            Number(
-                                                5,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
                                             ),
+                                            t: Annot(
+                                                Number(
+                                                    5,
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Number(
+                                            6,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Number(
-                                        6,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Annot(
-                                Number(
-                                    2,
+                            (
+                                1,
+                                Annot(
+                                    Number(
+                                        2,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -2385,7 +2488,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -2398,7 +2502,8 @@ fn export_class_reference_check1() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-3]
 2. [2:6-7]
@@ -2413,15 +2518,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 7,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 7,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2446,50 +2555,54 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: Annot(
-                                            Number(
-                                                5,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
                                             ),
+                                            t: Annot(
+                                                Number(
+                                                    5,
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Number(
+                                            6,
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Number(
-                                        6,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Value(
-                                NumberLit(
-                                    (
-                                        2,
-                                        0.0,
-                                        "0",
+                            (
+                                1,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            2,
+                                            0.0,
+                                            "0",
+                                        ),
                                     ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -2503,7 +2616,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -2516,7 +2630,8 @@ fn export_class_reference_check2() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-3]
 2. [2:5-11]
@@ -2531,15 +2646,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 7,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 7,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2564,44 +2683,48 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: Err(
+                                                5,
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Number(
+                                            6,
                                         ),
-                                        t: Err(
-                                            5,
-                                        ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Number(
-                                        6,
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Annot(
-                                Number(
-                                    2,
+                            (
+                                1,
+                                Annot(
+                                    Number(
+                                        2,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -2631,7 +2754,8 @@ fn export_class_reference_check3() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-3]
 2. [2:5-11]
@@ -2646,15 +2770,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 7,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 7,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2679,44 +2807,48 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: Annot(
-                                            Number(
-                                                5,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
                                             ),
-                                        ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Err(
-                                    6,
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                            t: Annot(
+                                                Number(
+                                                    5,
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Err(
+                                        6,
+                                    ),
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Annot(
-                                Number(
-                                    2,
+                            (
+                                1,
+                                Annot(
+                                    Number(
+                                        2,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -2749,7 +2881,8 @@ fn type_alias_dependencies() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-15]
 1. [1:18-24]
 2. [2:5-7]
@@ -2770,15 +2903,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 13,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 14,
-                        index: 3,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 13,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 14,
+                                index: 3,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2842,55 +2979,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 10,
-                            fn_loc: 9,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 11,
-                                                    index: 1,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 10,
+                                fn_loc: 9,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 11,
+                                                            index: 1,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 12,
+                                                    index: 2,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 12,
-                                            index: 2,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            7,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 8,
-                                        index: 0,
-                                    },
+                            (
+                                7,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 8,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -2904,7 +3051,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -2918,7 +3066,8 @@ fn class_dependencies() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [1:18-19]
 2. [1:21-27]
@@ -2936,15 +3085,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 10,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 11,
-                        index: 1,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 10,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 11,
+                                index: 1,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -2971,13 +3124,15 @@ Module {
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Annot(
-                                Number(
-                                    2,
+                            (
+                                1,
+                                Annot(
+                                    Number(
+                                        2,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -2995,55 +3150,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 7,
-                            fn_loc: 6,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 8,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 7,
+                                fn_loc: 6,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 8,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 9,
                                                     index: 0,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 9,
-                                            index: 0,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            4,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                            (
+                                4,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3057,7 +3222,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -3071,7 +3237,8 @@ fn class_dependencies_check() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [1:18-19]
 2. [1:22-23]
@@ -3089,15 +3256,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 10,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 11,
-                        index: 1,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 10,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 11,
+                                index: 1,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3124,17 +3295,19 @@ Module {
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Value(
-                                NumberLit(
-                                    (
-                                        2,
-                                        0.0,
-                                        "0",
+                            (
+                                1,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            2,
+                                            0.0,
+                                            "0",
+                                        ),
                                     ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3152,55 +3325,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 7,
-                            fn_loc: 6,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 8,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 7,
+                                fn_loc: 6,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 8,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 9,
                                                     index: 0,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 9,
-                                            index: 0,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            4,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                            (
+                                4,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3214,7 +3397,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -3228,7 +3412,8 @@ fn export_new_typecast() {
     }
     export default (new C: C);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [1:18-19]
 2. [1:21-27]
@@ -3246,17 +3431,21 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 10,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 11,
-                            index: 1,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 10,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 11,
+                                    index: 1,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3283,13 +3472,15 @@ Module {
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Annot(
-                                Number(
-                                    2,
+                            (
+                                1,
+                                Annot(
+                                    Number(
+                                        2,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3307,55 +3498,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 7,
-                            fn_loc: 6,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 8,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 7,
+                                fn_loc: 6,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 8,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 9,
                                                     index: 0,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 9,
-                                            index: 0,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            4,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                            (
+                                4,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3369,7 +3570,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -3383,7 +3585,8 @@ fn export_new_typecast_check() {
     }
     export default (new C: C);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [1:18-19]
 2. [1:22-23]
@@ -3401,17 +3604,21 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 10,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 11,
-                            index: 1,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 10,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 11,
+                                    index: 1,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3438,17 +3645,19 @@ Module {
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Value(
-                                NumberLit(
-                                    (
-                                        2,
-                                        0.0,
-                                        "0",
+                            (
+                                1,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            2,
+                                            0.0,
+                                            "0",
+                                        ),
                                     ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3466,55 +3675,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 7,
-                            fn_loc: 6,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 8,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 7,
+                                fn_loc: 6,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 8,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 9,
                                                     index: 0,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 9,
-                                            index: 0,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            4,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                            (
+                                4,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3528,7 +3747,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -3541,7 +3761,8 @@ fn recursive_dependencies() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-3]
 2. [2:5-6]
@@ -3556,15 +3777,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 7,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 7,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3589,55 +3814,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 5,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 5,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 6,
                                                     index: 0,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 6,
-                                            index: 0,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 2,
-                                        index: 0,
-                                    },
+                            (
+                                1,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 2,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3651,7 +3886,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -3664,7 +3900,8 @@ fn recursive_dependencies_check() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-3]
 2. [2:6-11]
@@ -3679,15 +3916,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 7,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 7,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3712,50 +3953,58 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 5,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 5,
+                                                            index: 0,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 6,
                                                     index: 0,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        LocalRef {
-                                            ref_loc: 6,
-                                            index: 0,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Err(
-                                2,
+                            (
+                                1,
+                                Err(
+                                    2,
+                                ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3785,7 +4034,8 @@ fn typeof_dependencies() {
     }
     export default (new C: C);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:15-21]
 2. [2:6-7]
@@ -3799,17 +4049,21 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 6,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 7,
-                            index: 1,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 6,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 7,
+                                    index: 1,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3847,25 +4101,29 @@ Module {
                     proto_props: {},
                     own_props: {
                         "p": ObjValueField(
-                            3,
-                            Annot(
-                                Typeof(
-                                    AnnotTypeof {
-                                        loc: 4,
-                                        qname: [
-                                            "x",
-                                        ],
-                                        t: Ref(
-                                            LocalRef {
-                                                ref_loc: 5,
-                                                index: 0,
-                                            },
-                                        ),
-                                        targs: None,
-                                    },
+                            (
+                                3,
+                                Annot(
+                                    Typeof(
+                                        AnnotTypeof {
+                                            loc: 4,
+                                            qname: [
+                                                "x",
+                                            ],
+                                            t: Ref(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 5,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                            targs: None,
+                                        },
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -3893,7 +4151,8 @@ fn typeof_dependencies_check() {
     }
     export default (new C: C);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [2:6-7]
 2. [3:2-3]
@@ -3906,17 +4165,21 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 5,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 6,
-                            index: 1,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 5,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 6,
+                                    index: 1,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -3952,25 +4215,29 @@ Module {
                     proto_props: {},
                     own_props: {
                         "p": ObjValueField(
-                            2,
-                            Annot(
-                                Typeof(
-                                    AnnotTypeof {
-                                        loc: 3,
-                                        qname: [
-                                            "x",
-                                        ],
-                                        t: Ref(
-                                            LocalRef {
-                                                ref_loc: 4,
-                                                index: 0,
-                                            },
-                                        ),
-                                        targs: None,
-                                    },
+                            (
+                                2,
+                                Annot(
+                                    Typeof(
+                                        AnnotTypeof {
+                                            loc: 3,
+                                            qname: [
+                                                "x",
+                                            ],
+                                            t: Ref(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 4,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                            targs: None,
+                                        },
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -4009,30 +4276,36 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 2,
-                def: Value(
-                    ObjLit(
-                        ValueObjLit {
-                            loc: 3,
-                            frozen: false,
-                            proto: None,
-                            props: {
-                                "x": ObjValueField(
-                                    4,
-                                    Ref(
-                                        LocalRef {
-                                            ref_loc: 4,
-                                            index: 0,
-                                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 2,
+                    def: Value(
+                        ObjLit(
+                            ValueObjLit {
+                                loc: 3,
+                                frozen: false,
+                                proto: None,
+                                props: {
+                                    "x": ObjValueField(
+                                        (
+                                            4,
+                                            Ref(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 4,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                            Neutral,
+                                        ),
                                     ),
-                                    Neutral,
-                                ),
+                                },
                             },
-                        },
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4087,12 +4360,14 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Err(
-                    1,
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Err(
+                        1,
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4113,7 +4388,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(EmptyArray(1))
 "#;
@@ -4141,30 +4415,36 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 3,
-                def: Value(
-                    ArrayLit(
-                        (
-                            4,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
-                                },
-                            ),
-                            [
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 3,
+                    def: Value(
+                        ArrayLit(
+                            (
+                                4,
                                 Ref(
-                                    LocalRef {
-                                        ref_loc: 6,
-                                        index: 1,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 5,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
-                            ],
+                                [
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 6,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                ],
+                            ),
                         ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4210,7 +4490,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(2, VariableDefinition { name: "y" }))
 "#;
@@ -4223,7 +4502,8 @@ fn void_function() {
             function foo() {}
     export default foo;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:8-22]
 1. [1:17-20]
 2. [1:22]
@@ -4234,15 +4514,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 3,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 3,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 4,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4298,7 +4582,8 @@ fn void_generator() {
             function* foo() { yield 0; }
     export default foo;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:8-23]
 1. [1:18-21]
 2. [1:23]
@@ -4309,15 +4594,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 3,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 3,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 4,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4361,7 +4650,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(2, FunctionReturn))
 "#;
@@ -4377,7 +4665,8 @@ fn import_default_dependencies() {
     }
     export default (new C: C);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:15-16]
 1. [2:6-7]
 2. [3:2-3]
@@ -4390,17 +4679,21 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 5,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 6,
-                            index: 0,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 5,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 6,
+                                    index: 0,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4431,25 +4724,29 @@ Module {
                     proto_props: {},
                     own_props: {
                         "p": ObjValueField(
-                            2,
-                            Annot(
-                                Typeof(
-                                    AnnotTypeof {
-                                        loc: 3,
-                                        qname: [
-                                            "x",
-                                        ],
-                                        t: Ref(
-                                            RemoteRef {
-                                                ref_loc: 4,
-                                                index: 0,
-                                            },
-                                        ),
-                                        targs: None,
-                                    },
+                            (
+                                2,
+                                Annot(
+                                    Typeof(
+                                        AnnotTypeof {
+                                            loc: 3,
+                                            qname: [
+                                                "x",
+                                            ],
+                                            t: Ref(
+                                                RemoteRef(
+                                                    PackedRefRemote {
+                                                        ref_loc: 4,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                            targs: None,
+                                        },
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -4485,7 +4782,8 @@ fn import_type_dependencies() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:22-24]
 1. [1:26-28]
 2. [1:30-32]
@@ -4503,15 +4801,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 10,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 11,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 10,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 11,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4540,55 +4842,65 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 7,
-                            fn_loc: 6,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Unqualified(
-                                                RemoteRef {
-                                                    ref_loc: 8,
-                                                    index: 1,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 7,
+                                fn_loc: 6,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Unqualified(
+                                                    RemoteRef(
+                                                        PackedRefRemote {
+                                                            ref_loc: 8,
+                                                            index: 1,
+                                                        },
+                                                    ),
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Unqualified(
+                                            RemoteRef(
+                                                PackedRefRemote {
+                                                    ref_loc: 9,
+                                                    index: 2,
                                                 },
                                             ),
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Unqualified(
-                                        RemoteRef {
-                                            ref_loc: 9,
-                                            index: 2,
-                                        },
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {
                         "f": ObjValueField(
-                            4,
-                            TyRef(
-                                Unqualified(
-                                    RemoteRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                            (
+                                4,
+                                TyRef(
+                                    Unqualified(
+                                        RemoteRef(
+                                            PackedRefRemote {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -4621,7 +4933,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -4635,7 +4948,8 @@ fn qualified_references() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:15-17]
 1. [2:12-14]
 2. [3:6-7]
@@ -4654,15 +4968,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 11,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 12,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 11,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 12,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -4691,52 +5009,62 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 4,
-                            fn_loc: 3,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [
-                                    FunParam {
-                                        name: Some(
-                                            "x",
-                                        ),
-                                        t: TyRef(
-                                            Qualified {
-                                                loc: 5,
-                                                id_loc: 7,
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 4,
+                                fn_loc: 3,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [
+                                        FunParam {
+                                            name: Some(
+                                                "x",
+                                            ),
+                                            t: TyRef(
+                                                Qualified(
+                                                    TyRefQualified {
+                                                        loc: 5,
+                                                        id_loc: 7,
+                                                        name: "T",
+                                                        qualification: Unqualified(
+                                                            RemoteRef(
+                                                                PackedRefRemote {
+                                                                    ref_loc: 6,
+                                                                    index: 0,
+                                                                },
+                                                            ),
+                                                        ),
+                                                    },
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: TyRef(
+                                        Qualified(
+                                            TyRefQualified {
+                                                loc: 8,
+                                                id_loc: 10,
                                                 name: "T",
                                                 qualification: Unqualified(
-                                                    RemoteRef {
-                                                        ref_loc: 6,
-                                                        index: 0,
-                                                    },
+                                                    RemoteRef(
+                                                        PackedRefRemote {
+                                                            ref_loc: 9,
+                                                            index: 1,
+                                                        },
+                                                    ),
                                                 ),
                                             },
                                         ),
-                                    },
-                                ],
-                                rest_param: None,
-                                this_param: None,
-                                return_: TyRef(
-                                    Qualified {
-                                        loc: 8,
-                                        id_loc: 10,
-                                        name: "T",
-                                        qualification: Unqualified(
-                                            RemoteRef {
-                                                ref_loc: 9,
-                                                index: 1,
-                                            },
-                                        ),
-                                    },
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    ),
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {},
                     dict: None,
@@ -4763,7 +5091,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -4804,17 +5133,19 @@ Module {
                 custom_error_loc_opt: None,
                 name: "T",
                 tparams: Poly(
-                    1,
-                    [
-                        TParam {
-                            name_loc: 2,
-                            name: "U",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        },
-                    ],
+                    (
+                        1,
+                        [
+                            TParam {
+                                name_loc: 2,
+                                name: "U",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
                 ),
                 body: Err(
                     3,
@@ -4849,7 +5180,8 @@ fn hoisted_requires() {
     }
     module.exports = C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [1:18-54]
 2. [3:8-9]
@@ -4866,10 +5198,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 9,
-                    index: 2,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 9,
+                        index: 2,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -4889,10 +5223,12 @@ Module {
             DefVariable {
                 id_loc: 0,
                 name: "M",
-                def: Require {
-                    loc: 1,
-                    index: 0,
-                },
+                def: Require(
+                    PackedLocIndex {
+                        loc: 1,
+                        index: 0,
+                    },
+                ),
             },
         ),
         Variable(
@@ -4910,36 +5246,46 @@ Module {
                 name: "C",
                 def: ClassSig {
                     tparams: Mono,
-                    extends: ClassExplicitExtends {
-                        loc: 5,
-                        t: Eval(
+                    extends: ClassExplicitExtends(
+                        (
                             5,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 6,
-                                    index: 0,
+                            Eval(
+                                PackedEval {
+                                    loc: 5,
+                                    packed: Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 6,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                    op: GetProp(
+                                        "D",
+                                    ),
                                 },
                             ),
-                            GetProp(
-                                "D",
-                            ),
                         ),
-                    },
+                    ),
                     implements: [],
                     static_props: {},
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            7,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 8,
-                                        index: 1,
-                                    },
+                            (
+                                7,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 8,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -4967,7 +5313,6 @@ Module {
         },
     ],
 }
-
 Errors:
 SigError(ExpectedAnnotation(3, ArrayPattern))
 "#;
@@ -5005,10 +5350,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 8,
-                    index: 2,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 8,
+                        index: 2,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -5028,10 +5375,12 @@ Module {
             DefVariable {
                 id_loc: 0,
                 name: "M",
-                def: Require {
-                    loc: 1,
-                    index: 0,
-                },
+                def: Require(
+                    PackedLocIndex {
+                        loc: 1,
+                        index: 0,
+                    },
+                ),
             },
         ),
         Variable(
@@ -5049,36 +5398,46 @@ Module {
                 name: "C",
                 def: ClassSig {
                     tparams: Mono,
-                    extends: ClassExplicitExtends {
-                        loc: 4,
-                        t: Eval(
+                    extends: ClassExplicitExtends(
+                        (
                             4,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 5,
-                                    index: 0,
+                            Eval(
+                                PackedEval {
+                                    loc: 4,
+                                    packed: Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                    op: GetProp(
+                                        "D",
+                                    ),
                                 },
                             ),
-                            GetProp(
-                                "D",
-                            ),
                         ),
-                    },
+                    ),
                     implements: [],
                     static_props: {},
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            6,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 7,
-                                        index: 1,
-                                    },
+                            (
+                                6,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 7,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -5112,10 +5471,12 @@ Module {
     module_kind: CJSModule {
         type_exports: [],
         exports: Some(
-            Require {
-                loc: 0,
-                index: 0,
-            },
+            Require(
+                PackedLocIndex {
+                    loc: 0,
+                    index: 0,
+                },
+            ),
         ),
         info: CJSModuleInfo {
             type_export_keys: [],
@@ -5153,10 +5514,12 @@ Module {
     module_kind: CJSModule {
         type_exports: [],
         exports: Some(
-            ImportDynamic {
-                loc: 0,
-                index: 0,
-            },
+            ImportDynamic(
+                PackedLocIndex {
+                    loc: 0,
+                    index: 0,
+                },
+            ),
         ),
         info: CJSModuleInfo {
             type_export_keys: [],
@@ -5186,17 +5549,20 @@ fn enable_relay_integration() {
     let input = r#"
             module.exports = graphql`query foo {}`;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-38]
 Type Sig:
 Module {
     module_kind: CJSModule {
         type_exports: [],
         exports: Some(
-            Require {
-                loc: 0,
-                index: 0,
-            },
+            Require(
+                PackedLocIndex {
+                    loc: 0,
+                    index: 0,
+                },
+            ),
         ),
         info: CJSModuleInfo {
             type_export_keys: [],
@@ -5234,17 +5600,20 @@ fn relay_integration_module_prefix() {
     let input = r#"
             module.exports = graphql`query foo {}`;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-38]
 Type Sig:
 Module {
     module_kind: CJSModule {
         type_exports: [],
         exports: Some(
-            Require {
-                loc: 0,
-                index: 0,
-            },
+            Require(
+                PackedLocIndex {
+                    loc: 0,
+                    index: 0,
+                },
+            ),
         ),
         info: CJSModuleInfo {
             type_export_keys: [],
@@ -5290,7 +5659,8 @@ fn scope_extrusion() {
     }
     module.exports = x;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [2:8-9]
 1. [3:6-7]
 2. [3:9-10]
@@ -5301,10 +5671,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 1,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 1,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -5338,10 +5710,12 @@ Module {
                 name: "x",
                 def: TyRef(
                     Unqualified(
-                        LocalRef {
-                            ref_loc: 2,
-                            index: 0,
-                        },
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 2,
+                                index: 0,
+                            },
+                        ),
                     ),
                 ),
             },
@@ -5393,25 +5767,33 @@ Module {
                         proto: None,
                         props: {
                             "x": ObjValueField(
-                                4,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 4,
-                                        index: 1,
-                                    },
+                                (
+                                    4,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 4,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                             "y": ObjValueField(
-                                5,
-                                Ref(
-                                    BuiltinRef {
-                                        ref_loc: 5,
-                                        type_ref: false,
-                                        name: "y",
-                                    },
+                                (
+                                    5,
+                                    Ref(
+                                        BuiltinRef(
+                                            PackedRefBuiltin {
+                                                ref_loc: 5,
+                                                type_ref: false,
+                                                name: "y",
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -5449,10 +5831,12 @@ Module {
                 name: "x",
                 def: TyRef(
                     Unqualified(
-                        LocalRef {
-                            ref_loc: 2,
-                            index: 0,
-                        },
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 2,
+                                index: 0,
+                            },
+                        ),
                     ),
                 ),
             },
@@ -5479,7 +5863,8 @@ fn report_all_errors() {
       b: (x: string) => x,
     };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-3]
 2. [2:6-22]
@@ -5505,50 +5890,56 @@ Module {
                         proto: None,
                         props: {
                             "a": ObjValueField(
-                                6,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 7,
-                                        index: 0,
-                                    },
+                                (
+                                    6,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 7,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                             "b": ObjValueField(
-                                8,
-                                Value(
-                                    FunExpr(
-                                        ValueFunExpr {
-                                            loc: 9,
-                                            async_: false,
-                                            generator: false,
-                                            def: FunSig {
-                                                tparams: Mono,
-                                                params: [
-                                                    FunParam {
-                                                        name: Some(
-                                                            "x",
-                                                        ),
-                                                        t: Annot(
-                                                            String(
-                                                                10,
+                                (
+                                    8,
+                                    Value(
+                                        FunExpr(
+                                            ValueFunExpr {
+                                                loc: 9,
+                                                async_: false,
+                                                generator: false,
+                                                def: FunSig {
+                                                    tparams: Mono,
+                                                    params: [
+                                                        FunParam {
+                                                            name: Some(
+                                                                "x",
                                                             ),
-                                                        ),
-                                                    },
-                                                ],
-                                                rest_param: None,
-                                                this_param: None,
-                                                return_: Err(
-                                                    11,
-                                                ),
-                                                type_guard: None,
-                                                effect_: ArbitraryEffect,
+                                                            t: Annot(
+                                                                String(
+                                                                    10,
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ],
+                                                    rest_param: None,
+                                                    this_param: None,
+                                                    return_: Err(
+                                                        11,
+                                                    ),
+                                                    type_guard: None,
+                                                    effect_: ArbitraryEffect,
+                                                },
+                                                statics: {},
                                             },
-                                            statics: {},
-                                        },
+                                        ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -5576,40 +5967,42 @@ Module {
                     proto_props: {},
                     own_props: {
                         "f": ObjValueField(
-                            1,
-                            Value(
-                                FunExpr(
-                                    ValueFunExpr {
-                                        loc: 2,
-                                        async_: false,
-                                        generator: false,
-                                        def: FunSig {
-                                            tparams: Mono,
-                                            params: [
-                                                FunParam {
-                                                    name: Some(
-                                                        "x",
-                                                    ),
-                                                    t: Annot(
-                                                        Number(
-                                                            3,
+                            (
+                                1,
+                                Value(
+                                    FunExpr(
+                                        ValueFunExpr {
+                                            loc: 2,
+                                            async_: false,
+                                            generator: false,
+                                            def: FunSig {
+                                                tparams: Mono,
+                                                params: [
+                                                    FunParam {
+                                                        name: Some(
+                                                            "x",
                                                         ),
-                                                    ),
-                                                },
-                                            ],
-                                            rest_param: None,
-                                            this_param: None,
-                                            return_: Err(
-                                                4,
-                                            ),
-                                            type_guard: None,
-                                            effect_: ArbitraryEffect,
+                                                        t: Annot(
+                                                            Number(
+                                                                3,
+                                                            ),
+                                                        ),
+                                                    },
+                                                ],
+                                                rest_param: None,
+                                                this_param: None,
+                                                return_: Err(
+                                                    4,
+                                                ),
+                                                type_guard: None,
+                                                effect_: ArbitraryEffect,
+                                            },
+                                            statics: {},
                                         },
-                                        statics: {},
-                                    },
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -5639,7 +6032,8 @@ fn munged_methods_ignored_if_directive() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [4:7-14]
 2. [4:15-16]
@@ -5648,15 +6042,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 1,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 2,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 1,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 2,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -5693,7 +6091,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(
         dedent_trim(expected_output),
         dedent_trim(&print_sig_with_options(
@@ -5713,7 +6112,8 @@ fn munged_methods_not_ignored() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-25]
 2. [2:2-9]
@@ -5725,15 +6125,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 4,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 4,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 5,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -5758,23 +6162,25 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "_method": ObjValueMethod {
-                            id_loc: 2,
-                            fn_loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Err(
-                                    3,
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                        "_method": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 2,
+                                fn_loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Err(
+                                        3,
+                                    ),
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {},
                     dict: None,
@@ -5803,7 +6209,8 @@ fn munged_fields_ignored_if_directive() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [4:7-14]
 2. [4:15-16]
@@ -5812,15 +6219,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 1,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 2,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 1,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 2,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -5857,7 +6268,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(
         dedent_trim(expected_output),
         dedent_trim(&print_sig_with_options(
@@ -5877,7 +6289,8 @@ fn munged_fields_not_ignored() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:2-9]
 2. [2:12-31]
@@ -5889,15 +6302,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 4,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 4,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 5,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -5924,29 +6341,31 @@ Module {
                     proto_props: {},
                     own_props: {
                         "_method": ObjValueField(
-                            1,
-                            Value(
-                                FunExpr(
-                                    ValueFunExpr {
-                                        loc: 2,
-                                        async_: false,
-                                        generator: false,
-                                        def: FunSig {
-                                            tparams: Mono,
-                                            params: [],
-                                            rest_param: None,
-                                            this_param: None,
-                                            return_: Err(
-                                                3,
-                                            ),
-                                            type_guard: None,
-                                            effect_: ArbitraryEffect,
+                            (
+                                1,
+                                Value(
+                                    FunExpr(
+                                        ValueFunExpr {
+                                            loc: 2,
+                                            async_: false,
+                                            generator: false,
+                                            def: FunSig {
+                                                tparams: Mono,
+                                                params: [],
+                                                rest_param: None,
+                                                this_param: None,
+                                                return_: Err(
+                                                    3,
+                                                ),
+                                                type_guard: None,
+                                                effect_: ArbitraryEffect,
+                                            },
+                                            statics: {},
                                         },
-                                        statics: {},
-                                    },
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -5975,7 +6394,8 @@ fn prop_types_static_failure() {
     }
     export default C;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-15]
 1. [2:9-18]
 2. [2:21-23]
@@ -5986,15 +6406,19 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 3,
-                def: Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 0,
-                    },
-                ),
-            },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 3,
+                    def: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 4,
+                                index: 0,
+                            },
+                        ),
+                    ),
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -6019,18 +6443,20 @@ Module {
                     implements: [],
                     static_props: {
                         "propTypes": ObjValueField(
-                            1,
-                            Value(
-                                ObjLit(
-                                    ValueObjLit {
-                                        loc: 2,
-                                        frozen: false,
-                                        proto: None,
-                                        props: {},
-                                    },
+                            (
+                                1,
+                                Value(
+                                    ObjLit(
+                                        ValueObjLit {
+                                            loc: 2,
+                                            frozen: false,
+                                            proto: None,
+                                            props: {},
+                                        },
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     proto_props: {},
@@ -6084,7 +6510,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(UnexpectedArraySpread(0, 1))
 "#;
@@ -6096,7 +6521,8 @@ fn array_hole() {
     let input = r#"
             module.exports = [,];
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-20]
 Type Sig:
 Module {
@@ -6122,7 +6548,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(UnexpectedArrayHole(0))
 "#;
@@ -6159,16 +6584,18 @@ Module {
                             ObjValueSpreadSlice(
                                 {
                                     "x": ObjValueField(
-                                        1,
-                                        Value(
-                                            StringLit(
-                                                (
-                                                    2,
-                                                    "x",
+                                        (
+                                            1,
+                                            Value(
+                                                StringLit(
+                                                    (
+                                                        2,
+                                                        "x",
+                                                    ),
                                                 ),
                                             ),
+                                            Neutral,
                                         ),
-                                        Neutral,
                                     ),
                                 },
                             ),
@@ -6181,16 +6608,18 @@ Module {
                                             proto: None,
                                             props: {
                                                 "y": ObjValueField(
-                                                    4,
-                                                    Value(
-                                                        StringLit(
-                                                            (
-                                                                5,
-                                                                "y",
+                                                    (
+                                                        4,
+                                                        Value(
+                                                            StringLit(
+                                                                (
+                                                                    5,
+                                                                    "y",
+                                                                ),
                                                             ),
                                                         ),
+                                                        Neutral,
                                                     ),
-                                                    Neutral,
                                                 ),
                                             },
                                         },
@@ -6200,16 +6629,18 @@ Module {
                             ObjValueSpreadSlice(
                                 {
                                     "z": ObjValueField(
-                                        6,
-                                        Value(
-                                            StringLit(
-                                                (
-                                                    7,
-                                                    "z",
+                                        (
+                                            6,
+                                            Value(
+                                                StringLit(
+                                                    (
+                                                        7,
+                                                        "z",
+                                                    ),
                                                 ),
                                             ),
+                                            Neutral,
                                         ),
-                                        Neutral,
                                     ),
                                 },
                             ),
@@ -6252,17 +6683,21 @@ Module {
         type_exports: [],
         exports: Some(
             Eval(
-                0,
-                Ref(
-                    BuiltinRef {
-                        ref_loc: 1,
-                        type_ref: false,
-                        name: "Number",
-                    },
-                ),
-                GetProp(
-                    "NaN",
-                ),
+                PackedEval {
+                    loc: 0,
+                    packed: Ref(
+                        BuiltinRef(
+                            PackedRefBuiltin {
+                                ref_loc: 1,
+                                type_ref: false,
+                                name: "Number",
+                            },
+                        ),
+                    ),
+                    op: GetProp(
+                        "NaN",
+                    ),
+                },
             ),
         ),
         info: CJSModuleInfo {
@@ -6327,7 +6762,8 @@ fn member_expression() {
     let input = r#"
             module.exports = a[0];
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-21]
 1. [1:17-18]
 2. [1:19-20]
@@ -6337,25 +6773,29 @@ Module {
         type_exports: [],
         exports: Some(
             Eval(
-                0,
-                Ref(
-                    BuiltinRef {
-                        ref_loc: 1,
-                        type_ref: false,
-                        name: "a",
-                    },
-                ),
-                GetElem(
-                    Value(
-                        NumberLit(
-                            (
-                                2,
-                                0.0,
-                                "0",
+                PackedEval {
+                    loc: 0,
+                    packed: Ref(
+                        BuiltinRef(
+                            PackedRefBuiltin {
+                                ref_loc: 1,
+                                type_ref: false,
+                                name: "a",
+                            },
+                        ),
+                    ),
+                    op: GetElem(
+                        Value(
+                            NumberLit(
+                                (
+                                    2,
+                                    0.0,
+                                    "0",
+                                ),
                             ),
                         ),
                     ),
-                ),
+                },
             ),
         ),
         info: CJSModuleInfo {
@@ -6385,7 +6825,8 @@ fn chained_member_expression() {
     let input = r#"
             module.exports = a.b.c;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-22]
 1. [1:17-20]
 2. [1:17-18]
@@ -6395,23 +6836,29 @@ Module {
         type_exports: [],
         exports: Some(
             Eval(
-                0,
-                Eval(
-                    1,
-                    Ref(
-                        BuiltinRef {
-                            ref_loc: 2,
-                            type_ref: false,
-                            name: "a",
+                PackedEval {
+                    loc: 0,
+                    packed: Eval(
+                        PackedEval {
+                            loc: 1,
+                            packed: Ref(
+                                BuiltinRef(
+                                    PackedRefBuiltin {
+                                        ref_loc: 2,
+                                        type_ref: false,
+                                        name: "a",
+                                    },
+                                ),
+                            ),
+                            op: GetProp(
+                                "b",
+                            ),
                         },
                     ),
-                    GetProp(
-                        "b",
+                    op: GetProp(
+                        "c",
                     ),
-                ),
-                GetProp(
-                    "c",
-                ),
+                },
             ),
         ),
         info: CJSModuleInfo {
@@ -6438,7 +6885,8 @@ fn arith_expression1() {
     let input = r#"
             module.exports = 6*7;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-20]
 1. [1:17-18]
 2. [1:19-20]
@@ -6448,28 +6896,32 @@ Module {
         type_exports: [],
         exports: Some(
             Eval(
-                0,
-                Value(
-                    NumberLit(
-                        (
-                            1,
-                            6.0,
-                            "6",
-                        ),
-                    ),
-                ),
-                Arith(
-                    Mult,
-                    Value(
+                PackedEval {
+                    loc: 0,
+                    packed: Value(
                         NumberLit(
                             (
-                                2,
-                                7.0,
-                                "7",
+                                1,
+                                6.0,
+                                "6",
                             ),
                         ),
                     ),
-                ),
+                    op: Arith(
+                        (
+                            Mult,
+                            Value(
+                                NumberLit(
+                                    (
+                                        2,
+                                        7.0,
+                                        "7",
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                },
             ),
         ),
         info: CJSModuleInfo {
@@ -6496,7 +6948,8 @@ fn arith_expression2() {
     let input = r#"
             module.exports = 6+7;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-20]
 1. [1:17-18]
 2. [1:19-20]
@@ -6506,28 +6959,32 @@ Module {
         type_exports: [],
         exports: Some(
             Eval(
-                0,
-                Value(
-                    NumberLit(
-                        (
-                            1,
-                            6.0,
-                            "6",
-                        ),
-                    ),
-                ),
-                Arith(
-                    Plus,
-                    Value(
+                PackedEval {
+                    loc: 0,
+                    packed: Value(
                         NumberLit(
                             (
-                                2,
-                                7.0,
-                                "7",
+                                1,
+                                6.0,
+                                "6",
                             ),
                         ),
                     ),
-                ),
+                    op: Arith(
+                        (
+                            Plus,
+                            Value(
+                                NumberLit(
+                                    (
+                                        2,
+                                        7.0,
+                                        "7",
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                },
             ),
         ),
         info: CJSModuleInfo {
@@ -6558,7 +7015,8 @@ fn update_expression() {
     export const post_incr = foo++;
     export const post_decr = foo--;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:16-19]
 1. [2:13-21]
 2. [2:24-29]
@@ -6615,14 +7073,18 @@ Module {
                 id_loc: 1,
                 name: "pre_incr",
                 def: Eval(
-                    2,
-                    Ref(
-                        RemoteRef {
-                            ref_loc: 3,
-                            index: 0,
-                        },
-                    ),
-                    Update,
+                    PackedEval {
+                        loc: 2,
+                        packed: Ref(
+                            RemoteRef(
+                                PackedRefRemote {
+                                    ref_loc: 3,
+                                    index: 0,
+                                },
+                            ),
+                        ),
+                        op: Update,
+                    },
                 ),
             },
         ),
@@ -6631,14 +7093,18 @@ Module {
                 id_loc: 4,
                 name: "pre_decr",
                 def: Eval(
-                    5,
-                    Ref(
-                        RemoteRef {
-                            ref_loc: 6,
-                            index: 0,
-                        },
-                    ),
-                    Update,
+                    PackedEval {
+                        loc: 5,
+                        packed: Ref(
+                            RemoteRef(
+                                PackedRefRemote {
+                                    ref_loc: 6,
+                                    index: 0,
+                                },
+                            ),
+                        ),
+                        op: Update,
+                    },
                 ),
             },
         ),
@@ -6647,14 +7113,18 @@ Module {
                 id_loc: 7,
                 name: "post_incr",
                 def: Eval(
-                    8,
-                    Ref(
-                        RemoteRef {
-                            ref_loc: 9,
-                            index: 0,
-                        },
-                    ),
-                    Update,
+                    PackedEval {
+                        loc: 8,
+                        packed: Ref(
+                            RemoteRef(
+                                PackedRefRemote {
+                                    ref_loc: 9,
+                                    index: 0,
+                                },
+                            ),
+                        ),
+                        op: Update,
+                    },
                 ),
             },
         ),
@@ -6663,14 +7133,18 @@ Module {
                 id_loc: 10,
                 name: "post_decr",
                 def: Eval(
-                    11,
-                    Ref(
-                        RemoteRef {
-                            ref_loc: 12,
-                            index: 0,
-                        },
-                    ),
-                    Update,
+                    PackedEval {
+                        loc: 11,
+                        packed: Ref(
+                            RemoteRef(
+                                PackedRefRemote {
+                                    ref_loc: 12,
+                                    index: 0,
+                                },
+                            ),
+                        ),
+                        op: Update,
+                    },
                 ),
             },
         ),
@@ -6698,7 +7172,8 @@ fn sequence_expression() {
             var x;
     export default (x, null);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [2:7-14]
 1. [2:19-23]
 Type Sig:
@@ -6706,14 +7181,16 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 0,
-                def: Value(
-                    NullLit(
-                        1,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 0,
+                    def: Value(
+                        NullLit(
+                            1,
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -6752,10 +7229,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -6810,10 +7289,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 1,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 1,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -6905,17 +7386,19 @@ Module {
                 id_loc: 0,
                 name: "Foo",
                 tparams: Poly(
-                    1,
-                    [
-                        TParam {
-                            name_loc: 2,
-                            name: "X",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        },
-                    ],
+                    (
+                        1,
+                        [
+                            TParam {
+                                name_loc: 2,
+                                name: "X",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
                 ),
                 def: InterfaceSig {
                     extends: [],
@@ -6939,26 +7422,32 @@ Module {
                     static_props: {},
                     own_props: {
                         "foo": InterfaceField(
-                            Some(
-                                4,
-                            ),
-                            TyRefApp {
-                                loc: 5,
-                                name: Unqualified(
-                                    LocalRef {
-                                        ref_loc: 6,
-                                        index: 0,
+                            (
+                                Some(
+                                    4,
+                                ),
+                                TyRefApp(
+                                    PackedTyRefApp {
+                                        loc: 5,
+                                        name: Unqualified(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 6,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        targs: [
+                                            Annot(
+                                                Any(
+                                                    7,
+                                                ),
+                                            ),
+                                        ],
                                     },
                                 ),
-                                targs: [
-                                    Annot(
-                                        Any(
-                                            7,
-                                        ),
-                                    ),
-                                ],
-                            },
-                            Neutral,
+                                Neutral,
+                            ),
                         ),
                     },
                     proto_props: {},
@@ -6990,7 +7479,8 @@ fn bound_coverage() {
             type Foo = number;
     export type T = <X: Foo> (X) => void;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-16]
 1. [1:19-25]
 2. [2:12-13]
@@ -7045,26 +7535,30 @@ Module {
                             3,
                             FunSig {
                                 tparams: Poly(
-                                    4,
-                                    [
-                                        TParam {
-                                            name_loc: 5,
-                                            name: "X",
-                                            polarity: Neutral,
-                                            bound: Some(
-                                                TyRef(
-                                                    Unqualified(
-                                                        LocalRef {
-                                                            ref_loc: 6,
-                                                            index: 0,
-                                                        },
+                                    (
+                                        4,
+                                        [
+                                            TParam {
+                                                name_loc: 5,
+                                                name: "X",
+                                                polarity: Neutral,
+                                                bound: Some(
+                                                    TyRef(
+                                                        Unqualified(
+                                                            LocalRef(
+                                                                PackedRefLocal {
+                                                                    ref_loc: 6,
+                                                                    index: 0,
+                                                                },
+                                                            ),
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                            default: None,
-                                            is_const: false,
-                                        },
-                                    ],
+                                                default: None,
+                                                is_const: false,
+                                            },
+                                        ],
+                                    ),
                                 ),
                                 params: [
                                     FunParam {
@@ -7100,7 +7594,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -7120,10 +7615,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -7147,16 +7644,20 @@ Module {
                     proto_props: {},
                     own_props: {
                         "x": ObjValueField(
-                            1,
-                            TyRef(
-                                Unqualified(
-                                    LocalRef {
-                                        ref_loc: 2,
-                                        index: 0,
-                                    },
+                            (
+                                1,
+                                TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 2,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -7190,10 +7691,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 0,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 0,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -7257,29 +7760,33 @@ Module {
                         proto: None,
                         props: {
                             "bar": ObjValueField(
-                                3,
-                                Annot(
-                                    SingletonString(
-                                        (
-                                            4,
-                                            "hello",
+                                (
+                                    3,
+                                    Annot(
+                                        SingletonString(
+                                            (
+                                                4,
+                                                "hello",
+                                            ),
                                         ),
                                     ),
+                                    Positive,
                                 ),
-                                Positive,
                             ),
                             "foo": ObjValueField(
-                                1,
-                                Annot(
-                                    SingletonNumber(
-                                        (
-                                            2,
-                                            42.0,
-                                            "42",
+                                (
+                                    1,
+                                    Annot(
+                                        SingletonNumber(
+                                            (
+                                                2,
+                                                42.0,
+                                                "42",
+                                            ),
                                         ),
                                     ),
+                                    Positive,
                                 ),
-                                Positive,
                             ),
                         },
                     },
@@ -7363,11 +7870,13 @@ Module {
         exports: Some(
             TyRef(
                 Unqualified(
-                    BuiltinRef {
-                        ref_loc: 0,
-                        type_ref: true,
-                        name: "FbtElement",
-                    },
+                    BuiltinRef(
+                        PackedRefBuiltin {
+                            ref_loc: 0,
+                            type_ref: true,
+                            name: "FbtElement",
+                        },
+                    ),
                 ),
             ),
         ),
@@ -7403,7 +7912,8 @@ fn fbt_empty_open() {
     let input = r#"
             module.exports = <fbt/>;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:18-21]
 Type Sig:
 Module {
@@ -7412,11 +7922,13 @@ Module {
         exports: Some(
             TyRef(
                 Unqualified(
-                    BuiltinRef {
-                        ref_loc: 0,
-                        type_ref: true,
-                        name: "FbtElement",
-                    },
+                    BuiltinRef(
+                        PackedRefBuiltin {
+                            ref_loc: 0,
+                            type_ref: true,
+                            name: "FbtElement",
+                        },
+                    ),
                 ),
             ),
         ),
@@ -7463,11 +7975,13 @@ Module {
         exports: Some(
             TyRef(
                 Unqualified(
-                    BuiltinRef {
-                        ref_loc: 0,
-                        type_ref: true,
-                        name: "FbtElement",
-                    },
+                    BuiltinRef(
+                        PackedRefBuiltin {
+                            ref_loc: 0,
+                            type_ref: true,
+                            name: "FbtElement",
+                        },
+                    ),
                 ),
             ),
         ),
@@ -7506,7 +8020,8 @@ fn keymirror() {
       b: null,
     })
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:35-4:1]
 1. [2:2-3]
 2. [3:2-3]
@@ -7523,28 +8038,32 @@ Module {
                         proto: None,
                         props: {
                             "a": ObjValueField(
-                                1,
-                                Annot(
-                                    SingletonString(
-                                        (
-                                            1,
-                                            "a",
+                                (
+                                    1,
+                                    Annot(
+                                        SingletonString(
+                                            (
+                                                1,
+                                                "a",
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                             "b": ObjValueField(
-                                2,
-                                Annot(
-                                    SingletonString(
-                                        (
-                                            2,
-                                            "b",
+                                (
+                                    2,
+                                    Annot(
+                                        SingletonString(
+                                            (
+                                                2,
+                                                "b",
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -7583,7 +8102,8 @@ fn jsx_div() {
     let input = r#"
             module.exports = <div></div>;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-28]
 Type Sig:
 Module {
@@ -7609,7 +8129,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(UnexpectedExpression(0, JSXElement))
 "#;
@@ -7622,7 +8141,8 @@ fn function_return() {
             var n = false;
     export function foo<X: typeof n>(x: X) { return 1; };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [2:7-38]
 2. [2:16-19]
@@ -7672,35 +8192,39 @@ Module {
                 fn_loc: 1,
                 def: FunSig {
                     tparams: Poly(
-                        3,
-                        [
-                            TParam {
-                                name_loc: 4,
-                                name: "X",
-                                polarity: Neutral,
-                                bound: Some(
-                                    Annot(
-                                        Typeof(
-                                            AnnotTypeof {
-                                                loc: 5,
-                                                qname: [
-                                                    "n",
-                                                ],
-                                                t: Ref(
-                                                    LocalRef {
-                                                        ref_loc: 6,
-                                                        index: 0,
-                                                    },
-                                                ),
-                                                targs: None,
-                                            },
+                        (
+                            3,
+                            [
+                                TParam {
+                                    name_loc: 4,
+                                    name: "X",
+                                    polarity: Neutral,
+                                    bound: Some(
+                                        Annot(
+                                            Typeof(
+                                                AnnotTypeof {
+                                                    loc: 5,
+                                                    qname: [
+                                                        "n",
+                                                    ],
+                                                    t: Ref(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 6,
+                                                                index: 0,
+                                                            },
+                                                        ),
+                                                    ),
+                                                    targs: None,
+                                                },
+                                            ),
                                         ),
                                     ),
-                                ),
-                                default: None,
-                                is_const: false,
-                            },
-                        ],
+                                    default: None,
+                                    is_const: false,
+                                },
+                            ],
+                        ),
                     ),
                     params: [
                         FunParam {
@@ -7736,7 +8260,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(0, VariableDefinition { name: "n" }))
 SigError(ExpectedAnnotation(8, FunctionReturn))
@@ -7822,10 +8345,12 @@ Module {
                                                                     "n",
                                                                 ],
                                                                 t: Ref(
-                                                                    LocalRef {
-                                                                        ref_loc: 5,
-                                                                        index: 0,
-                                                                    },
+                                                                    LocalRef(
+                                                                        PackedRefLocal {
+                                                                            ref_loc: 5,
+                                                                            index: 0,
+                                                                        },
+                                                                    ),
                                                                 ),
                                                                 targs: None,
                                                             },
@@ -7882,7 +8407,8 @@ fn function_statics() {
     bar.x = x;
     module.exports = bar;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:8-28]
 1. [1:17-20]
 2. [1:24-28]
@@ -7897,10 +8423,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 7,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 7,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -7936,10 +8464,12 @@ Module {
                     "x": (
                         5,
                         Ref(
-                            LocalRef {
-                                ref_loc: 6,
-                                index: 1,
-                            },
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 6,
+                                    index: 1,
+                                },
+                            ),
                         ),
                     ),
                 },
@@ -8131,7 +8661,8 @@ fn async_function_1() {
             async function foo() {};
     module.exports = foo;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-28]
 1. [1:23-26]
 2. [1:28]
@@ -8142,10 +8673,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -8196,7 +8729,8 @@ fn async_function_2() {
             async function foo() { return 1; };
     module.exports = foo;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:14-28]
 1. [1:23-26]
 2. [1:28]
@@ -8207,10 +8741,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -8251,7 +8787,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(2, FunctionReturn))
 "#;
@@ -8309,7 +8844,6 @@ Module {
     dirty_pattern_defs: [],
     patterns: [],
 }
-
 Errors:
 SigError(ExpectedAnnotation(1, FunctionReturn))
 "#;
@@ -8323,7 +8857,8 @@ fn type_spread() {
     type B = { b: number };
     export type C = { ...A, ...B, c: null }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-14]
 1. [1:17-30]
 2. [1:19-20]
@@ -8371,13 +8906,15 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "a": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        String(
-                                            3,
+                                    (
+                                        2,
+                                        Annot(
+                                            String(
+                                                3,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -8400,13 +8937,15 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "b": ObjAnnotField(
-                                    6,
-                                    Annot(
-                                        Number(
-                                            7,
+                                    (
+                                        6,
+                                        Annot(
+                                            Number(
+                                                7,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -8431,38 +8970,46 @@ Module {
                                 ObjSpreadAnnotElem(
                                     TyRef(
                                         Unqualified(
-                                            LocalRef {
-                                                ref_loc: 10,
-                                                index: 0,
-                                            },
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 10,
+                                                    index: 0,
+                                                },
+                                            ),
                                         ),
                                     ),
                                 ),
                                 ObjSpreadAnnotElem(
                                     TyRef(
                                         Unqualified(
-                                            LocalRef {
-                                                ref_loc: 11,
-                                                index: 1,
-                                            },
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 11,
+                                                    index: 1,
+                                                },
+                                            ),
                                         ),
                                     ),
                                 ),
-                                ObjSpreadAnnotSlice {
-                                    dict: None,
-                                    props: {
-                                        "c": ObjAnnotField(
-                                            12,
-                                            Annot(
-                                                Null(
-                                                    13,
+                                ObjSpreadAnnotSlice(
+                                    ObjSpreadAnnotSliceData {
+                                        dict: None,
+                                        props: {
+                                            "c": ObjAnnotField(
+                                                (
+                                                    12,
+                                                    Annot(
+                                                        Null(
+                                                            13,
+                                                        ),
+                                                    ),
+                                                    Neutral,
                                                 ),
                                             ),
-                                            Neutral,
-                                        ),
+                                        },
+                                        computed_props: [],
                                     },
-                                    computed_props: [],
-                                },
+                                ),
                             ],
                         },
                     ),
@@ -8486,7 +9033,8 @@ fn inline_interface() {
             type A = interface {};
     export type B = interface extends A { p: string };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-14]
 1. [1:17-29]
 2. [2:12-13]
@@ -8550,24 +9098,28 @@ Module {
                                 extends: [
                                     TyRef(
                                         Unqualified(
-                                            LocalRef {
-                                                ref_loc: 4,
-                                                index: 0,
-                                            },
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 4,
+                                                    index: 0,
+                                                },
+                                            ),
                                         ),
                                     ),
                                 ],
                                 props: {
                                     "p": InterfaceField(
-                                        Some(
-                                            5,
-                                        ),
-                                        Annot(
-                                            String(
-                                                6,
+                                        (
+                                            Some(
+                                                5,
                                             ),
+                                            Annot(
+                                                String(
+                                                    6,
+                                                ),
+                                            ),
+                                            Neutral,
                                         ),
-                                        Neutral,
                                     ),
                                 },
                                 computed_props: [],
@@ -8595,7 +9147,8 @@ fn object_annot_optional() {
     let input = r#"
             export type A = { p?: string };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:16-30]
 2. [1:18-19]
@@ -8633,17 +9186,19 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "p": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        Optional(
-                                            Annot(
-                                                String(
-                                                    3,
+                                    (
+                                        2,
+                                        Annot(
+                                            Optional(
+                                                Annot(
+                                                    String(
+                                                        3,
+                                                    ),
                                                 ),
                                             ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -8669,7 +9224,8 @@ fn interface_optional() {
     let input = r#"
             export interface I { p?: string }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-18]
 1. [1:21-22]
 2. [1:25-31]
@@ -8702,19 +9258,21 @@ Module {
                     extends: [],
                     props: {
                         "p": InterfaceField(
-                            Some(
-                                1,
-                            ),
-                            Annot(
-                                Optional(
-                                    Annot(
-                                        String(
-                                            2,
+                            (
+                                Some(
+                                    1,
+                                ),
+                                Annot(
+                                    Optional(
+                                        Annot(
+                                            String(
+                                                2,
+                                            ),
                                         ),
                                     ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     computed_props: [],
@@ -8928,23 +9486,25 @@ Module {
                             loc: 1,
                             obj_kind: InexactObj,
                             props: {
-                                "m": ObjAnnotMethod {
-                                    id_loc: 3,
-                                    fn_loc: 2,
-                                    def: FunSig {
-                                        tparams: Mono,
-                                        params: [],
-                                        rest_param: None,
-                                        this_param: None,
-                                        return_: Annot(
-                                            Void(
-                                                4,
+                                "m": ObjAnnotMethod(
+                                    ObjAnnotMethodData {
+                                        id_loc: 3,
+                                        fn_loc: 2,
+                                        def: FunSig {
+                                            tparams: Mono,
+                                            params: [],
+                                            rest_param: None,
+                                            this_param: None,
+                                            return_: Annot(
+                                                Void(
+                                                    4,
+                                                ),
                                             ),
-                                        ),
-                                        type_guard: None,
-                                        effect_: ArbitraryEffect,
+                                            type_guard: None,
+                                            effect_: ArbitraryEffect,
+                                        },
                                     },
-                                },
+                                ),
                             },
                             computed_props: [],
                             proto: ObjAnnotImplicitProto,
@@ -8969,7 +9529,8 @@ fn object_annot_call_poly() {
     let input = r#"
             export type A = { <T>(X): X };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:16-29]
 2. [1:18-27]
@@ -9010,36 +9571,40 @@ Module {
                             obj_kind: InexactObj,
                             props: {},
                             computed_props: [],
-                            proto: ObjAnnotCallable {
-                                ts: [
+                            proto: ObjAnnotCallable(
+                                [
                                     Annot(
                                         FunAnnot(
                                             (
                                                 2,
                                                 FunSig {
                                                     tparams: Poly(
-                                                        3,
-                                                        [
-                                                            TParam {
-                                                                name_loc: 4,
-                                                                name: "T",
-                                                                polarity: Neutral,
-                                                                bound: None,
-                                                                default: None,
-                                                                is_const: false,
-                                                            },
-                                                        ],
+                                                        (
+                                                            3,
+                                                            [
+                                                                TParam {
+                                                                    name_loc: 4,
+                                                                    name: "T",
+                                                                    polarity: Neutral,
+                                                                    bound: None,
+                                                                    default: None,
+                                                                    is_const: false,
+                                                                },
+                                                            ],
+                                                        ),
                                                     ),
                                                     params: [
                                                         FunParam {
                                                             name: None,
                                                             t: TyRef(
                                                                 Unqualified(
-                                                                    BuiltinRef {
-                                                                        ref_loc: 5,
-                                                                        type_ref: true,
-                                                                        name: "X",
-                                                                    },
+                                                                    BuiltinRef(
+                                                                        PackedRefBuiltin {
+                                                                            ref_loc: 5,
+                                                                            type_ref: true,
+                                                                            name: "X",
+                                                                        },
+                                                                    ),
                                                                 ),
                                                             ),
                                                         },
@@ -9048,11 +9613,13 @@ Module {
                                                     this_param: None,
                                                     return_: TyRef(
                                                         Unqualified(
-                                                            BuiltinRef {
-                                                                ref_loc: 6,
-                                                                type_ref: true,
-                                                                name: "X",
-                                                            },
+                                                            BuiltinRef(
+                                                                PackedRefBuiltin {
+                                                                    ref_loc: 6,
+                                                                    type_ref: true,
+                                                                    name: "X",
+                                                                },
+                                                            ),
                                                         ),
                                                     ),
                                                     type_guard: None,
@@ -9062,7 +9629,7 @@ Module {
                                         ),
                                     ),
                                 ],
-                            },
+                            ),
                         },
                     ),
                 ),
@@ -9074,7 +9641,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -9124,8 +9692,8 @@ Module {
                             obj_kind: InexactObj,
                             props: {},
                             computed_props: [],
-                            proto: ObjAnnotCallable {
-                                ts: [
+                            proto: ObjAnnotCallable(
+                                [
                                     Annot(
                                         FunAnnot(
                                             (
@@ -9167,7 +9735,7 @@ Module {
                                         ),
                                     ),
                                 ],
-                            },
+                            ),
                         },
                     ),
                 ),
@@ -9258,11 +9826,13 @@ Module {
     remote_refs: [],
     pattern_defs: [
         Ref(
-            BuiltinRef {
-                ref_loc: 4,
-                type_ref: false,
-                name: "e",
-            },
+            BuiltinRef(
+                PackedRefBuiltin {
+                    ref_loc: 4,
+                    type_ref: false,
+                    name: "e",
+                },
+            ),
         ),
     ],
     dirty_pattern_defs: [],
@@ -9384,11 +9954,13 @@ Module {
     remote_refs: [],
     pattern_defs: [
         Ref(
-            BuiltinRef {
-                ref_loc: 5,
-                type_ref: false,
-                name: "e",
-            },
+            BuiltinRef(
+                PackedRefBuiltin {
+                    ref_loc: 5,
+                    type_ref: false,
+                    name: "e",
+                },
+            ),
         ),
     ],
     dirty_pattern_defs: [],
@@ -9469,28 +10041,32 @@ Module {
                         AnnotTuple {
                             loc: 1,
                             elems: [
-                                TupleElement {
-                                    loc: 2,
-                                    name: None,
-                                    t: Annot(
-                                        String(
-                                            2,
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 2,
+                                        name: None,
+                                        t: Annot(
+                                            String(
+                                                2,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
-                                TupleElement {
-                                    loc: 3,
-                                    name: None,
-                                    t: Annot(
-                                        Number(
-                                            3,
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 3,
+                                        name: None,
+                                        t: Annot(
+                                            Number(
+                                                3,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
                             ],
                             inexact: false,
                         },
@@ -9553,32 +10129,36 @@ Module {
                         AnnotTuple {
                             loc: 1,
                             elems: [
-                                TupleElement {
-                                    loc: 2,
-                                    name: Some(
-                                        "foo",
-                                    ),
-                                    t: Annot(
-                                        String(
-                                            3,
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 2,
+                                        name: Some(
+                                            "foo",
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
-                                TupleElement {
-                                    loc: 4,
-                                    name: Some(
-                                        "bar",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            5,
+                                        t: Annot(
+                                            String(
+                                                3,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 4,
+                                        name: Some(
+                                            "bar",
+                                        ),
+                                        t: Annot(
+                                            Number(
+                                                5,
+                                            ),
+                                        ),
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
                             ],
                             inexact: false,
                         },
@@ -9602,7 +10182,8 @@ fn tuple_annot_variance() {
     let input = r#"
             export type A = [+foo: string, -bar: number];
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:16-44]
 2. [1:17-29]
@@ -9640,32 +10221,36 @@ Module {
                         AnnotTuple {
                             loc: 1,
                             elems: [
-                                TupleElement {
-                                    loc: 2,
-                                    name: Some(
-                                        "foo",
-                                    ),
-                                    t: Annot(
-                                        String(
-                                            3,
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 2,
+                                        name: Some(
+                                            "foo",
                                         ),
-                                    ),
-                                    polarity: Positive,
-                                    optional: false,
-                                },
-                                TupleElement {
-                                    loc: 4,
-                                    name: Some(
-                                        "bar",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            5,
+                                        t: Annot(
+                                            String(
+                                                3,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Negative,
-                                    optional: false,
-                                },
+                                        polarity: Positive,
+                                        optional: false,
+                                    },
+                                ),
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 4,
+                                        name: Some(
+                                            "bar",
+                                        ),
+                                        t: Annot(
+                                            Number(
+                                                5,
+                                            ),
+                                        ),
+                                        polarity: Negative,
+                                        optional: false,
+                                    },
+                                ),
                             ],
                             inexact: false,
                         },
@@ -9747,7 +10332,8 @@ fn cycle() {
             export type A = { p: ?B };
     export type B = { p: ?A };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:20-21]
 1. [1:24-33]
 2. [1:26-27]
@@ -9795,23 +10381,27 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "p": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        Maybe(
-                                            (
-                                                3,
-                                                TyRef(
-                                                    Unqualified(
-                                                        LocalRef {
-                                                            ref_loc: 4,
-                                                            index: 1,
-                                                        },
+                                    (
+                                        2,
+                                        Annot(
+                                            Maybe(
+                                                (
+                                                    3,
+                                                    TyRef(
+                                                        Unqualified(
+                                                            LocalRef(
+                                                                PackedRefLocal {
+                                                                    ref_loc: 4,
+                                                                    index: 1,
+                                                                },
+                                                            ),
+                                                        ),
                                                     ),
                                                 ),
                                             ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -9834,23 +10424,27 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "p": ObjAnnotField(
-                                    7,
-                                    Annot(
-                                        Maybe(
-                                            (
-                                                8,
-                                                TyRef(
-                                                    Unqualified(
-                                                        LocalRef {
-                                                            ref_loc: 9,
-                                                            index: 0,
-                                                        },
+                                    (
+                                        7,
+                                        Annot(
+                                            Maybe(
+                                                (
+                                                    8,
+                                                    TyRef(
+                                                        Unqualified(
+                                                            LocalRef(
+                                                                PackedRefLocal {
+                                                                    ref_loc: 9,
+                                                                    index: 0,
+                                                                },
+                                                            ),
+                                                        ),
                                                     ),
                                                 ),
                                             ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -9919,23 +10513,29 @@ Module {
                                 "q",
                             ],
                             t: Eval(
-                                4,
-                                Eval(
-                                    3,
-                                    Ref(
-                                        BuiltinRef {
-                                            ref_loc: 2,
-                                            type_ref: false,
-                                            name: "o",
+                                PackedEval {
+                                    loc: 4,
+                                    packed: Eval(
+                                        PackedEval {
+                                            loc: 3,
+                                            packed: Ref(
+                                                BuiltinRef(
+                                                    PackedRefBuiltin {
+                                                        ref_loc: 2,
+                                                        type_ref: false,
+                                                        name: "o",
+                                                    },
+                                                ),
+                                            ),
+                                            op: GetProp(
+                                                "p",
+                                            ),
                                         },
                                     ),
-                                    GetProp(
-                                        "p",
+                                    op: GetProp(
+                                        "q",
                                     ),
-                                ),
-                                GetProp(
-                                    "q",
-                                ),
+                                },
                             ),
                             targs: None,
                         },
@@ -9959,7 +10559,8 @@ fn qualified_generic_typeapp_loc() {
     let input = r#"
             declare export var a: O.P.Q<T>;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:19-20]
 1. [1:22-30]
 2. [1:22-27]
@@ -9994,37 +10595,47 @@ Module {
             DefVariable {
                 id_loc: 0,
                 name: "a",
-                def: TyRefApp {
-                    loc: 1,
-                    name: Qualified {
-                        loc: 2,
-                        id_loc: 6,
-                        name: "Q",
-                        qualification: Qualified {
-                            loc: 3,
-                            id_loc: 5,
-                            name: "P",
-                            qualification: Unqualified(
-                                BuiltinRef {
-                                    ref_loc: 4,
-                                    type_ref: true,
-                                    name: "O",
-                                },
-                            ),
-                        },
-                    },
-                    targs: [
-                        TyRef(
-                            Unqualified(
-                                BuiltinRef {
-                                    ref_loc: 7,
-                                    type_ref: true,
-                                    name: "T",
-                                },
-                            ),
+                def: TyRefApp(
+                    PackedTyRefApp {
+                        loc: 1,
+                        name: Qualified(
+                            TyRefQualified {
+                                loc: 2,
+                                id_loc: 6,
+                                name: "Q",
+                                qualification: Qualified(
+                                    TyRefQualified {
+                                        loc: 3,
+                                        id_loc: 5,
+                                        name: "P",
+                                        qualification: Unqualified(
+                                            BuiltinRef(
+                                                PackedRefBuiltin {
+                                                    ref_loc: 4,
+                                                    type_ref: true,
+                                                    name: "O",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
+                            },
                         ),
-                    ],
-                },
+                        targs: [
+                            TyRef(
+                                Unqualified(
+                                    BuiltinRef(
+                                        PackedRefBuiltin {
+                                            ref_loc: 7,
+                                            type_ref: true,
+                                            name: "T",
+                                        },
+                                    ),
+                                ),
+                            ),
+                        ],
+                    },
+                ),
             },
         ),
     ],
@@ -10044,7 +10655,8 @@ fn export_ref_renaming() {
             declare var a: string;
     export {a as b};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:20-21]
 1. [1:23-29]
 2. [2:13-14]
@@ -10054,10 +10666,12 @@ Module {
         type_exports: [],
         exports: [
             ExportRef(
-                LocalRef {
-                    ref_loc: 2,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 2,
+                        index: 0,
+                    },
+                ),
             ),
         ],
         info: ESModuleInfo {
@@ -10266,14 +10880,18 @@ Module {
                             proto: None,
                             props: {
                                 "C": ObjValueField(
-                                    3,
-                                    Ref(
-                                        LocalRef {
-                                            ref_loc: 3,
-                                            index: 0,
-                                        },
+                                    (
+                                        3,
+                                        Ref(
+                                            LocalRef(
+                                                PackedRefLocal {
+                                                    ref_loc: 3,
+                                                    index: 0,
+                                                },
+                                            ),
+                                        ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                         },
@@ -10287,15 +10905,19 @@ Module {
                 name: "C1",
                 def: ClassSig {
                     tparams: Mono,
-                    extends: ClassExplicitExtends {
-                        loc: 5,
-                        t: Ref(
-                            LocalRef {
-                                ref_loc: 5,
-                                index: 0,
-                            },
+                    extends: ClassExplicitExtends(
+                        (
+                            5,
+                            Ref(
+                                LocalRef(
+                                    PackedRefLocal {
+                                        ref_loc: 5,
+                                        index: 0,
+                                    },
+                                ),
+                            ),
                         ),
-                    },
+                    ),
                     implements: [],
                     static_props: {},
                     proto_props: {},
@@ -10311,21 +10933,27 @@ Module {
                 name: "C2",
                 def: ClassSig {
                     tparams: Mono,
-                    extends: ClassExplicitExtends {
-                        loc: 7,
-                        t: Eval(
+                    extends: ClassExplicitExtends(
+                        (
                             7,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 8,
-                                    index: 1,
+                            Eval(
+                                PackedEval {
+                                    loc: 7,
+                                    packed: Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 8,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                    op: GetProp(
+                                        "C",
+                                    ),
                                 },
                             ),
-                            GetProp(
-                                "C",
-                            ),
                         ),
-                    },
+                    ),
                     implements: [],
                     static_props: {},
                     proto_props: {},
@@ -10342,15 +10970,19 @@ Module {
                 name: "C3",
                 def: DeclareClassSig {
                     tparams: Mono,
-                    extends: ClassExplicitExtends {
-                        loc: 10,
-                        t: Ref(
-                            LocalRef {
-                                ref_loc: 10,
-                                index: 0,
-                            },
+                    extends: ClassExplicitExtends(
+                        (
+                            10,
+                            Ref(
+                                LocalRef(
+                                    PackedRefLocal {
+                                        ref_loc: 10,
+                                        index: 0,
+                                    },
+                                ),
+                            ),
                         ),
-                    },
+                    ),
                     mixins: [],
                     implements: [],
                     static_props: {},
@@ -10374,21 +11006,27 @@ Module {
                 name: "C4",
                 def: DeclareClassSig {
                     tparams: Mono,
-                    extends: ClassExplicitExtends {
-                        loc: 12,
-                        t: Eval(
+                    extends: ClassExplicitExtends(
+                        (
                             12,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 13,
-                                    index: 1,
+                            Eval(
+                                PackedEval {
+                                    loc: 12,
+                                    packed: Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 13,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                    op: GetProp(
+                                        "C",
+                                    ),
                                 },
                             ),
-                            GetProp(
-                                "C",
-                            ),
                         ),
-                    },
+                    ),
                     mixins: [],
                     implements: [],
                     static_props: {},
@@ -10423,7 +11061,8 @@ fn class_this() {
       m(): this { return this };
     }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:21-22]
 1. [2:2-27]
 2. [2:2-3]
@@ -10460,28 +11099,30 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "m": ObjValueMethod {
-                            id_loc: 2,
-                            fn_loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    Bound(
-                                        AnnotBound {
-                                            ref_loc: 3,
-                                            name: "this",
-                                        },
+                        "m": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 2,
+                                fn_loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [],
+                                    rest_param: None,
+                                    this_param: None,
+                                    return_: Annot(
+                                        Bound(
+                                            AnnotBound {
+                                                ref_loc: 3,
+                                                name: "this",
+                                            },
+                                        ),
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {},
                     dict: None,
@@ -10495,7 +11136,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -10618,25 +11260,31 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefault {
-                default_loc: 5,
-                def: TyRefApp {
-                    loc: 6,
-                    name: Unqualified(
-                        LocalRef {
-                            ref_loc: 7,
-                            index: 0,
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 5,
+                    def: TyRefApp(
+                        PackedTyRefApp {
+                            loc: 6,
+                            name: Unqualified(
+                                LocalRef(
+                                    PackedRefLocal {
+                                        ref_loc: 7,
+                                        index: 0,
+                                    },
+                                ),
+                            ),
+                            targs: [
+                                Annot(
+                                    Exists(
+                                        8,
+                                    ),
+                                ),
+                            ],
                         },
                     ),
-                    targs: [
-                        Annot(
-                            Exists(
-                                8,
-                            ),
-                        ),
-                    ],
                 },
-            },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -10657,17 +11305,19 @@ Module {
                 name: "C",
                 def: ClassSig {
                     tparams: Poly(
-                        1,
-                        [
-                            TParam {
-                                name_loc: 2,
-                                name: "T",
-                                polarity: Neutral,
-                                bound: None,
-                                default: None,
-                                is_const: false,
-                            },
-                        ],
+                        (
+                            1,
+                            [
+                                TParam {
+                                    name_loc: 2,
+                                    name: "T",
+                                    polarity: Neutral,
+                                    bound: None,
+                                    default: None,
+                                    is_const: false,
+                                },
+                            ],
+                        ),
                     ),
                     extends: ClassImplicitExtends,
                     implements: [],
@@ -10675,13 +11325,15 @@ Module {
                     proto_props: {},
                     own_props: {
                         "p": ObjValueField(
-                            3,
-                            Annot(
-                                Exists(
-                                    4,
+                            (
+                                3,
+                                Annot(
+                                    Exists(
+                                        4,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     dict: None,
@@ -10705,7 +11357,8 @@ fn exact_by_default() {
     let input = r#"
             export type T = { p: string }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:16-29]
 2. [1:18-19]
@@ -10743,13 +11396,15 @@ Module {
                             obj_kind: ExactObj,
                             props: {
                                 "p": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        String(
-                                            3,
+                                    (
+                                        2,
+                                        Annot(
+                                            String(
+                                                3,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -10804,30 +11459,34 @@ Module {
                         proto: None,
                         props: {
                             "bar": ObjValueField(
-                                3,
-                                Value(
-                                    NumberLit(
-                                        (
-                                            4,
-                                            1.0,
-                                            "1",
+                                (
+                                    3,
+                                    Value(
+                                        NumberLit(
+                                            (
+                                                4,
+                                                1.0,
+                                                "1",
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                             "foo": ObjValueField(
-                                1,
-                                Value(
-                                    NumberLit(
-                                        (
-                                            2,
-                                            0.0,
-                                            "0",
+                                (
+                                    1,
+                                    Value(
+                                        NumberLit(
+                                            (
+                                                2,
+                                                0.0,
+                                                "0",
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -10923,7 +11582,8 @@ fn cjs_exports_assign_shadowed_module_global() {
             var module;
     module.exports.foo = 0;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 Type Sig:
 Module {
     module_kind: CJSModule {
@@ -10954,7 +11614,8 @@ fn cjs_export_shadowed_hoisted_todo() {
             module.exports.foo = 0;
     function module() {}
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [0:0]
 1. [1:23-26]
 2. [1:29-30]
@@ -10971,17 +11632,19 @@ Module {
                         proto: None,
                         props: {
                             "foo": ObjValueField(
-                                1,
-                                Value(
-                                    NumberLit(
-                                        (
-                                            2,
-                                            0.0,
-                                            "0",
+                                (
+                                    1,
+                                    Value(
+                                        NumberLit(
+                                            (
+                                                2,
+                                                0.0,
+                                                "0",
+                                            ),
                                         ),
                                     ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -11117,10 +11780,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 1,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 1,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -11198,7 +11863,8 @@ fn es_export_named_fun_props() {
             export function foo() {}
     foo.bar = 1;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:15-29]
 1. [1:24-27]
 2. [1:29]
@@ -11280,7 +11946,8 @@ fn es_export_default_fun_props() {
             export default function foo() {}
     foo.bar = 1;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:15-22]
 1. [1:23-37]
 2. [1:32-35]
@@ -11292,10 +11959,12 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefaultBinding {
-                default_loc: 0,
-                index: 0,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 0,
+                    index: 0,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -11365,7 +12034,8 @@ fn fun_binding_assign() {
     foo.bar = 0;
     module.exports = foo;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:8-22]
 1. [1:17-20]
 2. [1:22]
@@ -11378,10 +12048,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 5,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 5,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -11462,10 +12134,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 5,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 5,
+                        index: 0,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -11552,10 +12226,12 @@ Module {
         type_exports: [],
         exports: Some(
             Ref(
-                LocalRef {
-                    ref_loc: 6,
-                    index: 1,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 6,
+                        index: 1,
+                    },
+                ),
             ),
         ),
         info: CJSModuleInfo {
@@ -11609,10 +12285,12 @@ Module {
                 id_loc: 0,
                 name: "foo",
                 def: Ref(
-                    LocalRef {
-                        ref_loc: 2,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 2,
+                            index: 0,
+                        },
+                    ),
                 ),
             },
         ),
@@ -11671,10 +12349,12 @@ Module {
                             props: {},
                             computed_props: [],
                             proto: ObjAnnotExplicitProto(
-                                2,
-                                Annot(
-                                    Null(
-                                        2,
+                                (
+                                    2,
+                                    Annot(
+                                        Null(
+                                            2,
+                                        ),
                                     ),
                                 ),
                             ),
@@ -11808,10 +12488,12 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     Get(
-                                        2,
-                                        Annot(
-                                            Number(
-                                                3,
+                                        (
+                                            2,
+                                            Annot(
+                                                Number(
+                                                    3,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -11835,10 +12517,12 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     Set(
-                                        6,
-                                        Annot(
-                                            Number(
-                                                7,
+                                        (
+                                            6,
+                                            Annot(
+                                                Number(
+                                                    7,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -11862,16 +12546,18 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     GetSet(
-                                        10,
-                                        Annot(
-                                            Number(
-                                                11,
+                                        (
+                                            10,
+                                            Annot(
+                                                Number(
+                                                    11,
+                                                ),
                                             ),
-                                        ),
-                                        12,
-                                        Annot(
-                                            Number(
-                                                13,
+                                            12,
+                                            Annot(
+                                                Number(
+                                                    13,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -11895,10 +12581,12 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     Get(
-                                        16,
-                                        Annot(
-                                            String(
-                                                17,
+                                        (
+                                            16,
+                                            Annot(
+                                                String(
+                                                    17,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -11922,10 +12610,12 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     Set(
-                                        20,
-                                        Annot(
-                                            String(
-                                                21,
+                                        (
+                                            20,
+                                            Annot(
+                                                String(
+                                                    21,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -11949,16 +12639,18 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     GetSet(
-                                        26,
-                                        Annot(
-                                            String(
-                                                27,
+                                        (
+                                            26,
+                                            Annot(
+                                                String(
+                                                    27,
+                                                ),
                                             ),
-                                        ),
-                                        24,
-                                        Annot(
-                                            Number(
-                                                25,
+                                            24,
+                                            Annot(
+                                                Number(
+                                                    25,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -11982,16 +12674,18 @@ Module {
                             props: {
                                 "p": ObjValueAccess(
                                     GetSet(
-                                        30,
-                                        Annot(
-                                            Number(
-                                                31,
+                                        (
+                                            30,
+                                            Annot(
+                                                Number(
+                                                    31,
+                                                ),
                                             ),
-                                        ),
-                                        32,
-                                        Annot(
-                                            String(
-                                                33,
+                                            32,
+                                            Annot(
+                                                String(
+                                                    33,
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -12018,7 +12712,8 @@ fn export_default_function_binding() {
     let input = r#"
             export default function f(): void {}
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:7-14]
 1. [1:15-33]
 2. [1:24-25]
@@ -12028,10 +12723,12 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefaultBinding {
-                default_loc: 0,
-                index: 0,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 0,
+                    index: 0,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -12095,10 +12792,12 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefaultBinding {
-                default_loc: 0,
-                index: 0,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 0,
+                    index: 0,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -12156,10 +12855,12 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefaultBinding {
-                default_loc: 0,
-                index: 0,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 0,
+                    index: 0,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -12213,7 +12914,8 @@ fn declared_export_default_class_binding() {
     let input = r#"
             declare export default class C {};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:15-22]
 1. [1:29-30]
 Type Sig:
@@ -12221,10 +12923,12 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefaultBinding {
-                default_loc: 0,
-                index: 0,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 0,
+                    index: 0,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -12279,17 +12983,20 @@ fn module_ref_prefix() {
     let input = r#"
             module.exports = "m#foo";
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-24]
 Type Sig:
 Module {
     module_kind: CJSModule {
         type_exports: [],
         exports: Some(
-            ModuleRef {
-                loc: 0,
-                index: 0,
-            },
+            ModuleRef(
+                PackedLocIndex {
+                    loc: 0,
+                    index: 0,
+                },
+            ),
         ),
         info: CJSModuleInfo {
             type_export_keys: [],
@@ -12389,7 +13096,8 @@ fn enum_default_export() {
     let input = r#"
             export default enum E { A, B }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:7-14]
 1. [1:20-21]
 2. [1:24-25]
@@ -12399,10 +13107,12 @@ Module {
     module_kind: ESModule {
         type_exports: [],
         exports: [
-            ExportDefaultBinding {
-                default_loc: 0,
-                index: 0,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 0,
+                    index: 0,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -12450,7 +13160,8 @@ fn enum_stmt() {
             enum E { A, B };
     export {E}
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-14]
 1. [1:17-18]
 2. [1:20-21]
@@ -12461,10 +13172,12 @@ Module {
         type_exports: [],
         exports: [
             ExportRef(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
         ],
         info: ESModuleInfo {
@@ -13113,7 +13826,8 @@ fn this_param_2() {
       foo(this : mixed) : void {}
     }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:21-22]
 1. [2:2-29]
 2. [2:2-5]
@@ -13151,31 +13865,33 @@ Module {
                     implements: [],
                     static_props: {},
                     proto_props: {
-                        "foo": ObjValueMethod {
-                            id_loc: 2,
-                            fn_loc: 1,
-                            async_: false,
-                            generator: false,
-                            def: FunSig {
-                                tparams: Mono,
-                                params: [],
-                                rest_param: None,
-                                this_param: Some(
-                                    Annot(
-                                        Mixed(
-                                            3,
+                        "foo": ObjValueMethod(
+                            ObjValueMethodData {
+                                id_loc: 2,
+                                fn_loc: 1,
+                                async_: false,
+                                generator: false,
+                                def: FunSig {
+                                    tparams: Mono,
+                                    params: [],
+                                    rest_param: None,
+                                    this_param: Some(
+                                        Annot(
+                                            Mixed(
+                                                3,
+                                            ),
                                         ),
                                     ),
-                                ),
-                                return_: Annot(
-                                    Void(
-                                        4,
+                                    return_: Annot(
+                                        Void(
+                                            4,
+                                        ),
                                     ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
+                                    type_guard: None,
+                                    effect_: ArbitraryEffect,
+                                },
                             },
-                        },
+                        ),
                     },
                     own_props: {},
                     dict: None,
@@ -13189,7 +13905,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -13198,7 +13915,8 @@ fn this_param_3() {
     let input = r#"
             declare export function foo(this : mixed) : void;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:24-27]
 1. [1:27-48]
 2. [1:35-40]
@@ -13272,7 +13990,8 @@ fn this_param_4() {
       foo(this : mixed) : void;
     }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:29-30]
 1. [2:2-26]
 2. [2:2-5]
@@ -13368,7 +14087,8 @@ fn this_param_5() {
     let input = r#"
             export type Foo = (this : mixed) => void
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-15]
 1. [1:18-40]
 2. [1:26-31]
@@ -13486,43 +14206,47 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "a": ObjAnnotField(
-                                    6,
-                                    Annot(
-                                        Number(
-                                            7,
-                                        ),
-                                    ),
-                                    Neutral,
-                                ),
-                                "f": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        FunAnnot(
-                                            (
-                                                3,
-                                                FunSig {
-                                                    tparams: Mono,
-                                                    params: [],
-                                                    rest_param: None,
-                                                    this_param: Some(
-                                                        Annot(
-                                                            Mixed(
-                                                                4,
-                                                            ),
-                                                        ),
-                                                    ),
-                                                    return_: Annot(
-                                                        Void(
-                                                            5,
-                                                        ),
-                                                    ),
-                                                    type_guard: None,
-                                                    effect_: ArbitraryEffect,
-                                                },
+                                    (
+                                        6,
+                                        Annot(
+                                            Number(
+                                                7,
                                             ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
+                                ),
+                                "f": ObjAnnotField(
+                                    (
+                                        2,
+                                        Annot(
+                                            FunAnnot(
+                                                (
+                                                    3,
+                                                    FunSig {
+                                                        tparams: Mono,
+                                                        params: [],
+                                                        rest_param: None,
+                                                        this_param: Some(
+                                                            Annot(
+                                                                Mixed(
+                                                                    4,
+                                                                ),
+                                                            ),
+                                                        ),
+                                                        return_: Annot(
+                                                            Void(
+                                                                5,
+                                                            ),
+                                                        ),
+                                                        type_guard: None,
+                                                        effect_: ArbitraryEffect,
+                                                    },
+                                                ),
+                                            ),
+                                        ),
+                                        Neutral,
+                                    ),
                                 ),
                             },
                             computed_props: [],
@@ -13548,7 +14272,8 @@ fn optional_indexed_access() {
     let input = r#"
             export type T = Obj?.['a']['b'];
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:16-31]
 2. [1:16-26]
@@ -13595,11 +14320,13 @@ Module {
                                                     loc: 2,
                                                     obj: TyRef(
                                                         Unqualified(
-                                                            BuiltinRef {
-                                                                ref_loc: 3,
-                                                                type_ref: true,
-                                                                name: "Obj",
-                                                            },
+                                                            BuiltinRef(
+                                                                PackedRefBuiltin {
+                                                                    ref_loc: 3,
+                                                                    type_ref: true,
+                                                                    name: "Obj",
+                                                                },
+                                                            ),
                                                         ),
                                                     ),
                                                     index: Annot(
@@ -13647,7 +14374,8 @@ fn cjs_export_type_star() {
             export type * from 'foo';
     export type * from 'bar';
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:20-21]
 1. [2:12-13]
 Type Sig:
@@ -13698,7 +14426,8 @@ fn es_export_star() {
     export * from 'baz';
     export * from 'qux';
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:20-21]
 1. [2:12-13]
 2. [3:7-8]
@@ -13766,7 +14495,8 @@ fn duplicate_binding() {
             import type {T} from 'foo';
     export type T = any;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 Type Sig:
 Module {
     module_kind: CJSModule {
@@ -13797,7 +14527,8 @@ fn duplicate_binding2() {
             const foo = 1;
     export var {foo, bar}: {foo: number, bar: number} = {foo: 2, bar: 3};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [2:17-20]
 1. [2:23-49]
 2. [2:24-27]
@@ -13846,22 +14577,26 @@ Module {
                     obj_kind: InexactObj,
                     props: {
                         "bar": ObjAnnotField(
-                            4,
-                            Annot(
-                                Number(
-                                    5,
+                            (
+                                4,
+                                Annot(
+                                    Number(
+                                        5,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                         "foo": ObjAnnotField(
-                            2,
-                            Annot(
-                                Number(
-                                    3,
+                            (
+                                2,
+                                Annot(
+                                    Number(
+                                        3,
+                                    ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                     computed_props: [],
@@ -13892,7 +14627,8 @@ fn duplicate_binding2_2() {
             class C {}
     export default class C {}
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 Type Sig:
 Module {
     module_kind: CJSModule {
@@ -13924,7 +14660,8 @@ declare function f(x: string): number;
 declare function f(x: number): string;
 export function f() {}
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:17-18]
 1. [1:18-37]
 2. [1:22-28]
@@ -14034,7 +14771,8 @@ fn optional_tuple_elements() {
     let input = r#"
             export type T = [a: number, b?: string];
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:12-13]
 1. [1:16-39]
 2. [1:17-26]
@@ -14072,36 +14810,40 @@ Module {
                         AnnotTuple {
                             loc: 1,
                             elems: [
-                                TupleElement {
-                                    loc: 2,
-                                    name: Some(
-                                        "a",
-                                    ),
-                                    t: Annot(
-                                        Number(
-                                            3,
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 2,
+                                        name: Some(
+                                            "a",
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
-                                TupleElement {
-                                    loc: 4,
-                                    name: Some(
-                                        "b",
-                                    ),
-                                    t: Annot(
-                                        Optional(
-                                            Annot(
-                                                String(
-                                                    5,
+                                        t: Annot(
+                                            Number(
+                                                3,
+                                            ),
+                                        ),
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 4,
+                                        name: Some(
+                                            "b",
+                                        ),
+                                        t: Annot(
+                                            Optional(
+                                                Annot(
+                                                    String(
+                                                        5,
+                                                    ),
                                                 ),
                                             ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: true,
-                                },
+                                        polarity: Neutral,
+                                        optional: true,
+                                    },
+                                ),
                             ],
                             inexact: false,
                         },
@@ -14126,7 +14868,8 @@ fn tuple_spread() {
             type S = [string, boolean];
     export type T = [number, ...S];
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-14]
 1. [1:17-34]
 2. [1:18-24]
@@ -14167,28 +14910,32 @@ Module {
                         AnnotTuple {
                             loc: 1,
                             elems: [
-                                TupleElement {
-                                    loc: 2,
-                                    name: None,
-                                    t: Annot(
-                                        String(
-                                            2,
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 2,
+                                        name: None,
+                                        t: Annot(
+                                            String(
+                                                2,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
-                                TupleElement {
-                                    loc: 3,
-                                    name: None,
-                                    t: Annot(
-                                        Boolean(
-                                            3,
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 3,
+                                        name: None,
+                                        t: Annot(
+                                            Boolean(
+                                                3,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
                             ],
                             inexact: false,
                         },
@@ -14207,29 +14954,35 @@ Module {
                         AnnotTuple {
                             loc: 5,
                             elems: [
-                                TupleElement {
-                                    loc: 6,
-                                    name: None,
-                                    t: Annot(
-                                        Number(
-                                            6,
+                                TupleElement(
+                                    TupleElementData {
+                                        loc: 6,
+                                        name: None,
+                                        t: Annot(
+                                            Number(
+                                                6,
+                                            ),
                                         ),
-                                    ),
-                                    polarity: Neutral,
-                                    optional: false,
-                                },
-                                TupleSpread {
-                                    loc: 7,
-                                    name: None,
-                                    t: TyRef(
-                                        Unqualified(
-                                            LocalRef {
-                                                ref_loc: 8,
-                                                index: 0,
-                                            },
+                                        polarity: Neutral,
+                                        optional: false,
+                                    },
+                                ),
+                                TupleSpread(
+                                    TupleSpreadData {
+                                        loc: 7,
+                                        name: None,
+                                        t: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 8,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
                                         ),
-                                    ),
-                                },
+                                    },
+                                ),
                             ],
                             inexact: false,
                         },
@@ -14258,7 +15011,8 @@ fn mapped_types() {
     export type T4 = {-[key in keyof O]?: O[key]};
     export type T5 = {[key in O]: O[key]};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-14]
 1. [1:17-43]
 2. [1:18-21]
@@ -14349,22 +15103,26 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "bar": ObjAnnotField(
-                                    4,
-                                    Annot(
-                                        String(
-                                            5,
+                                    (
+                                        4,
+                                        Annot(
+                                            String(
+                                                5,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                                 "foo": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        Number(
-                                            3,
+                                    (
+                                        2,
+                                        Annot(
+                                            Number(
+                                                3,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -14386,10 +15144,12 @@ Module {
                             loc: 7,
                             source_type: TyRef(
                                 Unqualified(
-                                    LocalRef {
-                                        ref_loc: 9,
-                                        index: 0,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                             property_type: Annot(
@@ -14398,10 +15158,12 @@ Module {
                                         loc: 10,
                                         obj: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 11,
-                                                    index: 0,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 11,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                         elem: Annot(
@@ -14444,10 +15206,12 @@ Module {
                             loc: 14,
                             source_type: TyRef(
                                 Unqualified(
-                                    LocalRef {
-                                        ref_loc: 16,
-                                        index: 0,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 16,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                             property_type: Annot(
@@ -14456,10 +15220,12 @@ Module {
                                         loc: 17,
                                         obj: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 18,
-                                                    index: 0,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 18,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                         elem: Annot(
@@ -14502,10 +15268,12 @@ Module {
                             loc: 21,
                             source_type: TyRef(
                                 Unqualified(
-                                    LocalRef {
-                                        ref_loc: 23,
-                                        index: 0,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 23,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                             property_type: Annot(
@@ -14514,10 +15282,12 @@ Module {
                                         loc: 24,
                                         obj: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 25,
-                                                    index: 0,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 25,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                         elem: Annot(
@@ -14560,10 +15330,12 @@ Module {
                             loc: 28,
                             source_type: TyRef(
                                 Unqualified(
-                                    LocalRef {
-                                        ref_loc: 30,
-                                        index: 0,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 30,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                             property_type: Annot(
@@ -14572,10 +15344,12 @@ Module {
                                         loc: 31,
                                         obj: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 32,
-                                                    index: 0,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 32,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                         elem: Annot(
@@ -14618,10 +15392,12 @@ Module {
                             loc: 35,
                             source_type: TyRef(
                                 Unqualified(
-                                    LocalRef {
-                                        ref_loc: 37,
-                                        index: 0,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 37,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                             property_type: Annot(
@@ -14630,10 +15406,12 @@ Module {
                                         loc: 38,
                                         obj: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 39,
-                                                    index: 0,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 39,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                         elem: Annot(
@@ -14682,7 +15460,8 @@ fn mapped_types_invalid() {
     export type T = {[key in keyof O]-?: O[key]};
     export type U = {[key in keyof O]: O[key], foo: number};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [2:12-13]
 1. [2:17-43]
 2. [3:12-13]
@@ -14764,7 +15543,8 @@ fn dirtify_defs() {
 export const aaaaa = {foo: 3, bar: ""};
 export const {foo} = {foo: 3};
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:24-30]
 1. [1:33-59]
 2. [1:34-37]
@@ -14826,22 +15606,26 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "bar": ObjAnnotField(
-                                    4,
-                                    Annot(
-                                        String(
-                                            5,
+                                    (
+                                        4,
+                                        Annot(
+                                            String(
+                                                5,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                                 "foo": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        Number(
-                                            3,
+                                    (
+                                        2,
+                                        Annot(
+                                            Number(
+                                                3,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -14863,29 +15647,33 @@ Module {
                             proto: None,
                             props: {
                                 "bar": ObjValueField(
-                                    10,
-                                    Value(
-                                        StringLit(
-                                            (
-                                                11,
-                                                "",
+                                    (
+                                        10,
+                                        Value(
+                                            StringLit(
+                                                (
+                                                    11,
+                                                    "",
+                                                ),
                                             ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                                 "foo": ObjValueField(
-                                    8,
-                                    Value(
-                                        NumberLit(
-                                            (
-                                                9,
-                                                3.0,
-                                                "3",
+                                    (
+                                        8,
+                                        Value(
+                                            NumberLit(
+                                                (
+                                                    9,
+                                                    3.0,
+                                                    "3",
+                                                ),
                                             ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                         },
@@ -14917,17 +15705,19 @@ Module {
                     proto: None,
                     props: {
                         "foo": ObjValueField(
-                            14,
-                            Value(
-                                NumberLit(
-                                    (
-                                        15,
-                                        3.0,
-                                        "3",
+                            (
+                                14,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            15,
+                                            3.0,
+                                            "3",
+                                        ),
                                     ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                 },
@@ -15025,14 +15815,18 @@ Module {
                         proto: None,
                         props: {
                             "Baz": ObjValueField(
-                                5,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 5,
-                                        index: 0,
-                                    },
+                                (
+                                    5,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 5,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -15084,7 +15878,8 @@ fn component2() {
     component Baz(x: string, ...props: Rest) {};
     module.exports = { Baz };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-17]
 1. [1:20-33]
 2. [1:22-23]
@@ -15111,14 +15906,18 @@ Module {
                         proto: None,
                         props: {
                             "Baz": ObjValueField(
-                                12,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 12,
-                                        index: 1,
-                                    },
+                                (
+                                    12,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 12,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -15147,13 +15946,15 @@ Module {
                             obj_kind: InexactObj,
                             props: {
                                 "x": ObjAnnotField(
-                                    2,
-                                    Annot(
-                                        Number(
-                                            3,
+                                    (
+                                        2,
+                                        Annot(
+                                            Number(
+                                                3,
+                                            ),
                                         ),
+                                        Neutral,
                                     ),
-                                    Neutral,
                                 ),
                             },
                             computed_props: [],
@@ -15186,10 +15987,12 @@ Module {
                         ComponentRestParam {
                             t: TyRef(
                                 Unqualified(
-                                    LocalRef {
-                                        ref_loc: 9,
-                                        index: 0,
-                                    },
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                         },
@@ -15221,7 +16024,8 @@ fn component3() {
     Baz.static = "amazing";
     module.exports = { Baz };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:8-27]
 1. [1:18-25]
 2. [1:25-27]
@@ -15249,14 +16053,18 @@ Module {
                         proto: None,
                         props: {
                             "Baz": ObjValueField(
-                                13,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 13,
-                                        index: 1,
-                                    },
+                                (
+                                    13,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 13,
+                                                index: 1,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -15313,11 +16121,13 @@ Module {
                         ComponentRestParam {
                             t: TyRef(
                                 Unqualified(
-                                    BuiltinRef {
-                                        ref_loc: 9,
-                                        type_ref: true,
-                                        name: "Rest",
-                                    },
+                                    BuiltinRef(
+                                        PackedRefBuiltin {
+                                            ref_loc: 9,
+                                            type_ref: true,
+                                            name: "Rest",
+                                        },
+                                    ),
                                 ),
                             ),
                         },
@@ -15328,10 +16138,12 @@ Module {
                                 loc: 10,
                                 arg: TyRef(
                                     Unqualified(
-                                        LocalRef {
-                                            ref_loc: 11,
-                                            index: 0,
-                                        },
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 11,
+                                                index: 0,
+                                            },
+                                        ),
                                     ),
                                 ),
                                 variant: Normal,
@@ -15358,7 +16170,8 @@ fn component4() {
             component Baz<T>(prop: T) renders T {};
     module.exports = { Baz };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:8-43]
 1. [1:18-21]
 2. [1:21-24]
@@ -15383,14 +16196,18 @@ Module {
                         proto: None,
                         props: {
                             "Baz": ObjValueField(
-                                10,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 10,
-                                        index: 0,
-                                    },
+                                (
+                                    10,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 10,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -15414,17 +16231,19 @@ Module {
                 def: ComponentSig {
                     params_loc: 4,
                     tparams: Poly(
-                        2,
-                        [
-                            TParam {
-                                name_loc: 3,
-                                name: "T",
-                                polarity: Neutral,
-                                bound: None,
-                                default: None,
-                                is_const: false,
-                            },
-                        ],
+                        (
+                            2,
+                            [
+                                TParam {
+                                    name_loc: 3,
+                                    name: "T",
+                                    polarity: Neutral,
+                                    bound: None,
+                                    default: None,
+                                    is_const: false,
+                                },
+                            ],
+                        ),
                     ),
                     params: [
                         ComponentParam {
@@ -15466,7 +16285,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -15476,7 +16296,8 @@ fn component5() {
             export component Baz () { }
     export default component Bar () { }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:15-31]
 1. [1:25-28]
 2. [1:29-31]
@@ -15494,10 +16315,12 @@ Module {
             ExportBinding(
                 0,
             ),
-            ExportDefaultBinding {
-                default_loc: 4,
-                index: 1,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 4,
+                    index: 1,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -15566,7 +16389,8 @@ fn component_disabled() {
             component Baz() {};
     module.exports = { Baz };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:18-21]
 1. [2:17-24]
 2. [2:19-22]
@@ -15583,14 +16407,18 @@ Module {
                         proto: None,
                         props: {
                             "Baz": ObjValueField(
-                                2,
-                                Ref(
-                                    LocalRef {
-                                        ref_loc: 2,
-                                        index: 0,
-                                    },
+                                (
+                                    2,
+                                    Ref(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 2,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                    Neutral,
                                 ),
-                                Neutral,
                             ),
                         },
                     },
@@ -15638,7 +16466,8 @@ fn component_disabled2() {
             export component Baz () { }
     export default component Bar () { }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:25-28]
 1. [2:7-14]
 2. [2:25-28]
@@ -15650,10 +16479,12 @@ Module {
             ExportBinding(
                 0,
             ),
-            ExportDefaultBinding {
-                default_loc: 1,
-                index: 1,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 1,
+                    index: 1,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -15707,7 +16538,8 @@ fn declare_component() {
             declare export component Baz ();
     declare export default component Bar ();
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:23-40]
 1. [1:33-36]
 2. [1:37-39]
@@ -15725,10 +16557,12 @@ Module {
             ExportBinding(
                 0,
             ),
-            ExportDefaultBinding {
-                default_loc: 4,
-                index: 1,
-            },
+            ExportDefaultBinding(
+                ExportDefaultBindingData {
+                    default_loc: 4,
+                    index: 1,
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -15803,7 +16637,8 @@ fn component_type() {
     export type Poly<Props> = component(...Props);
     declare export default Bar;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:13-14]
 1. [1:17-23]
 2. [2:5-6]
@@ -15850,17 +16685,21 @@ Module {
             ExportBinding(
                 2,
             ),
-            ExportDefault {
-                default_loc: 29,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 30,
-                            index: 3,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 29,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 30,
+                                    index: 3,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [
@@ -15922,10 +16761,12 @@ Module {
                                         name_loc: 7,
                                         t: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 8,
-                                                    index: 0,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 8,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                     },
@@ -15937,10 +16778,12 @@ Module {
                                             loc: 9,
                                             arg: TyRef(
                                                 Unqualified(
-                                                    LocalRef {
-                                                        ref_loc: 10,
-                                                        index: 1,
-                                                    },
+                                                    LocalRef(
+                                                        PackedRefLocal {
+                                                            ref_loc: 10,
+                                                            index: 1,
+                                                        },
+                                                    ),
                                                 ),
                                             ),
                                             variant: Normal,
@@ -16014,10 +16857,12 @@ Module {
                                     ComponentRestParam {
                                         t: TyRef(
                                             Unqualified(
-                                                LocalRef {
-                                                    ref_loc: 20,
-                                                    index: 4,
-                                                },
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 20,
+                                                        index: 4,
+                                                    },
+                                                ),
                                             ),
                                         ),
                                     },
@@ -16039,17 +16884,19 @@ Module {
                 custom_error_loc_opt: None,
                 name: "Poly",
                 tparams: Poly(
-                    23,
-                    [
-                        TParam {
-                            name_loc: 24,
-                            name: "Props",
-                            polarity: Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        },
-                    ],
+                    (
+                        23,
+                        [
+                            TParam {
+                                name_loc: 24,
+                                name: "Props",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                        ],
+                    ),
                 ),
                 body: Annot(
                     ComponentAnnot(
@@ -16088,7 +16935,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -16119,17 +16967,21 @@ Module {
             ExportBinding(
                 0,
             ),
-            ExportDefault {
-                default_loc: 8,
-                def: TyRef(
-                    Unqualified(
-                        LocalRef {
-                            ref_loc: 9,
-                            index: 1,
-                        },
+            ExportDefault(
+                ExportDefaultData {
+                    default_loc: 8,
+                    def: TyRef(
+                        Unqualified(
+                            LocalRef(
+                                PackedRefLocal {
+                                    ref_loc: 9,
+                                    index: 1,
+                                },
+                            ),
+                        ),
                     ),
-                ),
-            },
+                },
+            ),
         ],
         info: ESModuleInfo {
             type_export_keys: [],
@@ -16209,7 +17061,8 @@ fn function_const_type_param() {
     let input = r#"
             export function foo<const X>(x: X): X { return x; };
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:7-37]
 1. [1:16-19]
 2. [1:19-28]
@@ -16247,17 +17100,19 @@ Module {
                 fn_loc: 0,
                 def: FunSig {
                     tparams: Poly(
-                        2,
-                        [
-                            TParam {
-                                name_loc: 3,
-                                name: "X",
-                                polarity: Neutral,
-                                bound: None,
-                                default: None,
-                                is_const: true,
-                            },
-                        ],
+                        (
+                            2,
+                            [
+                                TParam {
+                                    name_loc: 3,
+                                    name: "X",
+                                    polarity: Neutral,
+                                    bound: None,
+                                    default: None,
+                                    is_const: true,
+                                },
+                            ],
+                        ),
                     ),
                     params: [
                         FunParam {
@@ -16297,7 +17152,8 @@ Module {
     pattern_defs: [],
     dirty_pattern_defs: [],
     patterns: [],
-}"#;
+}
+"#;
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
@@ -16306,7 +17162,8 @@ fn union_annot() {
     let input = r#"
             declare export var a: string | number | null;
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:19-20]
 1. [1:22-44]
 2. [1:22-28]
@@ -16382,7 +17239,8 @@ fn render_types() {
     export type Y = renders number | string;
     export type Z = renders (number | string);
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:20-21]
 1. [1:24-38]
 2. [1:32-38]
@@ -16534,7 +17392,8 @@ fn render_maybe_types() {
     declare export component Foo() renders? number;
     export component Bar() renders? number { return null }
         "#;
-    let expected_output = r#"Locs:
+    let expected_output = r#"
+Locs:
 0. [1:20-21]
 1. [1:24-39]
 2. [1:33-39]
@@ -16813,10 +17672,12 @@ Local defs:
         name: "x",
         def: TyRef(
             Unqualified(
-                LocalRef {
-                    ref_loc: 1,
-                    index: 1,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 1,
+                        index: 1,
+                    },
+                ),
             ),
         ),
     },
@@ -16842,19 +17703,23 @@ Local defs:
             "globalThis": (
                 4,
                 Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
             "x": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
@@ -16862,10 +17727,12 @@ Local defs:
             "T": (
                 2,
                 Ref(
-                    LocalRef {
-                        ref_loc: 2,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 2,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -16903,7 +17770,6 @@ Locs:
 9. [4:5-14]
 10. [4:17-23]
 11. [0:0]
-
 Local defs:
 0. TypeAlias(
     DefTypeAlias {
@@ -16942,17 +17808,21 @@ Local defs:
                                 obj_kind: InexactObj,
                                 props: {
                                     "foo": ObjAnnotField(
-                                        6,
-                                        TyRef(
-                                            Unqualified(
-                                                BuiltinRef {
-                                                    ref_loc: 7,
-                                                    type_ref: true,
-                                                    name: "bar",
-                                                },
+                                        (
+                                            6,
+                                            TyRef(
+                                                Unqualified(
+                                                    BuiltinRef(
+                                                        PackedRefBuiltin {
+                                                            ref_loc: 7,
+                                                            type_ref: true,
+                                                            name: "bar",
+                                                        },
+                                                    ),
+                                                ),
                                             ),
+                                            Neutral,
                                         ),
-                                        Neutral,
                                     ),
                                 },
                                 computed_props: [],
@@ -17010,19 +17880,23 @@ Local defs:
             "Array": (
                 8,
                 Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 8,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
             "globalThis": (
                 11,
                 Ref(
-                    LocalRef {
-                        ref_loc: 11,
-                        index: 4,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 11,
+                            index: 4,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17030,42 +17904,43 @@ Local defs:
             "$ReadOnly": (
                 9,
                 Ref(
-                    LocalRef {
-                        ref_loc: 9,
-                        index: 3,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 9,
+                            index: 3,
+                        },
+                    ),
                 ),
             ),
             "T1": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
             "T2": (
                 3,
                 Ref(
-                    LocalRef {
-                        ref_loc: 3,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value Array
-
 Builtin global value globalThis
-
 Builtin global type $ReadOnly
-
 Builtin global type T1
-
 Builtin global type T2
 "#;
     assert_eq!(
@@ -17111,10 +17986,12 @@ Local defs:
             "globalThis": (
                 4,
                 Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17122,10 +17999,12 @@ Local defs:
             "T": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17140,10 +18019,12 @@ CJSModule {
     exports: Some(
         TyRef(
             Unqualified(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
         ),
     ),
@@ -17202,10 +18083,12 @@ Local defs:
             "globalThis": (
                 5,
                 Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17213,10 +18096,12 @@ Local defs:
             "T": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17304,10 +18189,12 @@ Local defs:
             "globalThis": (
                 6,
                 Ref(
-                    LocalRef {
-                        ref_loc: 6,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17387,10 +18274,12 @@ Local defs:
             "globalThis": (
                 4,
                 Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17466,10 +18355,12 @@ Local defs:
             "globalThis": (
                 4,
                 Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17488,10 +18379,12 @@ CJSModule {
     exports: Some(
         TyRef(
             Unqualified(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
         ),
     ),
@@ -17548,10 +18441,12 @@ Local defs:
             "globalThis": (
                 4,
                 Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17570,10 +18465,12 @@ CJSModule {
     exports: Some(
         TyRef(
             Unqualified(
-                LocalRef {
-                    ref_loc: 3,
-                    index: 0,
-                },
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 0,
+                    },
+                ),
             ),
         ),
     ),
@@ -17783,10 +18680,12 @@ Local defs:
             "globalThis": (
                 21,
                 Ref(
-                    LocalRef {
-                        ref_loc: 21,
-                        index: 9,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 21,
+                            index: 9,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17815,74 +18714,102 @@ CJSModule {
                     ),
                     props: {
                         "A": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 6,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 6,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                         "Y": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 4,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 4,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                         "f": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 3,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 3,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                         "foo": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 5,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 5,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                         "x": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 0,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 0,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                         "y": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 1,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 1,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                         "z": ObjValueField(
-                            0,
-                            Ref(
-                                LocalRef {
-                                    ref_loc: 0,
-                                    index: 2,
-                                },
+                            (
+                                0,
+                                Ref(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 0,
+                                            index: 2,
+                                        },
+                                    ),
+                                ),
+                                Positive,
                             ),
-                            Positive,
                         ),
                     },
                 },
@@ -17928,10 +18855,12 @@ Local defs:
             "globalThis": (
                 3,
                 Ref(
-                    LocalRef {
-                        ref_loc: 3,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
@@ -17944,14 +18873,16 @@ Loc: 0
 ESModule {
     type_exports: [],
     exports: [
-        ExportDefault {
-            default_loc: 1,
-            def: Annot(
-                String(
-                    2,
+        ExportDefault(
+            ExportDefaultData {
+                default_loc: 1,
+                def: Annot(
+                    String(
+                        2,
+                    ),
                 ),
-            ),
-        },
+            },
+        ),
     ],
     info: ESModuleInfo {
         type_export_keys: [],
@@ -18012,10 +18943,12 @@ Local defs:
         name: "y",
         def: TyRef(
             Unqualified(
-                RemoteRef {
-                    ref_loc: 6,
-                    index: 0,
-                },
+                RemoteRef(
+                    PackedRefRemote {
+                        ref_loc: 6,
+                        index: 0,
+                    },
+                ),
             ),
         ),
     },
@@ -18028,10 +18961,12 @@ Local defs:
             "globalThis": (
                 7,
                 Ref(
-                    LocalRef {
-                        ref_loc: 7,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 7,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18106,7 +19041,6 @@ Locs:
 3. [5:2-3]
 4. [5:5-11]
 5. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
@@ -18117,26 +19051,30 @@ Local defs:
             extends: [],
             props: {
                 "a": InterfaceField(
-                    Some(
-                        1,
-                    ),
-                    Annot(
-                        String(
-                            2,
+                    (
+                        Some(
+                            1,
                         ),
+                        Annot(
+                            String(
+                                2,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
                 "b": InterfaceField(
-                    Some(
-                        3,
-                    ),
-                    Annot(
-                        Number(
-                            4,
+                    (
+                        Some(
+                            3,
                         ),
+                        Annot(
+                            Number(
+                                4,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18153,10 +19091,12 @@ Local defs:
             "globalThis": (
                 5,
                 Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18164,18 +19104,18 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
 "#;
     assert_eq!(
@@ -18204,7 +19144,6 @@ Locs:
 5. [5:2-5]
 6. [5:9-15]
 7. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
@@ -18267,10 +19206,12 @@ Local defs:
             "globalThis": (
                 7,
                 Ref(
-                    LocalRef {
-                        ref_loc: 7,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 7,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18278,18 +19219,18 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
 "#;
     assert_eq!(
@@ -18326,7 +19267,6 @@ Locs:
 11. [7:2-3]
 12. [7:5-11]
 13. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
@@ -18337,15 +19277,17 @@ Local defs:
             extends: [],
             props: {
                 "x": InterfaceField(
-                    Some(
-                        1,
-                    ),
-                    Annot(
-                        String(
-                            2,
+                    (
+                        Some(
+                            1,
                         ),
+                        Annot(
+                            String(
+                                2,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18363,15 +19305,17 @@ Local defs:
             extends: [],
             props: {
                 "y": InterfaceField(
-                    Some(
-                        4,
-                    ),
-                    Annot(
-                        Number(
-                            5,
+                    (
+                        Some(
+                            4,
                         ),
+                        Annot(
+                            Number(
+                                5,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18389,43 +19333,51 @@ Local defs:
             extends: [
                 TyRef(
                     Unqualified(
-                        LocalRef {
-                            ref_loc: 7,
-                            index: 0,
-                        },
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 7,
+                                index: 0,
+                            },
+                        ),
                     ),
                 ),
                 TyRef(
                     Unqualified(
-                        LocalRef {
-                            ref_loc: 10,
-                            index: 1,
-                        },
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 10,
+                                index: 1,
+                            },
+                        ),
                     ),
                 ),
             ],
             props: {
                 "a": InterfaceField(
-                    Some(
-                        8,
-                    ),
-                    Annot(
-                        String(
-                            9,
+                    (
+                        Some(
+                            8,
                         ),
+                        Annot(
+                            String(
+                                9,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
                 "b": InterfaceField(
-                    Some(
-                        11,
-                    ),
-                    Annot(
-                        Number(
-                            12,
+                    (
+                        Some(
+                            11,
                         ),
+                        Annot(
+                            Number(
+                                12,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18442,10 +19394,12 @@ Local defs:
             "globalThis": (
                 13,
                 Ref(
-                    LocalRef {
-                        ref_loc: 13,
-                        index: 3,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 13,
+                            index: 3,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18453,40 +19407,42 @@ Local defs:
             "Base1": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
             "Base2": (
                 3,
                 Ref(
-                    LocalRef {
-                        ref_loc: 3,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
             "Foo": (
                 6,
                 Ref(
-                    LocalRef {
-                        ref_loc: 6,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Base1
-
 Builtin global type Base2
-
 Builtin global type Foo
 "#;
     assert_eq!(
@@ -18513,7 +19469,6 @@ Locs:
 3. [5:2-12]
 4. [5:6-12]
 5. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
@@ -18578,10 +19533,12 @@ Local defs:
             "globalThis": (
                 5,
                 Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18589,18 +19546,18 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
 "#;
     assert_eq!(
@@ -18632,7 +19589,6 @@ Locs:
 5. [8:2-3]
 6. [8:5-12]
 7. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
@@ -18643,37 +19599,43 @@ Local defs:
             extends: [],
             props: {
                 "a": InterfaceField(
-                    Some(
-                        1,
-                    ),
-                    Annot(
-                        String(
-                            2,
+                    (
+                        Some(
+                            1,
                         ),
+                        Annot(
+                            String(
+                                2,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
                 "b": InterfaceField(
-                    Some(
-                        3,
-                    ),
-                    Annot(
-                        Number(
-                            4,
+                    (
+                        Some(
+                            3,
                         ),
+                        Annot(
+                            Number(
+                                4,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
                 "c": InterfaceField(
-                    Some(
-                        5,
-                    ),
-                    Annot(
-                        Boolean(
-                            6,
+                    (
+                        Some(
+                            5,
                         ),
+                        Annot(
+                            Boolean(
+                                6,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18690,10 +19652,12 @@ Local defs:
             "globalThis": (
                 7,
                 Ref(
-                    LocalRef {
-                        ref_loc: 7,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 7,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18701,18 +19665,18 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
 "#;
     assert_eq!(
@@ -18738,7 +19702,6 @@ Locs:
 2. [2:5-11]
 3. [5:2-3]
 4. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
@@ -18749,15 +19712,17 @@ Local defs:
             extends: [],
             props: {
                 "a": InterfaceField(
-                    Some(
-                        1,
-                    ),
-                    Annot(
-                        String(
-                            2,
+                    (
+                        Some(
+                            1,
                         ),
+                        Annot(
+                            String(
+                                2,
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18774,10 +19739,12 @@ Local defs:
             "globalThis": (
                 4,
                 Ref(
-                    LocalRef {
-                        ref_loc: 4,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18785,20 +19752,19 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
-
 Errors:
 BindingValidationError(InterfaceMergePropertyConflict { name: "a", current_binding_loc: 3, existing_binding_loc: 1 })
 "#;
@@ -18827,41 +19793,44 @@ Locs:
 4. [2:5-6]
 5. [4:10-13]
 6. [0:0]
-
 Local defs:
 0. Interface(
     DefInterface {
         id_loc: 0,
         name: "Foo",
         tparams: Poly(
-            1,
-            [
-                TParam {
-                    name_loc: 2,
-                    name: "T",
-                    polarity: Neutral,
-                    bound: None,
-                    default: None,
-                    is_const: false,
-                },
-            ],
+            (
+                1,
+                [
+                    TParam {
+                        name_loc: 2,
+                        name: "T",
+                        polarity: Neutral,
+                        bound: None,
+                        default: None,
+                        is_const: false,
+                    },
+                ],
+            ),
         ),
         def: InterfaceSig {
             extends: [],
             props: {
                 "a": InterfaceField(
-                    Some(
-                        3,
-                    ),
-                    Annot(
-                        Bound(
-                            AnnotBound {
-                                ref_loc: 4,
-                                name: "T",
-                            },
+                    (
+                        Some(
+                            3,
                         ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 4,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
                     ),
-                    Neutral,
                 ),
             },
             computed_props: [],
@@ -18878,10 +19847,12 @@ Local defs:
             "globalThis": (
                 6,
                 Ref(
-                    LocalRef {
-                        ref_loc: 6,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18889,20 +19860,19 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
-
 Errors:
 BindingValidationError(InterfaceMergeTparamMismatch { name: "Foo", current_binding_loc: 5, existing_binding_loc: 0 })
 "#;
@@ -18926,7 +19896,6 @@ Locs:
 1. [1:11-17]
 2. [2:10-13]
 3. [0:0]
-
 Local defs:
 0. TypeAlias(
     DefTypeAlias {
@@ -18949,10 +19918,12 @@ Local defs:
             "globalThis": (
                 3,
                 Ref(
-                    LocalRef {
-                        ref_loc: 3,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -18960,20 +19931,19 @@ Local defs:
             "Foo": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
         },
     },
 )
-
 Builtin global value globalThis
-
 Builtin global type Foo
-
 Errors:
 BindingValidationError(NameOverride { name: "Foo", override_binding_loc: 0, existing_binding_loc: 2 })
 "#;
@@ -19021,11 +19991,13 @@ Local defs:
         name: "y",
         def: TyRef(
             Unqualified(
-                BuiltinRef {
-                    ref_loc: 5,
-                    type_ref: true,
-                    name: "x",
-                },
+                BuiltinRef(
+                    PackedRefBuiltin {
+                        ref_loc: 5,
+                        type_ref: true,
+                        name: "x",
+                    },
+                ),
             ),
         ),
     },
@@ -19038,10 +20010,12 @@ Local defs:
             "globalThis": (
                 6,
                 Ref(
-                    LocalRef {
-                        ref_loc: 6,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19146,10 +20120,12 @@ Local defs:
             "globalThis": (
                 7,
                 Ref(
-                    LocalRef {
-                        ref_loc: 7,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 7,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19163,16 +20139,20 @@ ESModule {
     type_exports: [],
     exports: [
         ExportRef(
-            LocalRef {
-                ref_loc: 5,
-                index: 0,
-            },
+            LocalRef(
+                PackedRefLocal {
+                    ref_loc: 5,
+                    index: 0,
+                },
+            ),
         ),
         ExportRef(
-            LocalRef {
-                ref_loc: 6,
-                index: 1,
-            },
+            LocalRef(
+                PackedRefLocal {
+                    ref_loc: 6,
+                    index: 1,
+                },
+            ),
         ),
     ],
     info: ESModuleInfo {
@@ -19367,46 +20347,56 @@ Local defs:
             "B": (
                 17,
                 Ref(
-                    LocalRef {
-                        ref_loc: 17,
-                        index: 6,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 17,
+                            index: 6,
+                        },
+                    ),
                 ),
             ),
             "bar1": (
                 1,
                 Ref(
-                    LocalRef {
-                        ref_loc: 1,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 1,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
             "bar2": (
                 3,
                 Ref(
-                    LocalRef {
-                        ref_loc: 3,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
             "bar3": (
                 5,
                 Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
             "f": (
                 7,
                 Ref(
-                    LocalRef {
-                        ref_loc: 7,
-                        index: 3,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 7,
+                            index: 3,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19414,19 +20404,23 @@ Local defs:
             "Baz": (
                 13,
                 Ref(
-                    LocalRef {
-                        ref_loc: 13,
-                        index: 4,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 13,
+                            index: 4,
+                        },
+                    ),
                 ),
             ),
             "Boz": (
                 15,
                 Ref(
-                    LocalRef {
-                        ref_loc: 15,
-                        index: 5,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 15,
+                            index: 5,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19440,19 +20434,23 @@ Local defs:
             "globalThis": (
                 20,
                 Ref(
-                    LocalRef {
-                        ref_loc: 20,
-                        index: 8,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 20,
+                            index: 8,
+                        },
+                    ),
                 ),
             ),
             "ns": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 7,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 7,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19559,19 +20557,23 @@ Local defs:
             "a": (
                 1,
                 Ref(
-                    LocalRef {
-                        ref_loc: 1,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 1,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
             "b": (
                 3,
                 Ref(
-                    LocalRef {
-                        ref_loc: 3,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19611,19 +20613,23 @@ Local defs:
             "T1": (
                 6,
                 Ref(
-                    LocalRef {
-                        ref_loc: 6,
-                        index: 3,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 3,
+                        },
+                    ),
                 ),
             ),
             "T2": (
                 8,
                 Ref(
-                    LocalRef {
-                        ref_loc: 8,
-                        index: 5,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 8,
+                            index: 5,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19661,10 +20667,12 @@ Local defs:
             "a": (
                 11,
                 Ref(
-                    LocalRef {
-                        ref_loc: 11,
-                        index: 6,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 11,
+                            index: 6,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19672,10 +20680,12 @@ Local defs:
             "T1": (
                 16,
                 Ref(
-                    LocalRef {
-                        ref_loc: 16,
-                        index: 10,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 16,
+                            index: 10,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19702,10 +20712,12 @@ Local defs:
             "a": (
                 18,
                 Ref(
-                    LocalRef {
-                        ref_loc: 18,
-                        index: 11,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 18,
+                            index: 11,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19713,10 +20725,12 @@ Local defs:
             "T1": (
                 14,
                 Ref(
-                    LocalRef {
-                        ref_loc: 14,
-                        index: 8,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 14,
+                            index: 8,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19778,46 +20792,56 @@ Local defs:
             "globalThis": (
                 24,
                 Ref(
-                    LocalRef {
-                        ref_loc: 24,
-                        index: 14,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 24,
+                            index: 14,
+                        },
+                    ),
                 ),
             ),
             "non_ns_value": (
                 20,
                 Ref(
-                    LocalRef {
-                        ref_loc: 20,
-                        index: 12,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 20,
+                            index: 12,
+                        },
+                    ),
                 ),
             ),
             "ns_t_and_then_v": (
                 13,
                 Ref(
-                    LocalRef {
-                        ref_loc: 13,
-                        index: 9,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 13,
+                            index: 9,
+                        },
+                    ),
                 ),
             ),
             "ns_v": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
             "ns_v_and_then_t": (
                 10,
                 Ref(
-                    LocalRef {
-                        ref_loc: 10,
-                        index: 7,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 10,
+                            index: 7,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19825,19 +20849,23 @@ Local defs:
             "non_ns_type": (
                 22,
                 Ref(
-                    LocalRef {
-                        ref_loc: 22,
-                        index: 13,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 22,
+                            index: 13,
+                        },
+                    ),
                 ),
             ),
             "ns_t": (
                 5,
                 Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 4,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 4,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19886,17 +20914,19 @@ Local defs:
                     proto: None,
                     props: {
                         "p": ObjValueField(
-                            2,
-                            Value(
-                                NumberLit(
-                                    (
-                                        3,
-                                        0.0,
-                                        "0",
+                            (
+                                2,
+                                Value(
+                                    NumberLit(
+                                        (
+                                            3,
+                                            0.0,
+                                            "0",
+                                        ),
                                     ),
                                 ),
+                                Neutral,
                             ),
-                            Neutral,
                         ),
                     },
                 },
@@ -19921,28 +20951,34 @@ Local defs:
             "globalThis": (
                 7,
                 Ref(
-                    LocalRef {
-                        ref_loc: 7,
-                        index: 2,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 7,
+                            index: 2,
+                        },
+                    ),
                 ),
             ),
             "o": (
                 0,
                 Ref(
-                    LocalRef {
-                        ref_loc: 0,
-                        index: 0,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
                 ),
             ),
             "p": (
                 5,
                 Ref(
-                    LocalRef {
-                        ref_loc: 5,
-                        index: 1,
-                    },
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
                 ),
             ),
         },
@@ -19950,7 +20986,7 @@ Local defs:
     },
 )
 Pattern defs:
-0. Ref(LocalRef { ref_loc: 6, index: 0 })
+0. Ref(LocalRef(PackedRefLocal { ref_loc: 6, index: 0 }))
 Patterns:
 0. PDef(0)
 1. PropP { id_loc: 4, name: "p", def: 0 }

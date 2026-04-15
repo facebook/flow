@@ -15,6 +15,7 @@ use flow_common::reason::Reason;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CallArgInner;
 use flow_typing_type::type_::CanonicalRendersForm;
@@ -22,6 +23,10 @@ use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::DestructorConditionalTypeData;
+use flow_typing_type::type_::DestructorMappedTypeData;
+use flow_typing_type::type_::DestructorSpreadTupleTypeData;
+use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::EnumConcreteInfo;
 use flow_typing_type::type_::EnumConcreteInfoInner;
@@ -49,11 +54,14 @@ use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::Property;
 use flow_typing_type::type_::ReactAbstractComponentTData;
+use flow_typing_type::type_::ResolvedArgData;
 use flow_typing_type::type_::ResolvedParam;
+use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::Selector;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleView;
 use flow_typing_type::type_::Tvar;
@@ -67,6 +75,7 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeMap;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeParamInner;
+use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::UnresolvedParam;
 use flow_typing_type::type_::constraint;
 use flow_typing_type::type_::eval;
@@ -135,7 +144,9 @@ pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>)
             }
             TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::EmptyT) => Vec::new(),
             TypeInner::NominalT { nominal_type, .. } => match &nominal_type.underlying_t {
-                nominal::UnderlyingT::CustomError { t, .. } => flatten(cx, seen, t.dupe()),
+                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) => {
+                    flatten(cx, seen, t.dupe())
+                }
                 _ => vec![t],
             },
             TypeInner::EvalT {
@@ -519,25 +530,25 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 nominal::UnderlyingT::OpaqueWithLocal { t: inner } => {
                     let inner_prime = mapper.type_(cx, map_cx, inner.dupe());
                     if inner.ptr_eq(&inner_prime) {
-                        nominal_type.underlying_t.dupe()
+                        nominal_type.underlying_t.clone()
                     } else {
                         underlying_t_changed = true;
                         nominal::UnderlyingT::OpaqueWithLocal { t: inner_prime }
                     }
                 }
-                nominal::UnderlyingT::CustomError {
+                nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                     custom_error_loc,
                     t: inner,
-                } => {
+                }) => {
                     let inner_prime = mapper.type_(cx, map_cx, inner.dupe());
                     if inner.ptr_eq(&inner_prime) {
-                        nominal_type.underlying_t.dupe()
+                        nominal_type.underlying_t.clone()
                     } else {
                         underlying_t_changed = true;
-                        nominal::UnderlyingT::CustomError {
+                        nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                             custom_error_loc: custom_error_loc.clone(),
                             t: inner_prime,
-                        }
+                        }))
                     }
                 }
                 nominal::UnderlyingT::FullyOpaque => nominal_type.underlying_t.clone(),
@@ -1322,7 +1333,7 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         | Destructor::RequiredType
         | Destructor::PartialType
         | Destructor::EnumType => t.dupe(),
-        Destructor::SpreadType(options, tlist, acc) => {
+        Destructor::SpreadType(box DestructorSpreadTypeData(options, tlist, acc)) => {
             let mut tlist_changed = false;
             let tlist_prime: Rc<[object::spread::Operand]> = tlist
                 .iter()
@@ -1345,30 +1356,33 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if !tlist_changed && !acc_changed {
                 t.dupe()
             } else {
-                Rc::new(Destructor::SpreadType(
+                Rc::new(Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
                     options.clone(),
                     tlist_prime,
                     acc_prime,
-                ))
+                ))))
             }
         }
-        Destructor::SpreadTupleType {
+        Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
             reason_tuple,
             reason_spread,
             inexact,
             resolved,
             unresolved,
-        } => {
+        }) => {
             let mut unresolved_changed = false;
             let unresolved_prime: Rc<[UnresolvedParam]> = unresolved
                 .iter()
                 .map(|el| match el {
-                    UnresolvedParam::UnresolvedArg(element, generic) => {
+                    UnresolvedParam::UnresolvedArg(box UnresolvedArgData(element, generic)) => {
                         let element_prime = mapper.tuple_element(cx, map_cx, element.clone());
                         if !element.t.ptr_eq(&element_prime.t) {
                             unresolved_changed = true;
                         }
-                        UnresolvedParam::UnresolvedArg(element_prime, generic.clone())
+                        UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
+                            element_prime,
+                            generic.clone(),
+                        )))
                     }
                     UnresolvedParam::UnresolvedSpreadArg(inner_t) => {
                         let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
@@ -1383,24 +1397,31 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             let resolved_prime: Rc<[ResolvedParam]> = resolved
                 .iter()
                 .map(|el| match el {
-                    ResolvedParam::ResolvedArg(element, generic) => {
+                    ResolvedParam::ResolvedArg(box ResolvedArgData(element, generic)) => {
                         let element_prime = mapper.tuple_element(cx, map_cx, element.clone());
                         if !element.t.ptr_eq(&element_prime.t) {
                             resolved_changed = true;
                         }
-                        ResolvedParam::ResolvedArg(element_prime, generic.clone())
+                        ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
+                            element_prime,
+                            generic.clone(),
+                        )))
                     }
-                    ResolvedParam::ResolvedSpreadArg(reason, arr, generic) => {
+                    ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                        reason,
+                        arr,
+                        generic,
+                    )) => {
                         let arr_rc = Rc::new(arr.clone());
                         let arr_prime = mapper.arr_type(cx, map_cx, arr_rc.dupe());
                         if !Rc::ptr_eq(&arr_rc, &arr_prime) {
                             resolved_changed = true;
                         }
-                        ResolvedParam::ResolvedSpreadArg(
+                        ResolvedParam::ResolvedSpreadArg(Box::new(ResolvedSpreadArgData(
                             reason.dupe(),
                             (*arr_prime).clone(),
                             generic.clone(),
-                        )
+                        )))
                     }
                     ResolvedParam::ResolvedAnySpreadArg(_, _) => el.clone(),
                 })
@@ -1408,13 +1429,15 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if !unresolved_changed && !resolved_changed {
                 t.dupe()
             } else {
-                Rc::new(Destructor::SpreadTupleType {
-                    reason_tuple: reason_tuple.dupe(),
-                    reason_spread: reason_spread.dupe(),
-                    inexact: *inexact,
-                    resolved: resolved_prime,
-                    unresolved: unresolved_prime,
-                })
+                Rc::new(Destructor::SpreadTupleType(Box::new(
+                    DestructorSpreadTupleTypeData {
+                        reason_tuple: reason_tuple.dupe(),
+                        reason_spread: reason_spread.dupe(),
+                        inexact: *inexact,
+                        resolved: resolved_prime,
+                        unresolved: unresolved_prime,
+                    },
+                )))
             }
         }
         Destructor::RestType(options, x) => {
@@ -1426,13 +1449,13 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             }
         }
         Destructor::ValuesType => t.dupe(),
-        Destructor::ConditionalType {
+        Destructor::ConditionalType(box DestructorConditionalTypeData {
             distributive_tparam_name,
             infer_tparams,
             extends_t,
             true_t,
             false_t,
-        } => {
+        }) => {
             let mut infer_tparams_changed = false;
             let infer_tparams_prime: Rc<[TypeParam]> = infer_tparams
                 .iter()
@@ -1454,22 +1477,24 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             {
                 t.dupe()
             } else {
-                Rc::new(Destructor::ConditionalType {
-                    distributive_tparam_name: distributive_tparam_name.clone(),
-                    infer_tparams: infer_tparams_prime,
-                    extends_t: extends_t_prime,
-                    true_t: true_t_prime,
-                    false_t: false_t_prime,
-                })
+                Rc::new(Destructor::ConditionalType(Box::new(
+                    DestructorConditionalTypeData {
+                        distributive_tparam_name: distributive_tparam_name.clone(),
+                        infer_tparams: infer_tparams_prime,
+                        extends_t: extends_t_prime,
+                        true_t: true_t_prime,
+                        false_t: false_t_prime,
+                    },
+                )))
             }
         }
         Destructor::TypeMap(TypeMap::ObjectKeyMirror) => t.dupe(),
-        Destructor::MappedType {
+        Destructor::MappedType(box DestructorMappedTypeData {
             property_type,
             mapped_type_flags,
             homomorphic,
             distributive_tparam_name,
-        } => {
+        }) => {
             let property_type_prime = mapper.type_(cx, map_cx, property_type.dupe());
             let mut homomorphic_changed = false;
             let homomorphic_prime = match homomorphic {
@@ -1488,12 +1513,12 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if property_type.ptr_eq(&property_type_prime) && !homomorphic_changed {
                 t.dupe()
             } else {
-                Rc::new(Destructor::MappedType {
+                Rc::new(Destructor::MappedType(Box::new(DestructorMappedTypeData {
                     property_type: property_type_prime,
                     mapped_type_flags: mapped_type_flags.clone(),
                     homomorphic: homomorphic_prime,
                     distributive_tparam_name: distributive_tparam_name.clone(),
-                })
+                })))
             }
         }
         Destructor::ReactElementConfigType => t.dupe(),
@@ -1712,11 +1737,11 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     t: Rc<ArrType>,
 ) -> Rc<ArrType> {
     match &*t {
-        ArrType::ArrayAT {
+        ArrType::ArrayAT(box ArrayATData {
             react_dro,
             elem_t,
             tuple_view,
-        } => {
+        }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
             let mut tuple_view_changed = false;
             let tuple_view_prime = tuple_view.as_ref().map(|tv| {
@@ -1746,20 +1771,20 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if elem_t.ptr_eq(&elem_t_prime) && !tuple_view_changed {
                 t
             } else {
-                Rc::new(ArrType::ArrayAT {
+                Rc::new(ArrType::ArrayAT(Box::new(ArrayATData {
                     react_dro: react_dro.clone(),
                     elem_t: elem_t_prime,
                     tuple_view: tuple_view_prime,
-                })
+                })))
             }
         }
-        ArrType::TupleAT {
+        ArrType::TupleAT(box TupleATData {
             react_dro,
             elem_t,
             elements,
             arity,
             inexact,
-        } => {
+        }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
             let mut elements_changed = false;
             let elements_prime: Rc<[TupleElement]> = elements
@@ -1775,21 +1800,21 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             if elem_t.ptr_eq(&elem_t_prime) && !elements_changed {
                 t
             } else {
-                Rc::new(ArrType::TupleAT {
+                Rc::new(ArrType::TupleAT(Box::new(TupleATData {
                     react_dro: react_dro.clone(),
                     elem_t: elem_t_prime,
                     elements: elements_prime,
                     arity: *arity,
                     inexact: *inexact,
-                })
+                })))
             }
         }
-        ArrType::ROArrayAT(inner_t, dro) => {
+        ArrType::ROArrayAT(box (inner_t, dro)) => {
             let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
             if inner_t.ptr_eq(&inner_t_prime) {
                 t
             } else {
-                Rc::new(ArrType::ROArrayAT(inner_t_prime, dro.clone()))
+                Rc::new(ArrType::ROArrayAT(Box::new((inner_t_prime, dro.clone()))))
             }
         }
     }
@@ -1859,10 +1884,10 @@ pub fn predicate_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         PredicateInner::TruthyP
         | PredicateInner::NullP
         | PredicateInner::MaybeP
-        | PredicateInner::SingletonBoolP(_, _)
-        | PredicateInner::SingletonStrP(_, _, _)
-        | PredicateInner::SingletonNumP(_, _, _)
-        | PredicateInner::SingletonBigIntP(_, _, _)
+        | PredicateInner::SingletonBoolP(_)
+        | PredicateInner::SingletonStrP(_)
+        | PredicateInner::SingletonNumP(_)
+        | PredicateInner::SingletonBigIntP(_)
         | PredicateInner::BoolP(_)
         | PredicateInner::FunP
         | PredicateInner::NumP(_)

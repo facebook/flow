@@ -627,7 +627,7 @@ pub mod object_expression_acc {
                                         use_op,
                                         reason.dupe(),
                                         Box::new(tool),
-                                        Box::new(object::Tool::Spread(target, state)),
+                                        Box::new(object::Tool::Spread(Box::new((target, state)))),
                                         tout.dupe(),
                                     )),
                                 ),
@@ -1156,20 +1156,20 @@ fn method_call_opt_use<'a>(
                     mk_reason(VirtualReasonDesc::RNonnullAssert, chain_loc.dupe()),
                 )
             };
-            type_::OptMethodAction::OptChainM {
+            type_::OptMethodAction::OptChainM(Box::new(type_::OptChainMData {
                 exp_reason,
                 lhs_reason: mk_expression_reason(expr),
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint: type_::hint_unavailable(),
                 specialized_callee,
-            }
+            }))
         }
-        _ => type_::OptMethodAction::OptCallM {
+        _ => type_::OptMethodAction::OptCallM(Box::new(type_::OptCallMData {
             opt_methodcalltype,
             return_hint: type_env::get_hint(cx, chain_loc),
             specialized_callee,
-        },
+        })),
     };
     if private_ {
         let class_entries = type_env::get_class_entries(cx);
@@ -1226,7 +1226,7 @@ fn method_call<'a>(
                     let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                         use_op: use_op.dupe(),
                         reason: reason.dupe(),
-                        call_action: Box::new(type_::CallAction::Funcalltype(app)),
+                        call_action: Box::new(type_::CallAction::Funcalltype(Box::new(app))),
                         return_hint: type_::hint_unavailable(),
                     })));
                     flow_js::flow_non_speculating(cx, (&f, &use_t));
@@ -1260,11 +1260,13 @@ fn method_call<'a>(
                         reason: reason.dupe(),
                         prop_reason: reason_expr,
                         propref: Box::new(propref),
-                        method_action: Box::new(type_::MethodAction::CallM {
-                            methodcalltype,
-                            return_hint: type_::hint_unavailable(),
-                            specialized_callee: Some(specialized_callee.clone()),
-                        }),
+                        method_action: Box::new(type_::MethodAction::CallM(Box::new(
+                            type_::CallMData {
+                                methodcalltype,
+                                return_hint: type_::hint_unavailable(),
+                                specialized_callee: Some(specialized_callee.clone()),
+                            },
+                        ))),
                     })));
                     flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
                 },
@@ -1298,20 +1300,20 @@ fn elem_call_opt_use<CX>(
             } else {
                 None
             };
-            type_::OptMethodAction::OptChainM {
+            type_::OptMethodAction::OptChainM(Box::new(type_::OptChainMData {
                 exp_reason: reason_chain,
                 lhs_reason: reason_expr,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint: type_::hint_unavailable(),
                 specialized_callee,
-            }
+            }))
         }
-        _ => type_::OptMethodAction::OptCallM {
+        _ => type_::OptMethodAction::OptCallM(Box::new(type_::OptCallMData {
             opt_methodcalltype,
             return_hint: type_::hint_unavailable(),
             specialized_callee,
-        },
+        })),
     };
     type_::OptUseT::OptCallElemT(use_op, reason_call, reason_lookup, elem_t, action)
 }
@@ -1767,8 +1769,9 @@ pub fn opaque_type<'a>(
                         (tp.name.dupe(), tp.reason.dupe(), t, tp.polarity)
                     })
                     .collect();
-            let nominal_id =
-                nominal::Id::UserDefinedOpaqueTypeId(cx.make_aloc_id(&name_loc), name.dupe());
+            let nominal_id = nominal::Id::UserDefinedOpaqueTypeId(Box::new(
+                nominal::UserDefinedOpaqueTypeIdData(cx.make_aloc_id(&name_loc), name.dupe()),
+            ));
             let nominal_type = NominalType::new(NominalTypeInner {
                 underlying_t: match &underlying_t {
                     None => nominal::UnderlyingT::FullyOpaque,
@@ -2643,11 +2646,11 @@ fn statement_<'a>(
             };
             let check_reason = reason_of_t(discriminant_t);
             match enum_exhaustive_check {
-                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
+                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(box EnumExhaustiveCheckPossiblyValidData {
                     possible_checks,
                     checks,
                     default_case_loc,
-                } => {
+                }) => {
                     check_possible_enum_exhaustive_check(
                         cx,
                         check_reason,
@@ -4307,15 +4310,19 @@ pub fn type_alias<'a>(
                         .collect(),
                     None => vec![],
                 };
-                let nominal_id = type_::nominal::Id::UserDefinedOpaqueTypeId(
-                    cx.make_aloc_id(&name_loc),
-                    name.dupe(),
-                );
+                let nominal_id = type_::nominal::Id::UserDefinedOpaqueTypeId(Box::new(
+                    type_::nominal::UserDefinedOpaqueTypeIdData(
+                        cx.make_aloc_id(&name_loc),
+                        name.dupe(),
+                    ),
+                ));
                 let nominal_type = type_::NominalType::new(type_::NominalTypeInner {
-                    underlying_t: type_::nominal::UnderlyingT::CustomError {
-                        custom_error_loc,
-                        t: t.dupe(),
-                    },
+                    underlying_t: type_::nominal::UnderlyingT::CustomError(Box::new(
+                        nominal::CustomErrorData {
+                            custom_error_loc,
+                            t: t.dupe(),
+                        },
+                    )),
                     lower_t: None,
                     upper_t: None,
                     nominal_id,
@@ -5341,7 +5348,7 @@ fn create_computed_prop<'a>(
                             &nominal_type.underlying_t
                             && matches!(
                                 &nominal_type.nominal_id,
-                                nominal::Id::UserDefinedOpaqueTypeId(_, _)
+                                nominal::Id::UserDefinedOpaqueTypeId(_)
                             )
                             && nom_reason.loc().source() == nom_reason.def_loc().source() =>
                         {
@@ -5366,11 +5373,12 @@ fn create_computed_prop<'a>(
                             object_expression_acc::ComputedProp::IgnoredInvalidNonLiteralKey
                         }
                         TypeInner::NominalT { nominal_type, .. }
-                            if let nominal::UnderlyingT::CustomError { t: inner_key, .. } =
-                                &nominal_type.underlying_t
+                            if let nominal::UnderlyingT::CustomError(
+                                box nominal::CustomErrorData { t: inner_key, .. },
+                            ) = &nominal_type.underlying_t
                                 && matches!(
                                     &nominal_type.nominal_id,
-                                    nominal::Id::UserDefinedOpaqueTypeId(_, _)
+                                    nominal::Id::UserDefinedOpaqueTypeId(_)
                                 ) =>
                         {
                             if valid_computed_key(inner_key) {
@@ -5396,7 +5404,7 @@ fn create_computed_prop<'a>(
                             if let Some(upper_t) = &nominal_type.upper_t
                                 && matches!(
                                     &nominal_type.nominal_id,
-                                    nominal::Id::UserDefinedOpaqueTypeId(_, _)
+                                    nominal::Id::UserDefinedOpaqueTypeId(_)
                                 )
                                 && valid_computed_key(upper_t) =>
                         {
@@ -5953,7 +5961,9 @@ fn array_elements<'a>(
                 let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc);
                 let elem = mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral);
                 Ok((
-                    type_::UnresolvedParam::UnresolvedArg(elem, None),
+                    type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
+                        elem, None,
+                    ))),
                     ArrayElement::Expression(e_prime),
                 ))
             }
@@ -5962,7 +5972,9 @@ fn array_elements<'a>(
                 let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc.dupe());
                 let elem = mk_tuple_element(reason, t, None, false, Polarity::Neutral);
                 Ok((
-                    type_::UnresolvedParam::UnresolvedArg(elem, None),
+                    type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
+                        elem, None,
+                    ))),
                     ArrayElement::Hole(loc.dupe()),
                 ))
             }
@@ -6560,13 +6572,13 @@ fn expression_<'a>(
                     let reason = mk_reason(VirtualReasonDesc::RConstArrayLit, loc.dupe());
                     let elem_t =
                         empty_t::make(mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe()));
-                    let arrtype = type_::ArrType::TupleAT {
+                    let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                         elem_t,
                         elements: vec![].into(),
                         react_dro: None,
                         arity: (0, 0),
                         inexact: false,
-                    };
+                    }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
                         DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
@@ -6589,11 +6601,11 @@ fn expression_<'a>(
                     let element_reason =
                         mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe());
                     let elem_t = cx.mk_placeholder(element_reason);
-                    let arrtype = type_::ArrType::ArrayAT {
+                    let arrtype = type_::ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: Some(type_::empty_tuple_view()),
                         react_dro: None,
-                    };
+                    }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
                         DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
@@ -6609,11 +6621,11 @@ fn expression_<'a>(
                 }
                 [] => {
                     let (reason, elem_t) = empty_array(cx, loc.dupe());
-                    let arrtype = type_::ArrType::ArrayAT {
+                    let arrtype = type_::ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: Some(type_::empty_tuple_view()),
                         react_dro: None,
-                    };
+                    }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
                         DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
@@ -7340,7 +7352,7 @@ fn expression_<'a>(
             let call_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason.dupe(),
-                call_action: Box::new(type_::CallAction::Funcalltype(ft)),
+                call_action: Box::new(type_::CallAction::Funcalltype(Box::new(ft))),
                 return_hint: type_env::get_hint(cx, loc.dupe()),
             })));
             flow_js::flow_non_speculating(cx, (&t, &call_t));
@@ -8235,11 +8247,13 @@ pub fn optional_chain<'a>(
                             reason: reason.dupe(),
                             prop_reason: reason_lookup.dupe(),
                             propref: Box::new(propref),
-                            method_action: Box::new(type_::MethodAction::CallM {
-                                methodcalltype,
-                                return_hint: type_env::get_hint(cx, loc.dupe()),
-                                specialized_callee: Some(specialized_callee.clone()),
-                            }),
+                            method_action: Box::new(type_::MethodAction::CallM(Box::new(
+                                type_::CallMData {
+                                    methodcalltype,
+                                    return_hint: type_env::get_hint(cx, loc.dupe()),
+                                    specialized_callee: Some(specialized_callee.clone()),
+                                },
+                            ))),
                         })));
                         flow_js::flow_non_speculating(cx, (&super_t, &use_t));
                     },
@@ -8322,11 +8336,13 @@ pub fn optional_chain<'a>(
                             reason: reason.dupe(),
                             prop_reason: super_reason.dupe(),
                             propref: Box::new(propref),
-                            method_action: Box::new(type_::MethodAction::CallM {
-                                methodcalltype,
-                                return_hint: type_::hint_unavailable(),
-                                specialized_callee: None,
-                            }),
+                            method_action: Box::new(type_::MethodAction::CallM(Box::new(
+                                type_::CallMData {
+                                    methodcalltype,
+                                    return_hint: type_::hint_unavailable(),
+                                    specialized_callee: None,
+                                },
+                            ))),
                         })));
                         flow_js::flow_non_speculating(cx, (&super_t, &use_t));
                     },
@@ -9561,7 +9577,9 @@ pub fn optional_chain<'a>(
                                         UseT::new(UseTInner::CallT(Box::new(CallTData {
                                             use_op: use_op.dupe(),
                                             reason: reason_call.dupe(),
-                                            call_action: Box::new(CallAction::Funcalltype(app)),
+                                            call_action: Box::new(CallAction::Funcalltype(
+                                                Box::new(app),
+                                            )),
                                             return_hint: type_env::get_hint(cx, loc.dupe()),
                                         })));
                                     match opt_state {
@@ -11318,11 +11336,13 @@ fn simple_assignment<'a>(
                 expression::ExpressionInner::Member { inner: mem, .. } => {
                     let lhs_prop_reason = mk_pattern_reason(lhs);
                     let make_op = |lhs_r: Reason, prop: Reason| -> UseOp {
-                        UseOp::Op(Arc::new(type_::RootUseOp::SetProperty {
-                            lhs: lhs_r,
-                            prop,
-                            value: mk_expression_reason(rhs),
-                        }))
+                        UseOp::Op(Arc::new(type_::RootUseOp::SetProperty(Box::new(
+                            type_::SetPropertyData {
+                                lhs: lhs_r,
+                                prop,
+                                value: mk_expression_reason(rhs),
+                            },
+                        ))))
                     };
                     let pat_loc_c = pat_loc.dupe();
                     let reconstruct_ast_internal = |mem: expression::Member<ALoc, (ALoc, Type)>,
@@ -12585,8 +12605,7 @@ pub fn jsx_mk_props<'a>(
                 let arr_t = Type::new(TypeInner::DefT(
                     shorthand_arr_reason_clone,
                     DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
-                        elem_t.dupe(),
-                        None,
+                        Box::new((elem_t.dupe(), None)),
                     )))),
                 ));
                 flow_js::flow_non_speculating(
@@ -12622,7 +12641,7 @@ pub fn jsx_mk_props<'a>(
                 let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
                     use_op: use_op_clone2.dupe(),
                     reason: call_reason_clone.dupe(),
-                    call_action: Box::new(type_::CallAction::Funcalltype(app)),
+                    call_action: Box::new(type_::CallAction::Funcalltype(Box::new(app))),
                     return_hint: type_::hint_unavailable(),
                 })));
                 flow_js::flow_non_speculating(cx, (&stylex_props_t_clone, &use_t));
@@ -12775,7 +12794,7 @@ fn jsx_normalize_children_prop<'a>(
     children
         .into_iter()
         .map(|child| match child {
-            type_::UnresolvedParam::UnresolvedArg(elem, _) => elem.t,
+            type_::UnresolvedParam::UnresolvedArg(box type_::UnresolvedArgData(elem, _)) => elem.t,
             type_::UnresolvedParam::UnresolvedSpreadArg(a) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
@@ -12848,7 +12867,7 @@ fn react_jsx_desugar<'a>(
             vec![CallArg::arg(component_t.dupe()), CallArg::arg(props.dupe())];
         for child in &children {
             match child {
-                type_::UnresolvedParam::UnresolvedArg(elem, _) => {
+                type_::UnresolvedParam::UnresolvedArg(box type_::UnresolvedArgData(elem, _)) => {
                     argts.push(CallArg::arg(elem.t.dupe()));
                 }
                 type_::UnresolvedParam::UnresolvedSpreadArg(t) => {
@@ -12871,7 +12890,7 @@ fn react_jsx_desugar<'a>(
                 &UseT::new(UseTInner::CallT(Box::new(CallTData {
                     use_op: use_op.dupe(),
                     reason: reason.dupe(),
-                    call_action: Box::new(type_::CallAction::Funcalltype(funcalltype)),
+                    call_action: Box::new(type_::CallAction::Funcalltype(Box::new(funcalltype))),
                     return_hint: return_hint.clone(),
                 }))),
             ),
@@ -12889,17 +12908,19 @@ fn react_jsx_desugar<'a>(
                 &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                     use_op: use_op.dupe(),
                     reason: reason.dupe(),
-                    tool: Box::new(type_::react::Tool::CreateElement {
-                        component: component_t.dupe(),
-                        jsx_props: props.dupe(),
-                        tout: tout_tvar,
-                        targs: targs_opt.clone().map(|v| v.into()),
-                        should_generalize: *should_generalize.get_forced(cx),
-                        return_hint: return_hint.clone(),
-                        record_monomorphized_result: false,
-                        inferred_targs: None,
-                        specialized_component: Some(specialized_component.clone()),
-                    }),
+                    tool: Box::new(type_::react::Tool::CreateElement(Box::new(
+                        type_::react::CreateElementData {
+                            component: component_t.dupe(),
+                            jsx_props: props.dupe(),
+                            tout: tout_tvar,
+                            targs: targs_opt.clone().map(|v| v.into()),
+                            should_generalize: *should_generalize.get_forced(cx),
+                            return_hint: return_hint.clone(),
+                            record_monomorphized_result: false,
+                            inferred_targs: None,
+                            specialized_component: Some(specialized_component.clone()),
+                        },
+                    ))),
                 }))),
             ),
         );
@@ -12998,7 +13019,7 @@ fn non_react_jsx_desugar<'a>(
     let mut argts: Vec<CallArg> = vec![CallArg::arg(component_t.dupe()), CallArg::arg(props)];
     for child in &children {
         match child {
-            type_::UnresolvedParam::UnresolvedArg(elem, _) => {
+            type_::UnresolvedParam::UnresolvedArg(box type_::UnresolvedArgData(elem, _)) => {
                 argts.push(CallArg::arg(elem.t.dupe()));
             }
             type_::UnresolvedParam::UnresolvedSpreadArg(t) => {
@@ -13102,10 +13123,12 @@ fn jsx_body<'a>(
             )?;
             let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
             (
-                Some(type_::UnresolvedParam::UnresolvedArg(
-                    mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral),
-                    None,
-                )),
+                Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
+                    type_::UnresolvedArgData(
+                        mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral),
+                        None,
+                    ),
+                ))),
                 ast::jsx::Child::Element {
                     loc: (loc, t),
                     inner: typed_e,
@@ -13121,10 +13144,12 @@ fn jsx_body<'a>(
             )?;
             let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
             (
-                Some(type_::UnresolvedParam::UnresolvedArg(
-                    mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral),
-                    None,
-                )),
+                Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
+                    type_::UnresolvedArgData(
+                        mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral),
+                        None,
+                    ),
+                ))),
                 ast::jsx::Child::Fragment {
                     loc: (loc, t),
                     inner: typed_f,
@@ -13148,10 +13173,18 @@ fn jsx_body<'a>(
                     let e_t = typed_e.loc().1.dupe();
                     let reason = mk_reason(VirtualReasonDesc::RJSXChild, e_loc);
                     (
-                        Some(type_::UnresolvedParam::UnresolvedArg(
-                            mk_tuple_element(reason, e_t.dupe(), None, false, Polarity::Neutral),
-                            None,
-                        )),
+                        Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
+                            type_::UnresolvedArgData(
+                                mk_tuple_element(
+                                    reason,
+                                    e_t.dupe(),
+                                    None,
+                                    false,
+                                    Polarity::Neutral,
+                                ),
+                                None,
+                            ),
+                        ))),
                         ast::jsx::expression_container::Expression::Expression(typed_e),
                         e_t,
                     )
@@ -13195,10 +13228,12 @@ fn jsx_body<'a>(
             let unresolved_param_opt = match jsx_trim_text(loc.dupe(), &text.value) {
                 Some(c) => {
                     let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
-                    Some(type_::UnresolvedParam::UnresolvedArg(
-                        mk_tuple_element(reason, c, None, false, Polarity::Neutral),
-                        None,
-                    ))
+                    Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
+                        type_::UnresolvedArgData(
+                            mk_tuple_element(reason, c, None, false, Polarity::Neutral),
+                            None,
+                        ),
+                    )))
                 }
                 None => None,
             };
@@ -13511,11 +13546,11 @@ fn static_method_call_object<'a>(
     Ok(match (m.as_str(), targs, &**args_arguments) {
         ("assign", None, []) => {
             let use_op = UseOp::Frame(
-                Arc::new(FrameUseOp::FunMissingArg {
+                Arc::new(FrameUseOp::FunMissingArg(Box::new(FunMissingArgData {
                     def: reason.dupe(),
                     op: reason.dupe(),
                     n: 0,
-                }),
+                }))),
                 Arc::new(use_op),
             );
             flow_js_utils::add_output_non_speculating(
@@ -13761,11 +13796,13 @@ fn static_method_call_object<'a>(
             let keys_t = get_keys(arr_reason.dupe(), &o);
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                    elem_t: keys_t,
-                    tuple_view: None,
-                    react_dro: None,
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                    ArrayATData {
+                        elem_t: keys_t,
+                        tuple_view: None,
+                        react_dro: None,
+                    },
+                ))))),
             ));
             (
                 t,
@@ -13784,11 +13821,13 @@ fn static_method_call_object<'a>(
             let values_t = get_values(arr_reason.dupe(), &o);
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                    elem_t: values_t,
-                    tuple_view: None,
-                    react_dro: None,
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                    ArrayATData {
+                        elem_t: values_t,
+                        tuple_view: None,
+                        react_dro: None,
+                    },
+                ))))),
             ));
             (
                 t,
@@ -13819,37 +13858,41 @@ fn static_method_call_object<'a>(
             ));
             let entry_t = Type::new(TypeInner::DefT(
                 mk_reason(RTupleType, loc.dupe()),
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT {
-                    elem_t,
-                    react_dro: None,
-                    elements: vec![
-                        mk_tuple_element(
-                            elem_reason.dupe(),
-                            keys_t,
-                            Some(FlowSmolStr::new("key")),
-                            false,
-                            Polarity::Neutral,
-                        ),
-                        mk_tuple_element(
-                            elem_reason,
-                            values_t,
-                            Some(FlowSmolStr::new("value")),
-                            false,
-                            Polarity::Neutral,
-                        ),
-                    ]
-                    .into(),
-                    arity: (2, 2),
-                    inexact: false,
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
+                    TupleATData {
+                        elem_t,
+                        react_dro: None,
+                        elements: vec![
+                            mk_tuple_element(
+                                elem_reason.dupe(),
+                                keys_t,
+                                Some(FlowSmolStr::new("key")),
+                                false,
+                                Polarity::Neutral,
+                            ),
+                            mk_tuple_element(
+                                elem_reason,
+                                values_t,
+                                Some(FlowSmolStr::new("value")),
+                                false,
+                                Polarity::Neutral,
+                            ),
+                        ]
+                        .into(),
+                        arity: (2, 2),
+                        inexact: false,
+                    },
+                ))))),
             ));
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
-                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT {
-                    elem_t: entry_t,
-                    tuple_view: None,
-                    react_dro: None,
-                }))),
+                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                    ArrayATData {
+                        elem_t: entry_t,
+                        tuple_view: None,
+                        react_dro: None,
+                    },
+                ))))),
             ));
             (
                 t,
@@ -18801,11 +18844,13 @@ fn enum_exhaustive_check_of_switch_cases(
     cases_ast: &[statement::switch::Case<ALoc, (ALoc, Type)>],
 ) -> EnumPossibleExhaustiveCheckT {
     use std::collections::VecDeque;
-    let mut exhaustive_check = EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-        possible_checks: VecDeque::new(),
-        checks: Vec::new().into(),
-        default_case_loc: None,
-    };
+    let mut exhaustive_check = EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(
+        Box::new(EnumExhaustiveCheckPossiblyValidData {
+            possible_checks: VecDeque::new(),
+            checks: Vec::new().into(),
+            default_case_loc: None,
+        }),
+    );
     for case in cases_ast {
         exhaustive_check = match case {
             statement::switch::Case {
@@ -18820,11 +18865,13 @@ fn enum_exhaustive_check_of_switch_cases(
                 let (_, obj_t) = inner.object.loc();
                 match exhaustive_check {
                     EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
-                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                        mut possible_checks,
-                        checks,
-                        default_case_loc,
-                    } => {
+                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(
+                        box EnumExhaustiveCheckPossiblyValidData {
+                            mut possible_checks,
+                            checks,
+                            default_case_loc,
+                        },
+                    ) => {
                         let possible_check = (
                             obj_t.dupe(),
                             EnumCheck {
@@ -18833,11 +18880,13 @@ fn enum_exhaustive_check_of_switch_cases(
                             },
                         );
                         possible_checks.push_front(possible_check);
-                        EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                            possible_checks,
-                            checks,
-                            default_case_loc,
-                        }
+                        EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(Box::new(
+                            EnumExhaustiveCheckPossiblyValidData {
+                                possible_checks,
+                                checks,
+                                default_case_loc,
+                            },
+                        ))
                     }
                 }
             }
@@ -18847,15 +18896,19 @@ fn enum_exhaustive_check_of_switch_cases(
                 ..
             } => match exhaustive_check {
                 EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
-                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                    possible_checks,
-                    checks,
-                    ..
-                } => EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid {
-                    possible_checks,
-                    checks,
-                    default_case_loc: Some(default_case_loc.dupe()),
-                },
+                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(
+                    box EnumExhaustiveCheckPossiblyValidData {
+                        possible_checks,
+                        checks,
+                        ..
+                    },
+                ) => EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(Box::new(
+                    EnumExhaustiveCheckPossiblyValidData {
+                        possible_checks,
+                        checks,
+                        default_case_loc: Some(default_case_loc.dupe()),
+                    },
+                )),
             },
             statement::switch::Case {
                 test: Some(test_expr),
@@ -18868,7 +18921,7 @@ fn enum_exhaustive_check_of_switch_cases(
                         v.push(case_test_loc.dupe());
                         EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(v.into())
                     }
-                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid { .. } => {
+                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(..) => {
                         EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(
                             vec![case_test_loc.dupe()].into(),
                         )

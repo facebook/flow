@@ -25,6 +25,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_flow_common::obj_type;
 use flow_typing_type::type_::ArrType;
+use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::ArrayLengthOp;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::DefT;
@@ -41,6 +42,7 @@ use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ThisInstanceTData;
+use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleView;
 use flow_typing_type::type_::Type;
@@ -233,10 +235,10 @@ fn filter_opaque(
                 },
             }
         }
-        nominal::UnderlyingT::CustomError {
+        nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
             custom_error_loc,
             t,
-        } => {
+        }) => {
             let FilterResult { type_, changed } = filter_fn(t.dupe());
             match type_.deref() {
                 TypeInner::DefT(_, d) if matches!(&**d, DefTInner::EmptyT) => changed_result(
@@ -246,10 +248,12 @@ fn filter_opaque(
                     type_: Type::new(TypeInner::NominalT {
                         reason,
                         nominal_type: Rc::new(NominalType::new(NominalTypeInner {
-                            underlying_t: nominal::UnderlyingT::CustomError {
-                                custom_error_loc: custom_error_loc.dupe(),
-                                t: type_,
-                            },
+                            underlying_t: nominal::UnderlyingT::CustomError(Box::new(
+                                nominal::CustomErrorData {
+                                    custom_error_loc: custom_error_loc.dupe(),
+                                    t: type_,
+                                },
+                            )),
                             ..NominalTypeInner::clone(&**nominal_type)
                         })),
                     }),
@@ -1512,13 +1516,13 @@ pub fn array(t: Type) -> FilterResult {
                 });
                 changed_result(Type::new(TypeInner::DefT(
                     r.dupe().replace_desc_new(VirtualReasonDesc::RROArrayType),
-                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(
+                    DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new((
                         Type::new(TypeInner::DefT(
                             r,
                             DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
                         )),
                         None,
-                    )))),
+                    )))))),
                 )))
             }
             DefTInner::ArrT(_) => unchanged_result(t),
@@ -1544,12 +1548,12 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
         && let DefTInner::ArrT(arr) = d.deref()
     {
         match arr.deref() {
-            ArrType::TupleAT {
+            ArrType::TupleAT(box TupleATData {
                 arity: (num_req, num_total),
                 inexact,
                 ..
-            }
-            | ArrType::ArrayAT {
+            })
+            | ArrType::ArrayAT(box ArrayATData {
                 tuple_view:
                     Some(TupleView {
                         arity: (num_req, num_total),
@@ -1557,7 +1561,7 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
                         ..
                     }),
                 ..
-            } => {
+            }) => {
                 let matches = match op {
                     ArrayLengthOp::ArrLenEqual => {
                         if n == *num_req && n == *num_total && !inexact {
@@ -1585,7 +1589,7 @@ pub fn array_length(sense: bool, op: &ArrayLengthOp, n: i32, t: Type) -> FilterR
                     }
                 }
             }
-            ArrType::ArrayAT { .. } | ArrType::ROArrayAT(_, _) => {
+            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box (_, _)) => {
                 // [...]` matches every length, so arrays are matched.
                 let matches = n == 0 && *op == ArrayLengthOp::ArrLenGreaterThanEqual;
                 if matches == sense {
@@ -1954,12 +1958,12 @@ fn tag_of_def_t<'cx>(cx: &Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
         }
         DefTInner::InstanceT(instance_t) => tag_of_inst(&instance_t.inst),
         DefTInner::ArrT(arr) => match &**arr {
-            ArrType::TupleAT { elements, .. } => {
+            ArrType::TupleAT(box TupleATData { elements, .. }) => {
                 Some(BTreeSet::from([TypeTag(TypeTagInner::ArrTag {
                     sentinel: sentinel_of_tuple(cx, elements),
                 })]))
             }
-            ArrType::ArrayAT { .. } | ArrType::ROArrayAT(..) => {
+            ArrType::ArrayAT(box ArrayATData { .. }) | ArrType::ROArrayAT(box (..)) => {
                 Some(BTreeSet::from([TypeTag(TypeTagInner::ArrTag {
                     sentinel: BTreeMap::new(),
                 })]))
@@ -2022,7 +2026,9 @@ pub fn tag_of_t<'cx>(cx: &Context<'cx>, t: &Type) -> Option<TypeTagSet> {
             {
                 tag_of_t(cx, inner)
             }
-            nominal::UnderlyingT::CustomError { t: inner, .. } => tag_of_t(cx, inner),
+            nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                t: inner, ..
+            }) => tag_of_t(cx, inner),
             _ => match &nominal_type.upper_t {
                 Some(upper) => tag_of_t(cx, upper),
                 None => None,

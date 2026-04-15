@@ -372,22 +372,24 @@ fn check_polarity_impl<'cx>(
             }
             DefTInner::ArrT(arr) => {
                 use flow_typing_type::type_::ArrType;
+                use flow_typing_type::type_::ArrayATData;
+                use flow_typing_type::type_::TupleATData;
                 match arr.deref() {
                     // This representation signifies a literal, which is not a type.
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         tuple_view: Some(_),
                         ..
-                    } => {
+                    }) => {
                         panic!("UnexpectedType: ArrayAT with tuple_view in check_polarity");
                     }
-                    ArrType::ArrayAT {
+                    ArrType::ArrayAT(box ArrayATData {
                         elem_t,
                         tuple_view: None,
                         ..
-                    } => {
+                    }) => {
                         check_polarity_impl(cx, trace, seen, tparams, Polarity::Neutral, elem_t)?;
                     }
-                    ArrType::TupleAT { elements, .. } => {
+                    ArrType::TupleAT(box TupleATData { elements, .. }) => {
                         for elem in elements.iter() {
                             check_polarity_impl(
                                 cx,
@@ -399,7 +401,7 @@ fn check_polarity_impl<'cx>(
                             )?;
                         }
                     }
-                    ArrType::ROArrayAT(inner_t, _) => {
+                    ArrType::ROArrayAT(box (inner_t, _)) => {
                         check_polarity_impl(cx, trace, seen, tparams, polarity, inner_t)?;
                     }
                 }

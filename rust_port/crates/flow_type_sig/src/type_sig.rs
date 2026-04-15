@@ -35,8 +35,8 @@ use crate::signature_error;
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TArg<Loc, T> {
-    ImplicitArg(Loc),
-    ExplicitArg(T),
+    ImplicitArg(Box<Loc>),
+    ExplicitArg(Box<T>),
 }
 
 impl<Loc, T> TArg<Loc, T> {
@@ -45,7 +45,7 @@ impl<Loc, T> TArg<Loc, T> {
         T: Clone,
     {
         match self {
-            TArg::ImplicitArg(loc) => TArg::ImplicitArg(f(cx, loc)),
+            TArg::ImplicitArg(box loc) => TArg::ImplicitArg(Box::new(f(cx, loc))),
             // clone needed: generic T with Clone bound
             TArg::ExplicitArg(t) => TArg::ExplicitArg(t.clone()),
         }
@@ -54,8 +54,8 @@ impl<Loc, T> TArg<Loc, T> {
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Arg<T> {
-    Arg(T),
-    SpreadArg(T),
+    Arg(Box<T>),
+    SpreadArg(Box<T>),
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
@@ -113,7 +113,7 @@ impl<Loc, T> TParam<Loc, T> {
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TParams<Loc, T> {
     Mono,
-    Poly(Loc, Vec1<TParam<Loc, T>>),
+    Poly(Box<(Loc, Vec1<TParam<Loc, T>>)>),
 }
 
 impl<Loc, T> TParams<Loc, T> {
@@ -125,7 +125,7 @@ impl<Loc, T> TParams<Loc, T> {
     ) {
         match self {
             TParams::Mono => {}
-            TParams::Poly(loc, tparams) => {
+            TParams::Poly(box (loc, tparams)) => {
                 f_loc(cx, loc);
                 for tp in tparams.iter() {
                     f_loc(cx, &tp.name_loc);
@@ -148,10 +148,10 @@ impl<Loc, T> TParams<Loc, T> {
     ) -> TParams<Loc2, T2> {
         match self {
             TParams::Mono => TParams::Mono,
-            TParams::Poly(loc, tparams) => TParams::Poly(
+            TParams::Poly(box (loc, tparams)) => TParams::Poly(Box::new((
                 f_loc(cx, loc),
                 tparams.mapped_ref(|tp| tp.map(cx, &f_loc, &f_t)),
-            ),
+            ))),
         }
     }
 }
@@ -195,7 +195,7 @@ impl<Loc, T> FunRestParam<Loc, T> {
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ReactEffect<Loc> {
-    HookDecl(Loc),
+    HookDecl(Box<Loc>),
     HookAnnot,
     ArbitraryEffect,
     AnyEffect,
@@ -204,7 +204,7 @@ pub enum ReactEffect<Loc> {
 impl<Loc> ReactEffect<Loc> {
     pub fn iter<CX>(&self, cx: &mut CX, f_loc: &impl Fn(&mut CX, &Loc)) {
         match self {
-            ReactEffect::HookDecl(loc) => f_loc(cx, loc),
+            ReactEffect::HookDecl(box loc) => f_loc(cx, loc),
             ReactEffect::HookAnnot | ReactEffect::ArbitraryEffect | ReactEffect::AnyEffect => {}
         }
     }
@@ -215,7 +215,7 @@ impl<Loc> ReactEffect<Loc> {
         f: impl Fn(&mut CX, &Loc) -> Loc2,
     ) -> ReactEffect<Loc2> {
         match self {
-            ReactEffect::HookDecl(loc) => ReactEffect::HookDecl(f(cx, loc)),
+            ReactEffect::HookDecl(box loc) => ReactEffect::HookDecl(Box::new(f(cx, loc))),
             ReactEffect::HookAnnot => ReactEffect::HookAnnot,
             ReactEffect::ArbitraryEffect => ReactEffect::ArbitraryEffect,
             ReactEffect::AnyEffect => ReactEffect::AnyEffect,
@@ -368,18 +368,24 @@ impl<Loc, T> ComponentSig<Loc, T> {
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TupleElement<Loc, T> {
-    TupleElement {
-        loc: Loc,
-        name: Option<FlowSmolStr>,
-        t: T,
-        polarity: Polarity,
-        optional: bool,
-    },
-    TupleSpread {
-        loc: Loc,
-        name: Option<FlowSmolStr>,
-        t: T,
-    },
+    TupleElement(Box<TupleElementData<Loc, T>>),
+    TupleSpread(Box<TupleSpreadData<Loc, T>>),
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct TupleElementData<Loc, T> {
+    pub loc: Loc,
+    pub name: Option<FlowSmolStr>,
+    pub t: T,
+    pub polarity: Polarity,
+    pub optional: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct TupleSpreadData<Loc, T> {
+    pub loc: Loc,
+    pub name: Option<FlowSmolStr>,
+    pub t: T,
 }
 
 impl<Loc, T> TupleElement<Loc, T> {
@@ -390,24 +396,26 @@ impl<Loc, T> TupleElement<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> TupleElement<Loc2, T2> {
         match self {
-            TupleElement::TupleElement {
+            TupleElement::TupleElement(box TupleElementData {
                 loc,
                 name,
                 t,
                 polarity,
                 optional,
-            } => TupleElement::TupleElement {
+            }) => TupleElement::TupleElement(Box::new(TupleElementData {
                 loc: f_loc(cx, loc),
                 name: name.dupe(),
                 t: f_t(cx, t),
                 polarity: *polarity,
                 optional: *optional,
-            },
-            TupleElement::TupleSpread { loc, name, t } => TupleElement::TupleSpread {
-                loc: f_loc(cx, loc),
-                name: name.dupe(),
-                t: f_t(cx, t),
-            },
+            })),
+            TupleElement::TupleSpread(box TupleSpreadData { loc, name, t }) => {
+                TupleElement::TupleSpread(Box::new(TupleSpreadData {
+                    loc: f_loc(cx, loc),
+                    name: name.dupe(),
+                    t: f_t(cx, t),
+                }))
+            }
         }
     }
 }
@@ -415,8 +423,8 @@ impl<Loc, T> TupleElement<Loc, T> {
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjAnnotProto<Loc, T> {
     ObjAnnotImplicitProto,
-    ObjAnnotExplicitProto(Loc, T),
-    ObjAnnotCallable { ts: Vec1<T> },
+    ObjAnnotExplicitProto(Box<(Loc, T)>),
+    ObjAnnotCallable(Box<Vec1<T>>),
 }
 
 impl<Loc, T> ObjAnnotProto<Loc, T> {
@@ -428,21 +436,21 @@ impl<Loc, T> ObjAnnotProto<Loc, T> {
     ) -> ObjAnnotProto<Loc2, T2> {
         match self {
             ObjAnnotProto::ObjAnnotImplicitProto => ObjAnnotProto::ObjAnnotImplicitProto,
-            ObjAnnotProto::ObjAnnotExplicitProto(loc, t) => {
-                ObjAnnotProto::ObjAnnotExplicitProto(f_loc(cx, loc), f_t(cx, t))
+            ObjAnnotProto::ObjAnnotExplicitProto(box (loc, t)) => {
+                ObjAnnotProto::ObjAnnotExplicitProto(Box::new((f_loc(cx, loc), f_t(cx, t))))
             }
-            ObjAnnotProto::ObjAnnotCallable { ts } => ObjAnnotProto::ObjAnnotCallable {
-                ts: ts.mapped_ref(|t| f_t(cx, t)),
-            },
+            ObjAnnotProto::ObjAnnotCallable(box ts) => {
+                ObjAnnotProto::ObjAnnotCallable(Box::new(ts.mapped_ref(|t| f_t(cx, t))))
+            }
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Accessor<Loc, T> {
-    Get(Loc, T),
-    Set(Loc, T),
-    GetSet(Loc, T, Loc, T),
+    Get(Box<(Loc, T)>),
+    Set(Box<(Loc, T)>),
+    GetSet(Box<(Loc, T, Loc, T)>),
 }
 
 impl<Loc, T> Accessor<Loc, T> {
@@ -453,15 +461,15 @@ impl<Loc, T> Accessor<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            Accessor::Get(loc, t) => {
+            Accessor::Get(box (loc, t)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
             }
-            Accessor::Set(loc, t) => {
+            Accessor::Set(box (loc, t)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
             }
-            Accessor::GetSet(loc1, t1, loc2, t2) => {
+            Accessor::GetSet(box (loc1, t1, loc2, t2)) => {
                 f_loc(cx, loc1);
                 f_t(cx, t1);
                 f_loc(cx, loc2);
@@ -477,26 +485,32 @@ impl<Loc, T> Accessor<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> Accessor<Loc2, T2> {
         match self {
-            Accessor::Get(loc, t) => Accessor::Get(f_loc(cx, loc), f_t(cx, t)),
-            Accessor::Set(loc, t) => Accessor::Set(f_loc(cx, loc), f_t(cx, t)),
-            Accessor::GetSet(loc1, t1, loc2, t2) => {
-                Accessor::GetSet(f_loc(cx, loc1), f_t(cx, t1), f_loc(cx, loc2), f_t(cx, t2))
-            }
+            Accessor::Get(box (loc, t)) => Accessor::Get(Box::new((f_loc(cx, loc), f_t(cx, t)))),
+            Accessor::Set(box (loc, t)) => Accessor::Set(Box::new((f_loc(cx, loc), f_t(cx, t)))),
+            Accessor::GetSet(box (loc1, t1, loc2, t2)) => Accessor::GetSet(Box::new((
+                f_loc(cx, loc1),
+                f_t(cx, t1),
+                f_loc(cx, loc2),
+                f_t(cx, t2),
+            ))),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjValueProp<Loc, T> {
-    ObjValueField(Loc, T, Polarity),
-    ObjValueAccess(Accessor<Loc, T>),
-    ObjValueMethod {
-        id_loc: Loc,
-        fn_loc: Loc,
-        async_: bool,
-        generator: bool,
-        def: FunSig<Loc, T>,
-    },
+    ObjValueField(Box<(Loc, T, Polarity)>),
+    ObjValueAccess(Box<Accessor<Loc, T>>),
+    ObjValueMethod(Box<ObjValueMethodData<Loc, T>>),
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct ObjValueMethodData<Loc, T> {
+    pub id_loc: Loc,
+    pub fn_loc: Loc,
+    pub async_: bool,
+    pub generator: bool,
+    pub def: FunSig<Loc, T>,
 }
 
 impl<Loc, T> ObjValueProp<Loc, T> {
@@ -507,18 +521,18 @@ impl<Loc, T> ObjValueProp<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            ObjValueProp::ObjValueField(loc, t, _) => {
+            ObjValueProp::ObjValueField(box (loc, t, _)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
             }
-            ObjValueProp::ObjValueAccess(accessor) => accessor.iter(cx, f_loc, f_t),
-            ObjValueProp::ObjValueMethod {
+            ObjValueProp::ObjValueAccess(box accessor) => accessor.iter(cx, f_loc, f_t),
+            ObjValueProp::ObjValueMethod(box ObjValueMethodData {
                 id_loc,
                 fn_loc,
                 async_: _,
                 generator: _,
                 def,
-            } => {
+            }) => {
                 f_loc(cx, id_loc);
                 f_loc(cx, fn_loc);
                 def.iter(cx, f_loc, f_t);
@@ -533,38 +547,41 @@ impl<Loc, T> ObjValueProp<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> ObjValueProp<Loc2, T2> {
         match self {
-            ObjValueProp::ObjValueField(loc, t, pol) => {
-                ObjValueProp::ObjValueField(f_loc(cx, loc), f_t(cx, t), *pol)
+            ObjValueProp::ObjValueField(box (loc, t, pol)) => {
+                ObjValueProp::ObjValueField(Box::new((f_loc(cx, loc), f_t(cx, t), *pol)))
             }
-            ObjValueProp::ObjValueAccess(accessor) => {
-                ObjValueProp::ObjValueAccess(accessor.map(cx, &f_loc, &f_t))
+            ObjValueProp::ObjValueAccess(box accessor) => {
+                ObjValueProp::ObjValueAccess(Box::new(accessor.map(cx, &f_loc, &f_t)))
             }
-            ObjValueProp::ObjValueMethod {
+            ObjValueProp::ObjValueMethod(box ObjValueMethodData {
                 id_loc,
                 fn_loc,
                 async_,
                 generator,
                 def,
-            } => ObjValueProp::ObjValueMethod {
+            }) => ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
                 id_loc: f_loc(cx, id_loc),
                 fn_loc: f_loc(cx, fn_loc),
                 async_: *async_,
                 generator: *generator,
                 def: def.map(cx, &f_loc, &f_t),
-            },
+            })),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjAnnotProp<Loc, T> {
-    ObjAnnotField(Loc, T, Polarity),
-    ObjAnnotAccess(Accessor<Loc, T>),
-    ObjAnnotMethod {
-        id_loc: Loc,
-        fn_loc: Loc,
-        def: FunSig<Loc, T>,
-    },
+    ObjAnnotField(Box<(Loc, T, Polarity)>),
+    ObjAnnotAccess(Box<Accessor<Loc, T>>),
+    ObjAnnotMethod(Box<ObjAnnotMethodData<Loc, T>>),
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct ObjAnnotMethodData<Loc, T> {
+    pub id_loc: Loc,
+    pub fn_loc: Loc,
+    pub def: FunSig<Loc, T>,
 }
 
 impl<Loc, T> ObjAnnotProp<Loc, T> {
@@ -575,30 +592,30 @@ impl<Loc, T> ObjAnnotProp<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> ObjAnnotProp<Loc2, T2> {
         match self {
-            ObjAnnotProp::ObjAnnotField(loc, t, pol) => {
-                ObjAnnotProp::ObjAnnotField(f_loc(cx, loc), f_t(cx, t), *pol)
+            ObjAnnotProp::ObjAnnotField(box (loc, t, pol)) => {
+                ObjAnnotProp::ObjAnnotField(Box::new((f_loc(cx, loc), f_t(cx, t), *pol)))
             }
-            ObjAnnotProp::ObjAnnotAccess(accessor) => {
-                ObjAnnotProp::ObjAnnotAccess(accessor.map(cx, &f_loc, &f_t))
+            ObjAnnotProp::ObjAnnotAccess(box accessor) => {
+                ObjAnnotProp::ObjAnnotAccess(Box::new(accessor.map(cx, &f_loc, &f_t)))
             }
-            ObjAnnotProp::ObjAnnotMethod {
+            ObjAnnotProp::ObjAnnotMethod(box ObjAnnotMethodData {
                 id_loc,
                 fn_loc,
                 def,
-            } => ObjAnnotProp::ObjAnnotMethod {
+            }) => ObjAnnotProp::ObjAnnotMethod(Box::new(ObjAnnotMethodData {
                 id_loc: f_loc(cx, id_loc),
                 fn_loc: f_loc(cx, fn_loc),
                 def: def.map(cx, &f_loc, &f_t),
-            },
+            })),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum InterfaceProp<Loc, T> {
-    InterfaceField(Option<Loc>, T, Polarity),
-    InterfaceAccess(Accessor<Loc, T>),
-    InterfaceMethod(Vec1<(Loc, Loc, FunSig<Loc, T>)>),
+    InterfaceField(Box<(Option<Loc>, T, Polarity)>),
+    InterfaceAccess(Box<Accessor<Loc, T>>),
+    InterfaceMethod(Box<Vec1<(Loc, Loc, FunSig<Loc, T>)>>),
 }
 
 impl<Loc, T> InterfaceProp<Loc, T> {
@@ -609,14 +626,14 @@ impl<Loc, T> InterfaceProp<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            InterfaceProp::InterfaceField(loc_opt, t, _) => {
+            InterfaceProp::InterfaceField(box (loc_opt, t, _)) => {
                 if let Some(loc) = loc_opt {
                     f_loc(cx, loc);
                 }
                 f_t(cx, t);
             }
-            InterfaceProp::InterfaceAccess(accessor) => accessor.iter(cx, f_loc, f_t),
-            InterfaceProp::InterfaceMethod(methods) => {
+            InterfaceProp::InterfaceAccess(box accessor) => accessor.iter(cx, f_loc, f_t),
+            InterfaceProp::InterfaceMethod(box methods) => {
                 for (loc1, loc2, sig) in methods.iter() {
                     f_loc(cx, loc1);
                     f_loc(cx, loc2);
@@ -633,18 +650,16 @@ impl<Loc, T> InterfaceProp<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> InterfaceProp<Loc2, T2> {
         match self {
-            InterfaceProp::InterfaceField(loc_opt, t, pol) => InterfaceProp::InterfaceField(
-                loc_opt.as_ref().map(|loc| f_loc(cx, loc)),
-                f_t(cx, t),
-                *pol,
+            InterfaceProp::InterfaceField(box (loc_opt, t, pol)) => InterfaceProp::InterfaceField(
+                Box::new((loc_opt.as_ref().map(|loc| f_loc(cx, loc)), f_t(cx, t), *pol)),
             ),
-            InterfaceProp::InterfaceAccess(accessor) => {
-                InterfaceProp::InterfaceAccess(accessor.map(cx, &f_loc, &f_t))
+            InterfaceProp::InterfaceAccess(box accessor) => {
+                InterfaceProp::InterfaceAccess(Box::new(accessor.map(cx, &f_loc, &f_t)))
             }
-            InterfaceProp::InterfaceMethod(methods) => {
-                InterfaceProp::InterfaceMethod(methods.mapped_ref(|(loc1, loc2, sig)| {
+            InterfaceProp::InterfaceMethod(box methods) => {
+                InterfaceProp::InterfaceMethod(Box::new(methods.mapped_ref(|(loc1, loc2, sig)| {
                     (f_loc(cx, loc1), f_loc(cx, loc2), sig.map(cx, &f_loc, &f_t))
-                }))
+                })))
             }
         }
     }
@@ -671,12 +686,15 @@ impl<T> ObjAnnotDict<T> {
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjSpreadAnnotElem<Loc, T> {
-    ObjSpreadAnnotElem(T),
-    ObjSpreadAnnotSlice {
-        dict: Option<ObjAnnotDict<T>>,
-        props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
-        computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
-    },
+    ObjSpreadAnnotElem(Box<T>),
+    ObjSpreadAnnotSlice(Box<ObjSpreadAnnotSliceData<Loc, T>>),
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct ObjSpreadAnnotSliceData<Loc, T> {
+    pub dict: Option<ObjAnnotDict<T>>,
+    pub props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
+    pub computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
 }
 
 impl<Loc, T> ObjSpreadAnnotElem<Loc, T> {
@@ -687,14 +705,14 @@ impl<Loc, T> ObjSpreadAnnotElem<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> ObjSpreadAnnotElem<Loc2, T2> {
         match self {
-            ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => {
-                ObjSpreadAnnotElem::ObjSpreadAnnotElem(f_t(cx, t))
+            ObjSpreadAnnotElem::ObjSpreadAnnotElem(box t) => {
+                ObjSpreadAnnotElem::ObjSpreadAnnotElem(Box::new(f_t(cx, t)))
             }
-            ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+            ObjSpreadAnnotElem::ObjSpreadAnnotSlice(box ObjSpreadAnnotSliceData {
                 dict,
                 props,
                 computed_props,
-            } => ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+            }) => ObjSpreadAnnotElem::ObjSpreadAnnotSlice(Box::new(ObjSpreadAnnotSliceData {
                 dict: dict.as_ref().map(|d| d.map(cx, &f_t)),
                 props: props
                     .iter()
@@ -704,15 +722,15 @@ impl<Loc, T> ObjSpreadAnnotElem<Loc, T> {
                     .iter()
                     .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                     .collect(),
-            },
+            })),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjValueSpreadElem<Loc, T> {
-    ObjValueSpreadElem(T),
-    ObjValueSpreadSlice(BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>),
+    ObjValueSpreadElem(Box<T>),
+    ObjValueSpreadSlice(Box<BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>>),
 }
 
 impl<Loc, T> ObjValueSpreadElem<Loc, T> {
@@ -723,8 +741,8 @@ impl<Loc, T> ObjValueSpreadElem<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            ObjValueSpreadElem::ObjValueSpreadElem(t) => f_t(cx, t),
-            ObjValueSpreadElem::ObjValueSpreadSlice(props) => {
+            ObjValueSpreadElem::ObjValueSpreadElem(box t) => f_t(cx, t),
+            ObjValueSpreadElem::ObjValueSpreadSlice(box props) => {
                 for v in props.values() {
                     v.iter(cx, f_loc, f_t);
                 }
@@ -739,16 +757,16 @@ impl<Loc, T> ObjValueSpreadElem<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> ObjValueSpreadElem<Loc2, T2> {
         match self {
-            ObjValueSpreadElem::ObjValueSpreadElem(t) => {
-                ObjValueSpreadElem::ObjValueSpreadElem(f_t(cx, t))
+            ObjValueSpreadElem::ObjValueSpreadElem(box t) => {
+                ObjValueSpreadElem::ObjValueSpreadElem(Box::new(f_t(cx, t)))
             }
-            ObjValueSpreadElem::ObjValueSpreadSlice(props) => {
-                ObjValueSpreadElem::ObjValueSpreadSlice(
+            ObjValueSpreadElem::ObjValueSpreadSlice(box props) => {
+                ObjValueSpreadElem::ObjValueSpreadSlice(Box::new(
                     props
                         .iter()
                         .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
                         .collect(),
-                )
+                ))
             }
         }
     }
@@ -756,8 +774,8 @@ impl<Loc, T> ObjValueSpreadElem<Loc, T> {
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ClassExtends<Loc, T> {
-    ClassExplicitExtends { loc: Loc, t: T },
-    ClassExplicitExtendsApp { loc: Loc, t: T, targs: Vec<T> },
+    ClassExplicitExtends(Box<(Loc, T)>),
+    ClassExplicitExtendsApp(Box<(Loc, T, Vec<T>)>),
     ClassImplicitExtends,
     ObjectPrototypeExtendsNull,
 }
@@ -770,11 +788,11 @@ impl<Loc, T> ClassExtends<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            ClassExtends::ClassExplicitExtends { loc, t } => {
+            ClassExtends::ClassExplicitExtends(box (loc, t)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
             }
-            ClassExtends::ClassExplicitExtendsApp { loc, t, targs } => {
+            ClassExtends::ClassExplicitExtendsApp(box (loc, t, targs)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
                 for t in targs {
@@ -792,16 +810,15 @@ impl<Loc, T> ClassExtends<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> ClassExtends<Loc2, T2> {
         match self {
-            ClassExtends::ClassExplicitExtends { loc, t } => ClassExtends::ClassExplicitExtends {
-                loc: f_loc(cx, loc),
-                t: f_t(cx, t),
-            },
-            ClassExtends::ClassExplicitExtendsApp { loc, t, targs } => {
-                ClassExtends::ClassExplicitExtendsApp {
-                    loc: f_loc(cx, loc),
-                    t: f_t(cx, t),
-                    targs: targs.iter().map(|t| f_t(cx, t)).collect(),
-                }
+            ClassExtends::ClassExplicitExtends(box (loc, t)) => {
+                ClassExtends::ClassExplicitExtends(Box::new((f_loc(cx, loc), f_t(cx, t))))
+            }
+            ClassExtends::ClassExplicitExtendsApp(box (loc, t, targs)) => {
+                ClassExtends::ClassExplicitExtendsApp(Box::new((
+                    f_loc(cx, loc),
+                    f_t(cx, t),
+                    targs.iter().map(|t| f_t(cx, t)).collect(),
+                )))
             }
             ClassExtends::ClassImplicitExtends => ClassExtends::ClassImplicitExtends,
             ClassExtends::ObjectPrototypeExtendsNull => ClassExtends::ObjectPrototypeExtendsNull,
@@ -811,8 +828,8 @@ impl<Loc, T> ClassExtends<Loc, T> {
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ClassMixins<Loc, T> {
-    ClassMixin { loc: Loc, t: T },
-    ClassMixinApp { loc: Loc, t: T, targs: Vec<T> },
+    ClassMixin(Box<(Loc, T)>),
+    ClassMixinApp(Box<(Loc, T, Vec<T>)>),
 }
 
 impl<Loc, T> ClassMixins<Loc, T> {
@@ -823,11 +840,11 @@ impl<Loc, T> ClassMixins<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            ClassMixins::ClassMixin { loc, t } => {
+            ClassMixins::ClassMixin(box (loc, t)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
             }
-            ClassMixins::ClassMixinApp { loc, t, targs } => {
+            ClassMixins::ClassMixinApp(box (loc, t, targs)) => {
                 f_loc(cx, loc);
                 f_t(cx, t);
                 for t in targs {
@@ -844,15 +861,16 @@ impl<Loc, T> ClassMixins<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> ClassMixins<Loc2, T2> {
         match self {
-            ClassMixins::ClassMixin { loc, t } => ClassMixins::ClassMixin {
-                loc: f_loc(cx, loc),
-                t: f_t(cx, t),
-            },
-            ClassMixins::ClassMixinApp { loc, t, targs } => ClassMixins::ClassMixinApp {
-                loc: f_loc(cx, loc),
-                t: f_t(cx, t),
-                targs: targs.iter().map(|t| f_t(cx, t)).collect(),
-            },
+            ClassMixins::ClassMixin(box (loc, t)) => {
+                ClassMixins::ClassMixin(Box::new((f_loc(cx, loc), f_t(cx, t))))
+            }
+            ClassMixins::ClassMixinApp(box (loc, t, targs)) => {
+                ClassMixins::ClassMixinApp(Box::new((
+                    f_loc(cx, loc),
+                    f_t(cx, t),
+                    targs.iter().map(|t| f_t(cx, t)).collect(),
+                )))
+            }
         }
     }
 }
@@ -1662,19 +1680,19 @@ pub struct ValueObjSpreadLit<Loc, T> {
 pub enum Value<Loc, T> {
     ClassExpr(Box<(Loc, ClassSig<Loc, T>)>),
     FunExpr(Box<ValueFunExpr<Loc, T>>),
-    StringVal(Loc),
+    StringVal(Box<Loc>),
     StringLit(Box<(Loc, FlowSmolStr)>),
-    NumberVal(Loc),
+    NumberVal(Box<Loc>),
     NumberLit(Box<(Loc, f64, FlowSmolStr)>),
-    BigIntVal(Loc),
+    BigIntVal(Box<Loc>),
     BigIntLit(Box<(Loc, Option<i64>, FlowSmolStr)>),
-    BooleanVal(Loc),
-    BooleanLit(Loc, bool),
-    NullLit(Loc),
+    BooleanVal(Box<Loc>),
+    BooleanLit(Box<(Loc, bool)>),
+    NullLit(Box<Loc>),
     DeclareModuleImplicitlyExportedObject(Box<ValueDeclareModuleImplicitlyExportedObject<Loc, T>>),
     ObjLit(Box<ValueObjLit<Loc, T>>),
     ObjSpreadLit(Box<ValueObjSpreadLit<Loc, T>>),
-    EmptyConstArrayLit(Loc),
+    EmptyConstArrayLit(Box<Loc>),
     ArrayLit(Box<(Loc, T, Vec<T>)>),
     AsConst(Box<Value<Loc, T>>),
 }
@@ -1712,9 +1730,9 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T>
                 inner.2.hash(state);
             }
             Value::BooleanVal(loc) => loc.hash(state),
-            Value::BooleanLit(loc, b) => {
-                loc.hash(state);
-                b.hash(state);
+            Value::BooleanLit(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
             Value::NullLit(loc) => loc.hash(state),
             Value::DeclareModuleImplicitlyExportedObject(inner) => {
@@ -1772,7 +1790,7 @@ impl<Loc, T> Value<Loc, T> {
             Value::BigIntVal(loc) => f_loc(cx, loc),
             Value::BigIntLit(inner) => f_loc(cx, &inner.0),
             Value::BooleanVal(loc) => f_loc(cx, loc),
-            Value::BooleanLit(loc, _) => f_loc(cx, loc),
+            Value::BooleanLit(inner) => f_loc(cx, &inner.0),
             Value::NullLit(loc) => f_loc(cx, loc),
             Value::DeclareModuleImplicitlyExportedObject(inner) => {
                 f_loc(cx, &inner.loc);
@@ -1833,21 +1851,21 @@ impl<Loc, T> Value<Loc, T> {
                     .map(|(k, (loc, t))| (k.dupe(), (f_loc(cx, loc), f_t(cx, t))))
                     .collect(),
             })),
-            Value::StringVal(loc) => Value::StringVal(f_loc(cx, loc)),
+            Value::StringVal(loc) => Value::StringVal(Box::new(f_loc(cx, loc))),
             Value::StringLit(inner) => {
                 Value::StringLit(Box::new((f_loc(cx, &inner.0), inner.1.dupe())))
             }
-            Value::NumberVal(loc) => Value::NumberVal(f_loc(cx, loc)),
+            Value::NumberVal(loc) => Value::NumberVal(Box::new(f_loc(cx, loc))),
             Value::NumberLit(inner) => {
                 Value::NumberLit(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
             }
-            Value::BigIntVal(loc) => Value::BigIntVal(f_loc(cx, loc)),
+            Value::BigIntVal(loc) => Value::BigIntVal(Box::new(f_loc(cx, loc))),
             Value::BigIntLit(inner) => {
                 Value::BigIntLit(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
             }
-            Value::BooleanVal(loc) => Value::BooleanVal(f_loc(cx, loc)),
-            Value::BooleanLit(loc, b) => Value::BooleanLit(f_loc(cx, loc), *b),
-            Value::NullLit(loc) => Value::NullLit(f_loc(cx, loc)),
+            Value::BooleanVal(loc) => Value::BooleanVal(Box::new(f_loc(cx, loc))),
+            Value::BooleanLit(inner) => Value::BooleanLit(Box::new((f_loc(cx, &inner.0), inner.1))),
+            Value::NullLit(loc) => Value::NullLit(Box::new(f_loc(cx, loc))),
             Value::DeclareModuleImplicitlyExportedObject(inner) => {
                 Value::DeclareModuleImplicitlyExportedObject(Box::new(
                     ValueDeclareModuleImplicitlyExportedObject {
@@ -1883,7 +1901,7 @@ impl<Loc, T> Value<Loc, T> {
                     .map(|(loc, t)| (f_loc(cx, loc), f_t(cx, t))),
                 elems: inner.elems.mapped_ref(|elem| elem.map(cx, f_loc, f_t)),
             })),
-            Value::EmptyConstArrayLit(loc) => Value::EmptyConstArrayLit(f_loc(cx, loc)),
+            Value::EmptyConstArrayLit(loc) => Value::EmptyConstArrayLit(Box::new(f_loc(cx, loc))),
             Value::ArrayLit(inner) => Value::ArrayLit(Box::new((
                 f_loc(cx, &inner.0),
                 f_t(cx, &inner.1),
@@ -1898,7 +1916,7 @@ impl<Loc, T> Value<Loc, T> {
 pub enum ObjKind<T> {
     ExactObj,
     InexactObj,
-    IndexedObj(ObjAnnotDict<T>),
+    IndexedObj(Box<ObjAnnotDict<T>>),
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2034,19 +2052,19 @@ pub struct AnnotObjSpreadAnnot<Loc, T> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Annot<Loc, T> {
-    Any(Loc),
-    Mixed(Loc),
-    Empty(Loc),
-    Void(Loc),
-    Null(Loc),
-    Symbol(Loc),
-    UniqueSymbol(Loc),
-    Number(Loc),
-    BigInt(Loc),
-    String(Loc),
-    Boolean(Loc),
-    Exists(Loc),
-    Optional(T),
+    Any(Box<Loc>),
+    Mixed(Box<Loc>),
+    Empty(Box<Loc>),
+    Void(Box<Loc>),
+    Null(Box<Loc>),
+    Symbol(Box<Loc>),
+    UniqueSymbol(Box<Loc>),
+    Number(Box<Loc>),
+    BigInt(Box<Loc>),
+    String(Box<Loc>),
+    Boolean(Box<Loc>),
+    Exists(Box<Loc>),
+    Optional(Box<T>),
     Maybe(Box<(Loc, T)>),
     Union(Box<AnnotUnion<Loc, T>>),
     Intersection(Box<AnnotIntersection<Loc, T>>),
@@ -2056,12 +2074,12 @@ pub enum Annot<Loc, T> {
     SingletonString(Box<(Loc, FlowSmolStr)>),
     SingletonNumber(Box<(Loc, f64, FlowSmolStr)>),
     SingletonBigInt(Box<(Loc, Option<i64>, FlowSmolStr)>),
-    SingletonBoolean(Loc, bool),
+    SingletonBoolean(Box<(Loc, bool)>),
     StringPrefix(Box<AnnotStringPrefix<Loc, T>>),
     StringSuffix(Box<AnnotStringSuffix<Loc, T>>),
     Typeof(Box<AnnotTypeof<Loc, T>>),
     Bound(Box<AnnotBound<Loc>>),
-    NoInfer(T),
+    NoInfer(Box<T>),
     PropertyType(Box<AnnotPropertyType<Loc, T>>),
     ElementType(Box<AnnotElementType<Loc, T>>),
     EnumValue(Box<(Loc, T)>),
@@ -2075,14 +2093,14 @@ pub enum Annot<Loc, T> {
     Required(Box<(Loc, T)>),
     Keys(Box<(Loc, T)>),
     Renders(Box<AnnotRenders<Loc, T>>),
-    ComponentMissingRenders(Loc),
+    ComponentMissingRenders(Box<Loc>),
     Values(Box<(Loc, T)>),
     Exact(Box<(Loc, T)>),
     ExportsT(Box<(Loc, flow_import_specifier::Userland)>),
     Conditional(Box<AnnotConditional<Loc, T>>),
     ObjKeyMirror(Box<AnnotObjKeyMirror<Loc, T>>),
     ClassT(Box<(Loc, T)>),
-    FunctionBind(Loc),
+    FunctionBind(Box<Loc>),
     ReactElementConfig(Box<(Loc, T)>),
     FunAnnot(Box<(Loc, FunSig<Loc, T>)>),
     ComponentAnnot(Box<(Loc, ComponentSig<Loc, T>)>),
@@ -2148,9 +2166,9 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
                 inner.1.hash(state);
                 inner.2.hash(state);
             }
-            Annot::SingletonBoolean(l, b) => {
-                l.hash(state);
-                b.hash(state);
+            Annot::SingletonBoolean(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
             }
             Annot::StringPrefix(inner) => {
                 inner.loc.hash(state);
@@ -2286,19 +2304,19 @@ impl<Loc, T> Annot<Loc, T> {
         f_t: &impl Fn(&mut CX, &T),
     ) {
         match self {
-            Annot::Any(loc)
-            | Annot::Mixed(loc)
-            | Annot::Empty(loc)
-            | Annot::Void(loc)
-            | Annot::Null(loc)
-            | Annot::Symbol(loc)
-            | Annot::UniqueSymbol(loc)
-            | Annot::Number(loc)
-            | Annot::BigInt(loc)
-            | Annot::String(loc)
-            | Annot::Boolean(loc)
-            | Annot::Exists(loc) => f_loc(cx, loc),
-            Annot::Optional(t) => f_t(cx, t),
+            Annot::Any(box loc)
+            | Annot::Mixed(box loc)
+            | Annot::Empty(box loc)
+            | Annot::Void(box loc)
+            | Annot::Null(box loc)
+            | Annot::Symbol(box loc)
+            | Annot::UniqueSymbol(box loc)
+            | Annot::Number(box loc)
+            | Annot::BigInt(box loc)
+            | Annot::String(box loc)
+            | Annot::Boolean(box loc)
+            | Annot::Exists(box loc) => f_loc(cx, loc),
+            Annot::Optional(box t) => f_t(cx, t),
             Annot::Maybe(inner) => {
                 f_loc(cx, &inner.0);
                 f_t(cx, &inner.1);
@@ -2323,17 +2341,17 @@ impl<Loc, T> Annot<Loc, T> {
                 f_loc(cx, &inner.loc);
                 for elem in &inner.elems {
                     match elem {
-                        TupleElement::TupleElement {
+                        TupleElement::TupleElement(box TupleElementData {
                             loc,
                             name: _,
                             t,
                             polarity: _,
                             optional: _,
-                        } => {
+                        }) => {
                             f_loc(cx, loc);
                             f_t(cx, t);
                         }
-                        TupleElement::TupleSpread { loc, name: _, t } => {
+                        TupleElement::TupleSpread(box TupleSpreadData { loc, name: _, t }) => {
                             f_loc(cx, loc);
                             f_t(cx, t);
                         }
@@ -2351,7 +2369,7 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::SingletonString(inner) => f_loc(cx, &inner.0),
             Annot::SingletonNumber(inner) => f_loc(cx, &inner.0),
             Annot::SingletonBigInt(inner) => f_loc(cx, &inner.0),
-            Annot::SingletonBoolean(loc, _) => f_loc(cx, loc),
+            Annot::SingletonBoolean(inner) => f_loc(cx, &inner.0),
             Annot::StringPrefix(inner) => {
                 f_loc(cx, &inner.loc);
                 if let Some(t) = &inner.remainder {
@@ -2374,7 +2392,7 @@ impl<Loc, T> Annot<Loc, T> {
                 }
             }
             Annot::Bound(inner) => f_loc(cx, &inner.ref_loc),
-            Annot::NoInfer(t) => f_t(cx, t),
+            Annot::NoInfer(box t) => f_t(cx, t),
             Annot::PropertyType(inner) => {
                 f_loc(cx, &inner.loc);
                 f_t(cx, &inner.obj);
@@ -2419,7 +2437,9 @@ impl<Loc, T> Annot<Loc, T> {
                 f_loc(cx, &inner.loc);
                 f_t(cx, &inner.arg);
             }
-            Annot::ComponentMissingRenders(loc) | Annot::FunctionBind(loc) => f_loc(cx, loc),
+            Annot::ComponentMissingRenders(box loc) | Annot::FunctionBind(box loc) => {
+                f_loc(cx, loc)
+            }
             Annot::ExportsT(inner) => f_loc(cx, &inner.0),
             Annot::Conditional(inner) => {
                 f_loc(cx, &inner.loc);
@@ -2466,23 +2486,23 @@ impl<Loc, T> Annot<Loc, T> {
                 f_loc(cx, &inner.loc);
                 match &inner.obj_kind {
                     ObjKind::ExactObj | ObjKind::InexactObj => {}
-                    ObjKind::IndexedObj(dict) => {
+                    ObjKind::IndexedObj(box dict) => {
                         f_t(cx, &dict.key);
                         f_t(cx, &dict.value);
                     }
                 }
                 for v in inner.props.values() {
                     match v {
-                        ObjAnnotProp::ObjAnnotField(loc, t, _) => {
+                        ObjAnnotProp::ObjAnnotField(box (loc, t, _)) => {
                             f_loc(cx, loc);
                             f_t(cx, t);
                         }
-                        ObjAnnotProp::ObjAnnotAccess(accessor) => accessor.iter(cx, f_loc, f_t),
-                        ObjAnnotProp::ObjAnnotMethod {
+                        ObjAnnotProp::ObjAnnotAccess(box accessor) => accessor.iter(cx, f_loc, f_t),
+                        ObjAnnotProp::ObjAnnotMethod(box ObjAnnotMethodData {
                             id_loc,
                             fn_loc,
                             def,
-                        } => {
+                        }) => {
                             f_loc(cx, id_loc);
                             f_loc(cx, fn_loc);
                             def.iter(cx, f_loc, f_t);
@@ -2492,16 +2512,16 @@ impl<Loc, T> Annot<Loc, T> {
                 for (t, prop) in &inner.computed_props {
                     f_t(cx, t);
                     match prop {
-                        ObjAnnotProp::ObjAnnotField(loc, t, _) => {
+                        ObjAnnotProp::ObjAnnotField(box (loc, t, _)) => {
                             f_loc(cx, loc);
                             f_t(cx, t);
                         }
-                        ObjAnnotProp::ObjAnnotAccess(accessor) => accessor.iter(cx, f_loc, f_t),
-                        ObjAnnotProp::ObjAnnotMethod {
+                        ObjAnnotProp::ObjAnnotAccess(box accessor) => accessor.iter(cx, f_loc, f_t),
+                        ObjAnnotProp::ObjAnnotMethod(box ObjAnnotMethodData {
                             id_loc,
                             fn_loc,
                             def,
-                        } => {
+                        }) => {
                             f_loc(cx, id_loc);
                             f_loc(cx, fn_loc);
                             def.iter(cx, f_loc, f_t);
@@ -2510,11 +2530,11 @@ impl<Loc, T> Annot<Loc, T> {
                 }
                 match &inner.proto {
                     ObjAnnotProto::ObjAnnotImplicitProto => {}
-                    ObjAnnotProto::ObjAnnotExplicitProto(loc, t) => {
+                    ObjAnnotProto::ObjAnnotExplicitProto(box (loc, t)) => {
                         f_loc(cx, loc);
                         f_t(cx, t);
                     }
-                    ObjAnnotProto::ObjAnnotCallable { ts } => {
+                    ObjAnnotProto::ObjAnnotCallable(box ts) => {
                         for t in ts.iter() {
                             f_t(cx, t);
                         }
@@ -2525,30 +2545,30 @@ impl<Loc, T> Annot<Loc, T> {
                 f_loc(cx, &inner.loc);
                 for elem in inner.elems.iter() {
                     match elem {
-                        ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => f_t(cx, t),
-                        ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                        ObjSpreadAnnotElem::ObjSpreadAnnotElem(box t) => f_t(cx, t),
+                        ObjSpreadAnnotElem::ObjSpreadAnnotSlice(box ObjSpreadAnnotSliceData {
                             dict,
                             props,
                             computed_props,
-                        } => {
+                        }) => {
                             if let Some(d) = dict {
                                 f_t(cx, &d.key);
                                 f_t(cx, &d.value);
                             }
                             for v in props.values() {
                                 match v {
-                                    ObjAnnotProp::ObjAnnotField(loc, t, _) => {
+                                    ObjAnnotProp::ObjAnnotField(box (loc, t, _)) => {
                                         f_loc(cx, loc);
                                         f_t(cx, t);
                                     }
-                                    ObjAnnotProp::ObjAnnotAccess(accessor) => {
+                                    ObjAnnotProp::ObjAnnotAccess(box accessor) => {
                                         accessor.iter(cx, f_loc, f_t)
                                     }
-                                    ObjAnnotProp::ObjAnnotMethod {
+                                    ObjAnnotProp::ObjAnnotMethod(box ObjAnnotMethodData {
                                         id_loc,
                                         fn_loc,
                                         def,
-                                    } => {
+                                    }) => {
                                         f_loc(cx, id_loc);
                                         f_loc(cx, fn_loc);
                                         def.iter(cx, f_loc, f_t);
@@ -2558,18 +2578,18 @@ impl<Loc, T> Annot<Loc, T> {
                             for (t, prop) in computed_props {
                                 f_t(cx, t);
                                 match prop {
-                                    ObjAnnotProp::ObjAnnotField(loc, t, _) => {
+                                    ObjAnnotProp::ObjAnnotField(box (loc, t, _)) => {
                                         f_loc(cx, loc);
                                         f_t(cx, t);
                                     }
-                                    ObjAnnotProp::ObjAnnotAccess(accessor) => {
+                                    ObjAnnotProp::ObjAnnotAccess(box accessor) => {
                                         accessor.iter(cx, f_loc, f_t)
                                     }
-                                    ObjAnnotProp::ObjAnnotMethod {
+                                    ObjAnnotProp::ObjAnnotMethod(box ObjAnnotMethodData {
                                         id_loc,
                                         fn_loc,
                                         def,
-                                    } => {
+                                    }) => {
                                         f_loc(cx, id_loc);
                                         f_loc(cx, fn_loc);
                                         def.iter(cx, f_loc, f_t);
@@ -2594,19 +2614,19 @@ impl<Loc, T> Annot<Loc, T> {
         f_t: impl Fn(&mut CX, &T) -> T2,
     ) -> Annot<Loc2, T2> {
         match self {
-            Annot::Any(loc) => Annot::Any(f_loc(cx, loc)),
-            Annot::Mixed(loc) => Annot::Mixed(f_loc(cx, loc)),
-            Annot::Empty(loc) => Annot::Empty(f_loc(cx, loc)),
-            Annot::Void(loc) => Annot::Void(f_loc(cx, loc)),
-            Annot::Null(loc) => Annot::Null(f_loc(cx, loc)),
-            Annot::Symbol(loc) => Annot::Symbol(f_loc(cx, loc)),
-            Annot::UniqueSymbol(loc) => Annot::UniqueSymbol(f_loc(cx, loc)),
-            Annot::Number(loc) => Annot::Number(f_loc(cx, loc)),
-            Annot::BigInt(loc) => Annot::BigInt(f_loc(cx, loc)),
-            Annot::String(loc) => Annot::String(f_loc(cx, loc)),
-            Annot::Boolean(loc) => Annot::Boolean(f_loc(cx, loc)),
-            Annot::Exists(loc) => Annot::Exists(f_loc(cx, loc)),
-            Annot::Optional(t) => Annot::Optional(f_t(cx, t)),
+            Annot::Any(loc) => Annot::Any(Box::new(f_loc(cx, loc))),
+            Annot::Mixed(loc) => Annot::Mixed(Box::new(f_loc(cx, loc))),
+            Annot::Empty(loc) => Annot::Empty(Box::new(f_loc(cx, loc))),
+            Annot::Void(loc) => Annot::Void(Box::new(f_loc(cx, loc))),
+            Annot::Null(loc) => Annot::Null(Box::new(f_loc(cx, loc))),
+            Annot::Symbol(loc) => Annot::Symbol(Box::new(f_loc(cx, loc))),
+            Annot::UniqueSymbol(loc) => Annot::UniqueSymbol(Box::new(f_loc(cx, loc))),
+            Annot::Number(loc) => Annot::Number(Box::new(f_loc(cx, loc))),
+            Annot::BigInt(loc) => Annot::BigInt(Box::new(f_loc(cx, loc))),
+            Annot::String(loc) => Annot::String(Box::new(f_loc(cx, loc))),
+            Annot::Boolean(loc) => Annot::Boolean(Box::new(f_loc(cx, loc))),
+            Annot::Exists(loc) => Annot::Exists(Box::new(f_loc(cx, loc))),
+            Annot::Optional(t) => Annot::Optional(Box::new(f_t(cx, t))),
             Annot::Maybe(inner) => Annot::Maybe(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
             Annot::Union(inner) => Annot::Union(Box::new(AnnotUnion {
                 loc: f_loc(cx, &inner.loc),
@@ -2642,7 +2662,9 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::SingletonBigInt(inner) => {
                 Annot::SingletonBigInt(Box::new((f_loc(cx, &inner.0), inner.1, inner.2.dupe())))
             }
-            Annot::SingletonBoolean(loc, b) => Annot::SingletonBoolean(f_loc(cx, loc), *b),
+            Annot::SingletonBoolean(inner) => {
+                Annot::SingletonBoolean(Box::new((f_loc(cx, &inner.0), inner.1)))
+            }
             Annot::StringPrefix(inner) => Annot::StringPrefix(Box::new(AnnotStringPrefix {
                 loc: f_loc(cx, &inner.loc),
                 prefix: inner.prefix.dupe(),
@@ -2666,7 +2688,7 @@ impl<Loc, T> Annot<Loc, T> {
                 ref_loc: f_loc(cx, &inner.ref_loc),
                 name: inner.name.dupe(),
             })),
-            Annot::NoInfer(t) => Annot::NoInfer(f_t(cx, t)),
+            Annot::NoInfer(t) => Annot::NoInfer(Box::new(f_t(cx, t))),
             Annot::PropertyType(inner) => Annot::PropertyType(Box::new(AnnotPropertyType {
                 loc: f_loc(cx, &inner.loc),
                 obj: f_t(cx, &inner.obj),
@@ -2722,7 +2744,9 @@ impl<Loc, T> Annot<Loc, T> {
                 arg: f_t(cx, &inner.arg),
                 variant: inner.variant,
             })),
-            Annot::ComponentMissingRenders(loc) => Annot::ComponentMissingRenders(f_loc(cx, loc)),
+            Annot::ComponentMissingRenders(box loc) => {
+                Annot::ComponentMissingRenders(Box::new(f_loc(cx, loc)))
+            }
             Annot::Values(inner) => {
                 Annot::Values(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
@@ -2749,7 +2773,7 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::ClassT(inner) => {
                 Annot::ClassT(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
-            Annot::FunctionBind(loc) => Annot::FunctionBind(f_loc(cx, loc)),
+            Annot::FunctionBind(box loc) => Annot::FunctionBind(Box::new(f_loc(cx, loc))),
             Annot::ReactElementConfig(inner) => {
                 Annot::ReactElementConfig(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
@@ -2778,7 +2802,9 @@ impl<Loc, T> Annot<Loc, T> {
                 obj_kind: match &inner.obj_kind {
                     ObjKind::ExactObj => ObjKind::ExactObj,
                     ObjKind::InexactObj => ObjKind::InexactObj,
-                    ObjKind::IndexedObj(dict) => ObjKind::IndexedObj(dict.map(cx, &f_t)),
+                    ObjKind::IndexedObj(box dict) => {
+                        ObjKind::IndexedObj(Box::new(dict.map(cx, &f_t)))
+                    }
                 },
                 props: inner
                     .props
@@ -2810,9 +2836,9 @@ impl<Loc, T> Annot<Loc, T> {
 // destructuring.
 #[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Op<T> {
-    Arith(ast::expression::BinaryOperator, T),
-    GetProp(FlowSmolStr),
-    GetElem(T),
+    Arith(Box<(ast::expression::BinaryOperator, T)>),
+    GetProp(Box<FlowSmolStr>),
+    GetElem(Box<T>),
     Unary(ast::expression::UnaryOperator),
     Update,
 }
@@ -2820,9 +2846,9 @@ pub enum Op<T> {
 impl<T> Op<T> {
     pub fn iter(&self, mut f_t: impl FnMut(&T)) {
         match self {
-            Op::Arith(_, t) => f_t(t),
+            Op::Arith(box (_, t)) => f_t(t),
             Op::GetProp(_) => {}
-            Op::GetElem(t) => f_t(t),
+            Op::GetElem(box t) => f_t(t),
             Op::Unary(_) => {}
             Op::Update => {}
         }
@@ -2830,9 +2856,9 @@ impl<T> Op<T> {
 
     pub fn map<CX, T2>(&self, cx: &mut CX, f_t: impl Fn(&mut CX, &T) -> T2) -> Op<T2> {
         match self {
-            Op::Arith(op, t) => Op::Arith(*op, f_t(cx, t)),
-            Op::GetProp(s) => Op::GetProp(s.dupe()),
-            Op::GetElem(t) => Op::GetElem(f_t(cx, t)),
+            Op::Arith(box (op, t)) => Op::Arith(Box::new((*op, f_t(cx, t)))),
+            Op::GetProp(s) => Op::GetProp(s.clone()),
+            Op::GetElem(box t) => Op::GetElem(Box::new(f_t(cx, t))),
             Op::Unary(op) => Op::Unary(*op),
             Op::Update => Op::Update,
         }
@@ -2854,8 +2880,8 @@ impl<T> Op<T> {
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Errno<Loc> {
     CheckError,
-    BindingValidationError(signature_error::BindingValidation<Loc>),
-    SigError(signature_error::SignatureError<Loc>),
+    BindingValidationError(Box<signature_error::BindingValidation<Loc>>),
+    SigError(Box<signature_error::SignatureError<Loc>>),
 }
 
 impl<Loc> Errno<Loc> {
@@ -2874,8 +2900,10 @@ impl<Loc> Errno<Loc> {
     pub fn map<CX, Loc2>(&self, cx: &mut CX, f: impl Fn(&mut CX, &Loc) -> Loc2) -> Errno<Loc2> {
         match self {
             Errno::CheckError => Errno::CheckError,
-            Errno::BindingValidationError(err) => Errno::BindingValidationError(err.map(cx, f)),
-            Errno::SigError(err) => Errno::SigError(err.map(cx, f)),
+            Errno::BindingValidationError(err) => {
+                Errno::BindingValidationError(Box::new(err.map(cx, f)))
+            }
+            Errno::SigError(err) => Errno::SigError(Box::new(err.map(cx, f))),
         }
     }
 }
