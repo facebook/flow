@@ -191,6 +191,7 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_direct_serialization: bool;
+  opt_saved_state_parallel_decompress: bool;
   opt_saved_state_persist_export_index: bool;
   opt_saved_state_no_fallback: bool;
   opt_saved_state_reinit_on_lib_change: bool;
@@ -413,6 +414,8 @@ let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
 
 let saved_state_direct_serialization opts = opts.opt_saved_state_direct_serialization
+
+let saved_state_parallel_decompress opts = opts.opt_saved_state_parallel_decompress
 
 let saved_state_persist_export_index opts = opts.opt_saved_state_persist_export_index
 

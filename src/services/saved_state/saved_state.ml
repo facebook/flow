@@ -560,13 +560,21 @@ end = struct
 
     let save ~saved_state_filename ~genv ~env ~profiling =
       Hh_logger.info "Collecting env data for saved state";
+      let options = genv.ServerEnv.options in
       let env_data = collect_env_data ~genv ~env ~profiling in
       let filename = File_path.to_string saved_state_filename in
       Files.mkdirp (Filename.dirname filename) 0o777;
       let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
       let%lwt _header_bytes_written = write_version fd in
-      let%lwt () = write_heap ~profiling fd in
-      let%lwt () = write_env ~profiling ~filename fd env_data in
+      if Options.saved_state_parallel_decompress options then begin
+        (* Write env metadata FIRST (before heap), so on load we can read it
+         * and decompress in parallel with loading the heap dump. *)
+        let%lwt () = write_env ~profiling ~filename fd env_data in
+        write_heap ~profiling fd
+      end else begin
+        let%lwt () = write_heap ~profiling fd in
+        write_env ~profiling ~filename fd env_data
+      end;%lwt
       let%lwt () = Lwt_unix.close fd in
       Hh_logger.info "Finished writing saved-state file at %S" filename;
       Lwt.return_unit
@@ -850,9 +858,15 @@ end = struct
         Hh_logger.error ~exn "Failed to parse saved state env data";
         raise (Invalid_saved_state (Failed_to_marshal exn))
 
-    let decompress_env ~options compressed_data =
+    let decompress_env ~options ~release_lock compressed_data =
+      let decompress =
+        if release_lock then
+          Saved_state_compression.decompress_and_unmarshal_releasing_lock
+        else
+          Saved_state_compression.decompress_and_unmarshal
+      in
       let data =
-        try Saved_state_compression.decompress_and_unmarshal compressed_data with
+        try decompress compressed_data with
         | exn ->
           let exn = Exception.wrap exn in
           Hh_logger.error ~exn "Failed to decompress saved state env data";
@@ -860,7 +874,9 @@ end = struct
       in
       denormalize_env_data ~options ~data
 
-    let load ~options ~profiling fd =
+    (* Sequential load: file format is [version][heap][env].
+     * Load heap first, then read and decompress env. *)
+    let load_sequential ~options ~profiling fd =
       Hh_logger.info "Loading heap from saved-state file";
       let%lwt () = load_heap ~profiling fd in
       Hh_logger.info "Reading env metadata from saved-state file";
@@ -871,11 +887,67 @@ end = struct
       Hh_logger.info "Decompressing env metadata";
       let%lwt data =
         Profiling_js.with_timer_lwt profiling ~timer:"Decompress" ~f:(fun () ->
-            Lwt.return (decompress_env ~options compressed_data)
+            Lwt.return (decompress_env ~options ~release_lock:false compressed_data)
         )
       in
       Hh_logger.info "Finished loading saved-state";
       Lwt.return (Direct_saved_state data)
+
+    (* Parallel load: file format is [version][env][heap].
+     * Read env first, decompress in background thread while loading heap
+     * on the main thread. Both C stubs release the OCaml runtime lock,
+     * enabling true parallel execution on separate OS threads. *)
+    let load_parallel ~options ~profiling fd =
+      Hh_logger.info "Reading env metadata from saved-state file";
+      let%lwt (compressed_data : Saved_state_compression.compressed) =
+        Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () -> read_env fd)
+      in
+      Hh_logger.info "Decompressing env metadata + loading heap in parallel";
+      let decompress_result = ref None in
+      let decompress_exn = ref None in
+      let decompress_done = Mutex.create () in
+      let decompress_cond = Condition.create () in
+      let _decompress_thread =
+        Thread.create
+          (fun () ->
+            (try
+               decompress_result := Some (decompress_env ~options ~release_lock:true compressed_data)
+             with
+            | exn -> decompress_exn := Some (Exception.wrap exn));
+            Mutex.lock decompress_done;
+            Condition.signal decompress_cond;
+            Mutex.unlock decompress_done)
+          ()
+      in
+      let%lwt () =
+        Profiling_js.with_timer_lwt profiling ~timer:"LoadHeapAndDecompress" ~f:(fun () ->
+            (try SharedMem.load_heap (Lwt_unix.unix_file_descr fd) with
+            | Failure msg ->
+              Hh_logger.error "Failed to load heap: %s" msg;
+              raise (Invalid_saved_state (Failed_to_load_heap msg)));
+            Mutex.lock decompress_done;
+            while !decompress_result = None && !decompress_exn = None do
+              Condition.wait decompress_cond decompress_done
+            done;
+            Mutex.unlock decompress_done;
+            Lwt.return_unit
+        )
+      in
+      let%lwt () = Lwt_unix.close fd in
+      let data =
+        match (!decompress_result, !decompress_exn) with
+        | (Some data, _) -> data
+        | (_, Some exn) -> Exception.reraise exn
+        | (None, None) -> failwith "decompress thread finished without result"
+      in
+      Hh_logger.info "Finished loading saved-state";
+      Lwt.return (Direct_saved_state data)
+
+    let load ~options ~profiling fd =
+      if Options.saved_state_parallel_decompress options then
+        load_parallel ~options ~profiling fd
+      else
+        load_sequential ~options ~profiling fd
   end
 
   let load ~workers ~saved_state_filename ~options ~profiling =

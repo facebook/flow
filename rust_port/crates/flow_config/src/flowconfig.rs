@@ -176,6 +176,7 @@ pub mod opts {
         pub relay_integration_module_prefix_includes: Vec<String>,
         pub root_name: Option<String>,
         pub saved_state_direct_serialization: bool,
+        pub saved_state_parallel_decompress: bool,
         pub saved_state_fetcher: SavedStateFetcher,
         pub saved_state_persist_export_index: bool,
         pub saved_state_reinit_on_lib_change: bool,
@@ -334,6 +335,7 @@ pub mod opts {
             )],
             root_name: None,
             saved_state_direct_serialization: false,
+            saved_state_parallel_decompress: false,
             saved_state_fetcher: SavedStateFetcher::DummyFetcher,
             saved_state_persist_export_index: false,
             saved_state_reinit_on_lib_change: false,
@@ -1908,6 +1910,20 @@ pub mod opts {
         )
     }
 
+    fn saved_state_parallel_decompress_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_boolean(
+            |opts, v| {
+                opts.saved_state_parallel_decompress = v;
+                Ok(())
+            },
+            values,
+            config,
+        )
+    }
+
     fn saved_state_persist_export_index_parser(
         values: RawValues,
         config: &mut Opts,
@@ -2681,6 +2697,9 @@ pub mod opts {
                 "saved_state.allow_reinit" => Some(saved_state_allow_reinit_parser(values, config)),
                 "saved_state.direct_serialization" => {
                     Some(saved_state_direct_serialization_parser(values, config))
+                }
+                "saved_state.parallel_decompress" => {
+                    Some(saved_state_parallel_decompress_parser(values, config))
                 }
                 "saved_state.fetcher" => Some(saved_state_fetcher_parser(values, config)),
                 "saved_state.persist_export_index" => {
