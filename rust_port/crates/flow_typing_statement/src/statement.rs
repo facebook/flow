@@ -8393,9 +8393,7 @@ pub fn optional_chain<'a>(
                 }
                 let mut n = value;
                 while n > 0.0 {
-                    if flow_utils_concurrency::worker_cancel::should_cancel() {
-                        break;
-                    }
+                    flow_utils_concurrency::worker_cancel::check_should_cancel();
                     std::thread::sleep(std::time::Duration::from_secs_f64(n.min(1.0)));
                     n -= 1.0;
                 }
@@ -11214,6 +11212,20 @@ fn assign_member<'a>(
                 }
                 _ => prop_t.dupe(),
             };
+            let member_t = match (_object.deref(), name.as_str()) {
+                (
+                    expression::ExpressionInner::Identifier {
+                        loc: _,
+                        inner: id_inner,
+                    },
+                    "exports",
+                ) if id_inner.name.as_str() == "module"
+                    && !type_env::local_scope_entry_exists(cx, id_inner.loc.0.dupe()) =>
+                {
+                    t.dupe()
+                }
+                _ => prop_t.dupe(),
+            };
             let property = expression::member::Property::PropertyIdentifier(ast::Identifier::new(
                 ast::IdentifierInner {
                     loc: (prop_loc.dupe(), lhs_t.dupe()),
@@ -11229,7 +11241,7 @@ fn assign_member<'a>(
                         property,
                         comments: comments.clone(),
                     },
-                    prop_t,
+                    member_t,
                 ),
             )
         }

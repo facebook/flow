@@ -1210,7 +1210,7 @@ pub mod graphql {
                     if matches!(
                         &generic.id,
                         types::generic::Identifier::Unqualified(ident)
-                        if ident.name.as_str() == "$ReadOnlyArray"
+                        if matches!(ident.name.as_str(), "$ReadOnlyArray" | "ReadonlyArray")
                     ) && matches!(
                         &generic.targs,
                         Some(targs) if targs.arguments.len() == 1
@@ -1225,7 +1225,7 @@ pub mod graphql {
                 if matches!(
                     &generic.id,
                     types::generic::Identifier::Unqualified(ident)
-                    if ident.name.as_str() == "$ReadOnlyArray"
+                    if matches!(ident.name.as_str(), "$ReadOnlyArray" | "ReadonlyArray")
                 ) && matches!(
                     &generic.targs,
                     Some(targs) if targs.arguments.len() == 1
@@ -1369,7 +1369,6 @@ pub mod graphql {
                 .map(|item| get_imported_ident(cx, loc_of_aloc, item))
                 .collect();
         let tgt_loc = loc_of_aloc(&tgt_aloc);
-        // r
         visit_program(&defs, &tgt_loc, &graphql_ast)
     }
 }
@@ -1408,7 +1407,6 @@ pub struct TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
     pub generalize_react_mixed_element: bool,
     // ~add_warning
     pub add_warning: &'a dyn Fn(Loc, warning::Kind),
-    super_: StylizeTyMapper,
     sanitized_any: ALocTy,
 }
 
@@ -1445,8 +1443,57 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
             generalize_maybe,
             generalize_react_mixed_element,
             add_warning,
-            super_: StylizeTyMapper::new(),
             sanitized_any,
+        }
+    }
+
+    fn super_on_t(&mut self, env: &Loc, t: ALocTy) -> ALocTy {
+        match t.as_ref() {
+            ty::Ty::Generic(box (symbol, kind, args_opt))
+                if !symbol.sym_anonymous
+                    && matches!(
+                        &symbol.sym_provenance,
+                        flow_common_ty::ty_symbol::Provenance::Library(ri)
+                        if ri.imported_as.is_none()
+                    )
+                    && is_react_loc(&symbol.sym_def_loc) =>
+            {
+                let name_str = symbol.sym_name.as_str();
+                let is_react_name = matches!(
+                    name_str,
+                    "ChildrenArray"
+                        | "ComponentType"
+                        | "Context"
+                        | "MixedElement"
+                        | "ElementConfig"
+                        | "ElementProps"
+                        | "ElementRef"
+                        | "ElementType"
+                        | "Key"
+                        | "Node"
+                        | "Portal"
+                        | "RefObject"
+                        | "RefSetter"
+                        | "PropsOf"
+                        | "PropOf"
+                        | "RefOf"
+                );
+                if is_react_name {
+                    let args_opt = args_opt.as_ref().map(|args| {
+                        let mapped: Arc<[ALocTy]> =
+                            args.iter().map(|arg| self.on_t(env, arg.dupe())).collect();
+                        mapped
+                    });
+                    let new_symbol = Symbol {
+                        sym_name: flow_common::reason::Name::new(format!("React.{name_str}")),
+                        ..symbol.clone()
+                    };
+                    Arc::new(ty::Ty::Generic(Box::new((new_symbol, *kind, args_opt))))
+                } else {
+                    <Self as flow_common_ty::ty::TyEndoTy<ALoc, Loc>>::default_on_t(self, env, t)
+                }
+            }
+            _ => <Self as flow_common_ty::ty::TyEndoTy<ALoc, Loc>>::default_on_t(self, env, t),
         }
     }
 
@@ -1488,7 +1535,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 let mut all = vec![ty1, ty2];
                 all.extend(tys.iter().duped());
                 let u = ty::mk_union(from_bounds, all).unwrap_or_else(ty::explicit_any);
-                flow_common_ty::ty::TyEndoTy::on_t(&mut self.super_, env, u)
+                self.super_on_t(env, u)
             }
             1 => self.on_t(env, ts.into_iter().next().unwrap()),
             _ => {
@@ -1766,19 +1813,20 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 let remote_file = aloc.source().unwrap();
                 if remote_file.as_str().ends_with("graphql.js") {
                     //         ~get_ast_from_shared_mem file_sig typed_ast aloc with
-                    match graphql::extract_graphql_fragment(
+                    let result = graphql::extract_graphql_fragment(
                         self.cx,
                         self.loc_of_aloc,
                         self.get_ast_from_shared_mem,
                         self.file_sig,
                         self.typed_ast,
                         aloc.dupe(),
-                    ) {
+                    );
+                    match result {
                         Some(t) => t,
-                        None => flow_common_ty::ty::TyEndoTy::on_t(&mut self.super_, env, t),
+                        None => self.super_on_t(env, t),
                     }
                 } else {
-                    flow_common_ty::ty::TyEndoTy::on_t(&mut self.super_, env, t)
+                    self.super_on_t(env, t)
                 }
             }
             ty::Ty::Any(_) => self.sanitized_any.dupe(),
@@ -1788,10 +1836,23 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                     ty::Ty::Union(from_bounds, ty1, ty2, tys) => {
                         self.on_union(env, *from_bounds, ty1.dupe(), ty2.dupe(), tys)
                     }
-                    _ => flow_common_ty::ty::TyEndoTy::on_t(&mut self.super_, env, t),
+                    _ => self.super_on_t(env, t),
                 }
             }
         }
+    }
+}
+
+impl<'a, 'cx> flow_common_ty::ty_ancestors::TyEndoBase<Loc, ALoc>
+    for TypeNormalizationHardcodedFixesMapper<'a, 'cx>
+{
+}
+
+impl<'a, 'cx> flow_common_ty::ty::TyEndoTy<ALoc, Loc>
+    for TypeNormalizationHardcodedFixesMapper<'a, 'cx>
+{
+    fn on_t(&mut self, env: &Loc, t: ALocTy) -> ALocTy {
+        TypeNormalizationHardcodedFixesMapper::on_t(self, env, t)
     }
 }
 
@@ -1877,7 +1938,7 @@ pub mod make_hardcoded_fixes {
         } else {
             t_prime
         };
-        let t_double_prime = if t == t_prime {
+        let t_double_prime = if std::sync::Arc::ptr_eq(&t, &t_prime) {
             t
         } else {
             flow_common_ty::ty_utils::simplify_type(false, None, t_prime)

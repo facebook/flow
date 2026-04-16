@@ -7205,7 +7205,7 @@ fn function_params_inner(
 }
 
 #[allow(dead_code)]
-pub(crate) fn function_params_and_return(
+pub fn function_params_and_return(
     opts: &Opts,
     func: &ast::function::Function<Loc, Loc>,
 ) -> LayoutNode {
@@ -7226,7 +7226,7 @@ pub(crate) fn function_params_and_return(
     )
 }
 
-pub(crate) fn class_method(opts: &Opts, method: &ast::class::Method<Loc, Loc>) -> LayoutNode {
+pub fn class_method(opts: &Opts, method: &ast::class::Method<Loc, Loc>) -> LayoutNode {
     let func = &method.value.1;
     let func_loc = &method.value.0;
     // methods don't use id; see `key`

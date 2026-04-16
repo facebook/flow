@@ -5,12 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::io::Read;
+use std::collections::BTreeSet;
+use std::io::Write;
+use std::path::PathBuf;
 
-use crate::command_connect;
-use crate::command_connect::ServerRequest;
-use crate::command_connect::ServerResponse;
+use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
+use flow_common_errors::error_utils::PrintableError;
+use flow_parser::loc::Loc;
+use flow_server_env::server_prot;
+use flow_server_utils::file_input::FileInput;
+
 use crate::command_spec;
+use crate::command_spec::arg_spec;
 use crate::command_utils;
 
 //***********************************************************************
@@ -18,151 +24,185 @@ use crate::command_utils;
 //***********************************************************************
 
 fn spec() -> command_spec::Spec {
-    command_spec::Spec::new(
+    let exe_name = command_utils::exe_name();
+    let spec = command_spec::Spec::new(
         "check-contents",
         "Run typechecker on contents from stdin",
-        "Usage: flow check-contents [OPTION]... [FILE]\n\nRuns a flow check on the contents of stdin. If FILE is provided, then\ncheck-contents pretends that the contents of stdin come from FILE\n".to_string(),
-    )
-    .flag(
-        "--flowconfig-name",
-        &command_spec::required(Some(".flowconfig".to_string()), command_spec::string()),
-        "Set the name of the flow configuration file. (default: .flowconfig)",
-        Some("FLOW_CONFIG_NAME"),
-    )
-    .flag(
-        "--strip-root",
-        &command_spec::truthy(),
-        "Print paths without the root",
-        None,
-    )
-    .flag(
-        "--ignore-version",
-        &command_spec::truthy(),
-        "Ignore the version constraint in .flowconfig",
-        Some("FLOW_IGNORE_VERSION"),
-    )
-    .flag(
-        "--no-flowlib",
-        &command_spec::truthy(),
-        "Do not use the bundled flowlib",
-        Some("NO_FLOWLIB"),
-    )
-    .flag(
-        "--root",
-        &command_spec::optional(command_spec::string()),
-        "Project root directory containing the .flowconfig",
-        None,
-    )
-    .flag(
-        "--from",
-        &command_spec::optional(command_spec::string()),
-        "Specify who is calling this CLI command (used by logging)",
-        None,
-    )
-    .flag(
-        "--wait-for-recheck",
-        &command_spec::optional(command_spec::string()),
-        "Wait for recheck before responding (accepted but ignored)",
-        None,
-    )
-    .flag(
+        format!(
+            "Usage: {exe_name} check-contents [OPTION]... [FILE]\n\nRuns a flow check on the contents of stdin. If FILE is provided, then\ncheck-contents pretends that the contents of stdin come from FILE\n\ne.g. {exe_name} check-contents < foo.js\nor   {exe_name} check-contents foo.js < foo.js\n"
+        ),
+    );
+    let spec = command_utils::add_base_flags(spec);
+    let spec = command_utils::add_connect_and_json_flags(spec);
+    let spec = command_utils::add_json_version_flag(spec);
+    let spec = command_utils::add_offset_style_flag(spec);
+    let spec = command_utils::add_root_flag(spec);
+    let spec = command_utils::add_error_flags(spec);
+    let spec = command_utils::add_strip_root_flag(spec);
+    let spec = command_utils::add_verbose_flags(spec);
+    let spec = command_utils::add_from_flag(spec);
+    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    spec.flag(
         "--all",
-        &command_spec::truthy(),
+        &arg_spec::truthy(),
         "Ignore absence of an @flow pragma",
         None,
     )
-    .anon("filename", &command_spec::optional(command_spec::string()))
+    .anon("filename", &arg_spec::optional(arg_spec::string()))
 }
 
-fn main(args: &command_spec::Values) {
-    let flowconfig_name = command_spec::get(
-        args,
-        "--flowconfig-name",
-        &command_spec::required(Some(".flowconfig".to_string()), command_spec::string()),
-    )
-    .unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &command_spec::truthy()).unwrap();
-    let ignore_version =
-        command_spec::get(args, "--ignore-version", &command_spec::truthy()).unwrap();
-    let no_flowlib = command_spec::get(args, "--no-flowlib", &command_spec::truthy()).unwrap();
-    let root_arg = command_spec::get(
-        args,
-        "--root",
-        &command_spec::optional(command_spec::string()),
-    )
-    .unwrap();
-    let all = command_spec::get(args, "--all", &command_spec::truthy()).unwrap();
-    let filename = command_spec::get(
-        args,
-        "filename",
-        &command_spec::optional(command_spec::string()),
-    )
-    .unwrap();
-
-    let mut content = String::new();
-    std::io::stdin()
-        .read_to_string(&mut content)
-        .expect("failed to read stdin");
-
-    let root_hint = root_arg.as_deref().or(filename.as_deref());
-    let root = command_utils::guess_root(&flowconfig_name, root_hint);
-    let options = crate::get_options_with_root_and_flowconfig_name(
-        no_flowlib,
-        ignore_version,
-        &root,
-        &flowconfig_name,
-        command_utils::MakeOptionsOverrides::default(),
+fn main(args: &arg_spec::Values) {
+    let base_flags = command_utils::get_base_flags(args);
+    let (option_values, json, pretty) = command_utils::get_connect_and_json_flags(args);
+    let json_version = command_utils::get_json_version(args);
+    let offset_style = command_utils::get_offset_style(args);
+    let root = command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let error_flags_args = command_utils::get_error_flags_args(args);
+    let error_flags = command_utils::collect_error_flags(
+        error_flags_args.color,
+        error_flags_args.include_warnings,
+        error_flags_args.max_warnings,
+        error_flags_args.one_line,
+        error_flags_args.list_files,
+        error_flags_args.show_all_errors,
+        error_flags_args.show_all_branches,
+        error_flags_args.unicode,
+        error_flags_args.message_width,
     );
+    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let verbose = command_utils::verbose_flags(args);
+    let wait_for_recheck = command_spec::get(
+        args,
+        "--wait-for-recheck",
+        &arg_spec::optional(arg_spec::bool_flag()),
+    )
+    .unwrap();
+    let all = command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
+    let file =
+        command_spec::get(args, "filename", &arg_spec::optional(arg_spec::string())).unwrap();
 
-    match command_connect::connect_and_make_request(
+    let file =
+        command_utils::get_file_from_filename_or_stdin(spec().name.as_str(), file.as_deref(), None);
+    let flowconfig_name = base_flags.flowconfig_name;
+    let root = command_utils::guess_root(
         &flowconfig_name,
-        options.temp_dir.as_str(),
-        &root,
-        ServerRequest::CheckContents {
-            filename,
-            content,
-            force: all,
-            include_warnings: false,
-            strip_root,
+        match root.as_deref() {
+            Some(root) => Some(root),
+            None => file.path_of_file_input(),
         },
-    ) {
-        Ok(ServerResponse::CheckContents {
-            has_errors,
-            warning_count,
-            error_output,
-            not_covered,
-        }) => {
-            if not_covered {
-                println!("File is not @flow!");
-                flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
-            }
-            if has_errors || warning_count > 0 {
-                print!("{}", error_output);
-                let empty = flow_common_errors::error_utils::ConcreteLocPrintableErrorSet::empty();
-                let warnings =
-                    flow_common_errors::error_utils::ConcreteLocPrintableErrorSet::empty();
+    );
+    // pretty implies json
+    let json = json || json_version.is_some() || pretty;
+    let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+    if !option_values.quiet && verbose.is_some() {
+        eprintln!("NOTE: --verbose writes to the server log file");
+    }
+
+    let include_warnings = error_flags.include_warnings;
+    let request = server_prot::request::Command::CHECK_FILE {
+        input: file.clone(),
+        verbose,
+        force: all,
+        include_warnings,
+        wait_for_recheck,
+    };
+    let server_response =
+        command_utils::connect_and_make_request(&flowconfig_name, &option_values, &root, &request);
+    let response = match server_response {
+        server_prot::response::Response::CHECK_FILE(response) => response,
+        response => command_utils::failwith_bad_response(&request, &response),
+    };
+    let stdin_file = match &file {
+        FileInput::FileContent(None, contents) => Some((PathBuf::from("-"), contents.clone())),
+        FileInput::FileContent(Some(path), contents) => {
+            Some((PathBuf::from(path), contents.clone()))
+        }
+        _ => None,
+    };
+    let strip_root = if strip_root { Some(root) } else { None };
+    let print_json =
+        |errors: &ConcreteLocPrintableErrorSet,
+         warnings: &ConcreteLocPrintableErrorSet,
+         suppressed_errors: &[(PrintableError<Loc>, BTreeSet<Loc>)]| {
+            let strip_root = strip_root
+                .as_deref()
+                .map(|root| root.to_string_lossy().into_owned());
+            let stdout = std::io::stdout();
+            let mut out = stdout.lock();
+            flow_common_errors::error_utils::json_output::print_errors_with_offset_kind(
+                &mut out,
+                strip_root.as_deref(),
+                suppressed_errors,
+                pretty,
+                json_version
+                    .unwrap_or(flow_common_errors::error_utils::json_output::JsonVersion::JsonV1),
+                &stdin_file,
+                offset_kind,
+                errors,
+                warnings,
+            )
+            .expect("failed to write json errors");
+            out.flush().expect("failed to flush json errors");
+        };
+    match response {
+        server_prot::response::StatusResponse::ERRORS {
+            errors,
+            warnings,
+            suppressed_errors,
+        } => {
+            if json {
+                print_json(&errors, &warnings, &suppressed_errors)
+            } else {
+                let stdout = std::io::stdout();
+                let mut out = stdout.lock();
+                flow_common_errors::error_utils::cli_output::print_errors(
+                    &mut out,
+                    &error_flags,
+                    &stdin_file,
+                    strip_root.as_deref(),
+                    &errors,
+                    &warnings,
+                    None,
+                )
+                .expect("failed to write cli errors");
+                out.flush().expect("failed to flush cli errors");
                 // Return a successful exit code if there were only warnings.
-                let exit_status = if has_errors {
-                    flow_common_exit_status::FlowExitStatus::TypeError
-                } else {
-                    command_utils::get_check_or_status_exit_code(&empty, &warnings, None)
-                };
-                flow_common_exit_status::exit(exit_status);
+                flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
+                    &errors,
+                    &warnings,
+                    error_flags.max_warnings,
+                ))
             }
-            println!("No errors!");
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
         }
-        Ok(ServerResponse::Error { message }) => {
-            eprintln!("Error: {}", message);
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError)
+        server_prot::response::StatusResponse::NO_ERRORS => {
+            if json {
+                print_json(
+                    &ConcreteLocPrintableErrorSet::empty(),
+                    &ConcreteLocPrintableErrorSet::empty(),
+                    &[],
+                )
+            } else {
+                let stdout = std::io::stdout();
+                let mut out = stdout.lock();
+                writeln!(out, "No errors!").expect("failed to write success output");
+                out.flush().expect("failed to flush success output");
+            }
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError)
         }
-        Ok(response) => {
-            eprintln!("Unexpected response from server: {:?}", response);
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError)
-        }
-        Err(err) => {
-            eprintln!("{}", err);
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError)
+        server_prot::response::StatusResponse::NOT_COVERED => {
+            if json {
+                print_json(
+                    &ConcreteLocPrintableErrorSet::empty(),
+                    &ConcreteLocPrintableErrorSet::empty(),
+                    &[],
+                )
+            } else {
+                let stdout = std::io::stdout();
+                let mut out = stdout.lock();
+                writeln!(out, "File is not @flow!").expect("failed to write not-covered output");
+                out.flush().expect("failed to flush not-covered output");
+            }
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError)
         }
     }
 }

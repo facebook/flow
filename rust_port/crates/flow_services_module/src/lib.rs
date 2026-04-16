@@ -427,39 +427,16 @@ mod node {
     }
 
     fn parse_package(
-        options: &Options,
+        _options: &Options,
         shared_mem: &SharedMem,
         package_filename: &str,
     ) -> Arc<PackageJson> {
         let package_filename = super::resolve_symlinks(package_filename);
         let file_key = FileKey::json_file_of_absolute(&package_filename);
 
-        shared_mem.get_package_info(&file_key).unwrap_or_else(|| {
-            std::fs::read_to_string(&package_filename)
-                .ok()
-                .and_then(|content| {
-                    let node_main_fields: Vec<_> = options
-                        .node_main_fields
-                        .iter()
-                        .map(FlowSmolStr::new)
-                        .collect();
-                    let parse_options = None;
-                    let ((_loc, obj), parse_errors) = flow_parser::parse_package_json_file(
-                        false,
-                        None,
-                        parse_options,
-                        Some(file_key.dupe()),
-                        Ok(content.as_str()),
-                    );
-                    if parse_errors.is_empty() {
-                        Some(PackageJson::parse(&node_main_fields, &obj))
-                    } else {
-                        None
-                    }
-                })
-                .map(Arc::new)
-                .unwrap_or_else(|| Arc::new(PackageJson::empty()))
-        })
+        shared_mem
+            .get_package_info(&file_key)
+            .unwrap_or_else(|| Arc::new(PackageJson::empty()))
     }
 
     fn parse_exports(
@@ -883,20 +860,6 @@ mod node {
                     ) {
                         return Some(result);
                     }
-                }
-            }
-        } else {
-            for dirname in &file_options.node_resolver_dirnames {
-                if let Some(result) = resolve_relative(
-                    options,
-                    shared_mem,
-                    phantom_acc.as_deref_mut(),
-                    importing_file,
-                    possible_node_module_container_dir,
-                    Some(&package_subpath),
-                    &format!("{}{}{}", dirname, std::path::MAIN_SEPARATOR, package_name),
-                ) {
-                    return Some(result);
                 }
             }
         }

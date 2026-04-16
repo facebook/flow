@@ -707,8 +707,7 @@ fn local_value_identifiers(
     Result<Elt<ALoc>, flow_typing_ty_normalizer::normalizer::Error>,
 )> {
     let scope_info = scope_builder::program(typing.cx.enable_enums(), false, &typing.ast);
-    let ac_scope_id =
-        scope_info.closest_enclosing_scope(ac_loc, |loc, scope_loc| loc.contains(scope_loc));
+    let ac_scope_id = scope_info.closest_enclosing_scope(ac_loc, flow_common::reason::in_range);
     let names_and_locs = scope_info.fold_scope_chain(
         ac_scope_id,
         std::collections::BTreeMap::<String, Loc>::new(),
@@ -906,10 +905,11 @@ fn autocomplete_literals(
 }
 
 fn src_dir_of_loc(ac_loc: &Loc) -> Option<String> {
-    ac_loc
-        .source()
-        .and_then(|key| Path::new(key.as_str()).parent())
-        .map(|p| p.to_string_lossy().into_owned())
+    ac_loc.source().and_then(|key| {
+        Path::new(&key.to_absolute())
+            .parent()
+            .map(|p| p.to_string_lossy().into_owned())
+    })
 }
 
 fn lsp_position_to_flow_position(position: LspPosition) -> Position {
@@ -1131,6 +1131,7 @@ fn filter_by_token_and_sort(
     } else {
         let mut scored: Vec<(i32, ac_completion::CompletionItem)> = items
             .into_iter()
+            .rev()
             .filter_map(|item| {
                 fuzzy_path::fuzzy_score(true, false, before, &item.name).map(|score| (score, item))
             })
@@ -1153,6 +1154,7 @@ fn filter_by_token_and_sort_rev(
     } else {
         let mut scored: Vec<(i32, ac_completion::CompletionItem)> = items
             .into_iter()
+            .rev()
             .filter_map(|item| {
                 let boost_full_match = !(penalize_auto_import && item.log_info == "autoimport");
                 fuzzy_path::fuzzy_score(boost_full_match, false, before, &item.name)
@@ -1303,36 +1305,42 @@ fn autocomplete_id(
         },
     );
     if include_this {
-        items_rev.push(ac_completion::CompletionItem {
-            kind: Some(LspCompletionItemKind::VARIABLE),
-            name: "this".to_string(),
-            labelDetail: None,
-            description: Some("this".to_string()),
-            itemDetail: Some("this".to_string()),
-            text_edit: Some(text_edit(None, "this", edit_locs)),
-            additional_text_edits: Vec::new(),
-            sort_text: sort_text_of_rank(rank),
-            preselect: false,
-            documentation_and_tags: ac_completion::empty_documentation_and_tags(),
-            log_info: "this".to_string(),
-            insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
-        });
+        items_rev.insert(
+            0,
+            ac_completion::CompletionItem {
+                kind: Some(LspCompletionItemKind::VARIABLE),
+                name: "this".to_string(),
+                labelDetail: None,
+                description: Some("this".to_string()),
+                itemDetail: Some("this".to_string()),
+                text_edit: Some(text_edit(None, "this", edit_locs)),
+                additional_text_edits: Vec::new(),
+                sort_text: sort_text_of_rank(rank),
+                preselect: false,
+                documentation_and_tags: ac_completion::empty_documentation_and_tags(),
+                log_info: "this".to_string(),
+                insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
+            },
+        );
     }
     if include_super {
-        items_rev.push(ac_completion::CompletionItem {
-            kind: Some(LspCompletionItemKind::VARIABLE),
-            name: "super".to_string(),
-            labelDetail: None,
-            description: Some("super".to_string()),
-            itemDetail: Some("super".to_string()),
-            text_edit: Some(text_edit(None, "super", edit_locs)),
-            additional_text_edits: Vec::new(),
-            sort_text: sort_text_of_rank(rank),
-            preselect: false,
-            documentation_and_tags: ac_completion::empty_documentation_and_tags(),
-            log_info: "super".to_string(),
-            insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
-        });
+        items_rev.insert(
+            0,
+            ac_completion::CompletionItem {
+                kind: Some(LspCompletionItemKind::VARIABLE),
+                name: "super".to_string(),
+                labelDetail: None,
+                description: Some("super".to_string()),
+                itemDetail: Some("super".to_string()),
+                text_edit: Some(text_edit(None, "super", edit_locs)),
+                additional_text_edits: Vec::new(),
+                sort_text: sort_text_of_rank(rank),
+                preselect: false,
+                documentation_and_tags: ac_completion::empty_documentation_and_tags(),
+                log_info: "super".to_string(),
+                insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
+            },
+        );
     }
     if include_keywords {
         let keywords = keywords::keywords_at_loc(
@@ -2118,41 +2126,21 @@ fn autocomplete_create_result_method(
         ),
         None,
     );
-    let method_text = {
-        let statement = ast_builder::statements::class_declaration(
-            None,
-            None,
-            Some(ast_builder::identifiers::identifier(
-                None,
-                "__AUTO332_CLASS__",
-            )),
-            vec![ast::class::BodyElement::Method(method_.clone())],
-        );
-        let text = pretty_printer::print(
+    let insert_text = pretty_printer::print(
+        true,
+        &js_layout_generator::class_method(layout_options, &method_),
+    )
+    .contents()
+    .to_string()
+    .replacen(&format!("{};", autocomplete_sigil::SIGIL), "$0", 1);
+    let label_detail = format!(
+        "{}{{ … }}",
+        pretty_printer::print(
             true,
-            &js_layout_generator::statement(layout_options, false, &statement),
+            &js_layout_generator::function_params_and_return(layout_options, &method_.value.1),
         )
         .contents()
-        .to_string();
-        let start = text.find('{').map(|idx| idx + 1).unwrap_or(0);
-        let end = text.rfind('}').unwrap_or(text.len());
-        text[start..end].trim().to_string()
-    };
-    let sigil_stmt = format!("{};", autocomplete_sigil::SIGIL);
-    let insert_text = method_text.replacen(&sigil_stmt, "$0", 1);
-    let label_detail = method_text
-        .find(&sigil_stmt)
-        .and_then(|sigil_start| method_text[..sigil_start].rfind('{'))
-        .map(|body_start| method_text[..body_start].trim_end().to_string())
-        .and_then(|signature| {
-            signature.find(name).map(|name_start| {
-                format!(
-                    "{}{{ … }}",
-                    signature[name_start + name.len()..].trim_start()
-                )
-            })
-        })
-        .unwrap_or_else(|| "(…) { … }".to_string());
+    );
     ac_completion::CompletionItem {
         kind: Some(lsp_completion_of_type(ty_)),
         name: name.to_string(),
@@ -2350,8 +2338,12 @@ fn autocomplete_member(
                             &bracket_syntax.type_,
                         )
                     };
-                    let mut rev_items: Vec<_> = items.into_iter().rev().collect();
-                    rev_items.extend(id_result.result.items);
+                    let ac_completion::T {
+                        items: id_items,
+                        is_incomplete,
+                    } = id_result.result;
+                    let mut rev_items: Vec<_> = id_items.into_iter().rev().collect();
+                    rev_items.extend(items.into_iter().rev());
                     let items = filter_by_token_and_sort_rev(token, rev_items, false)
                         .into_iter()
                         .rev()
@@ -2359,7 +2351,7 @@ fn autocomplete_member(
                     AutocompleteServiceResultGeneric::AcResult(AcResult {
                         result: ac_completion::T {
                             items,
-                            is_incomplete: id_result.result.is_incomplete,
+                            is_incomplete,
                         },
                         errors_to_log: [errors_to_log, id_result.errors_to_log].concat(),
                     })

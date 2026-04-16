@@ -181,210 +181,224 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
         - [ ] `mapper`
 - [ ] commands/
-  - [ ] config/
-      - [ ] flowConfig.ml → `flow_config/src/flowconfig.rs`
+  - [x] config/
+      - [x] flowConfig.ml → `flow_config/src/flowconfig.rs`
           - [x] `file_watcher` type → `FileWatcher`
           - [x] `lazy_mode` type → `LazyMode`
-          - [ ] `config` type → `FlowConfig`
+          - [x] `config` type → `FlowConfig` (pub fields)
           - [x] `warning` type → `Warning`
           - [x] `error` type → `Error`
-          - [ ] `config_result` type
-          - [ ] `get`
-          - [ ] `get_hash`
-          - [ ] `get_with_hash`
+          - [x] `config_result` type — Rust uses `Result<(FlowConfig, Vec<Warning>, String), Error>` directly
+          - [x] `get` → `get`
+          - [x] `get_hash` — not needed separately; `get` returns the hash as the third tuple element
+          - [x] `get_with_hash` — same as `get` in Rust (always returns config + warnings + hash)
+          - [x] `get_with_ignored_version` → `get_with_ignored_version`
           - [x] `empty_config`
           - [x] `init`
           - [x] `write`
-          - [ ] `ignores`
-          - [ ] `untyped`
-          - [ ] `declarations`
-          - [ ] `includes`
-          - [ ] `libs`
-          - [ ] `enabled_rollouts`
-          - [ ] `abstract_classes`
-          - [ ] `all`
-          - [ ] `assert_operator`
-          - [ ] `autoimports`
-          - [ ] `autoimports_min_characters`
-          - [ ] `autoimports_ranked_by_usage`
-          - [ ] `autoimports_ranked_by_usage_boost_exact_match_min_length`
-          - [ ] `automatic_require_default`
-          - [ ] `babel_loose_array_spread`
-          - [ ] `ban_spread_key_props`
-          - [ ] `casting_syntax`
-          - [ ] `casting_syntax_only_support_as_excludes`
-          - [ ] `channel_mode`
-          - [ ] `async_component_syntax`
-          - [ ] `component_syntax`
-          - [ ] `deprecated_utilities`
-          - [ ] `deprecated_utilities_excludes`
-          - [ ] `dev_only_refinement_info_as_errors`
-          - [ ] `emoji`
-          - [ ] `enable_const_params`
-          - [ ] `enable_custom_error`
-          - [ ] `enums`
-          - [ ] `estimate_recheck_time`
-          - [ ] `exact_by_default`
-          - [ ] `facebook_fbs`
-          - [ ] `facebook_fbt`
-          - [ ] `facebook_module_interop`
-          - [ ] `file_watcher`
-          - [ ] `file_watcher_mergebase_with`
-          - [ ] `file_watcher_mergebase_with_git`
-          - [ ] `file_watcher_mergebase_with_hg`
-          - [ ] `file_watcher_timeout`
-          - [ ] `file_watcher_edenfs_timeout`
-          - [ ] `file_watcher_edenfs_throttle_time_ms`
-          - [ ] `files_implicitly_include_root`
-          - [ ] `format_bracket_spacing`
-          - [ ] `format_single_quotes`
-          - [ ] `gc_worker_custom_major_ratio`
-          - [ ] `gc_worker_custom_minor_max_size`
-          - [ ] `gc_worker_custom_minor_ratio`
-          - [ ] `gc_worker_major_heap_increment`
-          - [ ] `gc_worker_minor_heap_size`
-          - [ ] `gc_worker_space_overhead`
-          - [ ] `gc_worker_window_size`
-          - [ ] `haste_module_ref_prefix`
-          - [ ] `haste_paths_excludes`
-          - [ ] `haste_paths_includes`
-          - [ ] `hook_compatibility`
-          - [ ] `hook_compatibility_excludes`
-          - [ ] `hook_compatibility_includes`
-          - [ ] `ignore_non_literal_requires`
-          - [ ] `include_warnings`
-          - [ ] `instance_t_objkit_fix`
-          - [ ] `jest_integration`
-          - [ ] `lazy_mode`
-          - [ ] `llm_context_include_imports`
-          - [ ] `log_per_error_typing_telemetry`
-          - [ ] `lint_severities`
-          - [ ] `log_saving`
-          - [ ] `long_lived_workers`
-          - [ ] `max_files_checked_per_worker`
-          - [ ] `max_header_tokens`
-          - [ ] `max_seconds_for_check_per_worker`
-          - [ ] `max_workers`
-          - [ ] `max_workers_full_check`
-          - [ ] `merge_timeout`
-          - [ ] `missing_module_generators`
-          - [ ] `module_declaration_dirnames`
-          - [ ] `module_file_exts`
-          - [ ] `module_name_mappers`
-          - [ ] `module_resource_exts`
-          - [ ] `module_system`
-          - [ ] `modules_are_use_strict`
-          - [ ] `multi_platform`
-          - [ ] `multi_platform_ambient_supports_platform_project_overrides`
-          - [ ] `multi_platform_extension_group_mapping`
-          - [ ] `multi_platform_extensions`
-          - [ ] `munge_underscores`
-          - [ ] `no_flowlib`
-          - [ ] `no_unchecked_indexed_access`
-          - [ ] `node_modules_errors`
-          - [ ] `node_main_fields`
-          - [ ] `node_package_export_conditions`
-          - [ ] `node_resolver_allow_root_relative`
-          - [ ] `node_resolver_dirnames`
-          - [ ] `node_resolver_root_relative_dirnames`
-          - [ ] `opaque_type_new_bound_syntax`
-          - [ ] `pattern_matching`
-          - [ ] `pattern_matching_instance_patterns`
-          - [ ] `projects`
-          - [ ] `projects_overlap_mapping`
-          - [ ] `projects_path_mapping`
-          - [ ] `projects_strict_boundary`
-          - [ ] `projects_strict_boundary_import_pattern_opt_outs`
-          - [ ] `projects_strict_boundary_validate_import_pattern_opt_outs`
-          - [ ] `react_custom_jsx_typing`
-          - [ ] `react_ref_as_prop`
-          - [ ] `react_rules`
-          - [ ] `react_runtime`
-          - [ ] `records`
-          - [ ] `records_includes`
-          - [ ] `recursion_limit`
-          - [ ] `relay_integration`
-          - [ ] `relay_integration_esmodules`
-          - [ ] `relay_integration_excludes`
-          - [ ] `relay_integration_module_prefix`
-          - [ ] `relay_integration_module_prefix_includes`
-          - [ ] `required_version`
-          - [ ] `root_name`
-          - [x] `saved_state_fetcher`
-          - [x] `saved_state_direct_serialization`
-          - [x] `saved_state_persist_export_index`
-          - [x] `saved_state_reinit_on_lib_change`
-          - [x] `saved_state_skip_version_check`
-          - [ ] `shm_hash_table_pow`
-          - [ ] `shm_heap_size`
-          - [ ] `strict_es6_import_export`
-          - [ ] `strict_mode`
-          - [ ] `supported_operating_systems`
-          - [ ] `stylex_shorthand_prop`
-          - [ ] `ts_syntax`
-          - [ ] `deprecated_colon_extends`
-          - [ ] `deprecated_colon_extends_excludes`
-          - [ ] `ts_utility_syntax`
-          - [ ] `tslib_syntax`
-          - [ ] `type_expansion_recursion_limit`
-          - [ ] `unsuppressable_error_codes`
-          - [ ] `use_unknown_in_catch_variables`
-          - [ ] `vpn_less`
-          - [ ] `wait_for_recheck`
-          - [ ] `watchman_defer_states`
-          - [ ] `watchman_sync_timeout`
+          - Getter functions below are intentionally omitted: in OCaml, `config` is an abstract type
+            requiring accessor functions. In Rust, `FlowConfig` and `Opts` have public fields, so
+            callers access `config.ignores`, `config.options.all`, etc. directly. No getters needed.
+          - [x] `ignores` — `config.ignores`
+          - [x] `untyped` — `config.untyped`
+          - [x] `declarations` — `config.declarations`
+          - [x] `includes` — `config.includes`
+          - [x] `libs` — `config.libs`
+          - [x] `enabled_rollouts` — `config.rollouts` (callers map `.enabled_group` directly)
+          - [x] `lint_severities` — `config.lint_severities`
+          - [x] `strict_mode` — `config.strict_mode`
+          - [x] `required_version` — `config.version`
+          - [x] All `config.options.*` getters — direct field access on `config.options`
   - [ ] extra/
     - [ ] facebook/
         - [ ] extra_commands.ml
   - [ ] glean/
-      - [ ] gleanCommand.ml
-      - [ ] gleanRunner.ml
-      - [ ] gleanSchema.ml
-      - [ ] offset_cache.ml
-  - [ ] options/
-      - [ ] autofix_options.ml
-    - [ ] applyCodeActionCommand.ml
+      - [x] gleanCommand.ml → `flow_cli/src/glean_command.rs`
+      - [ ] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
+          - [x] `module DocumentationFullspanMap` → `mod documentation_fullspan_map`
+              - [x] `doc_span` type → `DocSpan`
+              - [x] `combine`
+              - [x] `create`
+          - [x] `class member_searcher` → `struct MemberSearcher`
+          - [x] `class type_reference_searcher` → `struct TypeReferenceSearcher`
+          - [x] `remove_dot_flow_suffix`
+          - [x] `module_of_module_ref`
+          - [x] `loc_of_index`
+          - [x] `loc_of_def`
+          - [x] `source_of_type_exports`
+          - [x] `export_of_export_name`
+          - [x] `type_import_declarations`
+          - [x] `type_declaration_references`
+          - [x] `extract_member_def`
+          - [x] `member_declaration_references`
+          - [x] `import_declarations`
+          - [x] `loc_of_obj_value_prop`
+          - [x] `loc_of_obj_annot_prop`
+          - [x] `source_of_exports`
+          - [x] `local_declaration_references`
+          - [x] `class declaration_info_collector`
+          - [x] `module_documentations`
+          - [x] `declaration_infos`
+          - [x] `file_of_string_modules`
+          - [x] `file_liness`
+          - [x] `all_schema_version`
+          - [x] `flow_schema_version`
+          - [x] `create_typed_runner_config` → `impl SimpleTypedRunnerConfig for GleanRunnerConfig`
+              - [x] `check_options`
+              - [x] `expand_roots`
+              - [x] `reporter`
+              - [x] `visit`
+          - [x] `make`
+      - [x] gleanSchema.ml → `flow_cli/src/glean_schema.rs`
+      - [x] offset_cache.ml → `flow_cli/src/offset_cache.rs`
+    - [x] applyCodeActionCommand.ml → `flow_cli/src/apply_code_action_command.rs`
     - [x] astCommand.ml → `flow_cli/src/ast_command.rs`
-    - [ ] autocompleteCommand.ml
-    - [ ] autofixCommand.ml
-    - [ ] batchCoverageCommand.ml
-    - [x] checkCommands.ml → `flow_cli/src/check_commands.rs`
-    - [ ] checkContentsCommand.ml
-    - [ ] codemodCommand.ml
-    - [ ] commandConnect.ml → `flow_cli/src/command_connect.rs` (partial: no retry/autostart/handshake/version mismatch)
-    - [ ] commandConnectSimple.ml → `flow_cli/src/command_connect.rs` (partial: simplified direct connection)
+    - [x] autocompleteCommand.ml → `flow_cli/src/autocomplete_command.rs`
+    - [x] autofixCommand.ml → `flow_cli/src/autofix_command.rs`
+    - [x] batchCoverageCommand.ml → `flow_cli/src/batch_coverage_command.rs`
+    - [x] foregroundCheckCommands.ml → `flow_cli/src/foreground_check_commands.rs`
+    - [x] checkContentsCommand.ml → `flow_cli/src/check_contents_command.rs`
+    - [x] codemodCommand.ml → `flow_cli/src/codemod_command.rs`
+    - [x] commandConnect.ml → `flow_cli/src/command_connect.rs`
+    - [x] commandConnectSimple.ml → `flow_cli/src/command_connect.rs`
     - [ ] commandInfo.ml
-    - [ ] commandMeanKill.ml
+    - [x] commandMeanKill.ml → `flow_cli/src/command_mean_kill.rs`
     - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
     - [x] commandUtils.ml → `flow_cli/src/command_utils.rs`
-        - [x] `make_options` → `make_options()`
+        - [x] `run_command`
+        - [x] `expand_file_list`
+        - [x] `get_filenames_from_input`
+        - [x] `print_version`
+        - [x] `expand_path`
+        - [x] `collect_error_flags`
+        - [x] `warning_flags` → `add_warning_flags`
+        - [x] `profile_flag` → `add_profile_flag`
+        - [x] `error_flags` → `add_error_flags`
+        - [x] `collect_json_flags` — inlined in `get_json_flags`
+        - [x] `json_flags` → `add_json_flags`
+        - [x] `temp_dir_flag` → `add_temp_dir_flag`
+        - [x] `collect_lazy_flags` — inlined in `get_connect_flags`
+        - [x] `lazy_flags` → `add_lazy_flags`
+        - [x] `input_file_flag` → `add_input_file_flag`
+        - [x] `verbose_focus_flag` → `add_verbose_focus_flag`
+        - [x] `type shared_mem_params` → `struct SharedMemParams`
+        - [x] `collect_shm_flags` → `get_shm_flags`
+        - [x] `shm_flags` → `add_shm_flags`
+        - [x] `shm_config`
+        - [x] `from_flag` → `add_from_flag`
+        - [x] `from_flag` (collector logic) → `apply_from_flag` + `default_from_flag`
+        - [x] `strip_root_flag` → `add_strip_root_flag`
+        - [x] `wait_for_recheck_flag` → `add_wait_for_recheck_flag`
+        - [x] `vpn_less_flag` → `add_vpn_less_flag`
+        - [x] `path_flag` → `add_path_flag`
+        - [x] `autostop_flag` → `add_autostop_flag`
+        - [x] `verbose_flags` → `add_verbose_flags` + `verbose_flags`
+        - [x] `slow_to_check_logging_flags` → `add_slow_to_check_logging_flags`
+        - [x] `quiet_flag` → `add_quiet_flag`
+        - [x] `type on_mismatch_behavior` → `enum OnMismatchBehavior`
+        - [x] `on_mismatch_flag` → `add_on_mismatch_flag`
+        - [x] `root_flag` → `add_root_flag`
+        - [x] `ignore_version_flag` → `add_ignore_version_flag`
+        - [x] `log_file_flags` → `add_log_file_flags` + `get_log_file_flags`
+        - [x] `type offset_style` → `enum OffsetStyle`
+        - [x] `offset_style_flag` → `add_offset_style_flag` + `get_offset_style`
+        - [x] `offset_kind_of_offset_style`
+        - [x] `flowconfig_multi_error`
+        - [x] `flowconfig_multi_warn`
+        - [x] `read_config_or_exit`
+        - [x] `read_config_and_hash_or_exit`
+        - [x] `check_version`
+        - [x] `assert_version`
+        - [x] `type flowconfig_params` → `struct FlowconfigFlags`
+        - [x] `list_of_string_arg`
+        - [x] `collect_flowconfig_flags` — inlined in `get_options_flags`
+        - [x] `remove_exclusion`
+        - [x] `file_options` — inlined in `make_options`
+        - [x] `file_options_of_flowconfig`
+        - [x] `ignore_flag` → `add_ignore_flag`
+        - [x] `untyped_flag` → `add_untyped_flag`
+        - [x] `declaration_flag` → `add_declaration_flag`
+        - [x] `include_flag` → `add_include_flag`
+        - [x] `lib_flag` → `add_lib_flag`
+        - [x] `lints_flag` → `add_lints_flag`
+        - [x] `no_restart_flag` → `add_no_restart_flag`
+        - [x] `flowconfig_flags` → `add_flowconfig_flags`
+        - [x] `type connect_params` → `struct ConnectParams`
+        - [x] `collect_connect_flags` → `get_connect_flags`
+        - [x] `collect_connect_flags_without_lazy` — inlined in `add_connect_flags_no_lazy`
+        - [x] `connect_flags_with_lazy_collector` → `add_connect_flags_with_lazy_collector`
+        - [x] `connect_flags_no_lazy` → `add_connect_flags_no_lazy`
+        - [x] `connect_flags` → `add_connect_flags`
+        - [x] `connect_and_json_flags` → `add_connect_and_json_flags` + `get_connect_and_json_flags`
+        - [x] `server_log_file`
+        - [x] `monitor_log_file`
+        - [x] `module Options_flags` / `type t` → `struct OptionsFlags`
+        - [x] `module Saved_state_flags` / `type t` → `struct SavedStateFlags`
+        - [x] `module Base_flags` / `type t` → `struct BaseFlags`
+        - [x] `parse_lints_flag`
+        - [x] `options_flags` (incl. `collect_options_flags`) → `add_options_flags` + `get_options_flags`
+        - [x] `saved_state_flags` (incl. `collect_saved_state_flags`) → `add_saved_state_flags` + `get_saved_state_flags`
+        - [x] `flowconfig_name_flag` → `add_flowconfig_name_flag`
+        - [x] `base_flags` → `add_base_flags` + `get_base_flags`
+        - [x] `default_file_watcher_timeout` → `DEFAULT_FILE_WATCHER_TIMEOUT`
+        - [x] `default_file_watcher_mergebase_with` → `DEFAULT_FILE_WATCHER_MERGEBASE_WITH`
+        - [x] `file_watcher_flag` → `file_watcher_flag` + `file_watcher_arg` + `add_file_watcher_flags`
+        - [x] `options_and_json_flags` → `add_options_and_json_flags`
+        - [x] `json_version_flag` → `add_json_version_flag` + `get_json_version`
+        - [x] `no_cgroup_flag` (incl. `get_systemd_binary`, `can_run_systemd`, `exec_in_cgroup_if_systemd_available`, `collect_no_cgroup_flag`) → `add_no_cgroup_flag` + `maybe_run_in_cgroup` + `exec_in_cgroup_if_systemd_available`
+        - [x] `get_temp_dir`
+        - [x] `make_options`
+        - [x] `make_env`
+        - [x] `search_for_root`
+        - [x] `guess_root`
+        - [x] `find_a_root`
+        - [x] `get_the_root`
+        - [x] `convert_input_pos`
+        - [x] `get_path_of_file`
+        - [x] `get_file_from_filename_or_stdin`
+        - [x] `parse_location_with_optional_filename`
+        - [x] `exe_name`
+        - [x] `connect_and_make_request` (recursive inner) → `connect_and_make_request_inner`
+        - [x] `connect_and_make_request` (outer with timeout)
+        - [x] `failwith_bad_response`
+        - [x] `get_check_or_status_exit_code`
+        - [x] `choose_file_watcher`
+        - [x] `choose_file_watcher_mergebase_with`
+        - [x] `choose_file_watcher_timeout`
+        - [x] `json_of_loc_with_offset`
+        - [x] `subcommand_spec`
+        - [x] `type codemod_params` → `struct CodemodParams`
+        - [x] `collect_codemod_flags` → `get_codemod_flags`
+        - [x] `codemod_flags` → `add_codemod_flags`
     - [x] configCommand.ml → `flow_cli/src/config_command.rs`
-    - [ ] coverageCommand.ml
-    - [ ] cycleCommand.ml
-    - [ ] dumpTypesCommand.ml
+    - [x] coverageCommand.ml → `flow_cli/src/coverage_command.rs`
+    - [x] cycleCommand.ml → `flow_cli/src/cycle_command.rs`
+    - [x] dumpImplDepsCommand.ml → `flow_cli/src/dump_impl_deps_command.rs`
+    - [x] dumpTypesCommand.ml → `flow_cli/src/dump_types_command.rs`
     - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
-    - [ ] findModuleCommand.ml
+    - [x] findModuleCommand.ml → `flow_cli/src/find_module_command.rs`
     - [ ] fixCommand.ml
-    - [ ] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs` (partial: simplified, no --json/--pretty)
-    - [ ] getDefCommand.ml
-    - [ ] graphCommand.ml
-    - [ ] initCommand.ml
-    - [ ] inlayHintCommand.ml
+    - [x] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs`
+    - [x] getDefCommand.ml → `flow_cli/src/get_def_command.rs`
+    - [x] graphCommand.ml → `flow_cli/src/graph_command.rs`
+    - [x] initCommand.ml → `flow_cli/src/init_command.rs`
+    - [x] inlayHintCommand.ml → `flow_cli/src/inlay_hint_command.rs`
+    - [x] llmContextCommand.ml → `flow_cli/src/llm_context_command.rs`
     - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
-    - [ ] lspCommand.ml
-    - [ ] saveStateCommand.ml → `flow_cli/src/save_state_command.rs`
-    - [ ] serverCommand.ml → `flow_cli/src/server_command.rs` (partial: no monitor process, no shm config)
-    - [ ] shellCompleteCommand.ml
-    - [ ] startCommand.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize, no monitor, no --json)
-    - [ ] statusCommands.ml → `flow_cli/src/status_command.rs` (partial: explicit status only, no --json/--pretty)
-    - [x] stopCommand.ml → `flow_cli/src/main.rs` (no-op in Rust, handled inline)
-    - [ ] typeAtPosCommand.ml
-    - [ ] typeOfNameCommand.ml
+    - [X] lspCommand.ml → `flow_cli/src/lsp_command.rs`
+    - [x] saveStateCommand.ml → `flow_cli/src/save_state_command.rs`
+    - [x] serverCommand.ml → `flow_cli/src/server_command.rs`
+    - [x] shellCompleteCommand.ml → `flow_cli/src/shell_complete_command.rs`
+    - [x] startCommand.ml → `flow_cli/src/start_command.rs`
+    - [x] statusCommands.ml → `flow_cli/src/status_command.rs`
+    - [x] stopCommand.ml → `flow_cli/src/stop_command.rs`
+    - [x] typeAtPosCommand.ml → `flow_cli/src/type_at_pos_command.rs`
+    - [x] typeOfNameCommand.ml → `flow_cli/src/type_of_name_command.rs`
     - [x] versionCommand.ml → `flow_cli/src/version_command.rs`
 - [ ] common/
   - [ ] audit/
       - [ ] expensive.ml
-  - [ ] bitset/
+  - [x] bitset/
       - [x] bitset.ml → `flow_common/src/bitset.rs`
           - [x] `all_one`
           - [x] `all_zero`
@@ -414,7 +428,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `read_hash`
   - [ ] dirent/
       - [ ] dirent.ml
-  - [ ] errors/
+  - [x] errors/
       - [x] error_codes.ml → `flow_common_errors/src/error_codes.rs`
       - [x] flow_errors_utils.ml → `flow_common_errors/src/error_utils.rs`
           - [x] `capitalize`
@@ -445,10 +459,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `string_of_kind`
           - [x] `string_of_loc`
           - [x] `text`
-  - [ ] exit/
-      - [ ] exit.ml
+  - [x] exit/
+      - [x] exit.ml → `flow_common_exit/src/lib.rs`
+          - [x] `set_json_mode`
+          - [x] `unset_json_mode`
+          - [x] `exit`
   - [x] exit_status/
       - [x] flowExitStatus.ml → `flow_common_exit_status/src/lib.rs`
+          - [x] `json_props_of_t`
   - [x] fuzzy_score/
     - [ ] __tests__/
         - [ ] fuzzy_score_test.ml
@@ -1125,7 +1143,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] file_url/
         - [ ] file_url.ml
     - [ ] hh_json/
-        - [ ] hh_json.ml
+        - [ ] hh_json.ml → `flow_hh_json/src/lib.rs` (partial: JSON printing functions only)
+            - [x] `json_string_of_value`
+            - [x] `json_to_multiline`
+            - [x] `print_json_endline`
+            - [x] `prerr_json_endline`
         - [ ] hh_json_helpers.ml
     - [ ] http_lite/
       - [ ] __tests__/
@@ -1212,7 +1234,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] __tests__/
       - [ ] lspErrors_test.ml
     - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
-    - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (client/server transport, reconnect loop, and custom status-capability behavior are still partial; see remaining function-level gaps)
+    - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (persistent TCP connection to standalone server, server auto-start/kill, LSP request keying, and connected-mode event loop are now functional; shared connect params live in `flow_server_env/src/lsp_connect_params.rs`; see remaining function-level gaps)
         - [x] `wrapped_id` type → `WrappedId`
         - [x] `encode_wrapped`
         - [x] `decode_wrapped`
@@ -1235,18 +1257,18 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `update_open_file`
         - [x] `new_metadata`
         - [x] `selectively_omit_errors`
-        - [ ] `get_next_event_from_server` (server-side preamble/marshal read is still stubbed via `marshal_tools_from_fd_with_preamble`)
+        - [x] `get_next_event_from_server` (now uses `persistent_rpc` over TCP to poll for server messages)
         - [x] `get_next_event_from_client`
-        - [ ] `get_next_event` (no `select`/tick/server-fd multiplexing yet; always pulls from client queue)
+        - [x] `get_next_event` (now uses `get_next_event_sync` which polls both server and client)
         - [x] `convert_to_client_uris`
         - [x] `convert_to_server_uris`
         - [x] `send_request_to_client`
         - [ ] `show_status` (Nuclide `window/status` capability is unported, so this only exercises the `ShowMessage` fallback path)
-        - [ ] `send_to_server` (server IPC write is unported; `marshal_tools_to_fd_with_preamble` is still a stub)
-        - [ ] `send_lsp_to_server` (inherits the unported `send_to_server` IPC path)
+        - [x] `send_to_server` (now uses `persistent_rpc` over TCP)
+        - [x] `send_lsp_to_server`
         - [x] `request_configuration`
         - [x] `subscribe_to_config_changes`
-        - [ ] `do_initialize` (Flow-specific/custom capabilities such as `typeCoverageProvider`, `rageProvider`, and status support are not fully advertised)
+        - [x] `do_initialize`
         - [ ] `show_connected_status` (status UX is downgraded because `window/status` support is not modeled)
         - [x] `track_to_server`
         - [x] `track_from_server`
@@ -1260,11 +1282,23 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `start_interaction`
         - [x] `log_interaction`
         - [x] `dismiss_tracks`
-        - [ ] `do_live_diagnostics` (local parse-error push is ported, but the server `LiveErrorsRequest` leg still depends on the unported IPC send path)
+        - [x] `do_live_diagnostics`
         - [ ] `get_local_request_handler` (no OCaml-style mistyped-handler validation; non-error results are dispatched through a generic closure path)
-        - [ ] `try_connect` (`CommandUtils.make_env`, `CommandConnectSimple.connect_once`, server autostart, and mean-kill flows are still stubbed/simplified)
+        - [x] `try_connect` (now implements persistent TCP connection with server auto-start, stale server kill, and handshake via `persistent_rpc`)
         - [x] `log_needed` type
-        - [ ] `run` (main loop is synchronous/client-driven; no Lwt event loop, periodic tick/select, or real connected-server event flow yet)
+        - [ ] `run` (main loop now polls both server and client via `get_next_event_sync`; still synchronous rather than Lwt-based, and no periodic tick/select)
+        - [x] `get_next_event_sync` (Rust-only: synchronous event multiplexer for server + client)
+        - [x] `persistent_rpc` (Rust-only: TCP-based server RPC for standalone mode)
+        - [x] `try_decode_wrapped`
+        - [x] `lsp_fmt_parse_id`
+        - [x] `lsp_helpers_supports_status`
+        - [x] `lsp_helpers_supports_connection_status`
+        - [x] `lsp_helpers_lsp_uri_to_path`
+        - [x] `lsp_helpers_get_root`
+        - [x] `parse_lsp_request`
+        - [x] `lsp_fmt_print_code_action_result`
+        - [x] `start_flow_server`
+        - [x] `kill_stale_server`
     - [x] lspErrors.ml → `flow_lsp/src/lsp_errors.rs`
     - [x] lspInteraction.ml → `flow_lsp/src/lsp_interaction.rs`
         - [x] `id` type → `Id`
@@ -1347,10 +1381,30 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] utils/
       - [ ] exitSignal.ml
     - [ ] fileWatcher.ml
-    - [ ] flowServerMonitor.ml → `flow_cli/src/flow_server.rs` (partial: simplified server without monitor process, uses Unix sockets + JSON IPC instead of Marshal + SocketHandshake)
-    - [ ] flowServerMonitorDaemon.ml → `flow_cli/src/start_command.rs` (partial: fork/setsid daemonize in start_command)
-    - [ ] flowServerMonitorOptions.ml
-    - [ ] flowServerMonitorServer.ml
+    - [ ] flowServerMonitor.ml → `flow_server_monitor/src/flow_server_monitor.rs` (partial: simplified monitor wrapper with daemonize/start/wait-for-child-exit; shared JSON/TCP socket RPC lives in `flow_server_env/src/server_socket_rpc.rs`, and there is still no faithful OCaml monitor process / Marshal / SocketHandshake path)
+        - [x] `daemonize`
+        - [x] `start_server`
+        - [x] `append_log_line`
+        - [x] `prepare_log_file`
+        - [x] `cleanup_startup_artifacts_if_owned`
+        - [x] `exit_status_message`
+        - [x] `wait_for_child_exit`
+    - [ ] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor.rs` (`daemonize`, still simplified child-process spawn instead of `Daemon.spawn`)
+    - [x] flowServerMonitorOptions.ml → `flow_server_monitor/src/flow_server_monitor_options.rs`
+        - [x] `watchman_options` type → `WatchmanOptions`
+        - [x] `edenfs_options` type → `EdenfsOptions`
+        - [x] `file_watcher` type → `FileWatcher`
+        - [x] `string_of_file_watcher`
+    - [ ] flowServerMonitorServer.ml → `flow_server/src/standalone.rs` (partial: active standalone JSON/TCP server runtime with persistent connection support, ephemeral command handling, and connection slot management; still not a faithful OCaml monitor/server split)
+        - [x] `start`
+        - [x] `FlowServer::run_with_signal_ready`
+        - [x] `process_persistent_workloads`
+        - [x] `handle_persistent_request`
+        - [x] `remove_persistent_client`
+        - [x] `cleanup_and_exit`
+        - [x] `request_dependency_recheck`
+        - [x] `current_persistent_status`
+        - [x] `ConnectionSlots` (max connection thread management)
     - [ ] persistentConnectionMap.ml
     - [ ] requestMap.ml
     - [ ] socketAcceptor.ml
@@ -1787,7 +1841,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `insert_type`
           - [x] `autofix_exports`
           - [x] `autofix_missing_local_annot`
-          - [ ] `collect_rage`
+          - [x] `collect_rage`
           - [x] `dump_types`
           - [x] `coverage`
           - [x] `batch_coverage`
@@ -1821,7 +1875,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `handle_inlay_hint`
           - [x] `handle_llm_context`
           - [x] `handle_insert_type`
-          - [ ] `handle_rage`
+          - [x] `handle_rage`
           - [x] `handle_status`
           - [ ] `handle_save_state`
           - [x] `handle_persistent_canceled`
@@ -1864,6 +1918,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `handle_persistent_immediately`
           - [ ] `enqueue_or_handle_ephemeral`
           - [ ] `enqueue_persistent`
+          - [x] `handle_ephemeral_command_for_standalone` (Rust-only: standalone-mode ephemeral dispatch)
+          - [x] `handle_ephemeral_command_for_standalone_wrapped`
+          - [x] `classify_ephemeral_command`
+          - [x] `handle_ephemeral_immediate_command`
+          - [x] `standalone_response_needs_checked_dependencies_retry`
       - [x] llmTypedContextProvider.ml → `flow_server_command_handler/src/llm_typed_context_provider.rs`
   - [ ] env/
       - [x] collated_errors.ml → `flow_server_env/src/collated_errors.rs`
@@ -1968,6 +2027,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `push_outstanding_handler`
           - [x] `pop_outstanding_handler`
           - [x] `autocomplete_session`
+          - [x] `all_clients`
+          - [x] `pop_message`
+          - [x] `has_client`
+          - [x] `send_status`
+          - [x] `send_server_exit`
+          - [x] `send_telemetry`
   - [x] protocol/
       - [x] lspProt.ml → `flow_server_env/src/lsp_prot.rs` (Flow-specific LSP extension types; standard LSP types use `lsp_types` crate)
           - [x] `client_id` type → `ClientId`
@@ -2004,7 +2069,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `monitor_to_client_message` type → `MonitorToClientMessage`
       - [x] serverCommandWithContext.ml → `flow_server_env/src/server_command_with_context.rs`
           - [x] `t` type → `ServerCommandWithContext`
-      - [x] serverProt.ml → `flow_server_env/src/server_prot.rs`
+      - [ ] serverProt.ml → `flow_server_env/src/server_prot.rs`
           - [x] `Infer_type_options`
           - [x] `Inlay_hint_options`
           - [x] `Type_of_name_options`
@@ -2023,6 +2088,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `Response.response`
           - [x] `Response.to_string`
       - [x] socketHandshake.ml → `flow_server_env/src/socket_handshake.rs`
+      - [x] (Rust-only) `flow_server_env/src/server_socket_rpc.rs` — JSON/TCP wire protocol for server requests/responses in standalone mode
+      - [x] (Rust-only) `flow_server_env/src/lsp_connect_params.rs` — shared connect params and persistent client handshake builder for LSP
   - [ ] rechecker/
       - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
       - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (async cancellation and parallelizable-workload machinery are still stubbed/simplified)
@@ -2070,8 +2137,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
         - [x] `string_of_saved_state_fetcher`
         - [ ] `init` (`focus_targets` is ignored and failure paths use `expect`/panic instead of the OCaml Lwt/exception flow)
-        - [ ] `idle_logging_loop` (runs one bounded detached sampling period instead of the recursive `Lwt.pick` loop)
-        - [ ] `gc_loop` (OCaml `SharedMem.collect_slice` incremental GC loop is currently a no-op)
+        - [x] `idle_logging_loop`
+        - [x] `gc_loop`
         - [ ] `serve` (uses detached threads plus blocking waits instead of `Lwt.pick`/cancellation between idle work and monitor events)
         - [x] `on_compact`
         - [x] `create_program_init`

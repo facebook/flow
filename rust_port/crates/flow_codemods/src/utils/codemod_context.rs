@@ -51,9 +51,9 @@ pub mod typed {
         &ccx.file
     }
 
-    pub fn ty_at_loc<'cx>(
+    pub fn ty_at_loc<'a, 'cx>(
         norm_opts: flow_typing_ty_normalizer::env::Options,
-        ccx: &'cx TypedCodemodContext<'cx>,
+        ccx: &'a TypedCodemodContext<'cx>,
         loc: Loc,
     ) -> Result<ALocElt, Error> {
         let TypedCodemodContext {
@@ -84,7 +84,7 @@ pub mod typed {
         &ccx.metadata
     }
 
-    pub fn context<'cx>(ccx: &'cx TypedCodemodContext<'cx>) -> &'cx Context<'cx> {
+    pub fn context<'a, 'cx>(ccx: &'a TypedCodemodContext<'cx>) -> &'a Context<'cx> {
         &ccx.cx
     }
 

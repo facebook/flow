@@ -24,7 +24,7 @@ pub struct CodemodReport<A> {
 }
 
 pub fn unit_reporter() -> CodemodReport<()> {
-    let report = Reporter::StringReporter(Box::new(|_, _| String::new()));
+    let report = Reporter::UnitReporter(Box::new(|_, _| ()));
     let combine = Box::new(|_, _| ());
     let empty = ();
     CodemodReport {

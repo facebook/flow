@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_utils_concurrency::worker_cancel;
+
 use crate::monitor_prot::MonitorToServerMessage;
 use crate::monitor_prot::PleaseDieReason;
 use crate::monitor_rpc;
@@ -31,6 +33,7 @@ pub struct CommandHandlerCallbacks {
 // SharedMem_js.cancel thingy.
 fn kill_workers() {
     log::info!("Killing the worker processes");
+    worker_cancel::stop_workers();
 }
 
 fn handle_message(
@@ -69,7 +72,7 @@ fn handle_message(
             initial,
         } => {
             if initial {
-                server_monitor_listener_state::push_lazy_init(changed_files);
+                server_monitor_listener_state::push_lazy_init(metadata, changed_files);
             } else {
                 match metadata {
                     Some(metadata) => {

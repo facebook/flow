@@ -212,11 +212,14 @@ fn take(
             match search_result_of_export(query, &m.value, source.clone(), kind.clone()) {
                 Some(search_result) => {
                     let weight = if weighted { *count } else { 0 };
-                    rev_all.push(SearchResultScored {
-                        search_result,
-                        score: m.score,
-                        weight,
-                    });
+                    rev_all.insert(
+                        0,
+                        SearchResultScored {
+                            search_result,
+                            score: m.score,
+                            weight,
+                        },
+                    );
                 }
                 None => {}
             }
@@ -226,12 +229,7 @@ fn take(
     let compare_score_fn = |a: &SearchResultScored, b: &SearchResultScored| -> std::cmp::Ordering {
         b.score.cmp(&a.score)
     };
-    rev_all.sort_by(
-        |a, b| match compare_search_result(&compare_score_fn, a, b) {
-            std::cmp::Ordering::Equal => std::cmp::Ordering::Greater,
-            k => k,
-        },
-    );
+    rev_all.sort_by(|a, b| compare_search_result(&compare_score_fn, a, b));
     let sorted = rev_all;
 
     let top_n: Vec<SearchResultScored> = sorted.iter().take(n).cloned().collect();

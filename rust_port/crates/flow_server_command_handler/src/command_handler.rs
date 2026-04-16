@@ -8,10 +8,15 @@
 #![allow(dead_code)]
 
 use std::sync::Arc;
+use std::sync::LazyLock;
+use std::sync::Mutex;
 
 use dupe::Dupe;
+use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
+use flow_common_modulename::HasteModuleInfo;
+use flow_common_modulename::Modulename;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_lsp_conversions;
 use flow_server_env::lsp_handler;
@@ -66,11 +71,39 @@ type AutocompleteResponse = Result<
     String,
 >;
 
-fn lsp_document_identifier_to_flow_path(t: &lsp_types::TextDocumentIdentifier) -> String {
-    let path = t.uri.path().to_string();
+pub const CHECKED_DEPENDENCIES_RETRY_SENTINEL: &str = "__flow_checked_dependencies_retry__";
+
+static DID_OPEN_PENDING_FILES: LazyLock<Mutex<std::collections::BTreeMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(std::collections::BTreeMap::new()));
+static URI_TO_LATEST_METADATA_MAP: LazyLock<
+    Mutex<std::collections::BTreeMap<String, lsp_prot::Metadata>>,
+> = LazyLock::new(|| Mutex::new(std::collections::BTreeMap::new()));
+
+fn lsp_uri_to_flow_path(uri: &lsp_types::Url) -> String {
+    let path = uri
+        .to_file_path()
+        .map(|path| path.to_string_lossy().to_string())
+        .unwrap_or_else(|_| uri.path().to_string());
     match std::fs::canonicalize(&path) {
-        Ok(p) => p.to_string_lossy().to_string(),
+        Ok(path) => path.to_string_lossy().to_string(),
         Err(_) => path,
+    }
+}
+
+fn lsp_document_identifier_to_flow_path(t: &lsp_types::TextDocumentIdentifier) -> String {
+    lsp_uri_to_flow_path(&t.uri)
+}
+
+fn live_errors_mark_latest_metadata(uri: &str, metadata: &lsp_prot::Metadata) {
+    let mut map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
+    map.insert(uri.to_string(), metadata.clone());
+}
+
+fn is_latest_live_errors_metadata(uri: &str, metadata: &lsp_prot::Metadata) -> bool {
+    let map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
+    match map.get(uri) {
+        Some(latest_metadata) => latest_metadata.start_wall_time == metadata.start_wall_time,
+        None => false,
     }
 }
 
@@ -227,11 +260,84 @@ fn try_with_json<T, J, F: FnOnce() -> (Result<T, String>, Option<J>)>(
     f()
 }
 
+fn type_contents_error_to_string(error: &TypeContentsError, fallback: &str) -> String {
+    match error {
+        TypeContentsError::CheckedDependenciesCanceled => {
+            CHECKED_DEPENDENCIES_RETRY_SENTINEL.to_string()
+        }
+        TypeContentsError::Errors(_) => fallback.to_string(),
+    }
+}
+
+fn is_checked_dependencies_retry_error(error: &str) -> bool {
+    error == CHECKED_DEPENDENCIES_RETRY_SENTINEL
+}
+
+pub fn standalone_response_needs_checked_dependencies_retry(
+    command: &server_prot::request::Command,
+    response: &server_prot::response::Response,
+) -> bool {
+    match (command, response) {
+        (
+            server_prot::request::Command::AUTOCOMPLETE { .. },
+            server_prot::response::Response::AUTOCOMPLETE(Err(error)),
+        )
+        | (
+            server_prot::request::Command::AUTOFIX_EXPORTS { .. },
+            server_prot::response::Response::AUTOFIX_EXPORTS(Err(error)),
+        )
+        | (
+            server_prot::request::Command::AUTOFIX_MISSING_LOCAL_ANNOT { .. },
+            server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(Err(error)),
+        )
+        | (
+            server_prot::request::Command::COVERAGE { .. },
+            server_prot::response::Response::COVERAGE(Err(error)),
+        )
+        | (
+            server_prot::request::Command::DUMP_TYPES { .. },
+            server_prot::response::Response::DUMP_TYPES(Err(error)),
+        )
+        | (
+            server_prot::request::Command::GET_DEF { .. },
+            server_prot::response::Response::GET_DEF(Err(error)),
+        )
+        | (
+            server_prot::request::Command::INFER_TYPE(_),
+            server_prot::response::Response::INFER_TYPE(Err(error)),
+        )
+        | (
+            server_prot::request::Command::INSERT_TYPE { .. },
+            server_prot::response::Response::INSERT_TYPE(Err(error)),
+        )
+        | (
+            server_prot::request::Command::INLAY_HINT(_),
+            server_prot::response::Response::INLAY_HINT(Err(error)),
+        ) => is_checked_dependencies_retry_error(error),
+        (
+            server_prot::request::Command::AUTOFIX_EXPORTS { .. },
+            server_prot::response::Response::AUTOFIX_EXPORTS(Ok((_patch, errors))),
+        ) => errors
+            .iter()
+            .any(|error| is_checked_dependencies_retry_error(error)),
+        (
+            server_prot::request::Command::TYPE_OF_NAME(_),
+            server_prot::response::Response::TYPE_OF_NAME(errors),
+        ) => errors.iter().any(|error| {
+            matches!(
+                error,
+                Err(error) if is_checked_dependencies_retry_error(error)
+            )
+        }),
+        _ => false,
+    }
+}
+
 fn status_log(errors: &ConcreteLocPrintableErrorSet) {
     if errors.is_empty() {
-        eprintln!("Status: OK");
+        log::info!("Status: OK");
     } else {
-        eprintln!("Status: Error");
+        log::info!("Status: Error");
     }
 }
 
@@ -356,7 +462,8 @@ fn file_input_of_text_document_position_opt(
     client_id: lsp_prot::ClientId,
     t: &lsp_types::TextDocumentPositionParams,
 ) -> Option<FileInput> {
-    Some(file_input_of_text_document_position(client_id, t))
+    let text_document = &t.text_document;
+    file_input_of_text_document_identifier_opt(client_id, text_document)
 }
 
 fn file_key_of_file_input_without_env(
@@ -463,11 +570,11 @@ fn check_that_we_care_about_this_file(
         }
     }
 
-    let file_path = file_key.as_str();
-    if is_stdin(file_path) || files::is_in_flowlib(&options.file_options, file_path) {
+    let file_path = file_key.to_absolute();
+    if is_stdin(&file_path) || files::is_in_flowlib(&options.file_options, &file_path) {
         Ok(())
     } else {
-        let file_path = files::imaginary_realpath(file_path);
+        let file_path = files::imaginary_realpath(&file_path);
         let file_options = &options.file_options;
         let all_unordered_libs: std::collections::BTreeSet<String> = env
             .all_unordered_libs
@@ -542,6 +649,8 @@ fn mk_module_system_info(
     };
     let shared_mem_clone = shared_mem.clone();
     let shared_mem_clone2 = shared_mem.clone();
+    let shared_mem_clone3 = shared_mem.clone();
+    let projects_options = options.projects_options.dupe();
     flow_services_autocomplete::module_system_info::LspModuleSystemInfo {
         file_options: options.file_options.dupe(),
         haste_module_system: options.module_system == flow_common::options::ModuleSystem::Haste,
@@ -551,7 +660,22 @@ fn mk_module_system_info(
                 .get_package_info(f)
                 .map(|pkg| Ok((*pkg).clone()))
         }),
-        is_package_file: Box::new(|_module_path, _module_name| false),
+        is_package_file: Box::new(move |module_path, module_name| {
+            let dependency = FlowProjects::from_path(
+                &projects_options,
+                &flow_parser::file_key::strip_project_root(module_path),
+            )
+            .and_then(|namespace| {
+                shared_mem_clone3.get_dependency(&Modulename::Haste(HasteModuleInfo::mk(
+                    module_name.into(),
+                    namespace.to_bitset(),
+                )))
+            });
+            match dependency.and_then(|dependency| shared_mem_clone3.get_provider(&dependency)) {
+                Some(addr) => shared_mem_clone3.is_package_file(&addr),
+                None => false,
+            }
+        }),
         node_resolver_root_relative_dirnames,
         resolves_to_real_path: Box::new(|from, to_real_path| {
             std::fs::canonicalize(from)
@@ -606,7 +730,7 @@ fn autoimport_options(
     let mut opts = export_search::default_options();
     opts.max_results = 100;
     opts.num_threads = std::cmp::max(1, 4_usize.saturating_sub(2)); // num_cpus not available, using default
-    opts.first_match_can_be_weak = ac_options.imports_ranked_usage;
+    opts.weighted = ac_options.imports_ranked_usage;
     opts
 }
 
@@ -896,7 +1020,7 @@ fn autocomplete_on_parsed(
     imports_ranked_usage: bool,
     imports_ranked_usage_boost_exact_match_min_length: usize,
     show_ranking_info: bool,
-) -> (Vec<(String, lsp_prot::Json)>, AcResult) {
+) -> (Vec<(String, lsp_prot::Json)>, AcResult, bool) {
     let (line, column) = cursor;
     let cursor_loc = flow_parser::loc::Loc::cursor(Some(filename.dupe()), line, column);
     let (contents, broader_context, canon_token) =
@@ -936,6 +1060,10 @@ fn autocomplete_on_parsed(
         contents.clone(),
         parse_result,
         node_modules_containers,
+    );
+    let checked_dependencies_canceled = matches!(
+        file_artifacts_result,
+        Err(TypeContentsError::CheckedDependenciesCanceled)
     );
     let initial_json_props = add_cache_hit_data_to_json(initial_json_props, did_hit);
     let ac_typing_artifacts = match file_artifacts_result {
@@ -1045,7 +1173,7 @@ fn autocomplete_on_parsed(
         }
     };
     autocomplete_js::autocomplete_unset_hooks();
-    (initial_json_props, ac_result)
+    (initial_json_props, ac_result, checked_dependencies_canceled)
 }
 
 fn autofix_errors_cli(
@@ -1194,23 +1322,33 @@ fn autocomplete(
             let imports_min_characters = options.autoimports_min_characters;
             let imports_ranked_usage_boost_exact_match_min_length =
                 options.autoimports_ranked_by_usage_boost_exact_match_min_length as usize;
-            let (initial_json_props, ac_result) = autocomplete_on_parsed(
-                options,
-                env,
-                shared_mem,
-                node_modules_containers,
-                client_id,
-                &filename,
-                &contents,
-                trigger_character,
-                cursor,
-                imports,
-                imports_min_characters,
-                imports_ranked_usage,
-                imports_ranked_usage_boost_exact_match_min_length,
-                show_ranking_info,
-            );
-            json_of_autocomplete_result(initial_json_props, ac_result)
+            let (initial_json_props, ac_result, checked_dependencies_canceled) =
+                autocomplete_on_parsed(
+                    options,
+                    env,
+                    shared_mem,
+                    node_modules_containers,
+                    client_id,
+                    &filename,
+                    &contents,
+                    trigger_character,
+                    cursor,
+                    imports,
+                    imports_min_characters,
+                    imports_ranked_usage,
+                    imports_ranked_usage_boost_exact_match_min_length,
+                    show_ranking_info,
+                );
+            if checked_dependencies_canceled {
+                (
+                    Err(CHECKED_DEPENDENCIES_RETRY_SENTINEL.to_string()),
+                    Some(lsp_prot::Json::Object(
+                        initial_json_props.into_iter().collect(),
+                    )),
+                )
+            } else {
+                json_of_autocomplete_result(initial_json_props, ac_result)
+            }
         }
     }
 }
@@ -1511,18 +1649,37 @@ fn infer_type(
         flow_data_structure_wrapper::smol_str::FlowSmolStr,
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
-    file_input: &FileInput,
-    line: u32,
-    column: u32,
+    input: &server_prot::infer_type_options::T,
     include_refinement_info: bool,
 ) -> (
     server_prot::response::InferTypeResponse,
     Option<lsp_prot::Json>,
 ) {
-    match of_file_input(options, env, file_input) {
+    let server_prot::infer_type_options::T {
+        input: ref file_input,
+        line,
+        r#char: column,
+        ref verbose,
+        omit_targ_defaults,
+        wait_for_recheck: _,
+        verbose_normalizer,
+        max_depth,
+        json,
+        ref strip_root,
+        expanded,
+        debug_print_internal_repr: _,
+        no_typed_ast_for_imports,
+    } = *input;
+    let mut options = options.clone();
+    options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
+    match of_file_input(&options, env, file_input) {
         Err(IdeFileError::Failed(msg)) => (Err(msg), None),
         Err(IdeFileError::Skipped(reason)) => {
-            let tys = server_prot::response::infer_type::Payload::Friendly(None);
+            let tys = if json {
+                server_prot::response::infer_type::Payload::Json(serde_json::Value::Null)
+            } else {
+                server_prot::response::infer_type::Payload::Friendly(None)
+            };
             let response = server_prot::response::infer_type::T {
                 loc: flow_parser::loc::Loc::none(),
                 tys,
@@ -1534,9 +1691,9 @@ fn infer_type(
             (Ok(response), extra_data)
         }
         Ok((file_key, content)) => {
-            let parse_result = parse_contents(options, &content, &file_key);
+            let parse_result = parse_contents(&options, &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
-                options,
+                &options,
                 type_parse_artifacts_cache,
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -1563,10 +1720,10 @@ fn infer_type(
                             &typecheck_artifacts.cx,
                             parse_artifacts.file_sig.clone(),
                             &typecheck_artifacts.typed_ast,
-                            false, // omit_targ_defaults
-                            40,    // max_depth
-                            false, // verbose_normalizer
-                            false, // no_typed_ast_for_imports
+                            omit_targ_defaults,
+                            max_depth as u32,
+                            verbose_normalizer,
+                            no_typed_ast_for_imports,
                             Some(&loc_of_aloc),
                             if include_refinement_info {
                                 Some(&loc_of_aloc)
@@ -1574,14 +1731,14 @@ fn infer_type(
                                 None
                             },
                             file_key.dupe(),
-                            line as i32,
-                            column as i32,
+                            line,
+                            column,
                         );
                     let documentation = documentation_at_loc(
                         &shared_mem,
                         &file_key,
-                        line,
-                        column,
+                        line as u32,
+                        column as u32,
                         check_result,
                         &parse_artifacts.ast,
                     );
@@ -1597,11 +1754,11 @@ fn infer_type(
                     );
                     let exact_by_default = options.exact_by_default;
                     let response = infer_type_to_response(
-                        false, // json
-                        false, // expanded
+                        json,
+                        expanded,
                         exact_by_default,
                         options.ts_syntax,
-                        None,
+                        strip_root.as_deref(),
                         loc,
                         refining_locs,
                         refinement_invalidated,
@@ -1656,9 +1813,9 @@ fn type_of_name(
                 node_modules_containers,
             );
             match file_artifacts_result {
-                Err(_parse_errors) => names
+                Err(parse_errors) => names
                     .iter()
-                    .map(|_| Err("Cannot parse".to_string()))
+                    .map(|_| Err(type_contents_error_to_string(&parse_errors, "Cannot parse")))
                     .collect(),
                 Ok(check_result) => {
                     let doc_at_loc = |reader: &flow_heap::parsing_heaps::SharedMem,
@@ -1738,8 +1895,11 @@ fn inlay_hint(
                 node_modules_containers,
             ) {
                 (Ok(result), did_hit_cache) => (Ok(result), did_hit_cache),
-                (Err(_parse_errors), did_hit_cache) => (
-                    Err("Couldn't parse file in parse_contents".to_string()),
+                (Err(parse_errors), did_hit_cache) => (
+                    Err(type_contents_error_to_string(
+                        &parse_errors,
+                        "Couldn't parse file in parse_contents",
+                    )),
                     did_hit_cache,
                 ),
             };
@@ -1877,7 +2037,10 @@ fn insert_type(
                 ),
             )
         }
-        Err(_) => Err("Failed to type-check file".to_string()),
+        Err(error) => Err(type_contents_error_to_string(
+            error,
+            "Failed to type-check file",
+        )),
     }
 }
 
@@ -1941,6 +2104,12 @@ fn autofix_exports(
                     parse_artifacts,
                     typecheck_artifacts,
                 );
+            if errors
+                .iter()
+                .any(|error| error == CHECKED_DEPENDENCIES_RETRY_SENTINEL)
+            {
+                return Err(CHECKED_DEPENDENCIES_RETRY_SENTINEL.to_string());
+            }
             Ok((
                 flow_parser_utils_output::replacement_printer::loc_patch_to_patch(
                     &file_content,
@@ -1949,7 +2118,10 @@ fn autofix_exports(
                 errors,
             ))
         }
-        Err(_) => Err("Failed to type-check file".to_string()),
+        Err(error) => Err(type_contents_error_to_string(
+            error,
+            "Failed to type-check file",
+        )),
     }
 }
 
@@ -1993,8 +2165,8 @@ fn autofix_missing_local_annot(
         intermediate_result,
         node_modules_containers,
     );
-    let file_artifacts =
-        file_artifacts_result.map_err(|_| "Failed to type-check file".to_string())?;
+    let file_artifacts = file_artifacts_result
+        .map_err(|error| type_contents_error_to_string(&error, "Failed to type-check file"))?;
     let (ref parse_artifacts, ref typecheck_artifacts) = file_artifacts;
     let edits = flow_services_code_action::code_action_service::autofix_missing_local_annot_fn(
         options,
@@ -2009,7 +2181,12 @@ fn autofix_missing_local_annot(
     Ok(flow_parser_utils_output::replacement_printer::loc_patch_to_patch(&file_content, &edits))
 }
 
-fn collect_rage(options: &Options, env: &server_env::Env) -> Vec<(String, String)> {
+fn collect_rage(
+    options: &Options,
+    env: &server_env::Env,
+    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    files: Option<&[String]>,
+) -> Vec<(String, String)> {
     let mut items = Vec::new();
     let data = format!("lazy_mode={}\n", options.lazy_mode);
     items.push(("options".to_string(), data));
@@ -2048,6 +2225,7 @@ fn collect_rage(options: &Options, env: &server_env::Env) -> Vec<(String, String
         &None,
         &[],
         flow_common_errors::error_utils::json_output::JsonVersion::JsonV1,
+        flow_parser::offset_utils::OffsetKind::Utf8,
         &errors,
         &warnings,
     );
@@ -2056,6 +2234,32 @@ fn collect_rage(options: &Options, env: &server_env::Env) -> Vec<(String, String
         serde_json::to_string_pretty(&json).unwrap_or_default()
     );
     items.push(("env.errors".to_string(), data));
+    if let Some(files) = files {
+        let mut data = String::from(
+            "Does the content on the disk match the most recent version of the file?\n\n",
+        );
+        for file in files {
+            let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(file);
+            let file_state = if !env.files.contains(&file_key) {
+                "FILE NOT PARSED BY FLOW (likely ignored implicitly or explicitly)".to_string()
+            } else {
+                match std::fs::read_to_string(file) {
+                    Err(_) => "ERROR! FAILED TO READ".to_string(),
+                    Ok(content) => {
+                        if flow_parsing::parsing_service::does_content_match_file_hash(
+                            shared_mem, &file_key, &content,
+                        ) {
+                            "OK".to_string()
+                        } else {
+                            "HASH OUT OF DATE".to_string()
+                        }
+                    }
+                }
+            };
+            data.push_str(&format!("{}: {}\n", file, file_state));
+        }
+        items.push(("file hash check".to_string(), data));
+    }
     items
 }
 
@@ -2082,8 +2286,9 @@ fn dump_types(
         intermediate_result,
         node_modules_containers,
     );
-    let (parse_artifacts, typecheck_artifacts) = file_artifacts_result
-        .map_err(|_parse_errors| "Couldn't parse file in parse_contents".to_string())?;
+    let (parse_artifacts, typecheck_artifacts) = file_artifacts_result.map_err(|parse_errors| {
+        type_contents_error_to_string(&parse_errors, "Couldn't parse file in parse_contents")
+    })?;
     Ok(flow_services_type_info::type_info_service::dump_types(
         evaluate_type_destructors,
         for_tool,
@@ -2109,9 +2314,11 @@ fn coverage(
     server_prot::response::CoverageResponse,
     Option<lsp_prot::Json>,
 ) {
-    let intermediate_result = parse_contents(options, content, file_key);
+    let mut options = options.clone();
+    options.all = options.all || force;
+    let intermediate_result = parse_contents(&options, content, file_key);
     let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
-        options,
+        &options,
         type_parse_artifacts_cache,
         shared_mem,
         env.master_cx.clone(),
@@ -2132,8 +2339,11 @@ fn coverage(
             );
             (Ok(coverage), Some(extra_data))
         }
-        Err(_parse_errors) => (
-            Err("Couldn't parse file in parse_contents".to_string()),
+        Err(parse_errors) => (
+            Err(type_contents_error_to_string(
+                &parse_errors,
+                "Couldn't parse file in parse_contents",
+            )),
             Some(extra_data),
         ),
     }
@@ -2151,12 +2361,13 @@ fn batch_coverage(
         )
     } else {
         let filter = |key: &str| batch.iter().any(|elt| key.starts_with(elt.as_str()));
-        let response: Vec<_> = env
+        let mut response: Vec<_> = env
             .coverage
             .iter()
-            .filter(|(key, _)| !key.is_lib_file() && filter(key.as_str()))
+            .filter(|(key, _)| !key.is_lib_file() && filter(&key.to_absolute()))
             .map(|(key, coverage)| (key.dupe(), coverage.clone()))
             .collect();
+        response.reverse();
         Ok(response)
     }
 }
@@ -2168,17 +2379,18 @@ fn serialize_graph(
         std::collections::BTreeSet<flow_parser::file_key::FileKey>,
     >,
 ) -> server_prot::response::GraphResponseSubgraph {
-    graph
+    let mut result: Vec<_> = graph
         .iter()
         .map(|(f, dep_fs)| {
-            let f_str = f.as_str().to_string();
-            let dep_strs: Vec<String> = dep_fs
-                .iter()
-                .map(|dep_f| dep_f.as_str().to_string())
-                .collect();
+            let f_str = f.to_absolute();
+            let mut dep_strs: Vec<String> =
+                dep_fs.iter().map(|dep_f| dep_f.to_absolute()).collect();
+            dep_strs.reverse();
             (f_str, dep_strs)
         })
-        .collect()
+        .collect();
+    result.reverse();
+    result
 }
 
 fn output_dependencies(
@@ -2339,8 +2551,11 @@ fn get_def(
                 node_modules_containers,
             ) {
                 (Ok(result), did_hit_cache) => (Ok(result), did_hit_cache),
-                (Err(_parse_errors), did_hit_cache) => (
-                    Err("Couldn't parse file in parse_contents".to_string()),
+                (Err(parse_errors), did_hit_cache) => (
+                    Err(type_contents_error_to_string(
+                        &parse_errors,
+                        "Couldn't parse file in parse_contents",
+                    )),
                     did_hit_cache,
                 ),
             };
@@ -2653,19 +2868,23 @@ fn handle_coverage(
     input: &FileInput,
     force: bool,
 ) -> EphemeralParallelizableResult {
-    let (response, json_data) = try_with_json(|| match of_file_input(options, env, input) {
-        Err(IdeFileError::Failed(msg)) => (Err(msg), None),
-        Err(IdeFileError::Skipped(reason)) => (Err(reason.clone()), json_of_skipped(&reason)),
-        Ok((file_key, file_contents)) => coverage(
-            options,
-            env,
-            None,
-            shared_mem.clone(),
-            node_modules_containers,
-            &file_key,
-            &file_contents,
-            force,
-        ),
+    let (response, json_data) = try_with_json(|| {
+        let mut options = options.clone();
+        options.all = options.all || force;
+        match of_file_input(&options, env, input) {
+            Err(IdeFileError::Failed(msg)) => (Err(msg), None),
+            Err(IdeFileError::Skipped(reason)) => (Err(reason.clone()), json_of_skipped(&reason)),
+            Ok((file_key, file_contents)) => coverage(
+                &options,
+                env,
+                None,
+                shared_mem.clone(),
+                node_modules_containers,
+                &file_key,
+                &file_contents,
+                force,
+            ),
+        }
     });
     (
         server_prot::response::Response::COVERAGE(response),
@@ -2809,9 +3028,7 @@ fn handle_infer_type(
         flow_data_structure_wrapper::smol_str::FlowSmolStr,
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
-    file_input: &FileInput,
-    line: u32,
-    column: u32,
+    input: &server_prot::infer_type_options::T,
 ) -> EphemeralParallelizableResult {
     let (result, json_data) = try_with_json(|| {
         infer_type(
@@ -2820,9 +3037,7 @@ fn handle_infer_type(
             None,
             shared_mem.clone(),
             node_modules_containers,
-            file_input,
-            line,
-            column,
+            input,
             true,
         )
     });
@@ -3019,8 +3234,13 @@ fn handle_insert_type(
     (server_prot::response::Response::INSERT_TYPE(result), None)
 }
 
-fn handle_rage(options: &Options, env: &server_env::Env) -> EphemeralParallelizableResult {
-    let items = collect_rage(options, env);
+fn handle_rage(
+    options: &Options,
+    env: &server_env::Env,
+    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    files: Option<&[String]>,
+) -> EphemeralParallelizableResult {
+    let items = collect_rage(options, env, shared_mem, files);
     (server_prot::response::Response::RAGE(items), None)
 }
 
@@ -3046,6 +3266,240 @@ fn handle_save_state(
 ) -> EphemeralNonparallelizableResult {
     let result = save_state(genv, env, saved_state_filename);
     (server_prot::response::Response::SAVE_STATE(result), None)
+}
+
+pub fn handle_ephemeral_command_for_standalone(
+    genv: &server_env::Genv,
+    env: &server_env::Env,
+    command: server_prot::request::Command,
+) -> EphemeralParallelizableResult {
+    let options = &*genv.options;
+    let shared_mem = genv.shared_mem.dupe();
+    let node_modules_containers = genv.node_modules_containers.as_ref();
+    match command {
+        server_prot::request::Command::APPLY_CODE_ACTION {
+            input,
+            action,
+            wait_for_recheck: _,
+        } => handle_apply_code_action(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            &action,
+            &input,
+        ),
+        server_prot::request::Command::AUTOCOMPLETE {
+            input,
+            cursor,
+            trigger_character,
+            wait_for_recheck: _,
+            imports,
+            imports_ranked_usage,
+            show_ranking_info,
+        } => handle_autocomplete(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            &input,
+            trigger_character.as_deref(),
+            cursor,
+            imports,
+            imports_ranked_usage,
+            show_ranking_info,
+        ),
+        server_prot::request::Command::AUTOFIX_EXPORTS {
+            input,
+            verbose: _,
+            wait_for_recheck: _,
+        } => handle_autofix_exports(options, env, shared_mem, node_modules_containers, &input),
+        server_prot::request::Command::AUTOFIX_MISSING_LOCAL_ANNOT {
+            input,
+            verbose: _,
+            wait_for_recheck: _,
+        } => handle_autofix_missing_local_annot(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            &input,
+        ),
+        server_prot::request::Command::CHECK_FILE {
+            input,
+            verbose: _,
+            force,
+            include_warnings: _,
+            wait_for_recheck: _,
+        } => handle_check_file(
+            options,
+            env,
+            shared_mem,
+            force,
+            &input,
+            node_modules_containers,
+        ),
+        server_prot::request::Command::COVERAGE {
+            input,
+            force,
+            wait_for_recheck: _,
+        } => handle_coverage(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            &input,
+            force,
+        ),
+        server_prot::request::Command::BATCH_COVERAGE {
+            batch,
+            wait_for_recheck: _,
+        } => handle_batch_coverage(options, env, &batch),
+        server_prot::request::Command::CYCLE {
+            filename,
+            types_only,
+        } => {
+            let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&filename);
+            handle_cycle(env, &file_key, types_only)
+        }
+        server_prot::request::Command::DUMP_TYPES {
+            input,
+            evaluate_type_destructors,
+            for_tool,
+            wait_for_recheck: _,
+        } => handle_dump_types(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            if evaluate_type_destructors {
+                flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode::EvaluateAll
+            } else {
+                flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode::EvaluateNone
+            },
+            for_tool,
+            &input,
+        ),
+        server_prot::request::Command::FIND_MODULE {
+            moduleref,
+            filename,
+            wait_for_recheck: _,
+        } => handle_find_module(
+            options,
+            shared_mem,
+            node_modules_containers,
+            &moduleref,
+            &filename,
+        ),
+        server_prot::request::Command::FORCE_RECHECK {
+            files,
+            focus,
+            missed_changes,
+            changed_mergebase,
+        } => handle_force_recheck(files, focus, missed_changes, changed_mergebase),
+        server_prot::request::Command::GET_DEF {
+            input,
+            line,
+            r#char,
+            wait_for_recheck: _,
+        } => handle_get_def(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            &input,
+            line as u32,
+            r#char as u32,
+        ),
+        server_prot::request::Command::GRAPH_DEP_GRAPH {
+            root,
+            strip_root,
+            outfile,
+            types_only,
+        } => handle_graph_dep_graph(env, &root, strip_root, &outfile, types_only),
+        server_prot::request::Command::INFER_TYPE(input) => {
+            handle_infer_type(options, env, shared_mem, node_modules_containers, &input)
+        }
+        server_prot::request::Command::INLAY_HINT(input) => {
+            handle_inlay_hint(options, env, shared_mem, node_modules_containers, &input)
+        }
+        server_prot::request::Command::TYPE_OF_NAME(input) => {
+            handle_type_of_name(options, env, shared_mem, node_modules_containers, &input)
+        }
+        server_prot::request::Command::INSERT_TYPE {
+            input,
+            target,
+            verbose: _,
+            location_is_strict,
+            wait_for_recheck: _,
+            omit_targ_defaults,
+        } => handle_insert_type(
+            options,
+            env,
+            shared_mem,
+            node_modules_containers,
+            &input,
+            &target,
+            omit_targ_defaults,
+            location_is_strict,
+        ),
+        server_prot::request::Command::RAGE { files } => {
+            handle_rage(options, env, &shared_mem, Some(&files))
+        }
+        server_prot::request::Command::SAVE_STATE { out } => {
+            let filename = match out {
+                server_prot::request::SaveStateOut::File(path) => {
+                    Some(path.to_string_lossy().to_string())
+                }
+                server_prot::request::SaveStateOut::Scm => {
+                    flow_saved_state::output_filename(options)
+                        .ok()
+                        .map(|path| path.to_string_lossy().to_string())
+                }
+            };
+            match filename {
+                Some(filename) => handle_save_state(genv, env, &filename),
+                None => (
+                    server_prot::response::Response::SAVE_STATE(Err(
+                        "Failed to determine saved-state output filename".to_string(),
+                    )),
+                    None,
+                ),
+            }
+        }
+        server_prot::request::Command::STATUS {
+            include_warnings: _,
+        } => handle_status(options, env, &shared_mem),
+        server_prot::request::Command::LLM_CONTEXT(input) => {
+            handle_llm_context(options, env, shared_mem, node_modules_containers, &input)
+        }
+    }
+}
+
+pub fn handle_ephemeral_command_for_standalone_wrapped(
+    genv: &server_env::Genv,
+    env: &server_env::Env,
+    command: server_prot::request::Command,
+) -> EphemeralParallelizableResult {
+    struct CommandSummaryGuard {
+        cmd_str: String,
+    }
+
+    impl Drop for CommandSummaryGuard {
+        fn drop(&mut self) {
+            send_command_summary(&(), &self.cmd_str);
+        }
+    }
+
+    let cmd_str = server_prot::request::to_string(&command);
+    eprintln!("{}", cmd_str);
+    flow_server_env::monitor_rpc::status_update(
+        flow_server_env::server_status::Event::HandlingRequestStart,
+    );
+    let _guard = CommandSummaryGuard {
+        cmd_str: cmd_str.clone(),
+    };
+    handle_ephemeral_command_for_standalone(genv, env, command)
 }
 
 fn find_code_actions(
@@ -3329,6 +3783,13 @@ fn get_ephemeral_handler(
     }
 }
 
+pub fn classify_ephemeral_command(
+    genv: &server_env::Genv,
+    command: &server_prot::request::Command,
+) -> CommandHandler {
+    get_ephemeral_handler(genv, command)
+}
+
 fn send_command_summary(_profiling: &(), name: &str) {
     flow_server_env::monitor_rpc::send_telemetry(lsp_prot::TelemetryFromServer::CommandSummary {
         name: name.to_string(),
@@ -3342,6 +3803,7 @@ fn send_command_summary(_profiling: &(), name: &str) {
 fn send_ephemeral_response<T>(
     cmd_str: &str,
     request_id: &str,
+    _client_context: &lsp_prot::LoggingContext,
     result: Result<
         (T, server_prot::response::Response, Option<lsp_prot::Json>),
         (String, Option<lsp_prot::Json>),
@@ -3360,6 +3822,21 @@ fn send_ephemeral_response<T>(
     }
 }
 
+fn format_client_context(client_context: &lsp_prot::LoggingContext) -> String {
+    let mut parts = Vec::new();
+    if let Some(from) = client_context.from.as_deref() {
+        parts.push(format!("from={from}"));
+    }
+    if let Some(agent_id) = client_context.agent_id.as_deref() {
+        parts.push(format!("agent_id={agent_id}"));
+    }
+    if parts.is_empty() {
+        String::new()
+    } else {
+        format!(" [{}]", parts.join(" "))
+    }
+}
+
 fn handle_ephemeral_uncaught_exception<T>(
     cmd_str: &str,
     exn_str: String,
@@ -3375,14 +3852,14 @@ fn handle_ephemeral_uncaught_exception<T>(
 fn wrap_ephemeral_handler(
     genv: &server_env::Genv,
     request_id: &str,
-    _client_context: &(),
+    client_context: &lsp_prot::LoggingContext,
     cmd_str: &str,
     handler: impl FnOnce() -> Result<
         ((), server_prot::response::Response, Option<lsp_prot::Json>),
         (String, Option<lsp_prot::Json>),
     >,
 ) -> Result<(), ()> {
-    eprintln!("{}", cmd_str);
+    eprintln!("{cmd_str}{}", format_client_context(client_context));
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestStart,
     );
@@ -3399,21 +3876,21 @@ fn wrap_ephemeral_handler(
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
         });
     send_command_summary(&(), cmd_str);
-    send_ephemeral_response(cmd_str, request_id, result)?;
+    send_ephemeral_response(cmd_str, request_id, client_context, result)?;
     Ok(())
 }
 
 fn wrap_immediate_ephemeral_handler(
     genv: &server_env::Genv,
     request_id: &str,
-    _client_context: &(),
+    client_context: &lsp_prot::LoggingContext,
     cmd_str: &str,
     handler: impl FnOnce() -> Result<
         ((), server_prot::response::Response, Option<lsp_prot::Json>),
         (String, Option<lsp_prot::Json>),
     >,
 ) -> Result<(), ()> {
-    eprintln!("{}", cmd_str);
+    eprintln!("{cmd_str}{}", format_client_context(client_context));
     let _should_print_summary = genv.options.profile;
     let result =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(handler)).unwrap_or_else(|e| {
@@ -3427,7 +3904,7 @@ fn wrap_immediate_ephemeral_handler(
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
         });
     send_command_summary(&(), cmd_str);
-    send_ephemeral_response(cmd_str, request_id, result)?;
+    send_ephemeral_response(cmd_str, request_id, client_context, result)?;
     Ok(())
 }
 
@@ -3441,7 +3918,7 @@ fn handle_ephemeral_immediately_unsafe(
 fn handle_ephemeral_immediately(
     genv: &server_env::Genv,
     request_id: &str,
-    client_context: &(),
+    client_context: &lsp_prot::LoggingContext,
     cmd_str: &str,
     workload: impl FnOnce() -> (server_prot::response::Response, Option<lsp_prot::Json>),
 ) -> Result<(), ()> {
@@ -3451,8 +3928,9 @@ fn handle_ephemeral_immediately(
 }
 
 fn handle_parallelizable_ephemeral(
-    genv: &'static server_env::Genv,
+    genv: server_env::Genv,
     request_id: String,
+    client_context: lsp_prot::LoggingContext,
     cmd_str: String,
     workload: Box<
         dyn FnOnce(&server_env::Env) -> (server_prot::response::Response, Option<lsp_prot::Json>)
@@ -3463,7 +3941,7 @@ fn handle_parallelizable_ephemeral(
         Box::new(|| false);
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
         move |env: &server_env::Env| {
-            let result = wrap_ephemeral_handler(genv, &request_id, &(), &cmd_str, || {
+            let result = wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || {
                 let (response, json_data) = workload(env);
                 Ok(((), response, json_data))
             });
@@ -3479,8 +3957,9 @@ fn handle_parallelizable_ephemeral(
 }
 
 fn handle_nonparallelizable_ephemeral(
-    genv: &'static server_env::Genv,
+    genv: server_env::Genv,
     request_id: String,
+    client_context: lsp_prot::LoggingContext,
     cmd_str: String,
     workload: Box<
         dyn FnOnce(&server_env::Env) -> (server_prot::response::Response, Option<lsp_prot::Json>)
@@ -3490,10 +3969,11 @@ fn handle_nonparallelizable_ephemeral(
     let workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> = Box::new(|| false);
     let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
         Box::new(move |env: server_env::Env| {
-            let _result = wrap_ephemeral_handler(genv, &request_id, &(), &cmd_str, || {
-                let (response, json_data) = workload(&env);
-                Ok(((), response, json_data))
-            });
+            let _result =
+                wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || {
+                    let (response, json_data) = workload(&env);
+                    Ok(((), response, json_data))
+                });
             env
         });
     flow_server_env::workload_stream::Workload {
@@ -3502,12 +3982,38 @@ fn handle_nonparallelizable_ephemeral(
     }
 }
 
+fn clone_ephemeral_genv(genv: &server_env::Genv) -> server_env::Genv {
+    server_env::Genv {
+        options: genv.options.clone(),
+        workers: None,
+        shared_mem: genv.shared_mem.dupe(),
+        node_modules_containers: genv.node_modules_containers.clone(),
+    }
+}
+
+fn handle_ephemeral_immediate_command(
+    command: server_prot::request::Command,
+) -> (server_prot::response::Response, Option<lsp_prot::Json>) {
+    match command {
+        server_prot::request::Command::FORCE_RECHECK {
+            files,
+            focus,
+            missed_changes,
+            changed_mergebase,
+        } => handle_force_recheck(files, focus, missed_changes, changed_mergebase),
+        _ => unreachable!(
+            "unexpected immediate ephemeral command: {}",
+            server_prot::request::to_string(&command)
+        ),
+    }
+}
+
 pub fn enqueue_or_handle_ephemeral(
     genv: &server_env::Genv,
     (request_id, command_with_context): (monitor_prot::RequestId, ServerCommandWithContext),
 ) {
     let ServerCommandWithContext {
-        client_logging_context: _client_context,
+        client_logging_context: client_context,
         command,
     } = command_with_context;
     let cmd_str = format!(
@@ -3517,24 +4023,46 @@ pub fn enqueue_or_handle_ephemeral(
     );
     match get_ephemeral_handler(genv, &command) {
         CommandHandler::HandleImmediately => {
-            let _result = handle_ephemeral_immediately(genv, &request_id, &(), &cmd_str, || {
-                handle_force_recheck(vec![], false, false, false)
-            });
+            let _result = handle_ephemeral_immediately(
+                genv,
+                &request_id,
+                &client_context,
+                &cmd_str,
+                move || handle_ephemeral_immediate_command(command),
+            );
             match _result {
                 Ok(()) | Err(()) => {}
             }
         }
         CommandHandler::HandleParallelizable => {
-            eprintln!(
-                "Ephemeral parallelizable command not yet wired up: {}",
-                cmd_str
+            let queued_genv = clone_ephemeral_genv(genv);
+            let queued_client_context = client_context.clone();
+            let workload = Box::new(move |env: &server_env::Env| {
+                handle_ephemeral_command_for_standalone(&queued_genv, env, command)
+            });
+            let workload = handle_parallelizable_ephemeral(
+                clone_ephemeral_genv(genv),
+                request_id.clone(),
+                queued_client_context,
+                cmd_str.clone(),
+                workload,
             );
+            server_monitor_listener_state::push_new_parallelizable_workload(&cmd_str, workload);
         }
         CommandHandler::HandleNonparallelizable => {
-            eprintln!(
-                "Ephemeral nonparallelizable command not yet wired up: {}",
-                cmd_str
+            let queued_genv = clone_ephemeral_genv(genv);
+            let queued_client_context = client_context.clone();
+            let workload = Box::new(move |env: &server_env::Env| {
+                handle_ephemeral_command_for_standalone(&queued_genv, env, command)
+            });
+            let workload = handle_nonparallelizable_ephemeral(
+                clone_ephemeral_genv(genv),
+                request_id,
+                queued_client_context,
+                cmd_str.clone(),
+                workload,
             );
+            server_monitor_listener_state::push_new_workload(&cmd_str, workload);
         }
     }
 }
@@ -3611,12 +4139,33 @@ fn handle_persistent_uncaught_exception(
     }
 }
 
+fn persistent_profiling_json(duration_secs: f64) -> lsp_prot::ProfilingFinished {
+    serde_json::json!({
+        "timing": {
+            "total_wall_duration": duration_secs,
+        },
+        "memory": {},
+    })
+}
+
+fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
+    lsp_prot::LoggingContext {
+        from: None,
+        agent_id: None,
+    }
+}
+
 fn send_persistent_response<T>(
     client_id: lsp_prot::ClientId,
+    profiling: lsp_prot::ProfilingFinished,
     result: (T, lsp_prot::Response, lsp_prot::Metadata),
 ) -> T {
     let (ret, lsp_response, metadata) = result;
-    let metadata = lsp_prot::Metadata { ..metadata };
+    let metadata = lsp_prot::Metadata {
+        server_profiling: Some(profiling),
+        server_logging_context: Some(persistent_server_logging_context()),
+        ..metadata
+    };
     let response = (lsp_response.clone(), metadata);
     if let Some(client) = persistent_connection::get_client(client_id) {
         persistent_connection::send_response(response, &client);
@@ -3650,6 +4199,7 @@ fn wrap_persistent_handler<T: Default>(
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestStart,
     );
+    let start = std::time::Instant::now();
     let _should_print_summary = options.profile;
     let result = match check_if_cancelled(&request, metadata.clone()) {
         Some((response, json_data)) => (default_ret, response, json_data),
@@ -3668,7 +4218,8 @@ fn wrap_persistent_handler<T: Default>(
             })
         }
     };
-    let ret = send_persistent_response(client_id, result);
+    let profiling = persistent_profiling_json(start.elapsed().as_secs_f64());
+    let ret = send_persistent_response(client_id, profiling.clone(), result);
     send_command_summary(&(), &lsp_prot::string_of_request(&request));
     ret
 }
@@ -3827,13 +4378,20 @@ fn handle_persistent_subscribe(
 }
 
 fn enqueue_did_open_files(files: &[(String, String)]) {
-    use std::collections::BTreeMap;
-    use std::sync::Mutex;
-    static PENDING: Mutex<BTreeMap<String, String>> = Mutex::new(BTreeMap::new());
-    let mut pending = PENDING.lock().unwrap();
+    let mut pending = DID_OPEN_PENDING_FILES.lock().unwrap();
     for (filename, file_content) in files {
         pending.insert(filename.clone(), file_content.clone());
     }
+}
+
+fn get_and_clear_did_open_files() -> Vec<(String, String)> {
+    let mut pending = DID_OPEN_PENDING_FILES.lock().unwrap();
+    let files = pending
+        .iter()
+        .map(|(filename, file_content)| (filename.clone(), file_content.clone()))
+        .collect();
+    pending.clear();
+    files
 }
 
 fn handle_persistent_did_open_notification(
@@ -3841,7 +4399,9 @@ fn handle_persistent_did_open_notification(
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    did_open(env, client_id);
+    if !get_and_clear_did_open_files().is_empty() {
+        did_open(env, client_id);
+    }
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
 
@@ -3861,7 +4421,7 @@ fn handle_persistent_did_change_notification(
         content_changes,
     } = params;
     let uri = text_document.uri;
-    let filename = uri.path();
+    let filename = lsp_uri_to_flow_path(&uri);
     let Some(client) = persistent_connection::get_client(client_id) else {
         return mk_lsp_error_response(
             None,
@@ -3870,7 +4430,7 @@ fn handle_persistent_did_change_notification(
             metadata,
         );
     };
-    match persistent_connection::client_did_change(&client, filename, &content_changes) {
+    match persistent_connection::client_did_change(&client, &filename, &content_changes) {
         Ok(()) => (lsp_prot::Response::LspFromServer(None), metadata),
         Err((reason, stack)) => mk_lsp_error_response(None, reason, Some(stack), metadata),
     }
@@ -4073,15 +4633,28 @@ fn handle_persistent_infer_type(
     let include_refinement_info = refinement_info_on_hover(client_id);
     let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
+    let input = server_prot::infer_type_options::T {
+        input: file_input.clone(),
+        line: line as i32,
+        r#char: column as i32,
+        verbose: None,
+        omit_targ_defaults: false,
+        wait_for_recheck: None,
+        verbose_normalizer: false,
+        max_depth: 40,
+        json: false,
+        strip_root: None,
+        expanded: false,
+        debug_print_internal_repr: false,
+        no_typed_ast_for_imports: false,
+    };
     let (result, extra_data) = infer_type(
         options,
         env,
         type_parse_artifacts_cache.as_ref(),
         shared_mem.clone(),
         node_modules_containers,
-        &file_input,
-        line,
-        column,
+        &input,
         include_refinement_info,
     );
     let metadata = with_data(extra_data, metadata);
@@ -4671,14 +5244,22 @@ fn get_file_artifacts(
     >,
     client_id: lsp_prot::ClientId,
     pos: &lsp_types::TextDocumentPositionParams,
+    file_input: Option<&FileInput>,
 ) -> (
     Result<Option<(FileArtifacts<'static>, flow_parser::file_key::FileKey)>, String>,
     Option<lsp_prot::Json>,
 ) {
-    let file_input = file_input_of_text_document_position(client_id, pos);
+    let default_file_input;
+    let file_input = match file_input {
+        Some(file_input) => file_input,
+        None => {
+            default_file_input = file_input_of_text_document_position(client_id, pos);
+            &default_file_input
+        }
+    };
     let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
-    match of_file_input(options, env, &file_input) {
+    match of_file_input(options, env, file_input) {
         Err(IdeFileError::Failed(reason)) => (Err(reason), None),
         Err(IdeFileError::Skipped(reason)) => (Ok(None), json_of_skipped(&reason)),
         Ok((file_key, content)) => {
@@ -4769,6 +5350,7 @@ fn map_local_find_references_results<T>(
     client_id: lsp_prot::ClientId,
     f: &dyn Fn(&flow_services_references::find_refs_types::SingleRef) -> Option<T>,
     text_doc_position: &lsp_types::TextDocumentPositionParams,
+    file_input: Option<&FileInput>,
 ) -> (Result<Vec<T>, String>, Option<lsp_prot::Json>) {
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
         options,
@@ -4777,6 +5359,7 @@ fn map_local_find_references_results<T>(
         node_modules_containers,
         client_id,
         text_doc_position,
+        file_input,
     );
     match file_artifacts_opt {
         Ok(Some((file_artifacts, file_key))) => {
@@ -4840,6 +5423,7 @@ fn handle_global_find_references_local_only(
         node_modules_containers,
         client_id,
         text_doc_position,
+        None,
     );
     match file_artifacts_opt {
         Err(reason) => {
@@ -4962,6 +5546,7 @@ fn handle_persistent_document_highlight(
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::DocumentHighlightParams,
+    file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let ref_to_highlight =
@@ -4982,6 +5567,7 @@ fn handle_persistent_document_highlight(
         client_id,
         &ref_to_highlight,
         &params.text_document_position_params,
+        file_input,
     );
     let metadata = with_data(extra_data, metadata);
     match result {
@@ -5005,6 +5591,7 @@ fn handle_persistent_prepare_rename(
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::TextDocumentPositionParams,
+    file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
@@ -5014,6 +5601,7 @@ fn handle_persistent_prepare_rename(
         node_modules_containers,
         client_id,
         params,
+        file_input,
     );
     match file_artifacts_opt {
         Err(reason) => {
@@ -5072,6 +5660,7 @@ fn handle_persistent_rename(
         node_modules_containers,
         client_id,
         &text_doc_position,
+        None,
     );
     match file_artifacts_opt {
         Err(reason) => {
@@ -5326,7 +5915,7 @@ fn handle_persistent_llm_context(
         .filter_map(|file_uri_str| {
             let file_path = lsp_types::Url::parse(file_uri_str)
                 .ok()
-                .map(|u| u.path().to_string())
+                .map(|uri| lsp_uri_to_flow_path(&uri))
                 .unwrap_or_else(|| file_uri_str.clone());
             let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&file_path);
             let text_document = lsp_types::TextDocumentIdentifier {
@@ -5383,7 +5972,7 @@ fn handle_persistent_rage(
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let root = genv.options.root.display().to_string();
-    let items = collect_rage(&genv.options, env)
+    let items = collect_rage(&genv.options, env, genv.shared_mem.as_ref(), None)
         .into_iter()
         .map(|(title, data)| lsp_mapper::rage::RageItem {
             title: Some(format!("{}:{}", root, title)),
@@ -5894,16 +6483,142 @@ fn linked_editing_range_handler(
     }
 }
 
+fn rename_module_file_sig_options(
+    options: &Options,
+) -> flow_parser_utils::file_sig::FileSigOptions {
+    flow_parser_utils::file_sig::FileSigOptions {
+        enable_enums: options.enums,
+        enable_jest_integration: options.enable_jest_integration,
+        enable_relay_integration: options.enable_relay_integration,
+        explicit_available_platforms: None,
+        file_options: options.file_options.dupe(),
+        haste_module_ref_prefix: options.haste_module_ref_prefix.dupe(),
+        project_options: options.projects_options.dupe(),
+        relay_integration_module_prefix: options.relay_integration_module_prefix.dupe(),
+    }
+}
+
+fn rename_module_edits_for_file(
+    old_haste_name: &str,
+    new_haste_name: &str,
+    file_sig: &flow_parser_utils::file_sig::FileSig,
+) -> Vec<lsp_types::TextEdit> {
+    use flow_parser_utils::file_sig::Require;
+
+    file_sig
+        .requires()
+        .iter()
+        .filter_map(|require| {
+            let (loc, replacement) = match require {
+                Require::Require { source, prefix, .. }
+                    if source.name().as_str() == old_haste_name =>
+                {
+                    (
+                        source.loc().clone(),
+                        match prefix {
+                            Some(prefix) => format!("{}{}", prefix, new_haste_name),
+                            None => new_haste_name.to_string(),
+                        },
+                    )
+                }
+                Require::ImportDynamic { source, .. }
+                | Require::Import0 { source }
+                | Require::Import { source, .. }
+                | Require::ExportFrom { source }
+                    if source.name().as_str() == old_haste_name =>
+                {
+                    (source.loc().clone(), new_haste_name.to_string())
+                }
+                _ => return None,
+            };
+            Some(lsp_types::TextEdit {
+                range: loc_to_lsp_range(&loc),
+                new_text: serde_json::to_string(&replacement).unwrap_or_else(|_| {
+                    format!(
+                        "\"{}\"",
+                        replacement.replace('\\', "\\\\").replace('"', "\\\"")
+                    )
+                }),
+            })
+        })
+        .collect()
+}
+
 fn handle_persistent_rename_file_imports(
+    options: &Options,
+    env: &server_env::Env,
+    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
+    params: &lsp_mapper::rename_file_imports::Params,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    mk_lsp_error_response(
-        Some(id),
-        "RenameModule is not yet ported to Rust".to_string(),
-        None,
-        metadata,
-    )
+    let text_document_identifier = lsp_types::TextDocumentIdentifier {
+        uri: params.old_uri.clone(),
+    };
+    let file_input = file_input_of_text_document_identifier(client_id, &text_document_identifier);
+    let result = match of_file_input(options, env, &file_input) {
+        Err(IdeFileError::Failed(reason)) => Err(reason),
+        Err(IdeFileError::Skipped(reason)) => Err(reason),
+        Ok((file_key, _content)) => {
+            let old_haste_name = flow_services_module::exported_module(
+                options,
+                &file_key,
+                &flow_services_module::PackageInfo::none(),
+            );
+            let new_flowpath = lsp_uri_to_flow_path(&params.new_uri);
+            let new_file_key = file_key.map(|_| new_flowpath.clone());
+            let new_haste_name = flow_services_module::exported_module(
+                options,
+                &new_file_key,
+                &flow_services_module::PackageInfo::none(),
+            );
+            match (old_haste_name, new_haste_name) {
+                (Some(old_haste_info), Some(new_haste_info)) => {
+                    let mut changes = std::collections::HashMap::new();
+                    let file_sig_opts = rename_module_file_sig_options(options);
+                    if let Some(haste_module) = shared_mem.get_haste_module(&old_haste_info) {
+                        for dependent in haste_module.get_dependents() {
+                            let Some(ast) = shared_mem.get_ast(&dependent) else {
+                                continue;
+                            };
+                            let Ok(uri) = lsp_types::Url::from_file_path(dependent.to_path_buf())
+                            else {
+                                continue;
+                            };
+                            let dependent_file_sig =
+                                flow_parser_utils::file_sig::FileSig::from_program(
+                                    &dependent,
+                                    &ast,
+                                    &file_sig_opts,
+                                );
+                            let edits = rename_module_edits_for_file(
+                                old_haste_info.module_name().as_str(),
+                                new_haste_info.module_name().as_str(),
+                                &dependent_file_sig,
+                            );
+                            if !edits.is_empty() {
+                                changes.insert(uri, edits);
+                            }
+                        }
+                    }
+                    Ok(lsp_types::WorkspaceEdit {
+                        changes: Some(changes),
+                        ..Default::default()
+                    })
+                }
+                _ => Err("Error converting file names to Haste paths".to_string()),
+            }
+        }
+    };
+    match result {
+        Ok(result) => {
+            let response =
+                LspMessage::ResponseMessage(id, LspResult::RenameFileImportsResult(result));
+            (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+        }
+        Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
+    }
 }
 
 fn handle_persistent_malformed_command(
@@ -5985,7 +6700,7 @@ fn live_diagnostics_of_uri(
         Err(_) => lsp_types::Url::from_file_path(uri)
             .unwrap_or_else(|_| lsp_types::Url::parse(&format!("file://{}", uri)).unwrap()),
     };
-    let file_path = live_errors_uri.path().to_string();
+    let file_path = lsp_uri_to_flow_path(&live_errors_uri);
     let file_input = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::get_file(&client, &file_path))
         .unwrap_or_else(|| FileInput::FileName(file_path.clone()));
@@ -6167,25 +6882,7 @@ fn handle_live_errors_request(
     uri: &str,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    use std::collections::BTreeMap;
-    use std::sync::Mutex;
-    static URI_TO_LATEST_METADATA_MAP: Mutex<BTreeMap<String, lsp_prot::Metadata>> =
-        Mutex::new(BTreeMap::new());
-
-    fn is_latest_metadata(uri: &str, metadata: &lsp_prot::Metadata) -> bool {
-        let map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
-        match map.get(uri) {
-            Some(latest_metadata) => latest_metadata.start_wall_time == metadata.start_wall_time,
-            None => false,
-        }
-    }
-
-    {
-        let mut map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
-        map.insert(uri.to_string(), metadata.clone());
-    }
-
-    if !is_latest_metadata(uri, &metadata) {
+    if !is_latest_live_errors_metadata(uri, &metadata) {
         return (
             lsp_prot::Response::LiveErrorsResponse(Err(lsp_prot::LiveErrorsFailure {
                 live_errors_failure_kind: lsp_prot::ErrorResponseKind::CanceledErrorResponse,
@@ -6216,7 +6913,7 @@ fn handle_live_errors_request(
         ),
     };
 
-    if is_latest_metadata(uri, &ret.1) {
+    if is_latest_live_errors_metadata(uri, &ret.1) {
         let mut map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
         map.remove(uri);
     }
@@ -6340,8 +7037,7 @@ fn get_persistent_handler(
         )) => {
             let text_document = &params.text_document;
             let text = text_document.text.clone();
-            let uri = &text_document.uri;
-            let fn_ = uri.path().to_string();
+            let fn_ = lsp_uri_to_flow_path(&text_document.uri);
             let files = vec![(fn_, text)];
             let did_anything_change = persistent_connection::get_client(client_id)
                 .map(|client| persistent_connection::client_did_open(&client, &files))
@@ -6383,7 +7079,7 @@ fn get_persistent_handler(
             LspNotification::DidCloseNotification(params),
         )) => {
             let text_document = &params.text_document;
-            let fn_ = text_document.uri.path().to_string();
+            let fn_ = lsp_uri_to_flow_path(&text_document.uri);
             let filenames = vec![fn_];
             // Close this file immediately in case another didOpen comes soon
             let did_anything_change = persistent_connection::get_client(client_id)
@@ -6439,6 +7135,10 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input = file_input_of_text_document_position_opt(
+                client_id,
+                &params.text_document_position_params,
+            );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6453,7 +7153,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
-                        None,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6467,6 +7167,10 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input = file_input_of_text_document_position_opt(
+                client_id,
+                &params.text_document_position_params,
+            );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6481,7 +7185,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
-                        None,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6522,6 +7226,8 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input =
+                file_input_of_text_document_position_opt(client_id, &params.text_document_position);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6536,7 +7242,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
-                        None,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6550,6 +7256,10 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input = file_input_of_text_document_position_opt(
+                client_id,
+                &params.text_document_position_params,
+            );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6564,7 +7274,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
-                        None,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6605,6 +7315,10 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input = file_input_of_text_document_position_opt(
+                client_id,
+                &params.text_document_position_params,
+            );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6619,6 +7333,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6656,6 +7371,7 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input = file_input_of_text_document_position_opt(client_id, &params);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6670,6 +7386,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6723,6 +7440,8 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
+            let file_input =
+                file_input_of_text_document_identifier_opt(client_id, &params.text_document);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -6737,7 +7456,7 @@ fn get_persistent_handler(
                         client_id,
                         id,
                         &params,
-                        None,
+                        file_input.as_ref(),
                         metadata,
                     )
                 }),
@@ -6748,11 +7467,12 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let options_arc = genv.options.clone();
+            let shared_mem = genv.shared_mem.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     let root = options_arc.root.display().to_string();
-                    let items = collect_rage(&options_arc, env)
+                    let items = collect_rage(&options_arc, env, shared_mem.as_ref(), None)
                         .into_iter()
                         .map(|(title, data)| lsp_mapper::rage::RageItem {
                             title: Some(format!("{}:{}", root, title)),
@@ -6953,13 +7673,26 @@ fn get_persistent_handler(
 
         lsp_prot::Request::LspToServer(LspMessage::RequestMessage(
             id,
-            LspRequest::RenameFileImportsRequest { .. },
+            LspRequest::RenameFileImportsRequest(params),
         )) => {
             let id = id.clone();
             let metadata = metadata.clone();
+            let params = params.clone();
+            let shared_mem = genv.shared_mem.clone();
+            let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |_env| handle_persistent_rename_file_imports(id, metadata)),
+                Box::new(move |env| {
+                    handle_persistent_rename_file_imports(
+                        &options_for_closure,
+                        env,
+                        shared_mem.clone(),
+                        client_id,
+                        id,
+                        &params,
+                        metadata,
+                    )
+                }),
             )
         }
 
@@ -7000,16 +7733,21 @@ fn get_persistent_handler(
         }
 
         lsp_prot::Request::LspToServer(unhandled) => {
+            let id = match &unhandled {
+                lsp_prot::LspMessage::RequestMessage(id, _) => Some(id.clone()),
+                _ => None,
+            };
             let unhandled_str = format!("{:?}", unhandled);
             let metadata = metadata.clone();
             PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
-                handle_persistent_unsupported(None, &unhandled_str, metadata)
+                handle_persistent_unsupported(id.clone(), &unhandled_str, metadata)
             }))
         }
 
         lsp_prot::Request::LiveErrorsRequest(uri) => {
             let uri = uri.to_string();
             let metadata = metadata.clone();
+            live_errors_mark_latest_metadata(&uri, &metadata);
             let options_arc = Arc::new(options.clone());
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
@@ -7050,6 +7788,7 @@ fn wrap_immediate_persistent_handler<T: Default>(
         "Persistent request: {}",
         lsp_prot::string_of_request(&request)
     );
+    let start = std::time::Instant::now();
     let _should_print_summary = options.profile;
     let result = match check_if_cancelled(&request, metadata.clone()) {
         Some((response, json_data)) => (default_ret, response, json_data),
@@ -7068,7 +7807,8 @@ fn wrap_immediate_persistent_handler<T: Default>(
             })
         }
     };
-    send_persistent_response(client_id, result)
+    let profiling = persistent_profiling_json(start.elapsed().as_secs_f64());
+    send_persistent_response(client_id, profiling, result)
 }
 
 fn handle_persistent_immediately_unsafe(

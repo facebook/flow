@@ -129,6 +129,7 @@ pub fn mk_job_stealing<A, B, C>(
 /// correctly detected.
 pub fn mk_next<R>(
     intermediate_result_callback: Arc<dyn Fn(&[R]) + Send + Sync>,
+    _quiet: bool,
     max_size: usize,
     num_workers: usize,
     files: Vec<FileKey>,
@@ -148,9 +149,13 @@ where
     let files_completed_for_status = files_completed.dupe();
     let status_update = move || {
         let finished = files_completed_for_status.load(Ordering::Acquire);
-        eprintln!(
-            "Checking progress: {}/{} files finished",
-            finished, total_count
+        flow_server_env::monitor_rpc::status_update(
+            flow_server_env::server_status::Event::CheckingProgress(
+                flow_server_env::server_status::Progress {
+                    total: Some(total_count as i32),
+                    finished: finished as i32,
+                },
+            ),
         );
     };
 

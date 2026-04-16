@@ -32,6 +32,35 @@ use crate::server_env_build;
 
 type NodeModulesContainers = Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>;
 
+mod flow_event_logger {
+    fn emit(event_name: &str, fields: &str) {
+        log::info!("{} {}", event_name, fields);
+    }
+
+    pub fn idle_heartbeat(idle_time: f64) {
+        emit("IDLE_HEARTBEAT", &format!("idle_time={idle_time:.3}"));
+    }
+
+    pub fn init_done(saved_state_fetcher: &str, first_internal_error: Option<&str>, duration: f64) {
+        let first_internal_error = first_internal_error.unwrap_or("");
+        emit(
+            "INIT_DONE",
+            &format!(
+                "saved_state_fetcher={saved_state_fetcher} first_internal_error={first_internal_error:?} duration={duration:.3}"
+            ),
+        );
+    }
+
+    pub fn sharedmem_gc_ran(old_size: i32, new_size: i32, time_taken: f64) {
+        emit(
+            "SHAREDMEM_GC_RAN",
+            &format!(
+                "kind=aggressive old_size={old_size} new_size={new_size} time_taken={time_taken:.6}"
+            ),
+        );
+    }
+}
+
 struct ProfilingRunning {
     start: std::time::Instant,
 }
@@ -105,7 +134,22 @@ fn extract_flowlibs_or_exit(options: &Options) {
                 LibDir::Prelude(path) => flow_flowlib::LibDir::Prelude(path.clone()),
                 LibDir::Flowlib(path) => flow_flowlib::LibDir::Flowlib(path.clone()),
             };
-            flow_flowlib::extract(&flowlib_libdir);
+            let extract_result =
+                std::panic::catch_unwind(|| flow_flowlib::extract(&flowlib_libdir));
+            match extract_result {
+                Ok(()) => {}
+                Err(_) => {
+                    let libdir_str = flow_flowlib::path_of_libdir(&flowlib_libdir)
+                        .display()
+                        .to_string();
+                    let msg = format!(
+                        "Could not extract flowlib files into {}: extract failed",
+                        libdir_str
+                    );
+                    eprintln!("{}", msg);
+                    flow_common_exit_status::exit(FlowExitStatus::CouldNotExtractFlowlibs);
+                }
+            }
         }
         None => {}
     }
@@ -120,7 +164,11 @@ fn string_of_saved_state_fetcher(options: &Options) -> &'static str {
     }
 }
 
-fn idle_logging_loop(_options: &Options, _start_time: f64) {
+fn idle_logging_loop(
+    _options: &Options,
+    _start_time: f64,
+    stop_flag: &std::sync::Arc<std::sync::atomic::AtomicBool>,
+) {
     let idle_period_in_seconds = 300.0_f64;
     let sample = |profiling: &ProfilingRunning| {
         let cgroup_stats = crate::cgroup::get_stats();
@@ -143,22 +191,42 @@ fn idle_logging_loop(_options: &Options, _start_time: f64) {
     };
 
     let should_print_summary = _options.profile;
-    let (_profiling, ()) = with_profiling("Idle", should_print_summary, |profiling| {
-        let iterations = idle_period_in_seconds as u64;
-        for _ in 0..iterations {
-            sample(profiling);
-            std::thread::sleep(std::time::Duration::from_secs(1));
-        }
-    });
+    while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
+        let (_profiling, ()) = with_profiling("Idle", should_print_summary, |profiling| {
+            let iterations = idle_period_in_seconds as u64;
+            for _ in 0..iterations {
+                if stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                    break;
+                }
+                sample(profiling);
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        });
 
-    let _idle_time = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs_f64()
-        - _start_time;
+        let idle_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs_f64()
+            - _start_time;
+        log::info!("Idle heartbeat after {:.3}s", idle_time);
+        flow_event_logger::idle_heartbeat(idle_time);
+    }
 }
 
-fn gc_loop() {}
+fn gc_loop(
+    shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
+    stop_flag: &std::sync::Arc<std::sync::atomic::AtomicBool>,
+) {
+    while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        let on_compact = on_compact(shared_mem);
+        let done = shared_mem.collect_slice(10000);
+        on_compact();
+        if done {
+            break;
+        }
+    }
+}
 
 fn serve(
     _genv: &Genv,
@@ -182,11 +250,15 @@ fn serve(
             let stop = stop_flag.clone();
             move || {
                 if !stop.load(std::sync::atomic::Ordering::Relaxed) {
-                    idle_logging_loop(&options, start_time);
+                    idle_logging_loop(&options, start_time, &stop);
                 }
             }
         });
-        let gc_handle = std::thread::spawn(gc_loop);
+        let gc_handle = std::thread::spawn({
+            let shared_mem = shared_mem.clone();
+            let stop = stop_flag.clone();
+            move || gc_loop(&shared_mem, &stop)
+        });
         server_monitor_listener_state::wait_for_anything(
             &|skip_incompatible, updates| {
                 flow_server_rechecker::rechecker::process_updates(
@@ -217,11 +289,12 @@ fn serve(
             log::info!("Running a serial workload");
             _env = workload(_env);
         }
+        log::logger().flush();
     }
 }
 
 #[allow(dead_code)]
-fn on_compact(shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) -> impl FnOnce() {
+pub(crate) fn on_compact(shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) -> impl FnOnce() {
     monitor_rpc::status_update(server_status::Event::GCStart);
     let old_size = shared_mem.heap_size();
     let start_t = std::time::Instant::now();
@@ -240,6 +313,7 @@ fn on_compact(shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) -> impl FnO
                 new_size,
                 time_taken
             );
+            flow_event_logger::sharedmem_gc_ran(old_size, new_size, time_taken);
         }
     }
 }
@@ -308,6 +382,9 @@ pub fn check_supported_operating_system(options: &Options) {
 fn run(_init_id: &str, _options: Arc<Options>) {
     check_supported_operating_system(&_options);
 
+    // The active CLI `flow start` / `flow server` path still goes through
+    // `flow_server_monitor` -> `flow_server::standalone`. This older server
+    // entrypoint remains off that path and therefore runs without monitor IPC.
     monitor_rpc::disable();
 
     let genv = create_program_init(_init_id, _options.clone());
@@ -342,7 +419,7 @@ fn run(_init_id: &str, _options: Arc<Options>) {
 
     let should_print_summary = _options.profile;
     let pool = genv.workers.as_ref().expect("workers must be initialized");
-    let (profiling, (env, node_modules_containers, _first_internal_error)) =
+    let (profiling, (env, node_modules_containers, first_internal_error)) =
         with_profiling("Init", should_print_summary, |profiling| {
             let (env, node_modules_containers, first_internal_error) =
                 flow_services_inference::type_service::init(&genv.options, pool, &genv.shared_mem);
@@ -358,7 +435,12 @@ fn run(_init_id: &str, _options: Arc<Options>) {
     );
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
-    let _saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+    let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+    flow_event_logger::init_done(
+        saved_state_fetcher,
+        first_internal_error.as_deref(),
+        init_duration,
+    );
 
     log::info!("Server is READY");
 

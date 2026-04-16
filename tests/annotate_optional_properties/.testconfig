@@ -1,2 +1,1 @@
 cmd: codemod annotate-optional-properties --strip-root --quiet ./
-skip_rust_port: true

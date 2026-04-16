@@ -702,6 +702,20 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         ast_visitor::type_identifier_default(self, id)
     }
 
+    fn identifier(&mut self, id: &'ast ast::Identifier<ALoc, T>) -> Result<(), Found> {
+        let loc = &id.loc;
+        let name = &id.name;
+
+        if self.annot_covers_target(loc) {
+            let aloc = self.callback.loc_of_annot(loc);
+            self.request(GetDefRequest::Identifier {
+                name: name.dupe(),
+                loc: aloc,
+            })?;
+        }
+        ast_visitor::identifier_default(self, id)
+    }
+
     fn jsx_element(
         &mut self,
         expr_loc: &'ast T,
@@ -1187,7 +1201,7 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         result
     }
 
-    fn member_private_name(&mut self, pn: &'ast ast::PrivateName<ALoc>) -> Result<(), Found> {
+    fn private_name(&mut self, pn: &'ast ast::PrivateName<ALoc>) -> Result<(), Found> {
         let loc = &pn.loc;
         let name = &pn.name;
         if (self.covers_target)(loc) {

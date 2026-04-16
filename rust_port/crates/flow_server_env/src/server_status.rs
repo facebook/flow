@@ -8,7 +8,7 @@
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Progress {
     pub total: Option<i32>,
     pub finished: i32,
@@ -16,7 +16,7 @@ pub struct Progress {
 
 pub type Deadline = f64;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Event {
     /// The server is free  
     Ready,
@@ -55,7 +55,7 @@ pub enum Event {
     WatchmanWaitStart(Option<Deadline>),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum TypecheckStatus {
     /// A typecheck's initial state
     StartingTypecheck,
@@ -82,14 +82,30 @@ pub enum TypecheckStatus {
     Unaccounted(String),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum RestartReason {
     ServerOutOfDate,
     OutOfSharedMemory,
     Restart,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum TypecheckMode {
     /// Flow is busy starting up  
     Initializing,
@@ -101,7 +117,7 @@ pub enum TypecheckMode {
     Restarting(RestartReason),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Status {
     /// The server's initial state  
     StartingUpFlowServer,
@@ -118,12 +134,15 @@ pub enum Status {
 pub fn string_of_progress(progress: &Progress) -> String {
     match progress.total {
         None => format!("{}", progress.finished),
-        Some(total) => format!(
-            "{}/{} ({:02.1}%)",
-            progress.finished,
-            total,
-            100.0 * progress.finished as f64 / (total.max(1)) as f64
-        ),
+        Some(total) => {
+            let pct = 100.0 * progress.finished as f64 / (total.max(1)) as f64;
+            let pct = if progress.finished < total && pct >= 99.95 {
+                99.9
+            } else {
+                pct
+            };
+            format!("{}/{} ({:02.1}%)", progress.finished, total, pct)
+        }
     }
 }
 

@@ -17,7 +17,53 @@ use flow_common::files::FileOptions;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::command_spec;
+use crate::command_spec::arg_spec;
 use crate::command_utils;
+
+// ***********************************************************************
+// flow ls (list files) command
+// ***********************************************************************
+
+fn spec() -> command_spec::Spec {
+    let spec = command_spec::Spec::new(
+        "ls",
+        "Lists files visible to Flow",
+        format!(
+            "Usage: {} ls [OPTION]... [FILE]...\n\nLists files visible to Flow\n",
+            command_utils::exe_name()
+        ),
+    );
+    let spec = command_utils::add_base_flags(spec);
+    let spec = command_utils::add_ignore_version_flag(spec);
+    let spec = command_utils::add_strip_root_flag(spec);
+    let spec = command_utils::add_ignore_flag(spec);
+    let spec = command_utils::add_include_flag(spec);
+    let spec = command_utils::add_untyped_flag(spec);
+    let spec = command_utils::add_declaration_flag(spec);
+    let spec = command_utils::add_root_flag(spec);
+    let spec = command_utils::add_json_flags(spec);
+    let spec = command_utils::add_from_flag(spec);
+    let spec = spec.flag(
+        "--all",
+        &arg_spec::truthy(),
+        "Even list ignored files",
+        None,
+    );
+    let spec = spec.flag(
+        "--imaginary",
+        &arg_spec::truthy(),
+        "Even list non-existent specified files (normally they are silently dropped). Non-existent files are never considered to be libs.",
+        None,
+    );
+    let spec = spec.flag(
+        "--explain",
+        &arg_spec::truthy(),
+        "Output what kind of file each file is and why Flow cares about it",
+        None,
+    );
+    let spec = command_utils::add_input_file_flag(spec, "ls");
+    spec.anon("files or dirs", &arg_spec::list_of(arg_spec::string()))
+}
 
 enum FileResult {
     ImplicitlyIncluded,
@@ -67,13 +113,14 @@ fn explain(
     let result = {
         let (is_ignored, backup) = files::is_ignored(options, &file);
         if libs.contains(&file) {
+            // This is a lib file
             let flowtyped_path = files::get_flowtyped_path(root);
             if file.starts_with(&flowtyped_path.to_string_lossy().to_string()) {
                 FileResult::ImplicitLib
             } else {
                 FileResult::ExplicitLib
             }
-        } else if root.join(flowconfig_name).to_string_lossy() == file {
+        } else if flow_server_files::server_files_js::config_file(flowconfig_name, root) == file {
             FileResult::ConfigFile
         } else if is_ignored {
             FileResult::ExplicitlyIgnored(backup)
@@ -123,6 +170,46 @@ fn iter_get_next(f: &mut dyn FnMut(&str), get_next: &mut dyn FnMut() -> Vec<Stri
     }
 }
 
+fn make_options(
+    flowconfig: &flow_config::FlowConfig,
+    root: &Path,
+    ignore_flag: Option<String>,
+    include_flag: Option<String>,
+    untyped_flag: Option<String>,
+    declaration_flag: Option<String>,
+) -> Arc<FileOptions> {
+    if ignore_flag.is_none()
+        && include_flag.is_none()
+        && untyped_flag.is_none()
+        && declaration_flag.is_none()
+    {
+        return command_utils::file_options_of_flowconfig(root, flowconfig);
+    }
+
+    let includes = command_utils::list_of_string_arg(include_flag);
+    let ignores: Vec<(String, Option<String>)> = command_utils::list_of_string_arg(ignore_flag)
+        .into_iter()
+        .map(|ignore| (ignore, None))
+        .collect();
+    let untyped = command_utils::list_of_string_arg(untyped_flag);
+    let declarations = command_utils::list_of_string_arg(declaration_flag);
+    let libs: Vec<String> = vec![];
+    let temp_dir = command_utils::get_temp_dir(&None);
+    command_utils::file_options(
+        flowconfig,
+        root,
+        true,
+        Path::new(&temp_dir),
+        ignores,
+        includes,
+        libs,
+        untyped,
+        declarations,
+    )
+}
+
+// The problem with Files.wanted is that it says yes to everything except ignored files and libs.
+// So implicitly ignored files (like files in another directory) pass the Files.wanted check
 fn wanted(
     root: &Path,
     options: &FileOptions,
@@ -135,6 +222,8 @@ fn wanted(
     }
 }
 
+// Directories will return a closure that returns every file under that
+// directory. Individual files will return a closure that returns just that file
 fn get_ls_files(
     root: &Path,
     all: bool,
@@ -202,6 +291,7 @@ fn get_ls_files(
         }
         Some(file) => {
             if (Path::new(file).exists() || imaginary)
+                // Make flow ls never report flowlib files
                 && !files::is_in_flowlib(&options, file)
                 && (all || wanted(root, &options, &all_unordered_libs, file))
             {
@@ -224,6 +314,8 @@ fn get_ls_files(
     }
 }
 
+// We have a list of get_next() functions. This combines them into a single
+// get_next function
 fn concat_get_next(
     mut get_nexts: Vec<Box<dyn FnMut() -> Vec<String>>>,
 ) -> Box<dyn FnMut() -> Vec<String>> {
@@ -241,6 +333,7 @@ fn concat_get_next(
     })
 }
 
+// Append a constant list of files to the get_next function
 fn get_next_append_const(
     mut get_next: Box<dyn FnMut() -> Vec<String>>,
     items: Vec<String>,
@@ -255,50 +348,53 @@ fn get_next_append_const(
     })
 }
 
-fn main_impl(args: &command_spec::Values) {
-    let flowconfig_name = command_spec::get(
+fn main_impl(args: &arg_spec::Values) {
+    let base_flags = command_utils::get_base_flags(args);
+    let flowconfig_name = base_flags.flowconfig_name;
+    let ignore_version = command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
+    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let ignore_flag =
+        command_spec::get(args, "--ignore", &arg_spec::optional(arg_spec::string())).unwrap();
+    let include_flag =
+        command_spec::get(args, "--include", &arg_spec::optional(arg_spec::string())).unwrap();
+    let untyped_flag =
+        command_spec::get(args, "--untyped", &arg_spec::optional(arg_spec::string())).unwrap();
+    let declaration_flag = command_spec::get(
         args,
-        "--flowconfig-name",
-        &command_spec::required(Some(".flowconfig".to_string()), command_spec::string()),
+        "--declaration",
+        &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
-    let ignore_version =
-        command_spec::get(args, "--ignore-version", &command_spec::truthy()).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &command_spec::truthy()).unwrap();
-    let root_flag = command_spec::get(
-        args,
-        "--root",
-        &command_spec::optional(command_spec::string()),
-    )
-    .unwrap();
-    let json = command_spec::get(args, "--json", &command_spec::truthy()).unwrap();
-    let pretty = command_spec::get(args, "--pretty", &command_spec::truthy()).unwrap();
-    let all = command_spec::get(args, "--all", &command_spec::truthy()).unwrap();
-    let imaginary = command_spec::get(args, "--imaginary", &command_spec::truthy()).unwrap();
-    let reason = command_spec::get(args, "--explain", &command_spec::truthy()).unwrap();
+    let root_flag =
+        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let json_flags = command_utils::get_json_flags(args);
+    let json = json_flags.json;
+    let pretty = json_flags.pretty;
+    let all = command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
+    let imaginary = command_spec::get(args, "--imaginary", &arg_spec::truthy()).unwrap();
+    let reason = command_spec::get(args, "--explain", &arg_spec::truthy()).unwrap();
     let input_file = command_spec::get(
         args,
         "--input-file",
-        &command_spec::optional(command_spec::string()),
+        &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
     let root_or_files = command_spec::get(
         args,
         "files or dirs",
-        &command_spec::list_of(command_spec::string()),
+        &arg_spec::list_of(arg_spec::string()),
     )
-    .unwrap();
+    .unwrap()
+    .unwrap_or_default();
 
-    let files_or_dirs = command_utils::get_filenames_from_input_with_allow_imaginary(
-        input_file.as_deref(),
-        Some(&root_or_files),
-        true,
-    );
-
+    let files_or_dirs =
+        command_utils::get_filenames_from_input(true, input_file.as_deref(), Some(&root_or_files));
     let root_hint: Option<String> = match &root_flag {
         Some(r) => Some(r.clone()),
         None => match files_or_dirs.first() {
             Some(first_file) => {
+                // If the first_file doesn't exist or if we can't find a .flowconfig, we'll error. If
+                // --strip-root is passed, we want the error to contain a relative path.
                 let first_file = if strip_root {
                     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
                     files::relative_path(&cwd, first_file)
@@ -311,38 +407,37 @@ fn main_impl(args: &command_spec::Values) {
         },
     };
     let root = command_utils::guess_root(&flowconfig_name, root_hint.as_deref());
-
     let config_path = root.join(&flowconfig_name);
     let config_path_str = config_path.to_string_lossy().to_string();
-    let (flowconfig, warnings, _hash) = match flow_config::get(&config_path_str) {
-        Ok(r) => r,
-        Err(flow_config::Error(line, msg)) => {
-            eprintln!(".flowconfig:{} {}", line, msg);
-            std::process::exit(1);
-        }
-    };
+    let (flowconfig, warnings, _hash) =
+        match flow_config::get_with_ignored_version(&config_path_str, ignore_version) {
+            Ok(r) => r,
+            Err(flow_config::Error(line, msg)) => {
+                eprintln!(".flowconfig:{} {}", line, msg);
+                flow_common_exit_status::exit(
+                    flow_common_exit_status::FlowExitStatus::InvalidFlowconfig,
+                );
+            }
+        };
     if !ignore_version && !warnings.is_empty() {
         for flow_config::Warning(line, message) in &warnings {
             eprintln!(".flowconfig:{} {}", line, message);
         }
         std::process::exit(8);
     }
-
-    let options = crate::command_utils::make_options(
-        flowconfig,
-        _hash,
-        flowconfig_name.clone(),
-        root.clone(),
-        std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned()),
-        true, // no_flowlib for ls command
-        crate::command_utils::MakeOptionsOverrides::default(),
+    let options = make_options(
+        &flowconfig,
+        &root,
+        ignore_flag,
+        include_flag,
+        untyped_flag,
+        declaration_flag,
     );
-    let options = Arc::new(options);
-
-    let (_ordered_libs, all_unordered_libs) =
-        files::ordered_and_unordered_lib_paths(&options.file_options);
+    let (_ordered_libs, all_unordered_libs) = files::ordered_and_unordered_lib_paths(&options);
     let all_unordered_libs = Arc::new(all_unordered_libs);
 
+    // `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
+    // we pass in ~libs:SSet.empty, which means we won't filter out any lib files
     let empty_libs: Arc<BTreeSet<String>> = Arc::new(BTreeSet::new());
     let node_modules_containers: RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>> =
         RwLock::new(BTreeMap::new());
@@ -351,7 +446,7 @@ fn main_impl(args: &command_spec::Values) {
         get_ls_files(
             &root,
             all,
-            options.file_options.clone(),
+            Arc::clone(&options),
             empty_libs.clone(),
             &node_modules_containers,
             imaginary,
@@ -364,7 +459,7 @@ fn main_impl(args: &command_spec::Values) {
                 get_ls_files(
                     &root,
                     all,
-                    options.file_options.clone(),
+                    Arc::clone(&options),
                     empty_libs.clone(),
                     &node_modules_containers,
                     imaginary,
@@ -374,20 +469,17 @@ fn main_impl(args: &command_spec::Values) {
             .collect();
         concat_get_next(get_nexts)
     };
-
     let root_str = format!("{}/", root.to_string_lossy());
-    let config_file_absolute = root.join(&flowconfig_name).to_string_lossy().to_string();
+    let config_file_absolute =
+        flow_server_files::server_files_js::config_file(&flowconfig_name, &root);
     let config_file_relative = files::relative_path(Path::new(&root_str), &config_file_absolute);
-
     let include_config_file = files_or_dirs.is_empty()
         || files_or_dirs
             .iter()
             .any(|f| f == &config_file_relative || root_str.starts_with(f.as_str()));
-
     if include_config_file {
         next_files = get_next_append_const(next_files, vec![config_file_absolute.clone()]);
     }
-
     let normalize_filename = |filename: &str| -> String {
         if !strip_root {
             filename.to_string()
@@ -395,22 +487,19 @@ fn main_impl(args: &command_spec::Values) {
             files::relative_path(Path::new(&root_str), filename)
         }
     };
-
     if json || pretty {
         let all_files = files::get_all(&mut *next_files);
         let files: Vec<String> = all_files.into_iter().collect();
 
         let json_value = if reason {
+            // Mapping may cause a stack overflow. To avoid that, we always use rev_map.
+            // Since the amount of rev_maps we use is odd, we reverse the list once more
+            // at the end
             let files_with_results: Vec<(String, FileResult)> = files
                 .iter()
                 .map(|f| {
-                    let (file, result) = explain(
-                        &flowconfig_name,
-                        &root,
-                        &options.file_options,
-                        &all_unordered_libs,
-                        f,
-                    );
+                    let (file, result) =
+                        explain(&flowconfig_name, &root, &options, &all_unordered_libs, f);
                     (normalize_filename(&file), result)
                 })
                 .collect();
@@ -435,7 +524,7 @@ fn main_impl(args: &command_spec::Values) {
                     let (f, r) = explain(
                         &flowconfig_name,
                         &root,
-                        &options.file_options,
+                        &options,
                         &all_unordered_libs,
                         filename,
                     );
@@ -456,79 +545,6 @@ fn main_impl(args: &command_spec::Values) {
             );
         }
     }
-}
-
-fn spec() -> command_spec::Spec {
-    command_spec::Spec::new(
-        "ls",
-        "Lists files visible to Flow",
-        "Usage: flow ls [OPTION]... [FILES/DIRS]\n\nLists files visible to Flow".to_string(),
-    )
-    .flag(
-        "--flowconfig-name",
-        &command_spec::required(Some(".flowconfig".to_string()), command_spec::string()),
-        "Set the name of the flow configuration file. (default: .flowconfig)",
-        Some("FLOW_CONFIG_NAME"),
-    )
-    .flag(
-        "--ignore-version",
-        &command_spec::truthy(),
-        "Ignore the version constraint in .flowconfig",
-        Some("FLOW_IGNORE_VERSION"),
-    )
-    .flag(
-        "--strip-root",
-        &command_spec::truthy(),
-        "Print paths without the root",
-        None,
-    )
-    .flag(
-        "--root",
-        &command_spec::optional(command_spec::string()),
-        "Project root directory containing the .flowconfig",
-        None,
-    )
-    .flag(
-        "--json",
-        &command_spec::truthy(),
-        "Output results in JSON format",
-        None,
-    )
-    .flag(
-        "--pretty",
-        &command_spec::truthy(),
-        "Pretty-print JSON output (implies --json)",
-        None,
-    )
-    .flag("--all", &command_spec::truthy(), "Even list ignored files", None)
-    .flag(
-        "--imaginary",
-        &command_spec::truthy(),
-        "Treat missing paths from input as imaginary files",
-        None,
-    )
-    .flag(
-        "--explain",
-        &command_spec::truthy(),
-        "Explain why each file is or is not visible to Flow",
-        None,
-    )
-    .flag(
-        "--from",
-        &command_spec::optional(command_spec::string()),
-        "Specify who is calling this CLI command (used by logging)",
-        None,
-    )
-    .flag(
-        "--input-file",
-        &command_spec::optional(command_spec::string()),
-        "File containing list of files to ls, one per line. If -, list of files is read from the standard input.",
-        None,
-    )
-    .anon(
-        "files or dirs",
-        &command_spec::list_of(command_spec::string()),
-    )
 }
 
 pub(crate) fn command() -> command_spec::Command {

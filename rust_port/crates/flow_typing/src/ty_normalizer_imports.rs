@@ -344,5 +344,5 @@ pub fn extract_types<'a>(
     for require in requires {
         imports = add_import_bindings(cx, &typed_ast, imports, require);
     }
-    imports
+    imports.into_iter().rev().collect()
 }

@@ -1,3 +1,2 @@
 cmd: annotate-exports --max-type-size 10
-skip_rust_port: true
 skip_windows: true

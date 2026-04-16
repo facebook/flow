@@ -19,9 +19,75 @@ use lsp_types::Url;
 use crate::file_watcher_status;
 use crate::server_status;
 
+mod flow_exit_status_serde {
+    use flow_common_exit_status::FlowExitStatus;
+    use serde::Deserialize;
+    use serde::Deserializer;
+    use serde::Serialize;
+    use serde::Serializer;
+
+    pub fn serialize<S>(status: &FlowExitStatus, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        flow_common_exit_status::error_code(*status).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<FlowExitStatus, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let code = i32::deserialize(deserializer)?;
+        match code {
+            -6 => Ok(FlowExitStatus::Interrupted),
+            0 => Ok(FlowExitStatus::NoError),
+            1 => Ok(FlowExitStatus::WindowsKilledByTaskManager),
+            2 => Ok(FlowExitStatus::TypeError),
+            3 => Ok(FlowExitStatus::OutOfTime),
+            4 => Ok(FlowExitStatus::KillError),
+            5 => Ok(FlowExitStatus::UnusedServer),
+            6 => Ok(FlowExitStatus::NoServerRunning),
+            7 => Ok(FlowExitStatus::OutOfRetries),
+            8 => Ok(FlowExitStatus::InvalidFlowconfig),
+            9 => Ok(FlowExitStatus::BuildIdMismatch),
+            10 => Ok(FlowExitStatus::InputError),
+            11 => Ok(FlowExitStatus::LockStolen),
+            12 => Ok(FlowExitStatus::CouldNotFindFlowconfig),
+            13 => Ok(FlowExitStatus::ServerOutOfDate),
+            15 => Ok(FlowExitStatus::OutOfSharedMemory),
+            16 => Ok(FlowExitStatus::FlowconfigChanged),
+            17 => Ok(FlowExitStatus::PathIsNotAFile),
+            18 => Ok(FlowExitStatus::Autostop),
+            19 => Ok(FlowExitStatus::KilledByMonitor),
+            20 => Ok(FlowExitStatus::InvalidSavedState),
+            21 => Ok(FlowExitStatus::Restart),
+            22 => Ok(FlowExitStatus::CouldNotExtractFlowlibs),
+            64 => Ok(FlowExitStatus::CommandlineUsageError),
+            66 => Ok(FlowExitStatus::NoInput),
+            78 => Ok(FlowExitStatus::ServerStartFailed),
+            97 => Ok(FlowExitStatus::MissingFlowlib),
+            98 => Ok(FlowExitStatus::SocketError),
+            99 => Ok(FlowExitStatus::DfindDied),
+            101 => Ok(FlowExitStatus::WatchmanError),
+            102 => Ok(FlowExitStatus::HashTableFull),
+            103 => Ok(FlowExitStatus::HeapFull),
+            104 => Ok(FlowExitStatus::WatchmanFailed),
+            105 => Ok(FlowExitStatus::FileWatcherMissedChanges),
+            108 => Ok(FlowExitStatus::EventLoggerRestartOutOfRetries),
+            110 => Ok(FlowExitStatus::UnknownError),
+            111 => Ok(FlowExitStatus::EdenfsWatcherFailed),
+            112 => Ok(FlowExitStatus::EdenfsWatcherLostChanges),
+            _ => Err(serde::de::Error::custom(format!(
+                "unknown FlowExitStatus code {}",
+                code
+            ))),
+        }
+    }
+}
+
 pub type ClientId = i32;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ErrorKind {
     ExpectedError,
     UnexpectedError,
@@ -31,7 +97,7 @@ pub type ErrorInfo = (ErrorKind, String, String);
 
 pub type Json = serde_json::Value;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct LoggingContext {
     pub from: Option<String>,
     pub agent_id: Option<String>,
@@ -50,7 +116,7 @@ pub type DocumentUri = Url;
 
 pub type UriMap<V> = BTreeMap<Url, V>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Metadata {
     /// when did this work-item get triggered?  
     // start_wall_time: float;
@@ -105,7 +171,7 @@ pub fn empty_metadata() -> Metadata {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Request {
     Subscribe,
     LspToServer(LspMessage),
@@ -116,7 +182,7 @@ pub type RequestWithMetadata = (Request, Metadata);
 
 // requests, notifications, responses from client
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ErrorsReason {
     /// Sending all the errors at the end of the recheck
     EndOfRecheck,
@@ -126,26 +192,26 @@ pub enum ErrorsReason {
     NewSubscription,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ErrorResponseKind {
     CanceledErrorResponse,
     ErroredErrorResponse,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct LiveErrorsFailure {
     pub live_errors_failure_kind: ErrorResponseKind,
     pub live_errors_failure_reason: String,
     pub live_errors_failure_uri: DocumentUri,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct LiveErrorsResponse {
     pub live_diagnostics: Vec<Diagnostic>,
     pub live_errors_uri: DocumentUri,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Response {
     LspFromServer(Option<LspMessage>),
     LiveErrorsResponse(Result<LiveErrorsResponse, LiveErrorsFailure>),
@@ -158,7 +224,7 @@ pub enum Response {
 
 pub type ResponseWithMetadata = (Response, Metadata);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct RecheckStats {
     pub dependent_file_count: i32,
     pub changed_file_count: i32,
@@ -166,14 +232,14 @@ pub struct RecheckStats {
     pub top_cycle: Option<(flow_parser::file_key::FileKey, i32)>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum TelemetryFromServer {
     InitSummary { duration: f64 },
     RecheckSummary { stats: RecheckStats, duration: f64 },
     CommandSummary { name: String, duration: f64 },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum NotificationFromServer {
     Errors {
         diagnostics: UriMap<Vec<Diagnostic>>,
@@ -182,12 +248,12 @@ pub enum NotificationFromServer {
     StartRecheck,
     EndRecheck(crate::server_prot::response::LazyStats),
     /// only used for the subset of exits which client handles  
-    ServerExit(flow_common_exit_status::FlowExitStatus),
+    ServerExit(#[serde(with = "flow_exit_status_serde")] flow_common_exit_status::FlowExitStatus),
     PleaseHold(server_status::Status, file_watcher_status::Status),
     Telemetry(TelemetryFromServer),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum MessageFromServer {
     RequestResponse(ResponseWithMetadata),
     NotificationFromServer(NotificationFromServer),

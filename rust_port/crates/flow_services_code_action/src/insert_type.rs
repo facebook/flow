@@ -80,7 +80,7 @@ pub fn simplify(ty: ALocTy) -> ALocTy {
     flow_common_ty::ty_utils::simplify_type(true, Some(true), ty)
 }
 
-fn serialize(
+pub fn serialize(
     cx: &Context<'_>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
@@ -237,7 +237,9 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                     Ok(_) | Err(_) => Ok(renders),
                 }
             }
-            _ => Ok(renders),
+            _ => Ok(
+                flow_parser::ast_visitor::map_component_renders_annotation_default(self, &renders),
+            ),
         }
     }
 
@@ -259,7 +261,12 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                     type_ast,
                 }))
             }
-            _ => Ok(return_annot),
+            _ => Ok(
+                flow_parser::ast_visitor::map_function_return_annotation_default(
+                    self,
+                    &return_annot,
+                ),
+            ),
         }
     }
 
@@ -289,7 +296,7 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                     })
                 }
             }
-            _ => Ok(node),
+            _ => Ok(flow_parser::ast_visitor::map_function_param_pattern_default(self, &node)),
         }
     }
 
@@ -341,10 +348,14 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                             }))
                         }
                     }
-                    _ => Ok(elem),
+                    _ => Ok(flow_parser::ast_visitor::map_class_element_default(
+                        self, &elem,
+                    )),
                 }
             }
-            _ => Ok(elem),
+            _ => Ok(flow_parser::ast_visitor::map_class_element_default(
+                self, &elem,
+            )),
         }
     }
 
@@ -380,7 +391,9 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                     ..decl.clone()
                 })
             }
-            _ => Ok(decl),
+            _ => Ok(flow_parser::ast_visitor::map_variable_declarator_default(
+                self, &decl,
+            )),
         }
     }
 
@@ -395,7 +408,11 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
         }
         match (&node, &kind) {
             (ast::pattern::Pattern::Identifier { .. }, ast::VariableKind::Const) if self.strict => {
-                Ok(node)
+                Ok(
+                    flow_parser::ast_visitor::map_variable_declarator_pattern_default(
+                        self, kind, &node,
+                    ),
+                )
             }
             (
                 ast::pattern::Pattern::Identifier { loc, inner: id },
@@ -412,7 +429,11 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                     }),
                 })
             }
-            _ => Ok(node),
+            _ => Ok(
+                flow_parser::ast_visitor::map_variable_declarator_pattern_default(
+                    self, kind, &node,
+                ),
+            ),
         }
     }
 

@@ -22,18 +22,18 @@ pub mod type_coverage {
     use lsp_types::Range;
     use lsp_types::TextDocumentIdentifier;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub text_document: TextDocumentIdentifier,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct UncoveredRange {
         pub range: Range,
         pub message: Option<String>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Result {
         pub covered_percent: i32,
         pub uncovered_ranges: Vec<UncoveredRange>,
@@ -42,7 +42,7 @@ pub mod type_coverage {
 }
 
 pub mod connection_status {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub is_connected: bool,
     }
@@ -52,7 +52,7 @@ pub mod show_status {
     use lsp_types::MessageActionItem;
     use lsp_types::ShowMessageRequestParams;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub request: ShowMessageRequestParams,
         pub progress: Option<i32>,
@@ -61,7 +61,7 @@ pub mod show_status {
         pub background_color: Option<ShowStatusBackgroundColor>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum ShowStatusBackgroundColor {
         Error,
         Warning,
@@ -73,7 +73,7 @@ pub mod show_status {
 pub mod rename_files {
     use lsp_types::Url;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct FileRename {
         pub old_uri: Url,
         pub new_uri: Url,
@@ -83,7 +83,7 @@ pub mod rename_files {
 pub mod will_rename_files {
     use lsp_types::WorkspaceEdit;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub files: Vec<super::rename_files::FileRename>,
     }
@@ -101,20 +101,20 @@ pub mod rename_file_imports {
 pub mod llm_context {
     use lsp_types::WorkspaceFolder;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct EnvironmentDetails {
         pub workspace_folders: Vec<WorkspaceFolder>,
         pub os: String,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub edited_file_paths: Vec<String>,
         pub environment_details: EnvironmentDetails,
         pub token_budget: i32,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Result {
         pub llm_context: String,
         pub files_processed: Vec<String>,
@@ -128,7 +128,7 @@ pub mod document_paste {
     use lsp_types::TextDocumentItem;
     use lsp_types::Url;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum ImportType {
         ImportNamedValue,
         ImportValueAsNamespace,
@@ -137,7 +137,7 @@ pub mod document_paste {
         ImportTypeOfAsNamespace,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct ImportItem {
         pub remote_name: String,
         pub local_name: Option<String>,
@@ -146,18 +146,18 @@ pub mod document_paste {
         pub import_source_is_resolved: bool,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum DataTransfer {
         ImportMetadata { imports: Vec<ImportItem> },
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct PrepareParams {
         pub uri: Url,
         pub ranges: Vec<Range>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct ProvideParams {
         pub text_document: TextDocumentItem,
         pub ranges: Vec<Range>,
@@ -169,7 +169,7 @@ pub mod text_document_diagnostics {
     use lsp_types::Diagnostic;
     use lsp_types::TextDocumentIdentifier;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub text_document: TextDocumentIdentifier,
     }
@@ -178,14 +178,14 @@ pub mod text_document_diagnostics {
 }
 
 pub mod ping {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Result {
         pub start_server_status: Option<String>,
     }
 }
 
 pub mod rage {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct RageItem {
         pub title: Option<String>,
         pub data: String,
@@ -195,7 +195,15 @@ pub mod rage {
 }
 
 pub mod lsp_error {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Code {
         ParseError,
         InvalidRequest,
@@ -210,7 +218,7 @@ pub mod lsp_error {
         ContentModified,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct T {
         pub code: Code,
         pub message: String,
@@ -221,20 +229,20 @@ pub mod lsp_error {
 pub mod register_capability {
     use lsp_types::DidChangeWatchedFilesRegistrationOptions;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum Options {
         DidChangeConfiguration,
         DidChangeWatchedFiles(DidChangeWatchedFilesRegistrationOptions),
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Registration {
         pub id: String,
         pub method: String,
         pub register_options: Options,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct Params {
         pub registrations: Vec<Registration>,
     }
@@ -244,7 +252,7 @@ pub mod workspace_symbol_information {
     use lsp_types::SymbolKind;
     use lsp_types::TextDocumentIdentifier;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct T {
         pub name: String,
         pub kind: SymbolKind,
@@ -254,7 +262,7 @@ pub mod workspace_symbol_information {
 }
 
 pub mod workspace_symbol_result {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum T {
         SymbolInformation(Vec<lsp_types::SymbolInformation>),
         WorkspaceSymbolInformation(Vec<super::workspace_symbol_information::T>),
@@ -262,7 +270,7 @@ pub mod workspace_symbol_result {
 }
 
 pub mod document_symbol_result {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum T {
         SymbolInformation(Vec<lsp_types::SymbolInformation>),
         DocumentSymbol(Vec<lsp_types::DocumentSymbol>),
@@ -271,7 +279,7 @@ pub mod document_symbol_result {
 
 pub type LspId = NumberOrString;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LspRequest {
     InitializeRequest(InitializeParams),
     RegisterCapabilityRequest(register_capability::Params),
@@ -314,7 +322,7 @@ pub enum LspRequest {
     UnknownRequest(String, Option<serde_json::Value>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LspResult {
     InitializeResult(InitializeResult),
     ShutdownResult,
@@ -358,7 +366,7 @@ pub enum LspResult {
     ErrorResult(lsp_error::T, String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LspNotification {
     ExitNotification,
     CancelRequestNotification(CancelParams),
@@ -379,14 +387,14 @@ pub enum LspNotification {
     UnknownNotification(String, Option<serde_json::Value>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LspMessage {
     RequestMessage(LspId, LspRequest),
     ResponseMessage(LspId, LspResult),
     NotificationMessage(LspNotification),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum TextEditOrInsertReplaceEdit {
     TextEdit(TextEdit),
     InsertReplaceEdit(InsertReplaceEdit),

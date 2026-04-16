@@ -389,6 +389,7 @@ fn mk_next_for_check<R: 'static>(
     let files: Vec<FileKey> = roots.iter().cloned().collect();
     flow_services_inference::job_utils::mk_next(
         intermediate_result_callback,
+        false,
         max_size,
         num_workers,
         files,
@@ -630,13 +631,16 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         tracing::info!("Checking {} files", _roots.len());
         let options = C::check_options(_options.clone());
         let metadata = flow_typing_context::metadata_of_options(&options);
-        let visit_fn: &dyn Fn(
-            &Options,
-            &ast::Program<Loc, Loc>,
-            codemod_context::typed::TypedCodemodContext<'_>,
-        ) -> C::Accumulator = &C::visit;
+        let visit = |options: &Options,
+                     ast: &ast::Program<Loc, Loc>,
+                     ctx: codemod_context::typed::TypedCodemodContext<'_>| {
+            let cx = ctx.cx.clone();
+            let acc = C::visit(options, ast, ctx);
+            let files = cx.reachable_deps().clone();
+            (acc, files)
+        };
         let mut check_fn = mk_check(
-            visit_fn,
+            &visit,
             _iteration,
             &reader,
             &options,
@@ -646,10 +650,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
         let (job_results, _remaining) =
             flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files);
-        let initial_run_result: ResultList<Self::Accumulator> = job_results
-            .into_iter()
-            .map(|(fk, r)| (fk, r.map(|opt| opt.map(|acc| (acc, BTreeSet::new())))))
-            .collect();
+        let initial_run_result: ResultList<Self::Accumulator> = job_results;
         tracing::info!("Initial run done");
         let second_run_roots: BTreeSet<FileKey> = initial_run_result.iter().fold(
             BTreeSet::<FileKey>::new(),
@@ -704,7 +705,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         }
         tracing::info!("Merging done.");
         let mut check_fn2 = mk_check(
-            visit_fn,
+            &visit,
             _iteration,
             &reader,
             &options,
@@ -714,10 +715,8 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         let files2: Vec<FileKey> = second_run_roots.iter().cloned().collect();
         let (job_results2, _remaining2) =
             flow_services_inference::job_utils::mk_job(&mut check_fn2, &options, files2);
-        let result: ResultList<Self::Accumulator> = job_results2
-            .into_iter()
-            .map(|(fk, r)| (fk, r.map(|opt| opt.map(|acc| (acc, BTreeSet::new())))))
-            .collect();
+        let mut result: ResultList<Self::Accumulator> = initial_run_result;
+        result.extend(job_results2);
         tracing::info!("Pruned-deps run done");
         result
     }

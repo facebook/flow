@@ -660,11 +660,12 @@ pub mod imports_helper {
             use_mode: UseMode,
             remote_symbol: &flow_common_ty::ty_symbol::Symbol<ALoc>,
         ) -> Result<flow_common_ty::ty_symbol::Symbol<ALoc>, error::ImportError> {
-            let result = match self
+            let cached = self
                 .symbol_cache
                 .borrow()
                 .get(&(remote_symbol.clone(), use_mode))
-            {
+                .cloned();
+            let result = match cached {
                 None => self.create_symbol(use_mode, remote_symbol)?,
                 Some(info) => info.clone()?,
             };
@@ -950,7 +951,10 @@ pub mod imports_helper {
             for ((import_kind, from), named_bindings) in named_map {
                 match import_kind {
                     statement::ImportKind::ImportType => {
-                        bindings.push((from, autofix_imports::Bindings::NamedType(named_bindings)));
+                        bindings.insert(
+                            0,
+                            (from, autofix_imports::Bindings::NamedType(named_bindings)),
+                        );
                     }
                     _ => {
                         bindings.push((from, autofix_imports::Bindings::Named(named_bindings)));

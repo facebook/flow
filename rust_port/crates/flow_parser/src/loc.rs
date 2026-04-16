@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::Cell;
 use std::cell::RefCell;
 
 use dupe::Dupe;
@@ -14,6 +15,21 @@ use crate::loc_sig::LocSig;
 
 thread_local! {
     pub static DESERIALIZE_FILE_KEY: RefCell<Option<FileKey>> = const { RefCell::new(None) };
+    static LOC_SERDE_FULL_SOURCE: Cell<bool> = const { Cell::new(false) };
+}
+
+/// When called, serializes/deserializes `Loc` with the full `FileKey` path
+/// as an `Option<String>` instead of the default `(bool, Position, Position)`
+/// tuple. This is needed for socket RPC where `FileKey` must survive
+/// cross-process round-trips.
+pub fn with_full_source_serde<F, R>(f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    LOC_SERDE_FULL_SOURCE.set(true);
+    let result = f();
+    LOC_SERDE_FULL_SOURCE.set(false);
+    result
 }
 
 /// line numbers are 1-indexed; column numbers are 0-indexed
@@ -63,19 +79,31 @@ pub struct Loc {
 
 impl serde::Serialize for Loc {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        (self.source.is_some(), &self.start, &self.end).serialize(serializer)
+        if LOC_SERDE_FULL_SOURCE.get() {
+            let source_str = self.source.as_ref().map(|fk| fk.to_absolute());
+            (source_str, &self.start, &self.end).serialize(serializer)
+        } else {
+            (self.source.is_some(), &self.start, &self.end).serialize(serializer)
+        }
     }
 }
 
 impl<'de> serde::Deserialize<'de> for Loc {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let (has_source, start, end) = <(bool, Position, Position)>::deserialize(deserializer)?;
-        let source = if has_source {
-            DESERIALIZE_FILE_KEY.with(|k| k.borrow().clone())
+        if LOC_SERDE_FULL_SOURCE.get() {
+            let (source_str, start, end) =
+                <(Option<String>, Position, Position)>::deserialize(deserializer)?;
+            let source = source_str.map(|s| FileKey::source_file_of_absolute(&s));
+            Ok(Loc { source, start, end })
         } else {
-            None
-        };
-        Ok(Loc { source, start, end })
+            let (has_source, start, end) = <(bool, Position, Position)>::deserialize(deserializer)?;
+            let source = if has_source {
+                DESERIALIZE_FILE_KEY.with(|k| k.borrow().clone())
+            } else {
+                None
+            };
+            Ok(Loc { source, start, end })
+        }
     }
 }
 

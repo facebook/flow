@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum FileInput {
     FileName(String),
     FileContent(Option<String>, String),

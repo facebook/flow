@@ -185,6 +185,38 @@ pub fn to_string(status: FlowExitStatus) -> &'static str {
     }
 }
 
+pub fn json_props_of_t(
+    status: FlowExitStatus,
+    msg: Option<&str>,
+) -> Vec<(String, serde_json::Value)> {
+    let mut exit_props = vec![
+        (
+            "code".to_string(),
+            serde_json::Value::Number(error_code(status).into()),
+        ),
+        (
+            "reason".to_string(),
+            serde_json::Value::String(to_string(status).to_string()),
+        ),
+    ];
+    if let Some(msg) = msg {
+        exit_props.push((
+            "msg".to_string(),
+            serde_json::Value::String(msg.to_string()),
+        ));
+    }
+    vec![
+        (
+            "flowVersion".to_string(),
+            serde_json::Value::String(flow_common::flow_version::VERSION.to_string()),
+        ),
+        (
+            "exit".to_string(),
+            serde_json::Value::Object(exit_props.into_iter().collect()),
+        ),
+    ]
+}
+
 pub fn exit(status: FlowExitStatus) -> ! {
     std::process::exit(error_code(status))
 }

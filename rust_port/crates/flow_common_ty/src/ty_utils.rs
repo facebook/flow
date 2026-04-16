@@ -139,6 +139,9 @@ pub mod simplify {
     use super::*;
     use crate::ty::AnyKind;
     use crate::ty::TyIter2Ty;
+    use crate::ty_symbol::ImportMode;
+    use crate::ty_symbol::ImportedIdent;
+    use crate::ty_symbol::RemoteInfo;
 
     pub struct Config {
         pub is_bot: fn(&ALocTy) -> bool,
@@ -148,6 +151,64 @@ pub mod simplify {
     }
 
     pub struct ComparatorBase;
+
+    fn compare_imported_ident<Env>(
+        cmp: &mut impl TyIter2Base<Env, ALoc>,
+        env: &Env,
+        id1: &ImportedIdent<ALoc>,
+        id2: &ImportedIdent<ALoc>,
+    ) -> Result<(), StructuralMismatch> {
+        let ImportedIdent(loc1, name1, mode1) = id1;
+        let ImportedIdent(loc2, name2, mode2) = id2;
+        cmp.on_aloc(env, loc1, loc2)?;
+        cmp.on_string(env, name1, name2)?;
+        StructuralMismatch::assert0(match (mode1, mode2) {
+            (ImportMode::ValueMode, ImportMode::ValueMode)
+            | (ImportMode::TypeMode, ImportMode::TypeMode)
+            | (ImportMode::TypeofMode, ImportMode::TypeofMode) => 0,
+            (ImportMode::ValueMode, _) => -1,
+            (_, ImportMode::ValueMode) => 1,
+            (ImportMode::TypeMode, _) => -1,
+            (_, ImportMode::TypeMode) => 1,
+        })
+    }
+
+    fn compare_remote_info<Env>(
+        cmp: &mut impl TyIter2Base<Env, ALoc>,
+        env: &Env,
+        ri1: &RemoteInfo<ALoc>,
+        ri2: &RemoteInfo<ALoc>,
+    ) -> Result<(), StructuralMismatch> {
+        match (&ri1.imported_as, &ri2.imported_as) {
+            (None, None) => Ok(()),
+            (Some(id1), Some(id2)) => compare_imported_ident(cmp, env, id1, id2),
+            (None, Some(_)) => Err(StructuralMismatch::Difference(-1)),
+            (Some(_), None) => Err(StructuralMismatch::Difference(1)),
+        }
+    }
+
+    fn compare_provenance<Env>(
+        cmp: &mut impl TyIter2Base<Env, ALoc>,
+        env: &Env,
+        p1: &Provenance<ALoc>,
+        p2: &Provenance<ALoc>,
+    ) -> Result<(), StructuralMismatch> {
+        match (p1, p2) {
+            (Provenance::Local, Provenance::Local) | (Provenance::Builtin, Provenance::Builtin) => {
+                Ok(())
+            }
+            (Provenance::Remote(ri1), Provenance::Remote(ri2))
+            | (Provenance::Library(ri1), Provenance::Library(ri2)) => {
+                compare_remote_info(cmp, env, ri1, ri2)
+            }
+            (Provenance::Local, _) => Err(StructuralMismatch::Difference(-1)),
+            (_, Provenance::Local) => Err(StructuralMismatch::Difference(1)),
+            (Provenance::Remote(_), _) => Err(StructuralMismatch::Difference(-1)),
+            (_, Provenance::Remote(_)) => Err(StructuralMismatch::Difference(1)),
+            (Provenance::Library(_), _) => Err(StructuralMismatch::Difference(-1)),
+            (_, Provenance::Library(_)) => Err(StructuralMismatch::Difference(1)),
+        }
+    }
 
     /* comparator_base inherits from comparator_ty in OCaml and only overrides
      * on_aloc (uses quick_compare) and on_symbol (adds Library provenance check).
@@ -189,7 +250,7 @@ pub mod simplify {
 
         fn on_symbol(
             &mut self,
-            _env: &Env,
+            env: &Env,
             name1: &Symbol<ALoc>,
             name2: &Symbol<ALoc>,
         ) -> Result<(), StructuralMismatch> {
@@ -201,10 +262,23 @@ pub mod simplify {
             {
                 match (&name1.sym_provenance, &name2.sym_provenance) {
                     (Provenance::Library(l1), Provenance::Library(l2)) if l1 == l2 => Ok(()),
-                    _ => StructuralMismatch::assert0(name1.sym_name.cmp(&name2.sym_name) as i32),
+                    _ => {
+                        compare_provenance(
+                            self,
+                            env,
+                            &name1.sym_provenance,
+                            &name2.sym_provenance,
+                        )?;
+                        self.on_aloc(env, &name1.sym_def_loc, &name2.sym_def_loc)?;
+                        self.on_name(env, &name1.sym_name, &name2.sym_name)?;
+                        self.on_bool(env, name1.sym_anonymous, name2.sym_anonymous)
+                    }
                 }
             } else {
-                StructuralMismatch::assert0(name1.sym_name.cmp(&name2.sym_name) as i32)
+                compare_provenance(self, env, &name1.sym_provenance, &name2.sym_provenance)?;
+                self.on_aloc(env, &name1.sym_def_loc, &name2.sym_def_loc)?;
+                self.on_name(env, &name1.sym_name, &name2.sym_name)?;
+                self.on_bool(env, name1.sym_anonymous, name2.sym_anonymous)
             }
         }
     }
@@ -546,22 +620,18 @@ pub mod simplify {
             }
 
             let compare = self.config.compare;
-
-            let mut result: Vec<ALocTy> = types.iter().map(|t| t.dupe()).collect();
-
-            result.sort_by(|a, b| {
-                let cmp_result = compare(a, b);
-                use std::cmp::Ordering;
-                match cmp_result {
-                    n if n < 0 => Ordering::Less,
-                    n if n > 0 => Ordering::Greater,
-                    _ => Ordering::Equal,
+            let mut result: Vec<ALocTy> = types.to_vec();
+            result.sort_by(|t1, t2| compare(t1, t2).cmp(&0));
+            let mut deduplicated = Vec::with_capacity(result.len());
+            for t in result {
+                if let Some(prev) = deduplicated.last()
+                    && compare(prev, &t) == 0
+                {
+                    continue;
                 }
-            });
-
-            result.dedup_by(|a, b| compare(a, b) == 0);
-
-            result
+                deduplicated.push(t);
+            }
+            deduplicated
         }
     }
 }

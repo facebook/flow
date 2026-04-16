@@ -846,7 +846,16 @@ pub struct TypeAtPosResult {
 /* Type destructors */
 
 pub fn bk_union<L: Dupe>(t: &Arc<Ty<L>>) -> Vec<Arc<Ty<L>>> {
+    bk_union_with_flattened(false, t)
+}
+
+pub fn bk_union_with_flattened<L: Dupe>(flattened: bool, t: &Arc<Ty<L>>) -> Vec<Arc<Ty<L>>> {
     match t.as_ref() {
+        Ty::Union(_, t1, t2, rest) if flattened => {
+            let mut result = vec![t1.dupe(), t2.dupe()];
+            result.extend(rest.iter().cloned());
+            result
+        }
         Ty::Union(_, t1, t2, rest) => {
             let mut result = Vec::new();
             result.extend(bk_union(t1));
@@ -873,28 +882,30 @@ pub fn bk_inter<L: Clone>(t: Ty<L>) -> Vec<Arc<Ty<L>>> {
 
 /* Type constructors */
 
-// OCaml: let mk_union ~from_bounds ?(flattened = false) nel_ts =
-// OCaml:   let (t, ts) = Nel.map_concat (bk_union ~flattened) nel_ts in
-// OCaml:   match ts with
-// OCaml:   | [] -> t
-// OCaml:   | hd :: tl -> Union (from_bounds, t, hd, tl)
 pub fn mk_union<L: Dupe>(from_annotation: bool, ts: Vec<Arc<Ty<L>>>) -> Option<Arc<Ty<L>>> {
-    // Flatten nested unions, matching OCaml's Nel.map_concat bk_union
-    let mut flattened: Vec<Arc<Ty<L>>> = Vec::new();
+    mk_union_with_flattened(from_annotation, false, ts)
+}
+
+pub fn mk_union_with_flattened<L: Dupe>(
+    from_annotation: bool,
+    flattened: bool,
+    ts: Vec<Arc<Ty<L>>>,
+) -> Option<Arc<Ty<L>>> {
+    let mut flattened_ts: Vec<Arc<Ty<L>>> = Vec::new();
     for t in ts {
-        flattened.extend(bk_union(&t));
+        flattened_ts.extend(bk_union_with_flattened(flattened, &t));
     }
-    match flattened.len() {
+    match flattened_ts.len() {
         0 => None,
-        1 => Some(flattened.remove(0)),
+        1 => Some(flattened_ts.remove(0)),
         _ => {
-            let t1 = flattened.remove(0);
-            let t2 = flattened.remove(0);
+            let t1 = flattened_ts.remove(0);
+            let t2 = flattened_ts.remove(0);
             Some(Arc::new(Ty::Union(
                 from_annotation,
                 t1,
                 t2,
-                Arc::from(flattened),
+                Arc::from(flattened_ts),
             )))
         }
     }

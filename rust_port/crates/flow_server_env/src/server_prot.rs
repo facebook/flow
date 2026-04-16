@@ -19,6 +19,7 @@ pub mod infer_type_options {
     use flow_common::verbose::Verbose;
     use flow_server_utils::file_input::FileInput;
 
+    #[derive(Debug, Clone)]
     pub struct T {
         pub input: FileInput,
         pub line: i32,
@@ -40,6 +41,7 @@ pub mod inlay_hint_options {
     use flow_common::verbose::Verbose;
     use flow_server_utils::file_input::FileInput;
 
+    #[derive(Debug, Clone)]
     pub struct T {
         pub input: FileInput,
         pub verbose: Option<Verbose>,
@@ -57,6 +59,7 @@ pub mod type_of_name_options {
     use flow_common::verbose::Verbose;
     use flow_server_utils::file_input::FileInput;
 
+    #[derive(Debug, Clone)]
     pub struct T {
         pub input: FileInput,
         pub names: Vec<String>,
@@ -69,6 +72,7 @@ pub mod type_of_name_options {
 }
 
 pub mod llm_context_options {
+    #[derive(Debug, Clone)]
     pub struct T {
         pub files: Vec<String>,
         pub token_budget: i32,
@@ -112,6 +116,7 @@ pub mod request {
     use crate::server_prot::type_of_name_options;
 
     #[allow(non_camel_case_types)]
+    #[derive(Debug, Clone)]
     pub enum Command {
         APPLY_CODE_ACTION {
             input: FileInput,
@@ -209,6 +214,7 @@ pub mod request {
         LLM_CONTEXT(llm_context_options::T),
     }
 
+    #[derive(Debug, Clone)]
     pub enum SaveStateOut {
         File(PathBuf),
         Scm,
@@ -363,7 +369,7 @@ pub mod response {
     use flow_parser::loc::Loc;
     use flow_services_coverage::FileCoverage;
     use flow_services_coverage::Kind as CoverageKind;
-    use lsp_types::CodeActionOrCommand;
+    pub use lsp_types::CodeActionOrCommand;
 
     use crate::server_prot::ConcreteLocPrintableErrorSet;
     use crate::server_prot::Patch;
@@ -465,11 +471,13 @@ pub mod response {
         use flow_parser::loc::Loc;
         use flow_services_export::export_index;
 
+        #[derive(Debug, Clone)]
         pub struct PropDoc {
             pub prop_name: String,
             pub description: String,
         }
 
+        #[derive(Debug, Clone)]
         pub struct T {
             pub loc: Loc,
             pub actual_name: String,
@@ -488,16 +496,19 @@ pub mod response {
 
         use crate::server_prot::refinement_invalidation;
 
+        #[derive(Debug, Clone)]
         pub struct FriendlyResponse {
             pub type_str: String,
             pub refs: Option<Vec<(String, Loc)>>,
         }
 
+        #[derive(Debug, Clone)]
         pub enum Payload {
             Friendly(Option<FriendlyResponse>),
             Json(serde_json::Value),
         }
 
+        #[derive(Debug, Clone)]
         pub struct T {
             pub loc: Loc,
             pub tys: Payload,
@@ -515,6 +526,7 @@ pub mod response {
         use crate::server_prot::refinement_invalidation;
         use crate::server_prot::response::infer_type;
 
+        #[derive(Debug, Clone)]
         pub struct Item {
             pub cursor_loc: Loc,
             pub type_loc: Loc,
@@ -538,6 +550,7 @@ pub mod response {
     pub type GraphResponseSubgraph = Vec<(String, Vec<String>)>;
 
     pub mod llm_context {
+        #[derive(Debug, Clone)]
         pub struct T {
             pub llm_context: String,
             pub files_processed: Vec<String>,
@@ -549,6 +562,7 @@ pub mod response {
     pub type LlmContextResponse = Result<llm_context::T, String>;
 
     #[allow(non_camel_case_types)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum StatusResponse {
         ERRORS {
             errors: ConcreteLocPrintableErrorSet,
@@ -564,6 +578,7 @@ pub mod response {
     pub type FindModuleResponse = (Option<FileKey>, Vec<String>);
 
     #[allow(non_camel_case_types)]
+    #[derive(Debug, Clone)]
     pub enum Response {
         APPLY_CODE_ACTION(ApplyCodeActionResponse),
         AUTOCOMPLETE(AutocompleteResponse),

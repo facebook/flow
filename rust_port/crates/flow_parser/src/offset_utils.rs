@@ -53,13 +53,25 @@ fn js_size_of_kind(kind: &Kind) -> u32 {
 }
 
 // table from 0-based line number and 0-based column number to the offset at that point
+#[derive(Debug)]
 pub struct OffsetTable {
     utf8_table: Vec<Vec<u32>>,
     js_table: Vec<Vec<u32>>,
+    kind: OffsetKind,
+}
+
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub enum OffsetKind {
+    Utf8,
+    JavaScript,
 }
 
 impl OffsetTable {
     pub fn make(text: &str) -> OffsetTable {
+        Self::make_with_kind(OffsetKind::Utf8, text)
+    }
+
+    pub fn make_with_kind(kind: OffsetKind, text: &str) -> OffsetTable {
         // Using Wtf8 allows us to properly track multi-byte characters, so that we increment the column
         // by 1 for a multi-byte character, but increment the offset by the number of bytes in the
         // character. It also keeps us from incrementing the line number if a multi-byte character happens
@@ -140,6 +152,7 @@ impl OffsetTable {
         OffsetTable {
             utf8_table: build_table(utf8_size_of_kind, &kinds),
             js_table: build_table(js_size_of_kind, &kinds),
+            kind,
         }
     }
 
@@ -171,17 +184,25 @@ impl OffsetTable {
         }
     }
 
-    pub(super) fn offset_js(&self, position: Position) -> Result<u32, OffsetLookupFailed> {
+    pub fn offset_js(&self, position: Position) -> Result<u32, OffsetLookupFailed> {
         Self::offset_internal(&self.js_table, position)
     }
 
-    pub fn offset(&self, position: Position) -> Result<u32, OffsetLookupFailed> {
+    pub fn offset_utf8(&self, position: Position) -> Result<u32, OffsetLookupFailed> {
         Self::offset_internal(&self.utf8_table, position)
+    }
+
+    pub fn offset(&self, position: Position) -> Result<u32, OffsetLookupFailed> {
+        let table = match self.kind {
+            OffsetKind::Utf8 => &self.utf8_table,
+            OffsetKind::JavaScript => &self.js_table,
+        };
+        Self::offset_internal(table, position)
     }
 
     /// Flow's position is based on byte offsets,
     /// while JS position is based on UTF16 character offsets.
-    pub(super) fn convert_flow_position_to_js_position(
+    pub fn convert_flow_position_to_js_position(
         &self,
         position: Position,
     ) -> Result<Position, OffsetLookupFailed> {
@@ -213,6 +234,62 @@ impl OffsetTable {
             line: position.line,
             column: column_index as i32,
         })
+    }
+
+    // let line_lengths table =
+    //   Array.fold_left
+    //     (fun (prev_line_end, lengths_rev) line ->
+    //       let line_end = line.(Array.length line - 1) in
+    //       (line_end, (line_end - prev_line_end) :: lengths_rev))
+    //     (-1, [])
+    //     table
+    //   |> snd
+    //   |> List.rev
+    pub fn line_lengths(&self) -> Vec<i64> {
+        let table = match self.kind {
+            OffsetKind::Utf8 => &self.utf8_table,
+            OffsetKind::JavaScript => &self.js_table,
+        };
+        let mut prev_line_end: i64 = -1;
+        let mut lengths_rev: Vec<i64> = Vec::new();
+        for line in table.iter() {
+            let line_end = line[line.len() - 1] as i64;
+            lengths_rev.push(line_end - prev_line_end);
+            prev_line_end = line_end;
+        }
+        lengths_rev
+    }
+
+    // let contains_multibyte_character table =
+    //   let exception FoundMultibyte in
+    //   try
+    //     Array.iter
+    //       (fun line ->
+    //         Array.iteri
+    //           (fun i offset ->
+    //             if i > 0 then
+    //               let offset_before = line.(i - 1) in
+    //               if offset - offset_before > 1 then raise FoundMultibyte)
+    //           line)
+    //       table;
+    //     false
+    //   with
+    //   | FoundMultibyte -> true
+    pub fn contains_multibyte_character(&self) -> bool {
+        let table = match self.kind {
+            OffsetKind::Utf8 => &self.utf8_table,
+            OffsetKind::JavaScript => &self.js_table,
+        };
+        for line in table.iter() {
+            for i in 1..line.len() {
+                let offset = line[i];
+                let offset_before = line[i - 1];
+                if offset - offset_before > 1 {
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     #[allow(dead_code)]

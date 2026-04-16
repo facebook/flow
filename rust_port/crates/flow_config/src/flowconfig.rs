@@ -93,6 +93,8 @@ pub mod opts {
         pub facebook_fbt: Option<String>,
         pub facebook_module_interop: bool,
         pub file_watcher: Option<FileWatcher>,
+        pub file_watcher_edenfs_throttle_time_ms: u32,
+        pub file_watcher_edenfs_timeout: u32,
         pub file_watcher_mergebase_with: Option<String>,
         pub file_watcher_mergebase_with_git: Option<String>,
         pub file_watcher_mergebase_with_hg: Option<String>,
@@ -118,6 +120,8 @@ pub mod opts {
         pub include_warnings: bool,
         pub jest_integration: bool,
         pub lazy_mode: Option<LazyMode>,
+        pub llm_context_include_imports: bool,
+        pub log_per_error_typing_telemetry: bool,
         pub log_saving: BTreeMap<String, LogSaving>,
         pub long_lived_workers: bool,
         pub max_files_checked_per_worker: u32,
@@ -240,6 +244,8 @@ pub mod opts {
             facebook_fbt: None,
             facebook_module_interop: false,
             file_watcher: None,
+            file_watcher_edenfs_throttle_time_ms: 50,
+            file_watcher_edenfs_timeout: 60,
             file_watcher_mergebase_with: None,
             file_watcher_mergebase_with_git: None,
             file_watcher_mergebase_with_hg: None,
@@ -268,6 +274,8 @@ pub mod opts {
             include_warnings: false,
             jest_integration: false,
             lazy_mode: None,
+            llm_context_include_imports: false,
+            log_per_error_typing_telemetry: false,
             log_saving: BTreeMap::new(),
             long_lived_workers: false,
             max_files_checked_per_worker: 100,
@@ -504,7 +512,14 @@ pub mod opts {
 
     fn optparse_regexp(s: &str) -> Result<Regex, String> {
         let converted = ocaml_str_to_rust_regex(s);
-        Regex::new(&converted).map_err(|e| format!("Invalid regular expression: {}", e))
+        Regex::new(&converted).map_err(|e| {
+            let reason = if e.to_string().contains("unclosed character class") {
+                "[ class not closed by ]".to_string()
+            } else {
+                e.to_string()
+            };
+            format!("Invalid ocaml regular expression: {}", reason)
+        })
     }
 
     fn ocaml_replacement_to_rust(template: &str) -> String {
@@ -1194,11 +1209,44 @@ pub mod opts {
                 ("none", FileWatcher::NoFileWatcher),
                 ("dfind", FileWatcher::DFind),
                 ("watchman", FileWatcher::Watchman),
+                ("edenfs", FileWatcher::EdenFS),
             ],
             |opts, v| {
                 opts.file_watcher = Some(v);
                 Ok(())
             },
+            values,
+            config,
+        )
+    }
+
+    fn file_watcher_edenfs_throttle_time_ms_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_uint(
+            |opts, v| {
+                opts.file_watcher_edenfs_throttle_time_ms = v;
+                Ok(())
+            },
+            None,
+            false,
+            values,
+            config,
+        )
+    }
+
+    fn file_watcher_edenfs_timeout_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_uint(
+            |opts, v| {
+                opts.file_watcher_edenfs_timeout = v;
+                Ok(())
+            },
+            None,
+            false,
             values,
             config,
         )
@@ -1692,7 +1740,7 @@ pub mod opts {
             |opts, v| {
                 if &v == "." || &v == ".." {
                     return Err(format!(
-                        "{v} is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
+                        "\"{v}\" is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
                     ));
                 }
                 opts.node_resolver_dirnames.push(v);
@@ -2155,6 +2203,26 @@ pub mod opts {
                 "experimental.channel_mode.windows" => {
                     Some(channel_mode_parser(values, config, cfg!(windows)))
                 }
+                // ( "experimental.llm_context.include_imports",
+                //   boolean (fun opts v -> Ok { opts with llm_context_include_imports = v }) );
+                "experimental.llm_context.include_imports" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.llm_context_include_imports = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                // ( "experimental.log_per_error_typing_telemetry",
+                //   boolean (fun opts v -> Ok { opts with log_per_error_typing_telemetry = v }) );
+                "experimental.log_per_error_typing_telemetry" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.log_per_error_typing_telemetry = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
                 "experimental.long_lived_workers" => {
                     Some(long_lived_workers_parser(values, config, true))
                 }
@@ -2382,6 +2450,12 @@ pub mod opts {
                     config,
                 )),
                 "file_watcher" => Some(file_watcher_parser(values, config)),
+                "file_watcher.edenfs.throttle_time_ms" => {
+                    Some(file_watcher_edenfs_throttle_time_ms_parser(values, config))
+                }
+                "file_watcher.edenfs.timeout" => {
+                    Some(file_watcher_edenfs_timeout_parser(values, config))
+                }
                 "file_watcher.mergebase_with" => {
                     Some(file_watcher_mergebase_with_parser(values, config))
                 }
@@ -2919,27 +2993,9 @@ fn parse_options(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<Vec
 }
 
 fn parse_version(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
-    fn is_valid_semver_range(s: &str) -> bool {
-        fn parse_version(s: &str) -> Option<(u64, u64, u64)> {
-            let parts: Vec<&str> = s.split('.').collect();
-            if parts.len() != 3 {
-                return None;
-            }
-            Some((
-                parts[0].parse().ok()?,
-                parts[1].parse().ok()?,
-                parts[2].parse().ok()?,
-            ))
-        }
-
-        match s.strip_prefix('^') {
-            Some(range) => parse_version(range).is_some(),
-            None => parse_version(s).is_some(),
-        }
-    }
     let potential_versions = trim_numbered_lines(lines);
     if let Some((ln, version_str)) = potential_versions.first() {
-        if !is_valid_semver_range(version_str) {
+        if !flow_common_semver::semver::is_valid_range(version_str) {
             return Err(Error(
                 *ln,
                 format!(
@@ -3099,7 +3155,11 @@ fn parse_rollouts(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<()
     Ok(())
 }
 
-fn parse_section(config: &mut FlowConfig, section: Section) -> Result<Vec<Warning>, Error> {
+fn parse_section(
+    config: &mut FlowConfig,
+    section: Section,
+    ignore_version: bool,
+) -> Result<Vec<Warning>, Error> {
     let Section((section_ln, section_name), lines) = section;
 
     match (section_name.as_str(), lines.as_slice()) {
@@ -3135,8 +3195,12 @@ fn parse_section(config: &mut FlowConfig, section: Section) -> Result<Vec<Warnin
             Ok(vec![])
         }
         ("version", lines) => {
-            parse_version(config, lines)?;
-            Ok(vec![])
+            if ignore_version {
+                Ok(vec![])
+            } else {
+                parse_version(config, lines)?;
+                Ok(vec![])
+            }
         }
         _ => Ok(vec![Warning(
             section_ln,
@@ -3218,12 +3282,16 @@ fn process_rollouts_with_sections(
     Ok(filtered_sections)
 }
 
-fn parse(config: &mut FlowConfig, lines: Vec<(u32, String)>) -> Result<Vec<Warning>, Error> {
+fn parse(
+    config: &mut FlowConfig,
+    lines: Vec<(u32, String)>,
+    ignore_version: bool,
+) -> Result<Vec<Warning>, Error> {
     let sections = process_rollouts_with_sections(config, group_into_sections(lines)?)?;
 
     let mut warnings = Vec::new();
     for section in sections {
-        warnings.extend(parse_section(config, section)?);
+        warnings.extend(parse_section(config, section, ignore_version)?);
     }
     Ok(warnings)
 }
@@ -3277,11 +3345,194 @@ pub fn empty_config() -> FlowConfig {
     }
 }
 
+pub fn init(
+    ignores: Vec<String>,
+    untyped: Vec<String>,
+    declarations: Vec<String>,
+    includes: Vec<String>,
+    libs: Vec<String>,
+    options: Vec<String>,
+    lints: Vec<String>,
+) -> Result<(FlowConfig, Vec<Warning>), Error> {
+    let mut warnings = Vec::new();
+    let mut config = empty_config();
+
+    parse_ignores(
+        &mut config,
+        &ignores.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    );
+    parse_untyped(
+        &mut config,
+        &untyped.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    );
+    parse_declarations(
+        &mut config,
+        &declarations.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    );
+    parse_includes(
+        &mut config,
+        &includes.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    );
+    warnings.extend(parse_options(
+        &mut config,
+        &options.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    )?);
+    parse_libs(
+        &mut config,
+        &libs.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    )?;
+    warnings.extend(parse_lints(
+        &mut config,
+        &lints.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
+    )?);
+
+    Ok((config, warnings))
+}
+
+pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Result<()> {
+    fn section_header(out: &mut impl std::io::Write, section: &str) -> std::io::Result<()> {
+        writeln!(out, "[{}]", section)
+    }
+
+    fn section_if_nonempty(
+        out: &mut impl std::io::Write,
+        header: &str,
+        is_empty: bool,
+        f: impl FnOnce(&mut dyn std::io::Write) -> std::io::Result<()>,
+    ) -> std::io::Result<()> {
+        if is_empty {
+            Ok(())
+        } else {
+            section_header(out, header)?;
+            f(out)?;
+            writeln!(out)
+        }
+    }
+
+    fn write_ignores(
+        out: &mut dyn std::io::Write,
+        ignores: &[(String, Option<String>)],
+    ) -> std::io::Result<()> {
+        for (ignore, backup_opt) in ignores {
+            match backup_opt {
+                None => writeln!(out, "{}", ignore)?,
+                Some(backup) => writeln!(out, "{} -> {}", ignore, backup)?,
+            }
+        }
+        Ok(())
+    }
+
+    fn write_lines(out: &mut dyn std::io::Write, values: &[String]) -> std::io::Result<()> {
+        for value in values {
+            writeln!(out, "{}", value)?;
+        }
+        Ok(())
+    }
+
+    fn write_libs(
+        out: &mut dyn std::io::Write,
+        libs: &[(Option<FlowSmolStr>, String)],
+    ) -> std::io::Result<()> {
+        for (scoped_dir_opt, lib) in libs {
+            match scoped_dir_opt {
+                None => writeln!(out, "{}", lib)?,
+                Some(scoped_dir) => writeln!(out, "{} -> {}", scoped_dir, lib)?,
+            }
+        }
+        Ok(())
+    }
+
+    fn write_options(out: &mut dyn std::io::Write, config: &FlowConfig) -> std::io::Result<()> {
+        let options = &config.options;
+        let default_options = opts::default_options();
+        if options.module_system != default_options.module_system {
+            let module_system = match options.module_system {
+                ModuleSystem::Node => "node",
+                ModuleSystem::Haste => "haste",
+            };
+            writeln!(out, "module.system={}", module_system)?;
+        }
+        if options.all != default_options.all {
+            writeln!(out, "all={}", options.all.unwrap_or(false))?;
+        }
+        if options.include_warnings != default_options.include_warnings {
+            writeln!(out, "include_warnings={}", options.include_warnings)?;
+        }
+        if options.exact_by_default != default_options.exact_by_default {
+            writeln!(
+                out,
+                "exact_by_default={}",
+                options.exact_by_default.unwrap_or(false)
+            )?;
+        }
+        Ok(())
+    }
+
+    fn write_lints(out: &mut dyn std::io::Write, config: &FlowConfig) -> std::io::Result<()> {
+        let lint_severities = &config.lint_severities;
+        let lint_default = lint_severities.get_default();
+        if lint_default != LintSettings::<Severity>::empty_severities().get_default() {
+            writeln!(out, "all={}", lint_default.as_str())?;
+        }
+        let mut result = Ok(());
+        lint_severities.iter(|kind, (state, _)| {
+            if result.is_ok() {
+                result = writeln!(out, "{}={}", kind.as_str(), state.as_str());
+            }
+        });
+        result
+    }
+
+    fn write_strict(
+        out: &mut dyn std::io::Write,
+        strict_mode: &StrictModeSettings,
+    ) -> std::io::Result<()> {
+        let mut result = Ok(());
+        strict_mode.iter(|kind| {
+            if result.is_ok() {
+                result = writeln!(out, "{}", kind.as_str());
+            }
+        });
+        result
+    }
+
+    section_header(out, "ignore")?;
+    write_ignores(out, &config.ignores)?;
+    writeln!(out)?;
+    section_if_nonempty(out, "untyped", config.untyped.is_empty(), |out| {
+        write_lines(out, &config.untyped)
+    })?;
+    section_if_nonempty(out, "declarations", config.declarations.is_empty(), |out| {
+        write_lines(out, &config.declarations)
+    })?;
+    section_header(out, "include")?;
+    write_lines(out, &config.includes)?;
+    writeln!(out)?;
+    section_header(out, "libs")?;
+    write_libs(out, &config.libs)?;
+    writeln!(out)?;
+    section_header(out, "lints")?;
+    write_lints(out, config)?;
+    writeln!(out)?;
+    section_header(out, "options")?;
+    write_options(out, config)?;
+    writeln!(out)?;
+    section_header(out, "strict")?;
+    write_strict(out, &config.strict_mode)
+}
+
 pub fn get(path: &str) -> Result<(FlowConfig, Vec<Warning>, String), Error> {
+    get_with_ignored_version(path, false)
+}
+
+pub fn get_with_ignored_version(
+    path: &str,
+    ignore_version: bool,
+) -> Result<(FlowConfig, Vec<Warning>, String), Error> {
     let (lines, hash) =
         read(path).map_err(|e| Error(0, format!("Failed to read config: {}", e)))?;
     let mut config = empty_config();
-    let warnings = parse(&mut config, lines)?;
+    let warnings = parse(&mut config, lines, ignore_version)?;
     let hash_string = format!("{:016x}", hash);
     Ok((config, warnings, hash_string))
 }

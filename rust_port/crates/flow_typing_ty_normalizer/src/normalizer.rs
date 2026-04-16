@@ -180,21 +180,24 @@ pub mod lookahead {
                     if seen.contains(&root_id) {
                         return Err(RecursiveError);
                     }
-                    seen.insert(root_id);
+                    let inserted = seen.insert(root_id);
                     match constraints {
-                        Constraints::Resolved(t) => loop_(cx, acc, seen, &t),
+                        Constraints::Resolved(t) => loop_(cx, acc, seen, &t)?,
                         Constraints::FullyResolved(s) => {
                             let t = cx.force_fully_resolved_tvar(&s);
-                            loop_(cx, acc, seen, &t)
+                            loop_(cx, acc, seen, &t)?;
                         }
                         Constraints::Unresolved(bounds) => {
                             let ts: Vec<_> = bounds.borrow().lower.keys().cloned().collect();
                             for t in ts {
                                 loop_(cx, acc, seen, &t)?;
                             }
-                            Ok(())
                         }
                     }
+                    if inserted {
+                        seen.remove(&root_id);
+                    }
+                    Ok(())
                 }
                 TypeInner::AnnotT(_, inner_t, _) => loop_(cx, acc, seen, inner_t),
                 _ => {
@@ -887,7 +890,7 @@ fn type_variable<'cx>(
             if lower_bounds.is_empty() {
                 empty_with_upper_bounds(env, state, cont, id, &bounds)
             } else {
-                match ty::mk_union(false, lower_bounds) {
+                match ty::mk_union_with_flattened(true, true, lower_bounds) {
                     Some(union) => Ok(union),
                     None => empty_with_upper_bounds(env, state, cont, id, &bounds),
                 }
@@ -2037,6 +2040,17 @@ mod type_converter {
             _ => Some(type__::<I>(env, state, None, renders)?),
         };
         let regular_props = match config_ty.as_ref() {
+            ty::Ty::Obj(obj)
+                if matches!(obj.obj_kind, ty::ObjKind::ExactObj)
+                    && matches!(&obj.obj_props[..], [ty::Prop::SpreadProp(_)]) =>
+            {
+                match &obj.obj_props[0] {
+                    ty::Prop::SpreadProp(config) => {
+                        ty::ComponentProps::UnflattenedComponentProps(config.dupe())
+                    }
+                    _ => unreachable!(),
+                }
+            }
             ty::Ty::Obj(obj) => {
                 let props_result: Result<Vec<_>, _> = obj
                     .obj_props
@@ -3779,6 +3793,11 @@ pub mod element_converter {
                                     }
                                 }
                             }
+                            let reason = match kind {
+                                TypeTKind::ImportClassKind => r,
+                                _ => type_util::reason_of_t(inner_t),
+                            };
+                            return type_t::<I>(env, state, reason, kind, inner_t, None);
                         }
                         _ => {}
                     }

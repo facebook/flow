@@ -271,18 +271,6 @@ fn unchecked_dependencies(
     ) -> Option<FileKey> {
         let file = shared_mem.get_provider(m)?;
         let _parse = shared_mem.get_typed_parse(&file)?;
-        let abs_path = file.to_absolute();
-        match std::fs::read_to_string(&abs_path) {
-            Ok(content)
-                if !parsing_service::does_content_match_file_hash(shared_mem, &file, &content) =>
-            {
-                return Some(file);
-            }
-            Err(_) => {
-                return Some(file);
-            }
-            Ok(_) => {}
-        }
         match shared_mem.get_leader(&file) {
             None => Some(file),
             Some(_) => None,

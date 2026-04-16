@@ -6,6 +6,7 @@
  */
 
 use std::collections::HashSet;
+use std::collections::VecDeque;
 
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -309,13 +310,34 @@ pub struct ParserEnv<'a> {
     lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
     /// This needs to be cleared whenever we advance.
     lookahead: lookahead::Lookahead<'a>,
-    token_sink: Option<&'a mut dyn FnMut(TokenSinkResult)>,
+    token_sink: Option<TokenSink<'a>>,
     parse_options: ParseOptions,
     /* It is a syntax error to reference private fields not in scope. In order to enforce this,
      * we keep track of the privates we've seen declared and used. */
     privates: Vec<(HashSet<String>, Vec<(String, Loc)>)>,
     /* The position up to which comments have been consumed, exclusive. */
     consumed_comments_pos: Position,
+}
+
+enum TokenSink<'a> {
+    Direct(&'a mut dyn FnMut(TokenSinkResult)),
+    Buffered {
+        next: Box<TokenSink<'a>>,
+        buffer: VecDeque<TokenSinkResult>,
+    },
+}
+
+fn send_token_to_sink<'a>(token_sink: TokenSink<'a>, token_data: TokenSinkResult) -> TokenSink<'a> {
+    match token_sink {
+        TokenSink::Direct(token_sink) => {
+            token_sink(token_data);
+            TokenSink::Direct(token_sink)
+        }
+        TokenSink::Buffered { next, mut buffer } => {
+            buffer.push_back(token_data);
+            TokenSink::Buffered { next, buffer }
+        }
+    }
 }
 
 /* constructor */
@@ -377,7 +399,7 @@ pub fn init_env<'a, E>(
         lex_mode_stack: vec![LexMode::Normal],
         lex_env,
         lookahead,
-        token_sink,
+        token_sink: token_sink.map(TokenSink::Direct),
         parse_options,
         privates: Vec::new(),
         consumed_comments_pos: Position { line: 0, column: 0 },
@@ -1416,21 +1438,24 @@ pub mod eat {
                 TokenKind::TInterpreter(loc, _) => loc.dupe(),
                 _ => token_loc,
             };
-            token_sink(TokenSinkResult {
-                token_loc,
-                token_kind: token,
-                /*
-                 * The lex mode is useful because it gives context to some
-                 * context-sensitive tokens.
-                 *
-                 * Some examples of such tokens include:
-                 *
-                 * `=>` - Part of an arrow function? or part of a type annotation?
-                 * `<`  - A less-than? Or an opening to a JSX element?
-                 * ...etc...
-                 */
-                token_context: env.lex_mode(),
-            });
+            let token_sink = send_token_to_sink(
+                token_sink,
+                TokenSinkResult {
+                    token_loc,
+                    token_kind: token,
+                    /*
+                     * The lex mode is useful because it gives context to some
+                     * context-sensitive tokens.
+                     *
+                     * Some examples of such tokens include:
+                     *
+                     * `=>` - Part of an arrow function? or part of a type annotation?
+                     * `<`  - A less-than? Or an opening to a JSX element?
+                     * ...etc...
+                     */
+                    token_context: env.lex_mode(),
+                },
+            );
             env.token_sink = Some(token_sink);
         }
 
@@ -1618,8 +1643,6 @@ pub mod expect {
 /// This module allows you to try parsing and rollback if you need. This is not
 /// cheap and its usage is strongly discouraged
 pub mod try_parse {
-    use std::collections::VecDeque;
-
     use super::*;
 
     #[derive(Debug)]
@@ -1637,18 +1660,18 @@ pub mod try_parse {
         saved_lex_mode_stack: Vec<LexMode>,
         saved_lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
         saved_consumed_comments_pos: Position,
-        token_buffer: Option<(
-            &'a mut dyn FnMut(TokenSinkResult),
-            VecDeque<TokenSinkResult>,
-        )>,
+        token_buffer: bool,
     }
 
     fn save_state<'a>(env: &mut ParserEnv<'a>) -> SavedState<'a> {
         let token_buffer = match env.token_sink.take() {
-            None => None,
+            None => false,
             Some(orig_token_sink) => {
-                let buffer = VecDeque::new();
-                Some((orig_token_sink, buffer))
+                env.token_sink = Some(TokenSink::Buffered {
+                    next: Box::new(orig_token_sink),
+                    buffer: VecDeque::new(),
+                });
+                true
             }
         };
 
@@ -1663,23 +1686,20 @@ pub mod try_parse {
         }
     }
 
-    fn reset_token_sink<'a>(
-        env: &mut ParserEnv<'a>,
-        token_buffer_info: Option<(
-            &'a mut dyn FnMut(TokenSinkResult),
-            VecDeque<TokenSinkResult>,
-        )>,
-        flush: bool,
-    ) {
-        match token_buffer_info {
-            None => {}
-            Some((orig_token_sink, token_buffer)) => {
-                if flush {
-                    for token_data in token_buffer {
-                        orig_token_sink(token_data);
+    fn reset_token_sink<'a>(env: &mut ParserEnv<'a>, token_buffer_info: bool, flush: bool) {
+        if token_buffer_info {
+            let token_sink = env.token_sink.take();
+            match token_sink {
+                Some(TokenSink::Buffered { next, buffer }) => {
+                    let mut next = *next;
+                    if flush {
+                        for token_data in buffer {
+                            next = send_token_to_sink(next, token_data);
+                        }
                     }
+                    env.token_sink = Some(next);
                 }
-                env.token_sink = Some(orig_token_sink);
+                None | Some(TokenSink::Direct(_)) => unreachable!(),
             }
         }
     }

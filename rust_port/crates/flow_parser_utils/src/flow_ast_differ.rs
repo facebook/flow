@@ -242,8 +242,7 @@ pub fn list_diff<'a, A: PartialEq>(
                     }
                 }
             }
-            let elem = std::mem::replace(&mut script[i], (0, Change::Delete(&old_arr[0])));
-            result.push(elem);
+            result.push(script[i].clone());
             i += 1;
         }
 

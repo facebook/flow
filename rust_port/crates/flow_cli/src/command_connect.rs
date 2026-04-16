@@ -5,241 +5,358 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Port of commandConnect.ml + commandConnectSimple.ml (simplified)
-// The OCaml version has a complex retry/autostart/handshake system. This Rust version
-// is a simplified direct connection without handshake or autostart. The OCaml architecture
-// uses Marshal for serialization and a SocketHandshake protocol; we use JSON + length-prefix.
-
-use std::io::Read;
-use std::io::Write;
-use std::net::TcpStream;
 use std::path::Path;
 use std::time::Duration;
+use std::time::Instant;
 
-pub(crate) use flow_server_env::server_prot::response::LazyStats;
-use flow_server_files::server_files_js;
-use serde::Deserialize;
-use serde::Serialize;
+use flow_common::flow_version;
+use flow_server_env::server_socket_rpc::ServerRequest;
+use flow_server_env::server_socket_rpc::ServerResponse;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub(crate) enum SaveStateOut {
-    File(String),
-    Scm,
+use crate::command_connect_simple as CCS;
+use crate::command_connect_simple::BusyReason;
+use crate::command_connect_simple::CCSError;
+use crate::command_connect_simple::MismatchBehavior;
+
+pub(crate) struct Env<'a> {
+    pub(crate) root: &'a Path,
+    pub(crate) autostart: bool,
+    pub(crate) retries: i32,
+    pub(crate) expiry: Option<Instant>,
+    pub(crate) lazy_mode: Option<&'a str>,
+    pub(crate) autostop: bool,
+    pub(crate) tmp_dir: &'a str,
+    pub(crate) shm_hash_table_pow: Option<u32>,
+    pub(crate) ignore_version: bool,
+    #[allow(dead_code)]
+    pub(crate) emoji: bool,
+    pub(crate) quiet: bool,
+    pub(crate) flowconfig_name: &'a str,
+    pub(crate) rerun_on_mismatch: bool,
 }
 
-/// Requests sent from client to server.
-/// Simplified wire types for the subset of ServerProt.Request.Command used by the Rust CLI.
-#[derive(Debug, Serialize, Deserialize)]
-pub(crate) enum ServerRequest {
-    CheckContents {
-        filename: Option<String>,
-        content: String,
-        force: bool,
-        include_warnings: bool,
-        strip_root: bool,
-    },
-    Status {
-        include_warnings: bool,
-        strip_root: bool,
-    },
-    ForceRecheck {
-        files: Vec<String>,
-        focus: bool,
-        missed_changes: bool,
-        changed_mergebase: bool,
-    },
-    SaveState {
-        out: SaveStateOut,
-    },
-    Shutdown,
+fn arg(name: &str, value: Option<&str>, arr: &mut Vec<String>) {
+    if let Some(value) = value {
+        arr.push(name.to_string());
+        arr.push(value.to_string());
+    }
 }
 
-/// Responses sent from server to client.
-/// Simplified wire types for the subset of ServerProt.Response.Response used by the Rust CLI.
-#[derive(Debug, Serialize, Deserialize)]
-pub(crate) enum ServerResponse {
-    CheckContents {
-        has_errors: bool,
-        warning_count: usize,
-        error_output: String,
-        not_covered: bool,
-    },
-    Status {
-        has_errors: bool,
-        error_count: usize,
-        warning_count: usize,
-        error_output: String,
-        lazy_stats: LazyStats,
-    },
-    ForceRecheck,
-    SaveState {
-        result: Result<String, String>,
-    },
-    Error {
-        message: String,
-    },
+fn arg_map<T, F: Fn(&T) -> String>(name: &str, f: F, value: Option<&T>, arr: &mut Vec<String>) {
+    let value = value.map(f);
+    arg(name, value.as_deref(), arr);
 }
 
-/// Send a message over a stream using 4-byte big-endian length prefix + JSON.
-pub(crate) fn send_message<W: Write, T: Serialize>(writer: &mut W, msg: &T) -> std::io::Result<()> {
-    let json = serde_json::to_vec(msg)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-    let len = json.len() as u32;
-    writer.write_all(&len.to_be_bytes())?;
-    writer.write_all(&json)?;
-    writer.flush()
+fn flag(name: &str, value: bool, arr: &mut Vec<String>) {
+    if value {
+        arr.push(name.to_string());
+    }
 }
 
-/// Receive a message from a stream using 4-byte big-endian length prefix + JSON.
-pub(crate) fn receive_message<R: Read, T: for<'de> Deserialize<'de>>(
-    reader: &mut R,
-) -> std::io::Result<T> {
-    let mut len_buf = [0u8; 4];
-    reader.read_exact(&mut len_buf)?;
-    let len = u32::from_be_bytes(len_buf) as usize;
-    let mut buf = vec![0u8; len];
-    reader.read_exact(&mut buf)?;
-    serde_json::from_slice(&buf)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
-}
+// Starts up a flow server by literally calling flow start
+fn start_flow_server(env: &Env) -> Result<(), (String, flow_common_exit_status::FlowExitStatus)> {
+    let Env {
+        tmp_dir,
+        lazy_mode,
+        autostop,
+        shm_hash_table_pow,
+        ignore_version,
+        root,
+        quiet,
+        flowconfig_name,
+        ..
+    } = env;
 
-pub(crate) enum ConnectError {
-    ServerNotRunning,
-    ServerSocketMissing,
-    ConnectionFailed(String),
-    CommunicationError(String),
-    Timeout,
-}
+    let exe = std::env::current_exe()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| {
+            std::env::args()
+                .next()
+                .unwrap_or_else(|| "flow".to_string())
+        });
 
-fn io_error_is_server_not_running(kind: std::io::ErrorKind) -> bool {
-    matches!(
-        kind,
-        std::io::ErrorKind::ConnectionRefused
-            | std::io::ErrorKind::ConnectionReset
-            | std::io::ErrorKind::ConnectionAborted
-            | std::io::ErrorKind::BrokenPipe
-            | std::io::ErrorKind::UnexpectedEof
-            | std::io::ErrorKind::NotConnected
-    )
-}
+    let root_str = root.to_string_lossy().to_string();
+    let mut args = vec!["start".to_string(), root_str];
+    arg_map(
+        "--sharedmemory-hash-table-pow",
+        |v: &u32| v.to_string(),
+        shm_hash_table_pow.as_ref(),
+        &mut args,
+    );
+    arg("--lazy-mode", *lazy_mode, &mut args);
+    arg("--temp-dir", Some(tmp_dir), &mut args);
+    let from = crate::flow_event_logger::get_from_i_am_a_clown();
+    arg("--from", from.as_deref(), &mut args);
+    flag("--ignore-version", *ignore_version, &mut args);
+    flag("--quiet", *quiet, &mut args);
+    flag("--autostop", *autostop, &mut args);
+    arg("--flowconfig-name", Some(flowconfig_name), &mut args);
 
-impl std::fmt::Display for ConnectError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConnectError::ServerNotRunning => write!(f, "There is no Flow server running"),
-            ConnectError::ServerSocketMissing => {
-                write!(f, "The flow server lock exists but the socket is missing")
+    use std::process::Command;
+    match Command::new(&exe)
+        .args(&args)
+        .stdin(std::process::Stdio::inherit())
+        .stdout(std::process::Stdio::inherit())
+        .stderr(std::process::Stdio::inherit())
+        .status()
+    {
+        Ok(status) => {
+            if status.success() {
+                Ok(())
+            } else if let Some(code) = status.code() {
+                if code
+                    == flow_common_exit_status::error_code(
+                        flow_common_exit_status::FlowExitStatus::LockStolen,
+                    )
+                {
+                    Err((
+                        "Lock stolen".to_string(),
+                        flow_common_exit_status::FlowExitStatus::LockStolen,
+                    ))
+                } else {
+                    Err((
+                        "Could not start Flow server!".to_string(),
+                        flow_common_exit_status::FlowExitStatus::ServerStartFailed,
+                    ))
+                }
+            } else {
+                Err((
+                    "Could not start Flow server!".to_string(),
+                    flow_common_exit_status::FlowExitStatus::ServerStartFailed,
+                ))
             }
-            ConnectError::ConnectionFailed(msg) => {
-                write!(f, "Could not connect to server: {}", msg)
-            }
-            ConnectError::CommunicationError(msg) => write!(f, "Communication error: {}", msg),
-            ConnectError::Timeout => write!(f, "Timed out waiting for server response"),
+        }
+        Err(exn) => Err((
+            format!("Could not start Flow server! Unexpected exception: {}", exn),
+            flow_common_exit_status::FlowExitStatus::UnknownError,
+        )),
+    }
+}
+
+struct RetryInfo {
+    retries_remaining: i32,
+    original_retries: i32,
+    last_connect_time: Instant,
+}
+
+fn reset_retries_if_necessary(retries: &mut RetryInfo, conn: &Result<ServerResponse, CCSError>) {
+    match conn {
+        Err(CCSError::ServerBusy(BusyReason::FailOnInit(..))) => {
+            retries.retries_remaining = 0;
+        }
+        Err(CCSError::ServerMissing) | Err(CCSError::ServerBusy(_)) => {}
+        Ok(_) | Err(CCSError::ServerSocketMissing) | Err(CCSError::BuildIdMismatch(_)) => {
+            retries.retries_remaining = retries.original_retries;
         }
     }
 }
 
-fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
-    let lock_path = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
-    Path::new(&lock_path).exists()
+fn rate_limit(retries: &RetryInfo) {
+    // Make sure there is at least 1 second between retries
+    let elapsed = retries.last_connect_time.elapsed();
+    if elapsed < Duration::from_secs(1) {
+        std::thread::sleep(Duration::from_secs(1) - elapsed);
+    }
 }
 
-pub(crate) fn remove_server_files(flowconfig_name: &str, tmp_dir: &str, root: &Path) {
-    let lock_path = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
-    let socket_path = server_files_js::socket_file(flowconfig_name, tmp_dir, root);
-    let ready_path = server_files_js::ready_file(flowconfig_name, tmp_dir, root);
-    let _ = std::fs::remove_file(lock_path);
-    let _ = std::fs::remove_file(socket_path);
-    let _ = std::fs::remove_file(ready_path);
+fn consume_retry(retries: &mut RetryInfo) {
+    retries.retries_remaining -= 1;
+    if retries.retries_remaining >= 0 {
+        rate_limit(retries);
+    }
 }
 
-/// Connect to the Flow server and send a request, returning the response.
-pub(crate) fn connect_and_make_request(
-    flowconfig_name: &str,
-    tmp_dir: &str,
-    root: &Path,
-    request: ServerRequest,
-) -> Result<ServerResponse, ConnectError> {
-    connect_and_make_request_with_timeout(flowconfig_name, tmp_dir, root, request, None)
+// A featureful wrapper around CommandConnectSimple.connect_once. This
+// function handles retries, timeouts, displaying messages during
+// initialization, etc
+fn connect_rec(env: &Env, request: &ServerRequest, retries: &mut RetryInfo) -> ServerResponse {
+    if retries.retries_remaining < 0 {
+        eprintln!("\nOut of retries, exiting!");
+        flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfRetries);
+    }
+
+    let has_timed_out = match env.expiry {
+        None => false,
+        Some(t) => Instant::now() >= t,
+    };
+    if has_timed_out {
+        eprintln!("\nTimeout exceeded, exiting");
+        flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfTime);
+    }
+
+    retries.last_connect_time = Instant::now();
+
+    let conn = CCS::connect_once(env.flowconfig_name, env.tmp_dir, env.root, request, Some(1));
+
+    reset_retries_if_necessary(retries, &conn);
+
+    match conn {
+        Ok(response) => response,
+
+        Err(CCSError::ServerMissing) => handle_missing_server(env, request, retries),
+
+        Err(CCSError::ServerBusy(busy_reason)) => {
+            let busy_reason_str = match &busy_reason {
+                BusyReason::TooManyClients => "has too many clients and rejected our connection",
+                BusyReason::NotResponding => "is not responding",
+                BusyReason::FailOnInit(..) => {
+                    "is still initializing and the client used --retry-if-init false"
+                }
+            };
+            if !env.quiet {
+                eprint!(
+                    "The flow server {} [{}] ({} {} remaining): ...",
+                    busy_reason_str,
+                    CCS::busy_reason_to_string(&busy_reason),
+                    retries.retries_remaining,
+                    if retries.retries_remaining == 1 {
+                        "retry"
+                    } else {
+                        "retries"
+                    },
+                );
+            }
+            consume_retry(retries);
+            connect_rec(env, request, retries)
+        }
+
+        Err(CCSError::BuildIdMismatch(MismatchBehavior::ServerExited)) => {
+            let msg = "The flow server's version didn't match the client's, so it exited.";
+            if env.autostart {
+                if !env.quiet {
+                    eprintln!("{}\nGoing to launch a new one.\n", msg);
+                }
+                // Don't decrement retries -- the server is definitely not running,
+                // so the next time round will hit Server_missing above, *but*
+                // before that will actually start the server -- we need to make
+                // sure that happens.
+                connect_rec(env, request, retries)
+            } else {
+                let msg = format!("\n{}", msg);
+                eprintln!("{}", msg);
+                flow_common_exit_status::exit(
+                    flow_common_exit_status::FlowExitStatus::BuildIdMismatch,
+                );
+            }
+        }
+
+        Err(CCSError::BuildIdMismatch(MismatchBehavior::ClientShouldError {
+            server_bin,
+            server_version,
+        })) => {
+            if env.rerun_on_mismatch {
+                if !env.quiet {
+                    eprintln!(
+                        "Version mismatch! Server binary is Flow v{} but we are using v{}",
+                        server_version,
+                        flow_version::VERSION,
+                    );
+                    eprintln!("Restarting command using the same binary as the server");
+                }
+                let args: Vec<String> = std::env::args().skip(1).collect();
+                match std::process::Command::new(&server_bin).args(&args).status() {
+                    Ok(status) => {
+                        std::process::exit(status.code().unwrap_or(1));
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to exec {}: {}", server_bin, e);
+                        flow_common_exit_status::exit(
+                            flow_common_exit_status::FlowExitStatus::BuildIdMismatch,
+                        );
+                    }
+                }
+            } else {
+                let msg = format!(
+                    "\nThe Flow server's version (v{}) didn't match the client's (v{}). Exiting",
+                    server_version,
+                    flow_version::VERSION,
+                );
+                eprintln!("{}", msg);
+                flow_common_exit_status::exit(
+                    flow_common_exit_status::FlowExitStatus::BuildIdMismatch,
+                );
+            }
+        }
+
+        Err(CCSError::ServerSocketMissing) => {
+            if !env.quiet {
+                eprintln!("Attempting to kill server for `{}`", env.root.display());
+            }
+            match crate::command_mean_kill::mean_kill(env.flowconfig_name, env.tmp_dir, env.root) {
+                Ok(()) => {
+                    if !env.quiet {
+                        eprintln!("Successfully killed server for `{}`", env.root.display());
+                    }
+                    handle_missing_server(env, request, retries)
+                }
+                Err(crate::command_mean_kill::FailedToKill::Message(err)) => {
+                    if !env.quiet {
+                        match err {
+                            Some(err) => eprintln!("{}", err),
+                            None => {}
+                        }
+                    }
+                    let msg = format!("Failed to kill server for `{}`", env.root.display());
+                    eprintln!("{}", msg);
+                    flow_common_exit_status::exit(
+                        flow_common_exit_status::FlowExitStatus::KillError,
+                    );
+                }
+            }
+        }
+    }
 }
 
-/// Connect to the Flow server and send a request, returning the response.
-/// If `timeout_secs` is Some, the read timeout is set to that value.
-pub(crate) fn connect_and_make_request_with_timeout(
-    flowconfig_name: &str,
-    tmp_dir: &str,
-    root: &Path,
-    request: ServerRequest,
-    timeout_secs: Option<u64>,
-) -> Result<ServerResponse, ConnectError> {
-    let socket_path = server_files_js::socket_file(flowconfig_name, tmp_dir, root);
-    let server_exists = server_exists(flowconfig_name, tmp_dir, root);
-
-    // Read the port from the socket file (written by the server on startup)
-    let port_str = std::fs::read_to_string(&socket_path).map_err(|e| {
-        if e.kind() == std::io::ErrorKind::NotFound {
-            if server_exists {
-                ConnectError::ServerSocketMissing
-            } else {
-                ConnectError::ServerNotRunning
+fn handle_missing_server(
+    env: &Env,
+    request: &ServerRequest,
+    retries: &mut RetryInfo,
+) -> ServerResponse {
+    if env.autostart {
+        if !env.quiet {
+            eprintln!("Launching Flow server for {}", env.root.display());
+        }
+        match start_flow_server(env) {
+            Ok(()) => {
+                if !env.quiet {
+                    eprint!("Started a new flow server: ...");
+                }
             }
-        } else {
-            ConnectError::ConnectionFailed(e.to_string())
-        }
-    })?;
-    let port: u16 = port_str.trim().parse().map_err(|_| {
-        if server_exists {
-            ConnectError::ServerSocketMissing
-        } else {
-            ConnectError::ConnectionFailed("invalid port in socket file".to_string())
-        }
-    })?;
-
-    // Connect via TCP to localhost
-    let mut stream = TcpStream::connect(("127.0.0.1", port)).map_err(|e| {
-        if io_error_is_server_not_running(e.kind()) {
-            if server_exists {
-                ConnectError::ServerSocketMissing
-            } else {
-                ConnectError::ServerNotRunning
+            Err((_, flow_common_exit_status::FlowExitStatus::LockStolen)) => {
+                if !env.quiet {
+                    eprint!(
+                        "Failed to start a new flow server ({} {} remaining): ...",
+                        retries.retries_remaining,
+                        if retries.retries_remaining == 1 {
+                            "retry"
+                        } else {
+                            "retries"
+                        },
+                    );
+                }
+                consume_retry(retries);
             }
-        } else {
-            ConnectError::ConnectionFailed(e.to_string())
-        }
-    })?;
-
-    // Set timeout
-    let read_timeout = timeout_secs.unwrap_or(60);
-    stream
-        .set_read_timeout(Some(Duration::from_secs(read_timeout)))
-        .ok();
-    stream.set_write_timeout(Some(Duration::from_secs(10))).ok();
-
-    // Send request
-    send_message(&mut stream, &request).map_err(|e| {
-        if io_error_is_server_not_running(e.kind()) {
-            if server_exists {
-                ConnectError::ServerSocketMissing
-            } else {
-                ConnectError::ServerNotRunning
+            Err((msg, code)) => {
+                eprintln!("{}", msg);
+                flow_common_exit_status::exit(code);
             }
-        } else {
-            ConnectError::CommunicationError(e.to_string())
         }
-    })?;
+        connect_rec(env, request, retries)
+    } else {
+        let msg = format!(
+            "\nError: There is no Flow server running in '{}'.",
+            env.root.display()
+        );
+        eprintln!("{}", msg);
+        flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoServerRunning);
+    }
+}
 
-    // Receive response
-    receive_message(&mut stream).map_err(|e| {
-        if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut {
-            ConnectError::Timeout
-        } else if io_error_is_server_not_running(e.kind()) {
-            if server_exists {
-                ConnectError::ServerSocketMissing
-            } else {
-                ConnectError::ServerNotRunning
-            }
-        } else {
-            ConnectError::CommunicationError(e.to_string())
-        }
-    })
+pub(crate) fn connect(env: &Env, request: &ServerRequest) -> ServerResponse {
+    let mut retries = RetryInfo {
+        retries_remaining: env.retries,
+        original_retries: env.retries,
+        last_connect_time: Instant::now(),
+    };
+    connect_rec(env, request, &mut retries)
 }

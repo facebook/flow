@@ -49,8 +49,8 @@ fn string_of_row(indent: usize, name: &str, i: usize) -> String {
 pub mod signature_verification {
     use super::*;
 
-    pub fn supported_error_kind<'cx>(
-        cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+    pub fn supported_error_kind<'a, 'cx>(
+        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
         max_type_size: i32,
         mut acc: BTreeMap<Loc, TyResult>,
         loc: Loc,
@@ -78,8 +78,8 @@ pub mod signature_verification {
         }
     }
 
-    pub fn collect_annotations<'cx>(
-        cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+    pub fn collect_annotations<'a, 'cx>(
+        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
         default_any: bool,
         max_type_size: i32,
         ast: &ast::Program<Loc, Loc>,
@@ -234,21 +234,20 @@ pub mod signature_verification_error_stats {
 
 use signature_verification_error_stats::SignatureVerificationErrorStats;
 
-pub struct AnnotateExportsMapper<'cx> {
-    cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+pub struct AnnotateExportsMapper<'a, 'cx> {
+    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     default_any: bool,
     sig_verification_loc_tys: BTreeMap<Loc, TyResult>,
     total_errors: usize,
-    wont_annotate_locs: BTreeSet<Loc>,
-    mapper: codemod_annotator::Mapper<'cx, SignatureVerificationErrorStats>,
+    mapper: codemod_annotator::Mapper<'a, 'cx, SignatureVerificationErrorStats>,
 }
 
-impl<'cx> AnnotateExportsMapper<'cx> {
+impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
     pub fn new(
         max_type_size: i32,
         default_any: bool,
-        cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> Self {
         let lint_severities = codemod_context::typed::lint_severities(cctx);
         Self {
@@ -257,7 +256,6 @@ impl<'cx> AnnotateExportsMapper<'cx> {
             default_any,
             sig_verification_loc_tys: BTreeMap::new(),
             total_errors: 0,
-            wont_annotate_locs: BTreeSet::new(),
             mapper: codemod_annotator::Mapper {
                 added_annotations_locmap: BTreeMap::new(),
                 wont_annotate_locs: BTreeSet::new(),
@@ -412,12 +410,38 @@ impl<'cx> AnnotateExportsMapper<'cx> {
         SignatureVerificationErrorStats {
             number_of_sig_ver_errors: self.total_errors,
             number_of_annotations_required: self.sig_verification_loc_tys.len(),
-            number_of_annotations_skipped: self.wont_annotate_locs.len(),
+            number_of_annotations_skipped: self.mapper.wont_annotate_locs.len(),
         }
+    }
+
+    pub fn program(&mut self, prog: &ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
+        let (total_errors_, sig_verification_loc_tys_) =
+            signature_verification::collect_annotations(
+                self.cctx,
+                self.default_any,
+                self.max_type_size,
+                prog,
+            );
+        self.total_errors = total_errors_;
+        self.sig_verification_loc_tys = sig_verification_loc_tys_;
+        if self.sig_verification_loc_tys.is_empty() {
+            prog.clone()
+        } else {
+            self.mapper.initialize_program_state(prog);
+            let prog_ = ast_visitor::map_program_default(self, prog);
+            let extra = self.post_run();
+            self.mapper.finalize_program(prog, prog_, extra)
+        }
+    }
+
+    pub fn acc(
+        &mut self,
+    ) -> flow_services_code_action::insert_type_utils::Acc<SignatureVerificationErrorStats> {
+        self.mapper.acc.clone()
     }
 }
 
-impl<'ast, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'cx> {
+impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
     fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
         loc
     }
@@ -705,7 +729,7 @@ impl<'ast, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'cx> {
             _ => {
                 let loc = &extends.loc;
                 if self.sig_verification_loc_tys.contains_key(loc) {
-                    self.wont_annotate_locs.insert(loc.clone());
+                    self.mapper.wont_annotate_locs.insert(loc.clone());
                 }
                 extends.clone()
             }
@@ -741,7 +765,7 @@ impl<'ast, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'cx> {
                     }
                 } else {
                     if self.sig_verification_loc_tys.contains_key(loc) {
-                        self.wont_annotate_locs.insert(loc.clone());
+                        self.mapper.wont_annotate_locs.insert(loc.clone());
                     }
                     ast_visitor::map_function_param_pattern_default(self, expr)
                 }
@@ -961,7 +985,7 @@ impl<'ast, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'cx> {
         match (ploc, rloc) {
             (Some(ploc), Some(rloc)) if ploc == rloc => {
                 if self.sig_verification_loc_tys.contains_key(rloc) {
-                    self.wont_annotate_locs.insert(rloc.clone());
+                    self.mapper.wont_annotate_locs.insert(rloc.clone());
                     self.mapper.acc.warn(
                         loc,
                         &flow_services_code_action::insert_type_utils::warning::Kind::SkippingArrowFunction,

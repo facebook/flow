@@ -55,6 +55,7 @@ pub use main_parser::parse_package_json_file;
 pub use main_parser::parse_program_file;
 pub use main_parser::parse_program_without_file;
 pub use main_parser::parse_to_json;
+pub use parser_env::LexMode;
 pub use parser_env::PERMISSIVE_PARSE_OPTIONS;
 pub use parser_env::ParseOptions;
 pub use parser_env::ParserEnv;

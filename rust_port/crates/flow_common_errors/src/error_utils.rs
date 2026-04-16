@@ -13,6 +13,8 @@ use flow_common::files;
 use flow_lint_settings::lints::LintKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
+use flow_parser::offset_utils::OffsetKind;
+use flow_parser::offset_utils::OffsetTable;
 
 use crate::error_codes::ErrorCode;
 
@@ -1214,7 +1216,7 @@ pub mod friendly {
             BTreeMap<i32, Loc>,
             Vec<MessageGroup<i32>>,
         ) {
-            list.into_iter().fold(
+            let (next_id, loc_to_id, id_to_loc, group_message_list) = list.into_iter().fold(
                 (next_id, loc_to_id, id_to_loc, Vec::new()),
                 |(next_id, loc_to_id, id_to_loc, mut acc), mg| {
                     let (next_id, loc_to_id, id_to_loc, mg) =
@@ -1222,7 +1224,8 @@ pub mod friendly {
                     acc.push(mg);
                     (next_id, loc_to_id, id_to_loc, acc)
                 },
-            )
+            );
+            (next_id, loc_to_id, id_to_loc, group_message_list)
         };
 
         let (next_id, loc_to_id, id_to_loc, group_message_nested) =
@@ -1394,7 +1397,7 @@ pub mod friendly {
     ) -> super::ClassicError<Loc> {
         let error_code = error.code;
         let (_, loc, message) = message_group_of_error(
-            false, true, true,
+            true, true, false,
             /* unicode: Not super important for legacy error format */ false, error_kind,
             error,
         );
@@ -1716,6 +1719,16 @@ fn read_file<'a>(stdin_file: &'a StdinFile, filename: &str) -> Option<Cow<'a, st
         panic!("Expected absolute location, got {}", filename)
     }
     std::fs::read_to_string(filename).ok().map(Cow::Owned)
+}
+
+fn get_offset_table_expensive(
+    stdin_file: &StdinFile,
+    offset_kind: OffsetKind,
+    loc: &Loc,
+) -> Option<OffsetTable> {
+    let filename = file_of_source(loc.source.as_ref())?;
+    let content = read_file(stdin_file, &filename)?;
+    Some(OffsetTable::make_with_kind(offset_kind, &content))
 }
 
 fn read_lines_in_file(
@@ -2273,7 +2286,7 @@ impl Ord for PrintableError<Loc> {
 // ConcreteLocPrintableErrorSet
 // ============================================================================
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConcreteLocPrintableErrorSet(BTreeSet<PrintableError<Loc>>);
 
 impl ConcreteLocPrintableErrorSet {
@@ -2641,7 +2654,14 @@ pub mod cli_output {
                 // are currently open then we need to increment their colors.
                 // Add our closing tag. We will get from this operation the color which
                 // we should add for our current reference.
-                let (color, tags) = add_close_tag(&colors, id, end_pos, tags_iter, 0, Vec::new());
+                let (color, tags) = add_close_tag(
+                    &colors,
+                    id,
+                    end_pos,
+                    std::iter::once((pos, tag_id, tag_kind)).chain(tags_iter),
+                    0,
+                    Vec::new(),
+                );
 
                 // Add a color for this id
                 colors = match custom_colors.get(&id) {
@@ -2663,7 +2683,7 @@ pub mod cli_output {
                 // been added by add_close_tag
                 tags_acc.push((*start, id, TagKind::Open(*end_pos)));
                 tags_acc.extend(tags);
-                break;
+                return (colors, tags_acc);
             }
 
             // For an empty array, add both the open and close tags.
@@ -2709,6 +2729,7 @@ pub mod cli_output {
 
                 // When we find the location for our close tag, add it
                 tags_acc.push((*end_pos, id, TagKind::Close));
+                tags_acc.push((pos, tag_id, tag_kind));
                 tags_acc.extend(tags_iter);
                 return (color_acc, tags_acc);
             }
@@ -3398,16 +3419,16 @@ pub mod cli_output {
                         let (width, mut refs_styled): (usize, Vec<(tty::Style, String)>) =
                             references.iter().fold(
                                 (1, vec![default_style(" ")]),
-                                |(width, mut acc), (id, _)| {
+                                |(width, acc), (id, _)| {
                                     let string_id = id.to_string();
                                     let width = width + 2 + string_id.len();
-                                    acc.push(dim_style("["));
-                                    acc.push((
-                                        tty::Style::Normal(get_tty_color(*id, colors)),
-                                        string_id,
-                                    ));
-                                    acc.push(dim_style("]"));
-                                    (width, acc)
+                                    let mut prefix = vec![
+                                        dim_style("["),
+                                        (tty::Style::Normal(get_tty_color(*id, colors)), string_id),
+                                        dim_style("]"),
+                                    ];
+                                    prefix.extend(acc);
+                                    (width, prefix)
                                 },
                             );
                         let width = width + 1;
@@ -3555,8 +3576,6 @@ pub mod cli_output {
                                 // Start that loop!
                                 let (tags, opened, code_line) =
                                     loop_fn(Vec::new(), 0, tags, opened, &line, n, colors)?;
-                                let code_line: Vec<(tty::Style, String)> =
-                                    code_line.into_iter().rev().collect();
                                 // Create the gutter text.
                                 let gutter: Vec<(tty::Style, String)> = match line_references
                                     .get(&n)
@@ -3671,14 +3690,14 @@ pub mod cli_output {
         code_frames.into_iter().enumerate().fold(
             Vec::new(),
             |mut acc, (idx, (file_key, code_frame))| {
+                if idx != 0 {
+                    acc.push(default_style("\n"));
+                }
                 let file_key_str = print_file_key(strip_root, Some(&file_key));
-                let mut header = vec![
+                let header = vec![
                     default_style(&" ".repeat(gutter_width)),
                     default_style(&format!("{}\n", file_key_str)),
                 ];
-                if idx != 0 {
-                    header.push(default_style("\n"));
-                }
                 acc.extend(header);
                 acc.extend(code_frame);
                 acc
@@ -4484,7 +4503,223 @@ pub mod json_output {
 
     use super::*;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    fn key_rank(value: &Value, key: &str) -> usize {
+        let is_top_level = matches!(value, Value::Object(props)
+            if props.contains_key("flowVersion")
+                && props.contains_key("jsonVersion")
+                && props.contains_key("errors")
+                && props.contains_key("passed"));
+        if is_top_level {
+            return match key {
+                "flowVersion" => 0,
+                "jsonVersion" => 1,
+                "errors" => 2,
+                "passed" => 3,
+                _ => 1000,
+            };
+        }
+
+        let is_error = matches!(value, Value::Object(props)
+            if props.contains_key("kind")
+                && props.contains_key("level")
+                && props.contains_key("suppressions"));
+        if is_error {
+            return match key {
+                "kind" => 0,
+                "level" => 1,
+                "suppressions" => 2,
+                "extra" => 3,
+                "message" => 4,
+                "error_codes" => 5,
+                "classic" => 3,
+                "primaryLoc" => 4,
+                "rootLoc" => 5,
+                "messageMarkup" => 6,
+                "referenceLocs" => 7,
+                _ => 1000,
+            };
+        }
+
+        let is_message = matches!(value, Value::Object(props)
+            if props.contains_key("descr") && props.contains_key("type"));
+        if is_message {
+            return match key {
+                "context" => 0,
+                "descr" => 1,
+                "type" => 2,
+                "loc" => 3,
+                "path" => 4,
+                "line" => 5,
+                "endline" => 6,
+                "start" => 7,
+                "end" => 8,
+                _ => 1000,
+            };
+        }
+
+        let is_loc = matches!(value, Value::Object(props)
+            if props.contains_key("source")
+                && props.contains_key("type")
+                && props.contains_key("start")
+                && props.contains_key("end"));
+        if is_loc {
+            return match key {
+                "source" => 0,
+                "type" => 1,
+                "start" => 2,
+                "end" => 3,
+                "context" => 4,
+                _ => 1000,
+            };
+        }
+
+        let is_position = matches!(value, Value::Object(props)
+            if props.contains_key("line") && props.contains_key("column"));
+        if is_position {
+            return match key {
+                "line" => 0,
+                "column" => 1,
+                "offset" => 2,
+                _ => 1000,
+            };
+        }
+
+        let is_info_tree = matches!(value, Value::Object(props) if props.contains_key("message"));
+        if is_info_tree {
+            return match key {
+                "message" => 0,
+                "children" => 1,
+                _ => 1000,
+            };
+        }
+
+        let is_unordered_list = matches!(value, Value::Object(props)
+            if props.get("kind") == Some(&json!("UnorderedList")));
+        if is_unordered_list {
+            return match key {
+                "kind" => 0,
+                "message" => 1,
+                "items" => 2,
+                "post_message" => 3,
+                _ => 1000,
+            };
+        }
+
+        let is_friendly_inline = matches!(value, Value::Object(props)
+            if props.contains_key("kind")
+                && (props.contains_key("text")
+                    || props.contains_key("referenceId")
+                    || props.contains_key("message")));
+        if is_friendly_inline {
+            return match key {
+                "kind" => 0,
+                "referenceId" => 1,
+                "message" => 2,
+                "text" => 1,
+                _ => 1000,
+            };
+        }
+
+        if key == "loc" {
+            return 0;
+        }
+
+        1000
+    }
+
+    fn ordered_entries(value: &Value) -> Vec<(&String, &Value)> {
+        match value {
+            Value::Object(props) => {
+                let mut entries = props.iter().collect::<Vec<_>>();
+                entries.sort_by(|(left_key, _), (right_key, _)| {
+                    key_rank(value, left_key)
+                        .cmp(&key_rank(value, right_key))
+                        .then_with(|| left_key.cmp(right_key))
+                });
+                entries
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    fn json_string_of_value(value: &Value) -> String {
+        match value {
+            Value::Array(values) => format!(
+                "[{}]",
+                values
+                    .iter()
+                    .map(json_string_of_value)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Value::Object(_) => format!(
+                "{{{}}}",
+                ordered_entries(value)
+                    .iter()
+                    .map(|(key, value)| format!(
+                        "{}:{}",
+                        serde_json::to_string(key).unwrap(),
+                        json_string_of_value(value)
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            _ => serde_json::to_string(value).unwrap(),
+        }
+    }
+
+    fn json_to_multiline(value: &Value) -> String {
+        fn loop_(indent: &str, value: &Value) -> String {
+            let single = json_string_of_value(value);
+            if single.len() < 80 {
+                single
+            } else {
+                match value {
+                    Value::Array(values) => {
+                        let next_indent = format!("{indent}  ");
+                        let rendered = values
+                            .iter()
+                            .map(|value| loop_(&next_indent, value))
+                            .collect::<Vec<_>>();
+                        format!(
+                            "[\n{next_indent}{}\n{indent}]",
+                            rendered.join(&format!(",\n{next_indent}"))
+                        )
+                    }
+                    Value::Object(_) => {
+                        let next_indent = format!("{indent}  ");
+                        let rendered = ordered_entries(value)
+                            .iter()
+                            .map(|(key, value)| {
+                                format!(
+                                    "{}:{}",
+                                    serde_json::to_string(key).unwrap(),
+                                    loop_(&next_indent, value)
+                                )
+                            })
+                            .collect::<Vec<_>>();
+                        format!(
+                            "{{\n{next_indent}{}\n{indent}}}",
+                            rendered.join(&format!(",\n{next_indent}"))
+                        )
+                    }
+                    _ => single,
+                }
+            }
+        }
+
+        loop_("", value)
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum JsonVersion {
         JsonV1,
         JsonV2,
@@ -4500,6 +4735,7 @@ pub mod json_output {
     fn json_of_message_props(
         stdin_file: &StdinFile,
         strip_root: Option<&str>,
+        offset_kind: OffsetKind,
         message: &Message<Loc>,
     ) -> Vec<(String, Value)> {
         let (desc, loc) = unwrap_message(message);
@@ -4521,34 +4757,10 @@ pub mod json_output {
                 ));
             }
             Some(ref loc) => {
-                fn json_of_loc_inline(
-                    strip_root: Option<&str>,
-                    _stdin_file: &StdinFile,
-                    loc: &Loc,
-                ) -> Value {
-                    let source_str = match &loc.source {
-                        Some(source) => flow_common::reason::string_of_source(strip_root, source),
-                        None => String::new(),
-                    };
-                    json!({
-                        "source": source_str,
-                        "type": if loc.source.is_some() { "SourceFile" } else { "NoSource" },
-                        "start": {
-                            "line": loc.start.line,
-                            "column": loc.start.column + 1,
-                            "offset": 0
-                        },
-                        "end": {
-                            "line": loc.end.line,
-                            "column": loc.end.column,
-                            "offset": 0
-                        }
-                    })
-                }
-
+                let offset_table = get_offset_table_expensive(stdin_file, offset_kind, loc);
                 props.push((
                     "loc".to_string(),
-                    json_of_loc_inline(strip_root, stdin_file, loc),
+                    flow_common::reason::json_of_loc(strip_root, true, offset_table.as_ref(), loc),
                 ));
                 props.extend(deprecated_json_props_of_loc(strip_root, loc));
             }
@@ -4628,44 +4840,12 @@ pub mod json_output {
     fn json_of_loc_with_context(
         strip_root: Option<&str>,
         stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
         loc: &Loc,
     ) -> Value {
-        fn json_of_loc_props_inline(strip_root: Option<&str>, loc: &Loc) -> Vec<(String, Value)> {
-            let source_str = match &loc.source {
-                Some(source) => flow_common::reason::string_of_source(strip_root, source),
-                None => String::new(),
-            };
-
-            vec![
-                ("source".to_string(), json!(source_str)),
-                (
-                    "type".to_string(),
-                    json!(if loc.source.is_some() {
-                        "SourceFile"
-                    } else {
-                        "NoSource"
-                    }),
-                ),
-                (
-                    "start".to_string(),
-                    json!({
-                        "line": loc.start.line,
-                        "column": loc.start.column + 1,
-                        "offset": 0
-                    }),
-                ),
-                (
-                    "end".to_string(),
-                    json!({
-                        "line": loc.end.line,
-                        "column": loc.end.column,
-                        "offset": 0
-                    }),
-                ),
-            ]
-        }
-
-        let mut props = json_of_loc_props_inline(strip_root, loc);
+        let offset_table = get_offset_table_expensive(stdin_file, offset_kind, loc);
+        let mut props =
+            flow_common::reason::json_of_loc_props(strip_root, true, offset_table.as_ref(), loc);
         props.push((
             "context".to_string(),
             json_of_loc_context_abridged(stdin_file, 5, Some(loc)),
@@ -4676,6 +4856,7 @@ pub mod json_output {
     fn json_of_message_with_context(
         strip_root: Option<&str>,
         stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
         message: &Message<Loc>,
     ) -> Value {
         let (_, loc) = unwrap_message(message);
@@ -4683,7 +4864,7 @@ pub mod json_output {
             "context".to_string(),
             json_of_loc_context(stdin_file, loc.as_ref()),
         );
-        let mut props = json_of_message_props(stdin_file, strip_root, message);
+        let mut props = json_of_message_props(stdin_file, strip_root, offset_kind, message);
         props.insert(0, context);
         Value::Object(props.into_iter().collect())
     }
@@ -4828,13 +5009,14 @@ pub mod json_output {
     fn json_of_references(
         strip_root: Option<&str>,
         stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
         references: &BTreeMap<i32, Loc>,
     ) -> Value {
         let mut props = serde_json::Map::new();
         for (id, loc) in references.iter() {
             props.insert(
                 id.to_string(),
-                json_of_loc_with_context(strip_root, stdin_file, loc),
+                json_of_loc_with_context(strip_root, stdin_file, offset_kind, loc),
             );
         }
         Value::Object(props)
@@ -4843,6 +5025,7 @@ pub mod json_output {
     fn json_of_friendly_error_props(
         strip_root: Option<&str>,
         stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
         error_kind: ErrorKind,
         error: &friendly::FriendlyGeneric<Loc>,
     ) -> Vec<(String, Value)> {
@@ -4859,7 +5042,9 @@ pub mod json_output {
 
         let root_loc = match &error.root {
             None => Value::Null,
-            Some(root) => json_of_loc_with_context(strip_root, stdin_file, &root.root_loc),
+            Some(root) => {
+                json_of_loc_with_context(strip_root, stdin_file, offset_kind, &root.root_loc)
+            }
         };
 
         vec![
@@ -4871,7 +5056,7 @@ pub mod json_output {
             // their rendering. `primaryLoc` will always be inside `rootLoc`.
             (
                 "primaryLoc".to_string(),
-                json_of_loc_with_context(strip_root, stdin_file, &primary_loc),
+                json_of_loc_with_context(strip_root, stdin_file, offset_kind, &primary_loc),
             ),
             ("rootLoc".to_string(), root_loc),
             // NOTE: This `messageMarkup` can be concatenated into a string when
@@ -4884,7 +5069,7 @@ pub mod json_output {
             // implementing the LSP error output.
             (
                 "referenceLocs".to_string(),
-                json_of_references(strip_root, stdin_file, &references),
+                json_of_references(strip_root, stdin_file, offset_kind, &references),
             ),
         ]
     }
@@ -4893,6 +5078,7 @@ pub mod json_output {
         strip_root: Option<&str>,
         stdin_file: &StdinFile,
         version: JsonVersion,
+        offset_kind: OffsetKind,
         json_of_message: impl Fn(&Message<Loc>) -> Value,
         severity: Severity,
         suppression_locs: &BTreeSet<Loc>,
@@ -4923,39 +5109,20 @@ pub mod json_output {
             }
         }
 
-        fn json_of_loc_inline(
-            strip_root: Option<&str>,
-            _stdin_file: &StdinFile,
-            loc: &Loc,
-        ) -> Value {
-            let source_str = match &loc.source {
-                Some(source) => flow_common::reason::string_of_source(strip_root, source),
-                None => String::new(),
-            };
-            json!({
-                "source": source_str,
-                "type": if loc.source.is_some() { "SourceFile" } else { "NoSource" },
-                "start": {
-                    "line": loc.start.line,
-                    "column": loc.start.column + 1,
-                    "offset": 0
-                },
-                "end": {
-                    "line": loc.end.line,
-                    "column": loc.end.column,
-                    "offset": 0
-                }
-            })
-        }
-
         let kind_str = kind_str(*kind);
         let severity_str = severity_str(severity);
 
         let suppressions: Vec<Value> = suppression_locs
             .iter()
             .map(|loc| {
+                let offset_table = get_offset_table_expensive(stdin_file, offset_kind, loc);
                 json!({
-                    "loc": json_of_loc_inline(strip_root, stdin_file, loc)
+                    "loc": flow_common::reason::json_of_loc(
+                        strip_root,
+                        true,
+                        offset_table.as_ref(),
+                        loc,
+                    )
                 })
             })
             .collect();
@@ -4976,6 +5143,7 @@ pub mod json_output {
                 props.extend(json_of_friendly_error_props(
                     strip_root,
                     stdin_file,
+                    offset_kind,
                     *kind,
                     friendly_error,
                 ));
@@ -4989,16 +5157,18 @@ pub mod json_output {
         strip_root: Option<&str>,
         stdin_file: &StdinFile,
         version: JsonVersion,
+        offset_kind: OffsetKind,
         severity: Severity,
         error: &PrintableError<Loc>,
         suppression_locs: &BTreeSet<Loc>,
     ) -> Value {
         let json_of_message =
-            |m: &Message<Loc>| json_of_message_with_context(strip_root, stdin_file, m);
+            |m: &Message<Loc>| json_of_message_with_context(strip_root, stdin_file, offset_kind, m);
         let props = json_of_error_props(
             strip_root,
             stdin_file,
             version,
+            offset_kind,
             json_of_message,
             severity,
             suppression_locs,
@@ -5012,6 +5182,7 @@ pub mod json_output {
         stdin_file: &StdinFile,
         suppressed_errors: &[(PrintableError<Loc>, BTreeSet<Loc>)],
         version: JsonVersion,
+        offset_kind: OffsetKind,
         errors: &ConcreteLocPrintableErrorSet,
         warnings: &ConcreteLocPrintableErrorSet,
     ) -> Value {
@@ -5023,6 +5194,7 @@ pub mod json_output {
                     strip_root,
                     stdin_file,
                     version,
+                    offset_kind,
                     severity,
                     error,
                     suppression_locs,
@@ -5052,9 +5224,10 @@ pub mod json_output {
         suppressed_errors: &[(PrintableError<Loc>, BTreeSet<Loc>)],
         version: JsonVersion,
         stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
         errors: &ConcreteLocPrintableErrorSet,
         warnings: &ConcreteLocPrintableErrorSet,
-    ) -> impl Fn(Vec<(String, Value)>) -> Value {
+    ) -> impl Fn(Vec<(String, Value)>) -> Value + use<> {
         // This function has an unusual signature because the first part can be
         // expensive -- specifically `json_of_errors_with_context` can take a while,
         // and we would like to include the time spent in our profiling data.
@@ -5068,6 +5241,7 @@ pub mod json_output {
             stdin_file,
             suppressed_errors,
             version,
+            offset_kind,
             errors,
             warnings,
         );
@@ -5101,6 +5275,7 @@ pub mod json_output {
         pretty: bool,
         version: JsonVersion,
         stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
         errors: &ConcreteLocPrintableErrorSet,
         warnings: &ConcreteLocPrintableErrorSet,
     ) -> impl FnOnce(Vec<(String, Value)>) -> std::io::Result<()> {
@@ -5109,6 +5284,7 @@ pub mod json_output {
             suppressed_errors,
             version,
             stdin_file,
+            offset_kind,
             errors,
             warnings,
         );
@@ -5116,14 +5292,9 @@ pub mod json_output {
         move |profiling_props: Vec<(String, Value)>| {
             let res = get_json(profiling_props);
             if pretty {
-                writeln!(
-                    out,
-                    "{}",
-                    serde_json::to_string_pretty(&res).unwrap_or_default()
-                )?;
+                write!(out, "{}", json_to_multiline(&res))?;
             } else {
-                serde_json::to_writer(&mut *out, &res).ok();
-                writeln!(out)?;
+                write!(out, "{}", json_string_of_value(&res))?;
             }
             out.flush()
         }
@@ -5139,6 +5310,30 @@ pub mod json_output {
         errors: &ConcreteLocPrintableErrorSet,
         warnings: &ConcreteLocPrintableErrorSet,
     ) -> std::io::Result<()> {
+        print_errors_with_offset_kind(
+            out,
+            strip_root,
+            suppressed_errors,
+            pretty,
+            version,
+            stdin_file,
+            OffsetKind::Utf8,
+            errors,
+            warnings,
+        )
+    }
+
+    pub fn print_errors_with_offset_kind<W: std::io::Write>(
+        out: &mut W,
+        strip_root: Option<&str>,
+        suppressed_errors: &[(PrintableError<Loc>, BTreeSet<Loc>)],
+        pretty: bool,
+        version: JsonVersion,
+        stdin_file: &StdinFile,
+        offset_kind: OffsetKind,
+        errors: &ConcreteLocPrintableErrorSet,
+        warnings: &ConcreteLocPrintableErrorSet,
+    ) -> std::io::Result<()> {
         let format_fn = format_errors(
             out,
             strip_root,
@@ -5146,6 +5341,7 @@ pub mod json_output {
             pretty,
             version,
             stdin_file,
+            offset_kind,
             errors,
             warnings,
         );

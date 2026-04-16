@@ -17,6 +17,7 @@ use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_server_env::error_collator;
+use flow_server_env::file_watcher_status;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_prot;
 use flow_server_env::monitor_rpc;
@@ -94,6 +95,17 @@ pub fn process_updates(
 fn send_start_recheck(env: &server_env::Env) {
     monitor_rpc::status_update(server_status::Event::RecheckStart);
     persistent_connection::send_start_recheck(&env.connections);
+    persistent_connection::send_status(
+        server_status::Status::Typechecking(
+            server_status::TypecheckMode::Rechecking,
+            server_status::TypecheckStatus::StartingTypecheck,
+        ),
+        (
+            file_watcher_status::FileWatcher::NoFileWatcher,
+            file_watcher_status::StatusKind::Ready,
+        ),
+        &env.connections,
+    );
 }
 
 // We must send "end_recheck" prior to sending errors+warnings so the client
@@ -101,6 +113,14 @@ fn send_start_recheck(env: &server_env::Env) {
 fn send_end_recheck(options: &Options, env: &server_env::Env) {
     let lazy_stats = get_lazy_stats(options, env);
     persistent_connection::send_end_recheck(lazy_stats, &env.connections);
+    persistent_connection::send_status(
+        server_status::Status::Free,
+        (
+            file_watcher_status::FileWatcher::NoFileWatcher,
+            file_watcher_status::StatusKind::Ready,
+        ),
+        &env.connections,
+    );
 
     persistent_connection::update_clients(
         &env.connections,
@@ -112,6 +132,13 @@ fn send_end_recheck(options: &Options, env: &server_env::Env) {
     );
 
     monitor_rpc::status_update(server_status::Event::FinishingUp);
+}
+
+fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
+    lsp_prot::LoggingContext {
+        from: None,
+        agent_id: None,
+    }
 }
 
 fn recheck(
@@ -129,8 +156,14 @@ fn recheck(
     let options = &genv.options;
     let workers = genv.workers.as_ref().unwrap();
 
-    let find_ref_request = find_refs_types::empty_request();
-    let _find_ref_command = find_ref_command;
+    let (find_ref_request, find_ref_transformer_with_client) = match find_ref_command {
+        Some(server_monitor_listener_state::FindRefCommand {
+            request,
+            client_id,
+            references_to_lsp_response,
+        }) => (request, Some((references_to_lsp_response, client_id))),
+        None => (find_refs_types::empty_request(), None),
+    };
 
     let _should_print_summary = options.profile;
     let recheck_start = Instant::now();
@@ -157,7 +190,7 @@ fn recheck(
         will_be_checked_files,
         env,
     );
-    let (log_recheck_event, recheck_stats, _find_ref_results, env) = match recheck_result {
+    let (log_recheck_event, recheck_stats, find_ref_results, env) = match recheck_result {
         Ok((log_event, stats, results, env)) => (log_event, stats, results, env),
         Err(type_service::RecheckError::Canceled(_changed_files)) => {
             log::error!("Recheck was canceled (unexpected without async runtime)");
@@ -168,8 +201,15 @@ fn recheck(
         }
     };
 
-    if let Some(command) = _find_ref_command {
-        command.run();
+    if let Some((transformer, client_id)) = find_ref_transformer_with_client {
+        let (response, metadata) = transformer(find_ref_results);
+        let metadata = lsp_prot::Metadata {
+            server_logging_context: Some(persistent_server_logging_context()),
+            ..metadata
+        };
+        if let Some(client) = persistent_connection::get_client(client_id) {
+            persistent_connection::send_response((response, metadata), &client);
+        }
     }
 
     send_end_recheck(options, &env);

@@ -11,3 +11,4 @@ pub mod server;
 pub mod server_daemon;
 pub mod server_env_build;
 pub mod server_worker;
+pub mod standalone;

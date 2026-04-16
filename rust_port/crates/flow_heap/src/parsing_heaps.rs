@@ -45,6 +45,8 @@ pub struct SharedMem {
     file_heap: LockedMap<FileKey, FileEntry>,
     pub haste_module_heap: LockedMap<HasteModuleInfo, HasteModule>,
     reader_cache: ReaderCache,
+    configured_heap_size: Option<u64>,
+    configured_hash_table_pow: Option<u32>,
 }
 
 pub struct HashStats {
@@ -55,10 +57,19 @@ pub struct HashStats {
 
 impl SharedMem {
     pub fn new() -> Self {
+        Self::new_with_config(None, None)
+    }
+
+    pub fn new_with_config(
+        configured_heap_size: Option<u64>,
+        configured_hash_table_pow: Option<u32>,
+    ) -> Self {
         Self {
             file_heap: LockedMap::new(),
             haste_module_heap: LockedMap::new(),
             reader_cache: ReaderCache::new(),
+            configured_heap_size,
+            configured_hash_table_pow,
         }
     }
 
@@ -66,15 +77,23 @@ impl SharedMem {
         let file_count = self.file_heap.len() as i32;
         let haste_count = self.haste_module_heap.len() as i32;
         let used_slots = file_count + haste_count;
+        let slots = self
+            .configured_hash_table_pow
+            .and_then(|pow| 1_i32.checked_shl(pow))
+            .unwrap_or(used_slots);
         HashStats {
             nonempty_slots: used_slots,
             used_slots,
-            slots: used_slots,
+            slots,
         }
     }
 
     pub fn heap_size(&self) -> i32 {
         (self.file_heap.len() + self.haste_module_heap.len()) as i32
+    }
+
+    pub fn configured_heap_size(&self) -> Option<u64> {
+        self.configured_heap_size
     }
 
     /// Clear the reader cache (AST and ALoc table caches). Used during
@@ -690,8 +709,8 @@ impl SharedMem {
                     Arc::new(crate::entity::Entity::new(
                         crate::entity::ResolvedRequires::new(vec![], vec![]),
                     )),
-                    Arc::new(crate::entity::Entity::new(file.dupe())),
-                    Arc::new(crate::entity::Entity::new(0u64)),
+                    Arc::new(crate::entity::Entity::empty()),
+                    Arc::new(crate::entity::Entity::empty()),
                 ),
             };
 
@@ -730,8 +749,8 @@ impl SharedMem {
                     crate::entity::ResolvedRequires::new(vec![], vec![]),
                 )),
                 imports,
-                Arc::new(crate::entity::Entity::new(file.dupe())),
-                Arc::new(crate::entity::Entity::new(0u64)),
+                Arc::new(crate::entity::Entity::empty()),
+                Arc::new(crate::entity::Entity::empty()),
             );
 
             let file_entry = FileEntry::new(
@@ -1049,6 +1068,14 @@ impl SharedMem {
         // This would require interior mutability on TypedParse.ast
         // For now, this is a no-op until we add that capability
         let _ = file;
+    }
+
+    pub fn collect_slice(&self, _work: usize) -> bool {
+        for (file, _) in self.file_heap.iter_unordered() {
+            self.compact_parse(file);
+        }
+        self.clear_reader_cache();
+        true
     }
 
     /// Commit sig_hash entity values in the heap, promoting latest values to committed.

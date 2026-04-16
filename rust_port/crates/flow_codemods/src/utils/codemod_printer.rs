@@ -22,13 +22,13 @@ fn diff_heaps_get_diff(file: &FileKey) -> Option<Patch> {
 pub fn print_results<A>(reporter_options: &ReporterOptions, report: &Reporter<A>, result: &A) {
     match report {
         Reporter::StringReporter(r) => {
-            eprintln!(
+            println!(
                 ">>> Launching report...\n\n{}\n",
                 r(reporter_options, result)
             );
         }
         Reporter::UnitReporter(r) => {
-            eprintln!(">>> Launching report...");
+            println!(">>> Launching report...");
             r(reporter_options, result);
         }
     }
@@ -46,8 +46,8 @@ pub fn print_ast_file_dry(strip_root: &Option<PathBuf>, file: &FileKey) {
                 strip_root.as_ref().map(|p| p.to_str().unwrap_or("")),
                 file,
             );
-            eprintln!(">>> {} (#changes: {})", display_path, diff.len());
-            eprintln!("{}", source);
+            println!(">>> {} (#changes: {})", display_path, diff.len());
+            println!("{}", source);
         }
         Some([]) | None => {}
     }

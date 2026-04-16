@@ -10,6 +10,7 @@ use std::path::Path;
 use flow_common::files;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser_utils_output::js_layout_generator;
@@ -53,12 +54,26 @@ fn main_of_package(
         -> Option<Result<flow_parser_utils::package_json::PackageJson, ()>>,
     package_dir: &str,
 ) -> Option<String> {
-    let file_key = FileKey::json_file_of_absolute(
-        &Path::new(package_dir)
-            .join("package.json")
-            .to_string_lossy(),
-    );
-    match get_package_info(&file_key) {
+    fn get_package_info_of_absolute(
+        get_package_info: &dyn Fn(
+            &FileKey,
+        ) -> Option<
+            Result<flow_parser_utils::package_json::PackageJson, ()>,
+        >,
+        absolute_path: &str,
+    ) -> Option<Result<flow_parser_utils::package_json::PackageJson, ()>> {
+        let file_key = FileKey::json_file_of_absolute(absolute_path);
+        match get_package_info(&file_key) {
+            Some(package_info) => Some(package_info),
+            None => {
+                let file_key = FileKey::new(FileKeyInner::JsonFile(absolute_path.to_string()));
+                get_package_info(&file_key)
+            }
+        }
+    }
+
+    let package_json_path = Path::new(package_dir).join("package.json");
+    match get_package_info_of_absolute(get_package_info, &package_json_path.to_string_lossy()) {
         Some(Ok(package)) => package.main().map(|main| main.to_string()),
         Some(Err(())) | None => None,
     }
@@ -202,11 +217,12 @@ fn node_path(
     let src_parts = files::split_path(src_dir);
     let req_parts = files::split_path(require_path);
     let (ancestor_rev, to_src, to_req) = find_ancestor_rev(&src_parts, &req_parts);
-    let src_rev = [to_src.clone(), ancestor_rev.clone()]
-        .concat()
-        .into_iter()
-        .rev()
-        .collect::<Vec<_>>();
+    let src_rev = {
+        let mut src_rev = to_src.clone();
+        src_rev.reverse();
+        src_rev.extend(ancestor_rev.clone());
+        src_rev
+    };
 
     // In this function, we will check whether any of the ancestor directory of the required file
     // is a package. If so, we call can_import_as_node_package to see whether we can import it as
@@ -221,20 +237,37 @@ fn node_path(
         ) -> Option<
             Result<flow_parser_utils::package_json::PackageJson, ()>,
         >,
-        package_absolute_path: &str,
         src_rev: &[String],
     ) -> Option<String> {
+        fn get_package_info_of_absolute(
+            get_package_info: &dyn Fn(
+                &FileKey,
+            ) -> Option<
+                Result<flow_parser_utils::package_json::PackageJson, ()>,
+            >,
+            absolute_path: &str,
+        ) -> Option<Result<flow_parser_utils::package_json::PackageJson, ()>> {
+            let file_key = FileKey::json_file_of_absolute(absolute_path);
+            match get_package_info(&file_key) {
+                Some(package_info) => Some(package_info),
+                None => {
+                    let file_key = FileKey::new(FileKeyInner::JsonFile(absolute_path.to_string()));
+                    get_package_info(&file_key)
+                }
+            }
+        }
+
         let (package_dir, rest) = to_req.split_first()?;
         let package_dir_rev = [vec![package_dir.clone()], ancestor_rev.to_vec()].concat();
-        let package_json = FileKey::json_file_of_absolute(&path_parts_rev_to_absolute(
+        let package_json_path = path_parts_rev_to_absolute(
             &[vec!["package.json".to_string()], package_dir_rev.clone()].concat(),
-        ));
-        match get_package_info(&package_json) {
+        );
+        match get_package_info_of_absolute(get_package_info, &package_json_path) {
             Some(Ok(package_info))
                 if can_import_as_node_package(
                     node_resolver_dirnames,
                     resolves_to_real_path,
-                    package_absolute_path,
+                    &path_parts_rev_to_absolute(&package_dir_rev),
                     package_dir,
                     Some(src_rev),
                 ) =>
@@ -255,7 +288,6 @@ fn node_path(
                 node_resolver_dirnames,
                 resolves_to_real_path,
                 get_package_info,
-                package_absolute_path,
                 src_rev,
             ),
         }
@@ -271,8 +303,6 @@ fn node_path(
                     Some(prefix) => {
                         let relative_src_dir = flow_parser::file_key::strip_project_root(src_dir);
                         files::is_prefix(prefix, &relative_src_dir)
-                            || relative_src_dir.ends_with(&format!("/{prefix}"))
-                            || relative_src_dir.contains(&format!("/{prefix}/"))
                     }
                 };
                 if prefix_matches {
@@ -295,14 +325,12 @@ fn node_path(
         })
     };
 
-    let package_absolute_path = path_parts_rev_to_absolute(&ancestor_rev);
     if let Some(path) = node_modules_package_import_path(
         &ancestor_rev,
         &to_req,
         node_resolver_dirnames,
         resolves_to_real_path,
         get_package_info,
-        &package_absolute_path,
         &src_rev,
     ) {
         return path;
@@ -343,7 +371,7 @@ fn path_of_modulename(
     match string_module_name {
         Some(module_name) => Some(module_name),
         None => src_dir.map(|src_dir| {
-            let path = files::chop_flow_ext(file_key).as_str().to_string();
+            let path = files::chop_flow_ext(file_key).to_absolute();
             node_path(
                 node_resolver_dirnames,
                 node_resolver_root_relative_dirnames,

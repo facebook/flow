@@ -1434,8 +1434,27 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         kind: &TypeParamsContext,
         tparams: &'ast types::TypeParams<ALoc, ALoc>,
     ) -> Result<(), Found> {
+        ast_visitor::type_params_default(self, kind, tparams)
+    }
+
+    fn function_(
+        &mut self,
+        loc: &'ast ALoc,
+        expr: &'ast ast::function::Function<ALoc, ALoc>,
+    ) -> Result<(), Found> {
         let original = self.rev_bound_tparams.clone();
-        let result = ast_visitor::type_params_default(self, kind, tparams);
+        let result = ast_visitor::function_default(self, loc, expr);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn component_declaration(
+        &mut self,
+        loc: &'ast ALoc,
+        component: &'ast statement::ComponentDeclaration<ALoc, ALoc>,
+    ) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::component_declaration_default(self, loc, component);
         self.rev_bound_tparams = original;
         result
     }
@@ -1472,6 +1491,68 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         let original = self.rev_bound_tparams.clone();
         self.rev_bound_tparams.push("this".to_string());
         let result = ast_visitor::declare_class_default(self, loc, decl);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn declare_component(
+        &mut self,
+        loc: &'ast ALoc,
+        decl: &'ast statement::DeclareComponent<ALoc, ALoc>,
+    ) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::declare_component_default(self, loc, decl);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn component_type(
+        &mut self,
+        loc: &'ast ALoc,
+        component: &'ast types::Component<ALoc, ALoc>,
+    ) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::component_type_default(self, loc, component);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn function_type(&mut self, ft: &'ast types::Function<ALoc, ALoc>) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::function_type_default(self, ft);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn interface(
+        &mut self,
+        loc: &'ast ALoc,
+        interface: &'ast statement::Interface<ALoc, ALoc>,
+    ) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::interface_default(self, loc, interface);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn opaque_type(
+        &mut self,
+        loc: &'ast ALoc,
+        otype: &'ast statement::OpaqueType<ALoc, ALoc>,
+    ) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::opaque_type_default(self, loc, otype);
+        self.rev_bound_tparams = original;
+        result
+    }
+
+    fn type_alias(
+        &mut self,
+        loc: &'ast ALoc,
+        alias: &'ast statement::TypeAlias<ALoc, ALoc>,
+    ) -> Result<(), Found> {
+        let original = self.rev_bound_tparams.clone();
+        let result = ast_visitor::type_alias_default(self, loc, alias);
         self.rev_bound_tparams = original;
         result
     }

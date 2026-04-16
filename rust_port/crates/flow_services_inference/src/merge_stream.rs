@@ -176,8 +176,14 @@ impl<A> MergeStream<A> {
     }
 
     pub fn update_server_status(&self) {
-        // TODO: actually implement this once we have MonitorRPC
-        let _ = self;
+        flow_server_env::monitor_rpc::status_update(
+            flow_server_env::server_status::Event::MergingProgress(
+                flow_server_env::server_status::Progress {
+                    finished: self.merged_files.load(Ordering::Relaxed) as i32,
+                    total: Some(self.total_files as i32),
+                },
+            ),
+        );
     }
 
     pub fn next(&self) -> Bucket<Component> {

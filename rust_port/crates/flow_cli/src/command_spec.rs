@@ -9,24 +9,6 @@ use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::sync::Arc;
 
-pub(crate) type Values = BTreeMap<String, Vec<String>>;
-
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub(crate) enum FlagArgCount {
-    Truthy,
-    NoArg,
-    Arg,
-    ArgList,
-    ArgCommand,
-}
-
-#[derive(Clone, Debug)]
-pub(crate) struct FlagMetadata {
-    pub doc: String,
-    pub env: Option<String>,
-    pub arg_count: FlagArgCount,
-}
-
 #[derive(Debug)]
 pub(crate) struct ShowHelp;
 
@@ -37,168 +19,342 @@ pub(crate) struct FailedToParse {
     pub details: Option<String>,
 }
 
-type ParseFn<T> =
-    dyn Fn(&str, Option<&[String]>) -> Result<T, FailedToParse> + Send + Sync + 'static;
+pub(crate) mod arg_spec {
+    use super::*;
 
-#[derive(Clone)]
-pub(crate) struct FlagType<T> {
-    parse: Arc<ParseFn<T>>,
-    arg: FlagArgCount,
-}
+    pub type Values = BTreeMap<String, Vec<String>>;
 
-impl<T> FlagType<T> {
-    fn new(
+    // consumes all the remaining args verbatim, to pass to a subcommand
+    #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+    pub enum FlagArgCount {
+        Truthy,
+        NoArg,
+        Arg,
+        ArgList,
+        ArgRest,
+        ArgCommand,
+        MaybeArg,
+    }
+
+    type ParseFn<T> =
+        dyn Fn(&str, Option<&[String]>) -> Result<T, FailedToParse> + Send + Sync + 'static;
+
+    #[derive(Clone)]
+    pub struct FlagType<T> {
+        parse: Arc<ParseFn<T>>,
         arg: FlagArgCount,
-        parse: impl Fn(&str, Option<&[String]>) -> Result<T, FailedToParse> + Send + Sync + 'static,
-    ) -> Self {
-        Self {
-            parse: Arc::new(parse),
-            arg,
+    }
+
+    impl<T> FlagType<T> {
+        fn new(
+            arg: FlagArgCount,
+            parse: impl Fn(&str, Option<&[String]>) -> Result<T, FailedToParse> + Send + Sync + 'static,
+        ) -> Self {
+            Self {
+                parse: Arc::new(parse),
+                arg,
+            }
+        }
+
+        pub fn parse(&self, name: &str, value: Option<&[String]>) -> Result<T, FailedToParse> {
+            (self.parse)(name, value)
+        }
+
+        pub fn arg_count(&self) -> FlagArgCount {
+            self.arg
         }
     }
 
-    pub(crate) fn parse(&self, name: &str, value: Option<&[String]>) -> Result<T, FailedToParse> {
-        (self.parse)(name, value)
+    #[derive(Clone, Debug)]
+    pub struct FlagMetadata {
+        pub doc: String,
+        pub env: Option<String>,
+        pub arg_count: FlagArgCount,
     }
 
-    pub(crate) fn arg_count(&self) -> FlagArgCount {
-        self.arg
+    pub fn string() -> FlagType<Option<String>> {
+        FlagType::new(FlagArgCount::Arg, |_name, value| {
+            Ok(match value {
+                Some([x]) => Some(x.to_string()),
+                _ => None,
+            })
+        })
     }
-}
 
-pub(crate) fn string() -> FlagType<Option<String>> {
-    FlagType::new(FlagArgCount::Arg, |_name, value| {
-        Ok(match value {
-            Some([x]) => Some(x.to_string()),
-            _ => None,
-        })
-    })
-}
-
-pub(crate) fn bool_flag() -> FlagType<Option<bool>> {
-    FlagType::new(FlagArgCount::Arg, |name, value| {
-        Ok(match value {
-            Some([x]) if x == "0" || x == "false" => Some(false),
-            None => Some(false),
-            Some([x]) if x == "1" || x == "true" => Some(true),
-            Some(_) => {
-                return Err(FailedToParse {
-                    arg: name.to_string(),
-                    msg: "Invalid argument".to_string(),
-                    details: Some("expected one of: true, false, 0, 1".to_string()),
-                });
-            }
-        })
-    })
-}
-
-pub(crate) fn enum_flag<T: Clone + Send + Sync + 'static>(
-    values: Vec<(&'static str, T)>,
-) -> FlagType<Option<T>> {
-    FlagType::new(FlagArgCount::Arg, move |name, value| {
-        Ok(match value {
-            Some([x]) => {
-                let value = values
-                    .iter()
-                    .find(|(s, _)| *s == x)
-                    .map(|(_, v)| v.clone())
-                    .ok_or_else(|| FailedToParse {
+    pub fn bool_flag() -> FlagType<Option<bool>> {
+        FlagType::new(FlagArgCount::Arg, |name, value| {
+            Ok(match value {
+                Some([x]) if x == "0" || x == "false" => Some(false),
+                None => Some(false),
+                Some([x]) if x == "1" || x == "true" => Some(true),
+                Some(_) => {
+                    return Err(FailedToParse {
                         arg: name.to_string(),
                         msg: "Invalid argument".to_string(),
-                        details: Some(format!(
-                            "expected one of: {}",
-                            values
-                                .iter()
-                                .map(|(s, _)| *s)
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        )),
+                        details: Some("expected one of: true, false, 0, 1".to_string()),
+                    });
+                }
+            })
+        })
+    }
+
+    pub fn int() -> FlagType<Option<i32>> {
+        FlagType::new(FlagArgCount::Arg, |name, value| {
+            Ok(match value {
+                Some([x]) => Some(x.parse::<i32>().map_err(|_| FailedToParse {
+                    arg: name.to_string(),
+                    msg: "Invalid argument".to_string(),
+                    details: Some(format!("expected an integer, got {:?}", x)),
+                })?),
+                _ => None,
+            })
+        })
+    }
+
+    pub fn uint() -> FlagType<Option<i32>> {
+        FlagType::new(FlagArgCount::Arg, |name, value| {
+            Ok(match value {
+                Some([x]) => {
+                    let i = x.parse::<i32>().map_err(|_| FailedToParse {
+                        arg: name.to_string(),
+                        msg: "Invalid argument".to_string(),
+                        details: Some(format!("expected an unsigned integer, got {:?}", x)),
                     })?;
-                Some(value)
-            }
-            _ => None,
+                    if i < 0 {
+                        return Err(FailedToParse {
+                            arg: name.to_string(),
+                            msg: "Invalid argument".to_string(),
+                            details: Some(format!("expected an unsigned integer, got {:?}", x)),
+                        });
+                    }
+                    Some(i)
+                }
+                _ => None,
+            })
         })
-    })
-}
+    }
 
-pub(crate) fn command_flag<T: Clone + Send + Sync + 'static>(
-    cmds: Vec<(&'static str, T)>,
-) -> FlagType<Option<(T, Vec<String>)>> {
-    let enum_type = enum_flag(cmds);
-    FlagType::new(FlagArgCount::ArgCommand, move |name, value| {
-        Ok(match value {
-            Some([cmd_name, rest @ ..]) => enum_type
-                .parse(name, Some(std::slice::from_ref(cmd_name)))?
-                .map(|cmd| (cmd, rest.iter().map(|s| s.to_string()).collect())),
-            Some([]) | None => None,
-        })
-    })
-}
-
-pub(crate) fn truthy() -> FlagType<bool> {
-    FlagType::new(FlagArgCount::Truthy, |_name, value| Ok(value.is_some()))
-}
-
-pub(crate) fn required<T: Clone + Send + Sync + 'static>(
-    default: Option<T>,
-    arg_type: FlagType<Option<T>>,
-) -> FlagType<T> {
-    FlagType::new(arg_type.arg_count(), move |name, value| match value {
-        None => match &default {
-            Some(default) => Ok(default.clone()),
-            None => Err(FailedToParse {
-                arg: name.to_string(),
-                msg: "Missing required arguments".to_string(),
-                details: None,
-            }),
-        },
-        value => match arg_type.parse(name, value)? {
-            Some(result) => Ok(result),
-            None => Err(FailedToParse {
-                arg: name.to_string(),
-                msg: "Wrong type for required argument".to_string(),
-                details: value.and_then(|value| match value {
-                    [x] => Some(format!("got {}", x)),
-                    _ => None,
-                }),
-            }),
-        },
-    })
-}
-
-pub(crate) fn optional<T>(arg_type: FlagType<Option<T>>) -> FlagType<Option<T>> {
-    arg_type
-}
-
-pub(crate) fn list_of<T: Send + Sync + 'static>(arg_type: FlagType<Option<T>>) -> FlagType<Vec<T>> {
-    FlagType::new(FlagArgCount::ArgList, move |name, value| match value {
-        None => Ok(vec![]),
-        Some(values) => values
-            .iter()
-            .map(|raw_value| {
-                arg_type
-                    .parse(name, Some(std::slice::from_ref(raw_value)))
-                    .and_then(|value| {
-                        value.ok_or_else(|| FailedToParse {
+    pub fn enum_flag<T: Clone + Send + Sync + 'static>(
+        values: Vec<(&'static str, T)>,
+    ) -> FlagType<Option<T>> {
+        FlagType::new(FlagArgCount::Arg, move |name, value| {
+            Ok(match value {
+                Some([x]) => {
+                    let value = values
+                        .iter()
+                        .find(|(s, _)| *s == x)
+                        .map(|(_, v)| v.clone())
+                        .ok_or_else(|| FailedToParse {
                             arg: name.to_string(),
                             msg: "Invalid argument".to_string(),
                             details: Some(format!(
-                                "wrong type for argument list item: {}",
-                                raw_value
+                                "expected one of: {}",
+                                values
+                                    .iter()
+                                    .map(|(s, _)| *s)
+                                    .collect::<Vec<_>>()
+                                    .join(", ")
                             )),
-                        })
-                    })
+                        })?;
+                    Some(value)
+                }
+                _ => None,
             })
-            .collect(),
-    })
+        })
+    }
+
+    pub fn command_flag<T: Clone + Send + Sync + 'static>(
+        cmds: Vec<(&'static str, T)>,
+    ) -> FlagType<Option<(T, Vec<String>)>> {
+        let enum_type = enum_flag(cmds);
+        FlagType::new(FlagArgCount::ArgCommand, move |name, value| {
+            Ok(match value {
+                Some([cmd_name, rest @ ..]) => enum_type
+                    .parse(name, Some(std::slice::from_ref(cmd_name)))?
+                    .map(|cmd| (cmd, rest.iter().map(|s| s.to_string()).collect())),
+                Some([]) | None => None,
+            })
+        })
+    }
+
+    pub fn truthy() -> FlagType<bool> {
+        FlagType::new(FlagArgCount::Truthy, |_name, value| Ok(value.is_some()))
+    }
+
+    pub fn no_arg() -> FlagType<Option<bool>> {
+        FlagType::new(FlagArgCount::NoArg, |_name, value| {
+            Ok(match value {
+                None => None,
+                Some([x]) if x == "false" => Some(false),
+                Some(_) => Some(true),
+            })
+        })
+    }
+
+    pub fn required<T: Clone + Send + Sync + 'static>(
+        default: Option<T>,
+        arg_type: FlagType<Option<T>>,
+    ) -> FlagType<T> {
+        FlagType::new(arg_type.arg_count(), move |name, value| match value {
+            None => match &default {
+                Some(default) => Ok(default.clone()),
+                None => Err(FailedToParse {
+                    arg: name.to_string(),
+                    msg: "Missing required arguments".to_string(),
+                    details: None,
+                }),
+            },
+            value => match arg_type.parse(name, value)? {
+                Some(result) => Ok(result),
+                None => Err(FailedToParse {
+                    arg: name.to_string(),
+                    msg: "Wrong type for required argument".to_string(),
+                    details: value.and_then(|value| match value {
+                        [x] => Some(format!("got {}", x)),
+                        _ => None,
+                    }),
+                }),
+            },
+        })
+    }
+
+    pub fn optional<T: Send + Sync + 'static>(
+        arg_type: FlagType<Option<T>>,
+    ) -> FlagType<Option<T>> {
+        FlagType::new(arg_type.arg_count(), move |name, value| match value {
+            None => Ok(None),
+            value => arg_type.parse(name, value),
+        })
+    }
+
+    pub fn list_of<T: Send + Sync + 'static>(
+        arg_type: FlagType<Option<T>>,
+    ) -> FlagType<Option<Vec<T>>> {
+        FlagType::new(FlagArgCount::ArgList, move |name, value| match value {
+            None => Ok(Some(vec![])),
+            Some(values) => Ok(Some(
+                values
+                    .iter()
+                    .map(|raw_value| {
+                        arg_type
+                            .parse(name, Some(std::slice::from_ref(raw_value)))
+                            .and_then(|value| {
+                                value.ok_or_else(|| FailedToParse {
+                                    arg: name.to_string(),
+                                    msg: "Invalid argument".to_string(),
+                                    details: Some(format!(
+                                        "wrong type for argument list item: {}",
+                                        raw_value
+                                    )),
+                                })
+                            })
+                    })
+                    .collect::<Result<Vec<_>, _>>()?,
+            )),
+        })
+    }
+
+    pub fn delimited<T: Send + Sync + 'static>(
+        delim: &'static str,
+        arg_type: FlagType<Option<T>>,
+    ) -> FlagType<Option<Vec<T>>> {
+        FlagType::new(FlagArgCount::Arg, move |name, value| {
+            Ok(match value {
+                Some([x]) => {
+                    let args: Vec<&str> = x.split(delim).filter(|s| !s.is_empty()).collect();
+                    Some(
+                        args.into_iter()
+                            .map(|arg| {
+                                let arg_str = arg.to_string();
+                                match arg_type.parse(name, Some(std::slice::from_ref(&arg_str)))? {
+                                    None => Err(FailedToParse {
+                                        arg: name.to_string(),
+                                        msg: "Invalid argument".to_string(),
+                                        details: Some(format!("wrong type for value: {}", arg)),
+                                    }),
+                                    Some(result) => Ok(result),
+                                }
+                            })
+                            .collect::<Result<Vec<_>, _>>()?,
+                    )
+                }
+                _ => None,
+            })
+        })
+    }
+
+    pub fn key_value<K: Send + Sync + 'static, V: Send + Sync + 'static>(
+        delim: &'static str,
+        key_type: FlagType<Option<K>>,
+        value_type: FlagType<V>,
+    ) -> FlagType<Option<(K, V)>> {
+        FlagType::new(FlagArgCount::Arg, move |name, value| {
+            Ok(match value {
+                Some([x]) => {
+                    let (key_str, val_input) =
+                        match x.splitn(2, delim).collect::<Vec<_>>().as_slice() {
+                            [key, value] => (key.to_string(), Some(vec![value.to_string()])),
+                            [key] => (key.to_string(), None),
+                            _ => {
+                                return Err(FailedToParse {
+                                    arg: name.to_string(),
+                                    msg: "Unexpected value".to_string(),
+                                    details: Some(format!("got {}", x)),
+                                });
+                            }
+                        };
+                    let key = match key_type.parse(name, Some(std::slice::from_ref(&key_str)))? {
+                        None => {
+                            return Err(FailedToParse {
+                                arg: name.to_string(),
+                                msg: "Invalid argument".to_string(),
+                                details: Some(format!("wrong type for key: {}", key_str)),
+                            });
+                        }
+                        Some(result) => result,
+                    };
+                    let value = value_type.parse(name, val_input.as_deref())?;
+                    Some((key, value))
+                }
+                _ => None,
+            })
+        })
+    }
+
+    pub fn optional_value_with_default<T: Clone + Send + Sync + 'static>(
+        default: T,
+        arg_type: FlagType<Option<T>>,
+    ) -> FlagType<Option<T>> {
+        FlagType::new(FlagArgCount::MaybeArg, move |name, value| match value {
+            None => Ok(None),
+            Some([]) => Ok(Some(default.clone())),
+            value => match arg_type.parse(name, value)? {
+                None => Err(FailedToParse {
+                    arg: name.to_string(),
+                    msg: "Wrong type for required argument".to_string(),
+                    details: value.and_then(|v| match v {
+                        [x] => Some(format!("got {}", x)),
+                        _ => None,
+                    }),
+                }),
+                Some(result) => Ok(Some(result)),
+            },
+        })
+    }
+
+    pub fn rest() -> FlagType<Vec<String>> {
+        FlagType::new(FlagArgCount::ArgRest, |_name, value| {
+            Ok(value.map_or_else(Vec::new, |values| values.to_vec()))
+        })
+    }
 }
 
 pub(crate) struct Spec {
     pub name: String,
     pub doc: String,
     pub usage: String,
-    pub flags: BTreeMap<String, FlagMetadata>,
-    pub anons: Vec<(String, FlagArgCount)>,
+    pub flags: BTreeMap<String, arg_spec::FlagMetadata>,
+    pub anons: Vec<(String, arg_spec::FlagArgCount)>,
 }
 
 impl Spec {
@@ -206,10 +362,10 @@ impl Spec {
         let mut flags = BTreeMap::new();
         flags.insert(
             "--help".to_string(),
-            FlagMetadata {
+            arg_spec::FlagMetadata {
                 doc: "This list of options".to_string(),
                 env: None,
-                arg_count: FlagArgCount::Truthy,
+                arg_count: arg_spec::FlagArgCount::Truthy,
             },
         );
         Self {
@@ -224,13 +380,13 @@ impl Spec {
     pub(crate) fn flag<T>(
         mut self,
         name: &str,
-        arg_type: &FlagType<T>,
+        arg_type: &arg_spec::FlagType<T>,
         doc: &str,
         env: Option<&str>,
     ) -> Self {
         self.flags.insert(
             name.to_string(),
-            FlagMetadata {
+            arg_spec::FlagMetadata {
                 doc: doc.to_string(),
                 env: env.map(|env| env.to_string()),
                 arg_count: arg_type.arg_count(),
@@ -239,7 +395,7 @@ impl Spec {
         self
     }
 
-    pub(crate) fn anon<T>(mut self, name: &str, arg_type: &FlagType<T>) -> Self {
+    pub(crate) fn anon<T>(mut self, name: &str, arg_type: &arg_spec::FlagType<T>) -> Self {
         self.anons.push((name.to_string(), arg_type.arg_count()));
         self
     }
@@ -248,10 +404,10 @@ impl Spec {
 pub(crate) struct Command {
     cmdname: String,
     cmddoc: String,
-    flags: BTreeMap<String, FlagMetadata>,
-    anons: Vec<(String, FlagArgCount)>,
+    flags: BTreeMap<String, arg_spec::FlagMetadata>,
+    anons: Vec<(String, arg_spec::FlagArgCount)>,
     string_of_usage: Box<dyn Fn() -> String + Send + Sync>,
-    main: Box<dyn Fn(&Values) + Send + Sync>,
+    main: Box<dyn Fn(&arg_spec::Values) + Send + Sync>,
 }
 
 fn no_dashes(opt: &str) -> &str {
@@ -268,155 +424,221 @@ fn is_arg(arg: &str) -> bool {
     arg.len() > 1 && arg != "--" && arg.starts_with('-')
 }
 
-//     not !is_done) args
-fn consume_args(args: &[String]) -> (Vec<String>, usize) {
+fn consume_args(args: &[String]) -> (Vec<String>, Vec<String>) {
+    let mut is_done = false;
     let mut consumed = Vec::new();
-    let mut count = 0;
-    while count < args.len() && !is_arg(&args[count]) {
-        consumed.push(args[count].clone());
-        count += 1;
+    let mut remaining = Vec::new();
+    for value in args {
+        if !is_done && is_arg(value) {
+            is_done = true;
+        }
+        if !is_done {
+            consumed.push(value.clone());
+        } else {
+            remaining.push(value.clone());
+        }
     }
-    (consumed, count)
+    (consumed, remaining)
 }
 
-//     by that name, then the flag without "no-" is looked up.
-fn find_flag<'a>(
+/// [find_flag "--foo" flags] looks up the spec for the "--foo" flag.
+/// If the flag starts with "--no-" and there isn't an explicit flag
+/// by that name, then the flag without "no-" is looked up.
+///
+/// Returns None if [name] is not a valid flag.
+pub(crate) fn find_flag<'a>(
     name: &str,
-    flags: &'a BTreeMap<String, FlagMetadata>,
-) -> Result<(&'a str, &'a FlagMetadata), FailedToParse> {
-    if let Some(flag) = flags.get_key_value(name) {
-        return Ok((flag.0.as_str(), flag.1));
+    flags: &'a BTreeMap<String, arg_spec::FlagMetadata>,
+) -> Option<(String, &'a arg_spec::FlagMetadata)> {
+    if let Some(flag) = flags.get(name) {
+        return Some((name.to_string(), flag));
     }
-    if let Some(name) = name.strip_prefix("--no-") {
-        let name = format!("--{}", name);
-        if let Some(flag) = flags.get_key_value(&name) {
-            if flag.1.arg_count == FlagArgCount::NoArg {
-                return Ok((flag.0.as_str(), flag.1));
+    if let Some(rest) = name.strip_prefix("--no-") {
+        let positive_name = format!("--{}", rest);
+        if let Some(flag) = flags.get(&positive_name) {
+            if flag.arg_count == arg_spec::FlagArgCount::NoArg {
+                return Some((positive_name, flag));
             }
         }
     }
-    Err(FailedToParse {
-        arg: name.to_string(),
-        msg: "Unknown option".to_string(),
-        details: None,
-    })
+    None
 }
 
-fn init_from_env(spec: &Spec) -> Values {
-    let mut values = Values::new();
+fn parse(
+    values: arg_spec::Values,
+    spec: &Spec,
+    anon_index: &mut usize,
+    argv: &[String],
+) -> Result<arg_spec::Values, FailedToParse> {
+    if argv.is_empty() {
+        return Ok(values);
+    }
+    let arg = &argv[0];
+    let args = &argv[1..];
+    if is_arg(arg) {
+        // split "--foo=bar"::args into "--foo"::"bar"::args
+        let (arg_name, rest) = match arg.splitn(2, '=').collect::<Vec<_>>().as_slice() {
+            [a, v] => {
+                let mut new_args = vec![v.to_string()];
+                new_args.extend(args.iter().cloned());
+                (a.to_string(), new_args)
+            }
+            [a] => (a.to_string(), args.to_vec()),
+            _ => unreachable!(),
+        };
+        parse_flag(values, spec, anon_index, &arg_name, &rest)
+    } else {
+        parse_anon(values, spec, anon_index, arg, args)
+    }
+}
+
+fn parse_flag(
+    mut values: arg_spec::Values,
+    spec: &Spec,
+    anon_index: &mut usize,
+    arg: &str,
+    args: &[String],
+) -> Result<arg_spec::Values, FailedToParse> {
+    let flags = &spec.flags;
+    let (arg_prime, flag) = find_flag(arg, flags).ok_or_else(|| FailedToParse {
+        arg: arg.to_string(),
+        msg: "Unknown option".to_string(),
+        details: None,
+    })?;
+    match flag.arg_count {
+        arg_spec::FlagArgCount::Truthy => {
+            values.insert(arg.to_string(), vec!["true".to_string()]);
+            parse(values, spec, anon_index, args)
+        }
+        arg_spec::FlagArgCount::NoArg => {
+            let value = if arg == arg_prime { "true" } else { "false" };
+            values.insert(arg_prime, vec![value.to_string()]);
+            parse(values, spec, anon_index, args)
+        }
+        arg_spec::FlagArgCount::Arg => match args {
+            [] => Err(FailedToParse {
+                arg: arg.to_string(),
+                msg: "Option needs an argument".to_string(),
+                details: None,
+            }),
+            [value, rest @ ..] => {
+                if is_arg(value) {
+                    return Err(FailedToParse {
+                        arg: arg.to_string(),
+                        msg: "Option needs an argument".to_string(),
+                        details: None,
+                    });
+                }
+                values.insert(arg.to_string(), vec![value.clone()]);
+                parse(values, spec, anon_index, rest)
+            }
+        },
+        arg_spec::FlagArgCount::ArgList => {
+            let (value_list, remaining) = consume_args(args);
+            values.insert(arg.to_string(), value_list);
+            parse(values, spec, anon_index, &remaining)
+        }
+        arg_spec::FlagArgCount::MaybeArg => match args {
+            [] => {
+                values.insert(arg.to_string(), vec![]);
+                parse(values, spec, anon_index, args)
+            }
+            [value, rest @ ..] => {
+                let remaining = if is_arg(value) {
+                    values.insert(arg.to_string(), vec![]);
+                    args
+                } else {
+                    values.insert(arg.to_string(), vec![value.clone()]);
+                    rest
+                };
+                parse(values, spec, anon_index, remaining)
+            }
+        },
+        arg_spec::FlagArgCount::ArgRest => {
+            panic!("Not supported");
+        }
+        arg_spec::FlagArgCount::ArgCommand => {
+            panic!("Not supported");
+        }
+    }
+}
+
+fn parse_anon(
+    mut values: arg_spec::Values,
+    spec: &Spec,
+    anon_index: &mut usize,
+    arg: &str,
+    args: &[String],
+) -> Result<arg_spec::Values, FailedToParse> {
+    let anon = spec.anons.get(*anon_index).cloned();
+    match anon {
+        Some((name, arg_spec::FlagArgCount::Arg)) => {
+            *anon_index += 1;
+            values.insert(name, vec![arg.to_string()]);
+            parse(values, spec, anon_index, args)
+        }
+        Some((name, arg_spec::FlagArgCount::ArgList)) => {
+            *anon_index += 1;
+            let mut combined = vec![arg.to_string()];
+            combined.extend(args.iter().cloned());
+            let (value_list, remaining) = consume_args(&combined);
+            values.insert(name, value_list);
+            parse(values, spec, anon_index, &remaining)
+        }
+        Some((name, arg_spec::FlagArgCount::ArgRest)) => {
+            *anon_index += 1;
+            let rest = if arg == "--" {
+                args.to_vec()
+            } else {
+                let mut v = vec![arg.to_string()];
+                v.extend(args.iter().cloned());
+                v
+            };
+            values.insert(name, rest);
+            Ok(values)
+        }
+        Some((name, arg_spec::FlagArgCount::ArgCommand)) => {
+            *anon_index += 1;
+            let mut cmd = vec![arg.to_string()];
+            cmd.extend(args.iter().cloned());
+            values.insert(name, cmd);
+            Ok(values)
+        }
+        Some((_, arg_spec::FlagArgCount::Truthy)) => unreachable!(),
+        Some((_, arg_spec::FlagArgCount::NoArg)) => unreachable!(),
+        Some((_, arg_spec::FlagArgCount::MaybeArg)) => unreachable!(),
+        None => Err(FailedToParse {
+            arg: arg.to_string(),
+            msg: "Unexpected argument".to_string(),
+            details: None,
+        }),
+    }
+}
+
+fn init_from_env(spec: &Spec) -> arg_spec::Values {
+    let mut values = arg_spec::Values::new();
     for (arg, flag) in &spec.flags {
-        if let Some(env) = &flag.env {
-            match std::env::var(env) {
+        match &flag.env {
+            Some(env) => match std::env::var(env) {
                 Ok(value) if !value.is_empty() => {
                     values.insert(arg.clone(), vec![value]);
                 }
                 Ok(_) | Err(_) => {}
-            }
+            },
+            None => {}
         }
     }
     values
 }
 
-fn parse_argv(spec: &Spec, argv: &[String]) -> Result<Values, FailedToParse> {
-    let mut values = init_from_env(spec);
+fn parse_argv(spec: &Spec, argv: &[String]) -> Result<arg_spec::Values, FailedToParse> {
+    let values = init_from_env(spec);
     let mut anon_index = 0;
-    let mut i = 0;
-    while i < argv.len() {
-        let arg = &argv[i];
-        if is_arg(arg) {
-            let (arg_name, inline_value) = match arg.split_once('=') {
-                Some((arg, value)) => (arg.to_string(), Some(value.to_string())),
-                None => (arg.clone(), None),
-            };
-            let (normalized_name, flag) = find_flag(&arg_name, &spec.flags)?;
-            match flag.arg_count {
-                FlagArgCount::Truthy => {
-                    values.insert(normalized_name.to_string(), vec!["true".to_string()]);
-                    i += 1;
-                }
-                FlagArgCount::NoArg => {
-                    let value = if arg_name == normalized_name {
-                        "true".to_string()
-                    } else {
-                        "false".to_string()
-                    };
-                    values.insert(normalized_name.to_string(), vec![value]);
-                    i += 1;
-                }
-                FlagArgCount::Arg => {
-                    let value = if let Some(value) = inline_value {
-                        value
-                    } else {
-                        let value = argv.get(i + 1).ok_or_else(|| FailedToParse {
-                            arg: arg_name.clone(),
-                            msg: "Option needs an argument".to_string(),
-                            details: None,
-                        })?;
-                        if is_arg(value) {
-                            return Err(FailedToParse {
-                                arg: arg_name.clone(),
-                                msg: "Option needs an argument".to_string(),
-                                details: None,
-                            });
-                        }
-                        i += 1;
-                        value.clone()
-                    };
-                    values.insert(normalized_name.to_string(), vec![value]);
-                    i += 1;
-                }
-                FlagArgCount::ArgList => {
-                    let mut value_list = Vec::new();
-                    if let Some(value) = inline_value {
-                        value_list.push(value);
-                    }
-                    let (rest, consumed) = consume_args(&argv[(i + 1)..]);
-                    value_list.extend(rest);
-                    values.insert(normalized_name.to_string(), value_list);
-                    i += 1 + consumed;
-                }
-                FlagArgCount::ArgCommand => {
-                    let mut command = inline_value.into_iter().collect::<Vec<_>>();
-                    command.extend(argv[(i + 1)..].iter().cloned());
-                    values.insert(normalized_name.to_string(), command);
-                    break;
-                }
-            }
-        } else {
-            let (name, arg_count) =
-                spec.anons
-                    .get(anon_index)
-                    .cloned()
-                    .ok_or_else(|| FailedToParse {
-                        arg: arg.clone(),
-                        msg: "Unexpected argument".to_string(),
-                        details: None,
-                    })?;
-            match arg_count {
-                FlagArgCount::Arg => {
-                    values.insert(name, vec![arg.clone()]);
-                    anon_index += 1;
-                    i += 1;
-                }
-                FlagArgCount::ArgList => {
-                    let (value_list, consumed) = consume_args(&argv[i..]);
-                    values.insert(name, value_list);
-                    anon_index += 1;
-                    i += consumed;
-                }
-                FlagArgCount::ArgCommand => {
-                    values.insert(name, argv[i..].to_vec());
-                    break;
-                }
-                FlagArgCount::Truthy | FlagArgCount::NoArg => {
-                    unreachable!("anonymous truthy/no-arg values are not valid")
-                }
-            }
-        }
-    }
-    Ok(values)
+    parse(values, spec, &mut anon_index, argv)
 }
 
+/// If no `col_width` is passed, the length of the longest string of the first column will be used.
+/// `col_pad` will be used as additional padding between the two columns.
 pub(crate) fn format_two_columns(
     margin: Option<usize>,
     col_width: Option<usize>,
@@ -472,18 +694,18 @@ fn usage_string(spec: &Spec) -> String {
         .filter(|(_, meta)| !meta.doc.is_empty())
         .map(|(name, meta)| (name, meta.doc))
         .collect::<Vec<_>>();
-    if rows.is_empty() {
-        spec.usage.clone()
-    } else {
-        format!(
-            "{}\n{}",
-            spec.usage,
-            format_two_columns(None, None, 0, &rows)
-        )
-    }
+    let flag_usage = format_two_columns(None, None, 0, &rows);
+    format!("{}\n{}", spec.usage, flag_usage)
 }
 
-pub(crate) fn command(spec: Spec, main: impl Fn(&Values) + Send + Sync + 'static) -> Command {
+pub(crate) fn usage(spec: &Spec) {
+    println!("{}", usage_string(spec));
+}
+
+pub(crate) fn command(
+    spec: Spec,
+    main: impl Fn(&arg_spec::Values) + Send + Sync + 'static,
+) -> Command {
     let cmdname = spec.name.clone();
     let cmddoc = spec.doc.clone();
     let flags = spec.flags.clone();
@@ -500,11 +722,24 @@ pub(crate) fn command(spec: Spec, main: impl Fn(&Values) + Send + Sync + 'static
 }
 
 impl Command {
-    pub(crate) fn run(&self, args: &Values) {
+    pub(crate) fn name(&self) -> &str {
+        &self.cmdname
+    }
+
+    pub(crate) fn doc(&self) -> &str {
+        &self.cmddoc
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn flags(&self) -> &BTreeMap<String, arg_spec::FlagMetadata> {
+        &self.flags
+    }
+
+    pub(crate) fn run(&self, args: &arg_spec::Values) {
         (self.main)(args);
     }
 
-    pub(crate) fn args_of_argv(&self, argv: &[String]) -> Result<Values, FailedToParse> {
+    pub(crate) fn args_of_argv(&self, argv: &[String]) -> Result<arg_spec::Values, FailedToParse> {
         let spec = Spec {
             name: self.cmdname.clone(),
             doc: self.cmddoc.clone(),
@@ -521,9 +756,9 @@ impl Command {
 }
 
 pub(crate) fn get<T>(
-    values: &Values,
+    values: &arg_spec::Values,
     name: &str,
-    arg_type: &FlagType<T>,
+    arg_type: &arg_spec::FlagType<T>,
 ) -> Result<T, FailedToParse> {
     arg_type.parse(name, values.get(name).map(Vec::as_slice))
 }
@@ -531,9 +766,9 @@ pub(crate) fn get<T>(
 pub(crate) fn parse_or_show_help(
     command: &Command,
     argv: &[String],
-) -> Result<Result<Values, ShowHelp>, FailedToParse> {
+) -> Result<Result<arg_spec::Values, ShowHelp>, FailedToParse> {
     let args = command.args_of_argv(argv)?;
-    let help = get(&args, "--help", &truthy())?;
+    let help = get(&args, "--help", &arg_spec::truthy())?;
     if help {
         Ok(Err(ShowHelp))
     } else {

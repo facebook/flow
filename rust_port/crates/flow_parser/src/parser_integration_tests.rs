@@ -1411,7 +1411,10 @@ mod hardcoded_tests {
             use crate::file_key::FileKeyInner;
             use crate::offset_utils;
 
-            let offset_table = offset_utils::OffsetTable::make(content);
+            let offset_table = offset_utils::OffsetTable::make_with_kind(
+                offset_utils::OffsetKind::JavaScript,
+                content,
+            );
             let file_key = FileKey::new(FileKeyInner::SourceFile(filename.unwrap().to_owned()));
             let (mut ast, errors) = main_parser::parse_program_file::<()>(
                 false,
@@ -1428,6 +1431,7 @@ mod hardcoded_tests {
                 &estree_translator::Config {
                     include_locs: true,
                     include_filename: false,
+                    offset_style: estree_translator::OffsetStyle::JsIndices,
                 },
                 &ast,
             );

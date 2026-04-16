@@ -6,6 +6,7 @@
  */
 
 use flow_server_env::file_watcher_status;
+use flow_server_env::lsp_connect_params::ConnectParams;
 use flow_server_env::lsp_prot;
 use flow_server_env::server_prot;
 use flow_server_env::server_status;

@@ -7,10 +7,18 @@
 
 //! Port of `services/code_action/__tests__/code_action_service_tests.ml`
 
+use std::sync::Once;
+
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
+use flow_parser::file_key::set_project_root;
 use flow_parser_utils::package_json::PackageJson;
 use flow_services_autocomplete::lsp_import_edits::for_tests::path_of_modulename_for_tests;
+
+fn init_project_root() {
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| set_project_root("/"));
+}
 
 fn string_opt(o: Option<String>) -> String {
     match o {
@@ -65,6 +73,7 @@ fn no_package_info(_file_key: &FileKey) -> Option<Result<PackageJson, ()>> {
 
 #[test]
 fn removes_js_extension() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/foo/bar.js".to_string(),
     ));
@@ -83,6 +92,7 @@ fn removes_js_extension() {
 
 #[test]
 fn removes_index_js() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/foo/index.js".to_string(),
     ));
@@ -101,6 +111,7 @@ fn removes_index_js() {
 
 #[test]
 fn leaves_json_extension() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/foo/bar.json".to_string(),
     ));
@@ -122,6 +133,7 @@ fn leaves_json_extension() {
 
 #[test]
 fn leaves_index_json_extension() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/foo/index.json".to_string(),
     ));
@@ -143,6 +155,7 @@ fn leaves_index_json_extension() {
 
 #[test]
 fn removes_node_modules_in_parent() {
+    init_project_root();
     let pkg = PackageJson::create(None, None, None, false, None);
     with_package(
         "/path/to/root/a/node_modules/module/package.json",
@@ -168,6 +181,7 @@ fn removes_node_modules_in_parent() {
 
 #[test]
 fn removes_node_modules_in_self() {
+    init_project_root();
     let pkg = PackageJson::create(None, None, None, false, None);
     with_package(
         "/path/to/root/a/node_modules/module/package.json",
@@ -193,6 +207,7 @@ fn removes_node_modules_in_self() {
 
 #[test]
 fn does_not_remove_node_modules_in_child() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/a/b/node_modules/module/index.js".to_string(),
     ));
@@ -214,6 +229,7 @@ fn does_not_remove_node_modules_in_child() {
 
 #[test]
 fn does_not_remove_node_modules_in_cousin() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/a/b/node_modules/module/index.js".to_string(),
     ));
@@ -235,6 +251,7 @@ fn does_not_remove_node_modules_in_cousin() {
 
 #[test]
 fn supports_package_json_main() {
+    init_project_root();
     let pkg = PackageJson::create(None, Some("main.js".into()), None, false, None);
     with_package(
         "/path/to/root/node_modules/pkg_with_main/package.json",
@@ -263,6 +280,7 @@ fn supports_package_json_main() {
 
 #[test]
 fn supports_package_json_relative_main() {
+    init_project_root();
     let pkg = PackageJson::create(None, Some("./main.js".into()), None, false, None);
     with_package(
         "/path/to/root/node_modules/pkg_with_relative_main/package.json",
@@ -291,6 +309,7 @@ fn supports_package_json_relative_main() {
 
 #[test]
 fn supports_package_json_nested_main() {
+    init_project_root();
     let pkg = PackageJson::create(None, Some("dist/main.js".into()), None, false, None);
     with_package(
         "/path/to/root/node_modules/pkg_with_nested_main/package.json",
@@ -319,6 +338,7 @@ fn supports_package_json_nested_main() {
 
 #[test]
 fn supports_root_relative_modules() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/root_relative_for_some/foo".to_string(),
     ));
@@ -385,6 +405,7 @@ fn supports_root_relative_modules() {
 
 #[test]
 fn supports_flowtyped_modules() {
+    init_project_root();
     let file_key = FileKey::new(FileKeyInner::SourceFile(
         "/path/to/root/@flowtyped/foo".to_string(),
     ));

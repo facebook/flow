@@ -70,6 +70,9 @@ pub fn disable() {
 }
 
 // Read a single message from the monitor.
+//
+// The active Rust CLI path does not initialize real monitor IPC yet, so this
+// still reports `IpcNotPorted` whenever the state is `Initialized`.
 pub fn read() -> Result<monitor_prot::MonitorToServerMessage, MonitorError> {
     with_infd(
         || Err(MonitorError::Disabled),
@@ -90,6 +93,8 @@ fn send(_msg: monitor_prot::ServerToMonitorMessage) {
     with_outfd(
         || {},
         |_outfd| {
+            // We still don't have the OCaml monitor Marshal/preamble transport
+            // wired up on the active Rust path.
             log::warn!("MonitorRPC.send called in Initialized state but IPC is not ported");
         },
     );
@@ -128,7 +133,7 @@ pub fn status_update(event: server_status::Event) {
     // Remember the last status so that we only send updates when something changes
     {
         let state = STATE.lock().unwrap();
-        if matches!(*state, State::Disabled) {
+        if !matches!(*state, State::Initialized { .. }) {
             return;
         }
     }

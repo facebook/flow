@@ -213,15 +213,10 @@ impl LintSettings<Severity> {
             value: (Severity, Option<Loc>),
             settings: &mut LintSettings<Severity>,
         ) -> Result<(), String> {
-            let mut all_redundant = true;
-
-            for key in keys {
+            let all_redundant = keys.iter().copied().all(|key| {
                 let v = settings.get_value(key);
-                let is_redundant =
-                    v == &value.0 && v != &LintSettings::<Severity>::config_default(key).0;
-                all_redundant = all_redundant && is_redundant;
-                settings.set_value(key, value.dupe());
-            }
+                v == &value.0 && v != &LintSettings::<Severity>::config_default(key).0
+            });
 
             if all_redundant {
                 Err(
@@ -229,6 +224,9 @@ impl LintSettings<Severity> {
                         .to_string(),
                 )
             } else {
+                for key in keys {
+                    settings.set_value(key, value.dupe());
+                }
                 Ok(())
             }
         }

@@ -98,7 +98,7 @@ fn hardcoded_ty_fixes_run<Extra: BaseStats>(
     } else {
         t_prime
     };
-    let t_double_prime = if *ty == t_prime {
+    let t_double_prime = if std::sync::Arc::ptr_eq(ty, &t_prime) {
         ty.dupe()
     } else {
         ty_utils::simplify_type(false, None, t_prime)
@@ -264,12 +264,12 @@ pub fn validate_ty(
 }
 
 #[allow(unreachable_code)]
-pub fn get_ty<'cx>(
-    cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+pub fn get_ty<'a, 'cx>(
+    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     loc: Loc,
 ) -> Result<ALocTy, Vec<error::Kind>> {
     let norm_opts = flow_typing_ty_normalizer::env::Options::default_for_codemod();
-    match codemod_context::typed::ty_at_loc(norm_opts, cctx, loc) {
+    match codemod_context::typed::ty_at_loc(norm_opts, cctx, loc.clone()) {
         Ok(elt) => {
             let typified: Option<ALocTy> = ty_utils::typify_elt(elt);
             typified.ok_or_else(|| vec![error::Kind::MissingAnnotationOrNormalizerError])
@@ -278,8 +278,8 @@ pub fn get_ty<'cx>(
     }
 }
 
-pub fn get_validated_ty<'cx>(
-    cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+pub fn get_validated_ty<'a, 'cx>(
+    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     loc: Loc,
 ) -> Result<ALocTy, Vec<error::Kind>> {
@@ -296,7 +296,7 @@ pub struct Make<Extra: BaseStats> {
 
 impl<Extra: BaseStats> Make<Extra> {}
 
-pub struct Mapper<'cx, Extra: BaseStats> {
+pub struct Mapper<'a, 'cx, Extra: BaseStats> {
     pub added_annotations_locmap: BTreeMap<Loc, Option<usize>>,
     pub wont_annotate_locs: BTreeSet<Loc>,
     pub codemod_error_locs: BTreeSet<Loc>,
@@ -305,7 +305,7 @@ pub struct Mapper<'cx, Extra: BaseStats> {
     >,
     pub hardcoded_imports: HardCodedImportMap,
 
-    pub cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+    pub cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     pub default_any: bool,
     pub generalize_maybe: bool,
     pub generalize_react_mixed_element: bool,
@@ -320,7 +320,7 @@ pub struct Mapper<'cx, Extra: BaseStats> {
     pub _phantom: std::marker::PhantomData<Extra>,
 }
 
-impl<'cx, Extra: BaseStats> Mapper<'cx, Extra> {
+impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
     fn get_remote_converter(
         &self,
     ) -> &flow_services_code_action::insert_type_imports::imports_helper::RemoteConverter<'cx> {
@@ -393,12 +393,9 @@ impl<'cx, Extra: BaseStats> Mapper<'cx, Extra> {
                     ty,
                 );
                 self.acc = acc_;
-                let ty_converted = self.get_remote_converter().type_(ty_fixed);
-                let run_result: Result<ast::types::Type<Loc, Loc>, error::Kind> = match ty_converted
-                {
-                    Ok(ty_c) => Ok(self.serialize(ty_c)),
-                    Err(e) => Err(e),
-                };
+                let converted = self.get_remote_converter().type_(ty_fixed.dupe());
+                let run_result: Result<ast::types::Type<Loc, Loc>, error::Kind> =
+                    converted.map(|ty| self.serialize(ty));
                 match run_result {
                     Ok(t_ast) => {
                         let size = ty_utils::size_of_type(Some(self.max_type_size), ty);
@@ -559,12 +556,8 @@ impl<'cx, Extra: BaseStats> Mapper<'cx, Extra> {
     }
 
     #[allow(unreachable_code)]
-    pub fn program(
-        &mut self,
-        prog: ast::Program<Loc, Loc>,
-        post_run: impl FnOnce(&mut Self) -> Extra,
-    ) -> ast::Program<Loc, Loc> {
-        let reserved_names = queries::used_names(&prog);
+    pub fn initialize_program_state(&mut self, prog: &ast::Program<Loc, Loc>) {
+        let reserved_names = queries::used_names(prog);
         let file = self.cctx.file.clone();
         let reader = &self.cctx.reader;
         let reader_haste = reader.clone();
@@ -591,10 +584,16 @@ impl<'cx, Extra: BaseStats> Mapper<'cx, Extra> {
                 reserved_names.iter().map(|s| s.to_string()).collect(),
             ),
         );
+    }
 
-        let prog_: ast::Program<Loc, Loc> = self.map_program(&prog);
-
-        if prog != prog_ {
+    pub fn finalize_program(
+        &mut self,
+        prog: &ast::Program<Loc, Loc>,
+        prog_: ast::Program<Loc, Loc>,
+        extra: Extra,
+    ) -> ast::Program<Loc, Loc> {
+        let file = self.cctx.file.clone();
+        if *prog != prog_ {
             self.acc.changed_set.insert(file.clone());
         }
 
@@ -626,8 +625,6 @@ impl<'cx, Extra: BaseStats> Mapper<'cx, Extra> {
             })
             .sum();
 
-        let extra = post_run(self);
-
         let stats = flow_services_code_action::insert_type_utils::Stats {
             number_of_annotations_added: self.added_annotations_locmap.len() as i64,
             total_size_of_annotations: total_size as i64,
@@ -652,9 +649,20 @@ impl<'cx, Extra: BaseStats> Mapper<'cx, Extra> {
             all_comments,
         }
     }
+
+    pub fn program(
+        &mut self,
+        prog: ast::Program<Loc, Loc>,
+        post_run: impl FnOnce(&mut Self) -> Extra,
+    ) -> ast::Program<Loc, Loc> {
+        self.initialize_program_state(&prog);
+        let prog_: ast::Program<Loc, Loc> = self.map_program(&prog);
+        let extra = post_run(self);
+        self.finalize_program(&prog, prog_, extra)
+    }
 }
 
-impl<'ast, 'cx, Extra: BaseStats> AstVisitor<'ast, Loc> for Mapper<'cx, Extra> {
+impl<'ast, 'a, 'cx, Extra: BaseStats> AstVisitor<'ast, Loc> for Mapper<'a, 'cx, Extra> {
     fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
         loc
     }

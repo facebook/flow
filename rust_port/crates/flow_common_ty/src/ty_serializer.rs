@@ -435,13 +435,9 @@ impl Serializer {
             }
         } else {
             let mut ts_iter = ts.into_iter();
-            let t0 = ts_iter.next().expect("union must have at least 2 elements");
-            let t1 = ts_iter.next().expect("union must have at least 2 elements");
-            let rest: Vec<Arc<Ty<L>>> = ts_iter.collect();
-
-            let ast_t0 = self.type_(&t0);
-            let ast_t1 = self.type_(&t1);
-            let ast_rest: Vec<AstType> = rest.iter().map(|t| self.type_(t)).collect();
+            let ast_t0 = self.type_(&ts_iter.next().expect("union must have at least 2 elements"));
+            let ast_t1 = self.type_(&ts_iter.next().expect("union must have at least 2 elements"));
+            let ast_rest: Vec<AstType> = ts_iter.map(|t| self.type_(&t)).collect();
             ast::types::Type::new(TypeInner::Union {
                 loc: LOC_NONE,
                 inner: Arc::new(ast::types::Union {

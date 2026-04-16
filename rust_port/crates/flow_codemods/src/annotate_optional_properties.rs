@@ -203,20 +203,20 @@ impl flow_services_code_action::insert_type_utils::BaseStats for ErrorStats {
     }
 }
 
-pub struct AnnotateOptionalPropertiesMapper<'cx> {
-    cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+pub struct AnnotateOptionalPropertiesMapper<'a, 'cx> {
+    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     default_any: bool,
     prop_data: PropDataSet,
     codemod_error_locs: BTreeSet<Loc>,
-    mapper: codemod_annotator::Mapper<'cx, ErrorStats>,
+    mapper: codemod_annotator::Mapper<'a, 'cx, ErrorStats>,
 }
 
-impl<'cx> AnnotateOptionalPropertiesMapper<'cx> {
+impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
     pub fn new(
         max_type_size: i32,
         default_any: bool,
-        cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> Self {
         let lint_severities = codemod_context::typed::lint_severities(cctx);
         Self {
@@ -250,6 +250,11 @@ impl<'cx> AnnotateOptionalPropertiesMapper<'cx> {
         ErrorStats {
             num_total_errors: self.prop_data.len(),
         }
+    }
+
+    pub fn acc(&mut self) -> flow_services_code_action::insert_type_utils::Acc<ErrorStats> {
+        self.mapper.acc.stats.extra = self.post_run();
+        self.mapper.acc.clone()
     }
 
     fn get_annot(
@@ -391,6 +396,7 @@ impl<'cx> AnnotateOptionalPropertiesMapper<'cx> {
             match existing {
                 Some(previous) => {
                     let mut new_data = data.clone();
+                    new_data.init_locs = data.init_locs.clone();
                     new_data
                         .init_locs
                         .extend(previous.init_locs.iter().cloned());
@@ -520,7 +526,7 @@ impl<'cx> AnnotateOptionalPropertiesMapper<'cx> {
                 let oloc = init_expr.loc().clone();
                 let obj_props = self.get_props_for_obj(oloc.clone());
                 if obj_props.is_empty() {
-                    self.map_variable_declarator(&decl)
+                    flow_parser::ast_visitor::map_variable_declarator_default(self, &decl)
                 } else {
                     let id = match &id {
                         ast::pattern::Pattern::Identifier { loc: ploc, inner }
@@ -579,13 +585,12 @@ impl<'cx> AnnotateOptionalPropertiesMapper<'cx> {
                     ast::statement::variable::Declarator { loc, id, init }
                 }
             }
-            _ => self.map_variable_declarator(&decl),
+            _ => flow_parser::ast_visitor::map_variable_declarator_default(self, &decl),
         }
     }
 
     pub fn program(&mut self, prog: ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
         let cx = &self.cctx.cx;
-        let _reader = &self.cctx.reader;
         let unsuppressable_error_codes: BTreeSet<
             flow_data_structure_wrapper::smol_str::FlowSmolStr,
         > = self
@@ -634,17 +639,27 @@ impl<'cx> AnnotateOptionalPropertiesMapper<'cx> {
         if self.prop_data.is_empty() {
             prog
         } else {
-            self.map_program(&prog)
+            self.mapper.initialize_program_state(&prog);
+            let prog_ = self.map_program(&prog);
+            let extra = self.post_run();
+            self.mapper.finalize_program(&prog, prog_, extra)
         }
     }
 }
 
-impl<'ast, 'cx> AstVisitor<'ast, Loc> for AnnotateOptionalPropertiesMapper<'cx> {
+impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateOptionalPropertiesMapper<'a, 'cx> {
     fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
         loc
     }
 
     fn normalize_type(type_: &'ast Loc) -> &'ast Loc {
         type_
+    }
+
+    fn map_variable_declarator(
+        &mut self,
+        decl: &'ast ast::statement::variable::Declarator<Loc, Loc>,
+    ) -> ast::statement::variable::Declarator<Loc, Loc> {
+        self.variable_declarator(ast::VariableKind::Var, decl.clone())
     }
 }

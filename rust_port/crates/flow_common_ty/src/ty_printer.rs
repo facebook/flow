@@ -64,21 +64,43 @@ pub fn property_key_quotes_needed(x: &str) -> bool {
 }
 
 pub fn utf8_escape(quote: &str, s: &str) -> String {
-    let quote_char = quote.chars().next().unwrap_or('"');
     let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
 
-    for c in s.chars() {
-        match c {
-            '\\' => result.push_str("\\\\"),
-            '\n' => result.push_str("\\n"),
-            '\r' => result.push_str("\\r"),
-            '\t' => result.push_str("\\t"),
-            '\'' if quote_char == '\'' => result.push_str("\\'"),
-            '"' if quote_char == '"' => result.push_str("\\\""),
-            c if c.is_control() => {
-                write!(result, "\\u{:04x}", c as u32).unwrap();
+    while let Some(c) = chars.next() {
+        let cp = c as u32;
+        let next_cp = chars.peek().map(|next| *next as u32);
+        match cp {
+            0x0 => {
+                let zero = match next_cp {
+                    Some(n) if (0x30..=0x39).contains(&n) => "\\x00",
+                    _ => "\\0",
+                };
+                result.push_str(zero);
             }
-            c => result.push(c),
+            0x8 => result.push_str("\\b"),
+            0x9 => result.push_str("\\t"),
+            0xA => result.push_str("\\n"),
+            0xB => result.push_str("\\v"),
+            0xC => result.push_str("\\f"),
+            0xD => result.push_str("\\r"),
+            0x22 if quote == "\"" => result.push_str("\\\""),
+            0x27 if quote == "'" => result.push_str("\\'"),
+            0x5C => result.push_str("\\\\"),
+            n if 0x1F < n && n < 0x7F => result.push(c),
+            n if n < 0x100 => {
+                write!(result, "\\x{:02x}", n).unwrap();
+            }
+            n if n < 0x10000 => {
+                write!(result, "\\u{:04x}", n).unwrap();
+            }
+            n => {
+                let n2 = n - 0x10000;
+                let hi = 0xD800 | (n2 >> 10);
+                let lo = 0xDC00 | (n2 & 0x3FF);
+                write!(result, "\\u{:4x}", hi).unwrap();
+                write!(result, "\\u{:4x}", lo).unwrap();
+            }
         }
     }
 
@@ -1233,6 +1255,7 @@ fn type_with_parens<L: Dupe>(
 }
 
 fn class_decl<L: Dupe>(
+    opts: &PrinterOptions,
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
@@ -1242,15 +1265,14 @@ fn class_decl<L: Dupe>(
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            |tparams: &Arc<[TypeParam<L>]>| {
-                type_parameter(&PrinterOptions::default(), depth, tparams, MAX_SIZE)
-            },
+            |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
             type_parameters,
         ),
     ])
 }
 
 fn interface_decl<L: Dupe>(
+    opts: &PrinterOptions,
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
@@ -1260,15 +1282,14 @@ fn interface_decl<L: Dupe>(
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            |tparams: &Arc<[TypeParam<L>]>| {
-                type_parameter(&PrinterOptions::default(), depth, tparams, MAX_SIZE)
-            },
+            |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
             type_parameters,
         ),
     ])
 }
 
 fn record_decl<L: Dupe>(
+    opts: &PrinterOptions,
     depth: usize,
     s: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
@@ -1278,15 +1299,14 @@ fn record_decl<L: Dupe>(
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            |tp: &Arc<[TypeParam<L>]>| {
-                type_parameter(&PrinterOptions::default(), depth, tp, MAX_SIZE)
-            },
+            |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, MAX_SIZE),
             tparams,
         ),
     ])
 }
 
 fn nominal_component_decl<L: Dupe>(
+    opts: &PrinterOptions,
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
@@ -1295,14 +1315,12 @@ fn nominal_component_decl<L: Dupe>(
     renders: &Option<Ty<L>>,
     is_type: bool,
 ) -> LayoutNode {
-    let opts = PrinterOptions::default();
-
     if is_type {
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
-            Some(ts) => type_args(&opts, depth, ts, MAX_SIZE),
+            Some(ts) => type_args(opts, depth, ts, MAX_SIZE),
             None => option(
-                |tparams: &Arc<[TypeParam<L>]>| type_parameter(&opts, depth, tparams, MAX_SIZE),
+                |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
                 type_parameters,
             ),
         };
@@ -1331,9 +1349,9 @@ fn nominal_component_decl<L: Dupe>(
         // component ComponentName<...>(props) renders Type
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
-            Some(ts) => type_args(&opts, depth, ts, MAX_SIZE),
+            Some(ts) => type_args(opts, depth, ts, MAX_SIZE),
             None => option(
-                |tparams: &Arc<[TypeParam<L>]>| type_parameter(&opts, depth, tparams, MAX_SIZE),
+                |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
                 type_parameters,
             ),
         };
@@ -1344,7 +1362,7 @@ fn nominal_component_decl<L: Dupe>(
             identifier(&local_name_of_symbol(s)),
             type_args_or_params,
             type_component_sig(
-                &opts,
+                opts,
                 depth,
                 regular_props,
                 renders.as_ref().map(|t| Arc::new(t.clone())).as_ref(),
@@ -1355,15 +1373,15 @@ fn nominal_component_decl<L: Dupe>(
 }
 
 fn type_alias<L: Dupe>(
+    opts: &PrinterOptions,
     depth: usize,
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     t_opt: &Option<Arc<Ty<L>>>,
 ) -> LayoutNode {
-    let opts = PrinterOptions::default();
     let name_str = &name.sym_name;
     let tparams_node = option(
-        |tp: &Arc<[TypeParam<L>]>| type_parameter(&opts, depth, tp, MAX_SIZE),
+        |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, MAX_SIZE),
         tparams,
     );
     let body = match t_opt {
@@ -1371,7 +1389,7 @@ fn type_alias<L: Dupe>(
             layout::pretty_space(),
             LayoutNode::atom("=".to_string()),
             layout::pretty_space(),
-            type_impl(&opts, depth, t, MAX_SIZE),
+            type_impl(opts, depth, t, MAX_SIZE),
         ]),
         None => LayoutNode::empty(),
     };
@@ -1385,8 +1403,12 @@ fn type_alias<L: Dupe>(
     ])
 }
 
-fn variable_decl<L: Dupe>(depth: usize, name: &Name, t: &Ty<L>) -> LayoutNode {
-    let opts = PrinterOptions::default();
+fn variable_decl<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    name: &Name,
+    t: &Ty<L>,
+) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom("declare".to_string()),
         layout::space(),
@@ -1395,7 +1417,7 @@ fn variable_decl<L: Dupe>(depth: usize, name: &Name, t: &Ty<L>) -> LayoutNode {
         identifier(name),
         LayoutNode::atom(":".to_string()),
         layout::space(),
-        type_impl(&opts, depth, t, MAX_SIZE),
+        type_impl(opts, depth, t, MAX_SIZE),
     ])
 }
 
@@ -1457,8 +1479,7 @@ fn namespace<L: Dupe>(name: &Option<Symbol<L>>) -> LayoutNode {
     layout::fuse(vec![LayoutNode::atom("namespace".to_string()), name_node])
 }
 
-fn module_<L: Dupe>(name: &Option<Symbol<L>>) -> LayoutNode {
-    let opts = PrinterOptions::default();
+fn module_<L: Dupe>(opts: &PrinterOptions, name: &Option<Symbol<L>>) -> LayoutNode {
     let name_node = match name {
         Some(sym) => {
             let name_str = sym.sym_name.to_string();
@@ -1473,18 +1494,18 @@ fn module_<L: Dupe>(name: &Option<Symbol<L>>) -> LayoutNode {
     layout::fuse(vec![LayoutNode::atom("module".to_string()), name_node])
 }
 
-fn decl<L: Dupe>(_opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNode {
+fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNode {
     match d {
-        Decl::VariableDecl(box (name, t)) => variable_decl(depth, name, t),
+        Decl::VariableDecl(box (name, t)) => variable_decl(opts, depth, name, t),
         Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
             name,
             tparams,
             type_,
             ..
-        }) => type_alias(depth, name, tparams, type_),
-        Decl::ClassDecl(box (s, ps)) => class_decl(depth, s, ps),
-        Decl::InterfaceDecl(box (s, ps)) => interface_decl(depth, s, ps),
-        Decl::RecordDecl(box (s, ps)) => record_decl(depth, s, ps),
+        }) => type_alias(opts, depth, name, tparams, type_),
+        Decl::ClassDecl(box (s, ps)) => class_decl(opts, depth, s, ps),
+        Decl::InterfaceDecl(box (s, ps)) => interface_decl(opts, depth, s, ps),
+        Decl::RecordDecl(box (s, ps)) => record_decl(opts, depth, s, ps),
         Decl::EnumDecl(box DeclEnumDeclData {
             name,
             members,
@@ -1503,9 +1524,9 @@ fn decl<L: Dupe>(_opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNod
             props,
             renders,
             is_type,
-        }) => nominal_component_decl(depth, name, tparams, targs, props, renders, *is_type),
+        }) => nominal_component_decl(opts, depth, name, tparams, targs, props, renders, *is_type),
         Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => namespace(name),
-        Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => module_(name),
+        Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => module_(opts, name),
     }
 }
 

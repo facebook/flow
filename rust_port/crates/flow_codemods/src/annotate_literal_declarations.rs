@@ -91,16 +91,34 @@ pub mod stats {
 
 use stats::Stats;
 
-pub struct AnnotateLiteralDeclarationsMapper<'cx> {
-    cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+impl flow_services_code_action::insert_type_utils::BaseStats for Stats {
+    fn empty() -> Self {
+        Self::empty()
+    }
+
+    fn combine(a: &Self, b: &Self) -> Self {
+        Self::combine(a, b)
+    }
+
+    fn serialize(&self) -> Vec<String> {
+        self.serialize()
+    }
+
+    fn report(&self) -> Vec<String> {
+        self.report()
+    }
+}
+
+pub struct AnnotateLiteralDeclarationsMapper<'a, 'cx> {
+    cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     max_type_size: i32,
     stats: Option<Stats>,
 }
 
-impl<'cx> AnnotateLiteralDeclarationsMapper<'cx> {
+impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
     pub fn new(
         max_type_size: i32,
-        cctx: &'cx codemod_context::typed::TypedCodemodContext<'cx>,
+        cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     ) -> Self {
         Self {
             cctx,
@@ -259,7 +277,7 @@ impl<'cx> AnnotateLiteralDeclarationsMapper<'cx> {
     }
 }
 
-impl<'ast, 'cx> AstVisitor<'ast, Loc> for AnnotateLiteralDeclarationsMapper<'cx> {
+impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateLiteralDeclarationsMapper<'a, 'cx> {
     fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
         loc
     }

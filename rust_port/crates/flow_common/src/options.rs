@@ -214,6 +214,7 @@ pub struct Options {
     pub instance_t_objkit_fix: bool,
     pub lazy_mode: bool,
     pub llm_context_include_imports: bool,
+    pub log_per_error_typing_telemetry: bool,
     pub lint_severities: LintSettings<Severity>,
     pub log_file: Arc<PathBuf>,
     pub log_saving: Arc<BTreeMap<String, LogSaving>>,

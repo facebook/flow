@@ -1235,13 +1235,13 @@ fn merge_impl<'cx>(
                 file,
                 |t, ref_loc, names| {
                     let (name, _) = (names.first().duped().unwrap_or_default(), &names[1..]);
-                    let reason = reason::mk_annot_reason(RType(Name::new(name)), ref_loc);
+                    let reason = reason::mk_annot_reason(RType(Name::new(name)), ref_loc.dupe());
                     let type_t_kind = if in_renders_arg {
                         type_::TypeTKind::RenderTypeKind
                     } else {
                         type_::TypeTKind::TypeAliasKind
                     };
-                    annotation_inference::mk_type_reference(cx, type_t_kind, reason, t)
+                    annotation_inference::mk_type_reference(cx, type_t_kind, reason, t.dupe())
                 },
                 name,
             )
@@ -1255,7 +1255,9 @@ fn merge_impl<'cx>(
             merge_tyref(
                 cx,
                 file,
-                move |t, _ref_loc, _names| type_util::typeapp_annot(false, false, loc, t, targs),
+                move |t, _ref_loc, _names| {
+                    type_util::typeapp_annot(false, false, loc.dupe(), t.dupe(), targs)
+                },
                 name,
             )
         }

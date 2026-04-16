@@ -109,10 +109,19 @@ fn acquire_lock(lock_file: &str) -> std::io::Result<fs::File> {
     if let Some(parent) = Path::new(lock_file).parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::OpenOptions::new()
+    let file = fs::OpenOptions::new()
         .write(true)
-        .create_new(true)
-        .open(lock_file)
+        .create(true)
+        .truncate(false)
+        .open(lock_file)?;
+    match file.try_lock() {
+        Ok(()) => Ok(file),
+        Err(fs::TryLockError::WouldBlock) => Err(std::io::Error::new(
+            std::io::ErrorKind::AlreadyExists,
+            "lock file is already held",
+        )),
+        Err(err) => Err(err.into()),
+    }
 }
 
 pub struct Args {
@@ -126,7 +135,7 @@ pub struct Args {
 
 pub type EntryPoint = Box<dyn Fn(Args) + Send + Sync>;
 
-pub fn open_log_file(file: &str) -> fs::File {
+pub fn try_open_log_file(file: &str) -> Result<fs::File, String> {
     // Not a huge problem, we just need to be more intentional
     if Path::new(file).exists() {
         let old_file = format!("{}.old", file);
@@ -147,7 +156,11 @@ pub fn open_log_file(file: &str) -> fs::File {
         .create(true)
         .append(true)
         .open(file)
-        .unwrap_or_else(|e| panic!("Failed to open log file '{}': {}", file, e))
+        .map_err(|e| format!("Failed to open log file '{}': {}", file, e))
+}
+
+pub fn open_log_file(file: &str) -> fs::File {
+    try_open_log_file(file).unwrap_or_else(|e| panic!("{}", e))
 }
 
 fn new_entry_point() -> String {

@@ -8,6 +8,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -25,6 +26,7 @@ use flow_common::flow_version;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
+use flow_common_errors::error_utils::PrintableError;
 use flow_common_modulename::Modulename;
 use flow_common_semver::semver;
 use flow_common_tarjan::topsort;
@@ -46,14 +48,17 @@ use flow_saved_state::LoadedSavedState;
 use flow_server_env::collated_errors::CollatedErrors;
 use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::error_collator;
+use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_env::Errors;
 use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_status;
 use flow_server_files::server_files_js;
 use flow_services_export::export_search::ExportSearch;
 use flow_services_get_def::get_def_types::DefInfo;
 use flow_services_module::PackageIncompatibleReturn;
+use flow_services_references::find_refs_types::FindRefsFound;
 use flow_typing_context::MasterContext;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
@@ -453,13 +458,15 @@ fn update_slow_files(
     }
 }
 
+type FindRefResults = Result<FindRefsFound, String>;
+
 type CheckAcc = (
     (
         BTreeMap<FileKey, ErrorSet>,
         BTreeMap<FileKey, ErrorSet>,
         ErrorSuppressions,
         BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
-        Result<Vec<()>, String>,
+        FindRefResults,
         Option<String>,
     ),
     (i32, f64, Option<FileKey>),
@@ -560,13 +567,18 @@ fn merge(
     sig_dependency_graph: &Graph<FileKey>,
     suppressions: ErrorSuppressions,
 ) -> MergeResult {
-    eprintln!("Calculating dependencies");
+    if !options.quiet {
+        eprintln!("Calculating dependencies");
+    }
+    monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
     let files_to_merge = to_merge.dupe().all();
     let calc_deps_start = Instant::now();
     let components = calc_deps(options, components, &files_to_merge);
     let calc_deps_time = calc_deps_start.elapsed();
 
-    eprintln!("Merging");
+    if !options.quiet {
+        eprintln!("Merging");
+    }
     let merge_start = Instant::now();
 
     let top_cycle = components
@@ -586,7 +598,9 @@ fn merge(
         suppressions,
     );
 
-    eprintln!("Merging Done");
+    if !options.quiet {
+        eprintln!("Merging Done");
+    }
     let time_to_merge = merge_start.elapsed();
 
     MergeResult {
@@ -617,7 +631,7 @@ mod check_files {
     ) -> (
         Errors,
         BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
-        Result<Vec<()>, String>,
+        FindRefResults,
         f64,
         usize,
         Option<String>,
@@ -625,9 +639,12 @@ mod check_files {
         Option<String>,
     ) {
         let options_ref = options.dupe();
+        let quiet = options.quiet;
         with_memory_timer(&options_ref, "Check", || {
-            eprintln!("Check prep");
-            eprintln!("new or changed signatures: {}", sig_new_or_changed.len());
+            if !quiet {
+                eprintln!("Check prep");
+                eprintln!("new or changed signatures: {}", sig_new_or_changed.len());
+            }
             let focused_to_check = to_check.focused();
             let merged_dependents = to_check.dependents();
             let mut skipped_count = 0;
@@ -649,23 +666,29 @@ mod check_files {
                     }
                 })
                 .collect::<Vec<_>>();
-            eprintln!(
+            let message = format!(
                 "Check will skip {} of {} files",
                 skipped_count,
                 focused_to_check.len() + merged_dependents.len()
             );
+            eprintln!("{}", message);
+            log::info!("{}", message);
+            append_to_server_log(&options, &message);
             let mut files = focused_to_check.dupe();
             for file in dependents_to_check {
                 files.insert(file);
             }
             let intermediate_result_callback: Arc<dyn Fn(&[_]) + Send + Sync> = Arc::new(|_| {});
-            eprintln!("Checking files");
+            if !quiet {
+                eprintln!("Checking files");
+            }
 
             let check_start_time = Instant::now();
             let max_size = options.max_files_checked_per_worker as usize;
             let num_workers = pool.num_workers();
             let (next, mk_next_merge, files_completed) = job_utils::mk_next(
                 intermediate_result_callback,
+                quiet,
                 max_size,
                 num_workers,
                 files.iter().map(|f| f.dupe()).collect(),
@@ -813,7 +836,9 @@ mod check_files {
             let (num_slow_files, _slowest_time, slowest_file) = slow_files;
             let time_to_check_merged = check_start_time.elapsed().as_secs_f64();
 
-            eprintln!("Checking Done");
+            if !quiet {
+                eprintln!("Checking Done");
+            }
             let errors = Errors {
                 local_errors,
                 duplicate_providers,
@@ -893,7 +918,13 @@ fn init_libs(
     BTreeMap<FileKey, ErrorSet>, // local_errors
     BTreeMap<FileKey, ErrorSet>, // warnings
     ErrorSuppressions,           // suppressions
-    (),
+    (
+        flow_imports_exports::exports::Exports,
+        Vec<(
+            flow_common::flow_projects::FlowProjects,
+            flow_imports_exports::exports::Exports,
+        )>,
+    ),
     Arc<MasterContext>, // master_cx
 ) {
     with_memory_timer(options, "InitLibs", || {
@@ -902,14 +933,21 @@ fn init_libs(
             errors: lib_errors,
             warnings: lib_warnings,
             suppressions: lib_suppressions,
-            exports: _lib_exports,
+            exports: lib_exports,
             master_cx,
         } = init::init(options, shared_mem, ordered_libs);
         let local_errors = merge_error_maps(lib_errors, local_errors);
         let warnings = merge_error_maps(lib_warnings, warnings);
         let mut suppressions = suppressions;
         suppressions.update_suppressions(lib_suppressions);
-        (libs_ok, local_errors, warnings, suppressions, (), master_cx)
+        (
+            libs_ok,
+            local_errors,
+            warnings,
+            suppressions,
+            lib_exports,
+            master_cx,
+        )
     })
 }
 
@@ -1089,6 +1127,12 @@ pub(crate) mod recheck {
         files_to_force.diff(&env.checked_files);
 
         eprintln!("Parsing");
+        monitor_rpc::status_update(server_status::Event::ParsingProgress(
+            server_status::Progress {
+                total: None,
+                finished: 0,
+            },
+        ));
 
         let modified_set = updates.dupe().all();
         let modified_files: Vec<FileKey> = modified_set.iter().map(|f| f.dupe()).collect();
@@ -1205,6 +1249,7 @@ pub(crate) mod recheck {
         let unchanged_files_to_force =
             files_to_force.filter(|file, _kind| unchanged.contains(file));
 
+        monitor_rpc::status_update(server_status::Event::ResolvingDependenciesProgress);
         let dirty_modules: flow_common_modulename::ModulenameSet =
             dirty_modules.into_iter().collect();
         let (changed_modules, duplicate_providers) = commit_modules(
@@ -1243,6 +1288,7 @@ pub(crate) mod recheck {
         );
 
         eprintln!("Recalculating dependency graph");
+        monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
         let parsed = parsed_set.dupe().union(unchanged.dupe());
         let dependency_info = with_memory_timer(options, "CalcDepsTypecheck", || {
             let files_to_update_dependency_info = parsed_set.union(dirty_direct_dependents.dupe());
@@ -1335,7 +1381,7 @@ pub(crate) mod recheck {
         let (to_merge, to_check, components, recheck_set) = include_dependencies_and_dependents(
             options,
             input,
-            unchanged_checked,
+            unchanged_checked.dupe(),
             all_dependent_files.dupe(),
             implementation_dependency_graph,
             sig_dependency_graph,
@@ -1365,7 +1411,7 @@ pub(crate) mod recheck {
             Env,
             RecheckResult,
             Box<dyn FnOnce()>,
-            Result<Vec<()>, String>,
+            FindRefResults,
             Option<String>,
         ),
         RecheckError,
@@ -1385,6 +1431,7 @@ pub(crate) mod recheck {
         let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
         let sig_dependency_graph = dependency_info.sig_dependency_graph();
         eprintln!("Determining what to recheck...");
+        monitor_rpc::status_update(server_status::Event::CalculatingDependentsStart);
         let mut unchanged_files_to_force = unchanged_files_to_force;
         unchanged_files_to_force.union(unchanged_files_to_upgrade.dupe());
         let DetermineWhatToRecheckResult {
@@ -1402,6 +1449,7 @@ pub(crate) mod recheck {
             &unchanged_files_to_force,
             &dirty_direct_dependents,
         );
+        monitor_rpc::status_update(server_status::Event::CalculatingDependentsEnd);
         will_be_checked_files.union(to_merge.dupe());
 
         match changed_mergebase {
@@ -1580,7 +1628,7 @@ pub(crate) mod recheck {
             Env,
             RecheckResult,
             Box<dyn FnOnce()>,
-            Result<Vec<()>, String>,
+            FindRefResults,
             Option<String>,
         ),
         RecheckError,
@@ -1684,15 +1732,7 @@ pub(crate) fn recheck_impl(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<
-    (
-        Box<dyn FnOnce()>,
-        RecheckStats,
-        Result<Vec<()>, String>,
-        Env,
-    ),
-    RecheckError,
-> {
+) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
     let (env, stats, record_recheck_time, find_ref_results, _first_internal_error) =
         match with_transaction_result("recheck", |_transaction| {
             recheck::full(
@@ -2073,6 +2113,23 @@ fn did_content_change(shared_mem: &SharedMem, filename: &str) -> bool {
     }
 }
 
+fn append_to_server_log(options: &Options, message: &str) {
+    let log_file = std::env::var("FLOW_LOG_FILE").unwrap_or_else(|_| {
+        server_files_js::log_file(
+            &options.flowconfig_name,
+            options.temp_dir.as_str(),
+            options.root.as_path(),
+        )
+    });
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_file)
+    {
+        let _ = writeln!(file, "{}", message);
+    }
+}
+
 fn filter_saved_state_updates(
     file_options: &FileOptions,
     sroot: &str,
@@ -2319,6 +2376,7 @@ fn init_with_initial_state(
     //
     // 1. The builtin libraries are merged first
     // 2. The non-builtin libraries are merged in the same order as before
+    monitor_rpc::status_update(server_status::Event::LoadLibrariesStart);
     let (ordered_libs, all_unordered_libs) =
         files::ordered_and_unordered_lib_paths(&options.file_options);
     let all_unordered_libs_set: BTreeSet<FlowSmolStr> = all_unordered_libs
@@ -2369,6 +2427,7 @@ fn init_with_initial_state(
         .chain(additional_dirty_modules)
         .collect();
 
+    monitor_rpc::status_update(server_status::Event::ResolvingDependenciesProgress);
     let (_changed_modules, duplicate_providers) = commit_modules(
         pool,
         options,
@@ -2501,6 +2560,7 @@ pub fn init_from_legacy_saved_state(
     bool,
     Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
+    monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     let node_modules_containers =
         Arc::new(RwLock::new(saved_state.node_modules_containers.clone()));
     let mut parsed = FlowOrdSet::new();
@@ -2574,6 +2634,7 @@ pub fn init_from_direct_saved_state(
     bool,
     Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
+    monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // Direct serialization saved state: the heap was already bulk-loaded by
     // SharedMem.load_heap during the load step, so all file data is already in
     // shared memory. The saved state metadata contains only FilenameSet.t (not
@@ -2783,7 +2844,18 @@ pub fn init_from_scratch(
             drop(sender);
         });
         let receiver_for_next = receiver.dupe();
-        let next: parsing_service::Next = Box::new(move || receiver_for_next.recv().ok());
+        let mut total = 0;
+        let next: parsing_service::Next = Box::new(move || {
+            let files = receiver_for_next.recv().ok()?;
+            monitor_rpc::status_update(server_status::Event::ParsingProgress(
+                server_status::Progress {
+                    total: None,
+                    finished: total,
+                },
+            ));
+            total += files.len() as i32;
+            Some(files)
+        });
 
         let CollatedParseResults {
             parsed: parsed_set,
@@ -2831,7 +2903,7 @@ pub fn init_from_scratch(
             .collect::<FlowOrdSet<_>>();
         let local_errors = merge_error_maps(package_errors, local_errors);
 
-        let (libs_ok, local_errors, warnings, suppressions, _exports, master_cx) = init_libs(
+        let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
             options,
             shared_mem,
             ordered_libs.clone(),
@@ -2840,6 +2912,7 @@ pub fn init_from_scratch(
             ErrorSuppressions::empty(),
         );
 
+        monitor_rpc::status_update(server_status::Event::ResolvingDependenciesProgress);
         let (_changed_modules, duplicate_providers) = commit_modules(
             pool,
             options,
@@ -2856,6 +2929,7 @@ pub fn init_from_scratch(
             &parsed_set,
         );
 
+        monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
         let dependency_info = with_memory_timer(options, "CalcDepsTypecheck", || {
             dep_service::calc_dependency_info(pool, shared_mem, &parsed_set)
         });
@@ -2890,6 +2964,21 @@ pub fn init_from_scratch(
             warnings,
             suppressions,
         };
+        let exports = if options.autoimports {
+            Some(with_memory_timer(options, "Indexing", || {
+                let parsed: BTreeSet<FileKey> = parsed_set.iter().duped().collect();
+                let (lib_exports, scoped_lib_exports) = &lib_exports;
+                let scoped_lib_exports: Vec<(String, flow_imports_exports::exports::Exports)> =
+                    scoped_lib_exports
+                        .iter()
+                        .map(|(_project, exports)| (String::new(), exports.clone()))
+                        .collect();
+                let lib_exports = (lib_exports.clone(), scoped_lib_exports);
+                flow_services_export::export_service::init(shared_mem, &lib_exports, &parsed)
+            }))
+        } else {
+            None
+        };
         let env = mk_env(
             parsed_set.dupe(),
             unparsed_set.dupe(),
@@ -2907,7 +2996,7 @@ pub fn init_from_scratch(
             all_unordered_libs_set,
             errors,
             collated_errors,
-            None, // exports
+            exports,
             master_cx,
         );
 
@@ -3055,12 +3144,7 @@ pub fn reinit(
     files_to_force: CheckedSet,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Option<(
-    Box<dyn FnOnce()>,
-    RecheckStats,
-    Result<Vec<()>, String>,
-    Env,
-)> {
+) -> Option<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env)> {
     let (saved_state, updates_since_saved_state) = match load_saved_state(pool, shared_mem, options)
     {
         Ok(result) => result,
@@ -3084,6 +3168,7 @@ pub fn reinit(
     // We loaded a saved state successfully! We are awesome!
     eprintln!("Reinitializing from saved state");
     log::info!("Reinitializing from saved state");
+    append_to_server_log(options, "Reinitializing from saved state");
     let (env, _libs_ok, _node_modules_containers) = init_from_saved_state(
         pool,
         shared_mem,
@@ -3135,15 +3220,7 @@ pub fn reinit_full_check(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<
-    (
-        Box<dyn FnOnce()>,
-        RecheckStats,
-        Result<Vec<()>, String>,
-        Env,
-    ),
-    RecheckError,
-> {
+) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
     shared_mem.clear_reader_cache();
     eprintln!("Reiniting with a full check.");
     log::info!("Reiniting with a full check.");
@@ -3206,15 +3283,7 @@ pub fn recheck(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<
-    (
-        Box<dyn FnOnce()>,
-        RecheckStats,
-        Result<Vec<()>, String>,
-        Env,
-    ),
-    RecheckError,
-> {
+) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
     if incompatible_lib_change {
         if did_change_mergebase && options.saved_state_reinit_on_lib_change {
@@ -3224,6 +3293,10 @@ pub fn recheck(
             // because the libdef also changed locally), fall back to reinit_full_check.
             eprintln!("Libdef changed with mergebase change; trying saved-state reinit first");
             log::info!("Libdef changed with mergebase change; trying saved-state reinit first");
+            append_to_server_log(
+                options,
+                "Libdef changed with mergebase change; trying saved-state reinit first",
+            );
             match reinit(
                 pool,
                 shared_mem,
@@ -3239,6 +3312,10 @@ pub fn recheck(
                 None => {
                     eprintln!("Saved-state reinit failed; falling back to reinit_full_check");
                     log::info!("Saved-state reinit failed; falling back to reinit_full_check");
+                    append_to_server_log(
+                        options,
+                        "Saved-state reinit failed; falling back to reinit_full_check",
+                    );
                     reinit_full_check(
                         pool,
                         shared_mem,
@@ -3529,7 +3606,11 @@ pub fn check_once(
     shared_mem: &Arc<SharedMem>,
     root: &Path,
     focus_targets: Option<FlowOrdSet<FileKey>>,
-) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
+) -> (
+    ConcreteLocPrintableErrorSet,
+    ConcreteLocPrintableErrorSet,
+    Vec<(PrintableError<Loc>, BTreeSet<Loc>)>,
+) {
     let total_start = Instant::now();
 
     let (env, libs_ok, _node_modules_containers) =
@@ -3544,21 +3625,35 @@ pub fn check_once(
     };
 
     let total_time = total_start.elapsed();
-    eprintln!("Total:              {:6.2}s", total_time.as_secs_f64());
+    if !options.quiet {
+        eprintln!("Total:              {:6.2}s", total_time.as_secs_f64());
+    }
 
-    let mut errors = ConcreteLocPrintableErrorSet::empty();
-    for (err, _, _) in &env.collated_errors.collated_duplicate_providers_errors {
-        errors.add(err.clone());
-    }
-    for errs in env.collated_errors.collated_local_errors.values() {
-        errors.union(errs);
-    }
-    for errs in env.collated_errors.collated_merge_errors.values() {
-        errors.union(errs);
-    }
-    let mut warnings = ConcreteLocPrintableErrorSet::empty();
-    for errs in env.collated_errors.collated_warning_map.values() {
-        warnings.union(errs);
-    }
-    (errors, warnings)
+    let (errors, warnings, suppressed_errors) = error_collator::get(&env);
+    let strip_root = if options.strip_root {
+        Some(options.root.as_path())
+    } else {
+        None
+    };
+    let loc_of_aloc = |aloc: &ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
+    let get_ast = |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { shared_mem.get_ast(file) };
+    let suppressed_errors = if options.include_suppressions {
+        suppressed_errors
+            .into_iter()
+            .map(|(e, loc_set)| {
+                (
+                    flow_typing_errors::intermediate_error::to_printable_error(
+                        &loc_of_aloc,
+                        get_ast,
+                        strip_root,
+                        e,
+                    ),
+                    loc_set,
+                )
+            })
+            .collect()
+    } else {
+        vec![]
+    };
+    (errors, warnings, suppressed_errors)
 }

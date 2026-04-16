@@ -950,6 +950,7 @@ fn suggest_imports(
     cx: &Context,
     layout_options: &js_layout_generator::Opts,
     module_system_info: &LspModuleSystemInfo,
+    src_dir: Option<&str>,
     ast: &ast::Program<Loc, Loc>,
     diagnostics: &[Diagnostic],
     imports_ranked_usage: bool,
@@ -966,10 +967,6 @@ fn suggest_imports(
     if files.is_empty() {
         return vec![];
     }
-    let src_dir = match uri.to_file_path() {
-        Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-        Err(_) => None,
-    };
     let error_range = loc_to_lsp_range(loc);
     let lsp_code = ErrorCode::CannotResolveName.as_str();
     let relevant_diagnostics: Vec<Diagnostic> = diagnostics
@@ -992,7 +989,7 @@ fn suggest_imports(
         match lsp_import_edits::text_edits_of_import(
             layout_options,
             module_system_info,
-            src_dir.as_deref(),
+            src_dir,
             ast,
             &export_kind,
             name,
@@ -2535,6 +2532,11 @@ fn code_actions_of_errors(
                             cx,
                             &code_action_utils::layout_options(options),
                             module_system_info,
+                            match uri.to_file_path() {
+                                Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+                                Err(_) => None,
+                            }
+                            .as_deref(),
                             ast,
                             diagnostics,
                             imports_ranked_usage,
@@ -2949,6 +2951,11 @@ pub fn code_actions_at_loc<'a>(
                         cx,
                         &code_action_utils::layout_options(options),
                         module_system_info,
+                        match uri.to_file_path() {
+                            Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+                            Err(_) => None,
+                        }
+                        .as_deref(),
                         ast,
                         diagnostics,
                         imports_ranked_usage,
@@ -3276,7 +3283,8 @@ pub fn autofix_imports_cli(
     file_key: &FileKey,
     file_content: &str,
 ) -> Result<Vec<(Loc, String)>, String> {
-    let src_dir = std::path::Path::new(file_key.as_str())
+    let file_path = file_key.to_absolute();
+    let src_dir = std::path::Path::new(&file_path)
         .parent()
         .map(|p| p.to_string_lossy().to_string());
     with_type_checked_file(
@@ -3314,8 +3322,12 @@ pub fn suggest_imports_cli(
     file_key: &FileKey,
     file_content: &str,
 ) -> Result<HashMap<String, Vec<CodeActionOrCommand>>, String> {
-    let uri =
-        Url::from_file_path(file_key.as_str()).unwrap_or_else(|_| Url::parse("file:///").unwrap());
+    let uri = Url::from_file_path(file_key.to_path_buf())
+        .unwrap_or_else(|_| Url::parse("file:///").unwrap());
+    let file_path = file_key.to_absolute();
+    let src_dir = std::path::Path::new(&file_path)
+        .parent()
+        .map(|p| p.to_string_lossy().to_string());
     with_type_checked_file(
         options,
         env,
@@ -3352,6 +3364,7 @@ pub fn suggest_imports_cli(
                                 cx,
                                 &code_action_utils::layout_options(options),
                                 module_system_info,
+                                src_dir.as_deref(),
                                 ast,
                                 &[],
                                 true, // imports_ranked_usage

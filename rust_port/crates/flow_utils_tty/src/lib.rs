@@ -11,6 +11,7 @@
 
 use std::io::IsTerminal;
 use std::io::Write;
+use std::process::Command;
 
 /// Raw terminal colors
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,6 +67,14 @@ impl RawColor {
         }
     }
 
+    /// Get ANSI style color code matching tty.ml's `color_num`
+    fn style_code(&self) -> &'static str {
+        match self {
+            RawColor::Default => "0",
+            color => color.fg_code(),
+        }
+    }
+
     /// Get ANSI color code for background
     fn bg_code(&self) -> &'static str {
         match self {
@@ -87,16 +96,16 @@ pub fn should_color(mode: ColorMode) -> bool {
     match mode {
         ColorMode::ColorAlways => true,
         ColorMode::ColorNever => false,
-        ColorMode::ColorAuto => {
-            // Check if stdout is a tty
-            std::io::stdout().is_terminal()
-        }
+        ColorMode::ColorAuto => supports_color(),
     }
 }
 
 /// Check if the terminal supports color
 pub fn supports_color() -> bool {
-    std::io::stdout().is_terminal()
+    match std::env::var("TERM") {
+        Ok(term) => std::io::stdout().is_terminal() && term != "dumb",
+        Err(_) => false,
+    }
 }
 
 /// Apply color styling to a string
@@ -107,15 +116,15 @@ pub fn apply_color(style: Style, text: &str, color_mode: Option<ColorMode>) -> S
     }
 
     let (codes, reset) = match style {
-        Style::Normal(c) => (format!("\x1b[{}m", c.fg_code()), "\x1b[0m"),
-        Style::Bold(c) => (format!("\x1b[1;{}m", c.fg_code()), "\x1b[0m"),
-        Style::Dim(c) => (format!("\x1b[2;{}m", c.fg_code()), "\x1b[0m"),
-        Style::Italics(c) => (format!("\x1b[3;{}m", c.fg_code()), "\x1b[0m"),
-        Style::Underline(c) => (format!("\x1b[4;{}m", c.fg_code()), "\x1b[0m"),
-        Style::BoldDim(c) => (format!("\x1b[1;2;{}m", c.fg_code()), "\x1b[0m"),
-        Style::BoldItalics(c) => (format!("\x1b[1;3;{}m", c.fg_code()), "\x1b[0m"),
-        Style::BoldUnderline(c) => (format!("\x1b[1;4;{}m", c.fg_code()), "\x1b[0m"),
-        Style::DimUnderline(c) => (format!("\x1b[2;4;{}m", c.fg_code()), "\x1b[0m"),
+        Style::Normal(c) => (format!("\x1b[{}m", c.style_code()), "\x1b[0m"),
+        Style::Bold(c) => (format!("\x1b[{};1m", c.style_code()), "\x1b[0m"),
+        Style::Dim(c) => (format!("\x1b[{};2m", c.style_code()), "\x1b[0m"),
+        Style::Italics(c) => (format!("\x1b[{};3m", c.style_code()), "\x1b[0m"),
+        Style::Underline(c) => (format!("\x1b[{};4m", c.style_code()), "\x1b[0m"),
+        Style::BoldDim(c) => (format!("\x1b[{};1;2m", c.style_code()), "\x1b[0m"),
+        Style::BoldItalics(c) => (format!("\x1b[{};1;3m", c.style_code()), "\x1b[0m"),
+        Style::BoldUnderline(c) => (format!("\x1b[{};1;4m", c.style_code()), "\x1b[0m"),
+        Style::DimUnderline(c) => (format!("\x1b[{};2;4m", c.style_code()), "\x1b[0m"),
         Style::NormalWithBG(fg, bg) => (
             format!("\x1b[{};{}m", fg.fg_code(), bg.bg_code()),
             "\x1b[0m",
@@ -139,4 +148,26 @@ pub fn cprint<W: Write>(
         write!(writer, "{}", apply_color(*style, text, color_mode))?;
     }
     Ok(())
+}
+
+// See https://github.com/yarnpkg/yarn/issues/405.
+pub fn supports_emoji() -> bool {
+    // On non-Windows (always true on Linux), check if color is supported
+    cfg!(not(target_os = "windows")) && supports_color()
+}
+
+/// Gets the column width of the current terminal.
+pub fn get_term_cols() -> Option<i32> {
+    if !cfg!(unix) || !supports_color() {
+        return None;
+    }
+    Command::new("tput")
+        .arg("cols")
+        .output()
+        .ok()
+        .and_then(|output| {
+            String::from_utf8(output.stdout)
+                .ok()
+                .and_then(|s| s.trim().parse::<i32>().ok())
+        })
 }

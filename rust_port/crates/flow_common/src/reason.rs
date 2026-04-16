@@ -1080,27 +1080,32 @@ pub fn in_range(loc: &Loc, range: &Loc) -> bool {
 
 pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
     use flow_parser::file_key::FileKeyInner;
-    let file = source.to_absolute();
     match source.inner() {
         FileKeyInner::LibFile(_) => {
             if let Some(root) = strip_root {
+                let suffix = source.suffix();
+                let flowlib_suffix = suffix
+                    .strip_prefix(flow_parser::file_key::FLOWLIB_MARKER)
+                    .unwrap_or(suffix);
+                let file = source.to_absolute();
                 let root_str = format!("{}/", root);
                 if file.starts_with(&root_str) {
                     format!("[LIB] {}", &file[root_str.len()..])
                 } else {
                     format!(
                         "[LIB] {}",
-                        std::path::Path::new(&file)
+                        std::path::Path::new(flowlib_suffix)
                             .file_name()
                             .and_then(|s| s.to_str())
-                            .unwrap_or(&file)
+                            .unwrap_or(flowlib_suffix)
                     )
                 }
             } else {
-                file
+                source.to_absolute()
             }
         }
         FileKeyInner::SourceFile(_) | FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => {
+            let file = source.to_absolute();
             if let Some(root) = strip_root {
                 let root_str = format!("{}/", root);
                 if file.starts_with(&root_str) {
@@ -2451,14 +2456,7 @@ pub fn react_element_desc_of_component_reason<L: Dupe>(
 
 pub fn range_string_of_loc(strip_root: Option<&str>, loc: &Loc) -> String {
     let file = match &loc.source {
-        Some(file) => {
-            let file_str = format!("{:?}", file);
-            if let Some(root) = strip_root {
-                file_str.trim_start_matches(root).to_string()
-            } else {
-                file_str
-            }
-        }
+        Some(file) => string_of_source(strip_root, file),
         None => String::new(),
     };
 

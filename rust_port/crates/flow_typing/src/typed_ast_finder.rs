@@ -102,10 +102,50 @@ pub fn find_type_annot_in_node(
 
 /// Find exact location match
 pub mod exact_match_query {
+    use flow_parser::ast_visitor;
+    use flow_parser::ast_visitor::AstVisitor;
     use flow_parser::polymorphic_ast_mapper;
     use flow_parser::polymorphic_ast_mapper::LocMapper;
 
     use super::*;
+
+    enum FoundFilteredOut {
+        Found(Type),
+    }
+
+    struct FilteredOutSearcher {
+        target_loc: ALoc,
+    }
+
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), (), FoundFilteredOut> for FilteredOutSearcher {
+        fn normalize_loc(_loc: &'ast ALoc) {}
+
+        fn normalize_type(_type_: &'ast (ALoc, Type)) {}
+
+        fn optional_call(
+            &mut self,
+            _loc: &'ast (ALoc, Type),
+            expr: &'ast ast::expression::OptionalCall<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundFilteredOut> {
+            let (filtered_out_loc, filtered_out_t) = &expr.filtered_out;
+            if *filtered_out_loc == self.target_loc {
+                return Err(FoundFilteredOut::Found(filtered_out_t.dupe()));
+            }
+            ast_visitor::optional_call_default(self, _loc, expr)
+        }
+
+        fn optional_member(
+            &mut self,
+            _loc: &'ast (ALoc, Type),
+            expr: &'ast ast::expression::OptionalMember<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundFilteredOut> {
+            let (filtered_out_loc, filtered_out_t) = &expr.filtered_out;
+            if *filtered_out_loc == self.target_loc {
+                return Err(FoundFilteredOut::Found(filtered_out_t.dupe()));
+            }
+            ast_visitor::optional_member_default(self, _loc, expr)
+        }
+    }
 
     struct ExactMatchSearcher {
         target_loc: ALoc,
@@ -127,6 +167,13 @@ pub mod exact_match_query {
     }
 
     pub fn find(typed_ast: &ast::Program<ALoc, (ALoc, Type)>, aloc: ALoc) -> Option<Type> {
+        let mut filtered_out_searcher = FilteredOutSearcher {
+            target_loc: aloc.dupe(),
+        };
+        if let Err(FoundFilteredOut::Found(t)) = filtered_out_searcher.program(typed_ast) {
+            return Some(t);
+        }
+
         let mut searcher = ExactMatchSearcher { target_loc: aloc };
         polymorphic_ast_mapper::program(&mut searcher, typed_ast).err()
     }

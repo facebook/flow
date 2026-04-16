@@ -90,20 +90,17 @@ pub fn cancellation_requests() -> &'static Mutex<BTreeSet<String>> {
     &CANCELLATION_REQUESTS
 }
 
-/// Placeholder until persistent connections and the LSP response plumbing are
-/// fully ported. This bundles the find-refs request, client, and response
-/// conversion as an opaque type.
-#[allow(dead_code)]
-pub struct FindRefCommand(Box<dyn FnOnce() + Send>);
+pub type FindRefResponseTransformer = Box<
+    dyn FnOnce(
+            Result<flow_services_references::find_refs_types::FindRefsFound, String>,
+        ) -> crate::lsp_prot::ResponseWithMetadata
+        + Send,
+>;
 
-impl FindRefCommand {
-    pub fn new(f: Box<dyn FnOnce() + Send>) -> Self {
-        FindRefCommand(f)
-    }
-
-    pub fn run(self) {
-        (self.0)();
-    }
+pub struct FindRefCommand {
+    pub request: flow_services_references::find_refs_types::Request,
+    pub client_id: crate::lsp_prot::ClientId,
+    pub references_to_lsp_response: FindRefResponseTransformer,
 }
 
 struct RecheckMsg {
@@ -170,21 +167,33 @@ pub fn push_files_to_force_focused_and_recheck(files: BTreeSet<String>) {
     });
 }
 
-pub fn push_global_find_ref_request(def_locs: Vec<Loc>, find_ref_command: FindRefCommand) {
+pub fn push_global_find_ref_request(
+    def_locs: Vec<Loc>,
+    request: flow_services_references::find_refs_types::Request,
+    client_id: crate::lsp_prot::ClientId,
+    references_to_lsp_response: FindRefResponseTransformer,
+) {
     push_recheck_msg(RecheckFiles::GlobalFindRef {
         def_locs,
-        find_ref_command,
+        find_ref_command: FindRefCommand {
+            request,
+            client_id,
+            references_to_lsp_response,
+        },
     });
 }
 
 /// Triggers a recheck of `files`.
 /// Call this immediately after a lazy init, where `files` are the files
 /// changed since mergebase.
-pub fn push_lazy_init(files: BTreeSet<String>) {
-    push_recheck_msg(RecheckFiles::FilesToForceFocusedAndRecheck {
-        files,
-        skip_incompatible: true,
-    });
+pub fn push_lazy_init(metadata: Option<FileWatcherMetadata>, files: BTreeSet<String>) {
+    push_recheck_msg_with_metadata(
+        metadata,
+        RecheckFiles::FilesToForceFocusedAndRecheck {
+            files,
+            skip_incompatible: true,
+        },
+    );
 }
 
 pub fn push_dependencies_to_prioritize(dependencies: FlowOrdSet<FileKey>) {
@@ -208,6 +217,10 @@ pub fn push_after_reinit(
 
 pub fn pop_next_workload() -> Option<WorkloadHandler> {
     WORKLOAD_STREAM.pop()
+}
+
+pub fn wait_for_workload() {
+    WORKLOAD_STREAM.wait_for_workload()
 }
 
 pub fn pop_next_parallelizable_workload() -> Option<ParallelizableWorkload> {
@@ -620,12 +633,18 @@ pub fn wait_for_updates_for_recheck(
 
 /// Block until any stream receives something
 pub fn wait_for_anything(
-    _process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
-    _get_forced: &dyn Fn() -> CheckedSet,
+    process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
+    get_forced: &dyn Fn() -> CheckedSet,
 ) {
-    crossbeam::channel::select! {
-        recv(WORKLOAD_NOTIFY.1) -> _ => {}
-        recv(ENV_UPDATE_NOTIFY.1) -> _ => {}
-        recv(RECHECK_NOTIFY.1) -> _ => {}
+    loop {
+        crossbeam::channel::select! {
+            recv(WORKLOAD_NOTIFY.1) -> _ => return,
+            recv(ENV_UPDATE_NOTIFY.1) -> _ => return,
+            recv(RECHECK_NOTIFY.1) -> _ => {
+                if recheck_fetch(process_updates, get_forced, Priority::Normal) {
+                    return;
+                }
+            }
+        }
     }
 }

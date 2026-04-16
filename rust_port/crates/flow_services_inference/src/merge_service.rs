@@ -11,6 +11,7 @@ use std::cell::OnceCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -41,6 +42,7 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
+use flow_server_files::server_files_js;
 use flow_services_coverage::FileCoverage;
 use flow_services_coverage::file_coverage;
 use flow_type_sig::compact_table::Index;
@@ -79,6 +81,23 @@ pub struct SigOptsData {
 }
 
 pub type MergeResults<A> = (Vec<A>, SigOptsData);
+
+fn append_to_server_log(options: &Options, message: &str) {
+    let log_file = std::env::var("FLOW_LOG_FILE").unwrap_or_else(|_| {
+        server_files_js::log_file(
+            &options.flowconfig_name,
+            options.temp_dir.as_str(),
+            options.root.as_path(),
+        )
+    });
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_file)
+    {
+        let _ = writeln!(file, "{}", message);
+    }
+}
 
 pub fn sig_hash(
     check_dirty_set: bool,
@@ -972,6 +991,7 @@ where
         components,
         recheck_set,
     ));
+    stream.update_server_status();
 
     let stream_ref = stream.dupe();
     let stream_merge = stream.dupe();
@@ -994,8 +1014,11 @@ where
     let total_files = stream.total_files();
     let skipped_count = stream.skipped_count();
     let sig_new_or_changed = stream.sig_new_or_changed();
+    let message = format!("Merge skipped {} of {} modules", skipped_count, total_files);
 
-    eprintln!("Merge skipped {} of {} modules", skipped_count, total_files);
+    eprintln!("{}", message);
+    log::info!("{}", message);
+    append_to_server_log(options, &message);
 
     (
         results,

@@ -26,6 +26,13 @@ use crate::parse_error::ParseError;
 pub struct Config {
     pub include_locs: bool,
     pub include_filename: bool,
+    pub offset_style: OffsetStyle,
+}
+
+#[derive(Clone, Copy)]
+pub enum OffsetStyle {
+    Utf8Bytes,
+    JsIndices,
 }
 
 fn loc_and_range(

@@ -1197,7 +1197,7 @@ pub fn imaginary_realpath(path: &str) -> String {
         let prefix = Path::new(path)
             .parent()
             .map(|p| p.to_string_lossy().into_owned())
-            .unwrap_or_default();
+            .unwrap_or_else(|| ".".to_string());
         // Sys.file_exists should always return true for / and for . so we should never get into
         // infinite recursion. Let's assert that
         assert!(prefix != path);

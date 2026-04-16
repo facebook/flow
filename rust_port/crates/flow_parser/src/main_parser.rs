@@ -673,6 +673,7 @@ pub fn parse_to_json(
         &estree_translator::Config {
             include_locs: true,
             include_filename: true,
+            offset_style: estree_translator::OffsetStyle::JsIndices,
         },
         &ast,
     );
