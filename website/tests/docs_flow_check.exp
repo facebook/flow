@@ -472,6 +472,9 @@ No errors!
 No errors!
 
 === enums/using-enums.md block 22 ===
+No errors!
+
+=== enums/using-enums.md block 23 ===
 Error ---------------------------------------------------------------------------------------------------------- -:13:20
 
 Cannot assign `o[LegacyStatus.Active]` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -492,7 +495,7 @@ References:
 
 Found 1 error
 
-=== enums/using-enums.md block 23 ===
+=== enums/using-enums.md block 24 ===
 No errors!
 
 === errors/index.md block 1 ===
@@ -1683,6 +1686,28 @@ No errors!
 === lang/variance.md block 7 ===
 No errors!
 
+=== lang/variance.md block 8 ===
+Error ----------------------------------------------------------------------------------------------------------- -:8:15
+
+Cannot call `takesCallback` with `acceptsExact` bound to `cb` because in the first parameter: inexact `Inexact` [1] is
+incompatible with exact `Exact` [2]. [incompatible-exact]
+
+   -:8:15
+   8| takesCallback(acceptsExact); // Error!
+                    ^^^^^^^^^^^^
+
+References:
+   -:6:43
+   6| declare function takesCallback(cb: (item: Inexact) => void): void;
+                                                ^^^^^^^ [1]
+   -:5:37
+   5| declare function acceptsExact(item: Exact): void;
+                                          ^^^^^ [2]
+
+
+
+Found 1 error
+
 === libdefs/creation.md block 1 ===
 No errors!
 
@@ -2657,6 +2682,9 @@ References:
 
 
 Found 4 errors
+
+=== react/render-types.md block 12 ===
+No errors!
 
 === react/types.md block 1 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
@@ -4811,6 +4839,35 @@ References:
 Found 1 error
 
 === types/maybe.md block 2 ===
+Error ------------------------------------------------------------------------------------------------------------ -:8:1
+
+Cannot call `acceptsNull` because: [incompatible-type]
+ - Either undefined [1] is incompatible with null [2].
+ - Or undefined [1] is incompatible with number [3].
+
+   -:8:1
+   8| acceptsNull();     // Error! Argument is required.
+      ^^^^^^^^^^^
+
+References:
+   -:8:1
+   8| acceptsNull();     // Error! Argument is required.
+      ^^^^^^^^^^^^^ [1]
+   -:2:38
+   2| function acceptsNull(value: number | null) {
+                                           ^^^^ [2]
+   -:2:29
+   2| function acceptsNull(value: number | null) {
+                                  ^^^^^^ [3]
+
+
+
+Found 1 error
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
+
+=== types/maybe.md block 3 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:18
 
 Cannot call `acceptsMaybeProp` with object literal bound to the first parameter because property `value` is missing in
@@ -4829,13 +4886,13 @@ References:
 
 Found 1 error
 
-=== types/maybe.md block 3 ===
-No errors!
-
 === types/maybe.md block 4 ===
 No errors!
 
 === types/maybe.md block 5 ===
+No errors!
+
+=== types/maybe.md block 6 ===
 No errors!
 
 === types/mixed.md block 1 ===
@@ -5329,6 +5386,36 @@ No errors!
 No errors!
 
 === types/objects.md block 36 ===
+No errors!
+
+=== types/objects.md block 37 ===
+Error ------------------------------------------------------------------------------------------------------------ -:5:5
+
+Cannot access object literal [1] with computed property using string [2]. [invalid-computed-prop]
+
+   -:5:5
+   5| obj[key]; // Error! Can't use string to index into an object with known keys.
+          ^^^
+
+References:
+   -:2:13
+   2| const obj = {a: 1, b: 2};
+                  ^^^^^^^^^^^^ [1]
+   -:4:12
+   4| const key: string = "a";
+                 ^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== types/objects.md block 38 ===
+No errors!
+
+=== types/objects.md block 39 ===
+No errors!
+
+=== types/objects.md block 40 ===
 No errors!
 
 === types/opaque-types.md block 1 ===
@@ -6843,6 +6930,30 @@ Found 2 errors
 No errors!
 
 === types/unions.md block 10 ===
+Error ----------------------------------------------------------------------------------------------------------- -:12:5
+
+Cannot cast `payload` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:5
+   12|     payload as string; // Error! payload is still PayloadMap[T]
+           ^^^^^^^
+
+References:
+   -:4:9
+    4|   PONG: number,
+               ^^^^^^ [1]
+   -:12:16
+   12|     payload as string; // Error! payload is still PayloadMap[T]
+                      ^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== types/unions.md block 11 ===
+No errors!
+
+=== types/unions.md block 12 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:37
 
 Cannot get `response.value` because property `value` is missing in `Failed` [1]. [prop-missing]
@@ -6860,16 +6971,16 @@ References:
 
 Found 1 error
 
-=== types/unions.md block 11 ===
-No errors!
-
-=== types/unions.md block 12 ===
-No errors!
-
 === types/unions.md block 13 ===
 No errors!
 
 === types/unions.md block 14 ===
+No errors!
+
+=== types/unions.md block 15 ===
+No errors!
+
+=== types/unions.md block 16 ===
 Error ----------------------------------------------------------------------------------------------------------- -:17:1
 
 Cannot call `prettyPrint` because: [incompatible-type]

@@ -141,3 +141,25 @@ In other words, `ContravariantOf<City>` is a subtype of `ContravariantOf<SanFran
 `ContravariantOf<Noun>`.
 This is because it is fine to write `SanFrancisco` into a property that can have any `City` written
 to, but it is not safe to write just any `Noun`.
+
+### Function parameter contravariance {#toc-function-parameter-contravariance}
+
+Function parameters are always in an input (contravariant) position. This means a function that accepts
+a more specific type cannot substitute for one that accepts a more general type. This commonly
+surprises people when passing callbacks with exact object types:
+
+```js flow-check
+type Exact = {foo: string};
+type Inexact = {foo: string, ...};
+
+declare function acceptsExact(item: Exact): void;
+declare function takesCallback(cb: (item: Inexact) => void): void;
+
+takesCallback(acceptsExact); // Error!
+```
+
+This error occurs because `takesCallback` may call `cb` with an object that has extra properties
+(since `Inexact` allows them). The callback `acceptsExact` only accepts objects with exactly `{foo: string}`,
+so passing an inexact object to it would be unsound. Even though passing an exact object *directly*
+to a function expecting an inexact one works (an exact type is a subtype of a compatible inexact type),
+the function types are flipped due to contravariance.

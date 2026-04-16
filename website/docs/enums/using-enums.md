@@ -564,7 +564,7 @@ const counts = new Map<Status, number>([
 const activeCount: Status | void = counts.get(Status.Active);
 ```
 
-Flow Enums cannot be used as keys in object literals, as [explained later on this page](#toc-distinct-object-keys).
+You can use enum members as computed keys in object literals if you type the object with an [indexer type](../../types/objects/#toc-objects-as-maps), as [explained later on this page](#toc-enum-members-as-distinct-object-keys).
 
 
 ### Enums in a union {#toc-enums-in-a-union}
@@ -761,10 +761,26 @@ Enums are designed to cover many use cases and exhibit certain benefits. The des
 these trade-offs might not be right for you. In these cases, you can continue to use existing patterns to satisfy your use cases.
 
 
-#### Distinct object keys {#toc-distinct-object-keys}
-You can’t use enum members as distinct object keys.
+#### Enum members as distinct object keys {#toc-enum-members-as-distinct-object-keys}
+You can use enum members as computed property keys in object literals. The resulting object is typed with an indexer type `{[E]: T}`:
 
-The following pattern works because the types of `LegacyStatus.Active` and `LegacyStatus.Off` are different. One has the type `'Active'` and one has the type `'Off'`.
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+
+const o = {
+  [Status.Active]: 0,
+};
+
+o as {[Status]: number}; // OK
+o[Status.Active] as number; // OK
+o[Status.Paused] = 1; // OK
+```
+
+However, you can't use enum members as **distinct** object keys that each map to a different value type. With legacy frozen-object patterns, each key has a distinct literal type, so Flow can track which key maps to which value:
 
 ```js flow-check
 const LegacyStatus = Object.freeze({
@@ -780,9 +796,10 @@ const x: string = o[LegacyStatus.Active]; // OK
 const y: number = o[LegacyStatus.Off]; // OK
 const z: boolean = o[LegacyStatus.Active]; // Error - as expected
 ```
-We can’t use the same pattern with enums. All enum members have the same type, the enum type, so Flow can’t track the relationship between keys and values.
 
-If you wish to map from an enum value to another value, you should use a [function with an exhaustively-checked switch instead](#toc-mapping-enums-to-other-values).
+This works because `LegacyStatus.Active` has the literal type `'Active'` and `LegacyStatus.Off` has the literal type `'Off'`. With Flow Enums, all members share the same enum type, so Flow can't distinguish between keys — the object can only have a single value type for all enum keys (via the indexer `{[E]: T}`).
+
+If you need to map each enum member to a different value type, use a [function with an exhaustively-checked switch instead](#toc-mapping-enums-to-other-values).
 
 
 #### Disjoint object unions {#toc-disjoint-object-unions}

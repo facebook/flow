@@ -300,3 +300,34 @@ rendersMaybeHeader as renders Header; // ERROR
 rendersHeaderList as renders Header; // ERROR
 rendersHeaderList as renders? Header; // ERROR
 ```
+
+## Common Issues
+
+### Render types are opaque at runtime {#toc-render-types-opaque-at-runtime}
+
+Render types are a type-only concept — you cannot inspect or compare component types at runtime. For example, you cannot check which component was passed to a render-typed prop:
+
+```js
+// This does NOT work — you can't compare component identity at runtime
+if (icon === FancyIcon) { ... }
+```
+
+If you need to distinguish between different rendered components at runtime, use a [disjoint union](../../types/unions/#toc-disjoint-object-unions) wrapper instead:
+
+```js flow-check
+import * as React from 'react';
+
+component FancyIcon() { return <span />; }
+component BasicIcon() { return <span />; }
+
+type IconProp =
+  | {type: 'fancy', node: renders FancyIcon}
+  | {type: 'basic', node: renders BasicIcon};
+
+component Layout(icon: IconProp) {
+  if (icon.type === 'fancy') {
+    icon.node as renders FancyIcon; // Works!
+  }
+  return <div>{icon.node}</div>;
+}
+```

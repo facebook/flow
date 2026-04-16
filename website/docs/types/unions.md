@@ -194,6 +194,40 @@ In order to use this pattern, there must be a key that is in every object in you
 and every object must set a different [literal type](../literals) for that key (in our example, the string `'success'`, and the string `'error'`).
 You can use any kind of literal type, including numbers and booleans.
 
+### Disjoint unions with generic types {#toc-disjoint-unions-with-generic-types}
+
+Disjoint union refinement requires the discriminant property to have a literal type. When the discriminant comes from a generic type parameter, Flow cannot narrow the union because the generic hasn't been resolved to a specific literal yet:
+
+```js flow-check
+type PayloadMap = {
+  PING: string,
+  PONG: number,
+};
+
+function handle<T: keyof PayloadMap>(
+  type: T,
+  payload: PayloadMap[T],
+) {
+  if (type === 'PING') {
+    payload as string; // Error! payload is still PayloadMap[T]
+  }
+}
+```
+
+To work around this, restructure the code so the discriminant is a concrete literal type. For example, use a disjoint union directly:
+
+```js flow-check
+type Message =
+  | {type: 'PING', payload: string}
+  | {type: 'PONG', payload: number};
+
+function handle(message: Message) {
+  if (message.type === 'PING') {
+    message.payload as string; // Works!
+  }
+}
+```
+
 ### Disjoint object unions with exact types {#toc-disjoint-unions-with-exact-types}
 
 Disjoint unions require you to use a single property to distinguish each object

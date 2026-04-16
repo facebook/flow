@@ -513,3 +513,68 @@ func({a: 1, b: "foo"}); // Works!
 
 The type `Object` is just an alias for [`any`](../any), and is unsafe.
 You can ban its use in your code with the [unclear-type lint](../../linting/rule-reference/#toc-unclear-type).
+
+## Common Issues
+
+### Computed property access (`invalid-computed-prop`) {#toc-invalid-computed-prop}
+
+Flow raises an `invalid-computed-prop` error when you use a computed key to access an object that doesn't have an [indexer type](#toc-objects-as-maps). Flow needs to know the exact set of keys at the type level, so arbitrary computed access on regular object types is not allowed:
+
+```js flow-check
+const obj = {a: 1, b: 2};
+
+const key: string = "a";
+obj[key]; // Error! Can't use string to index into an object with known keys.
+```
+
+To fix this, you have a few options:
+
+**Use `keyof typeof` to narrow the key type** when you know the key is valid:
+
+```js flow-check
+const obj = {a: 1, b: 2};
+
+function getVal(key: keyof typeof obj): number {
+  return obj[key]; // Works!
+}
+```
+
+**Use an indexer type** when the object is meant to be used as a dictionary:
+
+```js flow-check
+const obj: {[string]: number} = {a: 1, b: 2};
+
+const key: string = "a";
+obj[key]; // Works!
+```
+
+### Exponential type spread {#toc-exponential-type-spread}
+
+When you spread multiple conditional expressions into an object, Flow computes all possible combinations, which can grow exponentially. This causes an error when it exceeds Flow's limit:
+
+```js
+// Each conditional spread doubles the number of possible types
+const obj = {
+  ...cond1 ? {a: 1} : {},
+  ...cond2 ? {b: 2} : {},
+  ...cond3 ? {c: 3} : {},
+  // Flow must consider 2^3 = 8 possible object types
+};
+```
+
+To fix this, annotate intermediate variables with a single type that covers all possibilities using optional properties:
+
+```js flow-check
+type Flags = {
+  a?: number,
+  b?: number,
+  c?: number,
+};
+
+declare const cond1: boolean;
+declare const cond2: boolean;
+
+const flags1: Flags = cond1 ? {a: 1} : {};
+const flags2: Flags = cond2 ? {b: 2} : {};
+const obj: Flags = {...flags1, ...flags2};
+```

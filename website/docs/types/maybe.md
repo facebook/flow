@@ -21,6 +21,20 @@ acceptsMaybeNumber(null);      // Works!
 acceptsMaybeNumber("42");      // Error!
 ```
 
+### Maybe types as function parameters
+
+Because `?T` includes `void`, using it as a function parameter type makes the argument implicitly optional — callers can omit it entirely. If you want to require callers to always pass an argument while still accepting `null`, use `T | null` instead:
+
+```js flow-check
+function acceptsNull(value: number | null) {
+  // ...
+}
+
+acceptsNull(42);   // Works!
+acceptsNull(null); // Works!
+acceptsNull();     // Error! Argument is required.
+```
+
 In the case of objects, a **missing** property is not the same thing as an explicitly `undefined` property.
 
 ```js flow-check
@@ -32,7 +46,7 @@ acceptsMaybeProp({value: undefined}); // Works!
 acceptsMaybeProp({});                 // Error!
 ```
 
-If you want to allow missing properties, use [optional property](../objects/#toc-optional-object-type-properties) syntax, where the `?` is placed _before_ the colon.
+If you want to allow missing properties, use the [optional property](../objects/#toc-optional-object-type-properties) syntax, where the `?` is placed _before_ the colon.
 It is also possible to combine both syntaxes for an optional maybe type, for example `{value?: ?number}`.
 
 
