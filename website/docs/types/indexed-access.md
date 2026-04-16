@@ -1,6 +1,7 @@
 ---
 title: Indexed Access Types
 slug: /types/indexed-access
+description: "How to use indexed access types to extract a property type from an object, array, or tuple type."
 ---
 
 Flow’s Indexed Access Types allow you to get the type of a property from an [object](../objects), [array](../arrays), or [tuple](../tuples) type.

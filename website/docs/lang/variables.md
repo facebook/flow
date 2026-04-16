@@ -1,6 +1,7 @@
 ---
 title: Variable Declarations
 slug: /lang/variables
+description: "How Flow types var, let, and const variable declarations, including reassignment behavior."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

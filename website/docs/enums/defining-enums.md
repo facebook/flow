@@ -1,6 +1,7 @@
 ---
 title: Defining enums
 slug: /enums/defining-enums
+description: "How to define Flow Enums, including string, number, boolean, bigint, and symbol member types."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

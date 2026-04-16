@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [version]
 slug: /config/version
+description: "Pin your project to a specific Flow version using the .flowconfig [version] section."
 ---
 
 You can specify in the `.flowconfig` which version of Flow you expect to use.

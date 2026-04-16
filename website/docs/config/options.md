@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [options]
 slug: /config/options
+description: "Reference for all available .flowconfig [options] settings, including type checking behavior, module resolution, and more."
 ---
 
 import {SinceVersion, UntilVersion} from '../../components/VersionTags';

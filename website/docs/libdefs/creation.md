@@ -1,6 +1,7 @@
 ---
 title: Creating Library Definitions
 slug: /libdefs/creation
+description: "How to create your own library definitions for third-party code, including declare syntax for modules, classes, and functions."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

@@ -1,6 +1,7 @@
 ---
 title: Vim
 slug: /editors/vim
+description: "Set up Flow integration in Vim and NeoVim via the Language Server Protocol."
 ---
 
 Flow's editor integration is primarily via the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). There are [many vim LSP clients](https://microsoft.github.io/language-server-protocol/implementors/tools/) to choose from, such as [ALE](#toc-ale).

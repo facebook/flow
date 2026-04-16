@@ -1,6 +1,7 @@
 ---
 title: Migrating from legacy patterns
 slug: /enums/migrating-legacy-patterns
+description: "How to migrate from legacy JavaScript enum patterns like Object.freeze to Flow Enums."
 ---
 
 Learn how to migrate to Flow Enums from legacy JavaScript enum patterns like `Object.freeze`.

@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [libs]
 slug: /config/libs
+description: "Configure which library definition files Flow should use when type checking your code."
 ---
 
 The `[libs]` section in a `.flowconfig` file tells Flow to include the

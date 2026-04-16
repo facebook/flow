@@ -1,6 +1,7 @@
 ---
 title: Lint Rule Reference
 slug: /linting/rule-reference
+description: "Reference for all available Flow lint rules, including ambiguous-object-type, sketchy-null, unclear-type, and more."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

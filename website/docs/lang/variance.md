@@ -1,6 +1,7 @@
 ---
 title: Type Variance
 slug: /lang/variance
+description: "How type variance (covariance, contravariance, invariance) works in Flow's type system."
 ---
 
 Variance is a topic that comes up fairly often in type systems. It is used to determine

@@ -1,6 +1,7 @@
 ---
 title: Nominal & Structural Typing
 slug: /lang/nominal-structural
+description: "How Flow uses nominal typing for classes and structural typing for objects and interfaces."
 ---
 
 A static type checker can use either the name (nominal typing) or the structure (structural typing)

@@ -1,6 +1,7 @@
 ---
 title: Empty
 slug: /types/empty
+description: "How the empty (bottom) type works in Flow, representing a type with no values that is a subtype of all other types."
 ---
 
 The `empty` type has no values. It is the [subtype of all other types](../../lang/type-hierarchy) (i.e. the [bottom type](https://en.wikipedia.org/wiki/Bottom_type)).

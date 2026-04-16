@@ -1,6 +1,7 @@
 ---
 title: Component Types
 slug: /react/component-types
+description: "How to use Component Types to describe the type of a React component, useful for library definitions and higher-order components."
 ---
 :::info
 Component Types are only available in Flow v0.243.0+. If you are on an older version, please use [React.AbstractComponent](../types#toc-react-abstractcomponent)

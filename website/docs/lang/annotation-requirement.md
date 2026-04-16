@@ -1,6 +1,7 @@
 ---
 title: Annotation Requirement
 slug: /lang/annotation-requirement
+description: "Understand when Flow requires explicit type annotations under Local Type Inference and when types can be inferred automatically."
 ---
 
 > **Note:** As of version 0.199 Flow uses [Local Type Inference](https://medium.com/flow-type/local-type-inference-for-flow-aaa65d071347) as its inference algorithm.

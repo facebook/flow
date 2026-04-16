@@ -1,6 +1,7 @@
 ---
 title: Maybe Types
 slug: /types/maybe
+description: "How to use maybe types (?T) in Flow to represent values that can be null or undefined."
 ---
 
 You can prefix a type with `?` to make it a [union](../unions) with `null` and `void`:

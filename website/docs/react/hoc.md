@@ -1,6 +1,7 @@
 ---
 title: Higher-order Components
 slug: /react/hoc
+description: "How to type React higher-order components in Flow using Component Types."
 ---
 
 :::danger

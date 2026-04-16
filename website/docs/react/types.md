@@ -1,6 +1,7 @@
 ---
 title: Type Reference
 slug: /react/types
+description: "Reference for all React utility types exported by Flow, including React.Node, React.Element, React.MixedElement, and more."
 ---
 
 import {SinceVersion, UntilVersion} from '../../components/VersionTags';

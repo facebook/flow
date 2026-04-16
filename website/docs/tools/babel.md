@@ -1,6 +1,7 @@
 ---
 title: Babel
 slug: /tools/babel
+description: "How to set up Babel to strip Flow type annotations from your code."
 ---
 
 Flow and [Babel](http://babeljs.io/) are designed to work great together. It

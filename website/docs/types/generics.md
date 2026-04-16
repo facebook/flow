@@ -1,6 +1,7 @@
 ---
 title: Generics
 slug: /types/generics
+description: "How to use generic (polymorphic) types in Flow to write reusable, type-safe functions, classes, and type aliases."
 ---
 
 Generics (sometimes referred to as polymorphic types) are a way of abstracting

@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [declarations]
 slug: /config/declarations
+description: "Configure Flow to parse third-party library files in declaration mode, extracting type signatures without typechecking their contents."
 ---
 
 Often third-party libraries have broken type definitions or have type

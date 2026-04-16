@@ -1,6 +1,7 @@
 ---
 title: Prettier
 slug: /tools/prettier
+description: "How to set up Prettier to format Flow-typed JavaScript code, including support for the latest Flow features."
 ---
 
 All Flow features are supported by [Prettier](https://prettier.io/).

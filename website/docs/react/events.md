@@ -1,6 +1,7 @@
 ---
 title: Event Handling
 slug: /react/events
+description: "How to type React event handlers and synthetic events in Flow."
 ---
 
 The [React docs for handling events](https://react.dev/learn/responding-to-events) show how an event handler can be attached to

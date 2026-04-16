@@ -1,6 +1,7 @@
 ---
 title: Function/Class Components
 slug: /react/function-and-class-components
+description: "Legacy patterns for typing React function and class components in Flow, including props, default props, and state."
 ---
 
 :::danger

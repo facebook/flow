@@ -1,6 +1,7 @@
 ---
 title: Functions
 slug: /types/functions
+description: "How to type functions in Flow, including parameters, return types, rest parameters, generics, and callable objects."
 ---
 
 Functions have two places where types are applied: parameters (input) and the return value (output).

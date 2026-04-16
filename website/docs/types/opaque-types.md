@@ -1,6 +1,7 @@
 ---
 title: Opaque Type Aliases
 slug: /types/opaque-types
+description: "How to use opaque type aliases in Flow to hide the underlying type representation outside of the defining module."
 ---
 
 Opaque type aliases are type aliases that do not allow access to their

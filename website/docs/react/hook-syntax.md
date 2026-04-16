@@ -1,6 +1,7 @@
 ---
 title: Hook Syntax
 slug: /react/hook-syntax
+description: "How to use Flow's hook syntax for first-class React hook declarations with built-in Rules of React enforcement."
 ---
 
 Hook Syntax is first-class syntax and typechecking support for React hooks, bringing hooks into

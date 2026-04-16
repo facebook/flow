@@ -1,6 +1,7 @@
 ---
 title: Flowlint Comments
 slug: /linting/flowlint-comments
+description: "Control lint rule severity within a file using flowlint, flowlint-line, and flowlint-next-line comments."
 ---
 
 You can use `flowlint` comments to specify more granular lint settings within a file.

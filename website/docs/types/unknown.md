@@ -1,6 +1,7 @@
 ---
 title: Unknown
 slug: /types/unknown
+description: "How the unknown type works in Flow as the safe supertype of all types, requiring refinement before use."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

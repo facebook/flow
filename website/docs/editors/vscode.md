@@ -1,6 +1,7 @@
 ---
 title: Visual Studio Code
 slug: /editors/vscode
+description: "Set up Flow integration in Visual Studio Code using the Flow Language Support extension."
 ---
 
 ![Screenshot of Flow Language Support](/img/flow_for_vscode.gif)

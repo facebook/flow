@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [untyped]
 slug: /config/untyped
+description: "Configure Flow to skip typechecking for files matching specified patterns while still allowing them to be imported as the any type."
 ---
 
 The `[untyped]` section in a `.flowconfig` file tells Flow to not typecheck files

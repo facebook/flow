@@ -1,6 +1,7 @@
 ---
 title: Emacs
 slug: /editors/emacs
+description: "Set up Flow integration in Emacs using flow-for-emacs."
 ---
 
 ### flow-for-emacs {#toc-flow-for-emacs}

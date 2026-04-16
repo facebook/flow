@@ -1,6 +1,7 @@
 ---
 title: Module Types
 slug: /types/modules
+description: "How to import and export Flow types between modules, including type-only imports and CommonJS support."
 ---
 
 ## Importing and exporting types {#toc-importing-and-exporting-types}

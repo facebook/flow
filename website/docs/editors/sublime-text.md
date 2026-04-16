@@ -1,6 +1,7 @@
 ---
 title: Sublime Text
 slug: /editors/sublime-text
+description: "Set up Flow integration in Sublime Text 2 and 3."
 ---
 
 ### Flow For Sublime Text 2 and 3 {#toc-flow-for-sublime-text-2-and-3}

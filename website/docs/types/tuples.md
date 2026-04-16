@@ -1,6 +1,7 @@
 ---
 title: Tuples
 slug: /types/tuples
+description: "How to type tuples in Flow, including labeled elements, optional elements, variance, and spread syntax."
 ---
 
 Tuple types represent a **fixed length** list, where the elements can have **different types**.

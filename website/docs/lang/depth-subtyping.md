@@ -1,6 +1,7 @@
 ---
 title: Object Subtyping
 slug: /lang/object-subtyping
+description: "How Flow handles subtyping for objects, including depth subtyping with read-only properties and width subtyping."
 ---
 
 ## Depth Subtyping {#toc-depth-subtyping}

@@ -1,6 +1,7 @@
 ---
 title: Component Syntax
 slug: /react/component-syntax
+description: "How to use Flow's component syntax to declare React components with built-in type system support for props, refs, and render types."
 ---
 
 [Components](https://react.dev/learn/your-first-component) are the foundation for building UIs in React. While components are typically expressed using JavaScript functions, Component Syntax provides component primitive values that provide several advantages over function components, like:

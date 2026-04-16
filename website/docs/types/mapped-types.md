@@ -1,6 +1,7 @@
 ---
 title: Mapped Types
 slug: /types/mapped-types
+description: "How to use mapped types in Flow to transform object types or tuple types by iterating over their keys."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

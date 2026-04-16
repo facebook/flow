@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [include]
 slug: /config/include
+description: "Configure which files and directories Flow should include for type checking beyond the project root."
 ---
 
 The `[include]` section in a `.flowconfig` file tells Flow to include the

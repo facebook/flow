@@ -1,6 +1,7 @@
 ---
 title: Render Types
 slug: /react/render-types
+description: "How to use render types to constrain what a React component can render, enforcing composition rules at the type level."
 ---
 Some component libraries or design systems may want to restrict how components may be composed.
 For example, a Menu should only ever render MenuItems as children. Render types are a built-in way to support

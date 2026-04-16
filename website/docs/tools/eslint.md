@@ -1,6 +1,7 @@
 ---
 title: ESLint
 slug: /tools/eslint
+description: "How to set up ESLint with hermes-eslint to lint Flow-typed JavaScript code."
 ---
 
 ESLint is a static analysis tool which can help you quickly find and

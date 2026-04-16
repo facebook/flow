@@ -1,6 +1,7 @@
 ---
 title: Utility Types
 slug: /types/utilities
+description: "Reference for Flow's built-in utility types: keyof, Partial, Required, Readonly, Pick, Omit, Exclude, Extract, and more."
 ---
 
 import {SinceVersion, UntilVersion} from '../../components/VersionTags';

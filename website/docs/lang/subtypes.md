@@ -1,6 +1,7 @@
 ---
 title: Subsets & Subtypes
 slug: /lang/subtypes
+description: "How subtypes and supertypes work in Flow's type system, including implicit and explicit subtyping relationships."
 ---
 
 ## What is a subtype? {#toc-what-is-a-subtype}

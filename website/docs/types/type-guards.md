@@ -1,6 +1,7 @@
 ---
 title: Type Guards
 slug: /types/type-guards
+description: "How to write type guard functions in Flow to create custom type predicates for use in refinements."
 ---
 
 Flow lets you define functions whose return expression encodes some type predicate over a parameter `param`. This predicate is annotated in place of a return type annotation as `param is PredicateType`. It declares that if the function returns `true` then `param` is of type `PredicateType`.

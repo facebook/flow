@@ -1,6 +1,7 @@
 ---
 title: Type Refinements
 slug: /lang/refinements
+description: "How Flow narrows types based on conditional checks, typeof, equality, and other runtime tests."
 ---
 
 Refinements allow us to narrow the type of a value based on conditional tests.

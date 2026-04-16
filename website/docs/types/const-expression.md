@@ -1,6 +1,7 @@
 ---
 title: Const Expressions
 slug: /types/const-expression
+description: "How to use as const to create const-expressions that infer literal and read-only types in Flow."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

@@ -1,6 +1,7 @@
 ---
 title: Strict ES Module Import/Export Lints
 slug: /linting/strict-import-export-lints
+description: "Lint rules that enforce stricter ES module import and export usage, requiring the experimental.strict_es6_import_export option."
 ---
 
 These lint rules enforce stricter usage of ES module `import` and `export` syntax. They all require the [`experimental.strict_es6_import_export`](../../config/options/#toc-experimental-strict-es6-import-export) option to be set to `true` in your `.flowconfig`.

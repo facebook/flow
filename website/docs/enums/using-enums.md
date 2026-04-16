@@ -1,6 +1,7 @@
 ---
 title: Using enums
 slug: /enums/using-enums
+description: "How to use Flow Enums: accessing members, using as type annotations, exhaustive checking, methods, and more."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

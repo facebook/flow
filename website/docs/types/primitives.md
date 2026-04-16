@@ -1,6 +1,7 @@
 ---
 title: Primitive Types
 slug: /types/primitives
+description: "Reference for Flow's primitive types: boolean, string, number, null, void, symbol, and bigint."
 ---
 
 JavaScript has a number of different primitive types

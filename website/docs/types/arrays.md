@@ -1,6 +1,7 @@
 ---
 title: Arrays
 slug: /types/arrays
+description: "How to type arrays in Flow, including Array<T> syntax, read-only arrays, and array utility types."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

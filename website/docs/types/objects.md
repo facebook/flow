@@ -1,6 +1,7 @@
 ---
 title: Objects
 slug: /types/objects
+description: "How to type objects in Flow: exact vs inexact types, optional and read-only properties, indexers, object spread, and more."
 ---
 
 Objects can be used in many different ways in JavaScript.

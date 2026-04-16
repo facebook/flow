@@ -1,6 +1,7 @@
 ---
 title: Intersections
 slug: /types/intersections
+description: "How to use intersection types in Flow to combine multiple types."
 ---
 
 Sometimes it is useful to create a type which is ***all of*** a set of other

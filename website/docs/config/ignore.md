@@ -1,6 +1,7 @@
 ---
 title: .flowconfig [ignore]
 slug: /config/ignore
+description: "Configure Flow to ignore files matching specified regular expressions when type checking your code."
 ---
 
 The `[ignore]` section in a `.flowconfig` file tells Flow to ignore files

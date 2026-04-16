@@ -1,6 +1,7 @@
 ---
 title: Ref Functions
 slug: /react/refs
+description: "How to type React refs in Flow, including useRef and callback refs."
 ---
 
 React allows you to grab the instance of an element or component with [refs](https://react.dev/learn/manipulating-the-dom-with-refs).

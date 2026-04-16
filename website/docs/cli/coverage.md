@@ -1,6 +1,7 @@
 ---
 title: Flow Coverage
 slug: /cli/coverage
+description: "Measure how much of your code is covered by Flow's type checking, based on the presence of the any type in inferred expressions."
 ---
 The coverage command provides a metric of the amount of checking that Flow has
 performed on each part of your code. A program with high Flow coverage should

@@ -1,6 +1,7 @@
 ---
 title: Unions
 slug: /types/unions
+description: "How to use union types in Flow to represent values that can be one of several different types."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

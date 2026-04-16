@@ -1,6 +1,7 @@
 ---
 title: Type Casting Expressions
 slug: /types/casting
+description: "How to use type cast expressions in Flow to assert types using the as keyword."
 ---
 
 Sometimes it is useful to assert a type without using something like a function

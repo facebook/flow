@@ -1,6 +1,7 @@
 ---
 title: WebStorm
 slug: /editors/webstorm
+description: "Set up Flow integration in WebStorm."
 ---
 
 WebStorm installation instructions can be found here:

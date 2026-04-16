@@ -1,6 +1,7 @@
 ---
 title: Apply Code Action
 slug: /cli/apply-code-action
+description: "Apply LSP code actions like autofixes and code transformations from the command line, useful for scripting and batch-fixing."
 ---
 
 The `apply-code-action` command exposes LSP code actions via the CLI, allowing you to apply autofixes and code transformations without an editor. This is useful for scripting, CI pipelines, or batch-fixing files from the command line.

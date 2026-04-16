@@ -1,6 +1,7 @@
 ---
 title: Mixed
 slug: /types/mixed
+description: "How the mixed type works in Flow as the supertype of all types, now replaced by unknown since Flow v0.290."
 ---
 
 import {SinceVersion} from '../../components/VersionTags';

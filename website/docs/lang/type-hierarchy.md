@@ -1,6 +1,7 @@
 ---
 title: Type Hierarchy
 slug: /lang/type-hierarchy
+description: "A visual overview of Flow's type hierarchy showing the subtyping relationships between all built-in types."
 ---
 
 Types in Flow form a hierarchy based on [subtyping](../subtypes):

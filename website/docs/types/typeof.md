@@ -1,6 +1,7 @@
 ---
 title: Typeof Types
 slug: /types/typeof
+description: "How to use typeof types in Flow to extract the type of a value at the type level."
 ---
 
 JavaScript has a `typeof` operator which returns a string describing a value.

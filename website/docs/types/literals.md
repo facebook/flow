@@ -1,6 +1,7 @@
 ---
 title: Literal Types
 slug: /types/literals
+description: "How to use literal types in Flow to restrict values to specific strings, numbers, booleans, or bigints."
 ---
 
 Flow has [primitive types](../primitives) for

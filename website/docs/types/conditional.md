@@ -1,6 +1,7 @@
 ---
 title: Conditional Types
 slug: /types/conditional
+description: "How to use conditional types in Flow to choose between two output types based on a type-level condition."
 ---
 
 Flow's conditional type allows you to conditionally choose between two different output types by inspecting an input type. It is useful to extract parts of a type, or to describe a complex overload.

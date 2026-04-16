@@ -1,6 +1,7 @@
 ---
 title: Type Aliases
 slug: /types/aliases
+description: "How to create reusable type aliases in Flow to name complex types and use them throughout your code."
 ---
 
 When you have complicated types that you want to reuse in multiple places, you

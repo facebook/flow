@@ -1,6 +1,7 @@
 ---
 title: Classes
 slug: /types/classes
+description: "How to type classes in Flow, including class fields, methods, generics, and the relationship between class types and interface types."
 ---
 
 JavaScript [classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)

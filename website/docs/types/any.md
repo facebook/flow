@@ -1,6 +1,7 @@
 ---
 title: Any
 slug: /types/any
+description: "How the any type works in Flow, why it is unsafe, and how to avoid it."
 ---
 
 > **Warning:** Do not mistake `any` with [`unknown`](../unknown). It's also not the same as [`empty`](../empty).

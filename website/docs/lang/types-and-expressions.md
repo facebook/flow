@@ -1,6 +1,7 @@
 ---
 title: Types & Expressions
 slug: /lang/types-and-expressions
+description: "How types and expressions interact in Flow, including how operations on values produce new types."
 ---
 
 In JavaScript there are many types of values: numbers, strings, booleans,

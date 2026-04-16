@@ -1,6 +1,7 @@
 ---
 title: Comment Types
 slug: /types/comments
+description: "How to write Flow type annotations inside comments, so your code runs without a compilation step."
 ---
 
 Flow supports a comment-based syntax, which makes it possible to use Flow

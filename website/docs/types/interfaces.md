@@ -1,6 +1,7 @@
 ---
 title: Interfaces
 slug: /types/interfaces
+description: "How to use interfaces in Flow for structural typing of classes and objects, including implementing and extending interfaces."
 ---
 
 [Classes](../classes) in Flow are [nominally typed](../../lang/nominal-structural). This means that when you have two separate
