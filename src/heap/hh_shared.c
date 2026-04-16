@@ -2041,8 +2041,9 @@ static void write_all(int fd, const void* buf, size_t len) {
   }
 }
 
-/* Read loop helper to handle partial reads */
-static void read_all(int fd, void* buf, size_t len) {
+/* Read loop helper to handle partial reads.
+ * Returns NULL on success, or a static error message on failure. */
+static const char* read_all(int fd, void* buf, size_t len) {
   char* p = (char*)buf;
   while (len > 0) {
     ssize_t n = read(fd, p, len);
@@ -2050,14 +2051,15 @@ static void read_all(int fd, void* buf, size_t len) {
       if (errno == EINTR) {
         continue;
       }
-      caml_failwith("hh_load_heap: read failed");
+      return "hh_load_heap: read failed";
     }
     if (n == 0) {
-      caml_failwith("hh_load_heap: unexpected end of file");
+      return "hh_load_heap: unexpected end of file";
     }
     p += n;
     len -= n;
   }
+  return NULL;
 }
 
 typedef struct {
@@ -2245,13 +2247,22 @@ static void finalize_loaded_heap(
   info->free_bsize = 0;
 }
 
-/* Load uncompressed heap (legacy format) */
-static void load_heap_uncompressed(int fd, heap_save_header_t* h) {
-  read_all(fd, hashtbl, h->hashtbl_bsize);
+/* Load uncompressed heap (legacy format).
+ * Returns NULL on success, or a static error message on failure. */
+static const char* load_heap_uncompressed(int fd, heap_save_header_t* h) {
+  const char* err;
+  err = read_all(fd, hashtbl, h->hashtbl_bsize);
+  if (err) {
+    return err;
+  }
   memfd_reserve(shared_mem, Ptr_of_addr(h->heap_init), h->heap_size);
-  read_all(fd, Ptr_of_addr(h->heap_init), h->heap_size);
+  err = read_all(fd, Ptr_of_addr(h->heap_init), h->heap_size);
+  if (err) {
+    return err;
+  }
   finalize_loaded_heap(
       h->heap_init, h->heap_size, h->hcounter, h->hcounter_filled);
+  return NULL;
 }
 
 /* Load LZ4-compressed heap: decompress into hash table then heap memory.
@@ -2264,21 +2275,22 @@ static void load_heap_uncompressed(int fd, heap_save_header_t* h) {
  *
  * LZ4F_decompress handles partial output naturally — we limit each call's
  * output buffer to the remaining space in the current region. */
-static void load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
+static const char* load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
   memfd_reserve(shared_mem, Ptr_of_addr(h->heap_init), h->heap_size);
 
   LZ4F_dctx* dctx = NULL;
-  size_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
-  if (LZ4F_isError(err)) {
-    caml_failwith("hh_load_heap: failed to create LZ4 decompression context");
+  size_t lz4_err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
+  if (LZ4F_isError(lz4_err)) {
+    return "hh_load_heap: failed to create LZ4 decompression context";
   }
 
   char* read_buf = malloc(SAVE_HEAP_CHUNK_SIZE);
   if (!read_buf) {
     LZ4F_freeDecompressionContext(dctx);
-    caml_failwith("hh_load_heap: malloc failed");
+    return "hh_load_heap: malloc failed";
   }
 
+  const char* io_err = NULL;
   size_t compressed_remaining = h->compressed_size;
   size_t decompressed_pos = 0;
   size_t region1_size = h->hashtbl_bsize;
@@ -2289,7 +2301,10 @@ static void load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
     size_t to_read = compressed_remaining < SAVE_HEAP_CHUNK_SIZE
         ? compressed_remaining
         : (size_t)SAVE_HEAP_CHUNK_SIZE;
-    read_all(fd, read_buf, to_read);
+    io_err = read_all(fd, read_buf, to_read);
+    if (io_err) {
+      break;
+    }
     compressed_remaining -= to_read;
 
     const char* src = read_buf;
@@ -2312,9 +2327,8 @@ static void load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
       size_t ret =
           LZ4F_decompress(dctx, dst, &dst_produced, src, &src_consumed, NULL);
       if (LZ4F_isError(ret)) {
-        free(read_buf);
-        LZ4F_freeDecompressionContext(dctx);
-        caml_failwith("hh_load_heap: LZ4F_decompress failed");
+        io_err = "hh_load_heap: LZ4F_decompress failed";
+        break;
       }
 
       decompressed_pos += dst_produced;
@@ -2326,10 +2340,17 @@ static void load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
         break;
       }
     }
+    if (io_err) {
+      break;
+    }
   }
 
   free(read_buf);
   LZ4F_freeDecompressionContext(dctx);
+
+  if (io_err) {
+    return io_err;
+  }
 
   /* Skip any unread compressed bytes so fd is positioned after the heap data */
   if (compressed_remaining > 0) {
@@ -2338,6 +2359,7 @@ static void load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
 
   finalize_loaded_heap(
       h->heap_init, h->heap_size, h->hcounter, h->hcounter_filled);
+  return NULL;
 }
 
 /* Load the heap from an fd, supporting both compressed and legacy formats */
@@ -2349,14 +2371,21 @@ CAMLprim value hh_load_heap(value fd_val) {
 
   /* Read magic to determine format */
   uint64_t magic;
-  read_all(fd, &magic, sizeof(magic));
+  const char* err;
+  err = read_all(fd, &magic, sizeof(magic));
+  if (err) {
+    caml_failwith(err);
+  }
 
   if (magic == HEAP_MAGIC) {
     /* Legacy uncompressed format */
     heap_save_header_t header;
     header.magic = magic;
-    read_all(
+    err = read_all(
         fd, (char*)&header + sizeof(magic), sizeof(header) - sizeof(magic));
+    if (err) {
+      caml_failwith(err);
+    }
 
     if (header.hashtbl_slots != info->hashtbl_slots) {
       caml_failwith("hh_load_heap: hash table size mismatch");
@@ -2368,13 +2397,19 @@ CAMLprim value hh_load_heap(value fd_val) {
       caml_failwith("hh_load_heap: heap data too large");
     }
 
-    load_heap_uncompressed(fd, &header);
+    err = load_heap_uncompressed(fd, &header);
+    if (err) {
+      caml_failwith(err);
+    }
   } else if (magic == HEAP_MAGIC_LZ4) {
     /* LZ4-compressed format */
     heap_save_header_lz4_t header;
     header.magic = magic;
-    read_all(
+    err = read_all(
         fd, (char*)&header + sizeof(magic), sizeof(header) - sizeof(magic));
+    if (err) {
+      caml_failwith(err);
+    }
 
     if (header.hashtbl_slots != info->hashtbl_slots) {
       caml_failwith("hh_load_heap: hash table size mismatch");
@@ -2386,7 +2421,10 @@ CAMLprim value hh_load_heap(value fd_val) {
       caml_failwith("hh_load_heap: heap data too large");
     }
 
-    load_heap_lz4(fd, &header);
+    err = load_heap_lz4(fd, &header);
+    if (err) {
+      caml_failwith(err);
+    }
   } else {
     caml_failwith("hh_load_heap: invalid magic number");
   }
