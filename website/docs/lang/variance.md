@@ -9,7 +9,7 @@ how type parameters behave with respect to subtyping.
 
 First we'll setup a couple of classes that extend one another.
 
-```js
+```js flow-check
 class Noun {}
 class City extends Noun {}
 class SanFrancisco extends City {}
@@ -25,7 +25,7 @@ Here we'll dive deeper into each one of these cases.
 ## Covariance {#toc-covariance}
 
 Consider for example the type
-```js
+```js flow-check
 type CovariantOf<X> = {
   +prop: X;
   getter(): X;
@@ -40,7 +40,7 @@ given that `prop` is a readonly property.
 
 When these conditions hold, we can use the sigil `+` to annotate `X` in the definition
 of `CovariantOf`:
-```js
+```js flow-check
 type CovariantOf<+X> = {
   +prop: X;
   getter(): X;
@@ -74,44 +74,42 @@ of `ReadonlyArray<T>`.
 
 Let's see what happens if we try to relax the restrictions on the use of `X` and make,
 for example, `prop` be a read-write property. We arrive at the type definition
-```js
+```js flow-check
 type NonCovariantOf<X> = {
   prop: X;
   getter(): X;
 };
 ```
-Let's also declare a variable `nonCovariantCity` of type `NonCovariantOf<City>`
-```js
-declare const nonCovariantCity: NonCovariantOf<City>;
-```
+Let's also declare a variable `nonCovariantCity` of type `NonCovariantOf<City>`.
 Now, it is not safe to consider `nonCovariantCity` as an object of type `NonCovariantOf<Noun>`.
-Were we allowed to do this, we could have the following declaration:
-```js
-const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity;
+Were we allowed to do this, we could write a `Noun` into `prop`, invalidating the original type.
+Flow catches this:
+```js flow-check
+class Noun {}
+class City extends Noun {}
+
+type NonCovariantOf<X> = {
+  prop: X;
+  getter(): X;
+};
+
+declare const nonCovariantCity: NonCovariantOf<City>;
+const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity; // Error!
 ```
-This type permits the following assignment:
-```js
-nonCovariantNoun.prop = new Noun;
-```
-which would invalidate the original type for `nonCovariantCity` as it would now be storing
-a `Noun` in its `prop` field.
 
 
 What distinguishes `NonCovariantOf` from the `CovariantOf` definition is that type parameter `X` is used both
 in input and output positions, as it is being used to both read and write to
 property `prop`. Such a type parameter is called *invariant* and is the default case
 of variance, thus requiring no prepending sigil:
-```js
+```js flow-check
 type InvariantOf<X> = {
   prop: X;
   getter(): X;
   setter(X): void;
 };
 ```
-Assuming a variable
-```js
-declare const invariantCity: InvariantOf<City>;
-```
+Assuming a variable `invariantCity` of type `InvariantOf<City>`,
 it is *not* safe to use `invariantCity` in a context where:
 - an `InvariantOf<Noun>` is needed, because we should not be able to write a `Noun` to property
 `prop`.
@@ -129,7 +127,7 @@ a *contravariant* way. This means that it only appears in positions through whic
 we write data to the structure. We use the sigil `-` to describe this kind of type
 parameters:
 
-```js
+```js flow-check
 type ContravariantOf<-X> = {
   -prop: X;
   setter(X): void;

@@ -75,16 +75,19 @@ function isPositive(n: ?number): boolean {
   return n != null && n > 0;
 }
 ```
-If we declared `n is number` as the type guard of this function then in the following code:
-```js
+If we declared `n is number` as the type guard of this function then in the following code we would be able to establish that `n` is `null | void` in the else-branch. This is not true, however, since `n` could just be a non-negative number:
+```js flow-check
+function isPositiveUnsound(n: ?number): n is number {
+  return n != null && n > 0; // Error
+}
+
 declare const n: ?number;
-if (isPositive(n)) {
+if (isPositiveUnsound(n)) {
   // n is number here
 } else {
-  // n would be null | void here
+  // n would be inferred as null | void, but could actually be a non-negative number
 }
 ```
-we would be able to establish that `n` is `null | void` in the else-branch. This is not true, however, since `n` could just be a non-negative number.
 
 One-sided type guards, which we annotate as `implies param is PredicateType`, let us specify that a predicate narrows the type in only the positive case. For example,
 ```js flow-check
@@ -92,13 +95,17 @@ function isPositive(n: ?number): implies n is number {
   return n != null && n > 0;
 }
 ```
-Now, we'll get the following behavior
-```js
+Now, we'll get the following behavior:
+```js flow-check
+function isPositive(n: ?number): implies n is number {
+  return n != null && n > 0;
+}
+
 declare const n: ?number;
 if (isPositive(n)) {
-  // n is number here
+  n as number; // OK: n is number here
 } else {
-  // n is still ?number
+  n as ?number; // OK: n is still ?number
 }
 ```
 
@@ -127,7 +134,14 @@ declare class Square {
 }
 ```
 The `this` type guard annotations allow us to refine a `Shape`-typed value to either `Circle` or `Square`:
-```js
+```js flow-check
+declare class Shape {
+  isCircle(): this is Circle;
+  isSquare(): this is Square;
+}
+declare class Circle { radius: number }
+declare class Square { side: number }
+
 function area(shape: Shape): number {
   if (shape.isCircle()) {
     // shape is now a Circle
@@ -180,14 +194,12 @@ function filterError1(response: Array<Response>): Array<Error> {
   const result = response.filter(
     (response): response is Success => response.type === 'success'
   );
-  // The following is expected to error
-  return result;
+  return result; // Error
 }
 
 function filterError2(response: Array<Response>): Array<Error> {
   const result = response.filter(
-    // The following is expected to error
-    (response): response is Error => response.type === 'success'
+    (response): response is Error => response.type === 'success' // Error
   );
   return result;
 }
@@ -198,7 +210,11 @@ In `filterError2`, the predicate `response.type === 'success'` is used to refine
 
 Note that as of version 0.261 it is not necessary to provide a type guard annotation for the argument of `.filter()`.
 This will be inferred from the body of the arrow function:
-```js
+```js flow-check
+type Success = Readonly<{type: 'success', value: 23}>;
+type Error = Readonly<{type: 'error', error: string}>;
+type Response = Success | Error;
+
 function filterSuccessShort(response: Array<Response>): Array<Success> {
   return response.filter(
     response => response.type === 'success'

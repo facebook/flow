@@ -115,15 +115,15 @@ const x: MyTypeAlias = "hi"; // Works
 const y: MyOpaqueType = "hi"; // Works
 ```
 
-In a different file:
+In a different file, `MyTypeAlias` remains transparent but `MyOpaqueType` is nominal:
 
-```js
-// B.js
-import type {MyTypeAlias, MyOpaqueType} from "A.js";
+```js flow-check
+// B.js — when imported, type aliases are transparent but opaque types are not
+type MyTypeAlias = string;
+declare opaque type MyOpaqueType;
 
 const x: MyTypeAlias = "hi"; // Works
 const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`
-//                      ^^^^ Cannot assign "hi" to y because string is incompatible with MyOpaqueType
 ```
 
 ### Flow Enums

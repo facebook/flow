@@ -1047,6 +1047,9 @@ References:
 Found 1 error
 
 === lang/depth-subtyping.md block 4 ===
+No errors!
+
+=== lang/depth-subtyping.md block 5 ===
 Error ------------------------------------------------------------------------------------------------------------ -:7:8
 
 Cannot assign `new Person()` to `person.who` because property `who` is not writable. [cannot-write]
@@ -1058,13 +1061,13 @@ Cannot assign `new Person()` to `person.who` because property `who` is not writa
 
 Found 1 error
 
-=== lang/depth-subtyping.md block 5 ===
-No errors!
-
 === lang/depth-subtyping.md block 6 ===
 No errors!
 
 === lang/depth-subtyping.md block 7 ===
+No errors!
+
+=== lang/depth-subtyping.md block 8 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:5
 
 Cannot cast `obj.foo` to string because property `foo` of unknown type [1] is incompatible with string [2].
@@ -1086,7 +1089,7 @@ References:
 
 Found 1 error
 
-=== lang/depth-subtyping.md block 8 ===
+=== lang/depth-subtyping.md block 9 ===
 No errors!
 
 === lang/nominal-structural.md block 1 ===
@@ -1120,6 +1123,24 @@ No errors!
 No errors!
 
 === lang/nominal-structural.md block 6 ===
+Error ----------------------------------------------------------------------------------------------------------- -:7:25
+
+Cannot assign `"hi"` to `y` because string [1] is incompatible with `MyOpaqueType` [2]. [incompatible-type]
+
+   -:7:25
+   7| const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`
+                              ^^^^ [1]
+
+References:
+   -:7:10
+   7| const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`
+               ^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== lang/nominal-structural.md block 7 ===
 Error ----------------------------------------------------------------------------------------------------------- -:9:14
 
 Cannot assign `B.X` to `a` because `B` [1] is incompatible with `A` [2]. [incompatible-type]
@@ -1617,6 +1638,49 @@ Found 2 errors
 No errors!
 
 === lang/variables.md block 9 ===
+No errors!
+
+=== lang/variance.md block 1 ===
+No errors!
+
+=== lang/variance.md block 2 ===
+No errors!
+
+=== lang/variance.md block 3 ===
+No errors!
+
+=== lang/variance.md block 4 ===
+No errors!
+
+=== lang/variance.md block 5 ===
+Error ---------------------------------------------------------------------------------------------------------- -:11:48
+
+Cannot assign `nonCovariantCity` to `nonCovariantNoun` because in type argument `X` [1]: `Noun` [2] is incompatible with
+`City` [3]. [incompatible-type]
+
+   -:11:48
+   11| const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity; // Error!
+                                                      ^^^^^^^^^^^^^^^^
+
+References:
+   -:5:21
+    5| type NonCovariantOf<X> = {
+                           ^ [1]
+   -:11:40
+   11| const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity; // Error!
+                                              ^^^^ [2]
+   -:10:48
+   10| declare const nonCovariantCity: NonCovariantOf<City>;
+                                                      ^^^^ [3]
+
+
+
+Found 1 error
+
+=== lang/variance.md block 6 ===
+No errors!
+
+=== lang/variance.md block 7 ===
 No errors!
 
 === libdefs/creation.md block 1 ===
@@ -3384,6 +3448,154 @@ No errors!
 === types/const-expression.md block 1 ===
 No errors!
 
+=== types/const-expression.md block 2 ===
+No errors!
+
+=== types/const-expression.md block 3 ===
+No errors!
+
+=== types/const-expression.md block 4 ===
+No errors!
+
+=== types/const-expression.md block 5 ===
+Error ----------------------------------------------------------------------------------------------------------- -:9:20
+
+Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]:
+component [2] is incompatible with string literal `div` [3]. [incompatible-type]
+
+   -:9:20
+    9| onlyAllowsExactDiv(divGeneral); // Error
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:9:20
+
+Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]: string
+literal `div` [2] is incompatible with string [3]. [incompatible-type]
+
+   -:9:20
+    9| onlyAllowsExactDiv(divGeneral); // Error
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [2]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:9:20
+
+Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `P` [1]: `unknown` [2] is
+incompatible with props of string literal `div` [3]. [incompatible-type]
+
+   -:9:20
+    9| onlyAllowsExactDiv(divGeneral); // Error
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                          ^ [1]
+   <BUILTINS>/react.js:97:71
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                                             ^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------------- -:10:22
+
+Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `ElementType` [1]:
+component [2] is incompatible with string literal `div` [3]. [incompatible-type]
+
+   -:10:22
+   10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------------- -:10:22
+
+Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `ElementType` [1]: string
+literal `div` [2] is incompatible with string [3]. [incompatible-type]
+
+   -:10:22
+   10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [2]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------------- -:10:22
+
+Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `P` [1]: `unknown` [2] is
+incompatible with props of string literal `div` [3]. [incompatible-type]
+
+   -:10:22
+   10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                          ^ [1]
+   <BUILTINS>/react.js:97:71
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                                             ^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+
+
+Found 6 errors
+
+=== types/const-expression.md block 6 ===
+No errors!
+
+=== types/const-expression.md block 7 ===
+No errors!
+
+=== types/const-expression.md block 8 ===
+No errors!
+
 === types/empty.md block 1 ===
 No errors!
 
@@ -5132,9 +5344,65 @@ No errors!
 No errors!
 
 === types/opaque-types.md block 5 ===
-No errors!
+Error ------------------------------------------------------------------------------------------------------------ -:5:1
+
+Cannot cast `0` to `NumberAlias` because number [1] is incompatible with `NumberAlias` [2]. [incompatible-type]
+
+   -:5:1
+   5| 0 as NumberAlias; // Error: 0 is not a NumberAlias!
+      ^ [1]
+
+References:
+   -:5:6
+   5| 0 as NumberAlias; // Error: 0 is not a NumberAlias!
+           ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:8:10
+
+Cannot return `x` because `NumberAlias` [1] is incompatible with number [2]. [incompatible-type]
+
+   -:8:10
+   8|   return x; // Error: x is not a number!
+               ^
+
+References:
+   -:7:21
+   7| function convert(x: NumberAlias): number {
+                          ^^^^^^^^^^^ [1]
+   -:7:35
+   7| function convert(x: NumberAlias): number {
+                                        ^^^^^^ [2]
+
+
+
+Found 2 errors
 
 === types/opaque-types.md block 6 ===
+No errors!
+
+=== types/opaque-types.md block 7 ===
+Error ---------------------------------------------------------------------------------------------------------- -:10:12
+
+Cannot return `x` because string [1] is incompatible with `ID` [2]. [incompatible-type]
+
+   -:10:12
+   10|     return x; // Error: strings are not IDs.
+                  ^
+
+References:
+   -:9:18
+    9| function toID(x: string): ID {
+                        ^^^^^^ [1]
+   -:9:27
+    9| function toID(x: string): ID {
+                                 ^^ [2]
+
+
+
+Found 1 error
+
+=== types/opaque-types.md block 8 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:27
 
 number [1] is incompatible with string [2]. [incompatible-type]
@@ -5152,10 +5420,10 @@ References:
 
 Found 1 error
 
-=== types/opaque-types.md block 7 ===
+=== types/opaque-types.md block 9 ===
 No errors!
 
-=== types/opaque-types.md block 8 ===
+=== types/opaque-types.md block 10 ===
 No errors!
 
 === types/primitives.md block 1 ===
@@ -5900,13 +6168,39 @@ Found 1 error
 No errors!
 
 === types/type-guards.md block 4 ===
-No errors!
+Error ----------------------------------------------------------------------------------------------------------- -:3:10
+
+Cannot return `(n != null) && (n > 0)` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type number [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   -:3:10
+   3|   return n != null && n > 0; // Error
+               ^^^^^^^^^^^^^^^^^^
+
+References:
+   -:2:46
+   2| function isPositiveUnsound(n: ?number): n is number {
+                                                   ^^^^^^ [1]
+
+
+
+Found 1 error
 
 === types/type-guards.md block 5 ===
 No errors!
 
 === types/type-guards.md block 6 ===
-Error ---------------------------------------------------------------------------------------------------------- -:20:10
+No errors!
+
+=== types/type-guards.md block 7 ===
+No errors!
+
+=== types/type-guards.md block 8 ===
+No errors!
+
+=== types/type-guards.md block 9 ===
+Error ---------------------------------------------------------------------------------------------------------- -:19:10
 
 Cannot return `result` because in array element: `Success` [1] is not exactly the same as `Error` [2].
 [incompatible-type]
@@ -5916,8 +6210,8 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   -:20:10
-     20|   return result;
+   -:19:10
+     19|   return result; // Error
                   ^^^^^^
 
 References:
@@ -5935,7 +6229,7 @@ References:
                                                            ^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------------- -:26:38
+Error ---------------------------------------------------------------------------------------------------------- -:24:38
 
 Cannot return `response.type === 'success'` because property `error` is missing in object type [1] but exists in object
 type [2]. [incompatible-type]
@@ -5944,23 +6238,23 @@ The type of `response` [3] at the return expression `response.type === 'success'
 guard type `Error` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
-   -:26:38
-   26|     (response): response is Error => response.type === 'success'
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 References:
-   -:23:39
-   23| function filterError2(response: Array<Response>): Array<Error> {
+   -:22:39
+   22| function filterError2(response: Array<Response>): Array<Error> {
                                              ^^^^^^^^ [1]
-   -:26:29
-   26|     (response): response is Error => response.type === 'success'
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
                                    ^^^^^ [2]
-   -:26:6
-   26|     (response): response is Error => response.type === 'success'
+   -:24:6
+   24|     (response): response is Error => response.type === 'success' // Error
             ^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------------- -:26:38
+Error ---------------------------------------------------------------------------------------------------------- -:24:38
 
 Cannot return `response.type === 'success'` because property `value` is extra in object type [1] but missing in object
 type [2]. Exact objects do not accept extra props. [incompatible-type]
@@ -5969,23 +6263,23 @@ The type of `response` [3] at the return expression `response.type === 'success'
 guard type `Error` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
-   -:26:38
-   26|     (response): response is Error => response.type === 'success'
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 References:
-   -:23:39
-   23| function filterError2(response: Array<Response>): Array<Error> {
+   -:22:39
+   22| function filterError2(response: Array<Response>): Array<Error> {
                                              ^^^^^^^^ [1]
-   -:26:29
-   26|     (response): response is Error => response.type === 'success'
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
                                    ^^^^^ [2]
-   -:26:6
-   26|     (response): response is Error => response.type === 'success'
+   -:24:6
+   24|     (response): response is Error => response.type === 'success' // Error
             ^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------------- -:26:38
+Error ---------------------------------------------------------------------------------------------------------- -:24:38
 
 Cannot return `response.type === 'success'` because in property `type`: string literal `success` [1] is incompatible
 with string literal `error` [2]. [incompatible-type-guard]
@@ -5994,8 +6288,8 @@ The type of `response` [3] at the return expression `response.type === 'success'
 guard type `Error` [5]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
-   -:26:38
-   26|     (response): response is Error => response.type === 'success'
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 References:
@@ -6005,34 +6299,37 @@ References:
    -:3:30
     3| type Error = Readonly<{type: 'error', error: string}>;
                                     ^^^^^^^ [2]
-   -:26:6
-   26|     (response): response is Error => response.type === 'success'
+   -:24:6
+   24|     (response): response is Error => response.type === 'success' // Error
             ^^^^^^^^ [3]
-   -:26:29
-   26|     (response): response is Error => response.type === 'success'
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
                                    ^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------------- -:26:38
+Error ---------------------------------------------------------------------------------------------------------- -:24:38
 
 Cannot return `response.type === 'success'` because the negation of the predicate encoded in this expression needs to
 completely refine away the guard type `Error` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
-   -:26:38
-   26|     (response): response is Error => response.type === 'success'
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   -:26:29
-   26|     (response): response is Error => response.type === 'success'
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
                                    ^^^^^ [1]
 
 
 
 Found 5 errors
 
-=== types/type-guards.md block 7 ===
+=== types/type-guards.md block 10 ===
+No errors!
+
+=== types/type-guards.md block 11 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:35
 
 Cannot find type guard parameter `prop` [1] in the parameters of this function (type). [function-predicate]
@@ -6044,7 +6341,7 @@ Cannot find type guard parameter `prop` [1] in the parameters of this function (
 
 Found 1 error
 
-=== types/type-guards.md block 8 ===
+=== types/type-guards.md block 12 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:50
 
 A type guard parameter `prop` [1] cannot reference pattern parameter `prop` [2]. [function-predicate]
@@ -6062,7 +6359,7 @@ References:
 
 Found 1 error
 
-=== types/type-guards.md block 9 ===
+=== types/type-guards.md block 13 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:42
 
 A type guard parameter `value` [1] cannot reference rest parameter `value` [2]. [function-predicate]
@@ -6080,7 +6377,7 @@ References:
 
 Found 1 error
 
-=== types/type-guards.md block 10 ===
+=== types/type-guards.md block 14 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:36
 
 The type predicate number [1] needs to be compatible with parameter `x`'s type: number [1] is incompatible with
@@ -6099,7 +6396,7 @@ References:
 
 Found 1 error
 
-=== types/type-guards.md block 11 ===
+=== types/type-guards.md block 15 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:39
 
 Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
@@ -6118,7 +6415,7 @@ References:
 
 Found 1 error
 
-=== types/type-guards.md block 12 ===
+=== types/type-guards.md block 16 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
 
 Cannot return `x` because null or undefined [1] is incompatible with boolean [2]. [incompatible-type]
@@ -6156,13 +6453,13 @@ References:
 
 Found 2 errors
 
-=== types/type-guards.md block 13 ===
+=== types/type-guards.md block 17 ===
 No errors!
 
-=== types/type-guards.md block 14 ===
+=== types/type-guards.md block 18 ===
 No errors!
 
-=== types/type-guards.md block 15 ===
+=== types/type-guards.md block 19 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:36
 
 Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because: [incompatible-type-guard]
@@ -6215,10 +6512,10 @@ References:
 
 Found 2 errors
 
-=== types/type-guards.md block 16 ===
+=== types/type-guards.md block 20 ===
 No errors!
 
-=== types/type-guards.md block 17 ===
+=== types/type-guards.md block 21 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:12
 
 Cannot return `((typeof x) === 'number') && (x > 0)` because the negation of the predicate encoded in this expression
@@ -6239,7 +6536,7 @@ References:
 
 Found 1 error
 
-=== types/type-guards.md block 18 ===
+=== types/type-guards.md block 22 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -6260,7 +6557,7 @@ References:
 
 Found 1 error
 
-=== types/type-guards.md block 19 ===
+=== types/type-guards.md block 23 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:38
 
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]

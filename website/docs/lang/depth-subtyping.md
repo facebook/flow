@@ -42,7 +42,10 @@ This is an error because objects are mutable. The value referenced by the
 `employee` variable is the same as the value referenced by the `person`
 variable.
 
-```js
+```js flow-check
+class Person { name: string }
+
+declare const person: {who: Person};
 person.who = new Person();
 ```
 

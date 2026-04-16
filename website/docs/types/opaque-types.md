@@ -86,8 +86,9 @@ export opaque type NumberAlias = number;
 
 **`imports.js`**
 
-```js
-import type {NumberAlias} from './exports';
+```js flow-check
+// In imports.js, NumberAlias is opaque — its underlying type (number) is hidden
+declare opaque type NumberAlias;
 
 0 as NumberAlias; // Error: 0 is not a NumberAlias!
 
@@ -109,11 +110,12 @@ export opaque type ID: string = string;
 
 **`imports.js`**
 
-```js
-import type {ID} from './exports';
+```js flow-check
+// In imports.js, ID is opaque with a supertype constraint of string
+declare opaque type ID: string;
 
 function formatID(x: ID): string {
-    return "ID: " + x; // Ok! IDs are strings.
+    return "ID: " + x; // OK! IDs are strings.
 }
 
 function toID(x: string): ID {

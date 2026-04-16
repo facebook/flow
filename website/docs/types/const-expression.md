@@ -51,7 +51,7 @@ const y = x as const;
 
 A common pattern where const-expressions are useful is in enum-like
 structures that are not expected to be mutated. For example
-```js
+```js flow-check
 export const STATUS = {
   INIT: 'INIT',
   LOADING: 'LOADING',
@@ -62,8 +62,15 @@ export const STATUS = {
 The type of `STATUS.INIT` is `"INIT"`, the type of `STATUS.LOADING` is `"LOADING"` and so on.
 
 With this definition it is also possible to effectively lift the values of the various fields
-to type annotations. For example
-```js
+to type annotations. For example:
+```js flow-check
+const STATUS = {
+  INIT: 'INIT',
+  LOADING: 'LOADING',
+  SUCCESS: 'SUCCESS',
+  ERROR: 'ERROR',
+} as const;
+
 type State =
   | { +kind: typeof STATUS.INIT; }
   | { +kind: typeof STATUS.LOADING; progress: number; }
@@ -81,7 +88,9 @@ Check out [render types](../../react/render-types/) and [react type references](
 
 Since version 0.284, Flow will infer a more general type for React JSX elements by default.
 
-```js
+```js flow-check
+import * as React from 'react';
+
 const div1 = <div />; // `<div />` has type `React.MixedElement`
 declare component Foo();
 const foo1 = <Foo />; // `<Foo />` has type `renders Foo`
@@ -89,7 +98,9 @@ const foo1 = <Foo />; // `<Foo />` has type `renders Foo`
 
 However, if the JSX element is in a position that can be contextually typed, Flow will infer a more specific type, so it can be accepted by more restrictive APIs:
 
-```js
+```js flow-check
+import * as React from 'react';
+
 type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
 declare function onlyAllowsExactDiv(div: ExactDiv): void;
 declare component OnlyAllowsExactDiv(children: ExactDiv);
@@ -104,7 +115,10 @@ onlyAllowsExactDiv(<div />); // OK
 
 If you want to have the jsx to have a more specific type in a position that cannot be contextually typed, you can wrap it with `as const`:
 
-```js
+```js flow-check
+import * as React from 'react';
+
+type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
 declare function onlyAllowsExactDiv(div: ExactDiv): void;
 declare component OnlyAllowsExactDiv(children: ExactDiv);
 
@@ -135,7 +149,9 @@ declare function foo<X>(x: X): X;
 ```
 need to be treated as const-expressions. One way to support this is by always
 calling `foo` with `as const` on its argument:
-```js
+```js flow-check
+declare function foo<X>(x: X): X;
+
 const x1 = foo({ f: 42 } as const);
 const x2 = foo([42, "hello"] as const);
 ```
@@ -144,11 +160,9 @@ respectively.
 
 To avoid repeating and potentially forgetting to pass `as const`, you can use the
 `const` modifier on type parameter `X`:
-```js
+```js flow-check
 declare function constFoo<const X>(x: X): X;
-```
-Now you can call `constFoo` without `as const` and have the same effect as before:
-```js
+
 const y1 = constFoo({ f: 42 });
 const y2 = constFoo([42, "hello"]);
 ```
