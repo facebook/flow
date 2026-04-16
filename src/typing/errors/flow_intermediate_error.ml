@@ -4617,9 +4617,23 @@ let to_printable_error :
           ref upper;
         ]
       | _ ->
+        let all_props = Nel.to_list props in
+        let max_props = 10 in
+        let num_props = List.length all_props in
+        let (displayed, truncated_count) =
+          if num_props > max_props then
+            (Base.List.take all_props max_props, num_props - max_props)
+          else
+            (all_props, 0)
+        in
         [text "properties "]
         @ Flow_errors_utils.Friendly.conjunction_concat
-            (Base.List.map (Nel.to_list props) ~f:(fun p -> [code p]))
+            (Base.List.map displayed ~f:(fun p -> [code p]))
+        @ ( if truncated_count > 0 then
+            [text (spf ", ... (%d more)" truncated_count)]
+          else
+            []
+          )
         @ [text " are missing in "; ref lower; text " but exist in "; ref upper])
     | MessagePropPolarityMismatch { lower; upper; props } ->
       let f (prop, lpole, upole) =

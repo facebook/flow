@@ -7787,15 +7787,25 @@ where
                         ref_(upper),
                     ])
                 } else {
-                    let mut features = vec![text("properties ")];
                     let all_props: Vec<_> = std::iter::once(first_prop).chain(rest_props).collect();
-                    let prop_msgs: Vec<_> = all_props
+                    let max_props = 10;
+                    let num_props = all_props.len();
+                    let (displayed, truncated_count) = if num_props > max_props {
+                        (&all_props[..max_props], num_props - max_props)
+                    } else {
+                        (&all_props[..], 0)
+                    };
+                    let mut features = vec![text("properties ")];
+                    let prop_msgs: Vec<_> = displayed
                         .iter()
                         .map(|p| friendly::Message(vec![code(p.as_str())]))
                         .collect();
                     let friendly::Message(concat_result) =
                         friendly::conjunction_concat(prop_msgs, "and", None);
                     features.extend(concat_result);
+                    if truncated_count > 0 {
+                        features.push(text(&format!(", ... ({} more)", truncated_count)));
+                    }
                     features.extend(vec![
                         text(" are missing in "),
                         ref_(lower),

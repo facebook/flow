@@ -1,0 +1,32 @@
+Error --------------------------------------------------------------------------------- props_missing_truncation.js:20:2
+
+Cannot cast object literal to `Large` because properties `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, and `j`, ... (3
+more) are missing in object literal [1] but exist in `Large` [2]. [incompatible-type]
+
+   props_missing_truncation.js:20:2
+   20| ({} as Large); // Error
+        ^^ [1]
+
+References:
+   props_missing_truncation.js:20:8
+   20| ({} as Large); // Error
+              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- props_missing_truncation.js:23:2
+
+Cannot cast object literal to `Large` because properties `k`, `l`, and `m` are missing in object literal [1] but exist
+in `Large` [2]. [incompatible-type]
+
+   props_missing_truncation.js:23:2
+   23| ({a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10} as Large); // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   props_missing_truncation.js:23:67
+   23| ({a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10} as Large); // Error
+                                                                         ^^^^^ [2]
+
+
+
+Found 2 errors
