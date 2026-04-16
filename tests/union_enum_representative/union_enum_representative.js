@@ -55,3 +55,9 @@ type B = 'b1' | 'b2' | 'b3';
 declare function needsNumber(x: number): void;
 declare var combined: A | B;
 needsNumber(combined);
+
+// Case 8: Enum union through the catch-all (UnionT, _) dispatch path.
+// CallT is not specifically handled for unions, so it falls through
+// to the catch-all which now applies the representative optimization.
+declare const codes: 10 | 20 | 30;
+codes(); // error: number is not callable, via catch-all

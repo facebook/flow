@@ -189,70 +189,36 @@ References:
                                                        ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
+Error --------------------------------------------------------------------------------------------------- maybe.js:12:12
 
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in the indexer property: `?string` [1] is not
-exactly the same as `?number` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either make `{[string]: ?string}` [3] and `{[string]: ?number}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   maybe.js:12:34
-                                        v----------------------
-   12|     target[annotationTypeName] = Object.assign( // error
-   13|       target[annotationTypeName],
-   14|       source[annotationTypeName],
-   15|     );
-           ^
-
-References:
-   maybe.js:2:23
-    2|   string: ?{[string]: ?string, ...},
-                             ^^^^^^^ [1]
-   maybe.js:3:20
-    3|   int: ?{[string]: ?number, ...},
-                          ^^^^^^^ [2]
-   maybe.js:2:12
-    2|   string: ?{[string]: ?string, ...},
-                  ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   maybe.js:3:9
-    3|   int: ?{[string]: ?number, ...},
-               ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-
-
-Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
-
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in the indexer property: `?number` [1] is not
-exactly the same as `?string` [2]. [incompatible-type]
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in at least one member of element of
+`Object.keys` [1] > the indexer property: `?string` [2] is not exactly the same as `?number` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either make `{[string]: ?number}` [3] and `{[string]: ?string}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Either make `{[string]: ?string}` [4] and `{[string]: ?number}` [5] exactly the same
+- Or make the indexer in object type [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   maybe.js:12:34
-                                        v----------------------
+   maybe.js:12:12
    12|     target[annotationTypeName] = Object.assign( // error
-   13|       target[annotationTypeName],
-   14|       source[annotationTypeName],
-   15|     );
-           ^
+                  ^^^^^^^^^^^^^^^^^^
 
 References:
-   maybe.js:3:20
-    3|   int: ?{[string]: ?number, ...},
-                          ^^^^^^^ [1]
+   maybe.js:11:3
+   11|   Object.keys(source).forEach(annotationTypeName => {
+         ^^^^^^^^^^^^^^^^^^^ [1]
    maybe.js:2:23
     2|   string: ?{[string]: ?string, ...},
                              ^^^^^^^ [2]
-   maybe.js:3:9
+   maybe.js:3:20
     3|   int: ?{[string]: ?number, ...},
-               ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                          ^^^^^^^ [3]
    maybe.js:2:12
     2|   string: ?{[string]: ?string, ...},
                   ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   maybe.js:3:9
+    3|   int: ?{[string]: ?number, ...},
+               ^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
@@ -433,4 +399,4 @@ References:
 
 
 
-Found 22 errors
+Found 21 errors

@@ -1739,7 +1739,32 @@ struct
                | ConditionalT { distributive_tparam_name; _ } ->
                  Option.is_some distributive_tparam_name
                | _ -> true ->
-          flow_all_in_union cx trace rep u
+          (* For homogeneous enum unions that have already been optimized,
+             try a single representative member speculatively. If it fails,
+             emit just that one error (all members would fail identically).
+             If it succeeds, fall through to normal distribution to catch
+             members that might fail.
+             Note: we intentionally skip optimize_enum_only here (unlike the
+             TypeCastT and UseT handlers) because the catch-all runs on ALL
+             use types and forcing optimization can trigger tvar resolution
+             with side-effect errors. *)
+          let flowed_single =
+            match UnionRep.check_enum_with_tag rep with
+            | Some (enums, Some _) when UnionEnumSet.cardinal enums > 1 ->
+              let representative = UnionRep.members rep |> List.hd in
+              (match SpeculationKit.try_singleton_throw_on_failure cx trace representative u with
+              | exception Flow_js_utils.SpeculationSingletonError ->
+                let u =
+                  mod_use_op_of_use_t
+                    (Flow_js_utils.union_representative_use_op cx ~l ~representative)
+                    u
+                in
+                rec_flow cx trace (representative, u);
+                true
+              | () -> false)
+            | _ -> false
+          in
+          if not flowed_single then flow_all_in_union cx trace rep u
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         (* special treatment for some operations on intersections: these

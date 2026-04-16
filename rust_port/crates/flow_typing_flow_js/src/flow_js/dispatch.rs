@@ -2888,7 +2888,57 @@ fn __flow_impl<'cx>(
                 _ => true,
             } =>
         {
-            flow_all_in_union(cx, trace, rep, u)?;
+            // For homogeneous enum unions that have already been optimized,
+            // try a single representative member speculatively. If it fails,
+            // emit just that one error (all members would fail identically).
+            // If it succeeds, fall through to normal distribution to catch
+            // members that might fail.
+            // Note: we intentionally skip optimize_enum_only here (unlike the
+            // TypeCastT and UseT handlers) because the catch-all runs on ALL
+            // use types and forcing optimization can trigger tvar resolution
+            // with side-effect errors.
+            let flowed_single = {
+                match rep.check_enum_with_tag() {
+                    Some((enums, Some(_))) if enums.len() > 1 => {
+                        let mut members = rep.members_iter();
+                        match members.next() {
+                            None => false,
+                            Some(representative) => {
+                                let representative = representative.dupe();
+                                drop(members);
+                                match speculation_kit::try_singleton_throw_on_failure(
+                                    cx,
+                                    trace,
+                                    representative.dupe(),
+                                    u.dupe(),
+                                ) {
+                                    Err(FlowJsException::SpeculationSingletonError) => {
+                                        let u = type_util::mod_use_op_of_use_t(
+                                            |use_op| {
+                                                flow_js_utils::union_representative_use_op(
+                                                    cx,
+                                                    l,
+                                                    &representative,
+                                                    use_op.dupe(),
+                                                )
+                                            },
+                                            u,
+                                        );
+                                        rec_flow(cx, trace, (&representative, &u))?;
+                                        true
+                                    }
+                                    Ok(()) => false,
+                                    Err(e) => return Err(e),
+                                }
+                            }
+                        }
+                    }
+                    _ => false,
+                }
+            };
+            if !flowed_single {
+                flow_all_in_union(cx, trace, rep, u)?;
+            }
         }
         (_, UseTInner::FilterOptionalT(use_op, u_inner)) => {
             rec_flow_t(cx, trace, use_op.dupe(), (l, u_inner))?;

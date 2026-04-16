@@ -84,268 +84,112 @@ References:
                                     ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because properties `k` and `v` are missing in
-`A` [1] but exist in `B` [2]. [incompatible-type]
+Cannot call `cases[type.kind]` because in at least one member of `type.kind` [1] > the first argument: property `e` is
+missing in `B` [2] but exists in `A` [3]. [incompatible-type]
 
-   issue6155.js:15:39
+   issue6155.js:15:28
    15|     return (type) => cases[type.kind](type);
-                                             ^^^^
+                                  ^^^^^^^^^ [1]
 
 References:
    issue6155.js:14:44
    14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [2]
+                                                  ^^^^ [2]
+   issue6155.js:9:9
+    9|     a: (A) => R,
+               ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because properties `k` and `v` are missing in
-`C` [1] but exist in `B` [2]. [incompatible-type]
+Cannot call `cases[type.kind]` because in at least one member of `type.kind` [1] > the first argument: property `e` is
+missing in `C` [2] but exists in `A` [3]. [incompatible-type]
 
-   issue6155.js:15:39
+   issue6155.js:15:28
    15|     return (type) => cases[type.kind](type);
-                                             ^^^^
+                                  ^^^^^^^^^ [1]
 
 References:
    issue6155.js:14:44
    14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `B` [1] but
-exists in `A` [2]. [incompatible-type]
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:14:44
-   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
+                                                  ^^^^ [2]
    issue6155.js:9:9
     9|     a: (A) => R,
-               ^ [2]
+               ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
 
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `C` [1] but
-exists in `A` [2]. [incompatible-type]
+Cannot call `cases[type.kind]` because: [incompatible-type]
+ - in at least one member of `type.kind` [1]: `type` [2] is incompatible with `A` [3]
+    - in the first argument > property `kind`: `"b"` [4] is not exactly the same as `"a"` [5]
 
-   issue6155.js:15:39
+The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
+- Either make `B` [6] and `A` [7] exactly the same
+- Or make property `kind` in `A` [3] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   issue6155.js:15:28
    15|     return (type) => cases[type.kind](type);
-                                             ^^^^
+                                  ^^^^^^^^^ [1]
 
 References:
-   issue6155.js:14:44
-   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
+   issue6155.js:15:13
+   15|     return (type) => cases[type.kind](type);
+                   ^^^^ [2]
    issue6155.js:9:9
     9|     a: (A) => R,
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because in property `kind`: `"a"` [1] is not
-exactly the same as `"b"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
-- Either make `A` [3] and `B` [4] exactly the same
-- Or make property `kind` in `B` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:3:17
-    3| type A = {kind: 'a', e: Type};
-                       ^^^ [1]
+               ^ [3]
    issue6155.js:4:17
     4| type B = {kind: 'b', k: Type, v: Type};
-                       ^^^ [2]
-   issue6155.js:3:10
-    3| type A = {kind: 'a', e: Type};
-                ^^^^^^^^^^^^^^^^^^^^ [3]
-   issue6155.js:4:10
-    4| type B = {kind: 'b', k: Type, v: Type};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because in property `kind`: `"a"` [1] is not
-exactly the same as `"c"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
-- Either make `A` [3] and `C` [4] exactly the same
-- Or make property `kind` in `C` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
+                       ^^^ [4]
    issue6155.js:3:17
     3| type A = {kind: 'a', e: Type};
-                       ^^^ [1]
-   issue6155.js:5:17
-    5| type C = {kind: 'c'};
-                       ^^^ [2]
-   issue6155.js:3:10
-    3| type A = {kind: 'a', e: Type};
-                ^^^^^^^^^^^^^^^^^^^^ [3]
-   issue6155.js:5:10
-    5| type C = {kind: 'c'};
-                ^^^^^^^^^^^ [4]
-   issue6155.js:11:9
-   11|     c: (C) => R
-               ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because in property `kind`: `"b"` [1] is not
-exactly the same as `"a"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
-- Either make `B` [3] and `A` [4] exactly the same
-- Or make property `kind` in `A` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:4:17
-    4| type B = {kind: 'b', k: Type, v: Type};
-                       ^^^ [1]
-   issue6155.js:3:17
-    3| type A = {kind: 'a', e: Type};
-                       ^^^ [2]
+                       ^^^ [5]
    issue6155.js:4:10
     4| type B = {kind: 'b', k: Type, v: Type};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
    issue6155.js:3:10
     3| type A = {kind: 'a', e: Type};
-                ^^^^^^^^^^^^^^^^^^^^ [4]
+                ^^^^^^^^^^^^^^^^^^^^ [7]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
+
+Cannot call `cases[type.kind]` because: [incompatible-type]
+ - in at least one member of `type.kind` [1]: `type` [2] is incompatible with `A` [3]
+    - in the first argument > property `kind`: `"c"` [4] is not exactly the same as `"a"` [5]
+
+The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
+- Either make `C` [6] and `A` [7] exactly the same
+- Or make property `kind` in `A` [3] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   issue6155.js:15:28
+   15|     return (type) => cases[type.kind](type);
+                                  ^^^^^^^^^ [1]
+
+References:
+   issue6155.js:15:13
+   15|     return (type) => cases[type.kind](type);
+                   ^^^^ [2]
    issue6155.js:9:9
     9|     a: (A) => R,
-               ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because in property `kind`: `"b"` [1] is not
-exactly the same as `"c"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
-- Either make `B` [3] and `C` [4] exactly the same
-- Or make property `kind` in `C` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:4:17
-    4| type B = {kind: 'b', k: Type, v: Type};
-                       ^^^ [1]
+               ^ [3]
    issue6155.js:5:17
     5| type C = {kind: 'c'};
-                       ^^^ [2]
-   issue6155.js:4:10
-    4| type B = {kind: 'b', k: Type, v: Type};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   issue6155.js:5:10
-    5| type C = {kind: 'c'};
-                ^^^^^^^^^^^ [4]
-   issue6155.js:11:9
-   11|     c: (C) => R
-               ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because in property `kind`: `"c"` [1] is not
-exactly the same as `"a"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
-- Either make `C` [3] and `A` [4] exactly the same
-- Or make property `kind` in `A` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:5:17
-    5| type C = {kind: 'c'};
-                       ^^^ [1]
+                       ^^^ [4]
    issue6155.js:3:17
     3| type A = {kind: 'a', e: Type};
-                       ^^^ [2]
+                       ^^^ [5]
    issue6155.js:5:10
     5| type C = {kind: 'c'};
-                ^^^^^^^^^^^ [3]
+                ^^^^^^^^^^^ [6]
    issue6155.js:3:10
     3| type A = {kind: 'a', e: Type};
-                ^^^^^^^^^^^^^^^^^^^^ [4]
-   issue6155.js:9:9
-    9|     a: (A) => R,
-               ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because in property `kind`: `"c"` [1] is not
-exactly the same as `"b"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
-- Either make `C` [3] and `B` [4] exactly the same
-- Or make property `kind` in `B` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:5:17
-    5| type C = {kind: 'c'};
-                       ^^^ [1]
-   issue6155.js:4:17
-    4| type B = {kind: 'b', k: Type, v: Type};
-                       ^^^ [2]
-   issue6155.js:5:10
-    5| type C = {kind: 'c'};
-                ^^^^^^^^^^^ [3]
-   issue6155.js:4:10
-    4| type B = {kind: 'b', k: Type, v: Type};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [5]
+                ^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ------------------------------------------------------------------------------- recursive_react_component.js:11:30
@@ -581,4 +425,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 35 errors
+Found 29 errors
