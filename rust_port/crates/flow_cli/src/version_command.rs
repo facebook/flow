@@ -9,10 +9,7 @@
 // flow ast command
 // ***********************************************************************
 
-use std::sync::OnceLock;
-
 use flow_common::flow_version;
-use flow_common_xx as xx;
 use flow_server_env::socket_handshake;
 
 use crate::command_spec;
@@ -82,41 +79,20 @@ fn main(args: &arg_spec::Values) {
     } else if binary {
         print_binary(json, pretty);
     } else if json || pretty {
-        let executable = std::env::current_exe().ok();
-        let binary_path = executable
-            .as_ref()
+        let binary_path = std::env::current_exe()
             .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|| "<unknown>".to_string());
+            .unwrap_or_else(|_| "<unknown>".to_string());
         let json = serde_json::json!({
             "semver": flow_version::VERSION,
             "binary": binary_path,
             "build_id": socket_handshake::build_revision(),
-            "flow_build_id": executable.as_deref().map(get_build_id).unwrap_or_default(),
+            "flow_build_id": flow_common_build_id::get_build_id(),
         });
         flow_hh_json::print_json_endline(pretty, &json);
     } else {
         command_utils::print_version();
     };
     flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
-}
-
-fn get_build_id(executable: &std::path::Path) -> String {
-    static BUILD_ID: OnceLock<String> = OnceLock::new();
-
-    BUILD_ID
-        .get_or_init(|| {
-            let contents = std::fs::read(executable).unwrap_or_else(|err| {
-                panic!(
-                    "failed to read executable at {} for flow build id: {}",
-                    executable.display(),
-                    err
-                )
-            });
-            let mut state = xx::State::new(0);
-            state.update(&contents);
-            format!("{:016x}", state.digest())
-        })
-        .clone()
 }
 
 pub(crate) fn command() -> command_spec::Command {

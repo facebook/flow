@@ -412,8 +412,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `equal` → `#[derive(Eq)]`
           - [x] `max_size` → `const MAX_SIZE`
           - [x] `to_string` → `impl Display`
-  - [ ] build_id/
-      - [ ] flow_build_id.ml
+  - [x] build_id/
+      - [x] flow_build_id.ml → `flow_common_build_id/src/lib.rs`
+          - [x] `get_build_id`
   - [x] cycle_hash/
     - [x] __tests__/
         - [x] cycle_hash_test.ml
@@ -470,14 +471,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] __tests__/
         - [ ] fuzzy_score_test.ml
       - [x] fuzzy_score.ml → `flow_services_export/src/fuzzy_path/score_match.rs`
-  - [ ] leb128/
-    - [ ] __tests__/
-        - [ ] leb128_tests.ml
-      - [x] leb128.ml → `flow_common_leb128/src/unsigned.rs` (2/2 functions, 100% complete)
+  - [x] leb128/
+    - [x] __tests__/
+        - [x] leb128_tests.ml → `flow_common_leb128/src/unsigned.rs`
+      - [x] leb128.ml → `flow_common_leb128/src/unsigned.rs`
           - [x] `read` → `unsigned::read()`
           - [x] `write` → `unsigned::write()`
   - [x] lints/
-      - [x] exactCover.ml → `flow_lint_settings/src/lint_severity_cover.rs` (10/10 functions, 100% complete)
+      - [x] exactCover.ml → `flow_lint_settings/src/lint_severity_cover.rs`
           - [x] `new_builder` → `Builder::new()`
           - [x] `update_range` → `Builder::update_range()`
           - [x] `update_settings` → `Builder::update_settings()`
@@ -488,7 +489,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `get_severity` → `LintSeverityCover::get_severity()`
           - [x] `is_explicit` → `LintSeverityCover::is_explicit()`
           - [x] `to_string` → `LintSeverityCover::to_debug_string()`
-      - [x] lintSettings.ml → `flow_lint_settings/src/lint_settings.rs` (15/15 functions, 100% complete)
+      - [x] lintSettings.ml → `flow_lint_settings/src/lint_settings.rs`
           - [x] `of_default` → `LintSettings::of_default()`
           - [x] `set_value` → `LintSettings::set_value()`
           - [x] `set_all` → `LintSettings::set_all()`
@@ -534,7 +535,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] lwtUtils.ml
   - [x] lz4/
       - [x] lz4.ml → `lz4_flex` crate
-  - [ ] modulename/
+  - [x] modulename/
       - [x] haste_module_info.ml → `flow_common_modulename/src/haste_module_info.rs`
           - [x] `mk`
           - [x] `module_name`
@@ -546,8 +547,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `Modulename` enum (Haste/Filename variants)
           - [x] `ModulenameSet` type alias
           - [x] `ModulenameMap` type alias
-  - [ ] monad/
-      - [ ] stateResult.ml
+  - [x] monad/
+      - [x] stateResult.ml → `unnecessary monad in rust`
   - [x] packed_locs/
     - [x] __tests__/
         - [x] packed_locs_tests.ml → `flow_packed_locs/src/packed_locs.rs` (inline tests)
@@ -699,9 +700,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
             - [x] `get_from_cache`
             - [x] `with_cache`
             - [x] `with_cache_sync`
-    - [ ] loc_utils/
-        - [ ] loc_collections.ml
-        - [x] loc_sig.ml → `flow_parser/src/loc_sig.rs` (trait LocSig, impl for Loc and ALoc)
+    - [x] loc_utils/
+        - [x] loc_collections.ml → `unnecessary`
+        - [x] loc_sig.ml → `flow_parser/src/loc_sig.rs`
     - [x] cache.ml → `flow_common_utils/src/cache.rs`
         - [x] `Make` functor → `Cache<K, V>` impl
         - [x] `make`
@@ -712,7 +713,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `with_cache_sync`
     - [x] cache_sig.ml → unnecessary in rust (public API is in `flow_common_utils/src/cache.rs`)
     - [x] graph.ml → `flow_common_utils/src/graph.rs`
-    - [ ] graph_sig.ml
+    - [x] graph_sig.ml → `unnecessary`
     - [ ] json_rpc.ml
     - [x] line.ml → `flow_common_utils/src/line.rs`
     - [ ] listUtils.ml
@@ -2497,8 +2498,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] type_of_name.ml → `flow_services_type_of_name/src/type_of_name.rs`
 - [ ] state/
   - [ ] heaps/
-    - [ ] context/
-        - [ ] context_heaps.ml (unused in Rust; master_cx stored on server env)
+    - [x] context/
+        - [x] context_heaps.ml (unused in Rust; master_cx stored on server env)
     - [ ] diffing/
         - [ ] diff_heaps.ml
     - [ ] parsing/
@@ -2584,10 +2585,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
             - [ ] `record_not_found`
             - [ ] `record_unchanged`
             - [x] `typed_component`
-  - [ ] readers/
-      - [ ] abstract_state_reader.ml
-      - [ ] mutator_state_reader.ml
-      - [ ] state_reader.ml
+  - [x] readers/
+      - [x] abstract_state_reader.ml → `unnecessary`
+      - [x] mutator_state_reader.ml → `unnecessary`
+      - [x] state_reader.ml → `unnecessary`
 - [ ] stubs/
     - [ ] annotate_exports_hardcoded_expr_fixes.ml
     - [ ] eventLoggerLwt.ml
@@ -2626,7 +2627,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] flow_sedlex.ml → `irrelevant` (rust port uses logos)
       - [x] ppx_sedlex.ml → `irrelevant` (rust port uses logos)
       - [x] sedlex_cset.ml → `irrelevant` (rust port uses logos)
-- [ ] typing/
+- [x] typing/
   - [x] __tests__/
       - [x] type_hint_test.ml → `flow_typing/src/type_hint_test.rs`
       - [x] type_test.ml → `flow_typing/src/type_test.rs`

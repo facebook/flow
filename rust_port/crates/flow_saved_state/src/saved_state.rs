@@ -277,11 +277,15 @@ pub fn restore_dependency_info(
 const SAVED_STATE_VERSION_LENGTH: usize = 16;
 
 fn saved_state_version() -> String {
-    let unpadded = flow_common::flow_version::VERSION;
-    assert!(unpadded.len() <= SAVED_STATE_VERSION_LENGTH);
-    // We have to pad out the build ID to bring it up to the right length
-    let padding = "n".repeat(SAVED_STATE_VERSION_LENGTH - unpadded.len());
-    let version = format!("{unpadded}{padding}");
+    let version = if cfg!(debug_assertions) {
+        flow_common_build_id::get_build_id()
+    } else {
+        let unpadded = flow_common::flow_version::VERSION;
+        assert!(unpadded.len() <= SAVED_STATE_VERSION_LENGTH);
+        // We have to pad out the build ID to bring it up to the right length
+        let padding = "n".repeat(SAVED_STATE_VERSION_LENGTH - unpadded.len());
+        format!("{unpadded}{padding}")
+    };
     assert_eq!(version.len(), SAVED_STATE_VERSION_LENGTH);
     version
 }
