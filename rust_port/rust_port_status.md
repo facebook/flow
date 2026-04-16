@@ -261,7 +261,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] codemodCommand.ml → `flow_cli/src/codemod_command.rs`
     - [x] commandConnect.ml → `flow_cli/src/command_connect.rs`
     - [x] commandConnectSimple.ml → `flow_cli/src/command_connect.rs`
-    - [ ] commandInfo.ml
+    - [x] commandInfo.ml → `unnecessary interface`
     - [x] commandMeanKill.ml → `flow_cli/src/command_mean_kill.rs`
     - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
     - [x] commandUtils.ml → `flow_cli/src/command_utils.rs`
@@ -377,7 +377,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] dumpTypesCommand.ml → `flow_cli/src/dump_types_command.rs`
     - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
     - [x] findModuleCommand.ml → `flow_cli/src/find_module_command.rs`
-    - [ ] fixCommand.ml
     - [x] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs`
     - [x] getDefCommand.ml → `flow_cli/src/get_def_command.rs`
     - [x] graphCommand.ml → `flow_cli/src/graph_command.rs`
@@ -385,7 +384,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] inlayHintCommand.ml → `flow_cli/src/inlay_hint_command.rs`
     - [x] llmContextCommand.ml → `flow_cli/src/llm_context_command.rs`
     - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
-    - [X] lspCommand.ml → `flow_cli/src/lsp_command.rs`
+    - [x] lspCommand.ml → `flow_cli/src/lsp_command.rs`
     - [x] saveStateCommand.ml → `flow_cli/src/save_state_command.rs`
     - [x] serverCommand.ml → `flow_cli/src/server_command.rs`
     - [x] shellCompleteCommand.ml → `flow_cli/src/shell_complete_command.rs`
