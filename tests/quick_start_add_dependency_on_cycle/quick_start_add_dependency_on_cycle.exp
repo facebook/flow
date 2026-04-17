@@ -12,7 +12,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Change @flow file with dependency on a @flow file in a cycle, expect no error.
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 4/5 files.
+The Flow server is currently in lazy mode and is only checking 3/5 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Done!

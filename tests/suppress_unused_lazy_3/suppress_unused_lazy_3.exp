@@ -40,7 +40,7 @@ Unused suppression comment. [InferError]
 
 Found 2 warnings
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 7/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 === Add comment to B1.js (should skip B2.js check)
@@ -63,7 +63,7 @@ Unused suppression comment. [InferError]
 
 Found 2 warnings
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 7/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
 
@@ -84,7 +84,7 @@ Unused suppression comment. [InferError]
 
 Found 2 warnings
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 7/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 === Add comment to B1.js (B4 won't be in to_merge set)
@@ -107,11 +107,11 @@ Unused suppression comment. [InferError]
 
 Found 2 warnings
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 7/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 === Add comment to B4.js (We still need to suppress the error in B2)
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 8/8 files.
+The Flow server is currently in lazy mode and is only checking 7/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

@@ -15,7 +15,7 @@ Found correct merge base hash: Yes
 No new errors:
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 3/4 files.
+The Flow server is currently in lazy mode and is only checking 2/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Moving to commit 2

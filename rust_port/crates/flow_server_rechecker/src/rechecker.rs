@@ -57,7 +57,11 @@ pub fn get_lazy_stats(
     options: &Options,
     env: &server_env::Env,
 ) -> server_prot::response::LazyStats {
-    let checked_files = env.checked_files.cardinal() as i32;
+    // Report only focused + dependents as "checked" files. Dependencies are only
+    // merged (signatures computed) but not type-checked, so they shouldn't count
+    // toward the user-visible "checking N files" number.
+    let checked_files =
+        (env.checked_files.focused_cardinal() + env.checked_files.dependents_cardinal()) as i32;
     let total_files = env.files.len() as i32;
     server_prot::response::LazyStats {
         lazy_mode: options.lazy_mode,

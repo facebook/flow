@@ -12,7 +12,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 "Warm up" a dependency.
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 4/7 files.
+The Flow server is currently in lazy mode and is only checking 3/7 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 "Perturb" a dependent that depends on the warmed up, but unchanged dependency.
@@ -24,7 +24,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Test that the perturbed dependent is actually known (expecting a crash otherwise).
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 7/7 files.
+The Flow server is currently in lazy mode and is only checking 6/7 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Done!

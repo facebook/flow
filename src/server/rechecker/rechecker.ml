@@ -81,7 +81,12 @@ let start_parallelizable_workloads genv env =
     loop_thread
 
 let get_lazy_stats ~options env =
-  let checked_files = CheckedSet.cardinal env.checked_files in
+  (* Report only focused + dependents as "checked" files. Dependencies are only
+     merged (signatures computed) but not type-checked, so they shouldn't count
+     toward the user-visible "checking N files" number. *)
+  let checked_files =
+    CheckedSet.focused_cardinal env.checked_files + CheckedSet.dependents_cardinal env.checked_files
+  in
   let total_files = FilenameSet.cardinal env.files in
   { ServerProt.Response.lazy_mode = Options.lazy_mode options; checked_files; total_files }
 

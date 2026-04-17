@@ -141,5 +141,5 @@ annotation at function return: [signature-verification-failure]
 
 Found 4 errors
 
-The Flow server is currently in lazy mode and is only checking 8/9 files.
+The Flow server is currently in lazy mode and is only checking 7/9 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

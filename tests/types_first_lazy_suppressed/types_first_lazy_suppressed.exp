@@ -8,5 +8,5 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== suppressed errors should not be reported after focus-checking fileA.js: =====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 2/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
