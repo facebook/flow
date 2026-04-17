@@ -1668,7 +1668,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         (Class_type_sig.empty id None loc reason None env.tparams_map super, extend_asts)
       in
       let (iface_sig, property_asts) =
-        add_interface_properties env properties ~this:(implicit_mixed_this reason) iface_sig
+        add_interface_properties
+          env
+          ~obj_kind:`Interface
+          properties
+          ~this:(implicit_mixed_this reason)
+          iface_sig
       in
       Class_type_sig.check_signature_compatibility env.cx reason iface_sig;
       ( (loc, Class_type_sig.thistype env.cx iface_sig),
@@ -2990,7 +2995,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     in
     (dict, { indexer with Ast.Type.Object.Indexer.key = key_ast; value = value_ast })
 
-  and add_interface_properties env ~this properties s =
+  and add_interface_properties env ~obj_kind ~this properties s =
     let (x, rev_prop_asts) =
       List.fold_left
         Ast.Type.Object.(
@@ -3187,6 +3192,53 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 in
                 let (x, prop) =
                   Ast.Expression.Object.(
+                    let resolve_named_key ~check_variance key =
+                      let check_num key_loc num_value num_lit =
+                        if Js_number.is_float_safe_integer num_value then
+                          let name = Dtoa.ecma_string_of_float num_value in
+                          Some
+                            ( name,
+                              key_loc,
+                              (fun t -> Property.NumberLiteral ((key_loc, t), num_lit))
+                            )
+                        else (
+                          Flow_js_utils.add_output
+                            env.cx
+                            (Error_message.EUnsupportedKeyInObject
+                               {
+                                 loc = key_loc;
+                                 obj_kind;
+                                 key_error_kind =
+                                   Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value
+                                     num_value;
+                               }
+                            );
+                          None
+                        )
+                      in
+                      match key with
+                      | Property.Identifier
+                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
+                        Some (name, id_loc, (fun t -> Property.Identifier ((id_loc, t), id_name)))
+                      | Property.StringLiteral
+                          (key_loc, ({ Ast.StringLiteral.value = name; _ } as str_lit)) ->
+                        Some
+                          (name, key_loc, (fun t -> Property.StringLiteral ((key_loc, t), str_lit)))
+                      | Property.NumberLiteral
+                          (key_loc, ({ Ast.NumberLiteral.value = num_value; _ } as num_lit)) ->
+                        if check_variance then
+                          match variance with
+                          | Some (_, Ast.Variance.{ kind = Plus; _ })
+                          | Some (_, Ast.Variance.{ kind = Minus; _ }) ->
+                            Flow_js_utils.add_output
+                              env.cx
+                              (Error_message.EAmbiguousNumericKeyWithVariance key_loc);
+                            None
+                          | _ -> check_num key_loc num_value num_lit
+                        else
+                          check_num key_loc num_value num_lit
+                      | _ -> None
+                    in
                     match (_method, key, value) with
                     | ( true,
                         Property.Computed
@@ -3319,8 +3371,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                              (computed_loc, Flow_intermediate_error_types.IllegalName)
                           );
                         (x, Tast_utils.error_mapper#object_property_type (loc, prop)))
-                    | (_, Property.StringLiteral (key_loc, _), _)
-                    | (_, Property.NumberLiteral (key_loc, _), _)
                     | (_, Property.BigIntLiteral (key_loc, _), _)
                     | (_, Property.PrivateName (key_loc, _), _)
                     | (_, Property.Computed (key_loc, _), _) ->
@@ -3330,146 +3380,150 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                            (key_loc, Flow_intermediate_error_types.IllegalName)
                         );
                       (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                    (* Named keys: Identifier, StringLiteral, NumberLiteral *)
+                    (* method *)
                     | ( true,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
+                        _,
                         Ast.Type.Object.Property.Init (Some (func_loc, Ast.Type.Function func))
                       ) ->
-                      let meth_kind =
-                        match name with
-                        | "constructor" -> ConstructorKind
-                        | _ -> MethodKind { static }
-                      in
-                      let (fsig, func_ast) = mk_method_func_sig ~meth_kind env loc func in
-                      let this_write_loc = None in
-                      let ft = Func_type_sig.methodtype env.cx this_write_loc this fsig in
-                      let append_method =
-                        match (static, meth_kind) with
-                        | (false, ConstructorKind) ->
-                          Class_type_sig.append_constructor ~id_loc:(Some id_loc)
-                        | _ -> Class_type_sig.append_method ~static name ~id_loc ~this_write_loc
-                      in
-                      let open Ast.Type in
-                      ( append_method ~func_sig:fsig x,
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
-                            value = Object.Property.Init (Some ((func_loc, ft), Function func_ast));
-                            init = None;
-                          }
-                        )
-                      )
-                    | (true, Property.Identifier _, _) ->
+                      (match resolve_named_key ~check_variance:false key with
+                      | None -> (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                      | Some (name, key_loc, rebuild_key) ->
+                        let meth_kind =
+                          match name with
+                          | "constructor" -> ConstructorKind
+                          | _ -> MethodKind { static }
+                        in
+                        let (fsig, func_ast) = mk_method_func_sig ~meth_kind env loc func in
+                        let this_write_loc = None in
+                        let ft = Func_type_sig.methodtype env.cx this_write_loc this fsig in
+                        let append_method =
+                          match (static, meth_kind) with
+                          | (false, ConstructorKind) ->
+                            Class_type_sig.append_constructor ~id_loc:(Some key_loc)
+                          | _ ->
+                            Class_type_sig.append_method
+                              ~static
+                              name
+                              ~id_loc:key_loc
+                              ~this_write_loc
+                        in
+                        let open Ast.Type in
+                        ( append_method ~func_sig:fsig x,
+                          ( loc,
+                            {
+                              prop with
+                              Object.Property.key = rebuild_key ft;
+                              value = Object.Property.Init (Some ((func_loc, ft), Function func_ast));
+                              init = None;
+                            }
+                          )
+                        ))
+                    (* method not a function *)
+                    | (true, _, _) ->
                       Flow_js_utils.add_output
                         env.cx
                         Error_message.(EInternal (loc, MethodNotAFunction));
                       (x, Tast_utils.error_mapper#object_property_type (loc, prop))
-                    | ( false,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init (Some value)
-                      ) ->
-                      let (((_, t), _) as value_ast) = convert env value in
-                      let t =
-                        if optional then
-                          TypeUtil.optional t
-                        else
-                          t
-                      in
-                      let add =
-                        if proto then
-                          Class_type_sig.add_proto_field
-                        else
-                          Class_type_sig.add_field ~static
-                      in
-                      let open Ast.Type in
-                      ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, t), id_name);
-                            value = Object.Property.Init (Some value_ast);
-                            init =
-                              Base.Option.map init_ ~f:(Statement.expression env.cx ~as_const:true);
-                          }
-                        )
-                      )
-                    | ( false,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init None
-                      ) ->
-                      handle_init_only_property name id_loc ~rebuild_key:(fun t ->
-                          Property.Identifier ((id_loc, t), id_name)
-                      )
-                    (* unsafe getter property *)
-                    | ( _,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Get (get_loc, func)
-                      ) ->
-                      Flow_js_utils.add_output env.cx (Error_message.EUnsafeGettersSetters loc);
-                      let (fsig, func_ast) =
-                        mk_method_func_sig ~meth_kind:GetterKind env loc func
-                      in
-                      let prop_t =
-                        TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
-                      in
-                      let open Ast.Type in
-                      ( Class_type_sig.add_getter
-                          ~static
-                          name
-                          ~id_loc
-                          ~this_write_loc:None
-                          ~func_sig:fsig
-                          x,
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
-                            value = Object.Property.Get (get_loc, func_ast);
-                            init = None;
-                          }
-                        )
-                      )
-                    (* unsafe setter property *)
-                    | ( _,
-                        Property.Identifier
-                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Set (set_loc, func)
-                      ) ->
-                      Flow_js_utils.add_output env.cx (Error_message.EUnsafeGettersSetters loc);
-                      let (fsig, func_ast) =
-                        mk_method_func_sig ~meth_kind:SetterKind env loc func
-                      in
-                      let prop_t =
-                        match fsig with
-                        | { Func_type_sig.Types.tparams = None; fparams; _ } ->
-                          (match Func_type_params.value fparams with
-                          | [(_, t)] -> t
-                          | _ -> AnyT.at (AnyError None) id_loc)
-                        (* error case: report any ok *)
-                        | _ -> AnyT.at (AnyError None) id_loc
-                        (* error case: report any ok *)
-                      in
-                      let open Ast.Type in
-                      ( Class_type_sig.add_setter
-                          ~static
-                          name
-                          ~id_loc
-                          ~this_write_loc:None
-                          ~func_sig:fsig
-                          x,
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
-                            value = Object.Property.Set (set_loc, func_ast);
-                            init = None;
-                          }
-                        )
-                      )
+                    (* field with annotation *)
+                    | (false, _, Ast.Type.Object.Property.Init (Some value)) ->
+                      (match resolve_named_key ~check_variance:true key with
+                      | None -> (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                      | Some (name, key_loc, rebuild_key) ->
+                        let (((_, t), _) as value_ast) = convert env value in
+                        let t =
+                          if optional then
+                            TypeUtil.optional t
+                          else
+                            t
+                        in
+                        let add =
+                          if proto then
+                            Class_type_sig.add_proto_field
+                          else
+                            Class_type_sig.add_field ~static
+                        in
+                        let open Ast.Type in
+                        ( add name key_loc polarity (Class_type_sig.Types.Annot t) x,
+                          ( loc,
+                            {
+                              prop with
+                              Object.Property.key = rebuild_key t;
+                              value = Object.Property.Init (Some value_ast);
+                              init =
+                                Base.Option.map init_ ~f:(Statement.expression env.cx ~as_const:true);
+                            }
+                          )
+                        ))
+                    (* field without annotation *)
+                    | (false, _, Ast.Type.Object.Property.Init None) ->
+                      (match resolve_named_key ~check_variance:true key with
+                      | None -> (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                      | Some (name, key_loc, rebuild_key) ->
+                        handle_init_only_property name key_loc ~rebuild_key)
+                    (* getter *)
+                    | (_, _, Ast.Type.Object.Property.Get (get_loc, func)) ->
+                      (match resolve_named_key ~check_variance:false key with
+                      | None -> (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                      | Some (name, key_loc, rebuild_key) ->
+                        Flow_js_utils.add_output env.cx (Error_message.EUnsafeGettersSetters loc);
+                        let (fsig, func_ast) =
+                          mk_method_func_sig ~meth_kind:GetterKind env loc func
+                        in
+                        let prop_t =
+                          TypeUtil.type_t_of_annotated_or_inferred fsig.Func_type_sig.Types.return_t
+                        in
+                        let open Ast.Type in
+                        ( Class_type_sig.add_getter
+                            ~static
+                            name
+                            ~id_loc:key_loc
+                            ~this_write_loc:None
+                            ~func_sig:fsig
+                            x,
+                          ( loc,
+                            {
+                              prop with
+                              Object.Property.key = rebuild_key prop_t;
+                              value = Object.Property.Get (get_loc, func_ast);
+                              init = None;
+                            }
+                          )
+                        ))
+                    (* setter *)
+                    | (_, _, Ast.Type.Object.Property.Set (set_loc, func)) ->
+                      (match resolve_named_key ~check_variance:false key with
+                      | None -> (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                      | Some (name, key_loc, rebuild_key) ->
+                        Flow_js_utils.add_output env.cx (Error_message.EUnsafeGettersSetters loc);
+                        let (fsig, func_ast) =
+                          mk_method_func_sig ~meth_kind:SetterKind env loc func
+                        in
+                        let prop_t =
+                          match fsig with
+                          | { Func_type_sig.Types.tparams = None; fparams; _ } ->
+                            (match Func_type_params.value fparams with
+                            | [(_, t)] -> t
+                            | _ -> AnyT.at (AnyError None) key_loc)
+                          | _ -> AnyT.at (AnyError None) key_loc
+                        in
+                        let open Ast.Type in
+                        ( Class_type_sig.add_setter
+                            ~static
+                            name
+                            ~id_loc:key_loc
+                            ~this_write_loc:None
+                            ~func_sig:fsig
+                            x,
+                          ( loc,
+                            {
+                              prop with
+                              Object.Property.key = rebuild_key prop_t;
+                              value = Object.Property.Set (set_loc, func_ast);
+                              init = None;
+                            }
+                          )
+                        ))
                   )
                 in
                 (x, Ast.Type.Object.Property prop :: rev_prop_asts)
@@ -3703,7 +3757,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     (* TODO: interfaces don't have a name field, or even statics *)
     let iface_sig = Class_type_sig.add_name_field iface_sig in
     let (iface_sig, properties) =
-      add_interface_properties env properties ~this:(implicit_mixed_this reason) iface_sig
+      add_interface_properties
+        env
+        ~obj_kind:`Interface
+        properties
+        ~this:(implicit_mixed_this reason)
+        iface_sig
     in
     let (_, t) =
       Class_type_sig.classtype
@@ -4089,6 +4148,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         in
         add_interface_properties
           { env with tparams_map = tparams_map_with_this }
+          ~obj_kind:`DeclareClass
           properties
           ~this:(implicit_mixed_this (reason_of_t this_t))
           iface_sig

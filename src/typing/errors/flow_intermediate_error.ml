@@ -5154,12 +5154,14 @@ let to_printable_error :
           ~default:[text " Only identifier, string literal, and number literal keys are allowed."]
           (msg_of_invalid_obj_key_kind key_error_kind)
       in
-      let obj_kind =
+      let obj_kind_str =
         match obj_kind with
-        | `Type -> "type"
-        | `Literal -> "literal"
+        | `Type -> "object type"
+        | `Literal -> "object literal"
+        | `Interface -> "interface"
+        | `DeclareClass -> "declare class"
       in
-      [text "Unsupported key in object "; text obj_kind; text "."] @ suffix
+      [text "Unsupported key in "; text obj_kind_str; text "."] @ suffix
     | MessageUnsupportedSyntax AnnotationInsideDestructuring ->
       [
         text "Annotations inside of destructuring are not supported. ";

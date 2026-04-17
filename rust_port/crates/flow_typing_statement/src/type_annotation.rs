@@ -3169,8 +3169,14 @@ fn convert_inner<'a>(
                 super_,
             );
             let this = type_::implicit_mixed_this(reason.dupe());
-            let (iface_sig, property_asts) =
-                add_interface_properties(cx, env, this, properties, iface_sig);
+            let (iface_sig, property_asts) = add_interface_properties(
+                cx,
+                env,
+                intermediate_error_types::ObjKind::Interface,
+                this,
+                properties,
+                iface_sig,
+            );
             class_sig::check_signature_compatibility(cx, reason.dupe(), &iface_sig);
             let iface_t = class_sig::thistype(cx, &iface_sig);
             ast::types::Type::new(TypeInner::Interface {
@@ -5798,6 +5804,7 @@ fn convert_indexer_internal(
 fn add_interface_properties<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
+    obj_kind: intermediate_error_types::ObjKind,
     this: Type,
     properties: &[ast::types::object::Property<ALoc, ALoc>],
     mut s: func_class_sig_types::class::Class<FuncTypeParamsConfig>,
@@ -6090,10 +6097,8 @@ fn add_interface_properties<'a>(
                             }
                         };
                     use flow_parser::ast::expression::object::Key;
-                    let id_name = match &np.key {
-                        Key::StringLiteral((loc, _))
-                        | Key::NumberLiteral((loc, _))
-                        | Key::BigIntLiteral((loc, _)) => {
+                    match &np.key {
+                        Key::BigIntLiteral((loc, _)) => {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -6348,19 +6353,125 @@ fn add_interface_properties<'a>(
                             }
                             continue;
                         }
-                        Key::Identifier(id_name) => id_name,
+                        _ => {}
                     };
-                    let id_loc = id_name.loc.dupe();
-                    let name = id_name.name.dupe();
-
+                    type RebuildKey = Box<dyn Fn(Type) -> Key<ALoc, (ALoc, Type)>>;
+                    let resolve_named_key =
+                        |check_variance: bool| -> Option<(FlowSmolStr, ALoc, RebuildKey)> {
+                            let check_num =
+                                |key_loc: ALoc,
+                                 num_value: f64,
+                                 num_lit: ast::NumberLiteral<ALoc>|
+                                 -> Option<(FlowSmolStr, ALoc, RebuildKey)> {
+                                    if flow_common::js_number::is_float_safe_integer(num_value) {
+                                        let name = flow_common::js_number::ecma_string_of_float(
+                                            num_value,
+                                        );
+                                        let key_loc_clone = key_loc.dupe();
+                                        Some((
+                                            FlowSmolStr::new(&name),
+                                            key_loc,
+                                            Box::new(move |t| {
+                                                Key::NumberLiteral((
+                                                    (key_loc_clone.dupe(), t),
+                                                    num_lit.clone(),
+                                                ))
+                                            }),
+                                        ))
+                                    } else {
+                                        flow_js_utils::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedKeyInObject {
+                                                loc: key_loc,
+                                                obj_kind: obj_kind.clone(),
+                                                key_error_kind:
+                                                    InvalidObjKey::kind_of_num_value(num_value),
+                                            },
+                                        );
+                                        None
+                                    }
+                                };
+                            match &np.key {
+                                Key::Identifier(id_name) => {
+                                    let id_loc = id_name.loc.dupe();
+                                    let id_name_clone = id_name.clone();
+                                    Some((
+                                        id_name.name.dupe(),
+                                        id_loc.dupe(),
+                                        Box::new(move |t| {
+                                            Key::Identifier(ast::Identifier::new(
+                                                ast::IdentifierInner {
+                                                    loc: (id_loc.dupe(), t),
+                                                    name: id_name_clone.name.dupe(),
+                                                    comments: id_name_clone.comments.dupe(),
+                                                },
+                                            ))
+                                        }),
+                                    ))
+                                }
+                                Key::StringLiteral((key_loc, str_lit)) => {
+                                    let name = str_lit.value.dupe();
+                                    let key_loc = key_loc.dupe();
+                                    let str_lit_clone = str_lit.clone();
+                                    Some((
+                                        name,
+                                        key_loc.dupe(),
+                                        Box::new(move |t| {
+                                            Key::StringLiteral((
+                                                (key_loc.dupe(), t),
+                                                str_lit_clone.clone(),
+                                            ))
+                                        }),
+                                    ))
+                                }
+                                Key::NumberLiteral((key_loc, num_lit)) => {
+                                    if check_variance {
+                                        match &np.variance {
+                                            Some(ast::Variance {
+                                                kind:
+                                                    ast::VarianceKind::Plus | ast::VarianceKind::Minus,
+                                                ..
+                                            }) => {
+                                                flow_js_utils::add_output_non_speculating(
+                                                    cx,
+                                                    ErrorMessage::EAmbiguousNumericKeyWithVariance(
+                                                        key_loc.dupe(),
+                                                    ),
+                                                );
+                                                None
+                                            }
+                                            _ => check_num(
+                                                key_loc.dupe(),
+                                                num_lit.value,
+                                                num_lit.clone(),
+                                            ),
+                                        }
+                                    } else {
+                                        check_num(key_loc.dupe(), num_lit.value, num_lit.clone())
+                                    }
+                                }
+                                _ => None,
+                            }
+                        };
+                    // method
                     if np.method {
                         match &np.value {
-                            ast::types::object::PropertyValue::Init(Some(value)) => {
-                                match &**value {
-                                    ast::types::TypeInner::Function {
-                                        loc: func_loc,
-                                        inner: func,
-                                    } => {
+                            ast::types::object::PropertyValue::Init(Some(value))
+                                if let ast::types::TypeInner::Function {
+                                    loc: func_loc,
+                                    inner: func,
+                                } = &**value =>
+                            {
+                                match resolve_named_key(false) {
+                                    None => {
+                                        let Ok(error_prop) =
+                                            polymorphic_ast_mapper::object_property_type(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                np,
+                                            );
+                                        prop_asts.push(Property::NormalProperty(error_prop));
+                                    }
+                                    Some((name, key_loc, rebuild_key)) => {
                                         let meth_kind = match name.as_str() {
                                             "constructor" => MethodKind::ConstructorKind,
                                             _ => MethodKind::MethodKind {
@@ -6384,7 +6495,7 @@ fn add_interface_properties<'a>(
                                         match (np.static_, &meth_kind) {
                                             (false, MethodKind::ConstructorKind) => {
                                                 class_sig::append_constructor(
-                                                    Some(id_loc.dupe()),
+                                                    Some(key_loc.dupe()),
                                                     fsig,
                                                     None,
                                                     None,
@@ -6395,7 +6506,7 @@ fn add_interface_properties<'a>(
                                                 class_sig::append_method(
                                                     np.static_,
                                                     name.dupe(),
-                                                    id_loc.dupe(),
+                                                    key_loc.dupe(),
                                                     None,
                                                     fsig,
                                                     None,
@@ -6407,13 +6518,7 @@ fn add_interface_properties<'a>(
                                         prop_asts.push(Property::NormalProperty(
                                             ast::types::object::NormalProperty {
                                                 loc: np.loc.dupe(),
-                                                key: Key::Identifier(ast::Identifier::new(
-                                                    ast::IdentifierInner {
-                                                        loc: (id_loc.dupe(), ft.dupe()),
-                                                        name: id_name.name.dupe(),
-                                                        comments: id_name.comments.dupe(),
-                                                    },
-                                                )),
+                                                key: rebuild_key(ft.dupe()),
                                                 value: ast::types::object::PropertyValue::Init(
                                                     Some(ast::types::Type::new(
                                                         ast::types::TypeInner::Function {
@@ -6435,23 +6540,9 @@ fn add_interface_properties<'a>(
                                             },
                                         ));
                                     }
-                                    _ => {
-                                        flow_js_utils::add_output_non_speculating(
-                                            cx,
-                                            ErrorMessage::EInternal(Box::new((
-                                                np.loc.dupe(),
-                                                InternalError::MethodNotAFunction,
-                                            ))),
-                                        );
-                                        let Ok(error_prop) =
-                                            polymorphic_ast_mapper::object_property_type(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                np,
-                                            );
-                                        prop_asts.push(Property::NormalProperty(error_prop));
-                                    }
                                 }
                             }
+                            // method not a function
                             _ => {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
@@ -6469,218 +6560,241 @@ fn add_interface_properties<'a>(
                         }
                     } else {
                         match &np.value {
+                            // field with annotation
                             ast::types::object::PropertyValue::Init(Some(value)) => {
-                                let value_ast = convert_inner(cx, env, value);
-                                let (_, t) = value_ast.loc();
-                                let t = t.dupe();
-                                let t_with_optional = if np.optional {
-                                    type_util::optional(t.dupe(), None, false)
-                                } else {
-                                    t.dupe()
-                                };
-                                if np.proto {
-                                    class_sig::add_proto_field(
-                                        name.dupe(),
-                                        id_loc.dupe(),
-                                        polarity,
-                                        func_class_sig_types::class::Field::Annot(
-                                            t_with_optional.dupe(),
-                                        ),
-                                        &mut s,
-                                    );
-                                } else {
-                                    class_sig::add_field(
-                                        np.static_,
-                                        name.dupe(),
-                                        id_loc.dupe(),
-                                        polarity,
-                                        func_class_sig_types::class::Field::Annot(
-                                            t_with_optional.dupe(),
-                                        ),
-                                        &mut s,
-                                    );
-                                }
-                                let init_ast = init_.as_ref().map(|init_expr| {
-                                    crate::statement::expression(
-                                        None,
-                                        None,
-                                        Some(true),
-                                        cx,
-                                        init_expr,
-                                    )
-                                    .unwrap()
-                                });
-                                prop_asts.push(Property::NormalProperty(
-                                    ast::types::object::NormalProperty {
-                                        loc: np.loc.dupe(),
-                                        key: Key::Identifier(ast::Identifier::new(
-                                            ast::IdentifierInner {
-                                                loc: (id_loc.dupe(), t_with_optional),
-                                                name: id_name.name.dupe(),
-                                                comments: id_name.comments.dupe(),
-                                            },
-                                        )),
-                                        value: ast::types::object::PropertyValue::Init(Some(
-                                            value_ast,
-                                        )),
-                                        optional: np.optional,
-                                        static_: np.static_,
-                                        proto: np.proto,
-                                        method: np.method,
-                                        abstract_: np.abstract_,
-                                        override_: np.override_,
-                                        variance: np.variance.clone(),
-                                        ts_accessibility: np.ts_accessibility.clone(),
-                                        init: init_ast,
-                                        comments: np.comments.dupe(),
-                                    },
-                                ));
-                            }
-                            ast::types::object::PropertyValue::Init(None) => {
-                                let id_name_clone = id_name.clone();
-                                if let Some(prop_ast) =
-                                    handle_init_only_property(name.dupe(), id_loc.dupe(), &|t| {
-                                        Key::Identifier(ast::Identifier::new(
-                                            ast::IdentifierInner {
-                                                loc: (id_loc.dupe(), t),
-                                                name: id_name_clone.name.dupe(),
-                                                comments: id_name_clone.comments.dupe(),
-                                            },
-                                        ))
-                                    })
-                                {
-                                    prop_asts.push(prop_ast);
-                                } else {
-                                    let Ok(error_prop) =
-                                        polymorphic_ast_mapper::object_property_type(
-                                            &mut typed_ast_utils::ErrorMapper,
-                                            np,
-                                        );
-                                    prop_asts.push(Property::NormalProperty(error_prop));
-                                }
-                            }
-                            // unsafe getter property
-                            ast::types::object::PropertyValue::Get(get_loc, func) => {
-                                flow_js_utils::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::EUnsafeGettersSetters(np.loc.dupe()),
-                                );
-                                let (fsig, func_ast) = mk_method_func_sig(
-                                    cx,
-                                    env,
-                                    MethodKind::GetterKind,
-                                    np.loc.dupe(),
-                                    func,
-                                );
-                                let prop_t =
-                                    type_util::type_t_of_annotated_or_inferred(&fsig.return_t)
-                                        .dupe();
-                                class_sig::add_getter(
-                                    np.static_,
-                                    name.dupe(),
-                                    id_loc.dupe(),
-                                    None,
-                                    fsig,
-                                    None,
-                                    None,
-                                    &mut s,
-                                );
-                                prop_asts.push(Property::NormalProperty(
-                                    ast::types::object::NormalProperty {
-                                        loc: np.loc.dupe(),
-                                        key: Key::Identifier(ast::Identifier::new(
-                                            ast::IdentifierInner {
-                                                loc: (id_loc.dupe(), prop_t),
-                                                name: id_name.name.dupe(),
-                                                comments: id_name.comments.dupe(),
-                                            },
-                                        )),
-                                        value: ast::types::object::PropertyValue::Get(
-                                            get_loc.dupe(),
-                                            func_ast,
-                                        ),
-                                        optional: np.optional,
-                                        static_: np.static_,
-                                        proto: np.proto,
-                                        method: np.method,
-                                        abstract_: np.abstract_,
-                                        override_: np.override_,
-                                        variance: np.variance.clone(),
-                                        ts_accessibility: np.ts_accessibility.clone(),
-                                        init: None,
-                                        comments: np.comments.dupe(),
-                                    },
-                                ));
-                            }
-                            // unsafe setter property
-                            ast::types::object::PropertyValue::Set(set_loc, func) => {
-                                flow_js_utils::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::EUnsafeGettersSetters(np.loc.dupe()),
-                                );
-                                let (fsig, func_ast) = mk_method_func_sig(
-                                    cx,
-                                    env,
-                                    MethodKind::SetterKind,
-                                    np.loc.dupe(),
-                                    func,
-                                );
-                                let prop_t = if fsig.tparams.is_none() {
-                                    let params = crate::func_params::value::<FuncTypeParamsConfig>(
-                                        &fsig.fparams.params,
-                                    );
-                                    if params.len() == 1 {
-                                        params.into_iter().next().unwrap().1
-                                    } else {
-                                        // error case: report any ok
-                                        type_::any_t::at(
-                                            type_::AnySource::AnyError(None),
-                                            id_loc.dupe(),
-                                        )
+                                match resolve_named_key(true) {
+                                    None => {
+                                        let Ok(error_prop) =
+                                            polymorphic_ast_mapper::object_property_type(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                np,
+                                            );
+                                        prop_asts.push(Property::NormalProperty(error_prop));
                                     }
-                                } else {
-                                    // error case: report any ok
-                                    type_::any_t::at(
-                                        type_::AnySource::AnyError(None),
-                                        id_loc.dupe(),
-                                    )
-                                };
-                                class_sig::add_setter(
-                                    np.static_,
-                                    name.dupe(),
-                                    id_loc.dupe(),
-                                    None,
-                                    fsig,
-                                    None,
-                                    None,
-                                    &mut s,
-                                );
-                                prop_asts.push(Property::NormalProperty(
-                                    ast::types::object::NormalProperty {
-                                        loc: np.loc.dupe(),
-                                        key: Key::Identifier(ast::Identifier::new(
-                                            ast::IdentifierInner {
-                                                loc: (id_loc.dupe(), prop_t),
-                                                name: id_name.name.dupe(),
-                                                comments: id_name.comments.dupe(),
+                                    Some((name, key_loc, rebuild_key)) => {
+                                        let value_ast = convert_inner(cx, env, value);
+                                        let (_, t) = value_ast.loc();
+                                        let t = t.dupe();
+                                        let t_with_optional = if np.optional {
+                                            type_util::optional(t.dupe(), None, false)
+                                        } else {
+                                            t.dupe()
+                                        };
+                                        if np.proto {
+                                            class_sig::add_proto_field(
+                                                name.dupe(),
+                                                key_loc.dupe(),
+                                                polarity,
+                                                func_class_sig_types::class::Field::Annot(
+                                                    t_with_optional.dupe(),
+                                                ),
+                                                &mut s,
+                                            );
+                                        } else {
+                                            class_sig::add_field(
+                                                np.static_,
+                                                name.dupe(),
+                                                key_loc.dupe(),
+                                                polarity,
+                                                func_class_sig_types::class::Field::Annot(
+                                                    t_with_optional.dupe(),
+                                                ),
+                                                &mut s,
+                                            );
+                                        }
+                                        let init_ast = init_.as_ref().map(|init_expr| {
+                                            crate::statement::expression(
+                                                None,
+                                                None,
+                                                Some(true),
+                                                cx,
+                                                init_expr,
+                                            )
+                                            .unwrap()
+                                        });
+                                        prop_asts.push(Property::NormalProperty(
+                                            ast::types::object::NormalProperty {
+                                                loc: np.loc.dupe(),
+                                                key: rebuild_key(t_with_optional),
+                                                value: ast::types::object::PropertyValue::Init(
+                                                    Some(value_ast),
+                                                ),
+                                                optional: np.optional,
+                                                static_: np.static_,
+                                                proto: np.proto,
+                                                method: np.method,
+                                                abstract_: np.abstract_,
+                                                override_: np.override_,
+                                                variance: np.variance.clone(),
+                                                ts_accessibility: np.ts_accessibility.clone(),
+                                                init: init_ast,
+                                                comments: np.comments.dupe(),
                                             },
-                                        )),
-                                        value: ast::types::object::PropertyValue::Set(
-                                            set_loc.dupe(),
-                                            func_ast,
-                                        ),
-                                        optional: np.optional,
-                                        static_: np.static_,
-                                        proto: np.proto,
-                                        method: np.method,
-                                        abstract_: np.abstract_,
-                                        override_: np.override_,
-                                        variance: np.variance.clone(),
-                                        ts_accessibility: np.ts_accessibility.clone(),
-                                        init: None,
-                                        comments: np.comments.dupe(),
-                                    },
-                                ));
+                                        ));
+                                    }
+                                }
+                            }
+                            // field without annotation
+                            ast::types::object::PropertyValue::Init(None) => {
+                                match resolve_named_key(true) {
+                                    None => {
+                                        let Ok(error_prop) =
+                                            polymorphic_ast_mapper::object_property_type(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                np,
+                                            );
+                                        prop_asts.push(Property::NormalProperty(error_prop));
+                                    }
+                                    Some((name, key_loc, rebuild_key)) => {
+                                        if let Some(prop_ast) =
+                                            handle_init_only_property(name, key_loc, &*rebuild_key)
+                                        {
+                                            prop_asts.push(prop_ast);
+                                        } else {
+                                            let Ok(error_prop) =
+                                                polymorphic_ast_mapper::object_property_type(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    np,
+                                                );
+                                            prop_asts.push(Property::NormalProperty(error_prop));
+                                        }
+                                    }
+                                }
+                            }
+                            // getter
+                            ast::types::object::PropertyValue::Get(get_loc, func) => {
+                                match resolve_named_key(false) {
+                                    None => {
+                                        let Ok(error_prop) =
+                                            polymorphic_ast_mapper::object_property_type(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                np,
+                                            );
+                                        prop_asts.push(Property::NormalProperty(error_prop));
+                                    }
+                                    Some((name, key_loc, rebuild_key)) => {
+                                        flow_js_utils::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsafeGettersSetters(np.loc.dupe()),
+                                        );
+                                        let (fsig, func_ast) = mk_method_func_sig(
+                                            cx,
+                                            env,
+                                            MethodKind::GetterKind,
+                                            np.loc.dupe(),
+                                            func,
+                                        );
+                                        let prop_t = type_util::type_t_of_annotated_or_inferred(
+                                            &fsig.return_t,
+                                        )
+                                        .dupe();
+                                        class_sig::add_getter(
+                                            np.static_,
+                                            name.dupe(),
+                                            key_loc.dupe(),
+                                            None,
+                                            fsig,
+                                            None,
+                                            None,
+                                            &mut s,
+                                        );
+                                        prop_asts.push(Property::NormalProperty(
+                                            ast::types::object::NormalProperty {
+                                                loc: np.loc.dupe(),
+                                                key: rebuild_key(prop_t),
+                                                value: ast::types::object::PropertyValue::Get(
+                                                    get_loc.dupe(),
+                                                    func_ast,
+                                                ),
+                                                optional: np.optional,
+                                                static_: np.static_,
+                                                proto: np.proto,
+                                                method: np.method,
+                                                abstract_: np.abstract_,
+                                                override_: np.override_,
+                                                variance: np.variance.clone(),
+                                                ts_accessibility: np.ts_accessibility.clone(),
+                                                init: None,
+                                                comments: np.comments.dupe(),
+                                            },
+                                        ));
+                                    }
+                                }
+                            }
+                            // setter
+                            ast::types::object::PropertyValue::Set(set_loc, func) => {
+                                match resolve_named_key(false) {
+                                    None => {
+                                        let Ok(error_prop) =
+                                            polymorphic_ast_mapper::object_property_type(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                np,
+                                            );
+                                        prop_asts.push(Property::NormalProperty(error_prop));
+                                    }
+                                    Some((name, key_loc, rebuild_key)) => {
+                                        flow_js_utils::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsafeGettersSetters(np.loc.dupe()),
+                                        );
+                                        let (fsig, func_ast) = mk_method_func_sig(
+                                            cx,
+                                            env,
+                                            MethodKind::SetterKind,
+                                            np.loc.dupe(),
+                                            func,
+                                        );
+                                        let prop_t = if fsig.tparams.is_none() {
+                                            let params =
+                                                crate::func_params::value::<FuncTypeParamsConfig>(
+                                                    &fsig.fparams.params,
+                                                );
+                                            if params.len() == 1 {
+                                                params.into_iter().next().unwrap().1
+                                            } else {
+                                                type_::any_t::at(
+                                                    type_::AnySource::AnyError(None),
+                                                    key_loc.dupe(),
+                                                )
+                                            }
+                                        } else {
+                                            type_::any_t::at(
+                                                type_::AnySource::AnyError(None),
+                                                key_loc.dupe(),
+                                            )
+                                        };
+                                        class_sig::add_setter(
+                                            np.static_,
+                                            name.dupe(),
+                                            key_loc.dupe(),
+                                            None,
+                                            fsig,
+                                            None,
+                                            None,
+                                            &mut s,
+                                        );
+                                        prop_asts.push(Property::NormalProperty(
+                                            ast::types::object::NormalProperty {
+                                                loc: np.loc.dupe(),
+                                                key: rebuild_key(prop_t),
+                                                value: ast::types::object::PropertyValue::Set(
+                                                    set_loc.dupe(),
+                                                    func_ast,
+                                                ),
+                                                optional: np.optional,
+                                                static_: np.static_,
+                                                proto: np.proto,
+                                                method: np.method,
+                                                abstract_: np.abstract_,
+                                                override_: np.override_,
+                                                variance: np.variance.clone(),
+                                                ts_accessibility: np.ts_accessibility.clone(),
+                                                init: None,
+                                                comments: np.comments.dupe(),
+                                            },
+                                        ));
+                                    }
+                                }
                             }
                         }
                     }
@@ -7102,8 +7216,14 @@ pub fn mk_interface_sig<'a>(
     // TODO: interfaces don't have a name field, or even statics
     class_sig::add_name_field(&mut iface_sig);
     let this = type_::implicit_mixed_this(reason.dupe());
-    let (iface_sig, properties_ast) =
-        add_interface_properties(cx, &mut env, this, &body.properties, iface_sig);
+    let (iface_sig, properties_ast) = add_interface_properties(
+        cx,
+        &mut env,
+        intermediate_error_types::ObjKind::Interface,
+        this,
+        &body.properties,
+        iface_sig,
+    );
     let (_t_internal, t) = class_sig::classtype(
         cx,
         true,
@@ -7802,6 +7922,7 @@ pub fn mk_declare_class_sig<'a>(
         let (updated_sig, properties_typed) = add_interface_properties(
             cx,
             &mut env_with_this,
+            intermediate_error_types::ObjKind::DeclareClass,
             this_type,
             &body.properties,
             iface_sig,

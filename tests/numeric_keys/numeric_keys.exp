@@ -66,6 +66,39 @@ Unsupported key in object type. Number literals must not be larger than `Number.
          ^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------- declare_class.js:13:3
+
+Cannot cast `a[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   declare_class.js:13:3
+   13|   a[0] as empty; // ERROR
+         ^^^^
+
+References:
+   declare_class.js:5:6
+    5|   0: string;
+            ^^^^^^ [1]
+   declare_class.js:13:11
+   13|   a[0] as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:18:3
+
+Unsupported key in declare class. Only integer-like number literals are allowed. [illegal-key]
+
+   18|   1.1: true; // ERROR
+         ^^^
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:19:3
+
+Unsupported key in declare class. Number literals must not be larger than `Number.MAX_SAFE_INTEGER`. [illegal-key]
+
+   19|   9007199254740992: false; // ERROR
+         ^^^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- import_numeric_key.js:7:1
 
 Cannot cast `obj[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
@@ -98,6 +131,57 @@ References:
    import_numeric_key.js:8:11
    8| obj[2] as empty; // ERROR
                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:14:3
+
+Cannot cast `a[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   interface.js:14:3
+   14|   a[0] as empty; // ERROR
+         ^^^^
+
+References:
+   interface.js:5:6
+    5|   0: string;
+            ^^^^^^ [1]
+   interface.js:14:11
+   14|   a[0] as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:19:3
+
+Unsupported key in interface. Only integer-like number literals are allowed. [illegal-key]
+
+   19|   1.1: true; // ERROR
+         ^^^
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:20:3
+
+Unsupported key in interface. Number literals must not be larger than `Number.MAX_SAFE_INTEGER`. [illegal-key]
+
+   20|   9007199254740992: false; // ERROR
+         ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:25:4
+
+Cannot mix number literal keys and variance annotations, as the variance annotation could be interpreted as negating or
+making positive the number literal. Consider using a string literal key name to disambiguate. [illegal-key]
+
+   25|   -1: string; // ERROR
+          ^
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:26:4
+
+Cannot mix number literal keys and variance annotations, as the variance annotation could be interpreted as negating or
+making positive the number literal. Consider using a string literal key name to disambiguate. [illegal-key]
+
+   26|   +2: boolean; // ERROR
+          ^
 
 
 Error ---------------------------------------------------------------------------------------- non_literal_number.js:5:5
@@ -825,4 +909,4 @@ References:
 
 
 
-Found 45 errors
+Found 53 errors

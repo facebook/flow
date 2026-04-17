@@ -1177,6 +1177,8 @@ pub enum PrimitiveKind {
 pub enum ObjKind {
     Type,
     Literal,
+    Interface,
+    DeclareClass,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

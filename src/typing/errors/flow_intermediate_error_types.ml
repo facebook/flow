@@ -1233,7 +1233,7 @@ type 'loc message =
   | MessageUnsafeObjectAssign
   | MessageUnsupportedKeyInObject of {
       key_error_kind: InvalidObjKey.t;
-      obj_kind: [ `Type | `Literal ];
+      obj_kind: [ `Type | `Literal | `Interface | `DeclareClass ];
     }
   | MessageUnsupportedSyntax of unsupported_syntax
   | MessageUnsupportedVarianceAnnotation of string

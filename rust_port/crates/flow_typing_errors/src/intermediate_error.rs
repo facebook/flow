@@ -8567,14 +8567,12 @@ where
                     ],
                 };
                 let obj_kind_str = match obj_kind {
-                    ObjKind::Type => "type",
-                    ObjKind::Literal => "literal",
+                    ObjKind::Type => "object type",
+                    ObjKind::Literal => "object literal",
+                    ObjKind::Interface => "interface",
+                    ObjKind::DeclareClass => "declare class",
                 };
-                let mut features = vec![
-                    text("Unsupported key in object "),
-                    text(obj_kind_str),
-                    text("."),
-                ];
+                let mut features = vec![text("Unsupported key in "), text(obj_kind_str), text(".")];
                 features.extend(suffix);
                 friendly::Message(features)
             }

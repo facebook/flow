@@ -471,7 +471,7 @@ and 'loc t' =
   | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObject of {
       loc: 'loc;
-      obj_kind: [ `Type | `Literal ];
+      obj_kind: [ `Type | `Literal | `Interface | `DeclareClass ];
       key_error_kind: InvalidObjKey.t;
     }
   | EAmbiguousNumericKeyWithVariance of 'loc

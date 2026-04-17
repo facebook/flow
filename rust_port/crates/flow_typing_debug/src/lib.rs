@@ -2615,8 +2615,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             key_error_kind,
         } => {
             let obj_kind_str = match obj_kind {
-                IntermediateObjKind::Type => "type",
-                IntermediateObjKind::Literal => "literal",
+                IntermediateObjKind::Type => "object type",
+                IntermediateObjKind::Literal => "object literal",
+                IntermediateObjKind::Interface => "interface",
+                IntermediateObjKind::DeclareClass => "declare class",
             };
             format!(
                 "EUnsupportedKeyInObject ({}, {}, {})",

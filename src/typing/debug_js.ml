@@ -1498,8 +1498,10 @@ let dump_error_message =
       let key_error_kind = Flow_intermediate_error_types.InvalidObjKey.str_of_kind key_error_kind in
       let obj_kind =
         match obj_kind with
-        | `Type -> "type"
-        | `Literal -> "literal"
+        | `Type -> "object type"
+        | `Literal -> "object literal"
+        | `Interface -> "interface"
+        | `DeclareClass -> "declare class"
       in
       spf "EUnsupportedKeyInObject (%s, %s, %s)" (string_of_aloc loc) obj_kind key_error_kind
     | EAmbiguousNumericKeyWithVariance loc ->

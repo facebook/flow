@@ -1,0 +1,152 @@
+Error -------------------------------------------------------------------------------------------- declare_class.js:13:3
+
+Cannot cast `a.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   declare_class.js:13:3
+   13|   a.foo as empty; // ERROR
+         ^^^^^
+
+References:
+   declare_class.js:5:10
+    5|   "foo": string;
+                ^^^^^^ [1]
+   declare_class.js:13:12
+   13|   a.foo as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:22:3
+
+Cannot cast `B.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   declare_class.js:22:3
+   22|   B.bar as empty; // ERROR
+         ^^^^^
+
+References:
+   declare_class.js:18:17
+   18|   static "bar": number;
+                       ^^^^^^ [1]
+   declare_class.js:22:12
+   22|   B.bar as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:32:3
+
+Cannot cast `c.baz()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   declare_class.js:32:3
+   32|   c.baz() as empty; // ERROR
+         ^^^^^^^
+
+References:
+   declare_class.js:27:12
+   27|   "baz"(): string;
+                  ^^^^^^ [1]
+   declare_class.js:32:14
+   32|   c.baz() as empty; // ERROR
+                    ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:50:9
+
+Cannot call `F` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   declare_class.js:50:9
+   50|   new F(42); // ERROR
+               ^^ [1]
+
+References:
+   declare_class.js:46:20
+   46|   "constructor"(x: string): void;
+                          ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:61:3
+
+Cannot cast `e.prop` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   declare_class.js:61:3
+   61|   e.prop as empty; // ERROR
+         ^^^^^^
+
+References:
+   declare_class.js:55:17
+   55|   get "prop"(): number;
+                       ^^^^^^ [1]
+   declare_class.js:61:13
+   61|   e.prop as empty; // ERROR
+                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:15:3
+
+Cannot cast `a.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   interface.js:15:3
+   15|   a.foo as empty; // ERROR
+         ^^^^^
+
+References:
+   interface.js:5:10
+    5|   "foo": string;
+                ^^^^^^ [1]
+   interface.js:15:12
+   15|   a.foo as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:34:3
+
+Cannot cast `c.bar()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   interface.js:34:3
+   34|   c.bar() as empty; // ERROR
+         ^^^^^^^
+
+References:
+   interface.js:29:12
+   29|   "bar"(): string;
+                  ^^^^^^ [1]
+   interface.js:34:14
+   34|   c.bar() as empty; // ERROR
+                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:45:3
+
+Cannot cast `d.baz` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   interface.js:45:3
+   45|   d.baz as empty; // ERROR
+         ^^^^^
+
+References:
+   interface.js:39:16
+   39|   get "baz"(): number;
+                      ^^^^^^ [1]
+   interface.js:45:12
+   45|   d.baz as empty; // ERROR
+                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:59:3
+
+Cannot cast `e.message` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   interface.js:59:3
+   59|   e.message as empty; // ERROR
+         ^^^^^^^^^
+
+References:
+   interface.js:52:14
+   52|   "message": string;
+                    ^^^^^^ [1]
+   interface.js:59:16
+   59|   e.message as empty; // ERROR
+                      ^^^^^ [2]
+
+
+
+Found 9 errors
