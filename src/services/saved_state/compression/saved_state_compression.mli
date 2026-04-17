@@ -14,6 +14,10 @@ val marshal_and_compress : 'a -> compressed
  * OCaml value *)
 val decompress_and_unmarshal : compressed -> 'a
 
+(* Like [decompress_and_unmarshal] but releases the OCaml runtime lock during
+ * LZ4 decompression, allowing other OCaml threads to run concurrently. *)
+val decompress_and_unmarshal_releasing_lock : compressed -> 'a
+
 (* How many bytes is the compressed data *)
 val compressed_size : compressed -> int
 

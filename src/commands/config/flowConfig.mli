@@ -291,6 +291,8 @@ val saved_state_fetcher : config -> Options.saved_state_fetcher
 
 val saved_state_direct_serialization : config -> bool
 
+val saved_state_parallel_decompress : config -> bool
+
 val saved_state_persist_export_index : config -> bool
 
 val saved_state_reinit_on_lib_change : config -> bool

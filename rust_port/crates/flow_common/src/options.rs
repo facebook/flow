@@ -251,6 +251,7 @@ pub struct Options {
     pub root: Arc<PathBuf>,
     pub root_name: Option<FlowSmolStr>,
     pub saved_state_direct_serialization: bool,
+    pub saved_state_parallel_decompress: bool,
     pub saved_state_fetcher: SavedStateFetcher,
     pub saved_state_force_recheck: bool,
     pub saved_state_no_fallback: bool,

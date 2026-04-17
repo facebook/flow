@@ -14,6 +14,7 @@
 #include <caml/intext.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
+#include <caml/threads.h>
 
 #include <lz4.h>
 
@@ -76,6 +77,44 @@ CAMLprim value decompress_and_unmarshal_stub(value compressed) {
       compressed_data, marshaled_value, compressed_size, uncompressed_size);
 
   if (actual_uncompressed_size != uncompressed_size) {
+    caml_failwith("Failed to decompress");
+  }
+
+  result = caml_input_value_from_block(marshaled_value, uncompressed_size);
+
+  caml_stat_free(marshaled_value);
+
+  CAMLreturn(result);
+}
+
+/* Like decompress_and_unmarshal_stub but releases the OCaml runtime lock
+ * during LZ4 decompression, allowing other OCaml threads to run concurrently.
+ * The compressed data is copied out of the OCaml heap first since the GC
+ * could move it while the lock is released. */
+CAMLprim value decompress_and_unmarshal_releasing_lock_stub(value compressed) {
+  CAMLparam1(compressed);
+  CAMLlocal1(result);
+
+  const char* compressed_data_ocaml = String_val(Field(compressed, 0));
+  size_t compressed_size = Long_val(Field(compressed, 1));
+  size_t uncompressed_size = Long_val(Field(compressed, 2));
+
+  /* Copy compressed data out of the OCaml heap into C memory so we can
+   * safely release the runtime lock without worrying about GC moving it. */
+  char* compressed_data_c = caml_stat_alloc(compressed_size);
+  memcpy(compressed_data_c, compressed_data_ocaml, compressed_size);
+
+  char* marshaled_value = caml_stat_alloc(uncompressed_size);
+
+  caml_release_runtime_system();
+  size_t actual_uncompressed_size = LZ4_decompress_safe(
+      compressed_data_c, marshaled_value, compressed_size, uncompressed_size);
+  caml_acquire_runtime_system();
+
+  caml_stat_free(compressed_data_c);
+
+  if (actual_uncompressed_size != uncompressed_size) {
+    caml_stat_free(marshaled_value);
     caml_failwith("Failed to decompress");
   }
 

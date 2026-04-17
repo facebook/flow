@@ -155,6 +155,7 @@ module Opts = struct
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     saved_state_direct_serialization: bool;
+    saved_state_parallel_decompress: bool;
     saved_state_persist_export_index: bool;
     saved_state_reinit_on_lib_change: bool;
     saved_state_skip_version_check: bool;
@@ -321,6 +322,7 @@ module Opts = struct
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       saved_state_direct_serialization = false;
+      saved_state_parallel_decompress = false;
       saved_state_persist_export_index = false;
       saved_state_reinit_on_lib_change = false;
       saved_state_skip_version_check = false;
@@ -1318,6 +1320,9 @@ module Opts = struct
       ( "saved_state.direct_serialization",
         boolean (fun opts v -> Ok { opts with saved_state_direct_serialization = v })
       );
+      ( "saved_state.parallel_decompress",
+        boolean (fun opts v -> Ok { opts with saved_state_parallel_decompress = v })
+      );
       ( "saved_state.persist_export_index",
         boolean (fun opts v -> Ok { opts with saved_state_persist_export_index = v })
       );
@@ -2195,6 +2200,8 @@ let root_name c = c.options.Opts.root_name
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 
 let saved_state_direct_serialization c = c.options.Opts.saved_state_direct_serialization
+
+let saved_state_parallel_decompress c = c.options.Opts.saved_state_parallel_decompress
 
 let saved_state_persist_export_index c = c.options.Opts.saved_state_persist_export_index
 

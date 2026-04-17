@@ -59,6 +59,7 @@
 #include <caml/intext.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
+#include <caml/threads.h>
 #include <caml/unixsupport.h>
 
 #ifdef _WIN32
@@ -2362,14 +2363,16 @@ static const char* load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
   return NULL;
 }
 
-/* Load the heap from an fd, supporting both compressed and legacy formats */
+/* Load the heap from an fd, supporting both compressed and legacy formats.
+ * Releases the OCaml runtime lock during the actual I/O + decompression
+ * so that other OCaml threads can run concurrently. */
 CAMLprim value hh_load_heap(value fd_val) {
   CAMLparam1(fd_val);
   assert(info != NULL);
 
   int fd = Handle_val(fd_val);
 
-  /* Read magic to determine format */
+  /* Read magic to determine format — small read, keep the lock */
   uint64_t magic;
   const char* err;
   err = read_all(fd, &magic, sizeof(magic));
@@ -2421,7 +2424,13 @@ CAMLprim value hh_load_heap(value fd_val) {
       caml_failwith("hh_load_heap: heap data too large");
     }
 
+    /* Release the OCaml runtime lock so that other OCaml threads (e.g. the
+     * parallel env decompression thread) can run concurrently. This is safe
+     * because load_heap_lz4 does pure C work and returns errors instead of
+     * calling caml_failwith. */
+    caml_release_runtime_system();
     err = load_heap_lz4(fd, &header);
+    caml_acquire_runtime_system();
     if (err) {
       caml_failwith(err);
     }

@@ -205,6 +205,7 @@ pub(super) fn make_options(
                 relay_integration_module_prefix_includes,
                 root_name,
                 saved_state_direct_serialization,
+                saved_state_parallel_decompress,
                 saved_state_fetcher,
                 saved_state_persist_export_index,
                 saved_state_reinit_on_lib_change,
@@ -672,6 +673,8 @@ pub(super) fn make_options(
         root: Arc::new(root),
         root_name: root_name.map(FlowSmolStr::new),
         saved_state_direct_serialization,
+        saved_state_parallel_decompress,
+        // The CLI flag overrides the .flowconfig
         saved_state_fetcher: saved_state_fetcher_override.unwrap_or(saved_state_fetcher),
         saved_state_force_recheck: saved_state_force_recheck.unwrap_or(false),
         saved_state_no_fallback: saved_state_no_fallback.unwrap_or(false),
