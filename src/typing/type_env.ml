@@ -137,6 +137,17 @@ let find_var_opt { Env_api.env_values; _ } loc =
   | Some x -> Ok x
   | None -> Error loc
 
+type local_export_binding = {
+  def_loc: ALoc.t option;
+  val_kind: Env_api.val_kind;
+}
+
+let local_export_binding_at_loc cx loc =
+  let { Loc_env.var_info; _ } = Context.environment cx in
+  match find_var_opt var_info loc with
+  | Ok { Env_api.def_loc; val_kind; _ } -> Some { def_loc; val_kind }
+  | Error _ -> None
+
 let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
 
 let find_providers { Env_api.providers; _ } loc =
@@ -609,10 +620,21 @@ let read_entry ~lookup_mode cx loc reason =
   match find_var_opt var_info loc with
   | Error loc -> Error loc
   | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
+    (* Check whether a TsImport binding resolved to something that is
+       exclusively a type (no runtime value). Classes, enums, and
+       components can be canonicalized as types but also have runtime
+       values — they must not be treated as type-only. *)
     let ts_import_resolved_to_type_only t =
       match Context.find_resolved cx t with
       | Some resolved ->
-        Option.is_some (Flow_js_utils.ImportTypeTKit.canonicalize_imported_type cx reason resolved)
+        (match resolved with
+        | DefT (_, ClassT _)
+        | DefT (_, PolyT { t_out = DefT (_, ClassT _); _ })
+        | DefT (_, EnumObjectT _)
+        | DefT (_, ReactAbstractComponentT _) ->
+          false
+        | _ ->
+          Option.is_some (Flow_js_utils.ImportTypeTKit.canonicalize_imported_type cx reason resolved))
       | None -> false
     in
     (match (val_kind, name, def_loc, lookup_mode) with

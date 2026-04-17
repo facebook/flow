@@ -80,6 +80,7 @@ module SignatureVerification = struct
         hook_compatibility = Options.hook_compatibility_in_file options file;
         for_builtins = false;
         locs_to_dirtify = [];
+        is_ts_file = Files.has_ts_ext file;
       }
     in
     let (sig_errors, locs, _) =

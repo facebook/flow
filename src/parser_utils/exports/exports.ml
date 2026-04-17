@@ -318,6 +318,7 @@ module ESM = struct
             export_keys;
             type_stars;
             stars;
+            ts_pending_keys;
             strict = _;
             platform_availability_set = _;
           }
@@ -335,6 +336,16 @@ module ESM = struct
       )
     in
     let acc = Base.Array.fold2_exn ~init:acc ~f:(fold_name type_sig) export_keys exports in
+    (* ts_pending entries are .ts exports whose value-vs-type status can't be
+       determined at parse time (it's deferred to merge). Emit both Named and
+       NamedType so auto-import consumers can suggest the name regardless of
+       whether the resolved export turns out to be a value or a type. *)
+    let acc =
+      Base.Array.fold
+        ~init:acc
+        ~f:(fun acc name -> Named name :: NamedType name :: acc)
+        ts_pending_keys
+    in
     Base.Array.fold2_exn ~init:acc ~f:fold_type type_export_keys type_exports
 end
 
@@ -458,7 +469,7 @@ let add_global =
 
 let of_sig export_sig : t =
   match export_sig.Export_sig.module_kind with
-  | Some (Type_sig_pack.ESModule { type_exports; exports; info }) ->
+  | Some (Type_sig_pack.ESModule { type_exports; exports; ts_pending = _; info }) ->
     ESM.exports export_sig type_exports exports info
   | Some (Type_sig_pack.CJSModule { type_exports; exports; info }) ->
     CJS.exports export_sig type_exports exports info

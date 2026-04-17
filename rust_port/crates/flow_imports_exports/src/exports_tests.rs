@@ -67,6 +67,7 @@ fn sig_opts() -> TypeSigOptions {
         relay_integration_module_prefix: None,
         for_builtins: false,
         locs_to_dirtify: vec![],
+        is_ts_file: false,
     }
 }
 

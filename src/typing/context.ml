@@ -280,6 +280,7 @@ type t = {
   mutable aggressively_invalidated_locations: Refinement_invalidation.t ALocMap.t;
   mutable switch_to_match_eligible_locations: ALocSet.t;
   node_cache: Node_cache.t;
+  mutable ts_import_provenance: (Flow_import_specifier.t * string) ALocMap.t;
 }
 
 and resolve_require = Flow_import_specifier.t -> resolved_require
@@ -511,6 +512,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
         refined_locations = ALocMap.empty;
         aggressively_invalidated_locations = ALocMap.empty;
         switch_to_match_eligible_locations = ALocSet.empty;
+        ts_import_provenance = ALocMap.empty;
       }
   in
   Lazy.force cx_lazy
@@ -848,6 +850,11 @@ let refined_locations cx = cx.refined_locations
 let aggressively_invalidated_locations cx = cx.aggressively_invalidated_locations
 
 let switch_to_match_eligible_locations cx = cx.switch_to_match_eligible_locations
+
+let add_ts_import_provenance cx ~def_loc ~source ~remote_name =
+  cx.ts_import_provenance <- ALocMap.add def_loc (source, remote_name) cx.ts_import_provenance
+
+let find_ts_import_provenance cx ~def_loc = ALocMap.find_opt def_loc cx.ts_import_provenance
 
 let hint_map_arglist_cache cx = cx.hint_map_arglist_cache
 

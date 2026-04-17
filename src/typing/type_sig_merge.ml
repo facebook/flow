@@ -19,6 +19,10 @@ module Flow_js = struct end
 
 [@@@warning "+60"]
 
+type ts_pending_classified =
+  | TsPendingType of Type.named_symbol
+  | TsPendingValue of Type.named_symbol
+
 type exports =
   | CJSExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
@@ -30,6 +34,7 @@ type exports =
   | ESExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
       exports: Type.named_symbol Lazy.t SMap.t;
+      ts_pending: (string * ts_pending_classified Lazy.t) list;
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
@@ -536,9 +541,21 @@ let merge_exports =
           )
       in
       lazy_module
-    | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set } ->
+    | ESExports
+        { type_exports; exports; ts_pending; stars; type_stars; strict; platform_availability_set }
+      ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
+      (* Classify ts_pending entries and add each to the correct map *)
+      let (type_exports, exports) =
+        List.fold_left
+          (fun (te, ve) (name, lazy_entry) ->
+            match Lazy.force lazy_entry with
+            | TsPendingType sym -> (NameUtils.Map.add (Reason.OrdinaryName name) sym te, ve)
+            | TsPendingValue sym -> (te, NameUtils.Map.add (Reason.OrdinaryName name) sym ve))
+          (type_exports, exports)
+          ts_pending
+      in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       let lazy_module =
@@ -2322,6 +2339,50 @@ let merge_export file = function
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
+let classify_ts_pending_export file (pending : ALoc.t Pack.ts_pending_export) :
+    ts_pending_classified =
+  let classify_from_dep mref_index remote_name =
+    let (_, (lazy resolved_module)) = Module_refs.get file.dependencies mref_index in
+    match resolved_module with
+    | Context.TypedModule f ->
+      (match f () with
+      | Ok m -> Flow_js_utils.ImportExportUtils.classify_named_export file.cx m remote_name
+      | Error _ -> Flow_js_utils.ExportMissing)
+    | _ -> Flow_js_utils.ExportMissing
+  in
+  let is_type_only =
+    match pending with
+    | Pack.TsExportRef { import_provenance = Some (mref_index, remote_name); _ } ->
+      (match classify_from_dep mref_index remote_name with
+      | Flow_js_utils.FoundTypeOnly _ -> true
+      | _ -> false)
+    | Pack.TsExportRef { import_provenance = None; _ } -> false
+    | Pack.TsExportFrom { mref; remote_name; _ } ->
+      (match classify_from_dep mref remote_name with
+      | Flow_js_utils.FoundTypeOnly _ -> true
+      | _ -> false)
+  in
+  let sym =
+    match pending with
+    | Pack.TsExportRef { export_loc; ref; _ } ->
+      let merged = merge_export file (Pack.ExportRef ref) in
+      { merged with Type.name_loc = Some export_loc }
+    | Pack.TsExportFrom { export_loc; mref; remote_name } ->
+      (* name is unused by merge_remote_ref — resolution uses only id_loc,
+         index (mref), and remote. We pass "" because there is no local
+         binding name for an export-from specifier. *)
+      let remote_ref_node =
+        Pack.Import { id_loc = export_loc; name = ""; index = mref; remote = remote_name }
+      in
+      let reason = Reason.(mk_reason (RIdentifier (OrdinaryName remote_name)) export_loc) in
+      let type_ = merge_remote_ref file reason remote_ref_node in
+      { Type.name_loc = Some export_loc; preferred_def_locs = None; type_ }
+  in
+  if is_type_only then
+    TsPendingType sym
+  else
+    TsPendingValue sym
+
 let merge_resource_module_t cx file_key filename =
   let exports_t =
     match Utils_js.extension_of_filename filename with
@@ -2471,9 +2532,24 @@ let merge_builtins
       in
       CJSExports { type_exports; exports; type_stars; strict; platform_availability_set }
     in
-    let es_module type_exports exports info =
+    let make_ts_pending_lazy pending =
+      lazy
+        (let pending = Pack.map_ts_pending_export aloc pending in
+         let file = Lazy.force file_and_dependency_map_rec |> fst in
+         classify_ts_pending_export file pending
+        )
+    in
+    let es_module type_exports exports ts_pending info =
       let (Pack.ESModuleInfo
-            { type_export_keys; export_keys; type_stars; stars; strict; platform_availability_set }
+            {
+              type_export_keys;
+              export_keys;
+              ts_pending_keys;
+              type_stars;
+              stars;
+              strict;
+              platform_availability_set;
+            }
             ) =
         Pack.map_es_module_info aloc info
       in
@@ -2487,13 +2563,24 @@ let merge_builtins
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
       in
-      ESExports { type_exports; exports; type_stars; stars; strict; platform_availability_set }
+      (* Store ts_pending entries separately; they are classified and added to
+         the correct map during merge_exports when the lazy is forced. *)
+      let ts_pending =
+        Base.Array.fold2_exn
+          ~init:[]
+          ~f:(fun acc name pending -> (name, make_ts_pending_lazy pending) :: acc)
+          ts_pending_keys
+          ts_pending
+      in
+      ESExports
+        { type_exports; exports; ts_pending; type_stars; stars; strict; platform_availability_set }
     in
     lazy
       (let info =
          match module_kind with
          | Pack.CJSModule { type_exports; exports; info } -> cjs_module type_exports exports info
-         | Pack.ESModule { type_exports; exports; info } -> es_module type_exports exports info
+         | Pack.ESModule { type_exports; exports; ts_pending; info } ->
+           es_module type_exports exports ts_pending info
        in
        (reason, merge_exports (Lazy.force file_and_dependency_map_rec |> fst) reason info)
       )

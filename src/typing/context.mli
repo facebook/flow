@@ -383,6 +383,11 @@ val aggressively_invalidated_locations : t -> Refinement_invalidation.t ALocMap.
 
 val switch_to_match_eligible_locations : t -> ALocSet.t
 
+val add_ts_import_provenance :
+  t -> def_loc:ALoc.t -> source:Flow_import_specifier.t -> remote_name:string -> unit
+
+val find_ts_import_provenance : t -> def_loc:ALoc.t -> (Flow_import_specifier.t * string) option
+
 val environment : t -> Loc_env.t
 
 val typing_mode : t -> typing_mode

@@ -43,6 +43,13 @@ module LookupMode : sig
     | ForTypeof
 end
 
+type local_export_binding = {
+  def_loc: ALoc.t option;
+  val_kind: Env_api.val_kind;
+}
+
+val local_export_binding_at_loc : Context.t -> ALoc.t -> local_export_binding option
+
 val in_toplevel_scope : Context.t -> bool
 
 val in_global_scope : Context.t -> bool

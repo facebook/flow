@@ -65,6 +65,7 @@ let sig_opts =
     relay_integration_module_prefix = None;
     for_builtins = false;
     locs_to_dirtify = [];
+    is_ts_file = false;
   }
 
 let print_index exports =
@@ -78,6 +79,16 @@ let print_module contents_indent =
   let contents = dedent_trim contents_indent in
   let (_, _, packed_sig) =
     parse_and_pack_module ~strict:true ~platform_availability_set:None sig_opts contents
+  in
+  let exports = Exports.of_module packed_sig in
+  print_index exports
+
+let ts_sig_opts = { sig_opts with Type_sig_options.is_ts_file = true }
+
+let print_ts_module contents_indent =
+  let contents = dedent_trim contents_indent in
+  let (_, _, packed_sig) =
+    parse_and_pack_module ~strict:true ~platform_availability_set:None ts_sig_opts contents
   in
   let exports = Exports.of_module packed_sig in
   print_index exports
@@ -800,3 +811,20 @@ let%expect_test "react_builtin_ct_1" =
     export const y: React.ComponentType<{}> = null;
   |};
   [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]
+
+let%expect_test "ts_reexport_from" =
+  print_ts_module {|
+    export { MyType } from './exporter';
+  |};
+  [%expect {|
+    [(Named "MyType"); (NamedType "MyType")]
+  |}]
+
+let%expect_test "ts_import_then_export" =
+  print_ts_module {|
+    import { MyType } from './exporter';
+    export { MyType };
+  |};
+  [%expect {|
+    [(Named "MyType"); (NamedType "MyType")]
+  |}]

@@ -99,15 +99,51 @@ let export_specifiers cx info loc source export_kind =
   let effective_kind specifier_export_kind =
     Flow_ast_utils.effective_export_kind ~statement_export_kind:export_kind specifier_export_kind
   in
+  let is_ts_file = Files.has_ts_ext (Context.file cx) in
+  let classify_ts_local_export kind loc =
+    if kind <> Ast.Statement.ExportValue || not is_ts_file then
+      kind
+    else
+      let binding_info = Type_env.local_export_binding_at_loc cx loc in
+      match binding_info with
+      | Some { Type_env.val_kind = Env_api.Type _; _ } -> Ast.Statement.ExportType
+      | Some { Type_env.def_loc = Some def_loc; val_kind = Env_api.TsImport } ->
+        if Flow_js_utils.ImportExportUtils.is_ts_import_type_only cx ~def_loc then
+          Ast.Statement.ExportType
+        else
+          Ast.Statement.ExportValue
+      | _ -> Ast.Statement.ExportValue
+  in
   (* [declare] export [type] {[type] foo [as bar]}; *)
-  let export_ref kind loc local_type remote_name =
+  let export_ref kind loc local_type remote_name _source_local_name =
+    let kind = classify_ts_local_export kind loc in
     match kind with
     | Ast.Statement.ExportType -> Module_info.export_type info remote_name ~name_loc:loc local_type
     | Ast.Statement.ExportValue ->
       Module_info.export_value info remote_name ~name_loc:loc local_type
   in
+  (* Classify an export-from specifier in .ts files by checking the source module *)
+  let classify_ts_from_export kind source_local_name =
+    if kind <> Ast.Statement.ExportValue || not is_ts_file then
+      kind
+    else
+      match source with
+      | None -> kind
+      | Some (_, { Ast.StringLiteral.value = source_module_name; _ }) ->
+        let module_specifier = Flow_import_specifier.userland_specifier source_module_name in
+        (match Context.find_require cx module_specifier with
+        | Context.TypedModule f ->
+          (match f () with
+          | Ok m ->
+            (match Flow_js_utils.ImportExportUtils.classify_named_export cx m source_local_name with
+            | Flow_js_utils.FoundTypeOnly _ -> Ast.Statement.ExportType
+            | _ -> Ast.Statement.ExportValue)
+          | Error _ -> kind)
+        | _ -> kind)
+  in
   (* [declare] export [type] {[type] foo [as bar]} from 'module' *)
-  let export_from kind loc local_type remote_name =
+  let export_from kind loc local_type remote_name source_local_name =
+    let kind = classify_ts_from_export kind source_local_name in
     match kind with
     | Ast.Statement.ExportType -> Module_info.export_type info remote_name ~name_loc:loc local_type
     | Ast.Statement.ExportValue ->
@@ -131,7 +167,7 @@ let export_specifiers cx info loc source export_kind =
       | None -> OrdinaryName local_name
       | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) -> OrdinaryName remote_name
     in
-    export kind local_loc local_type remote_name
+    export kind local_loc local_type remote_name local_name
   in
   function
   (* [declare] export [type] {[type] foo [as bar]} [from ...]; *)

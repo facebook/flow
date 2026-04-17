@@ -172,6 +172,19 @@ type 'loc type_export =
   | ExportTypeFrom of Remote_refs.index
 [@@deriving map, show { with_path = false }]
 
+type 'loc ts_pending_export =
+  | TsExportRef of {
+      export_loc: 'loc;
+      ref: 'loc packed_ref;
+      import_provenance: (Module_refs.index * string) option;
+    }
+  | TsExportFrom of {
+      export_loc: 'loc;
+      mref: Module_refs.index;
+      remote_name: string;
+    }
+[@@deriving map, show { with_path = false }]
+
 type 'loc cjs_module_info =
   | CJSModuleInfo of {
       type_export_keys: string array;
@@ -187,6 +200,7 @@ type 'loc es_module_info =
       type_stars: ('loc * Module_refs.index) list;
       export_keys: string array;
       stars: ('loc * Module_refs.index) list;
+      ts_pending_keys: string array;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -201,6 +215,7 @@ type 'loc module_kind =
   | ESModule of {
       type_exports: 'loc type_export array;
       exports: 'loc export array;
+      ts_pending: 'loc ts_pending_export array;
       info: 'loc es_module_info;
     }
 [@@deriving show { with_path = false }]
@@ -498,7 +513,7 @@ and pack_exports
     cx
     file_loc
     module_name
-    (P.Exports { kind; types; type_stars; strict; platform_availability_set }) =
+    (P.Exports { kind; types; type_stars; ts_pending; strict; platform_availability_set }) =
   let (type_export_keys, type_exports) = pack_smap pack_type_export types in
   let type_stars = List.map pack_star type_stars in
   match kind with
@@ -544,12 +559,21 @@ and pack_exports
     CJSModule { type_exports; exports; info }
   | P.ESModule { names; stars } ->
     let (export_keys, exports) = pack_smap (pack_export cx) names in
+    let (ts_pending_keys, ts_pending_exports) = pack_smap pack_ts_pending_export ts_pending in
     let stars = List.map pack_star stars in
     let info =
       ESModuleInfo
-        { type_export_keys; type_stars; export_keys; stars; strict; platform_availability_set }
+        {
+          type_export_keys;
+          type_stars;
+          export_keys;
+          stars;
+          ts_pending_keys;
+          strict;
+          platform_availability_set;
+        }
     in
-    ESModule { type_exports; exports; info }
+    ESModule { type_exports; exports; ts_pending = ts_pending_exports; info }
 
 and pack_export cx = function
   | P.ExportRef ref ->
@@ -580,6 +604,21 @@ and pack_type_export = function
   | P.ExportTypeFrom ref ->
     let index = Remote_refs.index_exn ref in
     ExportTypeFrom index
+
+and pack_ts_pending_export = function
+  | P.TsExportRef { export_loc; ref; import_provenance } ->
+    let export_loc = pack_loc export_loc in
+    let ref = pack_ref ~type_ref:false ref in
+    let import_provenance =
+      Base.Option.map import_provenance ~f:(fun (mref, remote) ->
+          (Module_refs.index_exn mref, remote)
+      )
+    in
+    TsExportRef { export_loc; ref; import_provenance }
+  | P.TsExportFrom { export_loc; mref; remote_name } ->
+    let export_loc = pack_loc export_loc in
+    let mref = Module_refs.index_exn mref in
+    TsExportFrom { export_loc; mref; remote_name }
 
 and pack_value cx def = map_value pack_loc (pack_parsed cx) def
 

@@ -64,6 +64,8 @@ type cjs_module
 
 type es_export
 
+type ts_pending_export
+
 type es_module_info
 
 type es_module
@@ -209,15 +211,17 @@ let write_module = function
       pos
     in
     (size, write)
-  | Type_sig_pack.ESModule { type_exports; exports; info } ->
+  | Type_sig_pack.ESModule { type_exports; exports; ts_pending; info } ->
     let type_exports = Array.map serialize type_exports in
     let exports = Array.map serialize exports in
+    let ts_pending = Array.map serialize ts_pending in
     let info = serialize info in
-    let index_size = 3 * offset_size in
+    let index_size = 4 * offset_size in
     let size =
       index_size
       + tbl_size (hashed_size serialized_size) type_exports
       + tbl_size (hashed_size serialized_size) exports
+      + tbl_size (hashed_size serialized_size) ts_pending
       + hashed_size serialized_size info
     in
     let write buf pos_ref =
@@ -225,10 +229,12 @@ let write_module = function
       pos_ref := pos + index_size;
       let type_exports_pos = write_tbl (write_hashed write_serialized) buf pos_ref type_exports in
       let exports_pos = write_tbl (write_hashed write_serialized) buf pos_ref exports in
+      let ts_pending_pos = write_tbl (write_hashed write_serialized) buf pos_ref ts_pending in
       let info_pos = write_hashed write_serialized buf pos_ref info in
       buf_set32 buf pos (Int32.of_int type_exports_pos);
       buf_set32 buf (pos + 4) (Int32.of_int exports_pos);
-      buf_set32 buf (pos + 8) (Int32.of_int info_pos);
+      buf_set32 buf (pos + 8) (Int32.of_int ts_pending_pos);
+      buf_set32 buf (pos + 12) (Int32.of_int info_pos);
       pos lor 1
     in
     (size, write)
@@ -314,7 +320,9 @@ let es_module_type_exports buf pos = Int32.to_int (buf_get32 buf pos)
 
 let es_module_exports buf pos = Int32.to_int (buf_get32 buf (pos + 4))
 
-let es_module_info buf pos = Int32.to_int (buf_get32 buf (pos + 8))
+let es_module_ts_pending buf pos = Int32.to_int (buf_get32 buf (pos + 8))
+
+let es_module_info buf pos = Int32.to_int (buf_get32 buf (pos + 12))
 
 let read_str buf pos =
   let len = Int32.to_int (buf_get32 buf pos) in
@@ -375,6 +383,9 @@ let read_cjs_info : buf -> int -> Locs.index Type_sig_pack.cjs_module_info = buf
 
 let read_es_export : buf -> int -> Locs.index Type_sig_pack.export = buf_read_serialized
 
+let read_ts_pending_export : buf -> int -> Locs.index Type_sig_pack.ts_pending_export =
+  buf_read_serialized
+
 let read_es_info : buf -> int -> Locs.index Type_sig_pack.es_module_info = buf_read_serialized
 
 let read_local_def : buf -> int -> Locs.index Type_sig_pack.packed_def = buf_read_serialized
@@ -399,11 +410,13 @@ let read_cjs_module buf pos =
 let read_es_module buf pos =
   let type_exports_pos = es_module_type_exports buf pos in
   let exports_pos = es_module_exports buf pos in
+  let ts_pending_pos = es_module_ts_pending buf pos in
   let info_pos = es_module_info buf pos in
   let type_exports = read_tbl (read_hashed read_type_export) buf type_exports_pos in
   let exports = read_tbl (read_hashed read_es_export) buf exports_pos in
+  let ts_pending = read_tbl (read_hashed read_ts_pending_export) buf ts_pending_pos in
   let info = read_hashed read_es_info buf info_pos in
-  Type_sig_pack.ESModule { type_exports; exports; info }
+  Type_sig_pack.ESModule { type_exports; exports; ts_pending; info }
 
 let read_module_kind read_cjs_module read_es_module buf pos =
   let tag = pos land 1 in

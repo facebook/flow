@@ -208,6 +208,7 @@ pub fn sig_hash(
                     ModuleKind::ESModule {
                         type_exports,
                         exports,
+                        ts_pending: _,
                         info,
                     } => {
                         let te = info
@@ -326,6 +327,7 @@ pub fn sig_hash(
             ModuleKind::ESModule {
                 type_exports,
                 exports,
+                ts_pending,
                 info,
             } => {
                 let type_export_nodes: Vec<Rc<cycle_hash::Node>> = type_exports
@@ -366,6 +368,27 @@ pub fn sig_hash(
                     })
                     .collect();
 
+                let ts_pending_nodes: Vec<Rc<cycle_hash::Node>> = ts_pending
+                    .iter()
+                    .map(|pending| {
+                        let init_hash = content_hash_of(pending);
+                        let hash = Rc::new(Cell::new(init_hash));
+                        let hash_r = hash.dupe();
+                        let read_hash: ReadHash = Box::new(move || hash_r.get());
+                        let hash_w = hash.dupe();
+                        let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                        let pending = pending.clone();
+                        let file = file.dupe();
+                        let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                            Box::new(move |edge, dep_edge| {
+                                type_sig_hash::visit_ts_pending_export(
+                                    edge, dep_edge, &file, &pending,
+                                );
+                            });
+                        Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                    })
+                    .collect();
+
                 let ns_init_hash = content_hash_of(info);
                 let ns_hash = Rc::new(Cell::new(ns_init_hash));
                 let ns_hash_r = ns_hash.dupe();
@@ -374,6 +397,7 @@ pub fn sig_hash(
                 let ns_write: cycle_hash::WriteHash = Box::new(move |h| ns_hash_w.set(h));
                 let te_nodes_for_ns = type_export_nodes.clone();
                 let exp_nodes_for_ns = export_nodes.clone();
+                let ts_pending_nodes_for_ns = ts_pending_nodes.clone();
                 let type_stars = info.type_stars.clone();
                 let stars = info.stars.clone();
                 let file_for_ns = file.dupe();
@@ -384,6 +408,9 @@ pub fn sig_hash(
                         }
                         for exp in &exp_nodes_for_ns {
                             edge(exp.dupe());
+                        }
+                        for tp in &ts_pending_nodes_for_ns {
+                            edge(tp.dupe());
                         }
                         for (_, index) in &type_stars {
                             type_sig_hash::edge_import_ns(edge, dep_edge, &file_for_ns, *index);

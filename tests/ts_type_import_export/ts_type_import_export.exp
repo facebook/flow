@@ -6,81 +6,312 @@ Cannot import the type `MyType` as a value. Use `import type` instead. [import-t
               ^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- importer.ts:6:1
+Error ------------------------------------------------------------------------------------------------- importer.ts:13:1
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   importer.ts:6:1
-   6| x as string; // ERROR: number ~> string (proves the type was resolved)
-      ^
+   importer.ts:13:1
+   13| x as string; // ERROR: number ~> string (proves the type was resolved)
+       ^
 
 References:
-   importer.ts:4:18
-   4| declare const x: MyType;
-                       ^^^^^^ [1]
-   importer.ts:6:6
-   6| x as string; // ERROR: number ~> string (proves the type was resolved)
-           ^^^^^^ [2]
+   importer.ts:11:18
+   11| declare const x: MyType;
+                        ^^^^^^ [1]
+   importer.ts:13:6
+   13| x as string; // ERROR: number ~> string (proves the type was resolved)
+            ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- importer.ts:9:1
+Error ------------------------------------------------------------------------------------------------- importer.ts:16:1
 
 Cannot cast `y.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   importer.ts:9:1
-   9| y.x as number; // ERROR: string ~> number (proves the interface resolved)
-      ^^^
+   importer.ts:16:1
+   16| y.x as number; // ERROR: string ~> number (proves the interface resolved)
+       ^^^
 
 References:
-   exporter.ts:2:35
-   2| export interface MyInterface { x: string }
-                                        ^^^^^^ [1]
-   importer.ts:9:8
-   9| y.x as number; // ERROR: string ~> number (proves the interface resolved)
-             ^^^^^^ [2]
+   exporter.ts:9:35
+    9| export interface MyInterface { x: string }
+                                         ^^^^^^ [1]
+   importer.ts:16:8
+   16| y.x as number; // ERROR: string ~> number (proves the interface resolved)
+              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ importer.ts:10:11
+Error ------------------------------------------------------------------------------------------------ importer.ts:17:11
 
 Cannot use type `MyType` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
-   importer.ts:10:11
-   10| const z = MyType; // ERROR: type used as value
+   importer.ts:17:11
+   17| const z = MyType; // ERROR: type used as value
                  ^^^^^^
 
 References:
-   importer.ts:1:9
-    1| import {MyType} from './exporter';
+   importer.ts:8:9
+    8| import {MyType} from './exporter';
                ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ importer.ts:11:11
+Error ------------------------------------------------------------------------------------------------ importer.ts:18:11
 
 Cannot use type `MyInterface` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
-   importer.ts:11:11
-   11| const w = MyInterface; // ERROR: type used as value
+   importer.ts:18:11
+   18| const w = MyInterface; // ERROR: type used as value
                  ^^^^^^^^^^^
 
 References:
-   importer.ts:2:9
-    2| import {MyInterface} from './exporter';
+   importer.ts:9:9
+    9| import {MyInterface} from './exporter';
                ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ importer.ts:12:12
+Error ------------------------------------------------------------------------------------------------ importer.ts:19:12
 
 Cannot use type `MyNamespace` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
-   importer.ts:12:12
-   12| const ns = MyNamespace; // ERROR: type used as value
+   importer.ts:19:12
+   19| const ns = MyNamespace; // ERROR: type used as value
                   ^^^^^^^^^^^
 
 References:
-   importer.ts:3:9
-    3| import {MyNamespace} from './exporter';
+   importer.ts:10:9
+   10| import {MyNamespace} from './exporter';
                ^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- importer.ts:25:1
 
-Found 6 errors
+Cannot cast `lt` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   importer.ts:25:1
+   25| lt as number; // ERROR
+       ^^
+
+References:
+   importer.ts:23:19
+   23| declare const lt: LocalType;
+                         ^^^^^^^^^ [1]
+   importer.ts:25:7
+   25| lt as number; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:30:27
+
+Cannot use type `LocalType` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer.ts:30:27
+   30| const badLocalTypeValue = LocalType; // ERROR
+                                 ^^^^^^^^^
+
+References:
+   importer.ts:22:10
+   22| import { LocalType, LocalInterface } from './exporter';
+                ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:31:32
+
+Cannot use type `LocalInterface` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer.ts:31:32
+   31| const badLocalInterfaceValue = LocalInterface; // ERROR
+                                      ^^^^^^^^^^^^^^
+
+References:
+   importer.ts:22:21
+   22| import { LocalType, LocalInterface } from './exporter';
+                           ^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- importer_reexport.ts:14:1
+
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   importer_reexport.ts:14:1
+   14| a as string; // ERROR: number ~> string
+       ^
+
+References:
+   importer_reexport.ts:12:18
+   12| declare const a: FromType;
+                        ^^^^^^^^ [1]
+   importer_reexport.ts:14:6
+   14| a as string; // ERROR: number ~> string
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- importer_reexport.ts:17:1
+
+Cannot cast `b.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   importer_reexport.ts:17:1
+   17| b.x as number; // ERROR: string ~> number
+       ^^^
+
+References:
+   exporter.ts:9:35
+    9| export interface MyInterface { x: string }
+                                         ^^^^^^ [1]
+   importer_reexport.ts:17:8
+   17| b.x as number; // ERROR: string ~> number
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- importer_reexport.ts:18:14
+
+Cannot use type `FromType` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer_reexport.ts:18:14
+   18| const bad1 = FromType; // ERROR: type used as value
+                    ^^^^^^^^
+
+References:
+   importer_reexport.ts:11:20
+   11| import { MyType as FromType, MyInterface as FromIface, LocalType as FromLocal } from './reexporter_from';
+                          ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- importer_reexport.ts:19:14
+
+Cannot use type `FromIface` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer_reexport.ts:19:14
+   19| const bad2 = FromIface; // ERROR: type used as value
+                    ^^^^^^^^^
+
+References:
+   importer_reexport.ts:11:45
+   11| import { MyType as FromType, MyInterface as FromIface, LocalType as FromLocal } from './reexporter_from';
+                                                   ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- importer_reexport.ts:20:14
+
+Cannot use type `FromLocal` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer_reexport.ts:20:14
+   20| const bad3 = FromLocal; // ERROR: type used as value
+                    ^^^^^^^^^
+
+References:
+   importer_reexport.ts:11:69
+   11| import { MyType as FromType, MyInterface as FromIface, LocalType as FromLocal } from './reexporter_from';
+                                                                           ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- importer_reexport.ts:25:1
+
+Cannot cast `fromValue` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   importer_reexport.ts:25:1
+   25| fromValue as string; // ERROR: number ~> string
+       ^^^^^^^^^
+
+References:
+   exporter.ts:21:23
+   21| export const myValue: number = 42;
+                             ^^^^^^ [1]
+   importer_reexport.ts:25:14
+   25| fromValue as string; // ERROR: number ~> string
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- importer_reexport.ts:38:1
+
+Cannot cast `c` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   importer_reexport.ts:38:1
+   38| c as string; // ERROR: number ~> string
+       ^
+
+References:
+   importer_reexport.ts:36:18
+   36| declare const c: ImpType;
+                        ^^^^^^^ [1]
+   importer_reexport.ts:38:6
+   38| c as string; // ERROR: number ~> string
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- importer_reexport.ts:41:1
+
+Cannot cast `d.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   importer_reexport.ts:41:1
+   41| d.x as number; // ERROR: string ~> number
+       ^^^
+
+References:
+   exporter.ts:9:35
+    9| export interface MyInterface { x: string }
+                                         ^^^^^^ [1]
+   importer_reexport.ts:41:8
+   41| d.x as number; // ERROR: string ~> number
+              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- importer_reexport.ts:42:14
+
+Cannot use type `ImpType` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer_reexport.ts:42:14
+   42| const bad4 = ImpType; // ERROR: type used as value
+                    ^^^^^^^
+
+References:
+   importer_reexport.ts:35:20
+   35| import { MyType as ImpType, MyInterface as ImpIface, LocalType as ImpLocal, myValue as impValue, MyClass as ImpClass, MyEnum as ImpEnum } from './reexporter_imported';
+                          ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- importer_reexport.ts:43:14
+
+Cannot use type `ImpIface` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer_reexport.ts:43:14
+   43| const bad5 = ImpIface; // ERROR: type used as value
+                    ^^^^^^^^
+
+References:
+   importer_reexport.ts:35:44
+   35| import { MyType as ImpType, MyInterface as ImpIface, LocalType as ImpLocal, myValue as impValue, MyClass as ImpClass, MyEnum as ImpEnum } from './reexporter_imported';
+                                                  ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- importer_reexport.ts:44:14
+
+Cannot use type `ImpLocal` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   importer_reexport.ts:44:14
+   44| const bad6 = ImpLocal; // ERROR: type used as value
+                    ^^^^^^^^
+
+References:
+   importer_reexport.ts:35:67
+   35| import { MyType as ImpType, MyInterface as ImpIface, LocalType as ImpLocal, myValue as impValue, MyClass as ImpClass, MyEnum as ImpEnum } from './reexporter_imported';
+                                                                         ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- importer_reexport.ts:48:1
+
+Cannot cast `impValue` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   importer_reexport.ts:48:1
+   48| impValue as string; // ERROR: number ~> string
+       ^^^^^^^^
+
+References:
+   exporter.ts:21:23
+   21| export const myValue: number = 42;
+                             ^^^^^^ [1]
+   importer_reexport.ts:48:13
+   48| impValue as string; // ERROR: number ~> string
+                   ^^^^^^ [2]
+
+
+
+Found 21 errors

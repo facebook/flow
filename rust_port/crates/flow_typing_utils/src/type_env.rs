@@ -313,6 +313,28 @@ fn find_var_opt<'a>(var_info: &'a EnvInfo<ALoc>, loc: &ALoc) -> Result<&'a EnvRe
     }
 }
 
+pub struct LocalExportBinding {
+    pub def_loc: Option<ALoc>,
+    pub val_kind: ValKind,
+}
+
+pub fn local_export_binding_at_loc<'cx>(
+    cx: &Context<'cx>,
+    loc: ALoc,
+) -> Option<LocalExportBinding> {
+    let env = cx.environment();
+    let var_info = &env.var_info;
+    match find_var_opt(var_info, &loc) {
+        Ok(EnvRead {
+            def_loc, val_kind, ..
+        }) => Some(LocalExportBinding {
+            def_loc: def_loc.clone(),
+            val_kind: *val_kind,
+        }),
+        Err(_) => None,
+    }
+}
+
 fn find_refi(var_info: &EnvInfo<ALoc>, id: i32) -> Refinement<ALoc> {
     (var_info.refinement_of_id)(id)
 }
@@ -1314,7 +1336,29 @@ fn read_entry<'cx>(
                 );
                 let ts_import_resolved_to_type_only = match cx.find_resolved(&t) {
                     Some(resolved) => {
-                        flow_typing_flow_common::flow_js_utils::import_type_t_kit::canonicalize_imported_type(cx, reason.dupe(), &resolved).is_some()
+                        use std::ops::Deref;
+
+                        use flow_typing_type::type_::DefTInner;
+                        use flow_typing_type::type_::PolyTData;
+                        use flow_typing_type::type_::TypeInner;
+                        match resolved.deref() {
+                            TypeInner::DefT(_, def_t) => match def_t.deref() {
+                                DefTInner::ClassT(_) => false,
+                                DefTInner::PolyT(box PolyTData { t_out, .. })
+                                    if matches!(t_out.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::ClassT(_))) =>
+                                {
+                                    false
+                                }
+                                DefTInner::EnumObjectT { .. } => false,
+                                DefTInner::ReactAbstractComponentT(_) => false,
+                                _ => {
+                                    flow_typing_flow_common::flow_js_utils::import_type_t_kit::canonicalize_imported_type(cx, reason.dupe(), &resolved).is_some()
+                                }
+                            },
+                            _ => {
+                                flow_typing_flow_common::flow_js_utils::import_type_t_kit::canonicalize_imported_type(cx, reason.dupe(), &resolved).is_some()
+                            }
+                        }
                     }
                     None => false,
                 };

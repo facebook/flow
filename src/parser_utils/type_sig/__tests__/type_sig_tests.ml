@@ -240,6 +240,7 @@ let sig_options
     relay_integration_module_prefix;
     for_builtins;
     locs_to_dirtify;
+    is_ts_file = false;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =
@@ -339,10 +340,12 @@ let%expect_test "export_number_literal" =
     ESModule {type_exports = [||];
       exports =
       [|ExportDefault {default_loc = [1:7-14]; def = (Value (NumberLit ([1:15-16], 0., "0")))}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_bigint_literal" =
@@ -355,10 +358,12 @@ let%expect_test "export_bigint_literal" =
       [|ExportDefault {default_loc = [1:7-14];
           def = (Value (BigIntLit ([1:15-17], (Some 0L), "0n")))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_bigint_literal_neg" =
@@ -373,10 +378,12 @@ let%expect_test "export_bigint_literal_neg" =
           (Eval ([1:15-18], (Value (BigIntLit ([1:16-18], (Some 0L), "0n"))),
              (Unary Flow_ast.Expression.Unary.Minus)))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_function_literal" =
@@ -399,10 +406,12 @@ let%expect_test "export_function_literal" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_function_literal_check1" =
@@ -425,10 +434,12 @@ let%expect_test "export_function_literal_check1" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.Identifier)))
@@ -454,10 +465,12 @@ let%expect_test "export_function_literal_check2" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError
@@ -475,10 +488,12 @@ let%expect_test "export_function_reference" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (Ref LocalRef {ref_loc = [2:15-18]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -504,10 +519,12 @@ let%expect_test "export_function_reference_check1" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (Ref LocalRef {ref_loc = [2:15-18]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -535,10 +552,12 @@ let%expect_test "export_function_reference_check2" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (Ref LocalRef {ref_loc = [2:15-18]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -563,10 +582,12 @@ let%expect_test "export_function_generic_typeof" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"b"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-17];
@@ -611,10 +632,12 @@ let%expect_test "export_function_typeof_return" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-17];
@@ -642,10 +665,12 @@ let%expect_test "export_function_generic_typeof_return" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"b"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-17];
@@ -702,10 +727,12 @@ let%expect_test "function_param_optional" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}} |}]
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "function_param_default" =
   print_sig {|
@@ -728,10 +755,12 @@ let%expect_test "function_param_default" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}} |}]
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "function_param_default_check" =
   print_sig {|
@@ -753,10 +782,12 @@ let%expect_test "function_param_default_check" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.Identifier)))
@@ -816,10 +847,12 @@ let%expect_test "function_param_typeof_reference" =
                  type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
@@ -849,10 +882,12 @@ let%expect_test "component_param_typeof_reference" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
@@ -917,10 +952,12 @@ let%expect_test "export_object_literal_property_literal" =
                  (ObjValueField ([1:17-18], (
                     Value (NumberLit ([1:20-21], 0., "0"))), Polarity.Neutral)) }})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_object_literal_property_reference" =
@@ -941,10 +978,12 @@ let%expect_test "export_object_literal_property_reference" =
                  (ObjValueField ([2:17-18], (
                     Ref LocalRef {ref_loc = [2:20-21]; index = 0}), Polarity.Neutral)) }})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Annot (Number [1:7-13]))}
@@ -968,10 +1007,12 @@ let%expect_test "export_object_literal_property_reference_check" =
                  (ObjValueField ([2:17-18], (
                     Ref LocalRef {ref_loc = [2:20-21]; index = 0}), Polarity.Neutral)) }})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:4-5])}
@@ -992,10 +1033,12 @@ let%expect_test "empty_object_literal" =
       [|ExportDefault {default_loc = [1:7-14];
           def = (Value ObjLit {loc = [1:15-18]; frozen = false; proto = None; props = {}})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_object_literal_number_key" =
@@ -1018,10 +1061,12 @@ let%expect_test "export_object_literal_number_key" =
                  (ObjValueField ([1:26-27], (
                     Value (StringLit ([1:29-36], "hello"))), Polarity.Neutral)) }})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_class_reference" =
@@ -1038,10 +1083,12 @@ let%expect_test "export_class_reference" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (Ref LocalRef {ref_loc = [5:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1080,10 +1127,12 @@ let%expect_test "export_class_reference_check1" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (Ref LocalRef {ref_loc = [5:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1123,10 +1172,12 @@ let%expect_test "export_class_reference_check2" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (Ref LocalRef {ref_loc = [5:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1168,10 +1219,12 @@ let%expect_test "export_class_reference_check3" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (Ref LocalRef {ref_loc = [5:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1217,10 +1270,12 @@ let%expect_test "type_alias_dependencies" =
       [|ExportDefault {default_loc = [8:7-14];
           def = (Ref LocalRef {ref_loc = [8:15-16]; index = 3})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-7]; custom_error_loc_opt = None;
@@ -1274,10 +1329,12 @@ let%expect_test "class_dependencies" =
       [|ExportDefault {default_loc = [6:7-14];
           def = (Ref LocalRef {ref_loc = [6:15-16]; index = 1})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1332,10 +1389,12 @@ let%expect_test "class_dependencies_check" =
       [|ExportDefault {default_loc = [6:7-14];
           def = (Ref LocalRef {ref_loc = [6:15-16]; index = 1})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1392,10 +1451,12 @@ let%expect_test "export_new_typecast" =
       [|ExportDefault {default_loc = [6:7-14];
           def = (TyRef (Unqualified LocalRef {ref_loc = [6:23-24]; index = 1}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1450,10 +1511,12 @@ let%expect_test "export_new_typecast_check" =
       [|ExportDefault {default_loc = [6:7-14];
           def = (TyRef (Unqualified LocalRef {ref_loc = [6:23-24]; index = 1}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1509,10 +1572,12 @@ let%expect_test "recursive_dependencies" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (Ref LocalRef {ref_loc = [5:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1556,10 +1621,12 @@ let%expect_test "recursive_dependencies_check" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (Ref LocalRef {ref_loc = [5:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1603,10 +1670,12 @@ let%expect_test "typeof_dependencies" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (TyRef (Unqualified LocalRef {ref_loc = [5:23-24]; index = 1}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Annot (Number [1:7-13]))}
@@ -1642,10 +1711,12 @@ let%expect_test "typeof_dependencies_check" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (TyRef (Unqualified LocalRef {ref_loc = [5:23-24]; index = 1}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:4-5])}
@@ -1690,10 +1761,12 @@ let%expect_test "const_initializer" =
                  (ObjValueField ([2:17-18], (
                     Ref LocalRef {ref_loc = [2:17-18]; index = 0}), Polarity.Neutral)) }})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:6-7]; name = "x"; def = (Value (NumberLit ([1:10-11], 0., "0")))}
@@ -1706,10 +1779,12 @@ let%expect_test "empty_array_literal" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefault {default_loc = [1:7-14]; def = (Err [1:15-18])}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.EmptyArray [1:15-18]))
@@ -1730,10 +1805,12 @@ let%expect_test "non_empty_array_literal" =
              (ArrayLit ([3:15-23], (Ref LocalRef {ref_loc = [3:17-18]; index = 0}),
                 [(Ref LocalRef {ref_loc = [3:20-21]; index = 1})])))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:6-7]; name = "x"; def = (Value (NumberLit ([1:10-11], 0., "0")))}
@@ -1756,10 +1833,12 @@ let%expect_test "void_function" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (Ref LocalRef {ref_loc = [2:15-18]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -1784,10 +1863,12 @@ let%expect_test "void_generator" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (Ref LocalRef {ref_loc = [2:15-18]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:10-13];
@@ -1819,10 +1900,12 @@ let%expect_test "import_default_dependencies" =
       [|ExportDefault {default_loc = [5:7-14];
           def = (TyRef (Unqualified LocalRef {ref_loc = [5:23-24]; index = 0}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./import_default_dependencies_helper
@@ -1864,10 +1947,12 @@ let%expect_test "import_type_dependencies" =
       [|ExportDefault {default_loc = [6:7-14];
           def = (Ref LocalRef {ref_loc = [6:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./import_type_dependencies_helper
@@ -1920,10 +2005,12 @@ let%expect_test "qualified_references" =
       [|ExportDefault {default_loc = [6:7-14];
           def = (Ref LocalRef {ref_loc = [6:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./qualified_references_helper
@@ -2387,10 +2474,12 @@ let%expect_test "munged_methods_ignored_if_directive" =
       [|ExportDefault {default_loc = [4:7-14];
           def = (Ref LocalRef {ref_loc = [4:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2416,10 +2505,12 @@ let%expect_test "munged_methods_not_ignored" =
       [|ExportDefault {default_loc = [4:7-14];
           def = (Ref LocalRef {ref_loc = [4:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2458,10 +2549,12 @@ let%expect_test "munged_fields_ignored_if_directive" =
       [|ExportDefault {default_loc = [4:7-14];
           def = (Ref LocalRef {ref_loc = [4:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2487,10 +2580,12 @@ let%expect_test "munged_fields_not_ignored" =
       [|ExportDefault {default_loc = [4:7-14];
           def = (Ref LocalRef {ref_loc = [4:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2535,10 +2630,12 @@ let%expect_test "propTypes_static_failure" =
       [|ExportDefault {default_loc = [4:7-14];
           def = (Ref LocalRef {ref_loc = [4:15-16]; index = 0})}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2710,10 +2807,12 @@ let%expect_test "update_expression" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 3); (ExportBinding 2); (ExportBinding 1); (ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"post_decr"; "post_incr"; "pre_decr"; "pre_incr"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. bar
@@ -2743,10 +2842,12 @@ let%expect_test "sequence_expression" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefault {default_loc = [2:7-14]; def = (Value (NullLit [2:19-23]))}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}} |}]
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "named_class_expression" =
   print_sig {|
@@ -2804,10 +2905,12 @@ let%expect_test "interface_coverage" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Interface {id_loc = [1:18-21];
@@ -3066,10 +3169,12 @@ let%expect_test "function_return" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
@@ -3112,10 +3217,12 @@ let%expect_test "function_return_2" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 1)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
@@ -3198,10 +3305,12 @@ let%expect_test "function_statics_conditional" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -3224,10 +3333,12 @@ let%expect_test "function_predicates" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [2:16-19];
@@ -3633,10 +3744,12 @@ let%expect_test "declare_class_optional_method" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -3778,10 +3891,12 @@ let%expect_test "destruct_object_shared" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 0); (ExportBinding 1); (ExportBinding 2)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"; "c"; "d"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-15]; name = "a"; def = (Pattern 1)}
@@ -3806,10 +3921,12 @@ let%expect_test "destruct_array_shared" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 0); (ExportBinding 1); (ExportBinding 2); (ExportBinding 3)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"; "b"; "c"; "d"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-15]; name = "a"; def = (Pattern 1)}
@@ -4000,10 +4117,12 @@ let%expect_test "typeof loc" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:11-12];
@@ -4026,10 +4145,12 @@ let%expect_test "qualified_generic_typeapp_loc" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -4055,10 +4176,12 @@ let%expect_test "export_ref_renaming" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportRef LocalRef {ref_loc = [2:13-14]; index = 0})|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"b"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:12-13]; name = "a"; def = (Annot (String [1:15-21]))} |}]
@@ -4069,10 +4192,12 @@ let%expect_test "union_annot" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -4089,10 +4214,12 @@ let%expect_test "intersection_annot" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -4116,10 +4243,12 @@ let%expect_test "class_extends" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 2); (ExportBinding 3); (ExportBinding 4); (ExportBinding 5)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C1"; "C2"; "C3"; "C4"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:14-15];
@@ -4208,10 +4337,12 @@ let%expect_test "class_this" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:13-14];
@@ -4240,10 +4371,12 @@ let%expect_test "declare_class_this" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -4287,10 +4420,12 @@ let%expect_test "existential" =
             name = (Unqualified LocalRef {ref_loc = [4:23-24]; index = 0});
             targs = [(Annot (Exists [4:25-26]))]}}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -4478,10 +4613,12 @@ let%expect_test "es_export_named_fun_props" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -4503,10 +4640,12 @@ let%expect_test "es_export_default_fun_props" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:7-14]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:24-27];
@@ -4607,10 +4746,12 @@ let%expect_test "obj_annot_proto" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"o"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -4647,10 +4788,12 @@ let%expect_test "getter_setter" =
         ExportBinding 2); (ExportBinding 3); (
         ExportBinding 4); (ExportBinding 5); (
         ExportBinding 6)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"; "b"; "c"; "d"; "e"; "f"; "g"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:13-14];
@@ -4726,10 +4869,12 @@ let%expect_test "export_default_function_binding" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:7-14]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:24-25];
@@ -4749,10 +4894,12 @@ let%expect_test "export_default_class_binding" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:7-14]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:21-22];
@@ -4771,10 +4918,12 @@ let%expect_test "declared_export_default_function_binding" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:15-22]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareFun {id_loc = [1:32-33];
@@ -4794,10 +4943,12 @@ let%expect_test "declared_export_default_class_binding" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:15-22]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:29-30];
@@ -4835,10 +4986,12 @@ let%expect_test "enum_export" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4853,10 +5006,12 @@ let%expect_test "enum_default_export" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:7-14]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
@@ -4873,10 +5028,12 @@ let%expect_test "enum_stmt" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportRef LocalRef {ref_loc = [2:8-9]; index = 0})|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:5-6];
@@ -4890,10 +5047,12 @@ let%expect_test "enum_bool_lit" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4907,10 +5066,12 @@ let%expect_test "enum_bool" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4924,10 +5085,12 @@ let%expect_test "enum_number_truthy" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4941,10 +5104,12 @@ let%expect_test "enum_number_any" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4958,10 +5123,12 @@ let%expect_test "enum_string_any" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4975,10 +5142,12 @@ let%expect_test "enum_symbol" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4992,10 +5161,12 @@ let%expect_test "enum_unknown_members" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -5009,10 +5180,12 @@ let%expect_test "enum_declared" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
@@ -5026,10 +5199,12 @@ let%expect_test "enum_disabled" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DisabledEnumBinding {id_loc = [1:12-13]; name = "E"} |}]
@@ -5439,11 +5614,12 @@ let%expect_test "builtin_es_module_default" =
     [1:15-18] ESModule {type_exports = [||];
                 exports =
                 [|ExportDefault {default_loc = [2:17-24]; def = (Annot (String [2:25-31]))}|];
+                ts_pending = [||];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"default"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_module_import_typeof" =
   print_builtins [{|
@@ -5475,19 +5651,21 @@ let%expect_test "builtin_module_import_typeof" =
     Builtin module bar:
     [4:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 1)|];
+                ts_pending = [||];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"y"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}}
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}}
     Builtin module foo:
     [1:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 0)|];
+                ts_pending = [||];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_interface_merge_props" =
   print_builtins [{|
@@ -5818,19 +5996,21 @@ let%expect_test "builtin_toplevel_import" =
     Builtin module bar:
     [5:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 1)|];
+                ts_pending = [||];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"y"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}}
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}}
     Builtin module foo:
     [1:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 0)|];
+                ts_pending = [||];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_module_export_specifiers" =
   print_builtins [{|
@@ -5855,11 +6035,12 @@ let%expect_test "builtin_module_export_specifiers" =
                 exports =
                 [|(ExportRef LocalRef {ref_loc = [4:18-19]; index = 0});
                   (ExportRef LocalRef {ref_loc = [4:21-22]; index = 1})|];
+                ts_pending = [||];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"; "y"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_declare_namespace" =
   print_builtins [{|
@@ -6088,10 +6269,12 @@ let%expect_test "this_param_1" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -6112,10 +6295,12 @@ let%expect_test "this_param_2" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"A"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:13-14];
@@ -6143,10 +6328,12 @@ let%expect_test "this_param_3" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareFun {id_loc = [1:24-27];
@@ -6167,10 +6354,12 @@ let%expect_test "this_param_4" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"A"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -6322,11 +6511,13 @@ let%expect_test "es_export_star" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [||];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = [([2:12-13], 1); ([1:12-13], 0)];
         export_keys = [||]; stars = [([4:7-8], 3); ([3:7-8], 2)];
-        strict = true; platform_availability_set = None}}
+        ts_pending_keys = [||]; strict = true;
+        platform_availability_set = None}}
 
     Module refs:
     0. foo
@@ -6348,10 +6539,12 @@ let%expect_test "es_export_type_specifier" =
       [|(ExportTypeRef LocalRef {ref_loc = [5:20-21]; index = 1});
         (ExportTypeRef LocalRef {ref_loc = [4:13-14]; index = 0})|];
       exports = [|(ExportRef LocalRef {ref_loc = [5:8-13]; index = 2})|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"S"; "T"|];
         type_stars = []; export_keys = [|"value"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
@@ -6369,11 +6562,12 @@ let%expect_test "es_export_type_specifier_from" =
   |};
   [%expect {|
     ESModule {type_exports = [|(ExportTypeFrom 2); (ExportTypeFrom 0)|];
-      exports = [|(ExportFrom 1)|];
+      exports = [|(ExportFrom 1)|]; ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"S"; "T"|];
         type_stars = []; export_keys = [|"value"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. foo
@@ -6402,10 +6596,12 @@ let%expect_test "duplicate_binding2" =
   |};
   [%expect{|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [2:17-20]; name = "bar"; def = (Pattern 1)}
@@ -6443,10 +6639,12 @@ let%expect_test "fun_shadow_declare_fun" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"f"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareFun {id_loc = [1:17-18];
@@ -6717,10 +6915,12 @@ export const {foo} = {foo: 3};
   |}; [%expect{|
     ESModule {type_exports = [|(ExportTypeBinding 0)|];
       exports = [|(ExportBinding 1); (ExportBinding 2)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"OOOOOO"|];
         type_stars = []; export_keys = [|"aaaaa"; "foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     (dirty) 0. TypeAlias {id_loc = [1:12-18];
@@ -6945,10 +7145,12 @@ let%expect_test "component_5" =
   [%expect{|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:7-14]; index = 1}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:17-20];
@@ -6999,10 +7201,12 @@ let%expect_test "component_disabled2" =
   [%expect{|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:7-14]; index = 1}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DisabledComponentBinding {id_loc = [1:17-20]; name = "Baz"}
@@ -7018,10 +7222,12 @@ let%expect_test "declare_component" =
   [%expect{|
     ESModule {type_exports = [||];
       exports = [|(ExportBinding 0); ExportDefaultBinding {default_loc = [2:15-22]; index = 1}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:25-28];
@@ -7055,10 +7261,12 @@ let%expect_test "component_type" =
         ExportDefault {default_loc = [8:15-22];
           def = (TyRef (Unqualified LocalRef {ref_loc = [8:23-26]; index = 3}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"Mono"; "Poly"|];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
@@ -7150,10 +7358,12 @@ let%expect_test "declare_component" =
         ExportDefault {default_loc = [3:15-22];
           def = (TyRef (Unqualified LocalRef {ref_loc = [3:23-26]; index = 1}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-22];
@@ -7241,10 +7451,12 @@ let%expect_test "render_maybe_types" =
       [|(ExportTypeBinding 3); (ExportTypeBinding 0); (
         ExportTypeBinding 1); (ExportTypeBinding 2)|];
       exports = [|(ExportBinding 5); (ExportBinding 4)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"C"; "X"; "Y"; "Z"|];
         type_stars = []; export_keys = [|"Bar"; "Foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -7325,10 +7537,12 @@ let%expect_test "function_const_type_param" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -7360,10 +7574,12 @@ let%expect_test "record_named_export" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"R"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. RecordBinding {id_loc = [1:14-15];
@@ -7389,10 +7605,12 @@ let%expect_test "record_default_export" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|ExportDefaultBinding {default_loc = [1:7-14]; index = 0}|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. RecordBinding {id_loc = [1:22-23];
@@ -7417,10 +7635,12 @@ let%expect_test "record_disabled" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"R"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DisabledRecordBinding {id_loc = [1:14-15]; name = "R"}
@@ -7460,10 +7680,12 @@ let%expect_test "import_equals_require" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (TyRef (Unqualified RemoteRef {ref_loc = [2:19-22]; index = 0}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. foo
@@ -7505,10 +7727,12 @@ let%expect_test "export_import_equals_require" =
   [%expect {|
     ESModule {type_exports = [||];
       exports = [|(ExportRef RemoteRef {ref_loc = [1:14-17]; index = 0})|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. foo
@@ -7528,10 +7752,12 @@ let%expect_test "import_equals_qualified_name" =
       [|ExportDefault {default_loc = [2:7-14];
           def = (TyRef (Unqualified LocalRef {ref_loc = [2:19-22]; index = 0}))}
         |];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:7-10]; name = "Foo"; def = (Annot (Any [1:7-10]))}
@@ -7545,10 +7771,12 @@ let%expect_test "d_ts_computed_property_string_key" =
   [%expect {|
     ESModule {type_exports = [|(ExportTypeBinding 1)|];
       exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"WithStrKey"|];
         type_stars = []; export_keys = [|"STR_KEY"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:21-28];
@@ -7574,10 +7802,12 @@ let%expect_test "d_ts_computed_property_number_key" =
   [%expect {|
     ESModule {type_exports = [|(ExportTypeBinding 1)|];
       exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"WithNumKey"|];
         type_stars = []; export_keys = [|"NUM_KEY"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:21-28];
@@ -7605,10 +7835,12 @@ let%expect_test "d_ts_computed_property_in_interface" =
   [%expect {|
     ESModule {type_exports = [|(ExportTypeBinding 1)|];
       exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"WithComputedIface"|];
         type_stars = []; export_keys = [|"IFACE_KEY"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:21-30];
@@ -7633,10 +7865,12 @@ let%expect_test "d_ts_computed_property_in_declare_class" =
   |};
   [%expect {|
     ESModule {type_exports = [||]; exports = [|(ExportBinding 0); (ExportBinding 1)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"CLASS_KEY"; "WithComputedClass"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:21-30];
@@ -7667,10 +7901,12 @@ let%expect_test "d_ts_computed_property_bigint_key" =
   [%expect {|
     ESModule {type_exports = [|(ExportTypeBinding 1)|];
       exports = [|(ExportBinding 0)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"WithBigKey"|];
         type_stars = []; export_keys = [|"BIG_KEY"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:21-28];
@@ -7745,10 +7981,12 @@ let%expect_test "d_ts_computed_property_unsupported_expression" =
   [%expect {|
     ESModule {type_exports = [|(ExportTypeBinding 2)|];
       exports = [|(ExportBinding 0); (ExportBinding 1)|];
+      ts_pending = [||];
       info =
       ESModuleInfo {type_export_keys = [|"WithUnsupported"|];
         type_stars = []; export_keys = [|"A"; "B"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; ts_pending_keys = [||];
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:21-22]; name = "A"; def = (Annot (SingletonString ([1:24-27], "a")))}

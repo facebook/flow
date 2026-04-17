@@ -1056,18 +1056,37 @@ module Make
     let effective_kind specifier_export_kind =
       Flow_ast_utils.effective_export_kind ~statement_export_kind:export_kind specifier_export_kind
     in
-    let lookup_mode_of_kind kind =
-      match kind with
-      | Ast.Statement.ExportValue -> ForValue
-      | Ast.Statement.ExportType -> ForType
-    in
     (* [declare] export [type] {[type] foo [as bar]}; *)
     let export_ref kind loc local_name =
-      let lookup_mode = lookup_mode_of_kind kind in
-      let t = Type_env.var_ref ~lookup_mode cx local_name loc in
       match kind with
-      | Ast.Statement.ExportType -> (None, TypeAssertions.assert_export_is_type cx local_name t)
-      | Ast.Statement.ExportValue -> (None, t)
+      | Ast.Statement.ExportType ->
+        let t = Type_env.var_ref ~lookup_mode:ForType cx local_name loc in
+        (None, TypeAssertions.assert_export_is_type cx local_name t)
+      | Ast.Statement.ExportValue when Files.has_ts_ext (Context.file cx) ->
+        (* In .ts files, check if this is a local type binding or an imported type-only *)
+        let binding_info = Type_env.local_export_binding_at_loc cx loc in
+        (match binding_info with
+        | Some { Type_env.val_kind = Env_api.Type _; _ } ->
+          (* Local type binding: use ForType lookup and route as type export *)
+          let t = Type_env.var_ref ~lookup_mode:ForType cx local_name loc in
+          (None, TypeAssertions.assert_export_is_type cx local_name t)
+        | Some { Type_env.def_loc = Some def_loc; val_kind = Env_api.TsImport } ->
+          (* Classify first, then choose the lookup mode. ForType is needed for
+             type-only imports to avoid spurious type-as-value errors from
+             ts_import_resolved_to_type_only. ForValue is needed for value imports
+             (classes, enums) to get the correct runtime value form. *)
+          if Flow_js_utils.ImportExportUtils.is_ts_import_type_only cx ~def_loc then
+            let t = Type_env.var_ref ~lookup_mode:ForType cx local_name loc in
+            (None, TypeAssertions.assert_export_is_type cx local_name t)
+          else
+            let t = Type_env.var_ref ~lookup_mode:ForValue cx local_name loc in
+            (None, t)
+        | _ ->
+          let t = Type_env.var_ref ~lookup_mode:ForValue cx local_name loc in
+          (None, t))
+      | Ast.Statement.ExportValue ->
+        let t = Type_env.var_ref ~lookup_mode:ForValue cx local_name loc in
+        (None, t)
     in
     (* [declare] export [type] {[type] foo [as bar]} from 'module' *)
     let export_from kind ~module_name ~source_module loc local_name =
@@ -2258,6 +2277,22 @@ module Make
                        ~remote_name
                        ~local_name
                    in
+                   (* Record TS import provenance for value imports in .ts files *)
+                   ( if
+                     Files.has_ts_ext (Context.file cx)
+                     && import_kind = ImportDeclaration.ImportValue
+                   then
+                     let binding_def_loc =
+                       match local with
+                       | Some (local_loc, _) -> local_loc
+                       | None -> remote_name_loc
+                     in
+                     Context.add_ts_import_provenance
+                       cx
+                       ~def_loc:binding_def_loc
+                       ~source:(Flow_import_specifier.Userland module_name)
+                       ~remote_name
+                   );
                    let remote_ast = ((remote_name_loc, imported_t), rmt) in
                    let local_ast =
                      Base.Option.map local ~f:(fun (local_loc, local_id) ->

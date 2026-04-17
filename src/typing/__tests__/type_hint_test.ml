@@ -197,6 +197,7 @@ end = struct
         enable_records = true;
         for_builtins = true;
         locs_to_dirtify = [];
+        is_ts_file = false;
       }
     in
     let (_, master_cx) =

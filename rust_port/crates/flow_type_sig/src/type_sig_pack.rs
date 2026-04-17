@@ -390,6 +390,7 @@ impl<Loc> ESModuleInfo<Loc> {
                 .collect(),
             export_keys: self.export_keys.clone(),
             stars: self.stars.iter().map(|(loc, idx)| (f(loc), *idx)).collect(),
+            ts_pending_keys: self.ts_pending_keys.clone(),
             strict: self.strict,
             platform_availability_set: self.platform_availability_set.clone(),
         }
@@ -425,6 +426,45 @@ pub enum TypeExport<Loc> {
 }
 
 #[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
+pub enum TsPendingExport<Loc> {
+    TsExportRef {
+        export_loc: Loc,
+        ref_: PackedRef<Loc>,
+        import_provenance: Option<(Index<FlowImportSpecifier>, FlowSmolStr)>,
+    },
+    TsExportFrom {
+        export_loc: Loc,
+        mref: Index<FlowImportSpecifier>,
+        remote_name: FlowSmolStr,
+    },
+}
+
+impl<Loc> TsPendingExport<Loc> {
+    pub fn map<Loc2>(&self, f: &impl Fn(&Loc) -> Loc2) -> TsPendingExport<Loc2> {
+        match self {
+            TsPendingExport::TsExportRef {
+                export_loc,
+                ref_,
+                import_provenance,
+            } => TsPendingExport::TsExportRef {
+                export_loc: f(export_loc),
+                ref_: ref_.map(f),
+                import_provenance: import_provenance.clone(),
+            },
+            TsPendingExport::TsExportFrom {
+                export_loc,
+                mref,
+                remote_name,
+            } => TsPendingExport::TsExportFrom {
+                export_loc: f(export_loc),
+                mref: *mref,
+                remote_name: remote_name.dupe(),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub struct CJSModuleInfo<Loc> {
     pub type_export_keys: Vec<FlowSmolStr>,
     pub type_stars: Vec<(Loc, Index<FlowImportSpecifier>)>,
@@ -438,6 +478,7 @@ pub struct ESModuleInfo<Loc> {
     pub type_stars: Vec<(Loc, Index<FlowImportSpecifier>)>,
     pub export_keys: Vec<FlowSmolStr>,
     pub stars: Vec<(Loc, Index<FlowImportSpecifier>)>,
+    pub ts_pending_keys: Vec<FlowSmolStr>,
     pub strict: bool,
     pub platform_availability_set: Option<platform_set::PlatformSet>,
 }
@@ -452,6 +493,7 @@ pub enum ModuleKind<Loc> {
     ESModule {
         type_exports: Vec<TypeExport<Loc>>,
         exports: Vec<Export<Loc>>,
+        ts_pending: Vec<TsPendingExport<Loc>>,
         info: ESModuleInfo<Loc>,
     },
 }
@@ -471,10 +513,12 @@ impl<Loc> ModuleKind<Loc> {
             ModuleKind::ESModule {
                 type_exports,
                 exports,
+                ts_pending,
                 info,
             } => ModuleKind::ESModule {
                 type_exports: type_exports.iter().map(|e| e.map(f)).collect(),
                 exports: exports.iter().map(|e| e.map(f)).collect(),
+                ts_pending: ts_pending.iter().map(|e| e.map(f)).collect(),
                 info: info.map(f),
             },
         }
@@ -1198,10 +1242,12 @@ pub(crate) fn pack_exports<'arena, 'ast>(
         (keys, values)
     }
 
+    let exports_data = exports;
     let parse::Exports {
         kind,
         types,
         type_stars,
+        ts_pending: _,
         strict,
         platform_availability_set,
     } = exports;
@@ -1317,6 +1363,8 @@ pub(crate) fn pack_exports<'arena, 'ast>(
         }
         parse::ModuleKind::ESModule { names, stars } => {
             let (export_keys, exports) = pack_btreemap(names, |e| pack_export(cx, e));
+            let (ts_pending_keys, ts_pending_exports) =
+                pack_btreemap(&exports_data.ts_pending, |e| pack_ts_pending_export(e));
             // OCaml builds stars with :: (prepend), so the list is in reverse
             // declaration order. Rust uses push (append), so we reverse here to match.
             let stars = stars
@@ -1329,12 +1377,14 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                 type_stars,
                 export_keys,
                 stars,
+                ts_pending_keys,
                 strict: *strict,
                 platform_availability_set: *platform_availability_set,
             };
             ModuleKind::ESModule {
                 type_exports,
                 exports,
+                ts_pending: ts_pending_exports,
                 info,
             }
         }
@@ -1390,6 +1440,42 @@ fn pack_type_export<'arena, 'ast>(
         parse::ExportType::ExportTypeFrom(ref_) => {
             let index = ref_.0.index_exn();
             TypeExport::ExportTypeFrom(index)
+        }
+    }
+}
+
+fn pack_ts_pending_export<'arena, 'ast>(
+    export: &parse::TsPendingExport<'arena, 'ast>,
+) -> TsPendingExport<Index<Loc>> {
+    match export {
+        parse::TsPendingExport::TsExportRef {
+            export_loc,
+            ref_,
+            import_provenance,
+        } => {
+            let export_loc = pack_loc(export_loc);
+            let ref_ = pack_ref(false, ref_);
+            let import_provenance = import_provenance
+                .as_ref()
+                .map(|(mref, remote)| (mref.0.index_exn(), remote.dupe()));
+            TsPendingExport::TsExportRef {
+                export_loc,
+                ref_,
+                import_provenance,
+            }
+        }
+        parse::TsPendingExport::TsExportFrom {
+            export_loc,
+            mref,
+            remote_name,
+        } => {
+            let export_loc = pack_loc(export_loc);
+            let mref = mref.0.index_exn();
+            TsPendingExport::TsExportFrom {
+                export_loc,
+                mref,
+                remote_name: remote_name.dupe(),
+            }
         }
     }
 }

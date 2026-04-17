@@ -549,6 +549,7 @@ struct ContextInner<'cx> {
     aggressively_invalidated_locations: RefCell<ALocMap<RefinementInvalidation>>,
     switch_to_match_eligible_locations: RefCell<ALocSet>,
     node_cache: NodeCache<'cx, Context<'cx>>,
+    ts_import_provenance: RefCell<ALocMap<(FlowImportSpecifier, FlowSmolStr)>>,
 }
 
 #[derive(Clone, Dupe)]
@@ -821,6 +822,7 @@ impl<'cx> Context<'cx> {
             refined_locations: RefCell::new(ALocMap::new()),
             aggressively_invalidated_locations: RefCell::new(ALocMap::new()),
             switch_to_match_eligible_locations: RefCell::new(ALocSet::new()),
+            ts_import_provenance: RefCell::new(ALocMap::new()),
         });
         Self(inner)
     }
@@ -1573,6 +1575,29 @@ impl<'cx> Context<'cx> {
 
     pub fn switch_to_match_eligible_locations(&self) -> std::cell::Ref<'_, ALocSet> {
         self.0.switch_to_match_eligible_locations.borrow()
+    }
+
+    pub fn add_ts_import_provenance(
+        &self,
+        def_loc: ALoc,
+        source: FlowImportSpecifier,
+        remote_name: FlowSmolStr,
+    ) {
+        self.0
+            .ts_import_provenance
+            .borrow_mut()
+            .insert(def_loc, (source, remote_name));
+    }
+
+    pub fn find_ts_import_provenance(
+        &self,
+        def_loc: &ALoc,
+    ) -> Option<(FlowImportSpecifier, FlowSmolStr)> {
+        self.0
+            .ts_import_provenance
+            .borrow()
+            .get(def_loc)
+            .map(|(s, r)| (s.dupe(), r.dupe()))
     }
 
     pub fn hint_map_arglist_cache(

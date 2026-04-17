@@ -4403,6 +4403,13 @@ pub mod cjs_extract_named_exports_t_kit {
     }
 }
 
+pub enum ExportClassification {
+    FoundValue(NamedSymbol),
+    FoundTypeOnly(NamedSymbol),
+    UnknownButAllowedByEveryNamedExport,
+    ExportMissing,
+}
+
 pub mod import_export_utils {
     use std::collections::BTreeSet;
     use std::rc::Rc;
@@ -4429,11 +4436,14 @@ pub mod import_export_utils {
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::ImportKind;
     use flow_typing_type::type_::ModuleType;
+    use flow_typing_type::type_::NamedSymbol;
     use flow_typing_type::type_::NamespaceType;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::any_t;
+    use flow_typing_type::type_util::def_loc_of_t;
 
+    use super::ExportClassification;
     use super::FlowJsException;
     use super::add_output;
     use super::import_default_t_kit;
@@ -4886,6 +4896,71 @@ pub mod import_export_utils {
             &name,
         )?;
         Ok(t)
+    }
+
+    pub fn classify_named_export<'cx>(
+        cx: &Context<'cx>,
+        module_: &ModuleType,
+        export_name: &FlowSmolStr,
+    ) -> ExportClassification {
+        let exports = &module_.module_export_types;
+        let mut value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
+        match &exports.cjs_export {
+            Some((def_loc_opt, type_)) => {
+                let name_loc = Some(match def_loc_opt {
+                    None => def_loc_of_t(type_).dupe(),
+                    Some(l) => l.dupe(),
+                });
+                value_exports_tmap.insert(
+                    Name::new(FlowSmolStr::new("default")),
+                    NamedSymbol::new(name_loc, None, type_.dupe()),
+                );
+            }
+            None => {}
+        }
+        let type_exports_tmap = cx.find_exports(exports.type_exports_tmap);
+        let key = Name::new(export_name.dupe());
+        match value_exports_tmap.get(&key) {
+            Some(sym) => ExportClassification::FoundValue(sym.dupe()),
+            None => match type_exports_tmap.get(&key) {
+                Some(sym) => ExportClassification::FoundTypeOnly(sym.dupe()),
+                None => {
+                    if exports.has_every_named_export {
+                        ExportClassification::UnknownButAllowedByEveryNamedExport
+                    } else {
+                        ExportClassification::ExportMissing
+                    }
+                }
+            },
+        }
+    }
+
+    pub fn is_ts_import_type_only<'cx>(cx: &Context<'cx>, def_loc: &ALoc) -> bool {
+        match cx.find_ts_import_provenance(def_loc) {
+            Some((source, remote_name)) => {
+                let module_result = if cx.in_declare_module() {
+                    match &source {
+                        FlowImportSpecifier::Userland(mref) => cx
+                            .builtin_module_opt(mref)
+                            .map(|(_reason, m)| m.get_forced(cx).dupe()),
+                        _ => None,
+                    }
+                } else {
+                    match cx.find_require(&source) {
+                        ResolvedRequire::TypedModule(f) => f(cx, cx).ok(),
+                        _ => None,
+                    }
+                };
+                match module_result {
+                    Some(m) => match classify_named_export(cx, &m, &remote_name) {
+                        ExportClassification::FoundTypeOnly(_) => true,
+                        _ => false,
+                    },
+                    None => false,
+                }
+            }
+            None => false,
+        }
     }
 }
 

@@ -415,3 +415,30 @@ pub fn visit_type_export<Loc>(edge: &dyn Fn(Rc<Node>), file: &File, texport: &P:
         P::TypeExport::ExportTypeFrom(index) => edge_remote_ref(edge, file, *index),
     }
 }
+
+pub fn visit_ts_pending_export<Loc>(
+    edge: &dyn Fn(Rc<Node>),
+    dep_edge: &dyn Fn(&ReadHash),
+    file: &File,
+    pending: &P::TsPendingExport<Loc>,
+) {
+    match pending {
+        P::TsPendingExport::TsExportRef {
+            export_loc: _,
+            ref_,
+            import_provenance,
+        } => {
+            visit_ref(edge, file, ref_);
+            if let Some((index, remote)) = import_provenance {
+                edge_import(remote, edge, dep_edge, file, *index);
+            }
+        }
+        P::TsPendingExport::TsExportFrom {
+            export_loc: _,
+            mref,
+            remote_name,
+        } => {
+            edge_import(remote_name, edge, dep_edge, file, *mref);
+        }
+    }
+}

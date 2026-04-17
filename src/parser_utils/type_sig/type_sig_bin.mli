@@ -54,6 +54,8 @@ type cjs_module
 
 type es_export
 
+type ts_pending_export
+
 type es_module_info
 
 type es_module
@@ -88,6 +90,8 @@ val es_module_exports : buf -> es_module pos -> es_export serialized hashed tbl 
 
 val es_module_type_exports : buf -> es_module pos -> type_export serialized hashed tbl pos
 
+val es_module_ts_pending : buf -> es_module pos -> ts_pending_export serialized hashed tbl pos
+
 val es_module_info : buf -> es_module pos -> es_module_info serialized hashed pos
 
 val read_str : buf -> str pos -> string
@@ -115,6 +119,9 @@ val read_cjs_info :
   buf -> cjs_module_info serialized pos -> Locs.index Type_sig_pack.cjs_module_info
 
 val read_es_export : buf -> es_export serialized pos -> Locs.index Type_sig_pack.export
+
+val read_ts_pending_export :
+  buf -> ts_pending_export serialized pos -> Locs.index Type_sig_pack.ts_pending_export
 
 val read_es_info : buf -> es_module_info serialized pos -> Locs.index Type_sig_pack.es_module_info
 

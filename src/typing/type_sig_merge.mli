@@ -8,6 +8,10 @@
 module Pack = Type_sig_pack
 open Type_sig_collections
 
+type ts_pending_classified =
+  | TsPendingType of Type.named_symbol
+  | TsPendingValue of Type.named_symbol
+
 type exports =
   | CJSExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
@@ -19,6 +23,7 @@ type exports =
   | ESExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
       exports: Type.named_symbol Lazy.t SMap.t;
+      ts_pending: (string * ts_pending_classified Lazy.t) list;
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
@@ -48,6 +53,9 @@ val merge_remote_ref : file -> Reason.t -> ALoc.t Pack.remote_ref -> Type.t
 val merge_export : file -> ALoc.t Pack.export -> Type.named_symbol
 
 val merge_type_export : file -> Reason.t -> ALoc.t Pack.type_export -> Type.named_symbol
+
+val classify_ts_pending_export :
+  file -> ALoc.t Type_sig_pack.ts_pending_export -> ts_pending_classified
 
 val merge_exports : file -> Reason.t -> exports -> Type.moduletype Lazy.t
 

@@ -217,6 +217,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
               {
                 type_export_keys;
                 export_keys;
+                ts_pending_keys;
                 type_stars;
                 stars;
                 strict;
@@ -229,6 +230,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         in
         let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl type_export buf in
         let exports = Bin.es_module_exports buf pos |> Bin.read_tbl es_export buf in
+        let ts_pending_arr =
+          Bin.es_module_ts_pending buf pos
+          |> Bin.read_tbl (Bin.read_hashed Bin.read_ts_pending_export) buf
+        in
         let type_exports =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
@@ -237,8 +242,32 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
         in
+        (* For ts_pending, we can't classify eagerly because file_rec isn't ready.
+           Entries are stored separately and classified during merge_exports. *)
+        let make_ts_pending_lazy pending =
+          lazy
+            (let pending = Pack.map_ts_pending_export aloc pending in
+             let file = Lazy.force file_rec in
+             Merge.classify_ts_pending_export file pending
+            )
+        in
+        let ts_pending =
+          Base.Array.fold2_exn
+            ~init:[]
+            ~f:(fun acc name pending -> (name, make_ts_pending_lazy pending) :: acc)
+            ts_pending_keys
+            ts_pending_arr
+        in
         Type_sig_merge.ESExports
-          { type_exports; exports; type_stars; stars; strict; platform_availability_set }
+          {
+            type_exports;
+            exports;
+            ts_pending;
+            type_stars;
+            stars;
+            strict;
+            platform_availability_set;
+          }
       in
       Type.Constraint.ForcingState.of_lazy_module
         ( reason,

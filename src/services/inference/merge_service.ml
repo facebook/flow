@@ -87,6 +87,7 @@ let sig_hash ~check_dirty_set ~root:_ =
             {
               type_export_keys;
               export_keys;
+              ts_pending_keys = _;
               type_stars = _;
               stars = _;
               strict = _;
@@ -175,6 +176,16 @@ let sig_hash ~check_dirty_set ~root:_ =
       CJS { filename; type_exports; exports; ns }
     in
 
+    let ts_pending_export buf pos =
+      let init_hash = Bin.read_hashed Bin.hash_serialized buf pos in
+      let export = Bin.read_hashed Bin.read_ts_pending_export buf pos in
+      let read_hash () = Bin.read_hash buf pos in
+      let write_hash hash = Bin.write_hash buf pos hash in
+      let visit edge dep_edge = visit_ts_pending_export edge dep_edge file export in
+      write_hash init_hash;
+      Cycle_hash.create_node visit read_hash write_hash
+    in
+
     let es_module buf pos =
       let info_pos = Bin.es_module_info buf pos in
       let init_hash = Bin.read_hashed Bin.hash_serialized buf info_pos in
@@ -182,6 +193,7 @@ let sig_hash ~check_dirty_set ~root:_ =
             {
               type_export_keys;
               export_keys;
+              ts_pending_keys = _;
               type_stars;
               stars;
               strict = _;
@@ -192,10 +204,12 @@ let sig_hash ~check_dirty_set ~root:_ =
       in
       let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl type_export buf in
       let exports = Bin.es_module_exports buf pos |> Bin.read_tbl es_export buf in
+      let ts_pending = Bin.es_module_ts_pending buf pos |> Bin.read_tbl ts_pending_export buf in
       let ns =
         let visit edge dep_edge =
           Array.iter edge type_exports;
           Array.iter edge exports;
+          Array.iter edge ts_pending;
           List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) type_stars;
           List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) stars
         in

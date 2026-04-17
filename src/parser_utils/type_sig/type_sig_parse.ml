@@ -107,6 +107,18 @@ and 'loc export_type =
   | ExportTypeBinding of 'loc local_def_node
   | ExportTypeFrom of 'loc remote_ref_node
 
+and 'loc ts_pending_export =
+  | TsExportRef of {
+      export_loc: 'loc loc_node;
+      ref: 'loc ref;
+      import_provenance: (module_ref_node * string) option;
+    }
+  | TsExportFrom of {
+      export_loc: 'loc loc_node;
+      mref: module_ref_node;
+      remote_name: string;
+    }
+
 and 'loc module_kind =
   | UnknownModule
   | CJSModule of 'loc parsed
@@ -130,6 +142,7 @@ and 'loc exports =
       mutable kind: 'loc module_kind;
       mutable types: 'loc export_type smap;
       mutable type_stars: ('loc loc_node * module_ref_node) list;
+      mutable ts_pending: 'loc ts_pending_export smap;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -512,6 +525,7 @@ module Exports = struct
         kind = UnknownModule;
         types = SMap.empty;
         type_stars = [];
+        ts_pending = SMap.empty;
         strict;
         platform_availability_set;
       }
@@ -588,6 +602,17 @@ module Exports = struct
   let add_type name t (Exports e) = e.types <- SMap.add name t e.types
 
   let add_type_star loc mref (Exports e) = e.type_stars <- (loc, mref) :: e.type_stars
+
+  let add_ts_pending name t (Exports e) =
+    e.ts_pending <- SMap.add name t e.ts_pending;
+    match e.kind with
+    | ESModule _ -> ()
+    | UnknownModule -> e.kind <- ESModule { names = SMap.empty; stars = [] }
+    | CJSModule _
+    | CJSModuleProps _
+    | CJSDeclareModule _ ->
+      (* indeterminate *)
+      ()
 end
 
 module Scope = struct
@@ -1172,8 +1197,8 @@ module Scope = struct
       vref
     | x -> x
 
-  let export_ref scope tbls kind ~local ~exported =
-    let (ref_loc, name, exported) =
+  let export_ref opts scope tbls kind ~local ~exported =
+    let (ref_loc, name, exported_name) =
       match exported with
       | None ->
         let (id_loc, { Ast.Identifier.name; comments = _ }) = local in
@@ -1186,8 +1211,34 @@ module Scope = struct
     let ref = Ref { ref_loc; name; scope; resolved = None } in
     let f =
       match kind with
-      | Ast.Statement.ExportType -> Exports.add_type exported (ExportTypeRef ref)
-      | Ast.Statement.ExportValue -> Exports.add exported (ExportRef ref)
+      | Ast.Statement.ExportType -> Exports.add_type exported_name (ExportTypeRef ref)
+      | Ast.Statement.ExportValue when opts.is_ts_file ->
+        (* In .ts files, check if this is a local type binding *)
+        (match lookup_value scope name with
+        | None ->
+          (* Not in value scope; check type scope *)
+          (match lookup_type scope name with
+          | Some _ ->
+            (* Local type binding: emit as type export immediately *)
+            Exports.add_type exported_name (ExportTypeRef ref)
+          | None ->
+            (* Not found anywhere; keep as value export *)
+            Exports.add exported_name (ExportRef ref))
+        | Some (RemoteBinding node, _) ->
+          (match Remote_refs.value node with
+          | ImportBinding { mref; remote; _ } ->
+            (* Imported value binding in .ts: defer classification to merge/check
+               since the source module may export this as type-only. *)
+            Exports.add_ts_pending
+              exported_name
+              (TsExportRef { export_loc = ref_loc; ref; import_provenance = Some (mref, remote) })
+          | _ ->
+            (* Other remote bindings (ImportType, ImportTypeof, etc.): keep as value export *)
+            Exports.add exported_name (ExportRef ref))
+        | Some (LocalBinding _, _) ->
+          (* Local value binding: keep as value export *)
+          Exports.add exported_name (ExportRef ref))
+      | Ast.Statement.ExportValue -> Exports.add exported_name (ExportRef ref)
     in
     modify_exports f scope
 
@@ -1207,9 +1258,9 @@ module Scope = struct
     let f = Exports.add "default" (ExportDefaultBinding { default_loc; name; binding }) in
     modify_exports f scope
 
-  let export_from scope tbls kind mref ~local ~exported =
+  let export_from opts scope tbls kind mref ~local ~exported =
     let mref = push_module_ref tbls mref in
-    let (id_loc, name, remote) =
+    let (id_loc, exported_name, remote) =
       match exported with
       | None ->
         let (id_loc, { Ast.Identifier.name; comments = _ }) = local in
@@ -1222,11 +1273,22 @@ module Scope = struct
     let f =
       match kind with
       | Ast.Statement.ExportType ->
-        let node = push_remote_ref tbls (ImportTypeBinding { id_loc; name; mref; remote }) in
-        Exports.add_type name (ExportTypeFrom node)
+        let node =
+          push_remote_ref tbls (ImportTypeBinding { id_loc; name = exported_name; mref; remote })
+        in
+        Exports.add_type exported_name (ExportTypeFrom node)
+      | Ast.Statement.ExportValue when opts.is_ts_file ->
+        (* In .ts files, we can't classify at parse time whether the remote
+           export is type-only or value. Emit as TsExportFrom so merge/check
+           can classify at resolution time. *)
+        Exports.add_ts_pending
+          exported_name
+          (TsExportFrom { export_loc = id_loc; mref; remote_name = remote })
       | Ast.Statement.ExportValue ->
-        let node = push_remote_ref tbls (ImportBinding { id_loc; name; mref; remote }) in
-        Exports.add name (ExportFrom node)
+        let node =
+          push_remote_ref tbls (ImportBinding { id_loc; name = exported_name; mref; remote })
+        in
+        Exports.add exported_name (ExportFrom node)
     in
     modify_exports f scope
 
@@ -5568,7 +5630,7 @@ let export_default_decl =
       let def = expression opts scope tbls expr in
       Scope.export_default scope default_loc def
 
-let export_specifiers scope tbls kind source =
+let export_specifiers opts scope tbls kind source =
   let module S = Ast.Statement in
   let module E = S.ExportNamedDeclaration in
   let source =
@@ -5603,10 +5665,10 @@ let export_specifiers scope tbls kind source =
           Flow_ast_utils.effective_export_kind ~statement_export_kind:kind export_kind
         in
         match source with
-        | None -> Scope.export_ref scope tbls specifier_kind ~local ~exported
+        | None -> Scope.export_ref opts scope tbls specifier_kind ~local ~exported
         | Some mref ->
           let mref = Flow_import_specifier.userland mref in
-          Scope.export_from scope tbls specifier_kind mref ~local ~exported)
+          Scope.export_from opts scope tbls specifier_kind mref ~local ~exported)
       specifiers
 
 let assignment =
@@ -5724,7 +5786,7 @@ let rec statement opts scope tbls (loc, stmt) =
     begin
       match specifiers with
       | None -> ()
-      | Some specifiers -> export_specifiers scope tbls kind source specifiers
+      | Some specifiers -> export_specifiers opts scope tbls kind source specifiers
     end
   (* walk lex scopes to collect hoisted names in scope *)
   | S.Block { S.Block.body; _ } ->
@@ -5837,7 +5899,7 @@ let rec statement opts scope tbls (loc, stmt) =
     begin
       match specifiers with
       | None -> ()
-      | Some specifiers -> export_specifiers scope tbls S.ExportValue source specifiers
+      | Some specifiers -> export_specifiers opts scope tbls S.ExportValue source specifiers
     end
   | S.ExportDefaultDeclaration decl -> export_default_decl opts scope tbls decl
   | S.Expression
@@ -5870,7 +5932,7 @@ let rec statement opts scope tbls (loc, stmt) =
           | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
           | _ -> Ast.Statement.ExportValue
         in
-        Scope.export_ref scope tbls export_kind ~local:id ~exported:None
+        Scope.export_ref opts scope tbls export_kind ~local:id ~exported:None
     | S.ImportEqualsDeclaration.Identifier _ ->
       (* import Foo = A.B.C: qualified name form is not supported;
          bind as any so downstream code doesn't break. *)
@@ -5882,7 +5944,7 @@ let rec statement opts scope tbls (loc, stmt) =
           | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
           | _ -> Ast.Statement.ExportValue
         in
-        Scope.export_ref scope tbls export_kind ~local:id ~exported:None)
+        Scope.export_ref opts scope tbls export_kind ~local:id ~exported:None)
   | S.DeclareModule { S.DeclareModule.id; body; comments = _ } ->
     let (loc, name) =
       match id with

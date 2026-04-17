@@ -2067,6 +2067,12 @@ module CJSExtractNamedExportsTKit = struct
     | _ -> local_module
 end
 
+type export_classification =
+  | FoundValue of Type.named_symbol
+  | FoundTypeOnly of Type.named_symbol
+  | UnknownButAllowedByEveryNamedExport
+  | ExportMissing
+
 module ImportExportUtils : sig
   val get_module_type_or_any :
     Context.t ->
@@ -2139,6 +2145,10 @@ module ImportExportUtils : sig
     singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
     purpose:Flow_intermediate_error_types.expected_module_purpose ->
     Type.t
+
+  val classify_named_export : cx -> Type.moduletype -> string -> export_classification
+
+  val is_ts_import_type_only : cx -> def_loc:ALoc.t -> bool
 end = struct
   let check_platform_availability cx error_loc imported_module_available_platforms =
     let current_module_available_platforms = Context.available_platforms cx in
@@ -2393,6 +2403,70 @@ end = struct
       ~remote_name:name
       ~local_name:name
     |> snd
+
+  let classify_named_export cx module_ export_name =
+    let {
+      Type.module_export_types = exports;
+      module_reason = _;
+      module_is_strict = _;
+      module_available_platforms = _;
+    } =
+      module_
+    in
+    let value_exports_tmap =
+      let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
+      match exports.cjs_export with
+      | Some (def_loc_opt, type_) ->
+        let name_loc =
+          Some
+            (match def_loc_opt with
+            | None -> def_loc_of_t type_
+            | Some l -> l)
+        in
+        NameUtils.Map.add
+          (OrdinaryName "default")
+          { Type.preferred_def_locs = None; name_loc; type_ }
+          value_exports_tmap
+      | None -> value_exports_tmap
+    in
+    let type_exports_tmap = Context.find_exports cx exports.type_exports_tmap in
+    match NameUtils.Map.find_opt (OrdinaryName export_name) value_exports_tmap with
+    | Some sym -> FoundValue sym
+    | None ->
+      (match NameUtils.Map.find_opt (OrdinaryName export_name) type_exports_tmap with
+      | Some sym -> FoundTypeOnly sym
+      | None ->
+        if exports.has_every_named_export then
+          UnknownButAllowedByEveryNamedExport
+        else
+          ExportMissing)
+
+  let is_ts_import_type_only cx ~def_loc =
+    match Context.find_ts_import_provenance cx ~def_loc with
+    | Some (source, remote_name) ->
+      let module_result =
+        if Context.in_declare_module cx then
+          match source with
+          | Flow_import_specifier.Userland mref ->
+            (match Context.builtin_module_opt cx mref with
+            | Some (_, (lazy m)) -> Some m
+            | None -> None)
+          | _ -> None
+        else
+          match Context.find_require cx source with
+          | Context.TypedModule f ->
+            (match f () with
+            | Ok m -> Some m
+            | Error _ -> None)
+          | _ -> None
+      in
+      (match module_result with
+      | Some m ->
+        (match classify_named_export cx m remote_name with
+        | FoundTypeOnly _ -> true
+        | _ -> false)
+      | None -> false)
+    | None -> false
 end
 
 (*******************)

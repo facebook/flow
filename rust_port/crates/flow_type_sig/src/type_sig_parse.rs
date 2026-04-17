@@ -183,6 +183,20 @@ pub(super) enum ExportType<'arena, 'ast> {
 }
 
 #[derive(Clone)]
+pub(super) enum TsPendingExport<'arena, 'ast> {
+    TsExportRef {
+        export_loc: LocNode<'arena>,
+        ref_: Ref<'arena, 'ast>,
+        import_provenance: Option<(ModuleRefNode<'arena>, FlowSmolStr)>,
+    },
+    TsExportFrom {
+        export_loc: LocNode<'arena>,
+        mref: ModuleRefNode<'arena>,
+        remote_name: FlowSmolStr,
+    },
+}
+
+#[derive(Clone)]
 pub(super) enum ModuleKind<'arena, 'ast> {
     UnknownModule,
     CJSModule(Parsed<'arena, 'ast>),
@@ -207,6 +221,7 @@ pub(super) struct Exports<'arena, 'ast> {
     pub(super) kind: ModuleKind<'arena, 'ast>,
     pub(super) types: BTreeMap<FlowSmolStr, ExportType<'arena, 'ast>>,
     pub(super) type_stars: Vec<(LocNode<'arena>, ModuleRefNode<'arena>)>,
+    pub(super) ts_pending: BTreeMap<FlowSmolStr, TsPendingExport<'arena, 'ast>>,
     pub(super) strict: bool,
     pub(super) platform_availability_set: Option<PlatformSet>,
 }
@@ -683,6 +698,7 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
             kind: ModuleKind::UnknownModule,
             types: BTreeMap::new(),
             type_stars: Vec::new(),
+            ts_pending: BTreeMap::new(),
             strict,
             platform_availability_set,
         }))
@@ -766,6 +782,24 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
 
     fn add_type_star(&mut self, loc: LocNode<'arena>, mref: ModuleRefNode<'arena>) {
         self.type_stars.push((loc, mref));
+    }
+
+    fn add_ts_pending(&mut self, name: FlowSmolStr, t: TsPendingExport<'arena, 'ast>) {
+        self.ts_pending.insert(name, t);
+        match &self.kind {
+            ModuleKind::ESModule { .. } => {}
+            ModuleKind::UnknownModule => {
+                self.kind = ModuleKind::ESModule {
+                    names: BTreeMap::new(),
+                    stars: Vec::new(),
+                };
+            }
+            ModuleKind::CJSModule(_)
+            | ModuleKind::CJSModuleProps(_)
+            | ModuleKind::CJSDeclareModule(_) => {
+                // indeterminate
+            }
+        }
     }
 }
 
@@ -2129,6 +2163,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn export_ref<'arena, 'ast>(
+        opts: &TypeSigOptions,
         scopes: &mut Scopes<'arena, 'ast>,
         id: ScopeId,
         tbls: &mut Tables<'arena, 'ast>,
@@ -2150,8 +2185,8 @@ pub(super) mod scope {
         };
         let ref_loc = tbls.push_loc(ref_loc);
         let ref_ = Ref {
-            ref_loc,
-            name,
+            ref_loc: ref_loc.dupe(),
+            name: name.dupe(),
             scope: id,
             resolved: OnceCell::new(),
         };
@@ -2160,6 +2195,62 @@ pub(super) mod scope {
                 modify_exports(scopes, id, |exports| {
                     exports.add_type(exported_name, ExportType::ExportTypeRef(ref_))
                 });
+            }
+            ast::statement::ExportKind::ExportValue if opts.is_ts_file => {
+                // In .ts files, check if this is a local type binding
+                match lookup_value(scopes, id, &name) {
+                    None => {
+                        // Not in value scope; check type scope
+                        match lookup_type(scopes, id, &name) {
+                            Some(_) => {
+                                // Local type binding: emit as type export immediately
+                                modify_exports(scopes, id, |exports| {
+                                    exports.add_type(exported_name, ExportType::ExportTypeRef(ref_))
+                                });
+                            }
+                            None => {
+                                // Not found anywhere; keep as value export
+                                modify_exports(scopes, id, |exports| {
+                                    exports.add(exported_name, Export::ExportRef(ref_))
+                                });
+                            }
+                        }
+                    }
+                    Some((BindingNode::RemoteBinding(node), _)) => {
+                        let data = node.0.data();
+                        match &*data {
+                            RemoteBinding::ImportBinding { mref, remote, .. } => {
+                                let mref = mref.dupe();
+                                let remote = remote.dupe();
+                                drop(data);
+                                // Imported value binding in .ts: defer classification to merge/check
+                                modify_exports(scopes, id, |exports| {
+                                    exports.add_ts_pending(
+                                        exported_name,
+                                        TsPendingExport::TsExportRef {
+                                            export_loc: ref_loc,
+                                            ref_,
+                                            import_provenance: Some((mref, remote)),
+                                        },
+                                    )
+                                });
+                            }
+                            _ => {
+                                drop(data);
+                                // Other remote bindings: keep as value export
+                                modify_exports(scopes, id, |exports| {
+                                    exports.add(exported_name, Export::ExportRef(ref_))
+                                });
+                            }
+                        }
+                    }
+                    Some((BindingNode::LocalBinding(_), _)) => {
+                        // Local value binding: keep as value export
+                        modify_exports(scopes, id, |exports| {
+                            exports.add(exported_name, Export::ExportRef(ref_))
+                        });
+                    }
+                }
             }
             ast::statement::ExportKind::ExportValue => {
                 modify_exports(scopes, id, |exports| {
@@ -2224,6 +2315,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn export_from<'arena, 'ast>(
+        opts: &TypeSigOptions,
         scopes: &mut Scopes<'arena, 'ast>,
         id: ScopeId,
         tbls: &mut Tables<'arena, 'ast>,
@@ -2233,7 +2325,7 @@ pub(super) mod scope {
         exported: Option<&ast::Identifier<Loc, Loc>>,
     ) {
         let mref = tbls.push_module_ref(mref);
-        let (id_loc, name, remote) = match exported {
+        let (id_loc, exported_name, remote) = match exported {
             None => (
                 local.loc.dupe(),
                 id_name(local).clone(),
@@ -2250,23 +2342,38 @@ pub(super) mod scope {
             ast::statement::ExportKind::ExportType => {
                 let node = tbls.push_remote_ref(RemoteBinding::ImportTypeBinding {
                     id_loc,
-                    name: name.clone(),
+                    name: exported_name.clone(),
                     mref,
                     remote,
                 });
                 modify_exports(scopes, id, |exports| {
-                    exports.add_type(name, ExportType::ExportTypeFrom(node))
+                    exports.add_type(exported_name, ExportType::ExportTypeFrom(node))
+                })
+            }
+            ast::statement::ExportKind::ExportValue if opts.is_ts_file => {
+                // In .ts files, we can't classify at parse time whether the remote
+                // export is type-only or value. Emit as TsExportFrom so merge/check
+                // can classify at resolution time.
+                modify_exports(scopes, id, |exports| {
+                    exports.add_ts_pending(
+                        exported_name,
+                        TsPendingExport::TsExportFrom {
+                            export_loc: id_loc,
+                            mref,
+                            remote_name: remote,
+                        },
+                    )
                 })
             }
             ast::statement::ExportKind::ExportValue => {
                 let node = tbls.push_remote_ref(RemoteBinding::ImportBinding {
                     id_loc,
-                    name: name.clone(),
+                    name: exported_name.clone(),
                     mref,
                     remote,
                 });
                 modify_exports(scopes, id, |exports| {
-                    exports.add(name, Export::ExportFrom(node))
+                    exports.add(exported_name, Export::ExportFrom(node))
                 })
             }
         }
@@ -10271,6 +10378,7 @@ fn export_default_decl<'arena: 'ast, 'ast>(
 }
 
 fn export_specifiers<'arena, 'ast>(
+    opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
@@ -10313,6 +10421,7 @@ fn export_specifiers<'arena, 'ast>(
                 match &source_opt {
                     None => {
                         scope::export_ref(
+                            opts,
                             scopes,
                             scope,
                             tbls,
@@ -10324,6 +10433,7 @@ fn export_specifiers<'arena, 'ast>(
                     Some(mref) => {
                         let mref = Userland::from_smol_str(mref.clone());
                         scope::export_from(
+                            opts,
                             scopes,
                             scope,
                             tbls,
@@ -10656,7 +10766,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                 );
             }
             if let Some(specifiers) = specifiers {
-                export_specifiers(scope, scopes, tbls, *export_kind, source, specifiers);
+                export_specifiers(opts, scope, scopes, tbls, *export_kind, source, specifiers);
             }
         }
         // walk lex scopes to collect hoisted names in scope
@@ -10781,6 +10891,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             }
             if let Some(specifiers) = specifiers {
                 export_specifiers(
+                    opts,
                     scope,
                     scopes,
                     tbls,
@@ -10864,7 +10975,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                             }
                             _ => ast::statement::ExportKind::ExportValue,
                         };
-                        scope::export_ref(scopes, scope, tbls, export_kind, id, None);
+                        scope::export_ref(opts, scopes, scope, tbls, export_kind, id, None);
                     }
                 }
                 ast::statement::import_equals_declaration::ModuleReference::Identifier(_) => {
@@ -10889,7 +11000,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                             }
                             _ => ast::statement::ExportKind::ExportValue,
                         };
-                        scope::export_ref(scopes, scope, tbls, export_kind, id, None);
+                        scope::export_ref(opts, scopes, scope, tbls, export_kind, id, None);
                     }
                 }
             }

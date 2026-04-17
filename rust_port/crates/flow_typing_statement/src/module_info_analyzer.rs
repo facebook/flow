@@ -198,12 +198,39 @@ fn export_specifiers<'a>(
     export_kind: ast::statement::ExportKind,
     specifiers: &ast::statement::export_named_declaration::Specifier<ALoc, (ALoc, Type)>,
 ) {
+    let is_ts_file = flow_common::files::has_ts_ext(cx.file());
+    let classify_ts_local_export =
+        |kind: ast::statement::ExportKind, loc: &ALoc| -> ast::statement::ExportKind {
+            if kind != ast::statement::ExportKind::ExportValue || !is_ts_file {
+                return kind;
+            }
+            let binding_info = type_env::local_export_binding_at_loc(cx, loc.dupe());
+            match binding_info {
+                Some(type_env::LocalExportBinding {
+                    val_kind: flow_env_builder::env_api::ValKind::Type { .. },
+                    ..
+                }) => ast::statement::ExportKind::ExportType,
+                Some(type_env::LocalExportBinding {
+                    def_loc: Some(def_loc),
+                    val_kind: flow_env_builder::env_api::ValKind::TsImport,
+                }) => {
+                    if flow_js_utils::import_export_utils::is_ts_import_type_only(cx, &def_loc) {
+                        ast::statement::ExportKind::ExportType
+                    } else {
+                        ast::statement::ExportKind::ExportValue
+                    }
+                }
+                _ => ast::statement::ExportKind::ExportValue,
+            }
+        };
     // [declare] export [type] {[type] foo [as bar]};
     let export_ref = |info: &mut module_info::ModuleInfo,
                       kind: ast::statement::ExportKind,
                       loc: ALoc,
                       local_type: Type,
-                      remote_name: Name| {
+                      remote_name: Name,
+                      _source_local_name: FlowSmolStr| {
+        let kind = classify_ts_local_export(kind, &loc);
         match kind {
             ast::statement::ExportKind::ExportType => {
                 module_info::export_type(info, remote_name, loc, local_type)
@@ -213,12 +240,52 @@ fn export_specifiers<'a>(
             }
         }
     };
+    let classify_ts_from_export = |kind: ast::statement::ExportKind,
+                                   source_local_name: &FlowSmolStr|
+     -> ast::statement::ExportKind {
+        if kind != ast::statement::ExportKind::ExportValue || !is_ts_file {
+            return kind;
+        }
+        match source {
+            None => kind,
+            Some((_, source_literal)) => {
+                let source_module_name = &source_literal.value;
+                let module_specifier = flow_common::flow_import_specifier::Userland::from_smol_str(
+                    source_module_name.dupe(),
+                );
+                match cx.find_require(
+                    &flow_common::flow_import_specifier::FlowImportSpecifier::Userland(
+                        module_specifier,
+                    ),
+                ) {
+                    flow_typing_context::ResolvedRequire::TypedModule(f) => match f(cx, cx) {
+                        Ok(m) => {
+                            match flow_js_utils::import_export_utils::classify_named_export(
+                                cx,
+                                &m,
+                                source_local_name,
+                            ) {
+                                flow_js_utils::ExportClassification::FoundTypeOnly(_) => {
+                                    ast::statement::ExportKind::ExportType
+                                }
+                                _ => ast::statement::ExportKind::ExportValue,
+                            }
+                        }
+                        Err(_) => kind,
+                    },
+                    _ => kind,
+                }
+            }
+        }
+    };
     // [declare] export [type] {[type] foo [as bar]} from 'module'
     let export_from = |info: &mut module_info::ModuleInfo,
                        kind: ast::statement::ExportKind,
                        loc: ALoc,
                        local_type: Type,
-                       remote_name: Name| {
+                       remote_name: Name,
+                       source_local_name: FlowSmolStr| {
+        let kind = classify_ts_from_export(kind, &source_local_name);
         match kind {
             ast::statement::ExportKind::ExportType => {
                 module_info::export_type(info, remote_name, loc, local_type)
@@ -235,6 +302,7 @@ fn export_specifiers<'a>(
             ALoc,
             Type,
             Name,
+            FlowSmolStr,
         ),
          specifier: &ast::statement::export_named_declaration::ExportSpecifier<
             ALoc,
@@ -256,7 +324,14 @@ fn export_specifiers<'a>(
                 None => Name::new(local_name.dupe()),
                 Some(exported_id) => Name::new(exported_id.name.dupe()),
             };
-            export(info, kind, local_loc.dupe(), local_type.dupe(), remote_name)
+            export(
+                info,
+                kind,
+                local_loc.dupe(),
+                local_type.dupe(),
+                remote_name,
+                local_name.dupe(),
+            )
         };
 
     match specifiers {
@@ -268,6 +343,7 @@ fn export_specifiers<'a>(
                 ALoc,
                 Type,
                 Name,
+                FlowSmolStr,
             ) = match source {
                 Some(_) => &export_from,
                 None => &export_ref,

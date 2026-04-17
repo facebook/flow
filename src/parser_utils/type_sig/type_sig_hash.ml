@@ -201,3 +201,12 @@ let visit_type_export edge file = function
   | P.ExportTypeRef ref -> visit_ref edge file ref
   | P.ExportTypeBinding index -> edge_local_def edge file index
   | P.ExportTypeFrom index -> edge_remote_ref edge file index
+
+let visit_ts_pending_export edge dep_edge file = function
+  | P.TsExportRef { export_loc = _; ref; import_provenance } ->
+    visit_ref edge file ref;
+    (match import_provenance with
+    | Some (index, remote) -> edge_import remote edge dep_edge file index
+    | None -> ())
+  | P.TsExportFrom { export_loc = _; mref; remote_name } ->
+    edge_import remote_name edge dep_edge file mref

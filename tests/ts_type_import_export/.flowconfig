@@ -1,4 +1,5 @@
 [options]
 all=true
+enums=true
 module.file_ext=.ts
 module.file_ext=.js

@@ -76,6 +76,19 @@ pub type LazyCjsExport<'cx> = Rc<
     >,
 >;
 
+pub enum TsPendingClassified {
+    TsPendingType(NamedSymbol),
+    TsPendingValue(NamedSymbol),
+}
+
+pub type LazyTsPendingClassified<'cx> = Rc<
+    flow_lazy::Lazy<
+        Context<'cx>,
+        TsPendingClassified,
+        Box<dyn FnOnce(&Context<'cx>) -> TsPendingClassified + 'cx>,
+    >,
+>;
+
 pub enum Exports<'cx> {
     CJSExports {
         type_exports: BTreeMap<FlowSmolStr, LazyExport<'cx>>,
@@ -87,6 +100,7 @@ pub enum Exports<'cx> {
     ESExports {
         type_exports: BTreeMap<FlowSmolStr, LazyExport<'cx>>,
         exports: BTreeMap<FlowSmolStr, LazyExport<'cx>>,
+        ts_pending: Vec<(FlowSmolStr, LazyTsPendingClassified<'cx>)>,
         type_stars: Vec<(ALoc, Index<FlowImportSpecifier>)>,
         stars: Vec<(ALoc, Index<FlowImportSpecifier>)>,
         strict: bool,
@@ -1151,21 +1165,32 @@ pub fn merge_exports<'cx>(
         Exports::ESExports {
             type_exports,
             exports,
+            ts_pending,
             stars,
             type_stars,
             strict,
             platform_availability_set,
         } => {
             // let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
-            let exports_map: type_::exports::T = exports
+            let mut exports_map: type_::exports::T = exports
                 .iter()
                 .map(|(key, lazy_val)| (Name::new(key.dupe()), lazy_val.get_forced(cx).clone()))
                 .collect();
             // let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
-            let type_exports_map: type_::exports::T = type_exports
+            let mut type_exports_map: type_::exports::T = type_exports
                 .iter()
                 .map(|(key, lazy_val)| (Name::new(key.dupe()), lazy_val.get_forced(cx).clone()))
                 .collect();
+            for (name, lazy_entry) in &ts_pending {
+                match lazy_entry.get_forced(cx) {
+                    TsPendingClassified::TsPendingType(sym) => {
+                        type_exports_map.insert(Name::new(name.dupe()), sym.clone());
+                    }
+                    TsPendingClassified::TsPendingValue(sym) => {
+                        exports_map.insert(Name::new(name.dupe()), sym.clone());
+                    }
+                }
+            }
             let stars: Vec<(ALoc, FromNs<'cx>)> =
                 stars.iter().map(|s| merge_star(cx, file, s)).collect();
             let type_stars: Vec<(ALoc, FromNs<'cx>)> =
@@ -4722,6 +4747,82 @@ pub fn merge_export<'cx>(
     }
 }
 
+pub fn classify_ts_pending_export<'cx>(
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    pending: &Pack::TsPendingExport<ALoc>,
+) -> TsPendingClassified {
+    let classify_from_dep = |mref_index: &Index<FlowImportSpecifier>,
+                             remote_name: &FlowSmolStr|
+     -> flow_js_utils::ExportClassification {
+        let lazy_resolved = file.dependencies.borrow().get(mref_index.clone()).1.dupe();
+        let resolved = lazy_resolved.get_forced(cx).dupe();
+        match resolved {
+            ResolvedRequire::TypedModule(f) => match f(cx, cx) {
+                Ok(m) => {
+                    flow_js_utils::import_export_utils::classify_named_export(cx, &m, remote_name)
+                }
+                Err(_) => flow_js_utils::ExportClassification::ExportMissing,
+            },
+            _ => flow_js_utils::ExportClassification::ExportMissing,
+        }
+    };
+    let is_type_only = match pending {
+        Pack::TsPendingExport::TsExportRef {
+            import_provenance: Some((mref_index, remote_name)),
+            ..
+        } => matches!(
+            classify_from_dep(mref_index, remote_name),
+            flow_js_utils::ExportClassification::FoundTypeOnly(_)
+        ),
+        Pack::TsPendingExport::TsExportRef {
+            import_provenance: None,
+            ..
+        } => false,
+        Pack::TsPendingExport::TsExportFrom {
+            mref, remote_name, ..
+        } => matches!(
+            classify_from_dep(mref, remote_name),
+            flow_js_utils::ExportClassification::FoundTypeOnly(_)
+        ),
+    };
+    let sym = match pending {
+        Pack::TsPendingExport::TsExportRef {
+            export_loc, ref_, ..
+        } => {
+            let merged = merge_export(cx, file, &Pack::Export::ExportRef(ref_.clone()));
+            NamedSymbol::new(
+                Some(export_loc.dupe()),
+                merged.preferred_def_locs.clone(),
+                merged.type_.dupe(),
+            )
+        }
+        Pack::TsPendingExport::TsExportFrom {
+            export_loc,
+            mref,
+            remote_name,
+        } => {
+            let remote_ref_node = Pack::RemoteRef::Import {
+                id_loc: export_loc.dupe(),
+                name: FlowSmolStr::new(""),
+                index: *mref,
+                remote: remote_name.dupe(),
+            };
+            let reason = reason::mk_reason(
+                reason::VirtualReasonDesc::RIdentifier(Name::new(remote_name.dupe())),
+                export_loc.dupe(),
+            );
+            let type_ = merge_remote_ref(cx, file, reason, &remote_ref_node);
+            NamedSymbol::new(Some(export_loc.dupe()), None, type_)
+        }
+    };
+    if is_type_only {
+        TsPendingClassified::TsPendingType(sym)
+    } else {
+        TsPendingClassified::TsPendingValue(sym)
+    }
+}
+
 pub fn merge_resource_module_t<'cx>(
     cx: &Context<'cx>,
     file_key: FileKey,
@@ -5128,12 +5229,14 @@ pub fn merge_builtins<'cx>(
                 };
                 let es_module = |type_exports: &[Pack::TypeExport<Index<Loc>>],
                                  exports: &[Pack::Export<Index<Loc>>],
+                                 ts_pending_arr: &[Pack::TsPendingExport<Index<Loc>>],
                                  info: Pack::ESModuleInfo<Index<Loc>>|
                  -> Exports<'cx> {
                     let info = info.map(&*aloc_fn);
                     let Pack::ESModuleInfo {
                         type_export_keys,
                         export_keys,
+                        ts_pending_keys,
                         type_stars,
                         stars,
                         strict,
@@ -5145,9 +5248,33 @@ pub fn merge_builtins<'cx>(
                     let exports = exports.iter().map(es_export_fn).collect::<Vec<_>>();
                     let exports: BTreeMap<FlowSmolStr, LazyExport<'cx>> =
                         export_keys.into_iter().zip(exports).collect();
+                    let ts_pending: Vec<(FlowSmolStr, LazyTsPendingClassified<'cx>)> =
+                        ts_pending_keys
+                            .into_iter()
+                            .zip(ts_pending_arr.iter())
+                            .map(|(name, pending)| {
+                                let pending = pending.clone();
+                                let aloc_fn = aloc_fn.dupe();
+                                let file_and_dep = file_and_dep.dupe();
+                                (
+                                    name,
+                                    Rc::new(flow_lazy::Lazy::new(Box::new(
+                                        move |cx: &Context<'cx>| {
+                                            let pending = pending.map(&*aloc_fn);
+                                            let (file, _) = file_and_dep.get_forced(cx);
+                                            classify_ts_pending_export(cx, file, &pending)
+                                        },
+                                    )
+                                        as Box<
+                                            dyn FnOnce(&Context<'cx>) -> TsPendingClassified + 'cx,
+                                        >)),
+                                )
+                            })
+                            .collect();
                     Exports::ESExports {
                         type_exports,
                         exports,
+                        ts_pending,
                         type_stars,
                         stars,
                         strict,
@@ -5163,8 +5290,9 @@ pub fn merge_builtins<'cx>(
                     Pack::ModuleKind::ESModule {
                         type_exports,
                         exports,
+                        ts_pending,
                         info,
-                    } => es_module(&type_exports, &exports, info),
+                    } => es_module(&type_exports, &exports, &ts_pending, info),
                 };
                 let (file, _) = file_and_dep.get_forced(cx);
                 let reason2_ret = reason2.dupe();

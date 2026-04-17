@@ -500,6 +500,7 @@ pub fn mk_check_file(
             };
             let es_module = |type_exports_arr: &[Pack::TypeExport<Index<Loc>>],
                              exports_arr: &[Pack::Export<Index<Loc>>],
+                             ts_pending_arr: &[Pack::TsPendingExport<Index<Loc>>],
                              info: &Pack::ESModuleInfo<Index<Loc>>|
              -> Exports<'static> {
                 let Pack::ESModuleInfo {
@@ -507,6 +508,7 @@ pub fn mk_check_file(
                     type_stars,
                     export_keys,
                     stars,
+                    ts_pending_keys,
                     strict,
                     platform_availability_set,
                 } = &info.map(&|i| (*aloc_for_exports)(i));
@@ -535,9 +537,39 @@ pub fn mk_check_file(
                         .map(|(name, export)| (name.dupe(), es_export(export)))
                         .collect();
 
+                assert_eq!(
+                    ts_pending_keys.len(),
+                    ts_pending_arr.len(),
+                    "ts_pending_keys and ts_pending_arr length mismatch"
+                );
+                let ts_pending: Vec<(
+                    FlowSmolStr,
+                    type_sig_merge::LazyTsPendingClassified<'static>,
+                )> = ts_pending_keys
+                    .iter()
+                    .zip(ts_pending_arr.iter())
+                    .map(|(name, pending)| {
+                        let pending = pending.clone();
+                        let file_cell = file_cell_for_exports.dupe();
+                        let aloc = aloc_for_exports.dupe();
+                        let lazy_fn: Box<
+                            dyn FnOnce(&Context<'static>) -> type_sig_merge::TsPendingClassified
+                                + 'static,
+                        > = Box::new(move |cx: &Context<'static>| {
+                            let pending = pending.map(&|i| (*aloc)(i));
+                            let file = type_sig_merge::File::from_weak(
+                                file_cell.get().expect("file_rec not initialized"),
+                            );
+                            type_sig_merge::classify_ts_pending_export(cx, &file, &pending)
+                        });
+                        (name.dupe(), Rc::new(flow_lazy::Lazy::new(lazy_fn)))
+                    })
+                    .collect();
+
                 Exports::ESExports {
                     type_exports,
                     exports,
+                    ts_pending,
                     type_stars: type_stars.clone(),
                     stars: stars.clone(),
                     strict: *strict,
@@ -553,8 +585,9 @@ pub fn mk_check_file(
                 Pack::ModuleKind::ESModule {
                     type_exports,
                     exports,
+                    ts_pending,
                     info,
-                } => es_module(type_exports, exports, info),
+                } => es_module(type_exports, exports, ts_pending, info),
             };
             let file = type_sig_merge::File::from_weak(
                 file_cell_for_exports

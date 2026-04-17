@@ -683,6 +683,36 @@ fn mark_export_type<'arena, 'ast>(
     }
 }
 
+fn mark_ts_pending_export<'arena, 'ast>(
+    opts: &TypeSigOptions,
+    scopes: &mut parse::scope::Scopes<'arena, 'ast>,
+    tbls: &mut parse::Tables<'arena, 'ast>,
+    marker: &mut Marker<'_>,
+    export: &parse::TsPendingExport<'arena, 'ast>,
+) {
+    match export {
+        parse::TsPendingExport::TsExportRef {
+            export_loc,
+            ref_,
+            import_provenance,
+        } => {
+            mark_loc(marker, export_loc);
+            resolve_value_ref(opts, scopes, tbls, marker, ref_);
+            if let Some((mref, _)) = import_provenance {
+                mark_mref(mref);
+            }
+        }
+        parse::TsPendingExport::TsExportFrom {
+            export_loc,
+            mref,
+            remote_name: _,
+        } => {
+            mark_loc(marker, export_loc);
+            mark_mref(mref);
+        }
+    }
+}
+
 fn mark_star<'arena>(
     marker: &mut Marker<'_>,
     (loc, mref): &(LocNode<'arena>, ModuleRefNode<'arena>),
@@ -705,6 +735,9 @@ pub(super) fn mark_exports<'arena, 'ast>(
         }
         for star in &exports.type_stars {
             mark_star(marker, star);
+        }
+        for t in exports.ts_pending.values() {
+            mark_ts_pending_export(opts, scopes, tbls, marker, t);
         }
         match &exports.kind {
             parse::ModuleKind::UnknownModule => {}

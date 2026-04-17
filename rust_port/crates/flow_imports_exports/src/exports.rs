@@ -522,6 +522,7 @@ mod esm {
             export_keys,
             type_stars,
             stars,
+            ts_pending_keys,
             ..
         } = info;
 
@@ -539,6 +540,15 @@ mod esm {
 
         for (key, value) in export_keys.iter().zip(exports.iter()) {
             fold_name(export_sig, &mut acc, key, value);
+        }
+
+        // ts_pending entries are .ts exports whose value-vs-type status can't be
+        // determined at parse time (it's deferred to merge). Emit both Named and
+        // NamedType so auto-import consumers can suggest the name regardless of
+        // whether the resolved export turns out to be a value or a type.
+        for name in ts_pending_keys {
+            acc.0.push(Export::Named(name.dupe()));
+            acc.0.push(Export::NamedType(name.dupe()));
         }
 
         for (key, value) in type_export_keys.iter().zip(type_exports.iter()) {
@@ -679,6 +689,7 @@ fn of_sig<Loc>(export_sig: &ExportSig<Loc>) -> Exports {
         Some(ModuleKind::ESModule {
             type_exports,
             exports,
+            ts_pending: _,
             info,
         }) => esm::exports(export_sig, type_exports, exports, info),
         Some(ModuleKind::CJSModule {

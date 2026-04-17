@@ -29,6 +29,7 @@ pub struct TypeSigOptions {
     pub relay_integration_module_prefix: Option<String>,
     pub for_builtins: bool,
     pub locs_to_dirtify: Vec<Loc>,
+    pub is_ts_file: bool,
 }
 
 impl TypeSigOptions {
@@ -74,6 +75,7 @@ impl TypeSigOptions {
                 || flow_common::files::has_ts_ext(file),
             enable_records: options.enable_records,
             for_builtins: false,
+            is_ts_file: flow_common::files::has_ts_ext(file),
         }
     }
 
@@ -99,6 +101,7 @@ impl TypeSigOptions {
             enable_records: options.enable_records,
             for_builtins: true,
             locs_to_dirtify: Vec::new(),
+            is_ts_file: false,
         }
     }
 }

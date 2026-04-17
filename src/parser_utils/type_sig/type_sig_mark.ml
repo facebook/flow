@@ -272,6 +272,17 @@ let mark_export_type ~locs_to_dirtify = function
     Local_defs.mark binding (mark_and_report_should_be_dirtified ~locs_to_dirtify mark_local_binding)
   | P.ExportTypeFrom ref -> Remote_refs.mark ref (mark_and_report_not_dirty mark_remote_binding)
 
+let mark_ts_pending_export ~locs_to_dirtify = function
+  | P.TsExportRef { export_loc; ref; import_provenance } ->
+    mark_loc ~visit_loc:ignore export_loc;
+    resolve_value_ref ~locs_to_dirtify ~visit_loc:ignore ref;
+    (match import_provenance with
+    | Some (mref, _) -> mark_mref mref
+    | None -> ())
+  | P.TsExportFrom { export_loc; mref; remote_name = _ } ->
+    mark_loc ~visit_loc:ignore export_loc;
+    mark_mref mref
+
 let mark_star (loc, mref) =
   mark_loc ~visit_loc:ignore loc;
   mark_mref mref
@@ -279,9 +290,10 @@ let mark_star (loc, mref) =
 let mark_exports
     ~locs_to_dirtify
     file_loc
-    (P.Exports { kind; types; type_stars; strict = _; platform_availability_set = _ }) =
+    (P.Exports { kind; types; type_stars; ts_pending; strict = _; platform_availability_set = _ }) =
   SMap.iter (fun _ t -> mark_export_type ~locs_to_dirtify t) types;
   List.iter mark_star type_stars;
+  SMap.iter (fun _ t -> mark_ts_pending_export ~locs_to_dirtify t) ts_pending;
   match kind with
   | P.UnknownModule -> ()
   | P.CJSModule t -> mark_parsed ~locs_to_dirtify ~visit_loc:ignore t

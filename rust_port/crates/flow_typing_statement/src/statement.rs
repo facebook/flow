@@ -1838,27 +1838,103 @@ fn export_specifiers<'a>(
     let effective_kind = |specifier_export_kind: statement::ExportKind| -> statement::ExportKind {
         flow_parser::ast_utils::effective_export_kind(export_kind, specifier_export_kind)
     };
-    let lookup_mode_of_kind = |kind: statement::ExportKind| -> type_env::LookupMode {
-        match kind {
-            statement::ExportKind::ExportValue => type_env::LookupMode::ForValue,
-            statement::ExportKind::ExportType => type_env::LookupMode::ForType,
-        }
-    };
     // [declare] export [type] {[type] foo [as bar]};
-    let export_ref = |kind: statement::ExportKind,
-                      loc: ALoc,
-                      local_name: &Name|
-     -> (Option<ALoc>, Type) {
-        let lookup_mode = lookup_mode_of_kind(kind);
-        let t = type_env::var_ref(Some(lookup_mode), cx, None, local_name.dupe(), loc);
-        match kind {
-            statement::ExportKind::ExportType => (
-                None,
-                type_operation_utils::type_assertions::assert_export_is_type(cx, local_name, &t),
-            ),
-            statement::ExportKind::ExportValue => (None, t),
-        }
-    };
+    let export_ref =
+        |kind: statement::ExportKind, loc: ALoc, local_name: &Name| -> (Option<ALoc>, Type) {
+            match kind {
+                statement::ExportKind::ExportType => {
+                    let t = type_env::var_ref(
+                        Some(type_env::LookupMode::ForType),
+                        cx,
+                        None,
+                        local_name.dupe(),
+                        loc,
+                    );
+                    (
+                        None,
+                        type_operation_utils::type_assertions::assert_export_is_type(
+                            cx, local_name, &t,
+                        ),
+                    )
+                }
+                statement::ExportKind::ExportValue if flow_common::files::has_ts_ext(cx.file()) => {
+                    // In .ts files, check if this is a local type binding or an imported type-only
+                    let binding_info = type_env::local_export_binding_at_loc(cx, loc.dupe());
+                    match binding_info {
+                        Some(type_env::LocalExportBinding {
+                            val_kind: flow_env_builder::env_api::ValKind::Type { .. },
+                            ..
+                        }) => {
+                            // Local type binding: use ForType lookup and route as type export
+                            let t = type_env::var_ref(
+                                Some(type_env::LookupMode::ForType),
+                                cx,
+                                None,
+                                local_name.dupe(),
+                                loc,
+                            );
+                            (
+                                None,
+                                type_operation_utils::type_assertions::assert_export_is_type(
+                                    cx, local_name, &t,
+                                ),
+                            )
+                        }
+                        Some(type_env::LocalExportBinding {
+                            def_loc: Some(def_loc),
+                            val_kind: flow_env_builder::env_api::ValKind::TsImport,
+                        }) => {
+                            if flow_js_utils::import_export_utils::is_ts_import_type_only(
+                                cx, &def_loc,
+                            ) {
+                                let t = type_env::var_ref(
+                                    Some(type_env::LookupMode::ForType),
+                                    cx,
+                                    None,
+                                    local_name.dupe(),
+                                    loc,
+                                );
+                                (
+                                    None,
+                                    type_operation_utils::type_assertions::assert_export_is_type(
+                                        cx, local_name, &t,
+                                    ),
+                                )
+                            } else {
+                                let t = type_env::var_ref(
+                                    Some(type_env::LookupMode::ForValue),
+                                    cx,
+                                    None,
+                                    local_name.dupe(),
+                                    loc,
+                                );
+                                (None, t)
+                            }
+                        }
+                        _ => {
+                            let t = type_env::var_ref(
+                                Some(type_env::LookupMode::ForValue),
+                                cx,
+                                None,
+                                local_name.dupe(),
+                                loc,
+                            );
+                            (None, t)
+                        }
+                    }
+                }
+                statement::ExportKind::ExportValue => {
+                    let t = type_env::var_ref(
+                        Some(type_env::LookupMode::ForValue),
+                        cx,
+                        None,
+                        local_name.dupe(),
+                        loc,
+                    );
+                    (None, t)
+                }
+            }
+        };
     // [declare] export [type] {[type] foo [as bar]} from 'module'
     let export_from = |kind: statement::ExportKind,
                        module_name: flow_import_specifier::Userland,
@@ -3964,6 +4040,19 @@ fn statement_<'a>(
                                     local_name,
                                 )
                                 .expect("Should not be under speculation");
+                            if flow_common::files::has_ts_ext(cx.file())
+                                && spec_import_kind == statement::ImportKind::ImportValue
+                            {
+                                let binding_def_loc = match &spec.local {
+                                    Some(local_id) => local_id.loc.dupe(),
+                                    None => remote_name_loc.dupe(),
+                                };
+                                cx.add_ts_import_provenance(
+                                    binding_def_loc,
+                                    flow_common::flow_import_specifier::FlowImportSpecifier::Userland(module_name.dupe()),
+                                    remote_name.dupe(),
+                                );
+                            }
                             let remote_ast = ast::Identifier::new(ast::IdentifierInner {
                                 loc: (remote_name_loc, imported_t.dupe()),
                                 name: remote_name.dupe(),
