@@ -524,20 +524,7 @@ end = struct
         export_index;
       }
 
-    let save ~saved_state_filename ~genv ~env ~profiling =
-      Hh_logger.info "Collecting env data for saved state";
-      let env_data = collect_env_data ~genv ~env ~profiling in
-      let filename = File_path.to_string saved_state_filename in
-      Files.mkdirp (Filename.dirname filename) 0o777;
-      let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
-      let%lwt _header_bytes_written = write_version fd in
-      Hh_logger.info "Saving heap to saved-state file";
-      let%lwt () =
-        Profiling_js.with_timer_lwt profiling ~timer:"SaveHeap" ~f:(fun () ->
-            SharedMem.save_heap (Lwt_unix.unix_file_descr fd);
-            Lwt.return_unit
-        )
-      in
+    let write_env ~profiling ~filename fd env_data =
       Hh_logger.info "Compressing env metadata with lz4";
       let%lwt saved_state_contents =
         Profiling_js.with_timer_lwt profiling ~timer:"Compress" ~f:(fun () ->
@@ -554,17 +541,35 @@ end = struct
             )
         )
       in
-      Profiling_js.with_timer_lwt profiling ~timer:"Write" ~f:(fun () ->
+      Profiling_js.with_timer_lwt profiling ~timer:"WriteEnv" ~f:(fun () ->
           Hh_logger.info "Writing env metadata to saved-state file at %S" filename;
           let%lwt _data_bytes_written =
             Marshal_tools_lwt.to_fd_with_preamble
               fd
               (saved_state_contents : Saved_state_compression.compressed)
           in
-          let%lwt () = Lwt_unix.close fd in
-          Hh_logger.info "Finished writing saved-state file at %S" filename;
           Lwt.return_unit
       )
+
+    let write_heap ~profiling fd =
+      Hh_logger.info "Saving heap to saved-state file";
+      Profiling_js.with_timer_lwt profiling ~timer:"SaveHeap" ~f:(fun () ->
+          SharedMem.save_heap (Lwt_unix.unix_file_descr fd);
+          Lwt.return_unit
+      )
+
+    let save ~saved_state_filename ~genv ~env ~profiling =
+      Hh_logger.info "Collecting env data for saved state";
+      let env_data = collect_env_data ~genv ~env ~profiling in
+      let filename = File_path.to_string saved_state_filename in
+      Files.mkdirp (Filename.dirname filename) 0o777;
+      let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
+      let%lwt _header_bytes_written = write_version fd in
+      let%lwt () = write_heap ~profiling fd in
+      let%lwt () = write_env ~profiling ~filename fd env_data in
+      let%lwt () = Lwt_unix.close fd in
+      Hh_logger.info "Finished writing saved-state file at %S" filename;
+      Lwt.return_unit
   end
 
   let save ~saved_state_filename ~genv ~env ~profiling =
@@ -829,42 +834,44 @@ end = struct
         export_index;
       }
 
+    let load_heap ~profiling fd =
+      Profiling_js.with_timer_lwt profiling ~timer:"LoadHeap" ~f:(fun () ->
+          (try SharedMem.load_heap (Lwt_unix.unix_file_descr fd) with
+          | Failure msg ->
+            Hh_logger.error "Failed to load heap: %s" msg;
+            raise (Invalid_saved_state (Failed_to_load_heap msg)));
+          Lwt.return_unit
+      )
+
+    let read_env fd =
+      try%lwt Marshal_tools_lwt.from_fd_with_preamble fd with
+      | exn ->
+        let exn = Exception.wrap exn in
+        Hh_logger.error ~exn "Failed to parse saved state env data";
+        raise (Invalid_saved_state (Failed_to_marshal exn))
+
+    let decompress_env ~options compressed_data =
+      let data =
+        try Saved_state_compression.decompress_and_unmarshal compressed_data with
+        | exn ->
+          let exn = Exception.wrap exn in
+          Hh_logger.error ~exn "Failed to decompress saved state env data";
+          raise (Invalid_saved_state (Failed_to_decompress exn))
+      in
+      denormalize_env_data ~options ~data
+
     let load ~options ~profiling fd =
       Hh_logger.info "Loading heap from saved-state file";
-      let%lwt () =
-        Profiling_js.with_timer_lwt profiling ~timer:"LoadHeap" ~f:(fun () ->
-            (try SharedMem.load_heap (Lwt_unix.unix_file_descr fd) with
-            | Failure msg ->
-              Hh_logger.error "Failed to load heap: %s" msg;
-              raise (Invalid_saved_state (Failed_to_load_heap msg)));
-            Lwt.return_unit
-        )
-      in
+      let%lwt () = load_heap ~profiling fd in
       Hh_logger.info "Reading env metadata from saved-state file";
       let%lwt (compressed_data : Saved_state_compression.compressed) =
-        Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () ->
-            try%lwt Marshal_tools_lwt.from_fd_with_preamble fd with
-            | exn ->
-              let exn = Exception.wrap exn in
-              Hh_logger.error ~exn "Failed to parse saved state env data";
-              raise (Invalid_saved_state (Failed_to_marshal exn))
-        )
+        Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () -> read_env fd)
       in
       let%lwt () = Lwt_unix.close fd in
       Hh_logger.info "Decompressing env metadata";
-      let%lwt (data : saved_state_env_data) =
-        Profiling_js.with_timer_lwt profiling ~timer:"Decompress" ~f:(fun () ->
-            try Lwt.return (Saved_state_compression.decompress_and_unmarshal compressed_data) with
-            | exn ->
-              let exn = Exception.wrap exn in
-              Hh_logger.error ~exn "Failed to decompress saved state env data";
-              raise (Invalid_saved_state (Failed_to_decompress exn))
-        )
-      in
-      Hh_logger.info "Denormalizing env data";
       let%lwt data =
-        Profiling_js.with_timer_lwt profiling ~timer:"Denormalize" ~f:(fun () ->
-            Lwt.return (denormalize_env_data ~options ~data)
+        Profiling_js.with_timer_lwt profiling ~timer:"Decompress" ~f:(fun () ->
+            Lwt.return (decompress_env ~options compressed_data)
         )
       in
       Hh_logger.info "Finished loading saved-state";
