@@ -1,0 +1,100 @@
+Error ----------------------------------------------------------------------------------------------------- test.ts:9:17
+
+Cannot assign array literal to `i` because in index `0`: string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.ts:9:17
+   9| const i: Foo = ["not a number"]; // ERROR: string ~> number
+                      ^^^^^^^^^^^^^^ [1]
+
+References:
+   test.ts:2:14
+   2| type Foo<T = number> = [T];
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:13:10
+
+Cannot use `Bar` [1] without 1 type argument. [missing-type-arg]
+
+   test.ts:13:10
+   13| const c: Bar = [1]; // ERROR: missing type args
+                ^^^
+
+References:
+   test.ts:12:9
+   12| type Bar<T> = [T];
+               ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:17:10
+
+Cannot use `Baz` [1] without 1-2 type arguments. [missing-type-arg]
+
+   test.ts:17:10
+   17| const d: Baz = ["", ""]; // ERROR: T has no default
+                ^^^
+
+References:
+   test.ts:16:9
+   16| type Baz<T, U = string> = [T, U];
+               ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:39:10
+
+Cannot use `MyClass2` [1] without 1 type argument. [missing-type-arg]
+
+   test.ts:39:10
+   39| const g: MyClass2 = new MyClass2(1); // ERROR: missing type args
+                ^^^^^^^^
+
+References:
+   test.ts:33:15
+   33| class MyClass2<T> {
+                     ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:64:22
+
+Cannot use `Base2` [1] with fewer than 1 type argument. [missing-type-arg]
+
+   test.ts:64:22
+   64| class Child2 extends Base2 {} // ERROR: missing type args
+                            ^^^^^
+
+References:
+   test.ts:58:12
+   58| class Base2<T> {
+                  ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:77:27
+
+Cannot use `IBase2` [1] without 1 type argument. [missing-type-arg]
+
+   test.ts:77:27
+   77| interface IChild2 extends IBase2 {} // ERROR: missing type args
+                                 ^^^^^^
+
+References:
+   test.ts:74:17
+   74| interface IBase2<T> {
+                       ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.ts:89:10
+
+Cannot use `Inner` [1] without 1 type argument. [missing-type-arg]
+
+   test.ts:89:10
+   89| const n: NS2.Inner = { flag: true }; // ERROR: missing type args
+                ^^^^^^^^^
+
+References:
+   test.ts:87:13
+   87|   type Inner<T> = { flag: T };
+                   ^^^ [1]
+
+
+
+Found 7 errors

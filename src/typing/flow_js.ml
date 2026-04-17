@@ -1372,6 +1372,17 @@ struct
         (***************************************)
         (* transform values to type references *)
         (***************************************)
+        | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out; id }),
+            ValueToTypeReferenceT (use_op, reason_op, _, _)
+          )
+          when Files.has_ts_ext (Context.file cx) && Flow_js_utils.poly_minimum_arity ids = 0 ->
+          (* In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
+             matching TypeScript behavior where defaults are used.
+             Only when all params have defaults; otherwise fall through to EMissingTypeArgs. *)
+          let t =
+            mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc ids t_out []
+          in
+          rec_flow cx trace (t, u)
         | (l, ValueToTypeReferenceT (use_op, reason_op, type_t_kind, tout)) ->
           let t =
             Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type

@@ -615,6 +615,26 @@ module rec ConsGen : S = struct
       in
       let t_ = subst cx subst_map t in
       elab_t cx t_ op
+    | ( DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out; id }),
+        Annot_UseT_TypeT (reason, _)
+      )
+      when Files.has_ts_ext (Context.file cx) && Flow_js_utils.poly_minimum_arity ids = 0 ->
+      (* In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
+         matching TypeScript behavior where defaults are used.
+         Only when all params have defaults; otherwise fall through to EMissingTypeArgs. *)
+      let t =
+        mk_typeapp_of_poly
+          cx
+          ~use_op:unknown_use
+          ~reason_op:reason
+          ~reason_tapp
+          id
+          tparams_loc
+          ids
+          t_out
+          []
+      in
+      elab_t cx t op
     | (DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT (reason, _)) ->
       Flow_js_utils.add_output
         cx

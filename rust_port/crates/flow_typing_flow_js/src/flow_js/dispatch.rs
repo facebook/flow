@@ -2123,6 +2123,39 @@ fn __flow_impl<'cx>(
         // * transform values to type references *
         // ***************************************
         (
+            TypeInner::DefT(reason_tapp, def_t),
+            UseTInner::ValueToTypeReferenceT(box ValueToTypeReferenceTData {
+                use_op,
+                reason: reason_op,
+                ..
+            }),
+        ) if let DefTInner::PolyT(box PolyTData {
+            tparams_loc,
+            tparams: ids,
+            t_out,
+            id,
+        }) = def_t.deref()
+            && flow_common::files::has_ts_ext(cx.file())
+            && ids.iter().all(|tp| tp.default.is_some()) =>
+        {
+            // In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
+            // matching TypeScript behavior where defaults are used.
+            // Only when all params have defaults; otherwise fall through to EMissingTypeArgs.
+            let t = FlowJs::mk_typeapp_of_poly(
+                cx,
+                trace,
+                use_op.dupe(),
+                reason_op,
+                reason_tapp,
+                id.dupe(),
+                tparams_loc.dupe(),
+                Vec1::try_from_vec(ids.to_vec()).unwrap(),
+                t_out,
+                Rc::from([]),
+            )?;
+            rec_flow(cx, trace, (&t, u))?;
+        }
+        (
             _,
             UseTInner::ValueToTypeReferenceT(box ValueToTypeReferenceTData {
                 use_op,

@@ -76,13 +76,26 @@ let qualify_type cx use_op reason ~op_reason prop_name l =
 
 let mk_instance cx ?(type_t_kind = InstanceKind) instance_reason ?(use_desc = false) l =
   let f t =
-    t
-    |> Flow.singleton_concrete_type_for_inspection cx instance_reason
-    |> Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type
-         cx
-         ~use_op:unknown_use
-         instance_reason
-         type_t_kind
-    |> Tvar_resolver.resolved_t cx
+    let concrete = Flow.singleton_concrete_type_for_inspection cx instance_reason t in
+    match concrete with
+    | DefT (_, PolyT { tparams = ids; _ })
+      when Files.has_ts_ext (Context.file cx) && Flow_js_utils.poly_minimum_arity ids = 0 ->
+      (* In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
+         matching TypeScript behavior where defaults are used. Route through flow engine
+         so the PolyT + ValueToTypeReferenceT handler in flow_js.ml applies.
+         Only when all params have defaults; otherwise fall through to EMissingTypeArgs. *)
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx instance_reason (fun tout ->
+          Flow.flow
+            cx
+            (concrete, ValueToTypeReferenceT (unknown_use, instance_reason, type_t_kind, tout))
+      )
+    | _ ->
+      concrete
+      |> Flow_js_utils.ValueToTypeReferenceTransform.run_on_concrete_type
+           cx
+           ~use_op:unknown_use
+           instance_reason
+           type_t_kind
+      |> Tvar_resolver.resolved_t cx
   in
   AnnotT (instance_reason, map_on_resolved_type cx instance_reason l f, use_desc)

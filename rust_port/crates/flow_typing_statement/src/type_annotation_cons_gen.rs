@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::ops::Deref;
 use std::rc::Rc;
 
 use dupe::Dupe;
@@ -16,8 +17,10 @@ use flow_typing_flow_common::flow_js_utils::value_to_type_reference_transform;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
+use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::GetPropTData;
 use flow_typing_type::type_::GetTypeFromNamespaceTData;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::SpecializeTData;
 use flow_typing_type::type_::Tvar;
@@ -27,6 +30,7 @@ use flow_typing_type::type_::TypeTKind;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util::reason_of_t;
@@ -181,17 +185,51 @@ pub fn mk_instance<'a>(
     let use_desc = use_desc.unwrap_or(false);
     let instance_reason_clone = instance_reason.dupe();
     let f = move |cx: &Context<'_>, t: Type| {
-        let t = FlowJs::singleton_concrete_type_for_inspection(cx, &instance_reason_clone, &t)
-            .expect("Should not be under speculation");
-        let t = value_to_type_reference_transform::run_on_concrete_type(
-            cx,
-            unknown_use(),
-            &instance_reason_clone,
-            type_t_kind,
-            t,
-        )
-        .expect("Should not be under speculation");
-        tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, cx, t)
+        let concrete =
+            FlowJs::singleton_concrete_type_for_inspection(cx, &instance_reason_clone, &t)
+                .expect("Should not be under speculation");
+        match concrete.deref() {
+            TypeInner::DefT(_, def_t)
+                if let DefTInner::PolyT(box PolyTData { tparams: ids, .. }) = def_t.deref()
+                    && flow_common::files::has_ts_ext(cx.file())
+                    && ids.iter().all(|tp| tp.default.is_some()) =>
+            {
+                // In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
+                // matching TypeScript behavior where defaults are used. Route through flow engine
+                // so the PolyT + ValueToTypeReferenceT handler in flow_js.ml applies.
+                // Only when all params have defaults; otherwise fall through to EMissingTypeArgs.
+                tvar_resolver::mk_tvar_and_fully_resolve_where(
+                    cx,
+                    instance_reason_clone.dupe(),
+                    |cx, tout| {
+                        let tvar = match tout.deref() {
+                            TypeInner::OpenT(tvar) => tvar.dupe(),
+                            _ => unreachable!("mk_where always creates OpenT"),
+                        };
+                        let use_t = UseT::new(UseTInner::ValueToTypeReferenceT(Box::new(
+                            ValueToTypeReferenceTData {
+                                use_op: unknown_use(),
+                                reason: instance_reason_clone.dupe(),
+                                kind: type_t_kind,
+                                tout: Box::new(tvar),
+                            },
+                        )));
+                        flow_js::flow_non_speculating(cx, (&concrete, &use_t));
+                    },
+                )
+            }
+            _ => {
+                let t = value_to_type_reference_transform::run_on_concrete_type(
+                    cx,
+                    unknown_use(),
+                    &instance_reason_clone,
+                    type_t_kind,
+                    concrete,
+                )
+                .expect("Should not be under speculation");
+                tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, cx, t)
+            }
+        }
     };
     Type::new(TypeInner::AnnotT(
         instance_reason.dupe(),
