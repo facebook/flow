@@ -650,6 +650,99 @@ Variance modifiers cannot appear on a type parameter of a function type. [unsupp
                          ^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:15:23
+
+Cannot use `A` [1] in an input position because `A` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   in_out_variance.js:15:23
+   15| type BadOut<out A> = (A) => void; // ERROR: out in contravariant position
+                             ^
+
+References:
+   in_out_variance.js:15:17
+   15| type BadOut<out A> = (A) => void; // ERROR: out in contravariant position
+                       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:16:36
+
+Cannot use `A` [1] in an output position because `A` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   in_out_variance.js:16:36
+   16| type BadIn<in A> = {readonly prop: A}; // ERROR: in in covariant position
+                                          ^
+
+References:
+   in_out_variance.js:16:15
+   16| type BadIn<in A> = {readonly prop: A}; // ERROR: in in covariant position
+                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:17:43
+
+Cannot use `A` [1] in an input position because `A` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   in_out_variance.js:17:43
+   17| interface BadOutInterface<out A> { method(A): void } // ERROR: out in contravariant position
+                                                 ^
+
+References:
+   in_out_variance.js:17:31
+   17| interface BadOutInterface<out A> { method(A): void } // ERROR: out in contravariant position
+                                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:18:49
+
+Cannot use `A` [1] in an output position because `A` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   in_out_variance.js:18:49
+   18| interface BadInInterface<in A> { readonly prop: A } // ERROR: in in covariant position
+                                                       ^
+
+References:
+   in_out_variance.js:18:29
+   18| interface BadInInterface<in A> { readonly prop: A } // ERROR: in in covariant position
+                                   ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:19:38
+
+Cannot use `A` [1] in an input position because `A` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   in_out_variance.js:19:38
+   19| type BadInWriteonly<out A> = {-prop: A}; // ERROR: out in contravariant position // TODO: replace - with writeonly once implemented
+                                            ^
+
+References:
+   in_out_variance.js:19:25
+   19| type BadInWriteonly<out A> = {-prop: A}; // ERROR: out in contravariant position // TODO: replace - with writeonly once implemented
+                               ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:21:12
+
+The equivalent of TypeScript's `in out` variance annotation in Flow is to simply leave it out - it's the default if you
+don't have a variance annotation. [unsupported-syntax]
+
+   21| type InOut<in out A> = A; // ERROR: in out is always unsupported
+                  ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:22:26
+
+The equivalent of TypeScript's `in out` variance annotation in Flow is to simply leave it out - it's the default if you
+don't have a variance annotation. [unsupported-syntax]
+
+   22| interface InOutInterface<in out A> { prop: A } // ERROR: in out is always unsupported
+                                ^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- never.js:1:10
 
 The closest equivalent of TypeScript's `never` type in Flow is `empty`. [unsupported-syntax]
@@ -1171,4 +1264,4 @@ types. [unsupported-syntax]
 
 
 
-Found 127 errors
+Found 134 errors
