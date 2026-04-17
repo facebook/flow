@@ -1,7 +1,7 @@
 ---
 name: rust-port-validator
 description: Use this agent when you have just completed porting OCaml code to Rust and need to validate that all porting rules were followed correctly. Common scenarios include:\n\n<example>\nContext: User has just ported an OCaml module to Rust\nuser: "I've finished porting the lexer.ml file to lexer.rs"\nassistant: "Let me use the rust-port-validator agent to check that the port follows all the required rules."\n<tool use for rust-port-validator agent>\n</example>\n\n<example>\nContext: User notices issues with a recent Rust port\nuser: "The rust port looks good but I want to make sure I followed all the guidelines"\nassistant: "I'll launch the rust-port-validator agent to verify the port adheres to all OCaml-to-Rust porting rules."\n<tool use for rust-port-validator agent>\n</example>\n\n<example>\nContext: Proactive validation after assistant completes a port\nassistant: "I've completed porting the parser.ml file to parser.rs. Now let me use the rust-port-validator agent to validate the port follows all rules before we proceed."\n<tool use for rust-port-validator agent>\n</example>
-model: sonnet
+model: opus
 color: cyan
 ---
 

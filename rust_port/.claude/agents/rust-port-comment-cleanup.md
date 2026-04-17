@@ -1,7 +1,7 @@
 ---
 name: rust-port-comment-cleanup
 description: Specialized agent for cleaning up comments in Rust ports to match OCaml source exactly. Handles both regular comments and doc comments.
-model: haiku
+model: opus
 color: purple
 ---
 
