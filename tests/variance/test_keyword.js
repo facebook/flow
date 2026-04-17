@@ -4,11 +4,11 @@ class B extends A {};
 // named properties
 
 type RWA = {p: A}
-type ROA = {+p: A}
-type WOA = {-p: A}
+type ROA = {readonly p: A}
+type WOA = {-p: A} // TODO: replace - with writeonly once implemented
 type RWB = {p: B}
-type ROB = {+p: B}
-type WOB = {-p: B}
+type ROB = {readonly p: B}
+type WOB = {-p: B} // TODO: replace - with writeonly once implemented
 
 declare var rwA: RWA;
 declare var roA: ROA;
@@ -21,11 +21,11 @@ declare var woB: WOB;
 // dictionaries
 
 type dRWA = {[string]: A};
-type dROA = {+[string]: A};
-type dWOA = {-[string]: A};
+type dROA = {readonly [string]: A};
+type dWOA = {-[string]: A}; // TODO: replace - with writeonly once implemented
 type dRWB = {[string]: B};
-type dROB = {+[string]: B};
-type dWOB = {-[string]: B};
+type dROB = {readonly [string]: B};
+type dWOB = {-[string]: B}; // TODO: replace - with writeonly once implemented
 
 declare var drwA: dRWA;
 declare var droA: dROA;
@@ -45,11 +45,11 @@ declare var dwoB: dWOB;
   (rwA: RWA); // ok
   (drwA: dRWA); // ok
 
-  // +A
+  // readonly A
   (roA: RWA); // error
   (droA: dRWA); // error
 
-  // -A
+  // writeonly A
   (woA: RWA); // error
   (dwoA: dRWA); // error
 
@@ -61,16 +61,16 @@ declare var dwoB: dWOB;
   (rwB: RWA); // error
   (drwB: dRWA); // error
 
-  // +B
+  // readonly B
   (roB: RWA); // error
   (droB: dRWA); // error
 
-  // -B
+  // writeonly B
   (woB: RWA); // error
   (dwoB: dRWA); // error
 }
 
-// X ~> +A
+// X ~> readonly A
 {
   // literal A
   ({p: new A}: ROA); // ok
@@ -80,11 +80,11 @@ declare var dwoB: dWOB;
   (rwA: ROA); // ok
   (drwA: dROA); // ok
 
-  // +A
+  // readonly A
   (roA: ROA); // ok
   (droA: dROA); // ok
 
-  // -A
+  // writeonly A
   (woA: ROA); // error
   (dwoA: dROA); // error
 
@@ -96,16 +96,16 @@ declare var dwoB: dWOB;
   (rwB: ROA); // ok
   (drwB: dROA); // ok
 
-  // +B
+  // readonly B
   (roB: ROA); // ok
   (droB: dROA); // ok
 
-  // -B
+  // writeonly B
   (woB: ROA); // error
   (dwoB: dROA); // error
 }
 
-// X ~> -A
+// X ~> writeonly A
 {
   // literal A
   ({p: new A}: WOA); // ok
@@ -115,11 +115,11 @@ declare var dwoB: dWOB;
   (rwA: WOA); // ok
   (rwA: dWOA); // ok
 
-  // +A
+  // readonly A
   (roA: WOA); // error
   (droA: dWOA); // error
 
-  // -A
+  // writeonly A
   (woA: WOA); // ok
   (dwoA: dWOA); // ok
 
@@ -131,11 +131,11 @@ declare var dwoB: dWOB;
   (rwB: WOA); // error
   (drwB: dWOA); // error
 
-  // +B
+  // readonly B
   (roB: WOA); // error
   (droB: dWOA); // error
 
-  // -B
+  // writeonly B
   (woB: WOA); // error
   (dwoB: dWOA); // error
 }
@@ -150,16 +150,16 @@ declare var dwoB: dWOB;
   (rwA: RWB); // error
   (drwA: dRWB); // error
 
-  // +A
+  // readonly A
   (roA: RWB); // error
   (droA: dRWB); // error
 
-  // -A
+  // writeonly A
   (woA: RWB); // error
   (dwoA: dRWB); // error
 }
 
-// X ~> +B
+// X ~> readonly B
 {
   // literal A
   ({p: new A}: ROB); // error
@@ -169,16 +169,16 @@ declare var dwoB: dWOB;
   (rwA: ROB); // error
   (drwA: dROB); // error
 
-  // +A
+  // readonly A
   (roA: ROB); // error
   (droA: dROB); // error
 
-  // -A
+  // writeonly A
   (woA: ROB); // error
   (dwoA: dROB); // error
 }
 
-// X ~> -B
+// X ~> writeonly B
 {
   // literal A
   ({p: new A}: WOB); // ok
@@ -188,11 +188,11 @@ declare var dwoB: dWOB;
   (rwA: WOB); // ok
   (drwA: dWOB); // ok
 
-  // +A
+  // readonly A
   (roA: WOB); // error
   (droA: dWOB); // error
 
-  // -A
+  // writeonly A
   (woA: WOB); // ok
   (dwoA: dWOB); // ok
 }
@@ -204,21 +204,21 @@ declare var dwoB: dWOB;
 
   (([rwA]: Array<{p:A,...}>): Array<{p:A,...}>); // ok
 
-  (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+  (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
 
-  (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+  (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
 
-  (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+  (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
 
-  (([roA]: Array<{+p:A,...}>): Array<{+p:A,...}>); // ok
+  (([roA]: Array<{readonly p:A,...}>): Array<{readonly p:A,...}>); // ok
 
-  (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+  (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
 
-  (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+  (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
 
-  (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+  (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
 
-  (([woA]: Array<{-p:A,...}>): Array<{-p:A,...}>); // ok
+  (([woA]: Array<{-p:A,...}>): Array<{-p:A,...}>); // ok // TODO: replace - with writeonly
 
 }
 

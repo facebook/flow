@@ -1214,7 +1214,7 @@ References:
     6| type RWA = {p: A}
                       ^ [1]
    test_keyword.js:11:17
-   11| type WOB = {-p: B}
+   11| type WOB = {-p: B} // TODO: replace - with writeonly once implemented
                        ^ [2]
 
 
@@ -1249,7 +1249,7 @@ References:
    23| type dRWA = {[string]: A};
                               ^ [1]
    test_keyword.js:28:25
-   28| type dWOB = {-[string]: B};
+   28| type dWOB = {-[string]: B}; // TODO: replace - with writeonly once implemented
                                ^ [2]
 
 
@@ -1371,7 +1371,7 @@ Cannot cast `rwB` to `WOA` because in property `p`: `A` [1] is incompatible with
 
 References:
    test_keyword.js:8:17
-     8| type WOA = {-p: A}
+     8| type WOA = {-p: A} // TODO: replace - with writeonly once implemented
                         ^ [1]
    test_keyword.js:9:16
      9| type RWB = {p: B}
@@ -1388,7 +1388,7 @@ Cannot cast `drwB` to `dWOA` because in the indexer property: `A` [1] is incompa
 
 References:
    test_keyword.js:25:25
-    25| type dWOA = {-[string]: A};
+    25| type dWOA = {-[string]: A}; // TODO: replace - with writeonly once implemented
                                 ^ [1]
    test_keyword.js:26:24
     26| type dRWB = {[string]: B};
@@ -1441,10 +1441,10 @@ Cannot cast `woB` to `WOA` because in property `p`: `A` [1] is incompatible with
 
 References:
    test_keyword.js:8:17
-     8| type WOA = {-p: A}
+     8| type WOA = {-p: A} // TODO: replace - with writeonly once implemented
                         ^ [1]
    test_keyword.js:11:17
-    11| type WOB = {-p: B}
+    11| type WOB = {-p: B} // TODO: replace - with writeonly once implemented
                         ^ [2]
 
 
@@ -1458,10 +1458,10 @@ Cannot cast `dwoB` to `dWOA` because in the indexer property: `A` [1] is incompa
 
 References:
    test_keyword.js:25:25
-    25| type dWOA = {-[string]: A};
+    25| type dWOA = {-[string]: A}; // TODO: replace - with writeonly once implemented
                                 ^ [1]
    test_keyword.js:28:25
-    28| type dWOB = {-[string]: B};
+    28| type dWOB = {-[string]: B}; // TODO: replace - with writeonly once implemented
                                 ^ [2]
 
 
@@ -1583,9 +1583,9 @@ Cannot cast `roA` to `RWB` because in property `p`: `A` [1] is incompatible with
            ^^^
 
 References:
-   test_keyword.js:7:17
-     7| type ROA = {+p: A}
-                        ^ [1]
+   test_keyword.js:7:25
+     7| type ROA = {readonly p: A}
+                                ^ [1]
    test_keyword.js:9:16
      9| type RWB = {p: B}
                        ^ [2]
@@ -1618,9 +1618,9 @@ Cannot cast `droA` to `dRWB` because in the indexer property: `A` [1] is incompa
            ^^^^
 
 References:
-   test_keyword.js:24:25
-    24| type dROA = {+[string]: A};
-                                ^ [1]
+   test_keyword.js:24:33
+    24| type dROA = {readonly [string]: A};
+                                        ^ [1]
    test_keyword.js:26:24
     26| type dRWB = {[string]: B};
                                ^ [2]
@@ -1671,9 +1671,9 @@ Cannot cast object literal to `ROB` because in property `p`: `A` [1] is incompat
                ^^^^^ [1]
 
 References:
-   test_keyword.js:10:17
-    10| type ROB = {+p: B}
-                        ^ [2]
+   test_keyword.js:10:25
+    10| type ROB = {readonly p: B}
+                                ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:166:8
@@ -1685,9 +1685,9 @@ Cannot cast object literal to `dROB` because in property `p`: `A` [1] is incompa
                ^^^^^ [1]
 
 References:
-   test_keyword.js:27:25
-    27| type dROB = {+[string]: B};
-                                ^ [2]
+   test_keyword.js:27:33
+    27| type dROB = {readonly [string]: B};
+                                        ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:169:4
@@ -1702,9 +1702,9 @@ References:
    test_keyword.js:6:16
      6| type RWA = {p: A}
                        ^ [1]
-   test_keyword.js:10:17
-    10| type ROB = {+p: B}
-                        ^ [2]
+   test_keyword.js:10:25
+    10| type ROB = {readonly p: B}
+                                ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:170:4
@@ -1719,9 +1719,9 @@ References:
    test_keyword.js:23:24
     23| type dRWA = {[string]: A};
                                ^ [1]
-   test_keyword.js:27:25
-    27| type dROB = {+[string]: B};
-                                ^ [2]
+   test_keyword.js:27:33
+    27| type dROB = {readonly [string]: B};
+                                        ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:173:4
@@ -1733,12 +1733,12 @@ Cannot cast `roA` to `ROB` because in property `p`: `A` [1] is incompatible with
            ^^^
 
 References:
-   test_keyword.js:7:17
-     7| type ROA = {+p: A}
-                        ^ [1]
-   test_keyword.js:10:17
-    10| type ROB = {+p: B}
-                        ^ [2]
+   test_keyword.js:7:25
+     7| type ROA = {readonly p: A}
+                                ^ [1]
+   test_keyword.js:10:25
+    10| type ROB = {readonly p: B}
+                                ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:174:4
@@ -1750,12 +1750,12 @@ Cannot cast `droA` to `dROB` because in the indexer property: `A` [1] is incompa
            ^^^^
 
 References:
-   test_keyword.js:24:25
-    24| type dROA = {+[string]: A};
-                                ^ [1]
-   test_keyword.js:27:25
-    27| type dROB = {+[string]: B};
-                                ^ [2]
+   test_keyword.js:24:33
+    24| type dROA = {readonly [string]: A};
+                                        ^ [1]
+   test_keyword.js:27:33
+    27| type dROB = {readonly [string]: B};
+                                        ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:177:4
@@ -1841,19 +1841,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:207:18
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
-                         ^^^^^^^^^^ [1]
+   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+                         ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:207:38
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
-                                             ^^^^^^^^^ [2]
+   test_keyword.js:207:46
+   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+                                                     ^^^^^^^^^ [2]
    test_keyword.js:207:12
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:207:32
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^ [4]
+   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test_keyword.js:207:40
+   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+                                               ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:209:18
@@ -1867,18 +1867,18 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:209:18
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
                          ^^^^^^^^^^ [1]
 
 References:
    test_keyword.js:209:38
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
                                              ^^^^^^^^^ [2]
    test_keyword.js:209:12
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
                    ^^^^^^^^^^^^^^^^^ [3]
    test_keyword.js:209:32
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
                                        ^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1893,19 +1893,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:211:18
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
                          ^^^^^^^^^ [1]
 
 References:
    test_keyword.js:211:37
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
-                                            ^^^^^^^^^^ [2]
+   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+                                            ^^^^^^^^^^^^^^^^^^ [2]
    test_keyword.js:211:12
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
                    ^^^^^^^^^^^^^^^^ [3]
    test_keyword.js:211:31
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
-                                      ^^^^^^^^^^^^^^^^^ [4]
+   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:215:18
@@ -1919,19 +1919,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:215:18
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
                          ^^^^^^^^^^ [1]
 
 References:
    test_keyword.js:215:38
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
-                                             ^^^^^^^^^^ [2]
+   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
+                                             ^^^^^^^^^^^^^^^^^^ [2]
    test_keyword.js:215:12
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
                    ^^^^^^^^^^^^^^^^^ [3]
    test_keyword.js:215:32
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^^ [4]
+   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:217:18
@@ -1945,18 +1945,18 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:217:18
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
                          ^^^^^^^^^ [1]
 
 References:
    test_keyword.js:217:37
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
                                             ^^^^^^^^^^ [2]
    test_keyword.js:217:12
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
                    ^^^^^^^^^^^^^^^^ [3]
    test_keyword.js:217:31
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
                                       ^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1971,19 +1971,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:219:18
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
-                         ^^^^^^^^^^ [1]
+   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+                         ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:219:38
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
-                                             ^^^^^^^^^^ [2]
+   test_keyword.js:219:46
+   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+                                                     ^^^^^^^^^^ [2]
    test_keyword.js:219:12
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:219:32
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^^ [4]
+   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test_keyword.js:219:40
+   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+                                               ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:230:3
