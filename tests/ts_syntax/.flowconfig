@@ -5,6 +5,7 @@ unused_ts_shim.js
 all=true
 no_flowlib=false
 experimental.allow_readonly_variance=true
+experimental.allow_variance_keywords=true
 
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>/deprecated'
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<BUILTINS>/'

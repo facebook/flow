@@ -340,7 +340,7 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
                 loc,
                 kind: ast::VarianceKind::Readonly,
                 ..
-            }) if !cx.allow_readonly_variance() => {
+            }) if !(cx.allow_readonly_variance() || cx.allow_variance_keywords()) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -353,7 +353,7 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
                 loc,
                 kind: ast::VarianceKind::In,
                 ..
-            }) => {
+            }) if !cx.allow_variance_keywords() => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -368,7 +368,7 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
                 loc,
                 kind: ast::VarianceKind::Out,
                 ..
-            }) => {
+            }) if !cx.allow_variance_keywords() => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {

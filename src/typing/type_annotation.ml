@@ -238,15 +238,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     ( if not (Context.ts_syntax cx) then
       match variance with
       | Some (loc, { Ast.Variance.kind = Ast.Variance.Readonly; _ })
-        when not (Context.allow_readonly_variance cx) ->
+        when not (Context.allow_readonly_variance cx || Context.allow_variance_keywords cx) ->
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc })
-      | Some (loc, { Ast.Variance.kind = Ast.Variance.In; _ }) ->
+      | Some (loc, { Ast.Variance.kind = Ast.Variance.In; _ })
+        when not (Context.allow_variance_keywords cx) ->
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `In; loc })
-      | Some (loc, { Ast.Variance.kind = Ast.Variance.Out; _ }) ->
+      | Some (loc, { Ast.Variance.kind = Ast.Variance.Out; _ })
+        when not (Context.allow_variance_keywords cx) ->
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `Out; loc })
