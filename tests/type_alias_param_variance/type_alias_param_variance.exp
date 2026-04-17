@@ -58,5 +58,65 @@ References:
                ^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- test_keyword.js:5:18
 
-Found 4 errors
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:5:18
+   5| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+                       ^
+
+References:
+   test_keyword.js:5:9
+   5| type A<-T> = Foo<T>; // Error, Foo expects invariant type
+              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:6:18
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:6:18
+   6| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+                       ^
+
+References:
+   test_keyword.js:6:9
+   6| type B<+T> = Foo<T>; // Error, Foo expects invariant type
+              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:8:18
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:8:18
+   8| type D<-T> = Bar<T>; // Error, Bar expects covariant type
+                       ^
+
+References:
+   test_keyword.js:8:9
+   8| type D<-T> = Bar<T>; // Error, Bar expects covariant type
+              ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- test_keyword.js:13:18
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:13:18
+   13| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
+                        ^
+
+References:
+   test_keyword.js:13:9
+   13| type I<+T> = Baz<T>; // Error, Baz expects contravariant type
+               ^ [1]
+
+
+
+Found 8 errors
