@@ -1707,6 +1707,7 @@ let make_options
     opt_temp_dir;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
     opt_allow_readonly_variance = FlowConfig.allow_readonly_variance flowconfig;
+    opt_allow_variance_keywords = FlowConfig.allow_variance_keywords flowconfig;
     opt_deprecated_colon_extends =
       Base.List.map
         ~f:(fun s ->

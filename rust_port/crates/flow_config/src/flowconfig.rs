@@ -187,6 +187,7 @@ pub mod opts {
         pub strict_es6_import_export: bool,
         pub ts_syntax: bool,
         pub allow_readonly_variance: bool,
+        pub allow_variance_keywords: bool,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: bool,
         pub typescript_library_definition_support: bool,
@@ -346,6 +347,7 @@ pub mod opts {
             strict_es6_import_export: false,
             ts_syntax: false,
             allow_readonly_variance: false,
+            allow_variance_keywords: false,
             ts_utility_syntax: true,
             tslib_syntax: false,
             typescript_library_definition_support: false,
@@ -2354,6 +2356,14 @@ pub mod opts {
                 "experimental.allow_readonly_variance" => Some(parse_boolean(
                     |opts, v| {
                         opts.allow_readonly_variance = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "experimental.allow_variance_keywords" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.allow_variance_keywords = v;
                         Ok(())
                     },
                     values,

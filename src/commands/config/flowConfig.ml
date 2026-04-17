@@ -165,6 +165,7 @@ module Opts = struct
     supported_operating_systems: Options.supported_os list;
     ts_syntax: bool;
     allow_readonly_variance: bool;
+    allow_variance_keywords: bool;
     deprecated_colon_extends: string list;
     deprecated_colon_extends_excludes: string list;
     tslib_syntax: bool;
@@ -332,6 +333,7 @@ module Opts = struct
       supported_operating_systems = [];
       ts_syntax = false;
       allow_readonly_variance = false;
+      allow_variance_keywords = false;
       deprecated_colon_extends = [];
       deprecated_colon_extends_excludes = [];
       tslib_syntax = false;
@@ -1215,6 +1217,9 @@ module Opts = struct
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.allow_readonly_variance",
         boolean (fun opts v -> Ok { opts with allow_readonly_variance = v })
+      );
+      ( "experimental.allow_variance_keywords",
+        boolean (fun opts v -> Ok { opts with allow_variance_keywords = v })
       );
       ( "experimental.deprecated_colon_extends",
         string
@@ -2224,6 +2229,8 @@ let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let allow_readonly_variance c = c.options.Opts.allow_readonly_variance
+
+let allow_variance_keywords c = c.options.Opts.allow_variance_keywords
 
 let deprecated_colon_extends c = c.options.Opts.deprecated_colon_extends
 

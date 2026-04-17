@@ -315,6 +315,8 @@ val ts_syntax : config -> bool
 
 val allow_readonly_variance : config -> bool
 
+val allow_variance_keywords : config -> bool
+
 val deprecated_colon_extends : config -> string list
 
 val deprecated_colon_extends_excludes : config -> string list

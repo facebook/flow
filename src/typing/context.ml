@@ -85,6 +85,7 @@ type metadata = {
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
   allow_readonly_variance: bool;
+  allow_variance_keywords: bool;
   deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
   tslib_syntax: bool;
@@ -349,6 +350,7 @@ let metadata_of_options options =
     stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
     allow_readonly_variance = Options.allow_readonly_variance options;
+    allow_variance_keywords = Options.allow_variance_keywords options;
     deprecated_colon_extends = Options.deprecated_colon_extends options;
     deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
     tslib_syntax = Options.tslib_syntax options;
@@ -738,6 +740,8 @@ let stylex_shorthand_prop cx = cx.metadata.stylex_shorthand_prop
 let ts_syntax cx = cx.metadata.ts_syntax
 
 let allow_readonly_variance cx = cx.metadata.allow_readonly_variance
+
+let allow_variance_keywords cx = cx.metadata.allow_variance_keywords
 
 let deprecated_colon_extends cx = cx.metadata.deprecated_colon_extends
 

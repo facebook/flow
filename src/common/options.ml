@@ -206,6 +206,7 @@ type t = {
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_allow_readonly_variance: bool;
+  opt_allow_variance_keywords: bool;
   opt_deprecated_colon_extends: string list;
   opt_deprecated_colon_extends_excludes: Str.regexp list;
   opt_tslib_syntax: bool;
@@ -452,6 +453,8 @@ let temp_dir opts = opts.opt_temp_dir
 let ts_syntax opts = opts.opt_ts_syntax
 
 let allow_readonly_variance opts = opts.opt_allow_readonly_variance
+
+let allow_variance_keywords opts = opts.opt_allow_variance_keywords
 
 let deprecated_colon_extends opts = opts.opt_deprecated_colon_extends
 

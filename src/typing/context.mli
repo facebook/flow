@@ -135,6 +135,7 @@ type metadata = {
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
   allow_readonly_variance: bool;
+  allow_variance_keywords: bool;
   deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
   tslib_syntax: bool;
@@ -317,6 +318,8 @@ val stylex_shorthand_prop : t -> string option
 val ts_syntax : t -> bool
 
 val allow_readonly_variance : t -> bool
+
+val allow_variance_keywords : t -> bool
 
 val deprecated_colon_extends : t -> string list
 

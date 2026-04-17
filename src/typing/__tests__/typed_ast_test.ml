@@ -24,6 +24,7 @@ let metadata =
     (* global *)
     abstract_classes = false;
     allow_readonly_variance = false;
+    allow_variance_keywords = false;
     assert_operator = Options.AssertOperator.Disabled;
     automatic_require_default = false;
     babel_loose_array_spread = false;

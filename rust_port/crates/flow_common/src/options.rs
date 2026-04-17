@@ -269,6 +269,7 @@ pub struct Options {
     pub temp_dir: FlowSmolStr,
     pub ts_syntax: bool,
     pub allow_readonly_variance: bool,
+    pub allow_variance_keywords: bool,
     pub tslib_syntax: bool,
     pub typescript_library_definition_support: bool,
     pub deprecated_colon_extends: Arc<[String]>,
