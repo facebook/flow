@@ -23,9 +23,12 @@ use crate::lock::Mutex;
 ///
 /// Can be overridden by setting the `FLOW_STACK_SIZE` environment variable (in bytes).
 /// The Flow type checker uses deep recursion (e.g., dispatch::__flow), so we need a
-/// large stack. OCaml manages its own stack with a very generous limit: 512MB
-/// See https://ocaml.org/manual/5.1/tail_mod_cons.html#sec626
-const DEFAULT_STACK_SIZE: usize = 512 * 1024 * 1024;
+/// large stack.
+const DEFAULT_STACK_SIZE: usize = if cfg!(debug_assertions) {
+    256 * 1024 * 1024
+} else {
+    32 * 1024 * 1024
+};
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ThreadCount {
