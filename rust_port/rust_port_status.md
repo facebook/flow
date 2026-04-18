@@ -662,7 +662,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `typify_elt` → `typify_elt()`
           - [x] `reinterpret_elt_as_type_identifier` → `reinterpret_elt_as_type_identifier()`
   - [ ] utils/
-    - [ ] __tests__/
+    - [x] __tests__/
         - [x] bitset_test.ml → `flow_common/src/bitset.rs` (inline tests)
         - [x] cache_test.ml → `flow_common_utils/src/cache.rs` (inline tests)
         - [x] common_utils_tests.ml → `irrelevant` (OUnit aggregator, replaced by cargo test discovery)
@@ -722,7 +722,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] cache_sig.ml → unnecessary in rust (public API is in `flow_common_utils/src/cache.rs`)
     - [x] graph.ml → `flow_common_utils/src/graph.rs`
     - [x] graph_sig.ml → `unnecessary`
-    - [ ] json_rpc.ml
     - [x] line.ml → `flow_common_utils/src/line.rs`
     - [ ] listUtils.ml
     - [x] nel.ml → unnecessary in rust, use Vec1
