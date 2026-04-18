@@ -1211,8 +1211,11 @@ fn autofix_errors_cli(
         >,
     > = Arc::new(move |f| {
         shared_mem_ts.get_type_sig(f).map(|arc| {
-            let bytes = bincode::serialize(&*arc).expect("get_type_sig: serialize");
-            bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+            let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
+                .expect("get_type_sig: serialize");
+            bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                .expect("get_type_sig: deserialize")
+                .0
         })
     });
     let edits = flow_services_code_action::code_action_service::autofix_errors_cli(
@@ -2002,8 +2005,11 @@ fn insert_type(
         >,
     > {
         shared_mem_ts.get_type_sig(f).map(|arc| {
-            let bytes = bincode::serialize(&*arc).expect("get_type_sig: serialize");
-            bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+            let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
+                .expect("get_type_sig: serialize");
+            bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                .expect("get_type_sig: deserialize")
+                .0
         })
     };
     let intermediate_result = parse_contents(options, &file_content, &file_key);
@@ -2077,8 +2083,11 @@ fn autofix_exports(
         >,
     > = Arc::new(move |f| {
         shared_mem_ts.get_type_sig(f).map(|arc| {
-            let bytes = bincode::serialize(&*arc).expect("get_type_sig: serialize");
-            bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+            let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
+                .expect("get_type_sig: serialize");
+            bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                .expect("get_type_sig: deserialize")
+                .0
         })
     });
     let intermediate_result = parse_contents(options, &file_content, &file_key);
@@ -2152,8 +2161,11 @@ fn autofix_missing_local_annot(
         >,
     > {
         shared_mem_ts.get_type_sig(f).map(|arc| {
-            let bytes = bincode::serialize(&*arc).expect("get_type_sig: serialize");
-            bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+            let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
+                .expect("get_type_sig: serialize");
+            bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                .expect("get_type_sig: deserialize")
+                .0
         })
     };
     let intermediate_result = parse_contents(options, &file_content, &file_key);
@@ -3579,8 +3591,12 @@ fn find_code_actions(
                         >,
                     > = Arc::new(move |fk| {
                         shared_mem_ts.get_type_sig(fk).map(|arc| {
-                            let bytes = bincode::serialize(&*arc).expect("get_type_sig: serialize");
-                            bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+                            let bytes =
+                                bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
+                                    .expect("get_type_sig: serialize");
+                            bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                                .expect("get_type_sig: deserialize")
+                                .0
                         })
                     });
                     let module_system_info = mk_module_system_info(options, shared_mem.clone());

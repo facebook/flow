@@ -843,8 +843,11 @@ mod fix_errors_command {
                 Arc::new(move |file: &FileKey| {
                     reader.get_type_sig(file).map(|type_sig| {
                         let bytes =
-                            bincode::serialize(&*type_sig).expect("get_type_sig: serialize");
-                        bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+                            bincode::serde::encode_to_vec(&*type_sig, bincode::config::legacy())
+                                .expect("get_type_sig: serialize");
+                        bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                            .expect("get_type_sig: deserialize")
+                            .0
                     })
                 })
             };
@@ -958,8 +961,11 @@ mod fix_errors_command {
                 Arc::new(move |file: &FileKey| {
                     reader.get_type_sig(file).map(|type_sig| {
                         let bytes =
-                            bincode::serialize(&*type_sig).expect("get_type_sig: serialize");
-                        bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+                            bincode::serde::encode_to_vec(&*type_sig, bincode::config::legacy())
+                                .expect("get_type_sig: serialize");
+                        bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                            .expect("get_type_sig: deserialize")
+                            .0
                     })
                 })
             };

@@ -575,8 +575,11 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
                 Box::new(get_haste_module_info),
                 Box::new(move |fk| {
                     reader_ts.get_type_sig(fk).map(|arc| {
-                        let bytes = bincode::serialize(&*arc).expect("get_type_sig: serialize");
-                        bincode::deserialize(&bytes).expect("get_type_sig: deserialize")
+                        let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
+                            .expect("get_type_sig: serialize");
+                        bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+                            .expect("get_type_sig: deserialize")
+                            .0
                     })
                 }),
                 self.cctx.iteration as usize,

@@ -578,7 +578,7 @@ fn write_loaded_state(
     let mut file =
         File::create(path).map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     write_version(&mut file)?;
-    let bytes = bincode::serialize(&compressed)
+    let bytes = bincode::serde::encode_to_vec(&compressed, bincode::config::legacy())
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     file.write_all(&bytes)
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))
@@ -739,8 +739,10 @@ pub fn load(
     let mut bytes = Vec::new();
     file.read_to_end(&mut bytes)
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
-    let compressed: saved_state_compression::Compressed = bincode::deserialize(&bytes)
-        .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
+    let compressed: saved_state_compression::Compressed =
+        bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
+            .map(|(v, _)| v)
+            .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     let mut loaded: SerializedLoadedSavedState =
         saved_state_compression::decompress_and_unmarshal(&compressed)?;
     match &mut loaded {

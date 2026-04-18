@@ -18,7 +18,7 @@ pub struct Compressed {
 }
 
 pub fn marshal_and_compress<T: Serialize>(data: &T) -> Result<Compressed, InvalidReason> {
-    let serialized = bincode::serialize(data)
+    let serialized = bincode::serde::encode_to_vec(data, bincode::config::legacy())
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     let uncompressed_size = serialized.len();
     let compressed_data = lz4_flex::compress_prepend_size(&serialized);
@@ -35,7 +35,8 @@ pub fn decompress_and_unmarshal<T: DeserializeOwned>(
 ) -> Result<T, InvalidReason> {
     let decompressed = lz4_flex::decompress_size_prepended(&compressed.compressed_data)
         .map_err(|err| InvalidReason::Failed_to_decompress(err.to_string()))?;
-    bincode::deserialize(&decompressed)
+    bincode::serde::decode_from_slice(&decompressed, bincode::config::legacy())
+        .map(|(v, _)| v)
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))
 }
 
