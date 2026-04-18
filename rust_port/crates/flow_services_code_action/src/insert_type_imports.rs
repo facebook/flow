@@ -43,7 +43,13 @@ pub mod modules {
     use super::*;
 
     pub fn paths() -> BTreeMap<String, String> {
-        BTreeMap::new()
+        crate::hardcoded_module_fixes::FILES_TO_MODULES.iter().fold(
+            BTreeMap::new(),
+            |mut acc, (k, v)| {
+                acc.insert((*k).to_string(), (*v).to_string());
+                acc
+            },
+        )
     }
 
     pub fn resolve(

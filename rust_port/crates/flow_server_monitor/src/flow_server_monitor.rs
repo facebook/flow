@@ -464,6 +464,10 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
 }
 
 pub fn start(options: Arc<Options>, args: StartArgs) -> Result<(), String> {
+    if args.file_watcher.as_deref() == Some("edenfs") {
+        // Initialize Rust FFI layer for EdenFS file watcher
+        crate::startup_initializer::init();
+    }
     let lock_path = server_files_js::lock_file(
         &args.flowconfig_name,
         options.temp_dir.as_str(),

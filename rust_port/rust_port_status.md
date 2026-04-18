@@ -211,7 +211,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] All `config.options.*` getters — direct field access on `config.options`
   - [ ] extra/
     - [ ] facebook/
-        - [ ] extra_commands.ml
+        - [ ] extra_commands.ml — internal body unported; OSS stub +
+              `cfg(fbcode_build)` gate live in
+              `flow_cli/src/extra_commands.rs`
   - [ ] glean/
       - [x] gleanCommand.ml → `flow_cli/src/glean_command.rs`
       - [ ] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
@@ -992,8 +994,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] rage/
       - [ ] flytrap.ml
       - [ ] rageCommand.ml
-  - [x] saved_state/
-      - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/saved_state_fb_fetcher.rs`
+  - [ ] saved_state/
+      - [ ] saved_state_fb_fetcher.ml
   - [ ] server_callable/
     - [ ] lib/
         - [ ] ast_visitor.ml
@@ -2590,13 +2592,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] mutator_state_reader.ml → `unnecessary`
       - [x] state_reader.ml → `unnecessary`
 - [ ] stubs/
-    - [ ] annotate_exports_hardcoded_expr_fixes.ml
+    - [x] annotate_exports_hardcoded_expr_fixes.ml → `flow_codemods/src/utils/codemod_annotator.rs` (oss stub, inlined)
     - [ ] eventLoggerLwt.ml
-    - [ ] extra_commands.ml
+    - [x] extra_commands.ml → `flow_cli/src/extra_commands.rs` (oss stub)
     - [ ] flowEventLogger.ml
     - [ ] flowInteractionLogger.ml
-    - [ ] hardcoded_module_fixes.ml
-    - [ ] saved_state_fb_fetcher.ml
+    - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
+    - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs` (oss stub)
+    - [x] startup_initializer.ml → `flow_server_monitor/src/startup_initializer.rs` (oss stub)
 - [ ] third-party/
   - [x] core/
       - [x] core_doubly_linked.ml → `irrelevant` (rust port uses LinkedHashMap)

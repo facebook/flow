@@ -39,6 +39,7 @@ pub mod code_action_utils;
 pub mod contains_mapper;
 pub mod convert_type_to_readonly_form;
 pub mod document_paste;
+pub mod hardcoded_module_fixes;
 pub mod insert_inferred_render_type;
 pub mod insert_type;
 pub mod insert_type_imports;
