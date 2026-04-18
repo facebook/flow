@@ -193,3 +193,270 @@ impl<'a> Parser<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[derive(Debug)]
+    struct SemverParseError(String);
+
+    use super::Parser;
+    use crate::semver_comparator;
+    use crate::semver_comparator::Comparator;
+    use crate::semver_comparator::Op;
+    use crate::semver_range;
+    use crate::semver_range::Part;
+    use crate::semver_version;
+    use crate::semver_version::Identifier;
+    use crate::semver_version::Version;
+
+    fn parse_version(str: &str) -> Result<Version, SemverParseError> {
+        let mut parser = Parser::new(str);
+        parser
+            .version_top()
+            .map_err(|_| SemverParseError(str.to_string()))
+    }
+
+    fn parse_comparator(str: &str) -> Result<Comparator, SemverParseError> {
+        let mut parser = Parser::new(str);
+        parser
+            .comparator_top()
+            .map_err(|_| SemverParseError(str.to_string()))
+    }
+
+    fn parse_range(str: &str) -> Result<Vec<Part>, SemverParseError> {
+        let mut parser = Parser::new(str);
+        parser
+            .range_top()
+            .map_err(|_| SemverParseError(str.to_string()))
+    }
+
+    #[test]
+    fn version_basics() {
+        let cases: Vec<(&str, Version)> = vec![
+            ("0", semver_version::zero()),
+            (
+                "0.1",
+                Version {
+                    minor: 1,
+                    ..semver_version::zero()
+                },
+            ),
+            (
+                "1",
+                Version {
+                    major: 1,
+                    ..semver_version::zero()
+                },
+            ),
+            (
+                "1.2",
+                Version {
+                    major: 1,
+                    minor: 2,
+                    ..semver_version::zero()
+                },
+            ),
+            (
+                "1.2.3",
+                Version {
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    ..semver_version::zero()
+                },
+            ),
+            (
+                "1.2.3-alpha",
+                Version {
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    prerelease: vec![Identifier::Str("alpha".to_string())],
+                    ..semver_version::zero()
+                },
+            ),
+            (
+                "1.2.3-alpha.2",
+                Version {
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    prerelease: vec![Identifier::Str("alpha".to_string()), Identifier::Int(2)],
+                    ..semver_version::zero()
+                },
+            ),
+        ];
+        for (str, version) in &cases {
+            match parse_version(str) {
+                Ok(parsed) => assert_eq!(
+                    semver_version::to_string(version),
+                    semver_version::to_string(&parsed),
+                    "Expected {}, got {}",
+                    semver_version::to_string(version),
+                    semver_version::to_string(&parsed),
+                ),
+                Err(SemverParseError(token)) => {
+                    panic!("Failed to parse {}: unexpected token {}", str, token)
+                }
+            }
+        }
+        #[expect(
+            clippy::assertions_on_constants,
+            reason = "literal port of OCaml's `assert_bool \"done\" true` ounit workaround"
+        )]
+        {
+            assert!(true);
+        }
+    }
+
+    // fixes ounit error reporting
+
+    #[test]
+    fn comparator_basics() {
+        let v1 = Version {
+            major: 1,
+            ..semver_version::zero()
+        };
+        let cases: Vec<(&str, Comparator)> = vec![
+            (
+                ">1",
+                Comparator {
+                    op: Some(Op::Greater),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                ">=1",
+                Comparator {
+                    op: Some(Op::GreaterOrEqual),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                "<1",
+                Comparator {
+                    op: Some(Op::Less),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                "<=1",
+                Comparator {
+                    op: Some(Op::LessOrEqual),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                "=1",
+                Comparator {
+                    op: Some(Op::Equal),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                "1",
+                Comparator {
+                    op: None,
+                    version: v1.clone(),
+                },
+            ),
+            (
+                "= 1",
+                Comparator {
+                    op: Some(Op::Equal),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                " = 1",
+                Comparator {
+                    op: Some(Op::Equal),
+                    version: v1.clone(),
+                },
+            ),
+            (
+                "  = 1 ",
+                Comparator {
+                    op: Some(Op::Equal),
+                    version: v1.clone(),
+                },
+            ),
+        ];
+        for (str, comparator) in &cases {
+            match parse_comparator(str) {
+                Ok(parsed) => assert_eq!(
+                    semver_comparator::to_string(comparator),
+                    semver_comparator::to_string(&parsed),
+                    "Expected {}, got {}",
+                    semver_comparator::to_string(comparator),
+                    semver_comparator::to_string(&parsed),
+                ),
+                Err(SemverParseError(token)) => {
+                    panic!("Failed to parse {}: unexpected token {}", str, token)
+                }
+            }
+        }
+        #[expect(
+            clippy::assertions_on_constants,
+            reason = "literal port of OCaml's `assert_bool \"done\" true` ounit workaround"
+        )]
+        {
+            assert!(true);
+        }
+    }
+
+    // fixes ounit error reporting
+
+    #[test]
+    fn range_basics() {
+        let v1 = Version {
+            major: 1,
+            ..semver_version::zero()
+        };
+        let v2 = Version {
+            major: 2,
+            ..semver_version::zero()
+        };
+        let ge1 = Part::Comparator(Comparator {
+            op: Some(Op::GreaterOrEqual),
+            version: v1.clone(),
+        });
+        let lt2 = Part::Comparator(Comparator {
+            op: Some(Op::Less),
+            version: v2.clone(),
+        });
+        let cases: Vec<(&str, Vec<Part>)> = vec![
+            (">=1", vec![ge1.clone()]),
+            (">=1 <2", vec![ge1.clone(), lt2.clone()]),
+            ("^1", vec![Part::Caret(v1.clone())]),
+            ("^1.0", vec![Part::Caret(v1.clone())]),
+            ("^1.0.0", vec![Part::Caret(v1.clone())]),
+            (
+                "^1 ^2",
+                vec![Part::Caret(v1.clone()), Part::Caret(v2.clone())],
+            ),
+            (">=1 ^2", vec![ge1.clone(), Part::Caret(v2.clone())]),
+        ];
+        for (str, range) in &cases {
+            match parse_range(str) {
+                Ok(parsed) => assert_eq!(
+                    semver_range::to_string(range),
+                    semver_range::to_string(&parsed),
+                    "Expected {}, got {}",
+                    semver_range::to_string(range),
+                    semver_range::to_string(&parsed),
+                ),
+                Err(SemverParseError(token)) => {
+                    panic!("Failed to parse {}: unexpected token {}", str, token)
+                }
+            }
+        }
+        #[expect(
+            clippy::assertions_on_constants,
+            reason = "literal port of OCaml's `assert_bool \"done\" true` ounit workaround"
+        )]
+        {
+            assert!(true);
+        }
+    }
+}

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+// A directional graph which maintains back edges to facilitate fast traversals in either direction.
+
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::hash::Hash;
@@ -154,7 +156,6 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
         self.nodes.len()
     }
 
-    // Panic if the element does not exist.
     pub fn find(&self, elt: &K) -> &BTreeSet<K> {
         self.find_opt(elt)
             .unwrap_or_else(|| panic!("Node not found in graph"))
@@ -164,18 +165,15 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
         self.nodes.get(elt).map(|node| &node.forward)
     }
 
-    // Gets the set of backward edges. Raises Not_found if the element does not exist.
     pub fn find_backward(&self, elt: &K) -> &BTreeSet<K> {
         self.find_backward_opt(elt)
             .unwrap_or_else(|| panic!("Node not found in graph"))
     }
 
-    // Gets the set of backward edges.
     pub fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
         self.nodes.get(elt).map(|node| &node.backward)
     }
 
-    // Fold over forward edges
     pub fn fold<F, A>(&self, mut f: F, init: A) -> A
     where
         F: FnMut(&K, &BTreeSet<K>, A) -> A,
@@ -185,7 +183,6 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
             .fold(init, |acc, (key, node)| f(key, &node.forward, acc))
     }
 
-    // The map function must be injective, otherwise the results are undefined.
     pub fn map<F>(&self, mut f: F) -> Self
     where
         F: FnMut(&K) -> K,
@@ -226,207 +223,205 @@ mod tests {
 
     use super::*;
 
-    // Helper to create a set from a slice
-    fn set_from_slice(items: &[&str]) -> BTreeSet<Arc<str>> {
+    type StringGraph = Graph<Arc<str>>;
+
+    fn assert_ssets_equal(expected: &BTreeSet<Arc<str>>, actual: &BTreeSet<Arc<str>>) {
+        assert_eq!(expected, actual);
+    }
+
+    fn assert_smaps_equal(
+        expected: &BTreeMap<Arc<str>, BTreeSet<Arc<str>>>,
+        actual: &BTreeMap<Arc<str>, BTreeSet<Arc<str>>>,
+    ) {
+        assert_eq!(expected, actual);
+    }
+
+    fn sset_of_list(items: &[&str]) -> BTreeSet<Arc<str>> {
         items.iter().map(|s| Arc::from(*s)).collect()
     }
 
-    // Helper to create a map from key-value pairs
-    fn map_from_pairs(pairs: &[(&str, &[&str])]) -> BTreeMap<Arc<str>, BTreeSet<Arc<str>>> {
+    fn smap_of_list(pairs: &[(&str, &[&str])]) -> BTreeMap<Arc<str>, BTreeSet<Arc<str>>> {
         pairs
             .iter()
-            .map(|(key, values)| (Arc::from(*key), set_from_slice(values)))
+            .map(|(key, values)| (Arc::from(*key), sset_of_list(values)))
             .collect()
     }
 
-    // Test fixture: the base graph used in most tests
-    fn create_test_graph() -> Graph<Arc<str>> {
-        let map = map_from_pairs(&[("foo", &["bar", "baz"]), ("bar", &["baz"]), ("baz", &[])]);
-        Graph::of_map(map)
+    fn map() -> BTreeMap<Arc<str>, BTreeSet<Arc<str>>> {
+        smap_of_list(&[("foo", &["bar", "baz"]), ("bar", &["baz"]), ("baz", &[])])
+    }
+
+    fn reverse_map() -> BTreeMap<Arc<str>, BTreeSet<Arc<str>>> {
+        smap_of_list(&[("foo", &[]), ("bar", &["foo"]), ("baz", &["foo", "bar"])])
+    }
+
+    fn graph() -> StringGraph {
+        StringGraph::of_map(map())
     }
 
     #[test]
-    fn test_basic_construction() {
-        let map = map_from_pairs(&[("foo", &["bar", "baz"]), ("bar", &["baz"]), ("baz", &[])]);
-        let reverse_map =
-            map_from_pairs(&[("foo", &[]), ("bar", &["foo"]), ("baz", &["foo", "bar"])]);
-
-        let graph = Graph::of_map(map.clone());
+    fn basic_construction() {
+        let graph = graph();
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
-
-        assert_eq!(map, result_forward_map);
-        assert_eq!(reverse_map, result_backward_map);
+        assert_smaps_equal(&map(), &result_forward_map);
+        assert_smaps_equal(&reverse_map(), &result_backward_map);
     }
 
     #[test]
-    fn test_find() {
-        let graph = create_test_graph();
+    fn find() {
+        let graph = graph();
         let result = graph.find(&Arc::from("foo"));
-        let expected = set_from_slice(&["bar", "baz"]);
-        assert_eq!(&expected, result);
+        let expected = map().get(&Arc::from("foo") as &Arc<str>).unwrap().clone();
+        assert_ssets_equal(&expected, result);
     }
 
     #[test]
-    fn test_find_opt() {
-        let graph = create_test_graph();
+    fn find_opt() {
+        let graph = graph();
         let result = graph.find_opt(&Arc::from("foo"));
-        let expected = set_from_slice(&["bar", "baz"]);
-        assert_eq!(Some(&expected), result);
+        let result = result.unwrap();
+        let expected = map().get(&Arc::from("foo") as &Arc<str>).unwrap().clone();
+        assert_ssets_equal(&expected, result);
     }
 
     #[test]
-    fn test_find_opt_none() {
-        let graph = create_test_graph();
+    fn find_opt_none() {
+        let graph = graph();
         let result = graph.find_opt(&Arc::from("qux"));
-        assert_eq!(None, result);
+        let expected: Option<&BTreeSet<Arc<str>>> = None;
+        assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_find_backward() {
-        let graph = create_test_graph();
+    fn find_backward() {
+        let graph = graph();
         let result = graph.find_backward(&Arc::from("baz"));
-        let expected = set_from_slice(&["foo", "bar"]);
-        assert_eq!(&expected, result);
+        let expected = reverse_map()
+            .get(&Arc::from("baz") as &Arc<str>)
+            .unwrap()
+            .clone();
+        assert_ssets_equal(&expected, result);
     }
 
     #[test]
-    fn test_find_backward_opt() {
-        let graph = create_test_graph();
+    fn find_backward_opt() {
+        let graph = graph();
         let result = graph.find_backward_opt(&Arc::from("baz"));
-        let expected = set_from_slice(&["foo", "bar"]);
-        assert_eq!(Some(&expected), result);
+        let result = result.unwrap();
+        let expected = reverse_map()
+            .get(&Arc::from("baz") as &Arc<str>)
+            .unwrap()
+            .clone();
+        assert_ssets_equal(&expected, result);
     }
 
     #[test]
-    fn test_find_backward_opt_none() {
-        let graph = create_test_graph();
+    fn find_backward_opt_none() {
+        let graph = graph();
         let result = graph.find_backward_opt(&Arc::from("qux"));
-        assert_eq!(None, result);
+        let expected: Option<&BTreeSet<Arc<str>>> = None;
+        assert_eq!(expected, result);
     }
 
     #[test]
-    fn test_add() {
-        let graph = create_test_graph();
-        let update_map = map_from_pairs(&[("qux", &["foo", "baz"])]);
+    fn add() {
+        let graph = graph();
+        let update_map = smap_of_list(&[("qux", &["foo", "baz"])]);
         let graph = graph.update_from_map(update_map.clone(), BTreeSet::new());
-
         let result_forward_map = graph.to_map();
-        let mut expected_forward_map =
-            map_from_pairs(&[("foo", &["bar", "baz"]), ("bar", &["baz"]), ("baz", &[])]);
-        expected_forward_map.extend(update_map);
-
+        let mut expected_forward_map = map();
+        for (k, v) in update_map {
+            expected_forward_map.insert(k, v);
+        }
         let result_backward_map = graph.to_backward_map();
-        let expected_backward_map = map_from_pairs(&[
-            ("foo", &["qux"]),
-            ("bar", &["foo"]),
-            ("baz", &["qux", "foo", "bar"]),
-            ("qux", &[]),
-        ]);
-
-        assert_eq!(expected_forward_map, result_forward_map);
-        assert_eq!(expected_backward_map, result_backward_map);
+        let mut expected_backward_map = reverse_map();
+        expected_backward_map.insert(Arc::from("foo"), sset_of_list(&["qux"]));
+        expected_backward_map.insert(Arc::from("baz"), sset_of_list(&["qux", "foo", "bar"]));
+        expected_backward_map.insert(Arc::from("qux"), BTreeSet::new());
+        assert_smaps_equal(&expected_forward_map, &result_forward_map);
+        assert_smaps_equal(&expected_backward_map, &result_backward_map);
     }
 
     #[test]
-    fn test_remove() {
-        let graph = create_test_graph();
+    fn remove() {
+        let graph = graph();
         let mut to_remove = BTreeSet::new();
         to_remove.insert(Arc::from("bar"));
         let graph = graph.update_from_map(BTreeMap::new(), to_remove);
-
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
-
-        let expected_forward_map = map_from_pairs(&[("foo", &["baz"]), ("baz", &[])]);
-        let expected_backward_map = map_from_pairs(&[("foo", &[]), ("baz", &["foo"])]);
-
-        assert_eq!(expected_forward_map, result_forward_map);
-        assert_eq!(expected_backward_map, result_backward_map);
+        let expected_forward_map = smap_of_list(&[("foo", &["baz"]), ("baz", &[])]);
+        let expected_backward_map = smap_of_list(&[("foo", &[]), ("baz", &["foo"])]);
+        assert_smaps_equal(&expected_forward_map, &result_forward_map);
+        assert_smaps_equal(&expected_backward_map, &result_backward_map);
     }
 
     #[test]
-    fn test_remove_all() {
-        let graph = create_test_graph();
-        let to_remove: BTreeSet<Arc<str>> = graph.to_map().keys().cloned().collect();
+    fn remove_all() {
+        let graph = graph();
+        let to_remove: BTreeSet<Arc<str>> = map().keys().cloned().collect();
         let graph = graph.update_from_map(BTreeMap::new(), to_remove);
-
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
         let expected: BTreeMap<Arc<str>, BTreeSet<Arc<str>>> = BTreeMap::new();
-
-        assert_eq!(expected, result_forward_map);
-        assert_eq!(expected, result_backward_map);
+        assert_smaps_equal(&expected, &result_forward_map);
+        assert_smaps_equal(&expected, &result_backward_map);
     }
 
     #[test]
-    fn test_remove_nonexistent() {
-        let graph = create_test_graph();
+    fn remove_nonexistent() {
+        let graph = graph();
         let mut to_remove = BTreeSet::new();
         to_remove.insert(Arc::from("fake"));
         let graph = graph.update_from_map(BTreeMap::new(), to_remove);
-
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
-
-        let expected_forward_map =
-            map_from_pairs(&[("foo", &["bar", "baz"]), ("bar", &["baz"]), ("baz", &[])]);
-        let expected_backward_map =
-            map_from_pairs(&[("foo", &[]), ("bar", &["foo"]), ("baz", &["foo", "bar"])]);
-
-        assert_eq!(expected_forward_map, result_forward_map);
-        assert_eq!(expected_backward_map, result_backward_map);
+        assert_smaps_equal(&map(), &result_forward_map);
+        assert_smaps_equal(&reverse_map(), &result_backward_map);
     }
 
     #[test]
-    fn test_modify() {
-        let graph = create_test_graph();
-        let update_map = map_from_pairs(&[("foo", &[])]);
+    fn modify() {
+        let graph = graph();
+        let update_map = smap_of_list(&[("foo", &[])]);
         let graph = graph.update_from_map(update_map, BTreeSet::new());
-
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
-
-        let expected_forward_map = map_from_pairs(&[("foo", &[]), ("bar", &["baz"]), ("baz", &[])]);
-        let expected_backward_map =
-            map_from_pairs(&[("foo", &[]), ("bar", &[]), ("baz", &["bar"])]);
-
-        assert_eq!(expected_forward_map, result_forward_map);
-        assert_eq!(expected_backward_map, result_backward_map);
+        let mut expected_forward_map = map();
+        expected_forward_map.insert(Arc::from("foo"), BTreeSet::new());
+        let expected_backward_map = smap_of_list(&[("foo", &[]), ("bar", &[]), ("baz", &["bar"])]);
+        assert_smaps_equal(&expected_forward_map, &result_forward_map);
+        assert_smaps_equal(&expected_backward_map, &result_backward_map);
     }
 
     #[test]
-    fn test_modify_complex() {
-        let graph = create_test_graph();
-        let update_map = map_from_pairs(&[("foo", &["qux"]), ("qux", &["baz"])]);
+    fn modify_complex() {
+        let graph = graph();
+        let update_map = smap_of_list(&[("foo", &["qux"]), ("qux", &["baz"])]);
         let mut to_remove = BTreeSet::new();
         to_remove.insert(Arc::from("bar"));
         let graph = graph.update_from_map(update_map, to_remove);
-
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
-
         let expected_forward_map =
-            map_from_pairs(&[("foo", &["qux"]), ("baz", &[]), ("qux", &["baz"])]);
+            smap_of_list(&[("foo", &["qux"]), ("baz", &[]), ("qux", &["baz"])]);
         let expected_backward_map =
-            map_from_pairs(&[("foo", &[]), ("baz", &["qux"]), ("qux", &["foo"])]);
-
-        assert_eq!(expected_forward_map, result_forward_map);
-        assert_eq!(expected_backward_map, result_backward_map);
+            smap_of_list(&[("foo", &[]), ("baz", &["qux"]), ("qux", &["foo"])]);
+        assert_smaps_equal(&expected_forward_map, &result_forward_map);
+        assert_smaps_equal(&expected_backward_map, &result_backward_map);
     }
 
     #[test]
-    fn test_map() {
-        let graph = create_test_graph();
+    fn map_test() {
+        let graph = graph();
         let mapped_graph = graph.map(|x| Arc::from(format!("foo_{}", x).as_str()));
-
         let result_forward_map = mapped_graph.to_map();
-        let expected_forward_map = map_from_pairs(&[
+        let expected_forward_map = smap_of_list(&[
             ("foo_foo", &["foo_bar", "foo_baz"]),
             ("foo_bar", &["foo_baz"]),
             ("foo_baz", &[]),
         ]);
-
-        assert_eq!(expected_forward_map, result_forward_map);
+        assert_smaps_equal(&expected_forward_map, &result_forward_map);
     }
 }

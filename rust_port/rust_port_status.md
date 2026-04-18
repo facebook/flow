@@ -559,12 +559,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] profiling/
       - [ ] memory_utils.ml
       - [ ] profiling_js.ml
-  - [ ] semver/
-    - [ ] __tests__/
-        - [ ] semver_parser_test.ml
-        - [ ] semver_range_test.ml
-        - [ ] semver_tests.ml
-        - [ ] semver_version_test.ml
+  - [x] semver/
+    - [x] __tests__/
+        - [x] semver_parser_test.ml → `flow_common_semver/src/semver_parser.rs` (inline tests)
+        - [x] semver_range_test.ml → `flow_common_semver/src/semver_range.rs` (inline tests)
+        - [x] semver_tests.ml → `flow_common_semver/src/semver.rs` (inline tests; OUnit aggregator dropped)
+        - [x] semver_version_test.ml → `flow_common_semver/src/semver_version.rs` (inline tests)
     - [ ] cli/
         - [ ] main.ml
       - [x] semver.ml → `flow_common_semver/src/semver.rs`
@@ -655,10 +655,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `reinterpret_elt_as_type_identifier` → `reinterpret_elt_as_type_identifier()`
   - [ ] utils/
     - [ ] __tests__/
-        - [ ] bitset_test.ml
-        - [ ] cache_test.ml
-        - [ ] common_utils_tests.ml
-        - [ ] graph_test.ml
+        - [x] bitset_test.ml → `flow_common/src/bitset.rs` (inline tests)
+        - [x] cache_test.ml → `flow_common_utils/src/cache.rs` (inline tests)
+        - [x] common_utils_tests.ml → `irrelevant` (OUnit aggregator, replaced by cargo test discovery)
+        - [x] graph_test.ml → `flow_common_utils/src/graph.rs` (inline tests)
         - [x] line_test.ml → `flow_common_utils/src/line.rs` (inline tests)
         - [x] nel_test.ml → `irrelevant`
         - [x] resizableArray_test.ml → `irrelevant`
@@ -1232,7 +1232,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] workerCancel.ml
 - [ ] lsp/
   - [ ] __tests__/
-      - [ ] lspErrors_test.ml
+      - [x] lspErrors_test.ml → tests in `flow_lsp/src/lsp_errors.rs`
     - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
     - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (persistent TCP connection to standalone server, server auto-start/kill, LSP request keying, and connected-mode event loop are now functional; shared connect params live in `flow_server_env/src/lsp_connect_params.rs`; see remaining function-level gaps)
         - [x] `wrapped_id` type → `WrappedId`
@@ -2293,11 +2293,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `ObjectKeyVisitor` struct with AstVisitor
           - [x] `visit`
   - [ ] inference/
-    - [ ] __tests__/
-        - [ ] dep_graph_test_utils.ml
-        - [ ] inference_tests.ml
-        - [ ] pure_dep_graph_operations_test.ml
-        - [ ] types_js_test.ml
+    - [x] __tests__/
+        - [x] dep_graph_test_utils.ml → `flow_services_inference/src/dep_graph_test_utils.rs`
+        - [x] inference_tests.ml → `N/A` (just an entrypoint)
+        - [x] pure_dep_graph_operations_test.ml → `flow_services_inference/src/pure_dep_graph_operations_test.rs`
+        - [x] types_js_test.ml → `flow_services_inference/src/types_js_test.rs`
     - [ ] types/
         - [x] types_js_types.ml → `flow_services_inference_types/src/lib.rs`
       - [x] check_cache.ml → `flow_services_inference/src/check_cache.rs`
@@ -2609,9 +2609,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] fuzzy-path/
     - [x] src/
         - [x] fuzzy_path.ml → `flow_services_export/src/fuzzy_path/`
-    - [ ] test/
-        - [ ] expect_test.ml
-        - [ ] test.ml
+    - [x] test/
+        - [x] expect_test.ml → `flow_services_export/src/fuzzy_path/expect_test.rs`
+        - [x] test.ml → `flow_services_export/src/fuzzy_path/test.rs`
   - [ ] ocaml-base64/
     - [ ] src/
         - [ ] base64.ml

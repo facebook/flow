@@ -5,6 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+// This module is how the Flow lsp stores and reasons about Flow errors. This is tricky because
+// Flow errors might come from a few different places.
+//
+// Here's our general strategy:
+//
+// 1. If we get streamed server errors for a file, then we either
+//    1a. Add them to the known server errors for the file, if we previously had streamed errors for
+//        that file
+//    1b. Replace the known server errors for the file, if we previously had finalized server errors
+//        (e.g. from after the last recheck)
+// 2. If we have live parse errors for a file (e.g. from running the parser locally on an open file)
+//    then we replace the server's parse errors for that file with the live parse errors
+// 3. If we have live non-parse errors for a file (e.g. from check-contents for an open file)
+//    then we replace the server's non-parse errors for that file with the live non-parse errors.
+
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
@@ -52,6 +67,7 @@ fn empty_per_file_errors() -> PerFileErrors {
     }
 }
 
+// Returns true if we don't know about any errors for this file
 fn file_has_no_errors(errors: &PerFileErrors) -> bool {
     let live_parse_empty = match &errors.live_parse_errors {
         None => true,
@@ -79,6 +95,8 @@ pub fn empty() -> T {
     }
 }
 
+// For the most part we don't sort errors, and leave it to the server and the IDE to figure that
+// out. The one exception is in limit_errors, to ensure consistent results
 fn sort_errors(errors: &mut Errors) {
     errors.sort_by(|d1, d2| {
         let s1 = &d1.range.start;
@@ -87,6 +105,7 @@ fn sort_errors(errors: &mut Errors) {
     });
 }
 
+// If we have too many errors then limit them to the first N errors
 fn limit_errors(errors: Errors) -> Errors {
     fn is_refinement_information(d: &Diagnostic) -> bool {
         match &d.data {
@@ -164,6 +183,7 @@ fn choose_errors(per_file: &PerFileErrors) -> (&Errors, &Errors) {
         ServerErrors::Streamed((ParseErrors(p), NonParseErrors(np)))
         | ServerErrors::Finalized((ParseErrors(p), NonParseErrors(np))) => (p, np),
     };
+    // Prefer live parse errors over server parse errors
     let parse_errors = match &per_file.live_parse_errors {
         None => server_parse_errors,
         Some(ParseErrors(live)) => live,
@@ -175,13 +195,15 @@ fn choose_errors(per_file: &PerFileErrors) -> (&Errors, &Errors) {
     (parse_errors, non_parse_errors)
 }
 
-// Structural equality for fast comparison. Will never get false negative
 fn have_errors_changed(before: &PerFileErrors, after: &PerFileErrors) -> bool {
     let (before_parse, before_non_parse) = choose_errors(before);
     let (after_parse, after_non_parse) = choose_errors(after);
+    // Structural equality for fast comparison. Will never get false negative
     before_parse != after_parse || before_non_parse != after_non_parse
 }
 
+// We need to send the errors for this file. This is when we need to decide exactly which errors to
+// send.
 fn send_errors_for_file(state: &T, send_json: &mut dyn FnMut(serde_json::Value), uri: &Url) {
     let default = empty_per_file_errors();
     let per_file = state.file_to_errors_map.get(uri).unwrap_or(&default);
@@ -202,6 +224,8 @@ fn send_errors_for_file(state: &T, send_json: &mut dyn FnMut(serde_json::Value),
     send_json(notification);
 }
 
+// For every dirty file (files for which the client likely has out-of-date errors), send the errors
+// to the client
 fn send_all_errors(send_json: &mut dyn FnMut(serde_json::Value), state: T) -> T {
     let dirty_files = state.dirty_files.clone();
     let state = T {
@@ -214,6 +238,7 @@ fn send_all_errors(send_json: &mut dyn FnMut(serde_json::Value), state: T) -> T 
     state
 }
 
+// Helper function to modify the data for a specific file
 fn modify_per_file_errors(
     uri: &Url,
     state: T,
@@ -226,6 +251,7 @@ fn modify_per_file_errors(
         .unwrap_or_else(empty_per_file_errors);
     let new_per_file_errors = f(old_per_file_errors.clone());
     let dirty = have_errors_changed(&old_per_file_errors, &new_per_file_errors);
+    // To keep this data structure small, let's filter out files with no live or server errors
     let mut file_to_errors_map = state.file_to_errors_map;
     if file_has_no_errors(&new_per_file_errors) {
         file_to_errors_map.remove(uri);
@@ -242,6 +268,7 @@ fn modify_per_file_errors(
     }
 }
 
+// Helper function to modify the server errors for a specific file
 fn modify_server_errors(
     uri: &Url,
     new_errors: Errors,
@@ -258,12 +285,14 @@ fn modify_server_errors(
     })
 }
 
+// We've parsed a file locally and now want to record the number of parse errors for this file
 pub fn set_live_parse_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
     uri: &Url,
     live_parse_errors: Errors,
     state: T,
 ) -> T {
+    // If the caller passes in some non-parse errors then we'll just ignore them
     let live_parse_errors: Errors = live_parse_errors
         .into_iter()
         .filter(is_parse_error)
@@ -275,12 +304,15 @@ pub fn set_live_parse_errors_and_send(
     send_all_errors(send_json, state)
 }
 
+// We've run check-contents on a modified open file and now want to record the errors reported by
+// check-contents
 pub fn set_live_non_parse_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
     uri: &Url,
     live_non_parse_errors: Errors,
     state: T,
 ) -> T {
+    // If the caller passes in some parse errors then we'll just ignore them
     let live_non_parse_errors: Errors = live_non_parse_errors
         .into_iter()
         .filter(is_not_parse_error)
@@ -292,6 +324,8 @@ pub fn set_live_non_parse_errors_and_send(
     send_all_errors(send_json, state)
 }
 
+// When we close a file we clear all the live parse errors or non-parse errors for that file, but we
+// keep around the server errors
 pub fn clear_all_live_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
     uri: &Url,
@@ -305,6 +339,8 @@ pub fn clear_all_live_errors_and_send(
     send_all_errors(send_json, state)
 }
 
+// my_list @ [] returns a list which is no longer physically identical to my_list. This is a
+// workaround
 fn append(list_a: Errors, list_b: Errors) -> Errors {
     match (list_a.is_empty(), list_b.is_empty()) {
         (true, true) => vec![],
@@ -318,6 +354,8 @@ fn append(list_a: Errors, list_b: Errors) -> Errors {
     }
 }
 
+// During recheck we stream in errors from the server. These will replace finalized server errors
+// from a previous recheck or add to streamed server errors from this recheck
 pub fn add_streamed_server_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
     uri_to_error_map: BTreeMap<Url, Errors>,
@@ -351,6 +389,8 @@ pub fn add_streamed_server_errors_and_send(
     send_all_errors(send_json, state)
 }
 
+// After recheck we get all the errors from the server. This replaces whatever server errors we
+// already had.
 pub fn set_finalized_server_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
     uri_to_error_map: BTreeMap<Url, Errors>,
@@ -366,6 +406,9 @@ pub fn set_finalized_server_errors_and_send(
         });
         files_with_new_errors.insert(uri);
     }
+    // All the errors in uri_to_error_map have been added to state. But uri_to_error_map doesn't
+    // include files which used to have >0 errors but now have 0 errors. So we need to go through
+    // every file that used to have errors and clear them out
     let uris_to_clear: Vec<Url> = state
         .file_to_errors_map
         .keys()
@@ -399,6 +442,9 @@ pub fn set_finalized_server_errors_and_send(
     send_all_errors(send_json, state)
 }
 
+// When the Flow server dies, LSP must clear all the errors.
+// TODO: Don't clear live parse errors. Those don't require the server, so we can still keep
+//       providing them
 pub fn clear_all_errors_and_send(send_json: &mut dyn FnMut(serde_json::Value), state: T) -> T {
     let uris: Vec<Url> = state.file_to_errors_map.keys().cloned().collect();
     let mut state = state;
@@ -566,6 +612,7 @@ fn update_diagnostics_due_to_change(
         .collect()
 }
 
+// Basically a best-effort attempt to update the locations of errors after a didChange
 pub fn update_errors_due_to_change_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
     params: &lsp_types::DidChangeTextDocumentParams,
@@ -654,6 +701,7 @@ mod tests {
         }
     }
 
+    // Build a mock lsp diagnostic
     fn mk_diagnostic(error: &Error) -> Diagnostic {
         Diagnostic {
             range: Range {
@@ -677,6 +725,7 @@ mod tests {
         }
     }
 
+    // Take the json output and convert it back into a list of errors
     fn error_list_of_json_response(json: serde_json::Value) -> Vec<Error> {
         let uri_str = json["params"]["uri"].as_str().unwrap();
         let uri = Url::parse(uri_str).unwrap();
@@ -699,6 +748,8 @@ mod tests {
         }
     }
 
+    // Wraps some lspErrors calls and records what json is sent. Then asserts that all the expected
+    // errors were sent
     fn with_assert_errors_match(
         reason: &str,
         expected: &[Error],
@@ -715,12 +766,14 @@ mod tests {
         ret
     }
 
+    // Assert that NO json is sent. This is different than asserting that we sent a list of 0 errors
     fn assert_no_send(reason: &str) -> Box<dyn FnMut(serde_json::Value) + '_> {
         Box::new(move |_json| {
             panic!("Expected no send, but got a send for {:?}", reason);
         })
     }
 
+    // Given an error list, group it by uri and convert to diagnostics
     fn map_of_error_list(error_list: &[Error]) -> BTreeMap<Url, Errors> {
         let mut map: BTreeMap<Url, Errors> = BTreeMap::new();
         for error in error_list.iter().rev() {
@@ -794,7 +847,10 @@ mod tests {
         }
     }
 
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Defined in OCaml source but unused in test bodies"
+    )]
     fn bar_parse_error_2() -> Error {
         Error {
             uri: path_to_bar(),

@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#[cfg(test)]
+mod expect_test;
 mod matcher_base;
 mod score_match;
+#[cfg(test)]
+mod test;
 
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 

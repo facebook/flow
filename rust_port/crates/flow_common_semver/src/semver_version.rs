@@ -194,3 +194,155 @@ pub fn to_string(v: &Version) -> String {
     };
     format!("{major}.{minor}.{patch}{prerelease}{build}")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Identifier;
+    use super::Version;
+    use super::compare;
+    use super::compare_precedence;
+    use super::to_string;
+
+    fn v(
+        major: i64,
+        minor: i64,
+        patch: i64,
+        prerelease: Vec<Identifier>,
+        build: Vec<Identifier>,
+    ) -> Version {
+        Version {
+            major,
+            minor,
+            patch,
+            prerelease,
+            build,
+        }
+    }
+
+    fn v1_0_0_alpha() -> Version {
+        v(1, 0, 0, vec![Identifier::Str("alpha".to_string())], vec![])
+    }
+
+    fn v1_0_0_alpha_1() -> Version {
+        v(
+            1,
+            0,
+            0,
+            vec![Identifier::Str("alpha".to_string()), Identifier::Int(1)],
+            vec![],
+        )
+    }
+
+    fn v1_0_0_alpha_beta() -> Version {
+        v(
+            1,
+            0,
+            0,
+            vec![
+                Identifier::Str("alpha".to_string()),
+                Identifier::Str("beta".to_string()),
+            ],
+            vec![],
+        )
+    }
+
+    fn v1_0_0_beta() -> Version {
+        v(1, 0, 0, vec![Identifier::Str("beta".to_string())], vec![])
+    }
+
+    fn v1_0_0_beta_2() -> Version {
+        v(
+            1,
+            0,
+            0,
+            vec![Identifier::Str("beta".to_string()), Identifier::Int(2)],
+            vec![],
+        )
+    }
+
+    fn v1_0_0_beta_11() -> Version {
+        v(
+            1,
+            0,
+            0,
+            vec![Identifier::Str("beta".to_string()), Identifier::Int(11)],
+            vec![],
+        )
+    }
+
+    fn v1_0_0_rc_1() -> Version {
+        v(
+            1,
+            0,
+            0,
+            vec![Identifier::Str("rc".to_string()), Identifier::Int(1)],
+            vec![],
+        )
+    }
+
+    fn v1_0_0() -> Version {
+        v(1, 0, 0, vec![], vec![])
+    }
+
+    fn iter_pairs(f: &mut impl FnMut(&Version, &Version), list: &[Version]) {
+        match list {
+            [] => (),
+            [_] => (),
+            [a, rest @ ..] => match rest {
+                [] => (),
+                [b, ..] => {
+                    f(a, b);
+                    iter_pairs(f, rest);
+                }
+            },
+        }
+    }
+
+    #[test]
+    fn compare_precedence_prerelease() {
+        let ordered = vec![
+            v1_0_0_alpha(),
+            v1_0_0_alpha_1(),
+            v1_0_0_alpha_beta(),
+            v1_0_0_beta(),
+            v1_0_0_beta_2(),
+            v1_0_0_beta_11(),
+            v1_0_0_rc_1(),
+            v1_0_0(),
+        ];
+        iter_pairs(
+            &mut |a, b| {
+                let a_str = to_string(a);
+                let b_str = to_string(b);
+                assert!(compare_precedence(a, b) < 0, "{} < {} failed", a_str, b_str);
+                assert!(compare_precedence(b, a) > 0, "{} > {} failed", b_str, a_str);
+            },
+            &ordered,
+        );
+        for a in &ordered {
+            let a_str = to_string(a);
+            assert!(
+                compare_precedence(a, a) == 0,
+                "{} not equal to itself",
+                a_str
+            );
+        }
+    }
+
+    #[test]
+    fn compare_precedence_build() {
+        let a = v(1, 0, 0, vec![], vec![Identifier::Int(1)]);
+        let b = v(1, 0, 0, vec![], vec![Identifier::Int(2)]);
+        assert!(
+            compare_precedence(&a, &b) == 0,
+            "1.0.0+1 should be = 1.0.0+2"
+        );
+    }
+
+    #[test]
+    fn compare_build() {
+        let a = v(1, 0, 0, vec![], vec![Identifier::Int(1)]);
+        let b = v(1, 0, 0, vec![], vec![Identifier::Int(2)]);
+        assert!(compare(&a, &b) < 0, "1.0.0+1 should NOT be = 1.0.0+2");
+    }
+}

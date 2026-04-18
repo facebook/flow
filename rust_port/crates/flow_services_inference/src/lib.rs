@@ -9,6 +9,8 @@
 
 pub mod check_cache;
 pub mod check_service;
+#[cfg(test)]
+pub mod dep_graph_test_utils;
 pub mod dep_service;
 pub mod inference_utils;
 pub mod init;
@@ -17,6 +19,10 @@ pub mod merge_service;
 pub mod merge_stream;
 pub mod obj_to_obj_hook;
 pub mod pure_dep_graph_operations;
+#[cfg(test)]
+mod pure_dep_graph_operations_test;
 pub mod recheck_stats;
 pub mod type_contents;
 pub mod type_service;
+#[cfg(test)]
+mod types_js_test;

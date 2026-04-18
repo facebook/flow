@@ -3657,3 +3657,46 @@ pub fn check_once(
     };
     (errors, warnings, suppressed_errors)
 }
+
+pub fn debug_determine_what_to_recheck(
+    options: &Options,
+    sig_dependency_graph: &Graph<FileKey>,
+    implementation_dependency_graph: &Graph<FileKey>,
+    freshparsed: &CheckedSet,
+    unchanged_checked: CheckedSet,
+    unchanged_files_to_force: &CheckedSet,
+    dirty_direct_dependents: &FlowOrdSet<FileKey>,
+) -> DetermineWhatToRecheckResult {
+    recheck::determine_what_to_recheck(
+        options,
+        sig_dependency_graph,
+        implementation_dependency_graph,
+        freshparsed,
+        unchanged_checked,
+        unchanged_files_to_force,
+        dirty_direct_dependents,
+    )
+}
+
+pub fn debug_include_dependencies_and_dependents(
+    options: &Options,
+    unchanged_checked: CheckedSet,
+    input: CheckedSet,
+    implementation_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &Graph<FileKey>,
+    all_dependent_files: FlowOrdSet<FileKey>,
+) -> (
+    CheckedSet,
+    CheckedSet,
+    Vec<Vec1<FileKey>>,
+    FlowOrdSet<FileKey>,
+) {
+    include_dependencies_and_dependents(
+        options,
+        input,
+        unchanged_checked,
+        all_dependent_files,
+        implementation_dependency_graph,
+        sig_dependency_graph,
+    )
+}
