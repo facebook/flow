@@ -258,6 +258,11 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `InOut; loc })
       | _ -> ()
     );
+    (match variance with
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.Writeonly; _ })
+      when not (Context.allow_variance_keywords cx) ->
+      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Writeonly; loc })
+    | _ -> ());
     Typed_ast_utils.polarity variance
 
   (* Distributive tparam name helpers *)
@@ -1569,6 +1574,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                          | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Remove)
                            ->
                            RemoveVariance Polarity.Positive
+                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), Some Add)
+                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), None) ->
+                           OverrideVariance Polarity.Negative
+                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), Some Remove)
+                           ->
+                           RemoveVariance Polarity.Negative
                          | _ ->
                            let pol = polarity cx variance in
                            if pol = Polarity.Neutral then

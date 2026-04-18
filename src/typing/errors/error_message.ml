@@ -777,6 +777,10 @@ and 'loc t' =
       kind: ts_syntax_kind;
       loc: 'loc;
     }
+  | EVarianceKeyword of {
+      kind: [ `Writeonly ];
+      loc: 'loc;
+    }
   | EInvalidBinaryArith of {
       reason_out: 'loc virtual_reason;
       reason_l: 'loc virtual_reason;
@@ -1886,6 +1890,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidCatchParameterAnnotation { loc; ts_utility_syntax } ->
     EInvalidCatchParameterAnnotation { loc = f loc; ts_utility_syntax }
   | ETSSyntax { kind; loc } -> ETSSyntax { kind; loc = f loc }
+  | EVarianceKeyword { kind; loc } -> EVarianceKeyword { kind; loc = f loc }
   | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
     EInvalidBinaryArith
       {
@@ -2365,6 +2370,7 @@ let util_use_op_of_msg nope util = function
   | EBigIntNumCoerce _
   | EInvalidCatchParameterAnnotation _
   | ETSSyntax _
+  | EVarianceKeyword _
   | EInvalidBinaryArith _
   | EInvalidMappedType _
   | ETupleRequiredAfterOptional _
@@ -2580,6 +2586,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidCatchParameterAnnotation { loc; _ }
   | EInvalidMappedType { loc; _ }
   | ETSSyntax { loc; _ }
+  | EVarianceKeyword { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
   | EReferenceInDefault (_, _, loc)
   | EDuplicateComponentProp { spread = loc; _ }
@@ -3837,6 +3844,7 @@ let friendly_message_of_msg = function
     | AbstractMethod -> Normal MessageAbstractMethod
     | DeprecatedTypeParamColon -> Normal MessageDeprecatedTypeParamColonBound
   end
+  | EVarianceKeyword { kind = `Writeonly; _ } -> Normal MessageVarianceKeywordWriteonly
   | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->
     Normal (MessageCannotPerformBinaryArith { kind; reason_l; reason_r })
   | EInvalidMappedType { kind; _ } ->
@@ -4321,6 +4329,7 @@ let error_code_of_message err : error_code option =
     | _ -> None
   end
   | ETSSyntax _ -> Some UnsupportedSyntax
+  | EVarianceKeyword _ -> Some UnsupportedSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
   | EMissingPlatformSupportWithAvailablePlatforms _ -> Some MissingPlatformSupport
   | EMissingPlatformSupport _ -> Some MissingPlatformSupport

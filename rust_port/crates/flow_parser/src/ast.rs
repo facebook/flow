@@ -257,6 +257,7 @@ pub enum VarianceKind {
     Plus,
     Minus,
     Readonly,
+    Writeonly,
     In,
     Out,
     InOut,

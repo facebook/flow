@@ -384,6 +384,11 @@ pub(super) fn parse_function_params(
                 TokenKind::TIdentifier { raw, .. } if raw == "readonly"
             ) && peek::ith_is_identifier(env, 1);
 
+            let is_writeonly_with_ident = matches!(
+                peek::token(env),
+                TokenKind::TIdentifier { raw, .. } if raw == "writeonly"
+            ) && peek::ith_is_identifier(env, 1);
+
             if is_accessibility_with_ident {
                 let (acc_loc, (kind, leading)) = with_loc(None, env, |env| {
                     let leading = peek::comments(env);
@@ -406,7 +411,7 @@ pub(super) fn parse_function_params(
                     loc: LOC_NONE,
                     property,
                 })
-            } else if is_readonly_with_ident {
+            } else if is_readonly_with_ident || is_writeonly_with_ident {
                 let property = param_property(env, None)?;
                 Ok(function::Param::ParamProperty {
                     loc: LOC_NONE,
@@ -605,6 +610,17 @@ pub(super) fn parse_variance(
             Some(Variance {
                 loc: loc.dupe(),
                 kind: VarianceKind::Readonly,
+                comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
+            })
+        }
+        TokenKind::TIdentifier { raw, .. }
+            if parse_property_variance_keyword && raw == "writeonly" =>
+        {
+            let leading = peek::comments(env);
+            eat::token(env)?;
+            Some(Variance {
+                loc: loc.dupe(),
+                kind: VarianceKind::Writeonly,
                 comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
             })
         }

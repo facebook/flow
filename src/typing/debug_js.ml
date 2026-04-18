@@ -2037,6 +2037,7 @@ let dump_error_message =
     | EInvalidCatchParameterAnnotation { loc; ts_utility_syntax } ->
       spf "EInvalidCatchParameterAnnotation {%s; %b}" (string_of_aloc loc) ts_utility_syntax
     | ETSSyntax { loc; _ } -> spf "ETSSyntax (%s)" (string_of_aloc loc)
+    | EVarianceKeyword { loc; _ } -> spf "EVarianceKeyword (%s)" (string_of_aloc loc)
     | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
       spf
         "EInvalidBinaryArith (%s, %s, %s, %s)"

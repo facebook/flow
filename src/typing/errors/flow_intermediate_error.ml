@@ -4969,6 +4969,14 @@ let to_printable_error :
         code "+[string]: T";
         text " for dictionaries.";
       ]
+    | MessageVarianceKeywordWriteonly ->
+      [
+        text "The ";
+        code "writeonly";
+        text " variance keyword is gated behind the ";
+        code "experimental.allow_variance_keywords";
+        text " flowconfig option.";
+      ]
     | MessageTSUndefinedType ->
       [
         text "The equivalent of TypeScript's ";

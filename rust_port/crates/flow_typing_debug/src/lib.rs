@@ -113,6 +113,7 @@ use flow_typing_errors::error_message::EUnionOptimizationData;
 use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
 use flow_typing_errors::error_message::EUnionSpeculationFailedData;
+use flow_typing_errors::error_message::EVarianceKeywordData;
 use flow_typing_errors::error_message::EnumAllMembersAlreadyCheckedData;
 use flow_typing_errors::error_message::EnumBigIntMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumBooleanMemberNotInitializedData;
@@ -3748,6 +3749,9 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::ETSSyntax(box ETSSyntaxData { loc, .. }) => {
             format!("ETSSyntax ({})", string_of_aloc(None, loc))
+        }
+        ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { loc, .. }) => {
+            format!("EVarianceKeyword ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData {
             reason_out,

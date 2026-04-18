@@ -1034,6 +1034,7 @@ pub(crate) fn token_is_reserved_type(t: &TokenKind) -> bool {
         | TokenKind::TNull
         | TokenKind::TNumberType
         | TokenKind::TReadonly
+        | TokenKind::TWriteonly
         | TokenKind::TStatic
         | TokenKind::TStringType
         | TokenKind::TSymbolType
@@ -1077,7 +1078,7 @@ fn token_is_type_identifier_under_lex_mode(lex_mode: LexMode, t: &TokenKind) -> 
                 | TokenKind::TWhile | TokenKind::TWith | TokenKind::TYield => true,
                 /* identifier-ish, but not valid types */
                 TokenKind::TStatic | TokenKind::TTypeof | TokenKind::TFunction | TokenKind::TKeyof | TokenKind::TReadonly
-                | TokenKind::TInfer | TokenKind::TIs | TokenKind::TAsserts | TokenKind::TImplies | TokenKind::TVoid
+                | TokenKind::TWriteonly | TokenKind::TInfer | TokenKind::TIs | TokenKind::TAsserts | TokenKind::TImplies | TokenKind::TVoid
                 | TokenKind::TRendersQuestion | TokenKind::TRendersStar => false,
                 /* syntax */
                 TokenKind::TLcurly | TokenKind::TRcurly | TokenKind::TLcurlybar | TokenKind::TRcurlybar | TokenKind::TLparen
@@ -1231,6 +1232,7 @@ pub(crate) mod peek {
             | TokenKind::TPound
             | TokenKind::TIdentifier { .. }
             | TokenKind::TReadonly
+            | TokenKind::TWriteonly
             | TokenKind::TInfer => true,
             _ => false,
         }

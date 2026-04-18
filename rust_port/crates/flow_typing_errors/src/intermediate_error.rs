@@ -8282,6 +8282,13 @@ where
                 code("+[string]: T"),
                 text(" for dictionaries."),
             ]),
+            MessageVarianceKeywordWriteonly => friendly::Message(vec![
+                text("The "),
+                code("writeonly"),
+                text(" variance keyword is gated behind the "),
+                code("experimental.allow_variance_keywords"),
+                text(" flowconfig option."),
+            ]),
             MessageTSUndefinedType => friendly::Message(vec![
                 text("The equivalent of TypeScript's "),
                 code("undefined"),

@@ -67,6 +67,15 @@ fn maybe_variance(
                 comments: mk_comments_opt(Some(leading.into()), None),
             })
         }
+        TokenKind::TWriteonly if parse_property_variance_keyword => {
+            let leading = peek::comments(env);
+            eat::token(env)?;
+            Some(Variance {
+                loc,
+                kind: VarianceKind::Writeonly,
+                comments: mk_comments_opt(Some(leading.into()), None),
+            })
+        }
         TokenKind::TIdentifier { raw, .. } if raw == "in" && parse_in_out => {
             if peek::ith_is_type_identifier(env, 1) {
                 let leading = peek::comments(env);
@@ -1299,11 +1308,15 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 // readonly foo: T
                 let is_readonly_with_identifier = matches!(peek::token(env), TokenKind::TReadonly)
                     && peek::ith_is_identifier(env, 1);
+                // writeonly foo: T
+                let is_writeonly_with_identifier =
+                    matches!(peek::token(env), TokenKind::TWriteonly)
+                        && peek::ith_is_identifier(env, 1);
                 let variance = if is_plus || is_minus_with_identifier {
                     // `-1` is a valid type but not a valid tuple label.
                     //   But `-foo` is only valid as a tuple label.
                     maybe_variance(env, false, false)?
-                } else if is_readonly_with_identifier {
+                } else if is_readonly_with_identifier || is_writeonly_with_identifier {
                     maybe_variance(env, true, false)?
                 } else {
                     None
@@ -1814,6 +1827,7 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
             }
             TokenKind::TNew
             | TokenKind::TReadonly
+            | TokenKind::TWriteonly
             | TokenKind::TKeyof
             | TokenKind::TInfer
             | TokenKind::TAsserts
@@ -3076,7 +3090,7 @@ fn object_type(
                         break;
                     }
                 }
-                TokenKind::TReadonly => {
+                TokenKind::TReadonly | TokenKind::TWriteonly => {
                     let variance_allows = match &variance {
                         None => true,
                         Some(v) => {

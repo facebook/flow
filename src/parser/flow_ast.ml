@@ -109,6 +109,7 @@ and Variance : sig
     | Plus
     | Minus
     | Readonly
+    | Writeonly
     | In
     | Out
     | InOut

@@ -622,6 +622,13 @@ fn polarity<Loc: Dupe>(variance: Option<(Loc, ast::Variance<Loc>)>) -> Polarity 
                 kind: ast::VarianceKind::In,
                 ..
             },
+        ))
+        | Some((
+            _,
+            ast::Variance {
+                kind: ast::VarianceKind::Writeonly,
+                ..
+            },
         )) => Polarity::Negative,
         Some((
             _,

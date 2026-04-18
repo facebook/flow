@@ -52,7 +52,7 @@ pub fn polarity<M: Dupe>(variance: Option<&ast::Variance<M>>) -> Polarity {
             ..
         }) => Polarity::Positive,
         Some(ast::Variance {
-            kind: VarianceKind::In,
+            kind: VarianceKind::In | VarianceKind::Writeonly,
             ..
         }) => Polarity::Negative,
         None => Polarity::Neutral,

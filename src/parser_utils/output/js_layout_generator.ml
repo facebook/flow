@@ -3948,6 +3948,7 @@ and variance (loc, { Ast.Variance.kind; comments }) =
       | Ast.Variance.Plus -> Atom "+"
       | Ast.Variance.Minus -> Atom "-"
       | Ast.Variance.Readonly -> fuse [Atom "readonly"; space]
+      | Ast.Variance.Writeonly -> fuse [Atom "writeonly"; space]
       | Ast.Variance.In -> fuse [Atom "in"; space]
       | Ast.Variance.Out -> fuse [Atom "out"; space]
       | Ast.Variance.InOut -> fuse [Atom "in out"; space]

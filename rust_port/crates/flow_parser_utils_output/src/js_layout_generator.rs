@@ -7070,6 +7070,7 @@ pub(crate) fn variance(var: &ast::Variance<Loc>) -> LayoutNode {
             ast::VarianceKind::Plus => atom("+"),
             ast::VarianceKind::Minus => atom("-"),
             ast::VarianceKind::Readonly => fuse(vec![atom("readonly"), space()]),
+            ast::VarianceKind::Writeonly => fuse(vec![atom("writeonly"), space()]),
             ast::VarianceKind::In => fuse(vec![atom("in"), space()]),
             ast::VarianceKind::Out => fuse(vec![atom("out"), space()]),
             ast::VarianceKind::InOut => fuse(vec![atom("in out"), space()]),

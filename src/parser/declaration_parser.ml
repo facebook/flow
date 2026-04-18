@@ -147,6 +147,16 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
           )
+      | T_IDENTIFIER { raw = "writeonly"; _ } when parse_property_variance_keyword ->
+        let leading = Peek.comments env in
+        Eat.token env;
+        Some
+          ( loc,
+            {
+              Variance.kind = Variance.Writeonly;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
+          )
       | _ -> None
     in
     match variance with
@@ -270,6 +280,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             in
             Function.Param.ParamProperty (param_property env (Some ts_accessibility))
           | T_IDENTIFIER { raw = "readonly"; _ } when Peek.ith_is_identifier ~i:1 env ->
+            Function.Param.ParamProperty (param_property env None)
+          | T_IDENTIFIER { raw = "writeonly"; _ } when Peek.ith_is_identifier ~i:1 env ->
             Function.Param.ParamProperty (param_property env None)
           | _ ->
             let argument = Parse.pattern env ~allow_optional:true Parse_error.StrictParamName in

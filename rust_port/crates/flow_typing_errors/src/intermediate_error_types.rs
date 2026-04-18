@@ -2162,6 +2162,7 @@ pub enum Message<L: Dupe> {
     MessageTSVarianceInOut,
     MessageTSVarianceOut,
     MessageTSVarianceReadOnly,
+    MessageVarianceKeywordWriteonly,
     MessageTSClassAccessibility(ast::class::ts_accessibility::Kind),
     MessageTSParameterProperty,
     MessageAbstractClass,

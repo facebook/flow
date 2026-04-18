@@ -2112,6 +2112,38 @@ pub struct ETSSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct EVarianceKeywordData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub kind: VarianceKeywordKind,
+    pub loc: L,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum VarianceKeywordKind {
+    Writeonly,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_out: VirtualReason<L>,
     pub reason_l: VirtualReason<L>,
@@ -2751,6 +2783,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     },
 
     ETSSyntax(Box<ETSSyntaxData<L>>),
+
+    EVarianceKeyword(Box<EVarianceKeywordData<L>>),
 
     EInvalidBinaryArith(Box<EInvalidBinaryArithData<L>>),
 
@@ -4862,6 +4896,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ETSSyntax(Box::new(ETSSyntaxData { kind, loc: f(loc) }))
             }
 
+            EVarianceKeyword(box EVarianceKeywordData { kind, loc }) => {
+                EVarianceKeyword(Box::new(EVarianceKeywordData { kind, loc: f(loc) }))
+            }
+
             EInvalidBinaryArith(box EInvalidBinaryArithData {
                 reason_out,
                 reason_l,
@@ -5743,7 +5781,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             })
             | Self::EUnsafeGettersSetters(loc)
             | Self::EUnsafeObjectAssign(loc)
-            | Self::ETSSyntax(box ETSSyntaxData { kind: _, loc }) => Some(loc.dupe()),
+            | Self::ETSSyntax(box ETSSyntaxData { kind: _, loc })
+            | Self::EVarianceKeyword(box EVarianceKeywordData { kind: _, loc }) => Some(loc.dupe()),
 
             Self::EInvalidTypeof(box (loc, _)) => Some(loc.dupe()),
             Self::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { def, .. }) => {
@@ -8929,6 +8968,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 };
                 Normal(msg)
             }
+
+            ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { kind, .. }) => {
+                use crate::intermediate_error_types::Message;
+                let msg = match kind {
+                    VarianceKeywordKind::Writeonly => Message::MessageVarianceKeywordWriteonly,
+                };
+                Normal(msg)
+            }
         }
     }
 }
@@ -9629,6 +9676,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 _ => None,
             },
             ErrorMessage::ETSSyntax(box ETSSyntaxData { .. }) => Some(UnsupportedSyntax),
+            ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { .. }) => {
+                Some(UnsupportedSyntax)
+            }
             ErrorMessage::EInvalidTypeCastSyntax { .. } => Some(InvalidTypeCastSyntax),
             ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms(
                 box EMissingPlatformSupportWithAvailablePlatformsData { .. },

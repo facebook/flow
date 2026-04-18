@@ -1,0 +1,20 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:3:12
+
+The `writeonly` variance keyword is gated behind the `experimental.allow_variance_keywords` flowconfig option.
+[unsupported-syntax]
+
+   3| type T = { writeonly p: number };
+                 ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:3
+
+The `writeonly` variance keyword is gated behind the `experimental.allow_variance_keywords` flowconfig option.
+[unsupported-syntax]
+
+   5|   writeonly prop: number;
+        ^^^^^^^^^
+
+
+
+Found 2 errors

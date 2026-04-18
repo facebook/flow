@@ -1067,6 +1067,7 @@ let token_base ~for_type_token (env : Lex_env.t) lexbuf : result =
       | "null" -> Token (env, T_NULL)
       | "number" -> Token (env, T_NUMBER_TYPE)
       | "readonly" -> Token (env, T_READONLY)
+      | "writeonly" -> Token (env, T_WRITEONLY)
       | "infer" -> Token (env, T_INFER)
       | "is" -> Token (env, T_IS)
       | "asserts" -> Token (env, T_ASSERTS)

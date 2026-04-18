@@ -99,6 +99,7 @@ fn identifier_name_raw<'a>(env: &mut ParserEnv<'a>) -> Result<FlowSmolStr, Rollb
         TokenKind::TUndefinedType => FlowSmolStr::new_inline("undefined"),
         TokenKind::TKeyof => FlowSmolStr::new_inline("keyof"),
         TokenKind::TReadonly => FlowSmolStr::new_inline("readonly"),
+        TokenKind::TWriteonly => FlowSmolStr::new_inline("writeonly"),
         TokenKind::TInfer => FlowSmolStr::new_inline("infer"),
         /* Contextual stuff */
         TokenKind::TOf => FlowSmolStr::new_inline("of"),

@@ -1,0 +1,27 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:40:4
+
+Cannot get `w.p` because property `p` is not readable. [cannot-read]
+
+   40| (w.p: number); // error: write-only
+          ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:4
+
+Cannot get `aw.foo` because property `foo` is not readable. [cannot-read]
+
+   47| aw.foo as number; // error: writeonly property is not readable
+          ^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:53:19
+
+Cannot instantiate `RemoveWriteonly` because an index signature declaring the expected key / value type is not readable.
+[cannot-read]
+
+   53| declare const rw: RemoveWriteonly<WriteOnlyO>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 errors

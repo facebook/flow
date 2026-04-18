@@ -4610,6 +4610,7 @@ fn variance(offset_table: &OffsetTable, config: &Config, var: &ast::Variance<Loc
         VarianceKind::Plus => "plus",
         VarianceKind::Minus => "minus",
         VarianceKind::Readonly => "readonly",
+        VarianceKind::Writeonly => "writeonly",
         VarianceKind::In => "in",
         VarianceKind::Out => "out",
         VarianceKind::InOut => "in-out",

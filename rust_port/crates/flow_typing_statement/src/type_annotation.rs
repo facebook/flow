@@ -31,6 +31,7 @@ use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
 use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
+use flow_typing_errors::error_message::EVarianceKeywordData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::intermediate_error_types;
@@ -395,6 +396,22 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
                 );
             }
             _ => {}
+        }
+    }
+    if let Some(ast::Variance {
+        loc,
+        kind: ast::VarianceKind::Writeonly,
+        ..
+    }) = variance
+    {
+        if !cx.allow_variance_keywords() {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
+                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Writeonly,
+                    loc: loc.dupe(),
+                })),
+            );
         }
     }
     typed_ast_utils::polarity(variance)
@@ -3006,6 +3023,30 @@ fn convert_inner<'a>(
                                             {
                                                 type_::MappedTypeVariance::RemoveVariance(
                                                     Polarity::Positive,
+                                                )
+                                            }
+                                            (Some(v), Some(MappedTypeVarianceOp::Add))
+                                                if v.kind
+                                                    == flow_parser::ast::VarianceKind::Writeonly =>
+                                            {
+                                                type_::MappedTypeVariance::OverrideVariance(
+                                                    Polarity::Negative,
+                                                )
+                                            }
+                                            (Some(v), None)
+                                                if v.kind
+                                                    == flow_parser::ast::VarianceKind::Writeonly =>
+                                            {
+                                                type_::MappedTypeVariance::OverrideVariance(
+                                                    Polarity::Negative,
+                                                )
+                                            }
+                                            (Some(v), Some(MappedTypeVarianceOp::Remove))
+                                                if v.kind
+                                                    == flow_parser::ast::VarianceKind::Writeonly =>
+                                            {
+                                                type_::MappedTypeVariance::RemoveVariance(
+                                                    Polarity::Negative,
                                                 )
                                             }
                                             _ => {

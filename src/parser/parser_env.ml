@@ -737,6 +737,7 @@ let is_reserved_type str_val =
   | "null"
   | "number"
   | "readonly"
+  | "writeonly"
   | "static"
   | "string"
   | "symbol"
@@ -767,6 +768,7 @@ let token_is_reserved_type t =
   | T_NULL
   | T_NUMBER_TYPE
   | T_READONLY
+  | T_WRITEONLY
   | T_STATIC
   | T_STRING_TYPE
   | T_SYMBOL_TYPE
@@ -866,6 +868,7 @@ let token_is_type_identifier env t =
     | T_FUNCTION
     | T_KEYOF
     | T_READONLY
+    | T_WRITEONLY
     | T_INFER
     | T_IS
     | T_ASSERTS
@@ -1050,6 +1053,7 @@ module Peek = struct
     | T_POUND
     | T_IDENTIFIER _
     | T_READONLY
+    | T_WRITEONLY
     | T_INFER ->
       true
     | _ -> false

@@ -1604,6 +1604,7 @@ fn token_base_inner<'a>(
                     "null" => TokenKind::TNull,
                     "number" => TokenKind::TNumberType,
                     "readonly" => TokenKind::TReadonly,
+                    "writeonly" => TokenKind::TWriteonly,
                     "infer" => TokenKind::TInfer,
                     "is" => TokenKind::TIs,
                     "asserts" => TokenKind::TAsserts,

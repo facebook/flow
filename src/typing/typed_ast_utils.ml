@@ -21,7 +21,7 @@ let polarity = function
   | Some (_, { Ast.Variance.kind = Ast.Variance.Minus; comments = _ }) -> Polarity.Negative
   | Some (_, Ast.Variance.{ kind = InOut; comments = _ }) -> Polarity.Neutral
   | Some (_, Ast.Variance.{ kind = Readonly | Out; comments = _ }) -> Polarity.Positive
-  | Some (_, Ast.Variance.{ kind = In; comments = _ }) -> Polarity.Negative
+  | Some (_, Ast.Variance.{ kind = In | Writeonly; comments = _ }) -> Polarity.Negative
   | None -> Polarity.Neutral
 
 class ['M, 'T, 'N, 'U] type_at_aloc_map_folder =

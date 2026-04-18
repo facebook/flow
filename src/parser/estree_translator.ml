@@ -2145,6 +2145,7 @@ with type t = Impl.t = struct
         | Plus -> "plus"
         | Minus -> "minus"
         | Readonly -> "readonly"
+        | Writeonly -> "writeonly"
         | In -> "in"
         | Out -> "out"
         | InOut -> "in-out"

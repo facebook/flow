@@ -408,6 +408,7 @@ let identifier_name_raw env =
     | T_UNDEFINED_TYPE -> "undefined"
     | T_KEYOF -> "keyof"
     | T_READONLY -> "readonly"
+    | T_WRITEONLY -> "writeonly"
     | T_INFER -> "infer"
     (* Contextual stuff *)
     | T_OF -> "of"

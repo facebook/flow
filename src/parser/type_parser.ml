@@ -47,6 +47,16 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
           }
         )
+    | T_WRITEONLY when parse_property_variance_keyword ->
+      let leading = Peek.comments env in
+      Eat.token env;
+      Some
+        ( loc,
+          {
+            Variance.kind = Variance.Writeonly;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          }
+        )
     | T_IDENTIFIER { raw = "in"; _ } when parse_in_out && Peek.ith_is_type_identifier ~i:1 env ->
       let leading = Peek.comments env in
       Eat.token env;
@@ -832,6 +842,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 maybe_variance env
               | T_READONLY when Peek.ith_is_identifier ~i:1 env ->
                 maybe_variance ~parse_property_variance_keyword:true env
+              | T_WRITEONLY when Peek.ith_is_identifier ~i:1 env ->
+                maybe_variance ~parse_property_variance_keyword:true env
               | _ -> None
             in
             match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
@@ -1159,6 +1171,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         | _ -> function_param_or_generic_type env)
       | T_NEW
       | T_READONLY
+      | T_WRITEONLY
       | T_KEYOF
       | T_INFER
       | T_ASSERTS
@@ -2188,6 +2201,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~leading
           start_loc
       | T_READONLY
+      | T_WRITEONLY
         when (match variance with
              | None
              | Some (_, { Variance.kind = Variance.Plus | Variance.Minus; _ }) ->

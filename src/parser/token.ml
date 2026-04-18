@@ -176,6 +176,7 @@ type t =
   | T_UNDEFINED_TYPE
   | T_KEYOF
   | T_READONLY
+  | T_WRITEONLY
   | T_INFER
   | T_IS
   | T_ASSERTS
@@ -331,6 +332,7 @@ let token_to_string = function
   | T_DECR -> "T_DECR"
   | T_KEYOF -> "T_KEYOF"
   | T_READONLY -> "T_READONLY"
+  | T_WRITEONLY -> "T_WRITEONLY"
   | T_INFER -> "T_INFER"
   | T_IS -> "T_IS"
   | T_ASSERTS -> "T_ASSERTS"
@@ -492,6 +494,7 @@ let value_of_token = function
   | T_DECR -> "--"
   | T_KEYOF -> "keyof"
   | T_READONLY -> "readonly"
+  | T_WRITEONLY -> "writeonly"
   | T_INFER -> "infer"
   | T_IS -> "is"
   | T_ASSERTS -> "asserts"
