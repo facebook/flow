@@ -172,3 +172,10 @@ To use mapped types, you need to upgrade your infrastructure so that it supports
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
+
+## See Also {#toc-see-also}
+
+- [Indexed Access Types](../indexed-access) — extracting property types, commonly used in mapped type bodies
+- [Conditional Types](../conditional) — another advanced type feature for type-level logic
+- [Generics](../generics) — mapped types rely on generic type parameters
+- [Utility Types](../utilities) — built-in types like `Partial`, `Readonly`, and `Pick` (which mapped types generalize)

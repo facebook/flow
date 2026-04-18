@@ -115,3 +115,9 @@ only be a `string` inside of the `if` statement. This is known as a
 `unknown` is the opposite of [`empty`](../empty):
 - Everything is a `unknown`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
 - Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
+
+## See Also {#toc-see-also}
+
+- [Mixed](../mixed) — the predecessor to `unknown`, with the same behavior
+- [Refinements](../../lang/refinements) — how to narrow `unknown` values to specific types before use
+- [Type Hierarchy](../../lang/type-hierarchy) — how `unknown`, `any`, and `empty` relate in the full type hierarchy

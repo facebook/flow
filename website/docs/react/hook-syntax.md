@@ -161,3 +161,8 @@ component Component() {
   return null;
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [Generics](../../types/generics) — generic type parameters used in hook signatures
+- [Functions](../../types/functions) — hooks follow similar typing rules to functions

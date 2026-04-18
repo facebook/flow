@@ -267,3 +267,9 @@ const arr1: (?number)[] = null;   // Error!
 const arr2: (?number)[] = [1, 2]; // Works
 const arr3: (?number)[] = [null]; // Works
 ```
+
+## See Also {#toc-see-also}
+
+- [Tuples](../tuples) — fixed-length collections where each element can have a different type
+- [Variance](../../lang/variance) — why `ReadonlyArray` is covariant and `Array` is invariant
+- [Objects](../objects) — another core data structure type in Flow

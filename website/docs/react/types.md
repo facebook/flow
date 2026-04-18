@@ -390,3 +390,8 @@ type Ref<C> =
   | (instance: React.ElementRef<C> | null) => unknown;
   | { -current: React.ElementRef<ElementType> | null, ... }
 ```
+
+## See Also {#toc-see-also}
+
+- [Utility Types](../../types/utilities) — Flow's general-purpose utility types
+- [Generics](../../types/generics) — many React types are parameterized with generics

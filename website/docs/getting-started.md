@@ -277,3 +277,11 @@ For the [code above](#toc-write-flow-code), running `flow` will yield:
 ```sh
 3:12-3:12: Cannot return `x` because number is incompatible with string. [incompatible-type]
 ```
+
+## See Also {#toc-see-also}
+
+- [Configuration](../config/) — customizing Flow behavior with `.flowconfig`
+- [Type Annotations](../types/) — all the types you can use in Flow
+- [Editor Setup](../editors/) — integrating Flow into your IDE
+- [Babel](../tools/babel) — detailed Babel setup for stripping Flow types
+- [ESLint](../tools/eslint) — setting up ESLint to work with Flow

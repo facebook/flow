@@ -145,3 +145,10 @@ Then enable the rule in your ESLint config:
 ```
 'fb-flow/use-indexed-access-type': 1,
 ```
+
+## See Also {#toc-see-also}
+
+- [Objects](../objects) — the primary type indexed access is used with
+- [Mapped Types](../mapped-types) — transforming object types, often combined with indexed access
+- [Conditional Types](../conditional) — type-level conditionals, frequently used alongside indexed access
+- [Utility Types](../utilities) — `keyof`, `Pick`, and other built-in type helpers

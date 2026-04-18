@@ -56,3 +56,8 @@ Once all the dependencies of a `@flow strict-local` file are strict, the file ca
 
 ### What's Ahead {#toc-what-s-ahead}
 Eventually, some features of Flow Strict could become the default behavior of Flow, if those features prove successful and achieve widespread adoption.
+
+## See Also {#toc-see-also}
+
+- [Linting](../linting/) — Flow's linting framework for catching additional issues
+- [Lint Rule Reference](../linting/rule-reference) — all lint rules, many of which are enforced by strict mode

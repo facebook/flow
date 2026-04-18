@@ -115,3 +115,9 @@ only be a `string` inside of the `if` statement. This is known as a
 `mixed` is the opposite of [`empty`](../empty):
 - Everything is a `mixed`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
 - Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
+
+## See Also {#toc-see-also}
+
+- [Unknown](../unknown) — the replacement for `mixed` since Flow v0.290
+- [Refinements](../../lang/refinements) — how to narrow `mixed` values to specific types before use
+- [Type Hierarchy](../../lang/type-hierarchy) — how `mixed`, `any`, and `empty` relate in the full type hierarchy

@@ -655,3 +655,10 @@ Removed. Use [`Partial`](#toc-partial) instead.
 ### `$Shape<T>` <UntilVersion version="0.206" /> {#toc-shape}
 
 Removed. Use [`Partial`](#toc-partial) instead.
+
+## See Also {#toc-see-also}
+
+- [Mapped Types](../mapped-types) — a general mechanism for transforming object types (generalizes many utility types)
+- [Conditional Types](../conditional) — type-level conditionals for more complex transformations
+- [Generics](../generics) — most utility types are generic; understanding generics helps use them effectively
+- [Indexed Access Types](../indexed-access) — extracting property types from objects and tuples

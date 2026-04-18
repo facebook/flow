@@ -160,3 +160,8 @@ type, but may still optionally include a super type.
 declare opaque type Foo;
 declare opaque type PositiveNumber: number;
 ```
+
+## See Also {#toc-see-also}
+
+- [Type Aliases](../aliases) — regular (transparent) type aliases
+- [Nominal & Structural Typing](../../lang/nominal-structural) — opaque types are nominally typed, unlike regular type aliases

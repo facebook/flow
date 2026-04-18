@@ -223,3 +223,8 @@ Read more at [exhaustively checking enums in switch statements](../using-enums/#
 #### Operations over enum members {#toc-operations-over-enum-members}
 If previously you used functionality like `Object.values`, `Object.keys`, or `for-in` loops to get and operate on the enum members,
 you can use the [members method](../using-enums/#toc-members) instead.
+
+## See Also {#toc-see-also}
+
+- [Unions](../../types/unions) — the pattern that Flow Enums replace in many cases
+- [Literal Types](../../types/literals) — the type-level building blocks of union-based enum patterns

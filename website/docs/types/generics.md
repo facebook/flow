@@ -434,3 +434,11 @@ to behave covariantly and use it in a contravariant position:
 ```js flow-check
 type NotActuallyCovariant<+T> = (T) => void; // Error
 ```
+
+## See Also {#toc-see-also}
+
+- [Type Aliases](../aliases) — defining named types, often combined with generics
+- [Functions](../functions) — using generics in function signatures
+- [Variance](../../lang/variance) — how covariance and contravariance interact with generics
+- [Conditional Types](../conditional) — types computed from generic type parameters
+- [Mapped Types](../mapped-types) — transforming object types using generics

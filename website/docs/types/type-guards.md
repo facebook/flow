@@ -364,3 +364,9 @@ To use type guards, you need to upgrade your infrastructure so that it supports 
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
   * `this` type guards require hermes-parser version 0.26 or later.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
+
+## See Also {#toc-see-also}
+
+- [Refinements](../../lang/refinements) — built-in type narrowing with `typeof`, `instanceof`, and equality checks
+- [Unions](../unions) — type guards are commonly used to narrow union types
+- [Functions](../functions) — type guard syntax builds on function return type annotations

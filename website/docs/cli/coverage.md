@@ -127,3 +127,8 @@ will report coverage statistics for each file under `dir/`, as well as aggregate
 results.
 
 Note that `batch-coverage` requires a non-lazy Flow server.
+
+## See Also {#toc-see-also}
+
+- [Any](../../types/any) — the type that reduces coverage, and how to avoid it
+- [Unknown](../../types/unknown) — the safe alternative to `any` that maintains coverage

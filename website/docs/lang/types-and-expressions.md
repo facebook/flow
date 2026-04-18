@@ -100,3 +100,8 @@ Other type systems will favor completeness instead, only reporting real errors
 in favor of possibly missing errors. Unit/Integration testing is an extreme
 form of this approach. Often this comes at the cost of missing the errors that
 are the most complicated to find, leaving that part up to the developer.
+
+## See Also {#toc-see-also}
+
+- [Subtypes](../subtypes) — understanding how types relate to each other
+- [Annotation Requirement](../annotation-requirement) — when Flow can infer types and when you must annotate

@@ -92,3 +92,9 @@ function fn(obj: any) {
 ```
 
 Now your code will not leak `any`.
+
+## See Also {#toc-see-also}
+
+- [Unknown](../unknown) — the safe supertype of all types, requiring refinement before use
+- [Empty](../empty) — the bottom type, the subtype of all types
+- [Type Hierarchy](../../lang/type-hierarchy) — how `any`, `unknown`, and `empty` relate in the type system

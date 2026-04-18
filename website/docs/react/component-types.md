@@ -101,3 +101,8 @@ component PolymorphicExample<T: React.Node>(children: T) renders T {
 
 PolymorphicExample as component<T: React.Node>(children: T) renders T; // OK!
 ```
+
+## See Also {#toc-see-also}
+
+- [Generics](../../types/generics) — generic type parameters used in component type signatures
+- [Library Definitions](../../libdefs/) — declaring component types in library definition files

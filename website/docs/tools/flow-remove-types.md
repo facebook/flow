@@ -40,3 +40,7 @@ You can add this to your `package.json` scripts easily.
 > **Note:** You'll probably want to add a `prepublish` script that runs this
 > transform as well, so that it runs before you publish your code to the npm
 > registry.
+
+## See Also {#toc-see-also}
+
+- [Getting Started](../../getting-started) — full setup guide including compiler configuration

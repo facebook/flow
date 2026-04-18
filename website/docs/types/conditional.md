@@ -146,3 +146,10 @@ To use conditional types, you need to upgrade your infrastructure so that it sup
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
+
+## See Also {#toc-see-also}
+
+- [Mapped Types](../mapped-types) — another advanced type for transforming object types
+- [Indexed Access Types](../indexed-access) — extracting property types, often combined with conditional types
+- [Generics](../generics) — conditional types are most useful with generic type parameters
+- [Utility Types](../utilities) — built-in type transformations like `Partial`, `Readonly`, and `Pick`

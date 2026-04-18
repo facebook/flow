@@ -305,3 +305,9 @@ To use inexact tuples, upgrade to:
 - `prettier`: 3.3
 - `babel` with `babel-plugin-syntax-hermes-parser` (v0.23). See [our Babel guide](../../tools/babel/) for setup instructions.
 - `eslint` with `hermes-eslint` (v0.23). See [our ESLint guide](../../tools/eslint/) for setup instructions.
+
+## See Also {#toc-see-also}
+
+- [Arrays](../arrays) — variable-length collections where all elements share one type
+- [Unions](../unions) — disjoint tuple unions for type-safe tagged patterns
+- [Objects](../objects) — another core data structure type in Flow

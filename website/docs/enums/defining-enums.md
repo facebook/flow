@@ -297,3 +297,7 @@ A Flow Enum, like a class, is both a type and a value. You don't need to create 
 #### Use dot access for accessing members {#toc-use-dot-access-for-accessing-members}
 Prefer `Status.Active` vs. `const {Active} = Status;`. This makes it easier find uses of the enum with text search, and makes it clearer to the reader what enum is involved.
  Additionally, this is required for [switch statements involving enums](../using-enums/#toc-exhaustively-checking-enums-with-a-switch).
+
+## See Also {#toc-see-also}
+
+- [Nominal & Structural Typing](../../lang/nominal-structural) — enums are nominally typed like classes

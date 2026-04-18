@@ -114,3 +114,8 @@ class YourClass {
 let test1: typeof MyClass = YourClass; // Error!
 let test2: typeof MyClass = MyClass;   // Works!
 ```
+
+## See Also {#toc-see-also}
+
+- [Classes](../classes) — `typeof` is commonly used with classes to refer to the class value (not instance) type
+- [Modules](../modules) — `typeof` imports for getting the type of an imported value

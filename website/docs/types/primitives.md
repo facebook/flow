@@ -403,3 +403,9 @@ function func(value: unknown) {
   }
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [Literal Types](../literals) — using specific primitive values (like `2` or `"foo"`) as types
+- [Maybe Types](../maybe) — making any type nullable with the `?T` shorthand
+- [Refinements](../../lang/refinements) — narrowing from broad types to specific primitives using `typeof`

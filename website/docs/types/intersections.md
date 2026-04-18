@@ -246,3 +246,9 @@ func({a: 1, b: 'hi'}); // Error!
 
 It's not possible for an object to have exactly the property `a` and no other
 properties, and simultaneously exactly the property `b` and no other properties.
+
+## See Also {#toc-see-also}
+
+- [Unions](../unions) — the dual of intersections: values that are *one of* a set of types
+- [Interfaces](../interfaces) — a common way to define types that intersections combine
+- [Objects](../objects) — including object type spread, the preferred way to combine exact object types

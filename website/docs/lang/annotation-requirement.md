@@ -350,3 +350,9 @@ dependencies' implementations.
 
 ## Empty Array Literals {#toc-empty-array-literals}
 Empty array literals (`[]`) are handled specially in Flow. You can read about their [behavior and requirements](../../types/arrays/#toc-empty-array-literals).
+
+## See Also {#toc-see-also}
+
+- [Variables](../variables) — how variable declarations determine when annotations are needed
+- [Generics](../../types/generics) — generic return types are a common trigger for annotation requirements
+- [Functions](../../types/functions) — function parameters typically require annotations

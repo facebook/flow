@@ -327,3 +327,11 @@ prettyPrint("choice", true); // OK
 prettyPrint("currency", 1); // ERROR - missing arg
 prettyPrint("currency", true); // ERROR - wrong type arg
 ```
+
+## See Also {#toc-see-also}
+
+- [Intersections](../intersections) — the dual of unions: values that are *all of* a set of types
+- [Refinements](../../lang/refinements) — how to narrow union types to specific members
+- [Maybe Types](../maybe) — shorthand for `T | null | void`
+- [Literal Types](../literals) — using specific values as types, commonly combined with unions
+- [Flow Enums](../../enums/) — a structured alternative to unions of literal types

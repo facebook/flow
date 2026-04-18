@@ -176,3 +176,8 @@ component UsesThis() {
 ## Enable Component Syntax {#toc-enable-component-syntax}
 
 In your `.flowconfig`, under the `[options]` heading, add `component_syntax=true`.
+
+## See Also {#toc-see-also}
+
+- [Generics](../../types/generics) — using generic type parameters in component props
+- [Variance](../../lang/variance) — understanding read-only props and covariance

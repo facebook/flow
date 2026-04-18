@@ -291,3 +291,9 @@ const f: (boolean, string, number) => Array<string> =
 
 The type `Function` is just an alias for [`any`](../any), and is unsafe.
 You can ban its use in your code with the [unclear-type lint](../../linting/rule-reference/#toc-unclear-type).
+
+## See Also {#toc-see-also}
+
+- [Generics](../generics) — parameterized types used with functions for type-safe reusable code
+- [Type Guards](../type-guards) — special return types that refine parameter types
+- [Intersections](../intersections) — defining overloaded function types

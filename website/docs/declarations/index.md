@@ -85,3 +85,9 @@ function fooList(ns: List<number>): List<string> {
 ```
 
 Just don't forget to replace the declarations with proper implementations.
+
+## See Also {#toc-see-also}
+
+- [Library Definitions](../libdefs/) — declaring types for third-party npm packages
+- [Module Types](../types/modules) — importing and exporting types between modules
+- [`.flowconfig [declarations]`](../config/declarations) — configuring declaration mode for third-party code

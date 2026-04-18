@@ -147,3 +147,9 @@ and must return _at most_ the same outputs.
 
 The decision of which direction to apply the subtyping rule on inputs and outputs is
 governed by [variance](../variance), which is the topic of the next section.
+
+## See Also {#toc-see-also}
+
+- [Variance](../variance) — how subtyping interacts with generic type parameters
+- [Type Hierarchy](../type-hierarchy) — a visual overview of how all types relate
+- [Nominal & Structural Typing](../nominal-structural) — how classes and objects determine subtype relationships

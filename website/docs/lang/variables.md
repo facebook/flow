@@ -227,3 +227,8 @@ You can change the default type of `catch` variables when there is no annotation
 by setting the
 [`use_unknown_in_catch_variables`](../../config/options/#toc-use-unknown-in-catch-variables)
 option to true.
+
+## See Also {#toc-see-also}
+
+- [Annotation Requirement](../annotation-requirement) — when Flow requires explicit type annotations
+- [Refinements](../refinements) — how variable types are narrowed by conditional checks

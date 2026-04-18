@@ -578,3 +578,11 @@ const flags1: Flags = cond1 ? {a: 1} : {};
 const flags2: Flags = cond2 ? {b: 2} : {};
 const obj: Flags = {...flags1, ...flags2};
 ```
+
+## See Also {#toc-see-also}
+
+- [Interfaces](../interfaces) — structural types that can describe both class instances and objects
+- [Classes](../classes) — nominally typed values; use interfaces to bridge between classes and object types
+- [Tuples](../tuples) — fixed-length collections with per-element types
+- [Indexed Access Types](../indexed-access) — accessing specific property types from object types
+- [Utility Types](../utilities) — `Partial`, `Required`, `Readonly`, `keyof`, and other object helpers

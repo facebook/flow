@@ -288,3 +288,8 @@ declare module "some-commonjs-module" {
 NOTE: Because a given module cannot be both an ES module and a CommonJS module,
       it is an error to mix `declare export [...]` with
       `declare module.exports: ...` in the same `declare module` body.
+
+## See Also {#toc-see-also}
+
+- [Declaration Files](../../declarations/) — an alternative approach using `.flow` files
+- [Module Types](../../types/modules) — how types are imported and exported between modules

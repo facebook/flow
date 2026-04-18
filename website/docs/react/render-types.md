@@ -331,3 +331,8 @@ component Layout(icon: IconProp) {
   return <div>{icon.node}</div>;
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [Unions](../../types/unions) — render types interact with union types for flexible rendering
+- [Subtypes](../../lang/subtypes) — how render type subtyping works

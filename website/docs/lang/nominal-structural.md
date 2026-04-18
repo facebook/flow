@@ -140,3 +140,11 @@ enum B {
 
 const a: A = B.X; // Error!
 ```
+
+## See Also {#toc-see-also}
+
+- [Classes](../../types/classes) — nominally typed: compared by class name
+- [Interfaces](../../types/interfaces) — structurally typed: allow different classes with the same shape
+- [Objects](../../types/objects) — structurally typed: compared by shape
+- [Opaque Type Aliases](../../types/opaque-types) — nominally typed: hiding the underlying type across module boundaries
+- [Flow Enums](../../enums/) — nominally typed: each enum is a distinct type

@@ -262,3 +262,8 @@ match (result) {
 
 declare function processError(err: {error: Error}): Error;
 ```
+
+## See Also {#toc-see-also}
+
+- [Refinements](../../lang/refinements) — how `switch` and `if` narrowing translates to match patterns
+- [Unions](../../types/unions) — disjoint union patterns often migrated to match expressions

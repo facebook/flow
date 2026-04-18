@@ -125,3 +125,10 @@ An arrow pointing from type `A` to type `B` means that `A` is a subtype of `B`.
 For example, the type `string` is a subtype of `?string`.
 
 How can `any` be at both the top and the bottom? Because [it is unsafe](../../types/any/). This is denoted with a dotted line.
+
+## See Also {#toc-see-also}
+
+- [Subtypes](../subtypes) — the theory behind how types relate in the hierarchy
+- [Any](../../types/any) — the unsafe type that is both top and bottom
+- [Unknown](../../types/unknown) — the safe top type (supertype of all types)
+- [Empty](../../types/empty) — the bottom type (subtype of all types)

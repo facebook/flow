@@ -57,3 +57,9 @@ We put "safe" in quotes above, as due type safety holes in your code or bugs wit
 it is possible to get values which are `empty` typed.
 
 You can use the [coverage](../../cli/coverage/) command to identify code typed as `empty`.
+
+## See Also {#toc-see-also}
+
+- [Unknown](../unknown) — the supertype of all types (the opposite of `empty`)
+- [Any](../any) — an unsafe escape hatch that is both the top and bottom type
+- [Type Hierarchy](../../lang/type-hierarchy) — how `empty`, `unknown`, and `any` relate in the full type hierarchy

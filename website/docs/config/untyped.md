@@ -56,4 +56,8 @@ named `third_party/` within the project root. However, unlike the previous
 example's `.*/third_party/.*`, it would NOT parse files or directories under
 directories named `third_party/`, like `src/third_party/`.
 
+## See Also {#toc-see-also}
 
+- [`.flowconfig [declarations]`](../declarations) — a related mode that extracts type signatures without typechecking
+- [`.flowconfig [ignore]`](../ignore) — completely excluding files from Flow's module resolver
+- [Any](../../types/any) — the type that untyped modules are treated as

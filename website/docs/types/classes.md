@@ -390,3 +390,10 @@ const a: MyClass = MyClass; // Error!
 
 See [here](../utilities#toc-class) for details on `Class<T>`, which allows you
 to refer to the type of the class in an annotation.
+
+## See Also {#toc-see-also}
+
+- [Interfaces](../interfaces) — structural typing for classes, allowing different classes to be used interchangeably
+- [Nominal & Structural Typing](../../lang/nominal-structural) — why classes are compared by name, not shape
+- [Generics](../generics) — parameterized types, used with classes, functions, and type aliases
+- [Variance](../../lang/variance) — controlling read-only and write-only properties

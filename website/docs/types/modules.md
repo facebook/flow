@@ -48,3 +48,8 @@ const x: MyNumber = 1; // Works: like using `number`
 
 Just like other type imports, this code can be stripped away by a compiler so
 that it does not add a runtime dependency on the other module.
+
+## See Also {#toc-see-also}
+
+- [Declaration Files](../../declarations/) — `.flow` files that declare types for untyped modules
+- [Library Definitions](../../libdefs/) — declaring types for third-party packages

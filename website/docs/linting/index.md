@@ -78,3 +78,9 @@ Warnings are a new severity level introduced by the linting framework. They are 
 
 **error:**
 Lints with severity `error` are treated exactly the same as any other Flow error.
+
+## See Also {#toc-see-also}
+
+- [`.flowconfig [lints]`](../config/lints) — configuring lint severities in your `.flowconfig`
+- [Flow Strict](../strict/) — enabling stricter type checking with `@flow strict`
+- [ESLint](../tools/eslint) — using ESLint alongside Flow for additional linting

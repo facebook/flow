@@ -135,3 +135,9 @@ subtyping, and do not allow additional properties to exist.
 
 Using exact object types lets Flow know that no extra properties will exist at
 runtime, which allows [refinements](../refinements/) to get more specific.
+
+## See Also {#toc-see-also}
+
+- [Variance](../variance) — how covariance enables depth subtyping with read-only properties
+- [Subtypes](../subtypes) — the general theory of subtyping
+- [Objects](../../types/objects) — read-only and write-only object properties

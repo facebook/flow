@@ -826,3 +826,8 @@ Flow Enums are designed to allow for inlining (e.g. [member values must be liter
 
 While enum member access (e.g. `Status.Active`) can be inlined (other than [symbol enums](../defining-enums/#toc-symbol-enums) which cannot be inlined due to the nature of symbols),
 usage of its methods (e.g. `Status.cast(x)`) cannot be inlined.
+
+## See Also {#toc-see-also}
+
+- [Unions](../../types/unions) — an alternative to enums for some use cases
+- [Match](../../match/) — pattern matching works well with enums for exhaustive checking

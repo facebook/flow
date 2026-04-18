@@ -44,3 +44,9 @@ getColor("error");   // Error!
 ```
 
 Consider using [Flow Enums](../../enums) instead of unions of literal types, if they fit your use-case.
+
+## See Also {#toc-see-also}
+
+- [Primitive Types](../primitives) — the base types (`number`, `string`, etc.) that literals specialize
+- [Unions](../unions) — commonly used with literals to define finite sets of values
+- [Flow Enums](../../enums/) — a structured alternative to unions of literal types

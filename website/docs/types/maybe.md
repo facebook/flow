@@ -92,3 +92,9 @@ function acceptsMaybeNumber(value: ?number): number {
 However, type refinements can be lost. For instance, calling a function after refining the type of an object's property will invalidate this refinement.
 Consult the [refinement invalidations](../../lang/refinements/#toc-refinement-invalidations) docs for more details, to understand why Flow works this way,
 and how you can avoid this common pitfall.
+
+## See Also {#toc-see-also}
+
+- [Unions](../unions) — the general form: `?T` is shorthand for `T | null | void`
+- [Refinements](../../lang/refinements) — how to narrow maybe types before use
+- [Primitives](../primitives) — `null` and `void` types, and optional parameters

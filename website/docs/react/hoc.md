@@ -184,3 +184,9 @@ function MyComponent({bar, foo = 3}: Props): React.Node {}
 
 export const MyEnhancedComponent: component(...Props) = trivialHOC(MyComponent); // OK
 ```
+
+## See Also {#toc-see-also}
+
+- [Generics](../../types/generics) — HOC patterns make heavy use of generic type parameters
+- [Functions](../../types/functions) — HOCs are functions that take and return components
+- [Annotation Requirement](../../lang/annotation-requirement) — HOC exports typically require type annotations

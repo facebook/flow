@@ -16,3 +16,8 @@ Each line in the `[libs]` section is a path to the library file or directory
 which you would like to include. These paths can be relative to the project
 root directory or absolute. Including a directory recursively includes all the
 files under that directory as library files.
+
+## See Also {#toc-see-also}
+
+- [Library Definitions](../../libdefs/) — what library definitions are and how to use them
+- [Creating Library Definitions](../../libdefs/creation) — writing your own library definitions

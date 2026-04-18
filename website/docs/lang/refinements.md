@@ -307,3 +307,10 @@ function func(value: {prop?: string}) {
   }
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [Type Guards](../../types/type-guards) — custom functions that act as user-defined refinements
+- [Unions](../../types/unions) — refinements are most commonly used to narrow union types
+- [Maybe Types](../../types/maybe) — refining nullable values with `!= null` checks
+- [Variables](../variables) — how variable declarations interact with refinement

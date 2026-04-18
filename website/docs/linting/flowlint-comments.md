@@ -81,3 +81,8 @@ function foo(x: ?boolean) {
   }
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [Lint Rule Reference](../rule-reference) — all available lint rules and their descriptions
+- [`.flowconfig [lints]`](../../config/lints) — configuring lint severities project-wide

@@ -191,3 +191,8 @@ add a colon `:` with the `Type` and wrap the expression with parentheses `(` `)`
 ```
 
 > **Note:** The parentheses are necessary to avoid ambiguity with other syntax.
+
+## See Also {#toc-see-also}
+
+- [Any](../any) — casting through `any` for unsafe type conversions
+- [Subtypes](../../lang/subtypes) — understanding which casts are allowed based on subtyping rules

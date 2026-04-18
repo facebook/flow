@@ -58,3 +58,9 @@ Which would parse in declaration mode any file or directory under the directory
 named `third_party/` within the project root. However, unlike the previous
 example's `.*/third_party/.*`, it would NOT parse files or directories under
 directories named `third_party/`, like `src/third_party/`.
+
+## See Also {#toc-see-also}
+
+- [`.flowconfig [untyped]`](../untyped) — treating modules as `any` instead of extracting type signatures
+- [`.flowconfig [ignore]`](../ignore) — completely excluding files from Flow's module resolver
+- [Declaration Files](../../declarations/) — `.flow` files for manually declaring module types

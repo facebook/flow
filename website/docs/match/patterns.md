@@ -130,3 +130,8 @@ const e = match (x) {
   [1, _] as const x => x,
 };
 ```
+
+## See Also {#toc-see-also}
+
+- [Tuples](../../types/tuples) — tuple patterns in match expressions
+- [Objects](../../types/objects) — object patterns in match expressions

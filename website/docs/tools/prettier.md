@@ -19,3 +19,7 @@ plugins:
   - "@prettier/plugin-hermes"
 ```
 to your `.prettierrc` file.
+
+## See Also {#toc-see-also}
+
+- [Getting Started](../../getting-started) — full setup guide for Flow projects

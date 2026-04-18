@@ -29,3 +29,7 @@ Then add the `@babel/preset-flow` preset and `babel-plugin-syntax-hermes-parser`
 ```
 
 You can read the documentation of [babel-plugin-syntax-hermes-parser](https://github.com/facebook/hermes/blob/main/tools/hermes-parser/js/babel-plugin-syntax-hermes-parser/README.md) to see how to configure it. [This website's Babel config](https://github.com/facebook/flow/blob/baa74a889dc81fe36f0fd362db6d3e27d44d961d/website/babel.config.js#L10-L17) provides an example with custom parser options.
+
+## See Also {#toc-see-also}
+
+- [Getting Started](../../getting-started) — full setup guide including Babel configuration

@@ -158,3 +158,8 @@ You can also [migrate from existing patterns](./migration) like `switch` or cond
 * Flow: 0.274.1+ with option: `experimental.pattern_matching=true`
 * Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.29+, see our [Babel guide](../tools/babel) for more details.
 * ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.29+, see our [ESLint guide](../tools/eslint) for more details.
+
+## See Also {#toc-see-also}
+
+- [Unions](../types/unions) — disjoint unions are commonly matched against
+- [Flow Enums](../enums/) — enums work well with match expressions for exhaustive checking

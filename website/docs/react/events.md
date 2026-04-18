@@ -67,3 +67,8 @@ related to are:
 - `SyntheticWheelEvent<T>` for [WheelEvent](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent)
 - `SyntheticTouchEvent<T>` for [TouchEvent](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent)
 - `SyntheticTransitionEvent<T>` for [TransitionEvent](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent)
+
+## See Also {#toc-see-also}
+
+- [Functions](../../types/functions) — event handlers are typed as function types
+- [Generics](../../types/generics) — synthetic event types are generic over the DOM element type

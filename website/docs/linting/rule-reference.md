@@ -431,3 +431,9 @@ function baz() {
 You can explicitly ignore the promise with the `void` operator (e.g., `void foo();`).
 
 Note: As of v0.201.0, this rule subsumed the `unused-promise-in-async-scope` and `unused-promise-in-sync-scope` rules.
+
+## See Also {#toc-see-also}
+
+- [Flowlint Comments](../flowlint-comments) — controlling lint severity within a file using comments
+- [`.flowconfig [lints]`](../../config/lints) — configuring lint severities project-wide
+- [Flow Strict](../../strict/) — stricter type checking that enables additional lint-like rules

@@ -57,3 +57,8 @@ Sometimes you may want to ignore all files inside a directory with the exception
 !<PROJECT_ROOT>/node_modules/not-ignored-package-A/.*
 !<PROJECT_ROOT>/node_modules/not-ignored-package-B/.*
 ```
+
+## See Also {#toc-see-also}
+
+- [`.flowconfig [declarations]`](../declarations) — parsing files in declaration mode instead of ignoring them
+- [`.flowconfig [untyped]`](../untyped) — treating modules as `any` while still resolving imports

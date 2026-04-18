@@ -315,3 +315,10 @@ function func2(value: Contravariant) {
   value.writeOnly = 3.14; // Works!
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [Classes](../classes) — nominally typed values that can implement interfaces
+- [Objects](../objects) — structurally typed object types, which cannot describe class instances
+- [Nominal & Structural Typing](../../lang/nominal-structural) — the difference between name-based and shape-based typing
+- [Variance](../../lang/variance) — covariant (read-only) and contravariant (write-only) properties

@@ -235,3 +235,7 @@ export function outer() {
   }
 }
 ```
+
+## See Also {#toc-see-also}
+
+- [`.flowconfig [options]`](../../config/options) — the `experimental.strict_es6_import_export` option that enables these rules

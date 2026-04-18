@@ -163,3 +163,11 @@ This error occurs because `takesCallback` may call `cb` with an object that has 
 so passing an inexact object to it would be unsound. Even though passing an exact object *directly*
 to a function expecting an inexact one works (an exact type is a subtype of a compatible inexact type),
 the function types are flipped due to contravariance.
+
+## See Also {#toc-see-also}
+
+- [Subtypes](../subtypes) — the underlying subtyping relationships that variance builds on
+- [Generics](../../types/generics) — variance sigils on generic type parameters
+- [Arrays](../../types/arrays) — `ReadonlyArray` (covariant) vs `Array` (invariant)
+- [Interfaces](../../types/interfaces) — covariant and contravariant interface properties
+- [Objects](../../types/objects) — read-only and write-only object properties

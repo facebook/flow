@@ -134,3 +134,7 @@ The output is a JSON object keyed by unbound name, where each value is an array 
 ```
 
 When multiple modules export the same name, all candidates are listed so you can choose the appropriate one.
+
+## See Also {#toc-see-also}
+
+- [Editor Setup](../../editors/) — IDE integrations that provide code actions interactively

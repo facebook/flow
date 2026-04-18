@@ -44,3 +44,9 @@ out the `flow-typed`
 [tool and repository](https://github.com/flow-typed/flow-typed/)
 , which helps you quickly find and install pre-existing libdefs for your
 third-party dependencies.
+
+## See Also {#toc-see-also}
+
+- [Declaration Files](../declarations/) — `.flow` files for declaring types alongside untyped modules
+- [Module Types](../types/modules) — how to import and export types between modules
+- [`.flowconfig [libs]`](../config/libs) — configuring library definition paths

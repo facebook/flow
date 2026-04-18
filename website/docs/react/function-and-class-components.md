@@ -188,3 +188,9 @@ This way you avoid duplicating the properties that happen to have a default valu
 > function MyComponent(props: {foo: number}) {}
 > MyComponent.defaultProps = {foo: 42};
 > ```
+
+## See Also {#toc-see-also}
+
+- [Classes](../../types/classes) — how class types work in Flow (relevant for class components)
+- [Objects](../../types/objects) — props are typed as object types
+- [Annotation Requirement](../../lang/annotation-requirement) — when explicit type annotations are needed on component props

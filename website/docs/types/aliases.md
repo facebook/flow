@@ -88,3 +88,9 @@ const val: MyObject<number, boolean, string> = {
   baz: 'three',
 };
 ```
+
+## See Also {#toc-see-also}
+
+- [Opaque Type Aliases](../opaque-types) — type aliases that hide their underlying type outside of the defining file
+- [Generics](../generics) — parameterized types used with type aliases and functions
+- [Interfaces](../interfaces) — another way to define reusable types, with structural (shape-based) checking for class instances
