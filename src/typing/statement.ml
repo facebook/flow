@@ -9124,7 +9124,7 @@ module Make
         Type_env.bind_class_static_this cx static_this_default class_loc;
         Type_env.bind_class_instance_super cx super class_loc;
         Type_env.bind_class_static_super cx static_super class_loc;
-        let (class_t_internal, class_t) = Class_stmt_sig.classtype cx ~inst_kind class_sig in
+        let (class_t_internal, class_t, _) = Class_stmt_sig.classtype cx ~inst_kind class_sig in
         ( class_t,
           class_t_internal,
           class_sig,
@@ -9634,7 +9634,7 @@ module Make
         Type_env.bind_class_static_super cx static_super record_loc;
 
         let inst_kind = RecordKind { defaulted_props } in
-        let (class_t_internal, class_t) = Class_stmt_sig.classtype cx ~inst_kind class_sig in
+        let (class_t_internal, class_t, _) = Class_stmt_sig.classtype cx ~inst_kind class_sig in
 
         ( class_t,
           class_t_internal,

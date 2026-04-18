@@ -16290,7 +16290,7 @@ pub fn mk_class_sig<'a>(
                 type_env::bind_class_static_this(cx, static_this_default, class_loc.dupe());
                 type_env::bind_class_instance_super(cx, super_t, class_loc.dupe());
                 type_env::bind_class_static_super(cx, static_super, class_loc.dupe());
-                let (class_t_internal, class_t) =
+                let (class_t_internal, class_t, _) =
                     class_sig::classtype(cx, true, inst_kind.clone(), &class_sig);
 
                 let id_c = id.clone();
@@ -17186,7 +17186,7 @@ pub fn mk_record_sig<'a>(
                 let inst_kind = InstanceKind::RecordKind {
                     defaulted_props: defaulted_props.iter().duped().collect(),
                 };
-                let (class_t_internal, class_t) =
+                let (class_t_internal, class_t, _) =
                     class_sig::classtype(cx, true, inst_kind, &class_sig);
 
                 let id_name_c = id_name.clone();

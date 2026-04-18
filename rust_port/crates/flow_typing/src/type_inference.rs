@@ -770,6 +770,7 @@ pub fn initialize_env<'cx>(
             name_def_graph.dupe(),
         );
         *cx.environment_mut() = env;
+        cx.init_interface_merge_field_index();
         let components = name_def_ordering::build_ordering::<
             _,
             _,

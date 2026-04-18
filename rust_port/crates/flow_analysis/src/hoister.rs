@@ -88,6 +88,19 @@ impl<Loc: Dupe> HoisterBase<Loc> {
         }
     }
 
+    fn add_interface_binding(&mut self, imported: bool, entry: &ast::Identifier<Loc, Loc>) {
+        if !self.lexical_only {
+            self.bindings.add(Entry {
+                loc: entry.loc.dupe(),
+                name: entry.name.dupe(),
+                kind: Kind::Interface {
+                    imported,
+                    type_only_namespace: false,
+                },
+            });
+        }
+    }
+
     fn add_function_binding(&mut self, entry: &ast::Identifier<Loc, Loc>) {
         if self.lexical_only || self.lexical {
             self.bindings.add(Entry {
@@ -512,7 +525,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
         interface: &ast::statement::Interface<Loc, Loc>,
     ) -> Result<(), !> {
         if !self.lexical_only && self.with_types {
-            self.add_type_binding(false, &interface.id);
+            self.add_interface_binding(false, &interface.id);
         }
         Ok(())
     }

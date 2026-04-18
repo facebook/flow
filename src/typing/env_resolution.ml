@@ -1246,10 +1246,86 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
     else
       t
 
+let merge_props_by_id cx ~target_own ~target_proto ~source_own ~source_proto =
+  let target_own_map = Context.find_props cx target_own in
+  let source_own_map = Context.find_props cx source_own in
+  Context.add_property_map
+    cx
+    target_own
+    (NameUtils.Map.union
+       ~combine:(fun _name target_prop _source_prop -> Some target_prop)
+       target_own_map
+       source_own_map
+    );
+  let target_proto_map = Context.find_props cx target_proto in
+  let source_proto_map = Context.find_props cx source_proto in
+  Context.add_property_map
+    cx
+    target_proto
+    (NameUtils.Map.union
+       ~combine:(fun _name target_prop source_prop ->
+         let open Type in
+         match (target_prop, source_prop) with
+         | (Method { key_loc; type_ = t1 }, Method { type_ = t2; _ }) ->
+           let reason = TypeUtil.reason_of_t t1 in
+           Some (Method { key_loc; type_ = IntersectionT (reason, InterRep.make t1 t2 []) })
+         | _ -> Some target_prop)
+       target_proto_map
+       source_proto_map
+    )
+
 let resolve_interface cx loc inter =
   let cache = Context.node_cache cx in
+  let { Ast.Statement.Interface.id = (name_loc, _); _ } = inter in
   let (t, ast) = Statement.interface cx loc inter in
   Node_cache.set_interface cache loc (t, ast);
+  (* Interface declaration merging. The conflict map (good_name_loc -> [bad_name_locs])
+     built in env_builder drives everything. Prop IDs are registered in mk_interface_sig
+     (type_annotation.ml) when the InstanceT is created. Here we just look them up and merge. *)
+  let env = Context.environment cx in
+  let merge_conflicts = env.Loc_env.var_info.Env_api.interface_merge_conflicts in
+  let prop_ids = Context.interface_prop_ids cx in
+  let is_good = ALocMap.mem name_loc merge_conflicts in
+  let is_bad =
+    (not is_good)
+    && ALocMap.exists
+         (fun _good bad_locs -> List.exists (fun bad -> ALoc.equal bad name_loc) bad_locs)
+         merge_conflicts
+  in
+  if is_good || is_bad then begin
+    if is_good then
+      match ALocMap.find_opt name_loc merge_conflicts with
+      | Some bad_locs ->
+        let (good_own, good_proto) = ALocMap.find name_loc prop_ids in
+        List.iter
+          (fun bad_name_loc ->
+            match ALocMap.find_opt bad_name_loc prop_ids with
+            | Some (bad_own, bad_proto) ->
+              merge_props_by_id
+                cx
+                ~target_own:good_own
+                ~target_proto:good_proto
+                ~source_own:bad_own
+                ~source_proto:bad_proto
+            | None -> ())
+          bad_locs
+      | None -> ()
+    else
+      ALocMap.iter
+        (fun good_name_loc bad_locs ->
+          if List.exists (fun bad -> ALoc.equal bad name_loc) bad_locs then
+            match ALocMap.find_opt good_name_loc prop_ids with
+            | Some (good_own, good_proto) ->
+              let (bad_own, bad_proto) = ALocMap.find name_loc prop_ids in
+              merge_props_by_id
+                cx
+                ~target_own:good_own
+                ~target_proto:good_proto
+                ~source_own:bad_own
+                ~source_proto:bad_proto
+            | None -> ())
+        merge_conflicts
+  end;
   t
 
 let resolve_declare_class cx loc class_ =

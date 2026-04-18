@@ -5896,12 +5896,7 @@ let%expect_test "builtin_interface_merge_prop_conflict" =
          types = { "Foo" -> ([1:10-13], (Ref LocalRef {ref_loc = [1:10-13]; index = 0})) }}
 
     Builtin global value globalThis
-    Builtin global type Foo
-    Errors:
-    (BindingValidationError
-       Signature_error.InterfaceMergePropertyConflict {
-         name = "a"; current_binding_loc = [5:2-3];
-         existing_binding_loc = [2:2-3]}) |}]
+    Builtin global type Foo |}]
 
 let%expect_test "builtin_interface_merge_tparam_mismatch" =
   print_builtins [{|

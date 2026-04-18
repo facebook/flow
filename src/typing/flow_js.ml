@@ -7384,6 +7384,7 @@ struct
               | ConformToCommonInterface _
               | DeclareComponentRef _
               | GeneratorYield _
+              | MergedDeclaration _
               | ReactCreateElementCall _
               | ReactGetIntrinsic _
               | RecordCreate _

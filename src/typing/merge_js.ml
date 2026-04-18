@@ -827,6 +827,11 @@ let check_polarity cx =
 let check_general_post_inference_validations cx =
   Base.List.iter (Context.post_inference_validation_flows cx) ~f:(fun pair -> Flow_js.flow cx pair)
 
+let check_interface_merge_prop_conflicts cx =
+  Base.List.iter (Context.interface_merge_unify_tasks cx) ~f:(fun (use_op, bad_t, good_t) ->
+      Flow_js.unify cx ~use_op bad_t good_t
+  )
+
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
 let check_haste_provider_conflict cx tast =
@@ -1466,6 +1471,7 @@ let post_merge_checks cx file_sig ast tast metadata =
   );
   check_polarity cx;
   check_general_post_inference_validations cx;
+  check_interface_merge_prop_conflicts cx;
   detect_sketchy_null_checks cx tast;
   detect_non_voidable_properties cx;
   detect_test_prop_misses cx;

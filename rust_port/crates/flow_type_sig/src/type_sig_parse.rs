@@ -1392,23 +1392,6 @@ pub(super) mod scope {
         }
     }
 
-    fn loc_of_interface_prop<'arena, 'ast>(
-        prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
-    ) -> LocNode<'arena> {
-        match prop {
-            InterfaceProp::InterfaceField(box (Some(loc), _, _)) => loc.dupe(),
-            InterfaceProp::InterfaceField(box (None, _, _)) => {
-                panic!("InterfaceField should always have a location")
-            }
-            InterfaceProp::InterfaceAccess(box Accessor::Get(box (loc, _)))
-            | InterfaceProp::InterfaceAccess(box Accessor::Set(box (loc, _)))
-            | InterfaceProp::InterfaceAccess(box Accessor::GetSet(box (loc, _, _, _))) => {
-                loc.dupe()
-            }
-            InterfaceProp::InterfaceMethod(box ms) => ms.first().0.dupe(),
-        }
-    }
-
     fn merge_interface_sigs<'arena, 'ast>(
         existing_id_loc: LocNode<'arena>,
         current_id_loc: LocNode<'arena>,
@@ -1433,14 +1416,8 @@ pub(super) mod scope {
                         let merged = Vec1::try_from_vec(merged).unwrap();
                         *e.get_mut() = InterfaceProp::InterfaceMethod(Box::new(merged));
                     } else {
-                        // first wins + error
-                        tbls.additional_errors.push(
-                            signature_error::BindingValidation::InterfaceMergePropertyConflict {
-                                name: prop_name.clone(),
-                                current_binding_loc: loc_of_interface_prop(new_prop),
-                                existing_binding_loc: loc_of_interface_prop(e.get()),
-                            },
-                        );
+                        // First prop wins. Type conflict checking is deferred to
+                        // post-inference via Flow.unify.
                     }
                 }
                 Entry::Vacant(e) => {

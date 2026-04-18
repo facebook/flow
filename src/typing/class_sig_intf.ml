@@ -183,5 +183,9 @@ module type S = sig
      class and the second type is the external view--which differ because the internal view can be
      comparible with `this`, while the external view shouldn't be. *)
   val classtype :
-    Context.t -> ?check_polarity:bool -> inst_kind:Type.instance_kind -> t -> Type.t * Type.t
+    Context.t ->
+    ?check_polarity:bool ->
+    inst_kind:Type.instance_kind ->
+    t ->
+    Type.t * Type.t * (Type.Properties.id * Type.Properties.id)
 end

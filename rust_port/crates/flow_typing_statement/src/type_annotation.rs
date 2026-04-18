@@ -3213,6 +3213,7 @@ fn convert_inner<'a>(
             let (iface_sig, property_asts) = add_interface_properties(
                 cx,
                 env,
+                None,
                 intermediate_error_types::ObjKind::Interface,
                 this,
                 properties,
@@ -5845,6 +5846,7 @@ fn convert_indexer_internal(
 fn add_interface_properties<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
+    record_for_interface: Option<ALoc>,
     obj_kind: intermediate_error_types::ObjKind,
     this: Type,
     properties: &[ast::types::object::Property<ALoc, ALoc>],
@@ -5853,6 +5855,11 @@ fn add_interface_properties<'a>(
     func_class_sig_types::class::Class<FuncTypeParamsConfig>,
     Vec<ast::types::object::Property<ALoc, (ALoc, Type)>>,
 ) {
+    let record_field = |name: &FlowSmolStr, t: &Type| {
+        if let Some(id_loc) = &record_for_interface {
+            cx.record_interface_field(id_loc.dupe(), Name::new(name.dupe()), t.dupe());
+        }
+    };
     use flow_parser::ast::types::object::Property;
 
     let mut prop_asts: Vec<Property<ALoc, (ALoc, Type)>> = Vec::new();
@@ -6107,6 +6114,7 @@ fn add_interface_properties<'a>(
                                             &mut s,
                                         );
                                     } else {
+                                        record_field(&name, &t);
                                         class_sig::add_field(
                                             np.static_,
                                             name.dupe(),
@@ -6283,6 +6291,7 @@ fn add_interface_properties<'a>(
                                                         &mut s,
                                                     );
                                                 } else {
+                                                    record_field(&name, &t_with_optional);
                                                     class_sig::add_field(
                                                         np.static_,
                                                         name.dupe(),
@@ -6632,6 +6641,7 @@ fn add_interface_properties<'a>(
                                                 &mut s,
                                             );
                                         } else {
+                                            record_field(&name, &t_with_optional);
                                             class_sig::add_field(
                                                 np.static_,
                                                 name.dupe(),
@@ -7260,17 +7270,19 @@ pub fn mk_interface_sig<'a>(
     let (iface_sig, properties_ast) = add_interface_properties(
         cx,
         &mut env,
+        Some(id_loc.dupe()),
         intermediate_error_types::ObjKind::Interface,
         this,
         &body.properties,
         iface_sig,
     );
-    let (_t_internal, t) = class_sig::classtype(
+    let (_t_internal, t, (own_props, proto_props)) = class_sig::classtype(
         cx,
         true,
         type_::InstanceKind::InterfaceKind { inline: false },
         &iface_sig,
     );
+    cx.add_interface_prop_ids(id_loc.dupe(), own_props, proto_props);
     (
         t.dupe(),
         iface_sig,
@@ -7963,6 +7975,7 @@ pub fn mk_declare_class_sig<'a>(
         let (updated_sig, properties_typed) = add_interface_properties(
             cx,
             &mut env_with_this,
+            None,
             intermediate_error_types::ObjKind::DeclareClass,
             this_type,
             &body.properties,
@@ -7980,7 +7993,7 @@ pub fn mk_declare_class_sig<'a>(
             class_sig::add_default_constructor(ctor_reason, &mut iface_sig);
         }
 
-        let (t_internal, t) =
+        let (t_internal, t, _) =
             class_sig::classtype(cx, true, type_::InstanceKind::ClassKind, &iface_sig);
 
         let tast = ast::statement::DeclareClass {

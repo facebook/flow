@@ -19,6 +19,10 @@ type kind =
       imported: bool;
       type_only_namespace: bool;
     }
+  | Interface of {
+      imported: bool;
+      type_only_namespace: bool;
+    }
   | Enum
   | Function
   | Class
@@ -68,12 +72,13 @@ let to_map t =
     List.fold_left
       (fun map ((loc, { Ast.Identifier.name = x; comments = _ }), kind) ->
         match SMap.find_opt x map with
-        | Some (kind, locs) -> SMap.add x (kind, Nel.cons loc locs) map
-        | None -> SMap.add x (kind, Nel.one loc) map)
+        | Some (canonical_kind, entries) ->
+          SMap.add x (canonical_kind, Nel.cons (loc, kind) entries) map
+        | None -> SMap.add x (kind, Nel.one (loc, kind)) map)
       SMap.empty
       (List.rev t)
   in
-  SMap.map (fun (kind, locs) -> (kind, Nel.rev locs)) map
+  SMap.map (fun (canonical_kind, entries) -> (canonical_kind, Nel.rev entries)) map
 
 let allow_forward_ref = function
   | DeclaredFunction
@@ -84,7 +89,8 @@ let allow_forward_ref = function
   | DeclaredNamespace
   | Var
   | Function
-  | Component ->
+  | Component
+  | Interface _ ->
     true
   | _ -> false
 

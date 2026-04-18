@@ -1137,6 +1137,7 @@ pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> U
                     })
                     | VirtualRootUseOp::ClassOwnProtoCheck(..)
                     | VirtualRootUseOp::ConformToCommonInterface(..)
+                    | VirtualRootUseOp::MergedDeclaration { .. }
                     | VirtualRootUseOp::DeclareComponentRef { .. }
                     | VirtualRootUseOp::GeneratorYield { .. }
                     | VirtualRootUseOp::ReactCreateElementCall(..)

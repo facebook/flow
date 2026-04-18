@@ -19,6 +19,10 @@ type kind =
       imported: bool;
       type_only_namespace: bool;
     }
+  | Interface of {
+      imported: bool;
+      type_only_namespace: bool;
+    }
   | Enum
   | Function
   | Class
@@ -52,7 +56,9 @@ val exists : ('loc entry -> bool) -> 'loc t -> bool
 
 val to_assoc : 'loc t -> (string * (kind * 'loc Nel.t)) list
 
-val to_map : 'loc t -> (kind * 'loc Nel.t) SMap.t
+(** For each name, returns the canonical kind (first-declaration kind) and the
+    non-empty list of (loc, kind) pairs for every declaration of that name. *)
+val to_map : 'loc t -> (kind * ('loc * kind) Nel.t) SMap.t
 
 val allow_forward_ref : kind -> bool
 

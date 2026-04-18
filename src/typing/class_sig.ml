@@ -830,7 +830,10 @@ module Make
         )
     in
     let poly t = poly_type_of_tparams (Type.Poly.generate_id ()) x.tparams t in
-    (t_inner, poly t_outer)
+    let inst_prop_ids =
+      (this_instance_t.Type.inst.Type.own_props, this_instance_t.Type.inst.Type.proto_props)
+    in
+    (t_inner, poly t_outer, inst_prop_ids)
 
   let mk_class_binding _cx x = { Type.class_binding_id = x.id }
 

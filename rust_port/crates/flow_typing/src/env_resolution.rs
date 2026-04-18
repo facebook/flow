@@ -2341,14 +2341,102 @@ fn resolve_import<'cx>(
     }
 }
 
+fn merge_props_by_id<'cx>(
+    cx: &Context<'cx>,
+    target_own: &flow_typing_type::type_::properties::Id,
+    target_proto: &flow_typing_type::type_::properties::Id,
+    source_own: &flow_typing_type::type_::properties::Id,
+    source_proto: &flow_typing_type::type_::properties::Id,
+) {
+    use flow_typing_type::type_::Property;
+    use flow_typing_type::type_::PropertyInner;
+    use flow_typing_type::type_::TypeInner;
+    use flow_typing_type::type_::inter_rep;
+    let target_own_map = cx.find_props(target_own.dupe());
+    let source_own_map = cx.find_props(source_own.dupe());
+    let mut merged_own = target_own_map.clone();
+    for (name, prop) in source_own_map.iter() {
+        if !merged_own.contains_key(name) {
+            merged_own.insert(name.dupe(), prop.dupe());
+        }
+    }
+    cx.add_property_map(target_own.dupe(), merged_own);
+    let target_proto_map = cx.find_props(target_proto.dupe());
+    let source_proto_map = cx.find_props(source_proto.dupe());
+    let mut merged_proto = target_proto_map.clone();
+    for (name, source_prop) in source_proto_map.iter() {
+        match merged_proto.get(name).cloned() {
+            Some(target_prop) => {
+                if let (
+                    PropertyInner::Method { key_loc, type_: t1 },
+                    PropertyInner::Method { type_: t2, .. },
+                ) = (&*target_prop, &**source_prop)
+                {
+                    let reason = type_util::reason_of_t(t1).dupe();
+                    let combined = Type::new(TypeInner::IntersectionT(
+                        reason,
+                        inter_rep::make(t1.dupe(), t2.dupe(), std::rc::Rc::from(Vec::new())),
+                    ));
+                    merged_proto.insert(
+                        name.dupe(),
+                        Property::new(PropertyInner::Method {
+                            key_loc: key_loc.dupe(),
+                            type_: combined,
+                        }),
+                    );
+                }
+            }
+            None => {
+                merged_proto.insert(name.dupe(), source_prop.dupe());
+            }
+        }
+    }
+    cx.add_property_map(target_proto.dupe(), merged_proto);
+}
+
 fn resolve_interface<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     inter: &ast::statement::Interface<ALoc, ALoc>,
 ) -> Type {
     let cache = cx.node_cache();
+    let name_loc = inter.id.loc.dupe();
     let (t, ast) = statement::interface(cx, loc.dupe(), inter);
     cache.set_interface(loc, (t.dupe(), ast));
+    // Interface declaration merging. The conflict map (good_name_loc -> [bad_name_locs])
+    // built in env_builder drives everything. Prop IDs are registered in mk_interface_sig
+    // (type_annotation.rs) when the InstanceT is created. Here we just look them up and merge.
+    let env = cx.environment();
+    let merge_conflicts = &env.var_info.interface_merge_conflicts;
+    let prop_ids = cx.interface_prop_ids();
+    let is_good = merge_conflicts.contains_key(&name_loc);
+    let is_bad = !is_good
+        && merge_conflicts
+            .iter()
+            .any(|(_good, bad_locs)| bad_locs.contains(&name_loc));
+    if is_good || is_bad {
+        if is_good {
+            if let Some(bad_locs) = merge_conflicts.get(&name_loc) {
+                if let Some((good_own, good_proto)) = prop_ids.get(&name_loc).cloned() {
+                    for bad_name_loc in bad_locs {
+                        if let Some((bad_own, bad_proto)) = prop_ids.get(bad_name_loc).cloned() {
+                            merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
+                        }
+                    }
+                }
+            }
+        } else {
+            for (good_name_loc, bad_locs) in merge_conflicts.iter() {
+                if bad_locs.contains(&name_loc) {
+                    if let Some((good_own, good_proto)) = prop_ids.get(good_name_loc).cloned() {
+                        if let Some((bad_own, bad_proto)) = prop_ids.get(&name_loc).cloned() {
+                            merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
+                        }
+                    }
+                }
+            }
+        }
+    }
     t
 }
 

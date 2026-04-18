@@ -3006,7 +3006,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     in
     (dict, { indexer with Ast.Type.Object.Indexer.key = key_ast; value = value_ast })
 
-  and add_interface_properties env ~obj_kind ~this properties s =
+  and add_interface_properties env ?record_for_interface ~obj_kind ~this properties s =
+    let record_field name t =
+      Base.Option.iter record_for_interface ~f:(fun id_loc ->
+          Context.record_interface_field env.cx id_loc (Reason.OrdinaryName name) t
+      )
+    in
     let (x, rev_prop_asts) =
       List.fold_left
         Ast.Type.Object.(
@@ -3183,8 +3188,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     let add =
                       if proto then
                         Class_type_sig.add_proto_field
-                      else
+                      else begin
+                        record_field name t;
                         Class_type_sig.add_field ~static
+                      end
                     in
                     let open Ast.Type in
                     ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
@@ -3324,8 +3331,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         let add =
                           if proto then
                             Class_type_sig.add_proto_field
-                          else
+                          else begin
+                            record_field name t;
                             Class_type_sig.add_field ~static
+                          end
                         in
                         let open Ast.Type in
                         ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
@@ -3451,8 +3460,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         let add =
                           if proto then
                             Class_type_sig.add_proto_field
-                          else
+                          else begin
+                            record_field name t;
                             Class_type_sig.add_field ~static
+                          end
                         in
                         let open Ast.Type in
                         ( add name key_loc polarity (Class_type_sig.Types.Annot t) x,
@@ -3770,18 +3781,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let (iface_sig, properties) =
       add_interface_properties
         env
+        ~record_for_interface:id_loc
         ~obj_kind:`Interface
         properties
         ~this:(implicit_mixed_this reason)
         iface_sig
     in
-    let (_, t) =
+    let (_, t, (own_props, proto_props)) =
       Class_type_sig.classtype
         ~check_polarity:true
         ~inst_kind:(InterfaceKind { inline = false })
         cx
         iface_sig
     in
+    Context.add_interface_prop_ids cx id_loc ~own_props ~proto_props;
     ( t,
       iface_sig,
       {
@@ -4172,7 +4185,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           let reason = replace_desc_reason RDefaultConstructor reason in
           Class_type_sig.add_default_constructor reason iface_sig
       in
-      let (t_internal, t) =
+      let (t_internal, t, _) =
         Class_type_sig.classtype ~check_polarity:true ~inst_kind:ClassKind cx iface_sig
       in
       ( t_internal,

@@ -886,12 +886,6 @@ module Scope = struct
     | Mono -> 0
     | Poly (_, _, rest) -> 1 + List.length rest
 
-  let loc_of_interface_prop = function
-    | InterfaceField (Some loc, _, _) -> loc
-    | InterfaceField (None, _, _) -> failwith "InterfaceField should always have a location"
-    | InterfaceAccess (Get (loc, _) | Set (loc, _) | GetSet (loc, _, _, _)) -> loc
-    | InterfaceMethod ((id_loc, _, _), _) -> id_loc
-
   let merge_interface_sigs ~existing_id_loc ~current_id_loc tbls old_sig new_sig =
     let (InterfaceSig old_s) = old_sig in
     let (InterfaceSig new_s) = new_sig in
@@ -905,14 +899,9 @@ module Scope = struct
               | (InterfaceMethod old_sigs, InterfaceMethod new_sigs) ->
                 Some (InterfaceMethod (Nel.append old_sigs new_sigs))
               | _ ->
-                tbls.additional_errors <-
-                  Signature_error.InterfaceMergePropertyConflict
-                    {
-                      name = prop_name;
-                      current_binding_loc = loc_of_interface_prop new_prop;
-                      existing_binding_loc = loc_of_interface_prop existing_prop;
-                    }
-                  :: tbls.additional_errors;
+                (* First prop wins. Type conflict checking is deferred to
+                   post-inference via Flow.unify. *)
+                ignore (prop_name, new_prop);
                 Some existing_prop)
             old_s.props
             new_s.props;

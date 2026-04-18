@@ -520,6 +520,7 @@ type 'loc root_message =
       target: 'loc virtual_reason_desc;
     }
   | RootCannotConformToCommonInterface of { originate_from_import: bool }
+  | RootCannotMergeDeclaration of { first_decl: 'loc virtual_reason }
   | RootCannotCreateElement of 'loc virtual_reason_desc
   | RootCannotCreateRecord of 'loc virtual_reason_desc
   | RootCannotDeclareRef

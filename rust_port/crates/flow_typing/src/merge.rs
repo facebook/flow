@@ -1267,6 +1267,12 @@ fn check_general_post_inference_validations<'cx>(cx: &Context<'cx>) {
     }
 }
 
+fn check_interface_merge_prop_conflicts<'cx>(cx: &Context<'cx>) {
+    for (use_op, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
+        flow_js::unify_non_speculating(cx, Some(use_op.dupe()), bad_t, good_t);
+    }
+}
+
 fn check_react_rules_fn<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
     react_rules::check_react_rules(cx, tast);
 }
@@ -2117,6 +2123,7 @@ pub fn post_merge_checks<'cx>(
     }
     check_polarity_fn(cx);
     check_general_post_inference_validations(cx);
+    check_interface_merge_prop_conflicts(cx);
     detect_sketchy_null_checks(cx, tast);
     detect_non_voidable_properties(cx);
     detect_test_prop_misses(cx);

@@ -389,6 +389,7 @@ let initialize_env ?(exclude_syms = SSet.empty) cx aloc_ast =
       Loc_env.with_info Name_def.Global ast_hint_map hint_map info pred_func_map name_def_graph
     in
     Context.set_environment cx env;
+    Context.init_interface_merge_field_index cx;
     let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
     Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
     Type_env.init_env cx toplevel_scope_kind;

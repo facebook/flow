@@ -125,6 +125,10 @@ struct EnvValInner {
     def_loc: Option<ALoc>,
     heap_refinements: Rc<RefCell<HeapRefinementMap>>,
     kind: BindingsKind,
+    // Per-loc kind for every declaration site of this name. This preserves the
+    // per-loc kind info that to_map collapses (first-kind-wins). Used to judge
+    // whether a specific declaration site is e.g. an interface vs. a type alias.
+    kind_at_loc: BTreeMap<ALoc, BindingsKind>,
 }
 
 #[derive(Debug, Clone, Dupe)]
@@ -323,6 +327,7 @@ mod full_env {
                 def_loc: env_val.def_loc.dupe(),
                 heap_refinements: empty_heap_refinements(),
                 kind: env_val.kind,
+                kind_at_loc: env_val.kind_at_loc.clone(),
             })
         } else {
             EnvVal::new(EnvValInner {
@@ -332,6 +337,7 @@ mod full_env {
                 def_loc: env_val.def_loc.dupe(),
                 heap_refinements: empty_heap_refinements(),
                 kind: env_val.kind,
+                kind_at_loc: env_val.kind_at_loc.clone(),
             })
         }
     }
@@ -838,6 +844,7 @@ struct NameResolverState {
     inferred_type_guard_candidate: Option<(ALoc, FlowSmolStr)>,
     visiting_hoisted_type: bool,
     in_conditional_type_extends: bool,
+    interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
     jsx_base_name: Option<FlowSmolStr>,
     pred_func_map: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     /// Track parameter binding def_locs currently being processed, so that we can
@@ -873,6 +880,7 @@ impl NameResolverState {
             inferred_type_guard_candidate: None,
             visiting_hoisted_type: false,
             in_conditional_type_extends: false,
+            interface_merge_conflicts: BTreeMap::new(),
             jsx_base_name: None,
             pred_func_map: CACHED_PRED.with(|c| c.clone()),
             current_bindings: CACHED_BINDINGS.with(|c| c.clone()),
@@ -1068,7 +1076,8 @@ fn error_for_assignment_kind(
             | BK::Function
             | BK::Component
             | BK::Import
-            | BK::TsImport,
+            | BK::TsImport
+            | BK::Interface { .. },
             PatternWriteKind::VarBinding
             | PatternWriteKind::LetBinding
             | PatternWriteKind::ClassBinding
@@ -1082,7 +1091,7 @@ fn error_for_assignment_kind(
             def_loc,
         )),
         (
-            BK::Type { .. },
+            BK::Type { .. } | BK::Interface { .. },
             PatternWriteKind::VarBinding
             | PatternWriteKind::LetBinding
             | PatternWriteKind::ClassBinding
@@ -1130,6 +1139,10 @@ fn error_for_assignment_kind(
         )),
         (
             BK::Type {
+                imported,
+                type_only_namespace,
+            }
+            | BK::Interface {
                 imported,
                 type_only_namespace,
             },
@@ -1203,6 +1216,7 @@ fn initialize_globals(
             def_loc: None,
             heap_refinements: empty_heap_refinements(),
             kind: BindingsKind::Var,
+            kind_at_loc: BTreeMap::new(),
         });
         globals.insert(name.dupe(), entry);
     }
@@ -1216,6 +1230,7 @@ fn initialize_globals(
             def_loc: None,
             heap_refinements: empty_heap_refinements(),
             kind: BindingsKind::Var,
+            kind_at_loc: BTreeMap::new(),
         });
         globals.insert(name.dupe(), entry);
     }
@@ -1233,6 +1248,7 @@ fn initialize_globals(
             def_loc: None,
             heap_refinements: empty_heap_refinements(),
             kind: BindingsKind::Var,
+            kind_at_loc: BTreeMap::new(),
         });
         globals.insert(FlowSmolStr::new_inline("this"), entry);
     }
@@ -1256,6 +1272,7 @@ fn initialize_globals(
             def_loc: None,
             heap_refinements: Rc::new(RefCell::new(heap_refinements)),
             kind: BindingsKind::Var,
+            kind_at_loc: BTreeMap::new(),
         });
         globals.insert(module_name, entry);
     }
@@ -1270,6 +1287,7 @@ fn initialize_globals(
             def_loc: None,
             heap_refinements: empty_heap_refinements(),
             kind: BindingsKind::Var,
+            kind_at_loc: BTreeMap::new(),
         });
         globals.insert(name_str, entry);
     }
@@ -1312,6 +1330,7 @@ fn initial_env<Cx: Context>(
         def_loc: None,
         heap_refinements: empty_heap_refinements(),
         kind: BindingsKind::Internal,
+        kind_at_loc: BTreeMap::new(),
     });
     globals.insert(
         MAYBE_EXHAUSTIVELY_CHECKED_VAR_NAME_STR.dupe(),
@@ -1337,6 +1356,7 @@ fn initial_env<Cx: Context>(
             def_loc: None,
             heap_refinements: empty_heap_refinements(),
             kind: BindingsKind::Var,
+            kind_at_loc: BTreeMap::new(),
         });
         globals.insert(jsx_name.dupe(), env_val);
     }
@@ -1531,6 +1551,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
     fn pred_func_map(&self) -> FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>> {
         self.env_state.pred_func_map.dupe()
+    }
+
+    fn interface_merge_conflicts(&self) -> FlowOrdMap<ALoc, Vec<ALoc>> {
+        self.env_state
+            .interface_merge_conflicts
+            .iter()
+            .map(|(k, v)| (k.dupe(), v.clone()))
+            .collect()
     }
 
     fn is_assigning_write(&self, key: &env_api::EnvKey<ALoc>) -> bool {
@@ -2167,7 +2195,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn mk_env(
         &mut self,
         this_super_binding_env: ThisSuperBindingEnv,
-        bindings: &BTreeMap<FlowSmolStr, (BindingsKind, Vec1<ALoc>)>,
+        bindings: &BTreeMap<FlowSmolStr, (BindingsKind, Vec1<(ALoc, BindingsKind)>)>,
     ) -> BTreeMap<FlowSmolStr, EnvVal> {
         use env_api::DefLocType;
         use env_api::EnvKey;
@@ -2177,11 +2205,13 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
         let mut result = BTreeMap::new();
 
-        for (name, (kind, locs)) in bindings {
-            let loc = locs.first();
+        for (name, (kind, entries)) in bindings {
+            let (loc, _) = entries.first();
+            let kind_at_loc: BTreeMap<ALoc, BindingsKind> =
+                entries.iter().map(|(l, k)| (l.dupe(), *k)).collect();
 
             let env_val = match kind {
-                BindingsKind::Type { .. } => {
+                BindingsKind::Type { .. } | BindingsKind::Interface { .. } => {
                     let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
                     let reason = VirtualReason::new(desc, loc.dupe());
                     self.env_state.write_entries.insert(
@@ -2196,6 +2226,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::ThisAnnot => {
@@ -2213,6 +2244,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::DeclaredClass
@@ -2233,6 +2265,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::Class | BindingsKind::Enum | BindingsKind::Record => {
@@ -2254,6 +2287,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::DeclaredFunction => {
@@ -2274,6 +2308,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::Import => {
@@ -2293,6 +2328,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::Internal => {
@@ -2305,6 +2341,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: None,
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 BindingsKind::GeneratorNext => {
@@ -2322,6 +2359,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
                 _ => {
@@ -2430,6 +2468,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         def_loc: Some(loc.dupe()),
                         heap_refinements: empty_heap_refinements(),
                         kind: *kind,
+                        kind_at_loc: kind_at_loc.clone(),
                     })
                 }
             };
@@ -4770,7 +4809,13 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         discriminant: &flow_parser::ast::expression::Expression<ALoc, ALoc>,
         cases_with_lexical_bindings: &[(
             &'b flow_parser::ast::statement::switch::Case<ALoc, ALoc>,
-            BTreeMap<FlowSmolStr, (flow_analysis::bindings::Kind, Vec1<ALoc>)>,
+            BTreeMap<
+                FlowSmolStr,
+                (
+                    flow_analysis::bindings::Kind,
+                    Vec1<(ALoc, flow_analysis::bindings::Kind)>,
+                ),
+            >,
         )],
     ) -> Result<(), AbruptCompletion> {
         let incoming_env = self.env_snapshot();
@@ -4861,7 +4906,13 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             bool,
         ),
         case: &flow_parser::ast::statement::switch::Case<ALoc, ALoc>,
-        lexical_bindings: &BTreeMap<FlowSmolStr, (flow_analysis::bindings::Kind, Vec1<ALoc>)>,
+        lexical_bindings: &BTreeMap<
+            FlowSmolStr,
+            (
+                flow_analysis::bindings::Kind,
+                Vec1<(ALoc, flow_analysis::bindings::Kind)>,
+            ),
+        >,
     ) -> Result<
         (
             PartialEnvSnapshot,
@@ -4938,7 +4989,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 Kind::Let | Kind::Const | Kind::DeclaredLet | Kind::DeclaredConst => {
                     let env_entry = self.env_read(name);
                     Self::havoc_heap_refinements(&env_entry.heap_refinements);
-                    let loc = locs.first().dupe();
+                    let (loc, _) = locs.first();
+                    let loc = loc.dupe();
                     *env_entry.val_ref.borrow_mut() = ssa_val::declared_but_skipped(
                         &mut *self.cache.borrow_mut(),
                         name.dupe(),
@@ -7691,6 +7743,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         &mut self,
         ident: &flow_parser::ast::Identifier<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
+        use flow_common::reason::VirtualReason;
+        use flow_common::reason::VirtualReasonDesc;
         use flow_typing_errors::intermediate_error_types::IncorrectType;
 
         let loc = ident.loc.dupe();
@@ -7698,15 +7752,18 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         let env_val = self.env_read(name);
         let kind = env_val.kind;
         let def_loc = env_val.def_loc.dupe();
+        let kind_at_loc = env_val.kind_at_loc.clone();
         let reserved_keyword_error = if let Ok(keyword) = name.as_str().parse::<IncorrectType>() {
             if keyword.is_type_reserved() {
                 match kind {
-                    BindingsKind::Type { .. } => Some(ErrorMessage::EBindingError(Box::new((
-                        BindingError::EReservedKeyword { keyword },
-                        loc.dupe(),
-                        flow_common::reason::Name::new(name.dupe()),
-                        loc.dupe(),
-                    )))),
+                    BindingsKind::Type { .. } | BindingsKind::Interface { .. } => {
+                        Some(ErrorMessage::EBindingError(Box::new((
+                            BindingError::EReservedKeyword { keyword },
+                            loc.dupe(),
+                            flow_common::reason::Name::new(name.dupe()),
+                            loc.dupe(),
+                        ))))
+                    }
                     _ => None,
                 }
             } else {
@@ -7721,7 +7778,34 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 // Identifiers with no binding can never reintroduce "cannot reassign binding" errors
                 None => None,
                 Some(ref def_loc_val) => match kind {
+                    BindingsKind::Interface { .. }
+                        if loc != *def_loc_val
+                            && matches!(
+                                kind_at_loc.get(&loc),
+                                Some(BindingsKind::Interface { .. })
+                            ) =>
+                    {
+                        // Both the existing binding and this declaration are interfaces:
+                        // allow declaration merging. Record conflict for post-inference check
+                        // and add AssigningWrite so name_def resolves this declaration.
+                        let entry = self
+                            .env_state
+                            .interface_merge_conflicts
+                            .entry(def_loc_val.dupe())
+                            .or_insert_with(Vec::new);
+                        entry.push(loc.dupe());
+                        let reason = VirtualReason::new(
+                            VirtualReasonDesc::RType(flow_common::reason::Name::new(name.dupe())),
+                            loc.dupe(),
+                        );
+                        self.env_state.write_entries.insert(
+                            env_api::EnvKey::new(env_api::DefLocType::OrdinaryNameLoc, loc.dupe()),
+                            env_api::EnvEntry::AssigningWrite(reason),
+                        );
+                        None
+                    }
                     BindingsKind::Type { .. }
+                    | BindingsKind::Interface { .. }
                     | BindingsKind::DeclaredClass
                     | BindingsKind::DeclaredVar
                     | BindingsKind::DeclaredLet
@@ -7737,7 +7821,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                             def_loc_val.dupe(),
                         ))))
                     }
-                    BindingsKind::Type { .. } => None,
+                    BindingsKind::Type { .. } | BindingsKind::Interface { .. } => None,
                     BindingsKind::Var
                     | BindingsKind::Const
                     | BindingsKind::Let
@@ -11203,6 +11287,7 @@ pub struct NameResolverResult {
     pub type_guard_consistency_maps: TypeGuardConsistencyMaps<ALoc>,
     pub refinement_of_id: RefinementOfId,
     pub pred_func_map: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>>,
+    pub interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
 }
 
 impl NameResolverResult {
@@ -11217,6 +11302,7 @@ impl NameResolverResult {
             providers: self.providers,
             refinement_of_id: Box::new(move |id| refinement_of_id.get(id)),
             pred_func_map: self.pred_func_map,
+            interface_merge_conflicts: self.interface_merge_conflicts,
         }
     }
 }
@@ -11261,6 +11347,7 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
     let refinement_heap = env_walk.env_state.refinement_heap.borrow().dupe();
     let refinement_of_id = RefinementOfId::new(refinement_heap);
     let pred_func_map = env_walk.pred_func_map();
+    let interface_merge_conflicts = env_walk.interface_merge_conflicts();
     (
         completion_state,
         NameResolverResult {
@@ -11272,6 +11359,7 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
             type_guard_consistency_maps,
             refinement_of_id,
             pred_func_map,
+            interface_merge_conflicts,
         },
     )
 }

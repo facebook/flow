@@ -214,6 +214,28 @@ type component_t = {
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
   mutable post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
     (ALoc.t * string * Flow_projects.t list) list;
+  (* Supports interface declaration merging. When two or more
+     [interface Foo { ... }] declarations share a name in one scope, TS-style
+     merging folds them into a single Foo. A consequence is that any field
+     name appearing in more than one declaration must have agreeing types
+     across declarations — otherwise the merged interface would be
+     contradictory. This table is what lets us check that agreement: for each
+     merging interface (keyed by its name_loc), we remember the field types
+     we saw in source. After inference is done, the post-inference pass walks
+     these and unifies any field types that appear on both sides of a merge.
+     Interfaces not involved in any merge are absent from this table — their
+     loc never gets a slot, so recording is a no-op for them. *)
+  merging_interface_field_types: (ALoc.t, (Reason.name, Type.t) Hashtbl.t) Hashtbl.t;
+  (* Also supports interface declaration merging, but for a different step:
+     actually combining the property maps. Each interface InstanceT stores its
+     own/proto properties in two heap-allocated maps identified by
+     [Properties.id]. To fold N decls of [Foo] into one usable type, the maps
+     of the later decls must be merged into the maps of the first. This table
+     records the (own_props, proto_props) id pair of every interface decl in
+     the file so the merger (env_resolution) can look up the right maps for
+     each side of a merge. Populated for all interfaces, not only the merging
+     ones, since at registration time we don't gate on participation. *)
+  mutable interface_prop_ids: (Type.Properties.id * Type.Properties.id) ALocMap.t;
   mutable env_value_cache: possibly_refined_write_state IMap.t;
   mutable env_type_cache: possibly_refined_write_state IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
@@ -453,6 +475,8 @@ let make_ccx () =
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations = [];
+    merging_interface_field_types = Hashtbl.create 0;
+    interface_prop_ids = ALocMap.empty;
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     missing_local_annot_lower_bounds = ALocFuzzyMap.empty;
@@ -788,6 +812,73 @@ let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
 
 let post_inference_projects_strict_boundary_import_pattern_opt_outs_validations cx =
   cx.ccx.post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
+
+(* Reserve a slot in [merging_interface_field_types] for every interface that
+   participates in a merge, so later [record_interface_field] calls know who
+   to record for in O(1). The set of participating interfaces is whatever
+   env_builder reported in [interface_merge_conflicts]; we don't compute it
+   ourselves. *)
+let init_interface_merge_field_index cx =
+  let table = cx.ccx.merging_interface_field_types in
+  Hashtbl.reset table;
+  ALocMap.iter
+    (fun good_loc bad_locs ->
+      Hashtbl.replace table good_loc (Hashtbl.create 4);
+      List.iter (fun bad -> Hashtbl.replace table bad (Hashtbl.create 4)) bad_locs)
+    cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts
+
+(* Remember that interface [id_loc] declared a Field named [name] of type [t].
+   Only matters for interfaces that participate in declaration merging — for
+   anyone else, the absence of a slot in the table makes this a no-op. If the
+   same name shows up twice in one declaration (a syntax-level oddity that
+   the rest of the diff treats as "first wins"), we keep the first type so
+   the post-inference check sees the same type the merger sees. *)
+let record_interface_field cx id_loc name t =
+  match Hashtbl.find_opt cx.ccx.merging_interface_field_types id_loc with
+  | None -> ()
+  | Some inner -> if not (Hashtbl.mem inner name) then Hashtbl.add inner name t
+
+(* The list of "these two types should be the same, and here's why" obligations
+   that interface declaration merging produces. Each tuple is one shared field
+   between two merging declarations: post-inference will [unify] them, and
+   anyone who wrote disagreeing types gets a [MergedDeclaration] error
+   pointing at both decls. *)
+let interface_merge_unify_tasks cx =
+  let conflicts = cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts in
+  let fields = cx.ccx.merging_interface_field_types in
+  ALocMap.fold
+    (fun good_loc bad_locs acc ->
+      match Hashtbl.find_opt fields good_loc with
+      | None -> acc
+      | Some good_fields ->
+        let first_decl = Reason.mk_reason Reason.RInterfaceType good_loc in
+        List.fold_left
+          (fun acc bad_loc ->
+            match Hashtbl.find_opt fields bad_loc with
+            | None -> acc
+            | Some bad_fields ->
+              let current_decl = Reason.mk_reason Reason.RInterfaceType bad_loc in
+              let use_op = Type.Op (Type.MergedDeclaration { first_decl; current_decl }) in
+              Hashtbl.fold
+                (fun name bad_t acc ->
+                  match Hashtbl.find_opt good_fields name with
+                  | Some good_t -> (use_op, bad_t, good_t) :: acc
+                  | None -> acc)
+                bad_fields
+                acc)
+          acc
+          bad_locs)
+    conflicts
+    []
+
+let interface_prop_ids cx = cx.ccx.interface_prop_ids
+
+(* Hand the merger a way to find this declaration's property maps later. The
+   ids point at the heap-allocated maps that back its InstanceT; the merger
+   takes those ids and copies properties between them when several decls of
+   the same interface need to be folded together. *)
+let add_interface_prop_ids cx loc ~own_props ~proto_props =
+  cx.ccx.interface_prop_ids <- ALocMap.add loc (own_props, proto_props) cx.ccx.interface_prop_ids
 
 let env_cache_find_opt cx ~for_value id =
   let cache =

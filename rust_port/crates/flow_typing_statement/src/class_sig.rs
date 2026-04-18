@@ -1367,8 +1367,19 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
     check_polarity_flag: bool,
     inst_kind: InstanceKind,
     x: &class_types::Class<C>,
-) -> (Type, Type) {
+) -> (
+    Type,
+    Type,
+    (
+        flow_typing_type::type_::properties::Id,
+        flow_typing_type::type_::properties::Id,
+    ),
+) {
     let (this_reason, this_instance_t) = this_instance_type(cx, Some(inst_kind), x);
+    let inst_prop_ids = (
+        this_instance_t.inst.own_props.dupe(),
+        this_instance_t.inst.proto_props.dupe(),
+    );
     let this = Type::new(TypeInner::DefT(
         this_reason.dupe(),
         DefT::new(DefTInner::InstanceT(Rc::new(this_instance_t.dupe()))),
@@ -1416,7 +1427,7 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
     let poly = |t: Type| -> Type {
         type_util::poly_type_of_tparams(poly::Id::generate_id(), x.tparams.clone(), t)
     };
-    (t_inner, poly(t_outer))
+    (t_inner, poly(t_outer), inst_prop_ids)
 }
 
 pub fn mk_class_binding<'a, C: ConfigTypes>(

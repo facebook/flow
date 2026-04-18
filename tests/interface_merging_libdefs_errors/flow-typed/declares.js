@@ -1,6 +1,6 @@
 // Property conflict: same-name field
 interface PropConflict {
-  a: string; // ERROR
+  a: string;
 }
 interface PropConflict {
   a: number;

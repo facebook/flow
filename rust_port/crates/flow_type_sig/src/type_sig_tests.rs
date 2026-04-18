@@ -19909,8 +19909,7 @@ Locs:
 0. [1:10-13]
 1. [2:2-3]
 2. [2:5-11]
-3. [5:2-3]
-4. [0:0]
+3. [0:0]
 Local defs:
 0. Interface(
     DefInterface {
@@ -19942,15 +19941,15 @@ Local defs:
 )
 1. NamespaceBinding(
     DefNamespaceBinding {
-        id_loc: 4,
+        id_loc: 3,
         name: "globalThis",
         values: {
             "globalThis": (
-                4,
+                3,
                 Ref(
                     LocalRef(
                         PackedRefLocal {
-                            ref_loc: 4,
+                            ref_loc: 3,
                             index: 1,
                         },
                     ),
@@ -19974,8 +19973,6 @@ Local defs:
 )
 Builtin global value globalThis
 Builtin global type Foo
-Errors:
-BindingValidationError(InterfaceMergePropertyConflict { name: "a", current_binding_loc: 3, existing_binding_loc: 1 })
 "#;
     assert_eq!(
         dedent_trim(expected_output),

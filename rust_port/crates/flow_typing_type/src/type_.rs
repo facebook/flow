@@ -1086,6 +1086,10 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         target: VirtualReason<L>,
     },
     ConformToCommonInterface(Box<ConformToCommonInterfaceData<L>>),
+    MergedDeclaration {
+        first_decl: VirtualReason<L>,
+        current_decl: VirtualReason<L>,
+    },
     DeclareComponentRef {
         op: VirtualReason<L>,
     },
@@ -10458,6 +10462,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::ClassMethodDefinition { .. } => "ClassMethodDefinition",
         VirtualRootUseOp::Coercion { .. } => "Coercion",
         VirtualRootUseOp::ConformToCommonInterface(..) => "ConformToCommonInterface",
+        VirtualRootUseOp::MergedDeclaration { .. } => "MergedDeclaration",
         VirtualRootUseOp::DeclareComponentRef { .. } => "DeclareComponentRef",
         VirtualRootUseOp::DeleteProperty { .. } => "DeleteProperty",
         VirtualRootUseOp::DeleteVar { .. } => "DeleteVar",

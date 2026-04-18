@@ -1133,6 +1133,13 @@ where
                 self_module_loc: f(self_module_loc),
                 originate_from_import,
             })),
+            MergedDeclaration {
+                first_decl,
+                current_decl,
+            } => MergedDeclaration {
+                first_decl: mod_reason(first_decl),
+                current_decl: mod_reason(current_decl),
+            },
             DeclareComponentRef { op } => DeclareComponentRef { op: mod_reason(op) },
             DeleteProperty { lhs, prop } => DeleteProperty {
                 lhs: mod_reason(lhs),

@@ -376,6 +376,10 @@ module rec TypeTerm : sig
          * rather than at the implementation file against the common interface. *)
         originate_from_import: bool;
       }
+    | MergedDeclaration of {
+        first_decl: 'loc virtual_reason;
+        current_decl: 'loc virtual_reason;
+      }
     | DeclareComponentRef of { op: 'loc virtual_reason }
     | DeleteProperty of {
         lhs: 'loc virtual_reason;
@@ -4137,6 +4141,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | ClassMethodDefinition _ -> "ClassMethodDefinition"
   | Coercion _ -> "Coercion"
   | ConformToCommonInterface _ -> "ConformToCommonInterface"
+  | MergedDeclaration _ -> "MergedDeclaration"
   | DeclareComponentRef _ -> "DeclareComponentRef"
   | DeleteProperty _ -> "DeleteProperty"
   | DeleteVar _ -> "DeleteVar"

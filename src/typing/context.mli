@@ -351,6 +351,32 @@ val post_inference_validation_flows : t -> (Type.t * Type.use_t) list
 val post_inference_projects_strict_boundary_import_pattern_opt_outs_validations :
   t -> (ALoc.t * string * Flow_projects.t list) list
 
+(** Get ready to remember field types for the interfaces involved in
+    declaration merging. Must run after [set_environment] (so the conflict
+    set from env_builder is visible) and before any [record_interface_field]
+    call. *)
+val init_interface_merge_field_index : t -> unit
+
+(** Tell the context that interface [id_loc] declared a Field of this name and
+    type. Only meaningful for interfaces being merged with a same-named
+    sibling; others are silently ignored. *)
+val record_interface_field : t -> ALoc.t -> Reason.name -> Type.t -> unit
+
+(** All the type-equality obligations produced by interface declaration
+    merging in this file, in [unify]-ready form. A non-empty list means: at
+    least one merge contains a field that two decls disagreed on a type for. *)
+val interface_merge_unify_tasks : t -> (Type.use_op * Type.t * Type.t) list
+
+(** Look up the heap ids of the property maps backing each interface
+    declaration's InstanceT. The merger uses these to combine the property
+    maps of merging declarations in place. *)
+val interface_prop_ids : t -> (Type.Properties.id * Type.Properties.id) ALocMap.t
+
+(** Register one interface declaration's property-map ids, so the merger can
+    find them later. *)
+val add_interface_prop_ids :
+  t -> ALoc.t -> own_props:Type.Properties.id -> proto_props:Type.Properties.id -> unit
+
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
 val array_or_object_literal_declaration_upper_bounds : t -> (ALoc.t * Type.t list) list

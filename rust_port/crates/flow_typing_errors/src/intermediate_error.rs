@@ -1552,6 +1552,19 @@ where
                                 )
                             }
 
+                            VirtualRootUseOp::MergedDeclaration {
+                                first_decl,
+                                current_decl,
+                            } => root(
+                                loc,
+                                frames,
+                                current_decl,
+                                RootMessage::RootCannotMergeDeclaration {
+                                    first_decl: first_decl.clone(),
+                                },
+                                custom_error_message,
+                            ),
+
                             VirtualRootUseOp::DeclareComponentRef { op } => root(
                                 loc,
                                 frames,
@@ -4651,6 +4664,14 @@ where
                         )
                     }
                 }
+                RootMessage::RootCannotMergeDeclaration { first_decl } => (
+                    RootKind::OperationRoot,
+                    friendly::Message(vec![
+                        text("Cannot merge this interface declaration with previous declaration "),
+                        friendly::ref_map(&loc_of_aloc, first_decl),
+                        text(" because of conflicting property types"),
+                    ]),
+                ),
                 RootMessage::RootCannotCreateElement(component) => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![

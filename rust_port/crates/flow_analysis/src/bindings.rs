@@ -25,6 +25,10 @@ pub enum Kind {
         imported: bool,
         type_only_namespace: bool,
     },
+    Interface {
+        imported: bool,
+        type_only_namespace: bool,
+    },
     Enum,
     Function,
     Class,
@@ -99,16 +103,16 @@ impl<Loc: Dupe> Bindings<Loc> {
             .collect()
     }
 
-    pub fn to_map(&self) -> BTreeMap<FlowSmolStr, (Kind, Vec1<Loc>)> {
-        let mut map: BTreeMap<FlowSmolStr, (Kind, Vec1<Loc>)> = BTreeMap::new();
+    pub fn to_map(&self) -> BTreeMap<FlowSmolStr, (Kind, Vec1<(Loc, Kind)>)> {
+        let mut map: BTreeMap<FlowSmolStr, (Kind, Vec1<(Loc, Kind)>)> = BTreeMap::new();
 
         for Entry { loc, name, kind } in self.0.iter() {
             match map.get_mut(name) {
-                Some((_, locs)) => {
-                    locs.push(loc.dupe());
+                Some((_, entries)) => {
+                    entries.push((loc.dupe(), *kind));
                 }
                 None => {
-                    map.insert(name.dupe(), (*kind, Vec1::new(loc.dupe())));
+                    map.insert(name.dupe(), (*kind, Vec1::new((loc.dupe(), *kind))));
                 }
             }
         }
@@ -128,7 +132,8 @@ impl Kind {
             | Self::DeclaredNamespace
             | Self::Var
             | Self::Function
-            | Self::Component => true,
+            | Self::Component
+            | Self::Interface { .. } => true,
             _ => false,
         }
     }

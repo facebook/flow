@@ -1077,6 +1077,9 @@ pub enum RootMessage<L: Dupe> {
     RootCannotConformToCommonInterface {
         originate_from_import: bool,
     },
+    RootCannotMergeDeclaration {
+        first_decl: VirtualReason<L>,
+    },
     RootCannotCreateElement(VirtualReasonDesc<L>),
     RootCannotCreateRecord(VirtualReasonDesc<L>),
     RootCannotDeclareRef,

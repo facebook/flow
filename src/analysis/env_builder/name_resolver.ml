@@ -165,6 +165,10 @@ type env_val = {
   def_loc: ALoc.t option;
   heap_refinements: heap_refinement_map ref;
   kind: Bindings.kind;
+  (* Per-loc kind for every declaration site of this name. This preserves the
+     per-loc kind info that to_map collapses (first-kind-wins). Used to judge
+     whether a specific declaration site is e.g. an interface vs. a type alias. *)
+  kind_at_loc: Bindings.kind ALocMap.t;
 }
 
 type read_entry = {
@@ -321,7 +325,15 @@ end = struct
     ({ local_stacked_env = SMap.map Nel.one globals; captured = ref SMap.empty }, [])
 
   let copy_env_val_from_env_below ~should_havoc_val_to_initialized env_val =
-    let { val_ref; havoc; writes_by_closure_provider_val; def_loc; heap_refinements = _; kind } =
+    let {
+      val_ref;
+      havoc;
+      writes_by_closure_provider_val;
+      def_loc;
+      heap_refinements = _;
+      kind;
+      kind_at_loc;
+    } =
       env_val
     in
     if should_havoc_val_to_initialized env_val then
@@ -332,6 +344,7 @@ end = struct
         def_loc;
         heap_refinements = ref HeapRefinementMap.empty;
         kind;
+        kind_at_loc;
       }
     else
       {
@@ -341,6 +354,7 @@ end = struct
         def_loc;
         heap_refinements = ref HeapRefinementMap.empty;
         kind;
+        kind_at_loc;
       }
 
   let function_scope_read x ({ local_stacked_env; captured } : function_scope) =
@@ -624,6 +638,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     inferred_type_guard_candidate: (ALoc.t * string) option;
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
+    interface_merge_conflicts: ALoc.t list L.LMap.t;
     jsx_base_name: string option;
     pred_func_map: Env_api.pred_func_info L.LMap.t;
     (* Track parameter binding def_locs currently being processed, so that we can
@@ -764,7 +779,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
       | ( Bindings.(
-            Const | Let | Class | Record | Enum | Function | Component | Import | TsImport | Type _),
+            ( Const | Let | Class | Record | Enum | Function | Component | Import | TsImport
+            | Type _ | Interface _ )),
           ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
           | ComponentBinding )
         )
@@ -792,7 +808,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | (Bindings.Enum, AssignmentWrite) ->
         Some
           Error_message.(EBindingError (EEnumReassigned, assignment_loc, OrdinaryName name, def_loc))
-      | (Bindings.Type { imported; type_only_namespace }, AssignmentWrite) ->
+      | ( ( Bindings.Type { imported; type_only_namespace }
+          | Bindings.Interface { imported; type_only_namespace } ),
+          AssignmentWrite
+        ) ->
         Some
           Error_message.(
             EBindingError
@@ -837,6 +856,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                def_loc = None;
                heap_refinements = ref HeapRefinementMap.empty;
                kind = Bindings.Var;
+               kind_at_loc = ALocMap.empty;
              }
            in
            SMap.add name entry acc)
@@ -852,6 +872,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                def_loc = None;
                heap_refinements = ref HeapRefinementMap.empty;
                kind = Bindings.Var;
+               kind_at_loc = ALocMap.empty;
              }
            in
            SMap.add name entry acc)
@@ -867,6 +888,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             def_loc = None;
             heap_refinements = ref HeapRefinementMap.empty;
             kind = Bindings.Var;
+            kind_at_loc = ALocMap.empty;
           }
        )
     |>
@@ -885,6 +907,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                  (Ok (Val.global "exports"))
               );
           kind = Bindings.Var;
+          kind_at_loc = ALocMap.empty;
         }
     else
       Base.Fn.id
@@ -902,6 +925,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             def_loc = None;
             heap_refinements = ref HeapRefinementMap.empty;
             kind = Bindings.Var;
+            kind_at_loc = ALocMap.empty;
           }
         in
         SMap.add name entry acc)
@@ -927,6 +951,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
           kind = Bindings.Internal;
+          kind_at_loc = ALocMap.empty;
         }
       in
       SMap.add maybe_exhaustively_checked_var_name exhaustive_entry globals
@@ -953,6 +978,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
           kind = Bindings.Var;
+          kind_at_loc = ALocMap.empty;
         }
       in
       (FullEnv.init (SMap.add jsx_base_name env_val globals), Some jsx_base_name)
@@ -1030,6 +1056,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           inferred_type_guard_candidate = None;
           visiting_hoisted_type = false;
           in_conditional_type_extends = false;
+          interface_merge_conflicts = L.LMap.empty;
           jsx_base_name;
           pred_func_map = L.LMap.empty;
           current_bindings = L.LMap.empty;
@@ -1051,6 +1078,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method type_guard_consistency_maps = env_state.type_guard_consistency_maps
 
       method pred_func_map = env_state.pred_func_map
+
+      method interface_merge_conflicts = env_state.interface_merge_conflicts
 
       method private is_assigning_write key =
         match EnvMap.find_opt key env_state.write_entries with
@@ -1311,6 +1340,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 havoc = _;
                 def_loc = _;
                 kind = _;
+                kind_at_loc = _;
               } ->
             (match projections with
             | [] ->
@@ -1402,6 +1432,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc;
                 heap_refinements;
                 kind = _;
+                kind_at_loc = _;
               } ->
               let all =
                 match invalidation_reason with
@@ -1481,6 +1512,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             heap_refinements = _;
             writes_by_closure_provider_val = _;
             kind = _;
+            kind_at_loc = _;
           } ->
           this#should_invalidate ~all:true def_loc
           || List.length (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref) > 0
@@ -1525,9 +1557,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method private mk_env ~this_super_binding_env m =
         SMap.mapi
-          (fun name (kind, (loc, _)) ->
+          (fun name (kind, (((loc, _) as first_entry), rest_entries)) ->
+            let kind_at_loc =
+              List.fold_left
+                (fun acc (l, k) -> ALocMap.add l k acc)
+                ALocMap.empty
+                (first_entry :: rest_entries)
+            in
             match kind with
-            | Bindings.Type _ ->
+            | Bindings.Type _
+            | Bindings.Interface _ ->
               let reason = mk_reason (RType (OrdinaryName name)) loc in
               let write_entries =
                 EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
@@ -1540,6 +1579,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.ThisAnnot ->
               let reason = mk_reason RThis loc in
@@ -1554,6 +1594,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.(DeclaredClass | DeclaredVar | DeclaredLet | DeclaredConst) ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
@@ -1568,6 +1609,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.(Class | Enum | Record) ->
               let (havoc, providers) = this#providers_of_def_loc loc in
@@ -1586,6 +1628,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.DeclaredFunction ->
               let (_, providers) = this#providers_of_def_loc loc in
@@ -1605,6 +1648,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.Import ->
               let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
@@ -1621,6 +1665,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.Internal ->
               {
@@ -1630,6 +1675,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = None;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | Bindings.GeneratorNext ->
               let reason = mk_reason RNext loc in
@@ -1644,6 +1690,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               }
             | _ ->
               let (initial_val, havoc, writes_by_closure_provider_val) =
@@ -1729,6 +1776,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
+                kind_at_loc;
               })
           m
         |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
@@ -1900,14 +1948,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! binding_type_identifier ident =
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
-        let { kind; def_loc; _ } = this#env_read name in
+        let { kind; def_loc; kind_at_loc; _ } = this#env_read name in
         let error =
           let reserved_keyword_error =
             let open Flow_intermediate_error_types in
             match IncorrectType.from_str name with
             | Some keyword when IncorrectType.is_type_reserved keyword ->
               (match kind with
-              | Bindings.Type _ ->
+              | Bindings.Type _
+              | Bindings.Interface _ ->
                 Some
                   Error_message.(
                     EBindingError (EReservedKeyword { keyword }, loc, OrdinaryName name, loc)
@@ -1923,7 +1972,33 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | None -> None
             | Some def_loc ->
               (match kind with
+              | Bindings.Interface _
+                when (not (ALoc.equal loc def_loc))
+                     &&
+                     match ALocMap.find_opt loc kind_at_loc with
+                     | Some (Bindings.Interface _) -> true
+                     | _ -> false ->
+                (* Both the existing binding and this declaration are interfaces:
+                   allow declaration merging. Record conflict for post-inference check
+                   and add AssigningWrite so name_def resolves this declaration. *)
+                let existing =
+                  L.LMap.find_opt def_loc env_state.interface_merge_conflicts
+                  |> Base.Option.value ~default:[]
+                in
+                let reason = mk_reason (RType (OrdinaryName name)) loc in
+                let write_entries =
+                  EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
+                in
+                env_state <-
+                  {
+                    env_state with
+                    interface_merge_conflicts =
+                      L.LMap.add def_loc (loc :: existing) env_state.interface_merge_conflicts;
+                    write_entries;
+                  };
+                None
               | Bindings.Type _
+              | Bindings.Interface _
               | Bindings.DeclaredClass
               | Bindings.DeclaredVar
               | Bindings.DeclaredLet
@@ -1933,7 +2008,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                    so we only check for rebind in different locations. *)
                 Some
                   Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-              | Bindings.Type _ -> None
+              | Bindings.Type _
+              | Bindings.Interface _ ->
+                None
               | Bindings.Var
               | Bindings.Const
               | Bindings.Let
@@ -2125,6 +2202,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           def_loc;
           havoc = _;
           writes_by_closure_provider_val = _;
+          kind_at_loc = _;
         } =
           this#env_read x
         in
@@ -2684,6 +2762,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 def_loc;
                 havoc = _;
                 writes_by_closure_provider_val = _;
+                kind_at_loc = _;
               } =
                 this#env_read x
               in
@@ -3654,6 +3733,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               heap_refinements;
               def_loc = _;
               kind;
+              kind_at_loc = _;
             } =
               this#env_read base
             in
@@ -4216,7 +4296,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | Some fallthrough -> this#merge_self_env fallthrough);
         let () =
           lexical_bindings
-          |> SMap.iter (fun name (kind, (loc, _)) ->
+          |> SMap.iter (fun name (kind, ((loc, _), _)) ->
                  if this#is_excluded_ordinary_name name then
                    ()
                  else
@@ -7357,6 +7437,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         type_guard_consistency_maps = env_walk#type_guard_consistency_maps;
         refinement_of_id = env_walk#refinement_of_id;
         pred_func_map = env_walk#pred_func_map;
+        interface_merge_conflicts = env_walk#interface_merge_conflicts;
       }
     )
 

@@ -510,6 +510,7 @@ where
     pub providers: Rc<provider_api::Info<L>>,
     pub refinement_of_id: Box<dyn Fn(i32) -> Refinement<L>>,
     pub pred_func_map: FlowOrdMap<L, PredFuncInfo<L>>,
+    pub interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
 }
 
 #[derive(
@@ -559,6 +560,7 @@ where
                 panic!("Empty env info: refinement_of_id called on empty EnvInfo")
             }),
             pred_func_map: FlowOrdMap::new(),
+            interface_merge_conflicts: FlowOrdMap::new(),
         }
     }
 }

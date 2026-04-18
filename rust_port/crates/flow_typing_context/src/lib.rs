@@ -48,6 +48,8 @@ use flow_common::options::ReactRuntime;
 use flow_common::platform_set::PlatformSet;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
+use flow_common::reason::VirtualReason;
+use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::string_of_aloc;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_common::slow_to_check_logging::SlowToCheckLogging;
@@ -85,6 +87,7 @@ use flow_typing_type::type_::EvalReposCacheMap;
 use flow_typing_type::type_::FixCacheMap;
 use flow_typing_type::type_::IdCacheMap;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeContext;
 use flow_typing_type::type_::TypeInner;
@@ -441,6 +444,30 @@ pub struct ComponentT<'cx> {
     post_inference_validation_flows: RefCell<Vec<(Type, type_::UseT<Context<'cx>>)>>,
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
         RefCell<Vec<(ALoc, String, Vec<FlowProjects>)>>,
+    /// Supports interface declaration merging. When two or more
+    /// `interface Foo { ... }` declarations share a name in one scope,
+    /// TS-style merging folds them into a single Foo. A consequence is that
+    /// any field name appearing in more than one declaration must have
+    /// agreeing types across declarations — otherwise the merged interface
+    /// would be contradictory. This table is what lets us check that
+    /// agreement: for each merging interface (keyed by its name_loc), we
+    /// remember the field types we saw in source. After inference is done,
+    /// the post-inference pass walks these and unifies any field types that
+    /// appear on both sides of a merge. Interfaces not involved in any merge
+    /// are absent from this table — their loc never gets a slot, so
+    /// recording is a no-op for them.
+    merging_interface_field_types: RefCell<HashMap<ALoc, HashMap<Name, Type>>>,
+    /// Also supports interface declaration merging, but for a different step:
+    /// actually combining the property maps. Each interface InstanceT stores
+    /// its own/proto properties in two heap-allocated maps identified by
+    /// `Properties::Id`. To fold N decls of `Foo` into one usable type, the
+    /// maps of the later decls must be merged into the maps of the first.
+    /// This table records the (own_props, proto_props) id pair of every
+    /// interface decl in the file so the merger (env_resolution) can look up
+    /// the right maps for each side of a merge. Populated for all interfaces,
+    /// not only the merging ones, since at registration time we don't gate on
+    /// participation.
+    interface_prop_ids: RefCell<BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>>,
     env_value_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
     env_type_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
     // map from annot tvar ids to nodes used during annotation processing
@@ -753,6 +780,8 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         post_inference_projects_strict_boundary_import_pattern_opt_outs_validations: RefCell::new(
             Vec::new(),
         ),
+        merging_interface_field_types: RefCell::new(HashMap::new()),
+        interface_prop_ids: RefCell::new(BTreeMap::new()),
         env_value_cache: RefCell::new(IntHashMap::default()),
         env_type_cache: RefCell::new(IntHashMap::default()),
         missing_local_annot_lower_bounds: RefCell::new(BTreeMap::new()),
@@ -1462,6 +1491,94 @@ impl<'cx> Context<'cx> {
             .ccx
             .post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
             .borrow()
+    }
+
+    /// Reserve a slot in `merging_interface_field_types` for every interface
+    /// that participates in a merge, so later `record_interface_field` calls
+    /// know who to record for in O(1). The set of participating interfaces is
+    /// whatever env_builder reported in `interface_merge_conflicts`; we don't
+    /// compute it ourselves.
+    pub fn init_interface_merge_field_index(&self) {
+        let merge_conflicts = self.environment().var_info.interface_merge_conflicts.dupe();
+        let mut table = self.0.ccx.merging_interface_field_types.borrow_mut();
+        table.clear();
+        for (good_loc, bad_locs) in merge_conflicts.iter() {
+            table.entry(good_loc.dupe()).or_insert_with(HashMap::new);
+            for bad_loc in bad_locs {
+                table.entry(bad_loc.dupe()).or_insert_with(HashMap::new);
+            }
+        }
+    }
+
+    /// Remember that interface `id_loc` declared a Field named `name` of type
+    /// `t`. Only matters for interfaces that participate in declaration
+    /// merging — for anyone else, the absence of a slot in the table makes
+    /// this a no-op. If the same name shows up twice in one declaration (a
+    /// syntax-level oddity that the rest of the diff treats as "first
+    /// wins"), we keep the first type so the post-inference check sees the
+    /// same type the merger sees.
+    pub fn record_interface_field(&self, id_loc: ALoc, name: Name, t: Type) {
+        let mut table = self.0.ccx.merging_interface_field_types.borrow_mut();
+        if let Some(inner) = table.get_mut(&id_loc) {
+            inner.entry(name).or_insert(t);
+        }
+    }
+
+    /// The list of "these two types should be the same, and here's why"
+    /// obligations that interface declaration merging produces. Each tuple
+    /// is one shared field between two merging declarations: post-inference
+    /// will `unify` them, and anyone who wrote disagreeing types gets a
+    /// `MergedDeclaration` error pointing at both decls.
+    pub fn interface_merge_unify_tasks(&self) -> Vec<(UseOp, Type, Type)> {
+        let merge_conflicts = self.environment().var_info.interface_merge_conflicts.dupe();
+        let fields = self.0.ccx.merging_interface_field_types.borrow();
+        let mut tasks = Vec::new();
+        for (good_loc, bad_locs) in merge_conflicts.iter() {
+            let Some(good_fields) = fields.get(good_loc) else {
+                continue;
+            };
+            let first_decl = VirtualReason::new(VirtualReasonDesc::RInterfaceType, good_loc.dupe());
+            for bad_loc in bad_locs {
+                let Some(bad_fields) = fields.get(bad_loc) else {
+                    continue;
+                };
+                let current_decl =
+                    VirtualReason::new(VirtualReasonDesc::RInterfaceType, bad_loc.dupe());
+                let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
+                    first_decl: first_decl.dupe(),
+                    current_decl,
+                }));
+                for (name, bad_t) in bad_fields.iter() {
+                    if let Some(good_t) = good_fields.get(name) {
+                        tasks.push((use_op.dupe(), bad_t.dupe(), good_t.dupe()));
+                    }
+                }
+            }
+        }
+        tasks
+    }
+
+    pub fn interface_prop_ids(
+        &self,
+    ) -> std::cell::Ref<'_, BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>> {
+        self.0.ccx.interface_prop_ids.borrow()
+    }
+
+    /// Hand the merger a way to find this declaration's property maps later.
+    /// The ids point at the heap-allocated maps that back its InstanceT; the
+    /// merger takes those ids and copies properties between them when
+    /// several decls of the same interface need to be folded together.
+    pub fn add_interface_prop_ids(
+        &self,
+        loc: ALoc,
+        own_props: type_::properties::Id,
+        proto_props: type_::properties::Id,
+    ) {
+        self.0
+            .ccx
+            .interface_prop_ids
+            .borrow_mut()
+            .insert(loc, (own_props, proto_props));
     }
 
     pub fn env_cache_find_opt(

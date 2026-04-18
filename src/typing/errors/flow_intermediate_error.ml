@@ -683,6 +683,13 @@ let rec make_intermediate_error :
           ~specific_loc:(loc_of_aloc self_sig_loc)
           ~root_message:(RootCannotConformToCommonInterface { originate_from_import })
           ~custom_error_message
+      | Op (MergedDeclaration { first_decl; current_decl }) ->
+        root
+          ~loc
+          ~frames
+          ~root_reason:current_decl
+          ~root_message:(RootCannotMergeDeclaration { first_decl })
+          ~custom_error_message
       | Op (DeclareComponentRef { op }) ->
         root ~loc ~frames ~root_reason:op ~root_message:RootCannotDeclareRef ~custom_error_message
       | Op (FunCall { op; fn; _ }) ->
@@ -2142,6 +2149,14 @@ let to_printable_error :
       )
     | RootCannotConformToCommonInterface { originate_from_import = false } ->
       (OperationRoot, [text "Cannot conform to common interface module"])
+    | RootCannotMergeDeclaration { first_decl } ->
+      ( OperationRoot,
+        [
+          text "Cannot merge this interface declaration with previous declaration ";
+          ref first_decl;
+          text " because of conflicting property types";
+        ]
+      )
     | RootCannotCreateElement component ->
       (OperationRoot, [text "Cannot create "; desc component; text " element"])
     | RootCannotCreateRecord constructor ->

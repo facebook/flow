@@ -579,6 +579,10 @@ pub fn simplify<L: LocSig>(
         ValBindingKind::SourceLevelBinding(BindingsKind::Type {
             imported,
             type_only_namespace,
+        })
+        | ValBindingKind::SourceLevelBinding(BindingsKind::Interface {
+            imported,
+            type_only_namespace,
         }) => ValKind::Type {
             imported,
             type_only_namespace,

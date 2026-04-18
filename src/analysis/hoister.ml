@@ -308,6 +308,10 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
     method private add_type_binding ~imported entry =
       this#update_acc Bindings.(add (entry, Bindings.Type { imported; type_only_namespace = false }))
 
+    method private add_interface_binding ~imported entry =
+      this#update_acc
+        Bindings.(add (entry, Bindings.Interface { imported; type_only_namespace = false }))
+
     method! private add_const_binding ?kind entry =
       if lexical then super#add_const_binding ?kind entry
 
@@ -380,7 +384,7 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
-      if with_types then this#add_type_binding ~imported:false interface.id;
+      if with_types then this#add_interface_binding ~imported:false interface.id;
       super#interface loc interface
 
     method! import_declaration loc decl =
