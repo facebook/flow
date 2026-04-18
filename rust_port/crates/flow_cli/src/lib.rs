@@ -34,7 +34,6 @@ mod dump_types_command;
 mod env_builder_debug_command;
 mod extra_commands;
 mod find_module_command;
-mod flow_event_logger;
 mod force_recheck_command;
 mod foreground_check_commands;
 mod get_def_command;

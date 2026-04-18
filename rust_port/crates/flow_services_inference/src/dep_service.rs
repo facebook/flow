@@ -79,24 +79,24 @@ use flow_utils_concurrency::thread_pool::ThreadPool;
 // (sets of) modules and back that compose to give the dependency graph and the
 // dependent graph are useful intermediate data structures.
 
-/// Identify the direct dependents of new, changed, and deleted files.
-///
-/// Files that must be rechecked include those that immediately or recursively
-/// depended on modules whose providers were affected by new, changed, or deleted
-/// files. The latter modules, marked "changed," are calculated earlier when
-/// picking providers.
-///
-/// - candidates is the set of files which could be dependents. The returned sets will be subsets of
-///   the candidates set. For example, if we're calculating the dependents of all the changed files
-///   then this would be the set of unchanged files
-/// - root_files is the set of files for which we'd like to calculate dependents. This should be
-///   disjoint from candidates. If we wanted to calculate the dependents of all the changed files then
-///   this would be the set of changed files
-/// - root_modules is the set of modules for which we'd like to calculate dependents. If we wanted to
-///   calculate the dependents of all the changed files then this would be the set of module names
-///   which have new providers.
-///
-/// Return the subset of candidates directly dependent on root_modules / root_files.
+// Identify the direct dependents of new, changed, and deleted files.
+//
+// Files that must be rechecked include those that immediately or recursively
+// depended on modules whose providers were affected by new, changed, or deleted
+// files. The latter modules, marked "changed," are calculated earlier when
+// picking providers.
+//
+// - candidates is the set of files which could be dependents. The returned sets will be subsets of
+//   the candidates set. For example, if we're calculating the dependents of all the changed files
+//   then this would be the set of unchanged files
+// - root_files is the set of files for which we'd like to calculate dependents. This should be
+//   disjoint from candidates. If we wanted to calculate the dependents of all the changed files then
+//   this would be the set of changed files
+// - root_modules is the set of modules for which we'd like to calculate dependents. If we wanted to
+//   calculate the dependents of all the changed files then this would be the set of module names
+//   which have new providers.
+//
+// Return the subset of candidates directly dependent on root_modules / root_files.
 pub fn calc_unchanged_dependents(
     shared_mem: &SharedMem,
     _workers: Option<Vec<()>>,
@@ -196,7 +196,12 @@ pub fn calc_partial_dependency_graph(
     parsed: &FlowOrdSet<FileKey>,
 ) -> PartialDependencyGraph {
     let files_vec: Vec<FileKey> = files.iter().map(|f| f.dupe()).collect();
-    let next = map_reduce::make_next(pool.num_workers(), None, files_vec);
+    let next = map_reduce::make_next(
+        pool.num_workers(),
+        None::<fn(i32, i32, i32)>,
+        None,
+        files_vec,
+    );
 
     let dependency_graph: BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)> =
         map_reduce::call(

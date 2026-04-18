@@ -41,7 +41,15 @@ pub fn unit_of_op(op: OpMode) -> bool {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Kind {
     Checked,
     Any,
@@ -92,7 +100,15 @@ impl Kind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FileCoverage {
     pub checked: i32,
     pub uncovered: i32,
@@ -114,27 +130,27 @@ pub enum TvarStatus {
 }
 
 pub struct CoverageVisitor {
-    /// Type variables may appear in a cycle in the dependency graph, which requires
-    /// us to track the ones we've visited to avoid infinite recursion. There are three
-    /// stages of tvar resolution w.r.t coverage:
-    ///
-    /// - The tvar has not been seen before (there is no entry in tvar_cache). In this
-    ///   case we descend into the lower bounds of the tvar, marking its binding as
-    ///   Started in the tvar_cache.
-    ///
-    /// - The tvar has been seen and has been resolved (status = Done _). In this case
-    ///   we reuse the cached result.
-    ///
-    /// - The tvar is in the process of resolution (status = Started).
-    ///   These are types of the form:
-    ///
-    ///   ```js
-    ///     type X = X | number
-    ///              ^
-    ///   ```
-    ///   we consider the recursive occurrence as uncovered (Any). This case should
-    ///   be rare and it's arguable if we should be allowing it in the first place,
-    ///   so we assign the value that corresponds to the fewest guarantees.
+    // Type variables may appear in a cycle in the dependency graph, which requires
+    // us to track the ones we've visited to avoid infinite recursion. There are three
+    // stages of tvar resolution w.r.t coverage:
+    //
+    // - The tvar has not been seen before (there is no entry in tvar_cache). In this
+    //   case we descend into the lower bounds of the tvar, marking its binding as
+    //   Started in the tvar_cache.
+    //
+    // - The tvar has been seen and has been resolved (status = Done _). In this case
+    //   we reuse the cached result.
+    //
+    // - The tvar is in the process of resolution (status = Started).
+    //   These are types of the form:
+    //
+    //   ```js
+    //     type X = X | number
+    //              ^
+    //   ```
+    //   we consider the recursive occurrence as uncovered (Any). This case should
+    //   be rare and it's arguable if we should be allowing it in the first place,
+    //   so we assign the value that corresponds to the fewest guarantees.
     tvar_cache: BTreeMap<u32, TvarStatus>,
 }
 

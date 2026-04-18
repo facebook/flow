@@ -17,6 +17,7 @@ pub mod flow_symbol;
 pub mod flow_version;
 pub mod hint;
 pub mod js_number;
+pub mod lock;
 pub mod options;
 pub mod path_matcher;
 pub mod platform_set;
@@ -31,6 +32,5 @@ pub mod subst_name;
 pub mod sys_utils;
 pub mod verbose;
 
-// Re-export packed_locs from flow_packed_locs for backwards compatibility
 pub use flow_common_leb128 as leb128;
 pub use flow_packed_locs::packed_locs;

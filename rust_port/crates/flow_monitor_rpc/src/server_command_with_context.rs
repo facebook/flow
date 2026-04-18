@@ -8,6 +8,7 @@
 use crate::lsp_prot::LoggingContext;
 use crate::server_prot::request;
 
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ServerCommandWithContext {
     pub client_logging_context: LoggingContext,
     pub command: request::Command,

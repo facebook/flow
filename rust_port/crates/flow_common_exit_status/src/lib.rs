@@ -5,84 +5,92 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum FlowExitStatus {
-    /// Signaled
+    // Signaled
     Interrupted,
-    /// The generic 0 exit code
+    // The generic 0 exit code
     NoError,
-    /// Killed by Windows task manage
+    // Killed by Windows task manage
     WindowsKilledByTaskManager,
-    /// There are flow errors
+    // There are flow errors
     TypeError,
-    /// A command with a timeout timed out
+    // A command with a timeout timed out
     OutOfTime,
-    /// Failed to kill a server
+    // Failed to kill a server
     KillError,
-    /// The Flow server appears unused so it died out of sadness
+    // The Flow server appears unused so it died out of sadness
     UnusedServer,
-    /// There is no server running and we were told not to start one
+    // There is no server running and we were told not to start one
     NoServerRunning,
-    /// Ran out of retries
+    // Ran out of retries
     OutOfRetries,
-    /// Invalid .flowconfig
+    // Invalid .flowconfig
     InvalidFlowconfig,
-    /// Provided path is not a file as required
+    // Provided path is not a file as required
     PathIsNotAFile,
-    /// Different binaries being used together
+    // Different binaries being used together
     BuildIdMismatch,
-    /// Generic "Bad Input" kind of error
+    // Generic "Bad Input" kind of error
     InputError,
-    /// Failed to acquire lock or lost lock
+    // Failed to acquire lock or lost lock
     LockStolen,
-    /// Specific error for not being able to find a .flowconfig
+    // Specific error for not being able to find a .flowconfig
     CouldNotFindFlowconfig,
-    /// Failed to extract flowlibs into temp dir
+    // Failed to extract flowlibs into temp dir
     CouldNotExtractFlowlibs,
-    /// Generic out-of-date error. This could be a version thing or maybe
-    /// something changed and Flow can't handle it incrementally yet
+    // Generic out-of-date error. This could be a version thing or maybe
+    // something changed and Flow can't handle it incrementally yet
     ServerOutOfDate,
-    /// When the shared memory is missing space (e.g. full /dev/shm)
+    // When the shared memory is missing space (e.g. full /dev/shm)
     OutOfSharedMemory,
-    /// The .flowconfig has changed and we're out of date
+    // The .flowconfig has changed and we're out of date
     FlowconfigChanged,
-    /// Failed to parse the command line or misuse of command line arguments
+    // Failed to parse the command line or misuse of command line arguments
     CommandlineUsageError,
-    /// No input
+    // No input
     NoInput,
-    /// Failed to start a server
+    // Failed to start a server
     ServerStartFailed,
-    /// Something went wrong with extracting the flowlib
+    // Something went wrong with extracting the flowlib
     MissingFlowlib,
-    /// Flow monitor had been instructed to exit when there were no more clients
+    // Flow monitor had been instructed to exit when there were no more clients
     Autostop,
-    /// Server exited because the monitor asked it to
+    // Server exited because the monitor asked it to
     KilledByMonitor,
-    /// The saved state file is invalid and we're running with --saved-state-no-fallback
+    // The saved state file is invalid and we're running with --saved-state-no-fallback
     InvalidSavedState,
-    /// The server would like to restart, likely since re-init'ing is faster than a recheck
+    // The server would like to restart, likely since re-init'ing is faster than a recheck
     Restart,
-    /// The hack code might throw this
+    // The hack code might throw this
     SocketError,
-    /// The hack code might throw this
+    // The hack code might throw this
     DfindDied,
-    /// A fatal error with Watchman
+    // A fatal error with Watchman
     WatchmanError,
-    /// A fatal error with Watchman (TODO: dedupe with Watchman_error)
+    // A fatal error with Watchman (TODO: dedupe with Watchman_error)
     WatchmanFailed,
-    /// Watchman restarted
+    // Watchman restarted
     FileWatcherMissedChanges,
-    /// Shared memory hash table is full
+    // Shared memory hash table is full
     HashTableFull,
-    /// Shared memory heap is full
+    // Shared memory heap is full
     HeapFull,
-    /// EventLogger daemon ran out of restarts
+    // EventLogger daemon ran out of restarts
     EventLoggerRestartOutOfRetries,
-    /// A generic something-else-went-wrong
+    // A generic something-else-went-wrong
     UnknownError,
-    /// The EdenFS watcher failed in a way we cannot recover from
+    // The EdenFS watcher failed in a way we cannot recover from
     EdenfsWatcherFailed,
-    /// EdenFS watcher lost track of changes (e.g., due to an Eden restart)
+    // EdenFS watcher lost track of changes (e.g., due to an Eden restart)
     EdenfsWatcherLostChanges,
 }
 

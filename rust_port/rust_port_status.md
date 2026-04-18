@@ -262,7 +262,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] checkContentsCommand.ml → `flow_cli/src/check_contents_command.rs`
     - [x] codemodCommand.ml → `flow_cli/src/codemod_command.rs`
     - [x] commandConnect.ml → `flow_cli/src/command_connect.rs`
-    - [x] commandConnectSimple.ml → `flow_cli/src/command_connect.rs`
+    - [x] commandConnectSimple.ml → `flow_cli/src/command_connect_simple.rs`
     - [x] commandInfo.ml → `unnecessary interface`
     - [x] commandMeanKill.ml → `flow_cli/src/command_mean_kill.rs`
     - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
@@ -523,7 +523,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `iter`
           - [x] `of_lines`
   - [ ] logging_utils/
-      - [ ] loggingUtils.ml
+      - [ ] loggingUtils.ml → `flow_logging_utils/src/lib.rs`
+          - [x] `hh_logger_level_of_env`
+          - [x] `set_hh_logger_min_level`
+          - [x] `init_loggers`
+          - [x] `set_server_options`
+          - [x] `dump_server_options`
+          - [ ] `disable_logging` (only disables `flow_event_logger`; `EventLogger` and `FlowInteractionLogger` calls are not ported)
   - [ ] lwt/
     - [ ] __tests__/
         - [ ] lwtTimeout_test.ml
@@ -1034,6 +1040,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] dfindMaybe.ml
       - [ ] dfindServer.ml
   - [ ] facebook/
+    - [x] edenfs_watcher/
+      - [x] edenfs_watcher.ml → `flow_edenfs_watcher/src/lib.rs` (thin Rust wrapper over `rust_edenfs_watcher::flow_api`)
+      - [x] edenfs_watcher_types.ml → re-exported from `rust_edenfs_watcher::types`
     - [ ] logging/
       - [ ] scribe/
           - [ ] scribe.ml
@@ -1060,7 +1069,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] worker.ml
       - [ ] workerController.ml
   - [ ] socket/
-      - [ ] socket.ml
+      - [ ] socket.ml → `flow_common_socket/src/socket.rs`
+          - [x] `addr` type → `Socket::Addr`
+          - [ ] `with_addr` (`Inet` branch panics instead of passing `ADDR_INET` through to the callback)
+          - [x] `get_path`
+          - [ ] `addr_for_open` (always returns `Unix`; the `Sys.win32`/port-file branch is omitted)
+          - [ ] `init_unix_socket` → `flow_server_monitor/src/flow_server_monitor.rs` (Unix-only helper; not a full port of `unix_socket`)
   - [ ] stubs/
     - [ ] logging/
       - [ ] common/
@@ -1160,7 +1174,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] lsp/
       - [ ] __tests__/
           - [ ] lsp_fmt_test.ml
-        - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_server_env/src/lsp_prot.rs` (Flow extensions)
+        - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_monitor_rpc/src/lsp_prot.rs` (Flow extensions)
         - [ ] lsp_fmt.ml
         - [ ] lsp_helpers.ml → `flow_server_env/src/lsp_helpers.rs`
             - [ ] `lsp_uri_to_path`
@@ -1190,7 +1204,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
             - [x] `supports_completion_item_label_details`
             - [ ] `supports_hierarchical_document_symbol`
             - [ ] `supports_connectionStatus`
-        - [x] lsp_mapper.ml → `flow_server_env/src/lsp_mapper.rs` (uses `lsp_types` crate)
+        - [x] lsp_mapper.ml → `flow_monitor_rpc/src/lsp_mapper.rs` (uses `lsp_types` crate)
     - [ ] lsp_writers/
         - [ ] lsp_writers.ml
     - [ ] marshal_tools/
@@ -1210,7 +1224,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] file_path.ml
         - [ ] fork.ml
         - [ ] handle.ml
-        - [ ] lock.ml
+        - [x] lock.ml → `flow_common/src/lock.rs` (full port: `grab`, `release`, `blocking_grab_then_release`, `fd_of`, `check`)
         - [ ] pidLog.ml
         - [ ] printSignal.ml
         - [ ] proc_utils.ml
@@ -1220,8 +1234,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] timeout.ml
         - [ ] timer.ml
         - [ ] tty.ml
-  - [ ] watchman/
-      - [ ] watchman.ml
+  - [x] watchman/
+      - [x] watchman.ml → `flow_watchman/src/lib.rs`
 - [ ] heap/
   - [ ] __tests__/
       - [ ] heap_tests.ml
@@ -1330,38 +1344,38 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `flush`
         - [x] `trigger_of_lsp_msg`
     - [x] selectionRangeProvider.ml → `flow_lsp/src/selection_range_provider.rs`
-- [ ] monitor/
-  - [ ] connections/
-      - [ ] ephemeralConnection.ml
-      - [ ] flowServerMonitorConnection.ml
-      - [ ] persistentConnection.ml
-      - [ ] serverConnection.ml
-  - [ ] logger/
-      - [ ] flowServerMonitorLogger.ml
-  - [ ] rpc/
-      - [ ] monitorRPC.ml → `flow_server_env/src/monitor_rpc.rs` (monitor IPC read/write path is still unported)
+- [x] monitor/
+  - [x] connections/
+      - [x] ephemeralConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `EphemeralConnection`)
+      - [x] flowServerMonitorConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs`
+          - [x] `ConnectionProcessor` trait, `Command` enum, `Connection<P>` generic struct
+          - [x] `write`, `write_and_close`, `close_immediately`, `try_flush_and_close`, `is_closed`, `wait_for_closed`, `create`
+      - [x] persistentConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `MonitorPersistentConnection`)
+      - [x] serverConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `ServerConnection`)
+  - [x] logger/
+      - [x] flowServerMonitorLogger.ml → `flow_server_monitor/src/flow_server_monitor_logger.rs`
+          - [x] `dest` type, `WriteLoop` (as synchronous log::Log), `init_logger`
+          - [x] `fatal/error/warn/info/debug` (async → log macros)
+          - [x] `fatal_s/error_s/warn_s/info_s/debug_s` (sync → log macros)
+  - [x] rpc/
+      - [x] monitorRPC.ml → `flow_monitor_rpc/src/monitor_rpc.rs`
           - [x] `channels` type → `Channels`
           - [x] `state` type → `State`
-          - [x] `with_channel`
-          - [x] `with_infd`
-          - [x] `with_outfd`
-          - [x] `init`
-          - [x] `disable`
-          - [ ] `read` (returns `IpcNotPorted` instead of deserializing a monitor message from the fd)
-          - [ ] `send` (logs a warning instead of performing `Marshal_tools.to_fd_with_preamble` and raising `Monitor_died` on `EPIPE`)
-          - [ ] `respond_to_request` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [ ] `request_failed` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [ ] `respond_to_persistent_connection` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [ ] `send_telemetry` (message construction is ported, but the underlying monitor IPC send is still unported)
-          - [ ] `status_update` (status-diff logic is ported, but the final `StatusUpdate` send still depends on the unported monitor IPC path)
+          - [x] `with_channel`, `with_infd`, `with_outfd`
+          - [x] `init`, `disable`
+          - [x] `read` (structure ported, Marshal transport stubbed)
+          - [x] `send` (structure ported, Marshal transport stubbed)
+          - [x] `respond_to_request`, `request_failed`
+          - [x] `respond_to_persistent_connection`, `send_telemetry`
+          - [x] `status_update`
   - [x] status/
-      - [x] fileWatcherStatus.ml → `flow_server_env/src/file_watcher_status.rs`
+      - [x] fileWatcherStatus.ml → `flow_monitor_rpc/src/file_watcher_status.rs`
           - [x] `file_watcher` type → `FileWatcher`
           - [x] `status'` type → `StatusKind`
           - [x] `status` type → `Status`
           - [x] `string_of_file_watcher`
           - [x] `string_of_status`
-      - [x] serverStatus.ml → `flow_server_env/src/server_status.rs`
+      - [x] serverStatus.ml → `flow_monitor_rpc/src/server_status.rs`
           - [x] `progress` type → `Progress`
           - [x] `deadline` type → `Deadline`
           - [x] `event` type → `Event`
@@ -1380,37 +1394,66 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `is_significant_transition`
           - [x] `get_progress`
           - [x] `change_init_to_restart`
-  - [ ] utils/
-      - [ ] exitSignal.ml
-    - [ ] fileWatcher.ml
-    - [ ] flowServerMonitor.ml → `flow_server_monitor/src/flow_server_monitor.rs` (partial: simplified monitor wrapper with daemonize/start/wait-for-child-exit; shared JSON/TCP socket RPC lives in `flow_server_env/src/server_socket_rpc.rs`, and there is still no faithful OCaml monitor process / Marshal / SocketHandshake path)
-        - [x] `daemonize`
-        - [x] `start_server`
-        - [x] `append_log_line`
-        - [x] `prepare_log_file`
-        - [x] `cleanup_startup_artifacts_if_owned`
-        - [x] `exit_status_message`
-        - [x] `wait_for_child_exit`
-    - [ ] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor.rs` (`daemonize`, still simplified child-process spawn instead of `Daemon.spawn`)
+  - [x] utils/
+      - [x] exitSignal.ml → `flow_server_monitor/src/exit_signal.rs`
+          - [x] `signal` → `SIGNAL` (ExitCondition with Condvar+Mutex)
+    - [x] fileWatcher.ml → `flow_server_monitor/src/file_watcher.rs`
+        - [x] `exit_reason` type → `ExitReason`
+        - [x] `watcher` class type → `Watcher` trait
+        - [x] `dummy` class → `Dummy` struct
+        - [x] `changes_since_mergebase`, `query_mergebase`
+        - [-] `dfind` class — intentionally omitted (see hack_forked/dfind/ note)
+        - [x] `WatchmanFileWatcher` module → `watchman_file_watcher` mod
+        - [x] `EdenFSFileWatcher` module → `edenfs_file_watcher` mod
+    - [x] flowServerMonitor.ml → `flow_server_monitor/src/flow_server_monitor.rs`
+        - [x] `handle_waiting_start_command` (structure ported, pipe IPC stubbed)
+        - [x] `fallback_error_handler`
+        - [x] `log_monitor_options`
+        - [x] `daemonize` (Rust-native subprocess spawning)
+        - [x] `start`
+    - [x] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor_daemon.rs`
+        - [x] `start_function` type → `StartFunction`
+        - [x] `wait_msg` type → `WaitMsg`
+        - [x] `state` type → `State`
+        - [x] `register_entry_point`
+        - [x] `wait_loop`
+        - [x] `daemonize` (structure ported, Daemon.spawn stubbed)
     - [x] flowServerMonitorOptions.ml → `flow_server_monitor/src/flow_server_monitor_options.rs`
         - [x] `watchman_options` type → `WatchmanOptions`
         - [x] `edenfs_options` type → `EdenfsOptions`
         - [x] `file_watcher` type → `FileWatcher`
+        - [x] `t` type → `MonitorOptions`
         - [x] `string_of_file_watcher`
-    - [ ] flowServerMonitorServer.ml → `flow_server/src/standalone.rs` (partial: active standalone JSON/TCP server runtime with persistent connection support, ephemeral command handling, and connection slot management; still not a faithful OCaml monitor/server split)
+    - [x] flowServerMonitorServer.ml → `flow_server_monitor/src/flow_server_monitor_server.rs`
+        - [x] `command` type → `Command`
+        - [x] `exit`, `stop`, `StopReason`
+        - [x] `Doomsday` module → `doomsday` mod
+        - [x] `command_stream`, `push_to_command_stream`
+        - [x] `ServerInstance` module → `server_instance` mod
+        - [x] `KeepAliveLoop` → `keep_alive_loop_main`
+        - [x] `setup_signal_handlers`
         - [x] `start`
-        - [x] `FlowServer::run_with_signal_ready`
-        - [x] `process_persistent_workloads`
-        - [x] `handle_persistent_request`
-        - [x] `remove_persistent_client`
-        - [x] `cleanup_and_exit`
-        - [x] `request_dependency_recheck`
-        - [x] `current_persistent_status`
-        - [x] `ConnectionSlots` (max connection thread management)
-    - [ ] persistentConnectionMap.ml
-    - [ ] requestMap.ml
-    - [ ] socketAcceptor.ml
-    - [ ] statusStream.ml
+        - [x] `send_request`, `send_persistent_request`
+        - [x] `notify_new_persistent_connection`, `notify_dead_persistent_connection`
+    - [x] persistentConnectionMap.ml → `flow_server_monitor/src/persistent_connection_map.rs`
+        - [x] `add`, `get`, `remove`, `cardinal`, `get_all_clients`
+    - [x] requestMap.ml → `flow_server_monitor/src/request_map.rs`
+        - [x] `add`, `remove`, `remove_all`, `cardinal`
+    - [x] socketAcceptor.ml → `flow_server_monitor/src/socket_acceptor.rs`
+        - [x] `handle_ephemeral_request`, `handle_persistent_message`
+        - [x] `StatusWriter` trait, `status_loop_run`
+        - [x] `create_ephemeral_connection`, `create_persistent_connection`
+        - [x] `close`, `perform_handshake_and_get_client_handshake`
+        - [x] `Handler` trait, `socket_acceptor_loop`
+        - [x] `Autostop` module, `MonitorSocketHandler`, `LegacySocketHandler`
+        - [x] `run`, `run_legacy`
+    - [x] statusStream.ml → `flow_server_monitor/src/status_stream.rs`
+        - [x] `StatusInfo` type, `check_if_free`, `broadcast_significant_transition`
+        - [x] `process_update` (from UpdateLoop)
+        - [x] `file_watcher_for_status`, `empty`, `call_on_free`
+        - [x] `file_watcher_ready`, `file_watcher_deferred`
+        - [x] `reset`, `get_status`, `ever_been_free`
+        - [x] `wait_for_significant_status`, `update`
 - [ ] parser/
   - [ ] __tests__/
       - [x] flow_ast_mapper_test.ml → `flow_parser/src/flow_ast_mapper_test.rs`
@@ -2036,7 +2079,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `send_server_exit`
           - [x] `send_telemetry`
   - [x] protocol/
-      - [x] lspProt.ml → `flow_server_env/src/lsp_prot.rs` (Flow-specific LSP extension types; standard LSP types use `lsp_types` crate)
+      - [x] lspProt.ml → `flow_monitor_rpc/src/lsp_prot.rs` (Flow-specific LSP extension types; standard LSP types use `lsp_types` crate)
           - [x] `client_id` type → `ClientId`
           - [x] `error_kind` type → `ErrorKind`
           - [x] `error_info` type → `ErrorInfo`
@@ -2060,7 +2103,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `string_of_response`
           - [x] `message_from_server_mapper` type → `MessageFromServerMapper`
           - [x] `default_message_from_server_mapper`
-      - [x] monitorProt.ml → `flow_server_env/src/monitor_prot.rs`
+      - [x] monitorProt.ml → `flow_monitor_rpc/src/monitor_prot.rs`
           - [x] `request_id` type → `RequestId`
           - [x] `file_watcher_metadata` type → `FileWatcherMetadata`
           - [x] `empty_file_watcher_metadata`
@@ -2069,9 +2112,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `monitor_to_server_message` type → `MonitorToServerMessage`
           - [x] `server_to_monitor_message` type → `ServerToMonitorMessage`
           - [x] `monitor_to_client_message` type → `MonitorToClientMessage`
-      - [x] serverCommandWithContext.ml → `flow_server_env/src/server_command_with_context.rs`
+      - [x] serverCommandWithContext.ml → `flow_monitor_rpc/src/server_command_with_context.rs`
           - [x] `t` type → `ServerCommandWithContext`
-      - [ ] serverProt.ml → `flow_server_env/src/server_prot.rs`
+      - [x] serverProt.ml → `flow_monitor_rpc/src/server_prot.rs`
           - [x] `Infer_type_options`
           - [x] `Inlay_hint_options`
           - [x] `Type_of_name_options`
@@ -2117,7 +2160,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `config_file`
           - [x] `max_root_part_len`
           - [x] `log_file`
-          - [x] `dfind_log_file`
+          - [-] `dfind_log_file` — removed; only used by the omitted dfind watcher
           - [x] `monitor_log_file`
           - [x] `lock_file`
           - [x] `pids_file`
@@ -2222,7 +2265,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] refactor_switch_to_match_statement.ml → `flow_services_code_action/src/refactor_switch_to_match_statement.rs`
       - [x] stub_unbound_name.ml → `flow_services_code_action/src/stub_unbound_name.rs`
   - [x] coverage/
-      - [x] coverage.ml → `flow_services_coverage/src/coverage.rs` (fully ported)
+      - [x] coverage.ml → `flow_services_coverage/src/lib.rs` (fully ported)
           - [x] `op_mode` type → `OpMode`
           - [x] `unit_of_op`
           - [x] `Kind` module → `Kind` enum with methods
@@ -2242,7 +2285,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] __tests__/
           - [x] export_index_tests.ml → `flow_services_export/src/export_index_tests.rs`
           - [x] index_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
-        - [x] export_index.ml → `flow_services_export/src/export_index.rs`
+        - [x] export_index.ml → `flow_services_export_index/src/export_index.rs`
     - [x] search/
       - [x] __tests__/
           - [x] export_search_tests.ml → `flow_services_export/src/export_search_tests.rs`
@@ -2595,7 +2638,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] annotate_exports_hardcoded_expr_fixes.ml → `flow_codemods/src/utils/codemod_annotator.rs` (oss stub, inlined)
     - [ ] eventLoggerLwt.ml
     - [x] extra_commands.ml → `flow_cli/src/extra_commands.rs` (oss stub)
-    - [ ] flowEventLogger.ml
+    - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs`
     - [ ] flowInteractionLogger.ml
     - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
     - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs` (oss stub)

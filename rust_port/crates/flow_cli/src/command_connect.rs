@@ -85,7 +85,7 @@ fn start_flow_server(env: &Env) -> Result<(), (String, flow_common_exit_status::
     );
     arg("--lazy-mode", *lazy_mode, &mut args);
     arg("--temp-dir", Some(tmp_dir), &mut args);
-    let from = crate::flow_event_logger::get_from_i_am_a_clown();
+    let from = flow_event_logger::get_from_i_am_a_clown();
     arg("--from", from.as_deref(), &mut args);
     flag("--ignore-version", *ignore_version, &mut args);
     flag("--quiet", *quiet, &mut args);

@@ -33,7 +33,6 @@ pub struct Error(pub u32, pub String);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileWatcher {
     NoFileWatcher,
-    DFind,
     Watchman,
     EdenFS,
 }
@@ -532,7 +531,6 @@ pub mod opts {
         let mut i = 0;
         while i < chars.len() {
             if chars[i] == '\\' && i + 1 < chars.len() && chars[i + 1].is_ascii_digit() {
-                // \N -> ${N} (use braced form to avoid ambiguity with following chars)
                 result.push_str("${");
                 result.push(chars[i + 1]);
                 result.push('}');
@@ -1211,7 +1209,7 @@ pub mod opts {
         enum_parser(
             &[
                 ("none", FileWatcher::NoFileWatcher),
-                ("dfind", FileWatcher::DFind),
+                ("dfind", FileWatcher::Watchman),
                 ("watchman", FileWatcher::Watchman),
                 ("edenfs", FileWatcher::EdenFS),
             ],
@@ -2221,8 +2219,6 @@ pub mod opts {
                 "experimental.channel_mode.windows" => {
                     Some(channel_mode_parser(values, config, cfg!(windows)))
                 }
-                // ( "experimental.llm_context.include_imports",
-                //   boolean (fun opts v -> Ok { opts with llm_context_include_imports = v }) );
                 "experimental.llm_context.include_imports" => Some(parse_boolean(
                     |opts, v| {
                         opts.llm_context_include_imports = v;
@@ -2231,8 +2227,6 @@ pub mod opts {
                     values,
                     config,
                 )),
-                // ( "experimental.log_per_error_typing_telemetry",
-                //   boolean (fun opts v -> Ok { opts with log_per_error_typing_telemetry = v }) );
                 "experimental.log_per_error_typing_telemetry" => Some(parse_boolean(
                     |opts, v| {
                         opts.log_per_error_typing_telemetry = v;

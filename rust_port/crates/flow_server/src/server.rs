@@ -219,9 +219,7 @@ fn gc_loop(
 ) {
     while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
         std::thread::sleep(std::time::Duration::from_millis(10));
-        let on_compact = on_compact(shared_mem);
         let done = shared_mem.collect_slice(10000);
-        on_compact();
         if done {
             break;
         }
@@ -294,7 +292,7 @@ fn serve(
 }
 
 #[allow(dead_code)]
-pub(crate) fn on_compact(shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) -> impl FnOnce() {
+pub(crate) fn on_compact(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) -> impl FnOnce() {
     monitor_rpc::status_update(server_status::Event::GCStart);
     let old_size = shared_mem.heap_size();
     let start_t = std::time::Instant::now();
@@ -302,7 +300,6 @@ pub(crate) fn on_compact(shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) 
         .borrow_mut()
         .clear();
     persistent_connection::clear_type_parse_artifacts_caches();
-    let shared_mem = shared_mem.clone();
     move || {
         let new_size = shared_mem.heap_size();
         let time_taken = start_t.elapsed().as_secs_f64();
@@ -328,6 +325,10 @@ pub fn create_program_init(init_id: &str, options: Arc<Options>) -> Genv {
     }
 
     let shared_mem = Arc::new(flow_heap::parsing_heaps::SharedMem::new());
+    let shared_mem_for_on_compact = shared_mem.clone();
+    shared_mem.set_on_compact(Arc::new(move || {
+        Box::new(on_compact(shared_mem_for_on_compact.clone()))
+    }));
     server_env_build::make_genv(options, init_id, shared_mem)
 }
 
@@ -343,7 +344,6 @@ fn detect_linux_distro() -> Option<String> {
         Some(line) => {
             let id = &line[3..];
             let id = id.trim();
-            // Remove quotes if present
             let id = if id.len() >= 2 && id.starts_with('"') && id.ends_with('"') {
                 &id[1..id.len() - 1]
             } else {
@@ -379,15 +379,37 @@ pub fn check_supported_operating_system(options: &Options) {
     }
 }
 
-fn run(_init_id: &str, _options: Arc<Options>) {
+fn run(
+    _init_id: &str,
+    _options: Arc<Options>,
+    ready_path: Option<&str>,
+    monitor_channels: Option<monitor_rpc::Channels>,
+) {
+    // Check if the current operating system is supported
     check_supported_operating_system(&_options);
 
-    // The active CLI `flow start` / `flow server` path still goes through
-    // `flow_server_monitor` -> `flow_server::standalone`. This older server
-    // entrypoint remains off that path and therefore runs without monitor IPC.
-    monitor_rpc::disable();
+    match monitor_channels {
+        Some(channels) => monitor_rpc::init(channels),
+        None => monitor_rpc::disable(),
+    }
 
-    let genv = create_program_init(_init_id, _options.clone());
+    let genv_arc = Arc::new(create_program_init(_init_id, _options.clone()));
+    let listener_running = matches!(monitor_rpc::state(), monitor_rpc::StateKind::Initialized);
+    if listener_running {
+        let genv_for_listener = genv_arc.clone();
+        std::thread::spawn(move || {
+            let callbacks = flow_server_env::server_monitor_listener::CommandHandlerCallbacks {
+                enqueue_or_handle_ephemeral:
+                    flow_server_command_handler::command_handler::enqueue_or_handle_ephemeral,
+                enqueue_persistent:
+                    flow_server_command_handler::command_handler::enqueue_persistent,
+            };
+            flow_server_env::server_monitor_listener::listen_for_messages(
+                &genv_for_listener,
+                &callbacks,
+            );
+        });
+    }
 
     let t = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -415,15 +437,22 @@ fn run(_init_id: &str, _options: Arc<Options>) {
 
     monitor_rpc::status_update(server_status::Event::InitStart);
 
-    extract_flowlibs_or_exit(&genv.options);
+    extract_flowlibs_or_exit(&genv_arc.options);
 
     let should_print_summary = _options.profile;
-    let pool = genv.workers.as_ref().expect("workers must be initialized");
+    let pool = genv_arc
+        .workers
+        .as_ref()
+        .expect("workers must be initialized");
     let (profiling, (env, node_modules_containers, first_internal_error)) =
         with_profiling("Init", should_print_summary, |profiling| {
             let (env, node_modules_containers, first_internal_error) =
-                flow_services_inference::type_service::init(&genv.options, pool, &genv.shared_mem);
-            sample_init_memory(profiling, &genv.shared_mem);
+                flow_services_inference::type_service::init(
+                    &genv_arc.options,
+                    pool,
+                    &genv_arc.shared_mem,
+                );
+            sample_init_memory(profiling, &genv_arc.shared_mem);
             (env, node_modules_containers, first_internal_error)
         });
     let init_duration = profiling.get_profiling_duration();
@@ -444,13 +473,20 @@ fn run(_init_id: &str, _options: Arc<Options>) {
 
     log::info!("Server is READY");
 
+    crate::ready::signal_ready_file(ready_path);
+
     let t_prime = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs_f64();
     log::info!("Took {} seconds to initialize.", t_prime - t);
 
-    serve(&genv, env, &genv.shared_mem, &node_modules_containers);
+    serve(
+        &genv_arc,
+        env,
+        &genv_arc.shared_mem,
+        &node_modules_containers,
+    );
 }
 
 fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
@@ -462,9 +498,14 @@ fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
     }
 }
 
-fn run_from_daemonize(_init_id: &str, _options: Arc<Options>) {
+fn run_from_daemonize(
+    _init_id: &str,
+    _options: Arc<Options>,
+    ready_path: Option<String>,
+    monitor_channels: Option<monitor_rpc::Channels>,
+) {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(_init_id, _options);
+        run(_init_id, _options, ready_path.as_deref(), monitor_channels);
     }));
     match result {
         Ok(()) => {}
@@ -588,9 +629,26 @@ pub fn daemonize(
     argv: &[String],
     file_watcher_pid: Option<u32>,
     options: Arc<Options>,
-) {
-    let entry = server_daemon::register_entry_point(|init_id, options| {
-        run_from_daemonize(init_id, options);
+    ready_path: Option<String>,
+    monitor_channels: Option<monitor_rpc::Channels>,
+) -> std::thread::JoinHandle<()> {
+    let monitor_channels_slot = std::sync::Arc::new(std::sync::Mutex::new(monitor_channels));
+    let entry_channels_slot = monitor_channels_slot.clone();
+    let entry = server_daemon::register_entry_point(move |init_id, options| {
+        let channels = entry_channels_slot.lock().unwrap().take();
+        run_from_daemonize(init_id, options, ready_path.clone(), channels);
     });
-    server_daemon::daemonize(init_id, log_file, argv, options, file_watcher_pid, &entry);
+    let init_id_owned = init_id.to_string();
+    let log_file_owned = log_file.to_string();
+    let argv_owned: Vec<String> = argv.to_vec();
+    std::thread::spawn(move || {
+        server_daemon::daemonize(
+            &init_id_owned,
+            &log_file_owned,
+            &argv_owned,
+            options,
+            file_watcher_pid,
+            &entry,
+        );
+    })
 }

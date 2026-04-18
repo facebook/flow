@@ -267,12 +267,6 @@ pub fn do_parse(
                 let requires: Vec<FlowImportSpecifier> =
                     file_sig.require_loc_map().into_keys().collect();
 
-                // TODO: compute globals
-                // let (_, (_, _, globals)) =
-                //   let enable_enums = Options.enums options in
-                //   Ssa_builder.program_with_scope ~enable_enums ast
-                // If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig
-
                 if let Ok(parse_errors) = Vec1::try_from_vec(parse_errors) {
                     ParseResult::ParseRecovered {
                         ast,
@@ -289,9 +283,6 @@ pub fn do_parse(
 
                     let exports_result = exports::of_module(&type_sig);
                     let imports_result = imports::of_file_sig(&file_sig);
-                    // TODO: add globals when Ssa_builder is ported
-                    // let imports = Imports.add_globals globals imports;
-
                     let tolerable_errors = sig_errors
                         .into_iter()
                         .filter_map(|err| match err {
@@ -351,14 +342,6 @@ fn content_hash_matches_old_file_hash(
     file: &FileKey,
     content_hash: u64,
 ) -> bool {
-    // Compare against the latest (most recently committed) file hash.
-    // This detects whether the file has actually changed since the last recheck.
-    //
-    // Note: we use get_file_hash (latest) rather than get_file_hash_committed (old)
-    // because our Entity's "old" slot tracks the value from before the most recent
-    // set() call, not the most recently committed transaction value. Using latest
-    // correctly detects changes like A -> B -> A (revert), where the committed
-    // value after the first recheck is B, not A.
     shared_mem
         .get_file_hash(file)
         .map(|old_hash| old_hash == content_hash)
@@ -397,10 +380,6 @@ fn reducer(
     acc: &mut ParseResults,
     file_key: FileKey,
 ) {
-    // In OCaml, this skip only applies during the true init transaction, where
-    // duplicate file walks can ask us to parse the same file twice. Approximate
-    // that here by skipping only files that have an uncommitted parse entry,
-    // i.e. files first parsed earlier in this same transaction.
     if is_init
         && shared_mem.get_parse(&file_key).is_some()
         && shared_mem.get_parse_committed(&file_key).is_none()
@@ -578,6 +557,38 @@ fn merge(a: &mut ParseResults, b: ParseResults) {
 }
 
 // ***************************** public ********************************
+
+pub fn next_of_filename_set(
+    pool: &ThreadPool,
+    filenames: Vec<FileKey>,
+    progress_fn: Option<
+        impl Fn(/*total:*/ i32, /*start:*/ i32, /*length:*/ i32) + Send + Sync + 'static,
+    >,
+) -> Next {
+    match progress_fn {
+        Some(progress_fn) => {
+            let bucket_next =
+                map_reduce::make_next(pool.num_workers(), Some(progress_fn), None, filenames);
+            Box::new(move || match bucket_next.next() {
+                map_reduce::Bucket::Job(batch) => Some(batch),
+                map_reduce::Bucket::Wait | map_reduce::Bucket::Done => None,
+            })
+        }
+        None => {
+            let bucket_next = map_reduce::make_next(
+                pool.num_workers(),
+                None::<fn(i32, i32, i32)>,
+                None,
+                filenames,
+            );
+            Box::new(move || match bucket_next.next() {
+                map_reduce::Bucket::Job(batch) => Some(batch),
+                map_reduce::Bucket::Wait | map_reduce::Bucket::Done => None,
+            })
+        }
+    }
+}
+
 fn parse(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
@@ -662,14 +673,15 @@ pub fn reparse_with_defaults(
     )
 }
 
-/// ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
-/// Any not-yet-parsed files whose on-disk contents don't match their already-known hash are skipped
-/// and returned to the caller.
+// ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
+// Any not-yet-parsed files whose on-disk contents don't match their already-known hash are skipped
+// and returned to the caller.
 pub fn ensure_parsed(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
     files: FlowOrdSet<FileKey>,
+    progress_fn: impl Fn(/*total:*/ i32, /*start:*/ i32, /*length:*/ i32) + Send + Sync + 'static,
 ) -> FlowOrdSet<FileKey> {
     let files_vec: Vec<FileKey> = files.into_iter().collect();
     let files_missing_asts: FlowOrdSet<FileKey> = {
@@ -706,6 +718,7 @@ pub fn ensure_parsed(
     let next: Next = {
         let bucket_next = map_reduce::make_next(
             pool.num_workers(),
+            Some(progress_fn),
             None,
             files_missing_asts.into_iter().collect(),
         );

@@ -105,25 +105,6 @@ fn dump_server_options(options: &Options) {
     }
 }
 
-fn acquire_lock(lock_file: &str) -> std::io::Result<fs::File> {
-    if let Some(parent) = Path::new(lock_file).parent() {
-        fs::create_dir_all(parent)?;
-    }
-    let file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .open(lock_file)?;
-    match file.try_lock() {
-        Ok(()) => Ok(file),
-        Err(fs::TryLockError::WouldBlock) => Err(std::io::Error::new(
-            std::io::ErrorKind::AlreadyExists,
-            "lock file is already held",
-        )),
-        Err(err) => Err(err.into()),
-    }
-}
-
 pub struct Args {
     pub options: Arc<Options>,
     pub init_id: String,
@@ -136,7 +117,6 @@ pub struct Args {
 pub type EntryPoint = Box<dyn Fn(Args) + Send + Sync>;
 
 pub fn try_open_log_file(file: &str) -> Result<fs::File, String> {
-    // Not a huge problem, we just need to be more intentional
     if Path::new(file).exists() {
         let old_file = format!("{}.old", file);
         if let Err(e) = (|| -> std::io::Result<()> {
@@ -218,28 +198,33 @@ pub fn daemonize(
     let tmp_dir = &options.temp_dir;
     let flowconfig_name = &options.flowconfig_name;
     let lock = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
-    let _lock_file = match acquire_lock(&lock) {
-        Ok(file) => file,
-        Err(_) => {
-            let msg = format!(
-                "Error: There is already a server running for {}",
-                root.display()
-            );
-            eprintln!("{}", msg);
-            flow_common_exit_status::exit(FlowExitStatus::LockStolen);
-        }
-    };
+    if !flow_common::lock::check(&lock) {
+        let msg = format!(
+            "Error: There is already a server running for {}",
+            root.display()
+        );
+        eprintln!("{}", msg);
+        flow_common_exit_status::exit(FlowExitStatus::LockStolen);
+    }
 
     let _log_fd = open_log_file(log_file);
 
+    // Daemon.spawn is creating a new process with log_fd as both the stdout
+    // and stderr. We are NOT leaking stdout and stderr. But the Windows
     // implementation of OCaml does leak stdout and stderr. This means any process
-    // that waits for `flow start`'s stdout and stderr to close might wait forever.
-    // stdout and stderr and that seems to solve things. However, that call fails
-    // on Windows 7. After poking around for a few hours, I can't think of a
+    // that waits for `flow start`'s stdout and stderr to close might wait
+    // forever.
+    //
+    // On Windows 10 (and 8 I think), you can just call `set_close_on_exec` on
+    // stdout and stderr and that seems to solve things. However, that call
+    // fails on Windows 7. After poking around for a few hours, I can't think
+    // of a solution other than manually implementing Unix.create_process
+    // correctly.
+    //
     // So for now let's make Windows 7 not crash. It seems like `flow start` on
-    // Windows 7 doesn't actually leak stdio, so a no op is acceptable.
-
+    // Windows 7 doesn't actually leak stdio, so a no op is acceptable
     let _name = format!("server master process watching {}", root.display());
+
     let args = Args {
         options,
         init_id: _init_id.to_string(),

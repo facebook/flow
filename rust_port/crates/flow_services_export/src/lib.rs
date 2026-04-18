@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-pub mod export_index;
+pub use flow_services_export_index::export_index;
 #[cfg(test)]
 mod export_index_tests;
 pub mod export_search;

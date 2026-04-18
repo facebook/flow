@@ -18,11 +18,11 @@ pub type Deadline = f64;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Event {
-    /// The server is free  
+    // The server is free
     Ready,
-    /// The server is starting to initialize
+    // The server is starting to initialize
     InitStart,
-    /// Fetching the saved state is taking a long time
+    // Fetching the saved state is taking a long time
     FetchSavedStateDelay(String),
     ReadSavedState,
     LoadSavedStateProgress(Progress),
@@ -39,27 +39,27 @@ pub enum Event {
     MergingProgress(Progress),
     CheckingProgress(Progress),
     CancelingProgress(Progress),
-    /// Server's finishing up typechecking or other work  
+    // Server's finishing up typechecking or other work
     FinishingUp,
-    /// The server is starting to recheck  
+    // The server is starting to recheck
     RecheckStart,
-    /// The server is starting to handle an ephemeral/persistent request  
+    // The server is starting to handle an ephemeral/persistent request
     HandlingRequestStart,
-    /// The server is done handling an ephemeral/persistent request
+    // The server is done handling an ephemeral/persistent request
     HandlingRequestEnd,
-    /// The server is starting to GC
+    // The server is starting to GC
     GCStart,
-    /// The server is collating the errors  
+    // The server is collating the errors
     CollatingErrorsStart,
-    /// The server is now blocked waiting for Watchman  
+    // The server is now blocked waiting for Watchman
     WatchmanWaitStart(Option<Deadline>),
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum TypecheckStatus {
-    /// A typecheck's initial state
+    // A typecheck's initial state
     StartingTypecheck,
-    /// Fetching saved state, when it is taking a while  
+    // Fetching saved state, when it is taking a while
     FetchingSavedState(String),
     ReadingSavedState,
     LoadingSavedState(Progress),
@@ -74,9 +74,9 @@ pub enum TypecheckStatus {
     Merging(Progress),
     Checking(Progress),
     Canceling(Progress),
-    /// We sometimes collate errors during typecheck  
+    // We sometimes collate errors during typecheck
     CollatingErrors,
-    /// haven't reached free state yet  
+    // haven't reached free state yet
     FinishingTypecheck,
     WaitingForWatchman(Option<Deadline>),
     Unaccounted(String),
@@ -107,27 +107,27 @@ pub enum RestartReason {
     serde::Deserialize
 )]
 pub enum TypecheckMode {
-    /// Flow is busy starting up  
+    // Flow is busy starting up
     Initializing,
-    /// Flow is busy rechecking  
+    // Flow is busy rechecking
     Rechecking,
-    /// Flow is busy handling a request
+    // Flow is busy handling a request
     HandlingRequest,
-    /// Same as initializing but with a reason why we restarted
+    // Same as initializing but with a reason why we restarted
     Restarting(RestartReason),
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Status {
-    /// The server's initial state  
+    // The server's initial state
     StartingUpFlowServer,
-    /// Not busy doing something else  
+    // Not busy doing something else
     Free,
-    /// Busy doing Flow stuff  
+    // Busy doing Flow stuff
     Typechecking(TypecheckMode, TypecheckStatus),
-    /// This one is pretty obvious
+    // This one is pretty obvious
     GarbageCollecting,
-    /// A bad state caused by transitioning from a good state due to an unexpected event  
+    // A bad state caused by transitioning from a good state due to an unexpected event
     Unknown,
 }
 
@@ -260,8 +260,8 @@ pub fn string_of_event(event: &Event) -> String {
     }
 }
 
-/// As a general rule, use past tense for status updates that show progress and present perfect
-/// progressive for those that don't.
+// As a general rule, use past tense for status updates that show progress and present perfect
+// progressive for those that don't.
 pub fn string_of_typecheck_status(use_emoji: bool, tcs: &TypecheckStatus) -> String {
     match tcs {
         TypecheckStatus::StartingTypecheck => {
@@ -468,8 +468,8 @@ pub fn string_of_status(use_emoji: bool, terse: bool, status: &Status) -> String
     format!("{}{}", if terse { "" } else { "Server is " }, status_string)
 }
 
-/// Transition function for the status state machine. Given the current status and the event,
-/// pick a new status
+// Transition function for the status state machine. Given the current status and the event,
+// pick a new status
 pub fn update(event: &Event, status: &Status) -> Status {
     match (event, status) {
         (Event::Ready, _) => Status::Free,
@@ -603,9 +603,9 @@ pub fn is_free(status: &Status) -> bool {
     }
 }
 
-/// Returns true iff the transition from old_status to new_status is "significant", which is a
-/// pretty arbitrary judgement of how interesting the new status is to a user. Significant
-/// transitions are pushed to the user immediately; insignificant transitions are throttled.
+// Returns true iff the transition from old_status to new_status is "significant", which is a
+// pretty arbitrary judgement of how interesting the new status is to a user. Significant
+// transitions are pushed to the user immediately; insignificant transitions are throttled.
 pub fn is_significant_transition(old_status: &Status, new_status: &Status) -> bool {
     // If the statuses are literally the same, then the transition is not significant
     old_status != new_status
@@ -692,9 +692,9 @@ pub fn get_progress(status: &Status) -> (Option<String>, Option<i32>, Option<i32
     }
 }
 
-/// When the server is initializing it will publish statuses that say it is initializing. The
-/// monitor might know that the server actually is restarting. This function turns a initializing
-/// status into a restarting status
+// When the server is initializing it will publish statuses that say it is initializing. The
+// monitor might know that the server actually is restarting. This function turns a initializing
+// status into a restarting status
 pub fn change_init_to_restart(restart_reason: Option<RestartReason>, status: Status) -> Status {
     match restart_reason {
         None => status,

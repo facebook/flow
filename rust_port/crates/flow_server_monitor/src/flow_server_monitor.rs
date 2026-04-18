@@ -26,6 +26,7 @@ pub struct DaemonizeArgs {
     pub all: bool,
     pub wait: bool,
     pub no_restart: bool,
+    pub autostop: bool,
     pub lazy_mode: Option<String>,
     pub long_lived_workers: Option<bool>,
     pub max_workers: Option<i32>,
@@ -66,6 +67,8 @@ pub struct StartArgs {
     pub shm_heap_size: Option<u64>,
     pub shm_hash_table_pow: Option<u32>,
     pub from: Option<String>,
+    pub autostop: bool,
+    pub no_restart: bool,
 }
 
 fn append_log_line(
@@ -151,6 +154,7 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
         all,
         wait,
         no_restart,
+        autostop,
         lazy_mode,
         long_lived_workers,
         max_workers,
@@ -218,6 +222,9 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     }
     if no_restart {
         cmd.arg("--no-auto-restart");
+    }
+    if autostop {
+        cmd.arg("--autostop");
     }
     if let Some(mode) = lazy_mode {
         cmd.arg("--lazy-mode").arg(mode);
@@ -468,6 +475,7 @@ pub fn start(options: Arc<Options>, args: StartArgs) -> Result<(), String> {
         // Initialize Rust FFI layer for EdenFS file watcher
         crate::startup_initializer::init();
     }
+    flow_event_logger::set_command(Some("monitor".to_string()));
     let lock_path = server_files_js::lock_file(
         &args.flowconfig_name,
         options.temp_dir.as_str(),

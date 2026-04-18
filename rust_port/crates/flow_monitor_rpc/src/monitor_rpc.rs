@@ -1,0 +1,191 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::fs::File;
+use std::io;
+use std::sync::Arc;
+use std::sync::Mutex;
+
+use crate::lsp_prot;
+use crate::monitor_prot;
+use crate::server_prot::response;
+use crate::server_status;
+
+#[derive(Debug)]
+pub enum MonitorError {
+    MonitorDied,
+    Disabled,
+}
+
+pub type Channels = (File, File);
+
+enum State {
+    Uninitialized,
+    Initialized {
+        infd: Arc<Mutex<File>>,
+        outfd: Arc<Mutex<File>>,
+    },
+    Disabled,
+}
+
+static STATE: Mutex<State> = Mutex::new(State::Uninitialized);
+
+fn with_channel<T>(
+    select_channel: impl for<'a> FnOnce(
+        &'a Arc<Mutex<File>>,
+        &'a Arc<Mutex<File>>,
+    ) -> &'a Arc<Mutex<File>>,
+    on_disabled: impl FnOnce() -> T,
+    f: impl FnOnce(&mut File) -> T,
+) -> T {
+    let channel = {
+        let state = STATE.lock().unwrap();
+        match &*state {
+            // Probably means someone is calling this module from a worker thread
+            State::Uninitialized => {
+                panic!("MonitorRPC can only be used by the master thread");
+            }
+            // Probably means that this is a `flow check` and there is no server monitor
+            State::Disabled => return on_disabled(),
+            State::Initialized { infd, outfd } => select_channel(infd, outfd).clone(),
+        }
+    };
+    let mut channel = channel.lock().unwrap();
+    f(&mut channel)
+}
+
+fn with_infd<T>(on_disabled: impl FnOnce() -> T, f: impl FnOnce(&mut File) -> T) -> T {
+    with_channel(|infd, _outfd| infd, on_disabled, f)
+}
+
+fn with_outfd<T>(on_disabled: impl FnOnce() -> T, f: impl FnOnce(&mut File) -> T) -> T {
+    with_channel(|_infd, outfd| outfd, on_disabled, f)
+}
+
+// The main server process will initialize this with the channels to the monitor process
+pub fn init(channels: Channels) {
+    let (infd, outfd) = channels;
+    let mut state = STATE.lock().unwrap();
+    *state = State::Initialized {
+        infd: Arc::new(Mutex::new(infd)),
+        outfd: Arc::new(Mutex::new(outfd)),
+    };
+}
+
+// If there is no monitor process (like in `flow check`), we can disable MonitorRPC
+pub fn disable() {
+    let mut state = STATE.lock().unwrap();
+    *state = State::Disabled;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StateKind {
+    Uninitialized,
+    Initialized,
+    Disabled,
+}
+
+pub fn state() -> StateKind {
+    let state = STATE.lock().unwrap();
+    match &*state {
+        State::Uninitialized => StateKind::Uninitialized,
+        State::Initialized { .. } => StateKind::Initialized,
+        State::Disabled => StateKind::Disabled,
+    }
+}
+
+// Read a single message from the monitor.
+pub fn read() -> Result<monitor_prot::MonitorToServerMessage, MonitorError> {
+    with_infd(
+        || Err(MonitorError::Disabled),
+        |infd| {
+            flow_parser::loc::with_full_source_serde(|| {
+                bincode::deserialize_from(infd).map_err(|_| MonitorError::MonitorDied)
+            })
+        },
+    )
+}
+
+// Sends a message to the monitor.
+//
+// This is a no-op if the MonitorRPC is disabled. This allows the server to stream things like
+// status updates without worrying whether or not there is a monitor
+//
+// Unliked read, this is synchronous. We don't currently have a use case for async sends, and it's a
+// little painful to thread lwt through to everywhere we send data
+fn send(msg: monitor_prot::ServerToMonitorMessage) {
+    with_outfd(
+        || {},
+        |outfd| match flow_parser::loc::with_full_source_serde(|| {
+            bincode::serialize_into(outfd, &msg)
+        }) {
+            Ok(()) => {}
+            Err(e) => match *e {
+                bincode::ErrorKind::Io(io_err) if io_err.kind() == io::ErrorKind::BrokenPipe => {
+                    panic!("Monitor_died (EPIPE)");
+                }
+                _ => {
+                    log::error!("MonitorRPC.send: write failed: {}", e);
+                }
+            },
+        },
+    );
+}
+
+// Respond to a request from an ephemeral client
+pub fn respond_to_request(request_id: monitor_prot::RequestId, response: response::Response) {
+    send(monitor_prot::ServerToMonitorMessage::Response(
+        request_id, response,
+    ));
+}
+
+// Exception while handling the request
+pub fn request_failed(request_id: monitor_prot::RequestId, exn_str: String) {
+    send(monitor_prot::ServerToMonitorMessage::RequestFailed(
+        request_id, exn_str,
+    ));
+}
+
+// Send a message to a persistent client
+pub fn respond_to_persistent_connection(
+    client_id: lsp_prot::ClientId,
+    response: lsp_prot::MessageFromServer,
+) {
+    send(monitor_prot::ServerToMonitorMessage::PersistentConnectionResponse(client_id, response));
+}
+
+pub fn send_telemetry(t: lsp_prot::TelemetryFromServer) {
+    send(monitor_prot::ServerToMonitorMessage::Telemetry(t));
+}
+
+// Send a status update to the monitor
+pub fn status_update(event: server_status::Event) {
+    // Remember the last status so that we only send updates when something changes
+    static LAST_STATUS: Mutex<server_status::Status> = Mutex::new(server_status::INITIAL_STATUS);
+
+    {
+        let state = STATE.lock().unwrap();
+        if !matches!(*state, State::Initialized { .. }) {
+            return;
+        }
+    }
+    let new_status = {
+        let mut last_status = LAST_STATUS.lock().unwrap();
+        let new_status = server_status::update(&event, &last_status);
+        if new_status != *last_status {
+            *last_status = new_status.clone();
+            Some(new_status)
+        } else {
+            None
+        }
+    };
+    if let Some(new_status) = new_status {
+        send(monitor_prot::ServerToMonitorMessage::StatusUpdate(
+            new_status,
+        ));
+    }
+}

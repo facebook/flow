@@ -36,11 +36,7 @@ pub enum SupportedOs {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsxMode {
-    /// JSX desugars into a `React.createElement(name, props, ...children)` call
     JsxReact,
-    /// Specifies a function that should be invoked instead of React.createElement
-    /// when interpreting JSX syntax. Otherwise, the usual rules of JSX are
-    /// followed: children are varargs after a props argument.
     JsxPragma(String, flow_parser::ast::expression::Expression<ALoc, ALoc>),
 }
 
@@ -55,10 +51,8 @@ pub enum SavedStateFetcher {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ReactRefAsProp {
-    /// Only in component syntax: ban ref prop in spread
     #[default]
     Legacy,
-    /// Implement full React 19 behavior
     FullSupport,
 }
 
@@ -87,7 +81,6 @@ pub enum AssertOperator {
 }
 
 impl AssertOperator {
-    /// Returns true if the operator should be parsed
     pub fn parse(self) -> bool {
         match self {
             AssertOperator::Unparsed => false,
@@ -97,7 +90,6 @@ impl AssertOperator {
         }
     }
 
-    /// Returns true if the operator is usable
     pub fn usable(self) -> bool {
         match self {
             AssertOperator::Unparsed | AssertOperator::Disabled => false,
@@ -105,7 +97,6 @@ impl AssertOperator {
         }
     }
 
-    /// Returns true if the operator is specialized
     pub fn specialized(self) -> bool {
         matches!(self, AssertOperator::Specialized)
     }
@@ -154,14 +145,13 @@ pub struct GcControl {
     pub custom_minor_max_size: Option<u32>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct LogSaving {
     pub threshold_time_ms: i64,
     pub limit: Option<u64>,
     pub rate: f64,
 }
 
-/// Main options structure containing all Flow configuration
 #[derive(Debug, Clone, Default)]
 pub struct Options {
     pub abstract_classes: bool,
@@ -284,8 +274,6 @@ pub struct Options {
 }
 
 impl Options {
-    /// Checks if hook compatibility is enabled for a given file.
-    /// Returns true if the file path matches any include pattern and does not match any exclude pattern.
     pub fn hook_compatibility_in_file(&self, file: &flow_parser::file_key::FileKey) -> bool {
         let path = file.to_absolute();
         let included = if self.hook_compatibility_includes.is_empty() {

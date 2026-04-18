@@ -10,7 +10,6 @@ use std::path::PathBuf;
 use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;
-use crate::flow_event_logger;
 
 // ***********************************************************************
 // flow init command
@@ -131,7 +130,6 @@ fn main(args: &arg_spec::Values) {
     );
     let config = match config {
         Ok((config, warnings)) if warnings.is_empty() => config,
-        // TODO: write warnings to stderr instead of exiting
         Ok((_config, warnings)) => error(
             warnings
                 .into_iter()

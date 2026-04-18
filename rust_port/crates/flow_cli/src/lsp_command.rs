@@ -14,10 +14,6 @@ use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;
 
-// ***********************************************************************
-// flow lsp command
-// ***********************************************************************
-
 fn spec() -> command_spec::Spec {
     let exe_name = command_utils::exe_name();
     let spec = command_spec::Spec::new(
@@ -65,7 +61,7 @@ fn main(args: &arg_spec::Values) {
         timeout: None,
         no_auto_start: false,
         autostop,
-        from: crate::flow_event_logger::get_from_i_am_a_clown(),
+        from: flow_event_logger::get_from_i_am_a_clown(),
         lazy_mode: None,
         temp_dir,
         shm_flags: SharedMemParams {

@@ -35,8 +35,10 @@ use flow_typing_errors::intermediate_error_types::IntermediateError;
 
 use crate::collated_errors::CollatedErrors;
 use crate::collated_errors::ErrorStateTimestamps;
+use crate::monitor_rpc;
 use crate::server_env::Env;
 use crate::server_env::Errors;
+use crate::server_status;
 
 fn add_suppression_warnings(
     root: &Path,
@@ -146,14 +148,14 @@ pub fn update_local_collated_errors<F, G>(
     }
 }
 
-/// Note on suppressions: The suppressions within the Server.errors parameter
-/// only account for the files that were most recently checked. Due to bugs in the
-/// checker it is possible for errors that are included in that same set to appear
-/// in files other than the ones in checked_files. To effectively suppress these
-/// we need to pass in an additional `all_suppressions` parameter. This is the
-/// suppression set we pass over to Error_suppressions.filter_suppressed_errors.
-/// Finally, we compute unused suppression warnings over the set of suppressions
-/// that we found during checking (not all_suppressions).
+// Note on suppressions: The suppressions within the Server.errors parameter
+// only account for the files that were most recently checked. Due to bugs in the
+// checker it is possible for errors that are included in that same set to appear
+// in files other than the ones in checked_files. To effectively suppress these
+// we need to pass in an additional `all_suppressions` parameter. This is the
+// suppression set we pass over to Error_suppressions.filter_suppressed_errors.
+// Finally, we compute unused suppression warnings over the set of suppressions
+// that we found during checking (not all_suppressions).
 pub fn update_collated_errors<F, G>(
     loc_of_aloc: &F,
     get_ast: &G,
@@ -198,6 +200,8 @@ pub fn update_collated_errors<F, G>(
             errors.insert(filename.dupe(), file_errs);
             suppressed.insert(filename.dupe(), file_suppressed);
         };
+
+    monitor_rpc::status_update(server_status::Event::CollatingErrorsStart);
 
     collate_duplicate_providers(
         root,

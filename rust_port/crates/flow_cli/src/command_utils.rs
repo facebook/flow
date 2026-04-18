@@ -40,7 +40,6 @@ use tracing::level_filters::LevelFilter;
 use crate::command_spec;
 use crate::command_spec::Command;
 use crate::command_spec::arg_spec;
-use crate::flow_event_logger;
 
 #[derive(Clone, Debug)]
 pub(crate) enum UnicodeMode {
@@ -1782,7 +1781,7 @@ const DEFAULT_FILE_WATCHER_MERGEBASE_WITH: &str = "master";
 pub(crate) fn file_watcher_flag() -> arg_spec::FlagType<Option<flow_config::FileWatcher>> {
     arg_spec::enum_flag(vec![
         ("none", flow_config::FileWatcher::NoFileWatcher),
-        ("dfind", flow_config::FileWatcher::DFind),
+        ("dfind", flow_config::FileWatcher::Watchman),
         ("watchman", flow_config::FileWatcher::Watchman),
         ("edenfs", flow_config::FileWatcher::EdenFS),
     ])
@@ -1793,18 +1792,16 @@ pub(crate) fn file_watcher_arg(
 ) -> &'static str {
     match file_watcher {
         FlowServerMonitorOptions::FileWatcher::NoFileWatcher => "none",
-        FlowServerMonitorOptions::FileWatcher::DFind => "dfind",
         FlowServerMonitorOptions::FileWatcher::Watchman(_) => "watchman",
         FlowServerMonitorOptions::FileWatcher::EdenFS(_) => "edenfs",
     }
 }
 
-// (* let file_watcher_flag prev = ... *)
 pub(crate) fn add_file_watcher_flag(spec: command_spec::Spec) -> command_spec::Spec {
     spec.flag(
         "--file-watcher",
         &arg_spec::optional(file_watcher_flag()),
-        "Which file watcher Flow should use (none, dfind, watchman, edenfs). Flow will ignore file system events if this is set to none. (default: dfind)",
+        "Which file watcher Flow should use (none, watchman, edenfs). Flow will ignore file system events if this is set to none. (default: watchman)",
         None,
     )
     .flag(
@@ -3123,7 +3120,7 @@ fn connect_and_make_request_inner(
             };
             flow_server_env::server_socket_rpc::ServerRequest::SaveState {
                 out,
-                from: crate::flow_event_logger::get_from_i_am_a_clown(),
+                from: flow_event_logger::get_from_i_am_a_clown(),
             }
         }
         command => {
@@ -3213,11 +3210,10 @@ pub(crate) fn choose_file_watcher(
         (None, _) => flowconfig
             .options
             .file_watcher
-            .unwrap_or(flow_config::FileWatcher::DFind),
+            .unwrap_or(flow_config::FileWatcher::Watchman),
     };
     match file_watcher {
         flow_config::FileWatcher::NoFileWatcher => FlowServerMonitorOptions::NoFileWatcher,
-        flow_config::FileWatcher::DFind => FlowServerMonitorOptions::DFind,
         flow_config::FileWatcher::Watchman => {
             let sync_timeout = sync_timeout.or(flowconfig.options.watchman_sync_timeout);
             let defer_states = flowconfig.options.watchman_defer_states.clone();

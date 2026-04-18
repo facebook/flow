@@ -299,8 +299,12 @@ fn resolve_requires(
 ) {
     with_memory_timer(options, "ResolveRequires", || {
         let parsed_files: Vec<FileKey> = parsed.iter().map(|f| f.dupe()).collect();
-        let next =
-            flow_utils_concurrency::map_reduce::make_next(pool.num_workers(), None, parsed_files);
+        let next = flow_utils_concurrency::map_reduce::make_next(
+            pool.num_workers(),
+            None::<fn(i32, i32, i32)>,
+            None,
+            parsed_files,
+        );
         let options_clone = options.dupe();
         let shared_mem_clone = shared_mem.dupe();
         let node_modules_containers = node_modules_containers.dupe();
@@ -881,8 +885,21 @@ fn ensure_parsed(
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), UnexpectedFileChanges> {
     with_memory_timer(options, "EnsureParsed", || {
-        let parse_unexpected_skips =
-            parsing_service::ensure_parsed(pool, shared_mem, options, files);
+        let parse_unexpected_skips = parsing_service::ensure_parsed(
+            pool,
+            shared_mem,
+            options,
+            files,
+            |total, start, _length| {
+                let finished = start;
+                monitor_rpc::status_update(server_status::Event::ParsingProgress(
+                    server_status::Progress {
+                        total: Some(total),
+                        finished,
+                    },
+                ));
+            },
+        );
         if parse_unexpected_skips.is_empty() {
             Ok(())
         } else {
@@ -914,10 +931,10 @@ fn init_libs(
     warnings: BTreeMap<FileKey, ErrorSet>,
     suppressions: ErrorSuppressions,
 ) -> (
-    bool,                        // ok
-    BTreeMap<FileKey, ErrorSet>, // local_errors
-    BTreeMap<FileKey, ErrorSet>, // warnings
-    ErrorSuppressions,           // suppressions
+    bool,
+    BTreeMap<FileKey, ErrorSet>,
+    BTreeMap<FileKey, ErrorSet>,
+    ErrorSuppressions,
     (
         flow_imports_exports::exports::Exports,
         Vec<(
@@ -925,7 +942,7 @@ fn init_libs(
             flow_imports_exports::exports::Exports,
         )>,
     ),
-    Arc<MasterContext>, // master_cx
+    Arc<MasterContext>,
 ) {
     with_memory_timer(options, "InitLibs", || {
         let init::InitResult {
@@ -1136,10 +1153,19 @@ pub(crate) mod recheck {
 
         let modified_set = updates.dupe().all();
         let modified_files: Vec<FileKey> = modified_set.iter().map(|f| f.dupe()).collect();
-        let modified_next: parsing_service::Next = {
-            let mut iter_state = Some(modified_files);
-            Box::new(move || iter_state.take())
-        };
+        let modified_next: parsing_service::Next = parsing_service::next_of_filename_set(
+            pool,
+            modified_files,
+            Some(|total: i32, start: i32, _length: i32| {
+                let finished = start;
+                monitor_rpc::status_update(server_status::Event::ParsingProgress(
+                    server_status::Progress {
+                        total: Some(total),
+                        finished,
+                    },
+                ));
+            }),
+        );
         let CollatedParseResults {
             parsed: parsed_set,
             unparsed: unparsed_set,
@@ -1664,7 +1690,6 @@ pub(crate) mod recheck {
         )
     }
 
-    #[allow(dead_code)] // Called from handle_updates_since_saved_state which is not yet ported
     pub(crate) fn parse_and_update_dependency_info(
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,

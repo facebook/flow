@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! LSP-specific types use `lsp_types` crate equivalents where possible.
-//! `Lsp.lsp_message` is represented by `crate::lsp_mapper::LspMessage`.
-
 use std::collections::BTreeMap;
 
 use dupe::Dupe;
@@ -103,9 +100,6 @@ pub struct LoggingContext {
     pub agent_id: Option<String>,
 }
 
-/// `Profiling_js.finished` — abstract in .mli, concrete in .ml as:
-///   { finished_timing: Timing.finished; finished_memory: Memory.finished }
-/// Represented as JSON since Timing/Memory modules are not yet ported.
 pub type ProfilingFinished = serde_json::Value;
 
 pub type LspId = NumberOrString;
@@ -118,35 +112,33 @@ pub type UriMap<V> = BTreeMap<Url, V>;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Metadata {
-    /// when did this work-item get triggered?  
-    // start_wall_time: float;
+    // when did this work-item get triggered?
     pub start_wall_time: f64,
-    /// What was the thing that triggered this work-item  
-    // start_json_truncated: Hh_json.json;
+    // What was the thing that triggered this work-item
     pub start_json_truncated: Json,
-    /// What was the state of the server at the time the work-item was triggered?  
-    /// Might be None e.g. if the server was down at the time or if we don't know  
+    // What was the state of the server at the time the work-item was triggered?
+    // Might be None e.g. if the server was down at the time or if we don't know
     pub start_server_status: Option<server_status::Status>,
     pub start_watcher_status: Option<file_watcher_status::Status>,
-    /// And what was the state of the lspCommand client? Is optional only to save  
-    /// space in the obvious cases that don't need explanation.  
+    // And what was the state of the lspCommand client? Is optional only to save
+    // space in the obvious cases that don't need explanation.
     pub start_lsp_state: Option<String>,
     pub start_lsp_state_reason: Option<String>,
-    /// If handling the workitem resulted in error, what was that error?  
+    // If handling the workitem resulted in error, what was that error?
     pub error_info: Option<ErrorInfo>,
-    /// If the workitem was handled on the server, how long did it take there?  
+    // If the workitem was handled on the server, how long did it take there?
     pub server_profiling: Option<ProfilingFinished>,
-    /// and if it had work done on the client, how long there?
+    // and if it had work done on the client, how long there?
     pub client_duration: Option<f64>,
-    /// Did the handler for this workitem provide any extra data?
+    // Did the handler for this workitem provide any extra data?
     pub extra_data: Vec<(String, Json)>,
-    /// The logging context for the server
+    // The logging context for the server
     pub server_logging_context: Option<LoggingContext>,
-    /// LSP method (e.g. 'textDocument/completion')
+    // LSP method (e.g. 'textDocument/completion')
     pub lsp_method_name: String,
-    /// If we're tracking an interaction in the lsp process, this is the id of the interaction *)
+    // If we're tracking an interaction in the lsp process, this is the id of the interaction
     pub interaction_tracking_id: Option<i32>,
-    /// JSON-RPC id of corresponding LSP request  
+    // JSON-RPC id of corresponding LSP request
     pub lsp_id: Option<LspId>,
     pub activity_key: Option<Json>,
 }
@@ -184,9 +176,9 @@ pub type RequestWithMetadata = (Request, Metadata);
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ErrorsReason {
-    /// Sending all the errors at the end of the recheck
+    // Sending all the errors at the end of the recheck
     EndOfRecheck,
-    /// Streaming errors during recheck  
+    // Streaming errors during recheck
     RecheckStreaming,
     EnvChange,
     NewSubscription,
@@ -228,7 +220,7 @@ pub type ResponseWithMetadata = (Response, Metadata);
 pub struct RecheckStats {
     pub dependent_file_count: i32,
     pub changed_file_count: i32,
-    /// name of cycle leader, and size of cycle  
+    // name of cycle leader, and size of cycle
     pub top_cycle: Option<(flow_parser::file_key::FileKey, i32)>,
 }
 
@@ -247,7 +239,7 @@ pub enum NotificationFromServer {
     },
     StartRecheck,
     EndRecheck(crate::server_prot::response::LazyStats),
-    /// only used for the subset of exits which client handles  
+    // only used for the subset of exits which client handles
     ServerExit(#[serde(with = "flow_exit_status_serde")] flow_common_exit_status::FlowExitStatus),
     PleaseHold(server_status::Status, file_watcher_status::Status),
     Telemetry(TelemetryFromServer),

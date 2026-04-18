@@ -18,9 +18,9 @@ pub fn build_revision() -> String {
     flow_common::flow_version::VERSION.to_string()
 }
 
-pub type ClientHandshakeWire = (String, String);
+pub type ClientHandshakeWire = (String, Vec<u8>);
 
-pub type ServerHandshakeWire = (String, Option<String>);
+pub type ServerHandshakeWire = (String, Option<Vec<u8>>);
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VersionMismatchStrategy {
@@ -53,18 +53,18 @@ pub struct MonitorToClient1 {
     pub server_version: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClientType {
     Ephemeral,
     Persistent { lsp_init_params: InitializeParams },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientToMonitor2 {
     pub client_type: ClientType,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MonitorToClient2 {
     ServerHasTooManyClients,
     ServerStillInitializing(server_status::Status, file_watcher_status::Status),

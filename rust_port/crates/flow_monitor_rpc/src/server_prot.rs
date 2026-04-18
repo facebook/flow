@@ -19,7 +19,7 @@ pub mod infer_type_options {
     use flow_common::verbose::Verbose;
     use flow_server_utils::file_input::FileInput;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct T {
         pub input: FileInput,
         pub line: i32,
@@ -41,7 +41,7 @@ pub mod inlay_hint_options {
     use flow_common::verbose::Verbose;
     use flow_server_utils::file_input::FileInput;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct T {
         pub input: FileInput,
         pub verbose: Option<Verbose>,
@@ -59,7 +59,7 @@ pub mod type_of_name_options {
     use flow_common::verbose::Verbose;
     use flow_server_utils::file_input::FileInput;
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct T {
         pub input: FileInput,
         pub names: Vec<String>,
@@ -72,7 +72,7 @@ pub mod type_of_name_options {
 }
 
 pub mod llm_context_options {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct T {
         pub files: Vec<String>,
         pub token_budget: i32,
@@ -81,7 +81,7 @@ pub mod llm_context_options {
 }
 
 pub mod code_action {
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     pub enum T {
         Quickfix { include_best_effort_fix: bool },
         SourceAddMissingImports,
@@ -116,7 +116,7 @@ pub mod request {
     use crate::server_prot::type_of_name_options;
 
     #[allow(non_camel_case_types)]
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum Command {
         APPLY_CODE_ACTION {
             input: FileInput,
@@ -214,7 +214,7 @@ pub mod request {
         LLM_CONTEXT(llm_context_options::T),
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum SaveStateOut {
         File(PathBuf),
         Scm,
@@ -383,12 +383,14 @@ pub mod response {
     }
 
     // Details about functions to be added in json output
+    #[derive(serde::Serialize, serde::Deserialize)]
     pub struct FuncParamResult {
         pub param_documentation: Option<String>,
         pub param_name: String,
         pub param_ty: String,
     }
 
+    #[derive(serde::Serialize, serde::Deserialize)]
     pub enum FuncDetailsResult {
         SigHelpFunc {
             func_documentation: Option<String>,
@@ -405,7 +407,7 @@ pub mod response {
 
     pub type TextEdit = (Loc, String);
 
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     #[allow(non_snake_case)]
     pub struct InsertReplaceEdit {
         pub newText: String,
@@ -421,7 +423,7 @@ pub mod response {
         use crate::server_prot::response::InsertReplaceEdit;
         use crate::server_prot::response::TextEdit;
 
-        #[derive(Debug, Clone, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         #[allow(non_snake_case)]
         pub struct CompletionItem {
             pub kind: Option<CompletionItemKind>,
@@ -439,7 +441,7 @@ pub mod response {
             pub insert_text_format: InsertTextFormat,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         #[allow(non_snake_case)]
         pub struct T {
             pub items: Vec<CompletionItem>,
@@ -469,15 +471,15 @@ pub mod response {
 
     pub mod infer_type_of_name {
         use flow_parser::loc::Loc;
-        use flow_services_export::export_index;
+        use flow_services_export_index::export_index;
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct PropDoc {
             pub prop_name: String,
             pub description: String,
         }
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct T {
             pub loc: Loc,
             pub actual_name: String,
@@ -496,19 +498,19 @@ pub mod response {
 
         use crate::server_prot::refinement_invalidation;
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct FriendlyResponse {
             pub type_str: String,
             pub refs: Option<Vec<(String, Loc)>>,
         }
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub enum Payload {
             Friendly(Option<FriendlyResponse>),
             Json(serde_json::Value),
         }
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct T {
             pub loc: Loc,
             pub tys: Payload,
@@ -526,7 +528,7 @@ pub mod response {
         use crate::server_prot::refinement_invalidation;
         use crate::server_prot::response::infer_type;
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct Item {
             pub cursor_loc: Loc,
             pub type_loc: Loc,
@@ -550,7 +552,7 @@ pub mod response {
     pub type GraphResponseSubgraph = Vec<(String, Vec<String>)>;
 
     pub mod llm_context {
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub struct T {
             pub llm_context: String,
             pub files_processed: Vec<String>,
@@ -578,7 +580,7 @@ pub mod response {
     pub type FindModuleResponse = (Option<FileKey>, Vec<String>);
 
     #[allow(non_camel_case_types)]
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum Response {
         APPLY_CODE_ACTION(ApplyCodeActionResponse),
         AUTOCOMPLETE(AutocompleteResponse),

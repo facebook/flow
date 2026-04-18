@@ -15,13 +15,13 @@ use crate::server_command_with_context::ServerCommandWithContext;
 use crate::server_prot::response;
 use crate::server_status;
 
-/// Ephemeral socket connections expect a response to their requests. We use request_id to indicate
-/// to which request a given response is replying
+// Ephemeral socket connections expect a response to their requests. We use request_id to indicate
+// to which request a given response is replying
 pub type RequestId = String;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FileWatcherMetadata {
-    /// [Some _] if we checked whether the mergebase changed, [None] if we didn't/can't ask the VCS
+    // [Some _] if we checked whether the mergebase changed, [None] if we didn't/can't ask the VCS
     pub changed_mergebase: Option<bool>,
     pub missed_changes: bool,
 }
@@ -50,32 +50,34 @@ pub fn merge_file_watcher_metadata(
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum PleaseDieReason {
     MonitorExiting(flow_common_exit_status::FlowExitStatus, String),
 }
 
-/// These are the messages that the monitor sends to the server
+// These are the messages that the monitor sends to the server
+#[derive(serde::Serialize, serde::Deserialize)]
 pub enum MonitorToServerMessage {
-    /// A request from an ephemeral socket connection. It expects a response
+    // A request from an ephemeral socket connection. It expects a response
     Request(RequestId, ServerCommandWithContext),
-    /// A notification that there is a new persistent socket connection
+    // A notification that there is a new persistent socket connection
     NewPersistentConnection(lsp_prot::ClientId, InitializeParams),
-    /// A request from a persistent socket connection. It does not expect a response
+    // A request from a persistent socket connection. It does not expect a response
     PersistentConnectionRequest(lsp_prot::ClientId, lsp_prot::RequestWithMetadata),
-    /// A notification that a persistent socket connection is dead
+    // A notification that a persistent socket connection is dead
     DeadPersistentConnection(lsp_prot::ClientId),
-    /// The file watcher has noticed changes
+    // The file watcher has noticed changes
     FileWatcherNotification {
         files: BTreeSet<String>,
         metadata: Option<FileWatcherMetadata>,
         initial: bool,
     },
-    /// Monitor wants to kill the server but first asks nicely for the server to honorably kill itself
+    // Monitor wants to kill the server but first asks nicely for the server to honorably kill itself
     PleaseDie(PleaseDieReason),
 }
 
-/// These are the messages that the server sends to the monitor
+// These are the messages that the server sends to the monitor
+#[derive(serde::Serialize, serde::Deserialize)]
 pub enum ServerToMonitorMessage {
     // A response to an ephemeral socket's request
     Response(RequestId, response::Response),
@@ -83,18 +85,19 @@ pub enum ServerToMonitorMessage {
     RequestFailed(RequestId, String),
     // A response to a persistent socket connection
     PersistentConnectionResponse(lsp_prot::ClientId, lsp_prot::MessageFromServer),
-    /// A notification of the server's current status
+    // A notification of the server's current status
     StatusUpdate(server_status::Status),
-    /// A telemetry notification from the server  
+    // A telemetry notification from the server
     Telemetry(lsp_prot::TelemetryFromServer),
 }
 
-/// These are the messages that the server sends to an ephemeral socket connection
+// These are the messages that the server sends to an ephemeral socket connection
+#[derive(serde::Serialize, serde::Deserialize)]
 pub enum MonitorToClientMessage {
     // The response from the server
     Data(response::Response),
-    /// The server threw an exception while processing the request
+    // The server threw an exception while processing the request
     ServerException(String),
-    /// The server is currently busy. Please wait for a response  
+    // The server is currently busy. Please wait for a response
     PleaseHold(server_status::Status, file_watcher_status::Status),
 }

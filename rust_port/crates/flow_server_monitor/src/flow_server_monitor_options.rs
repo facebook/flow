@@ -5,15 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// (* These are all the little bits of information which the Flow server monitor needs in order to
-//  * function *)
-
-// type watchman_options = {
-//   debug: bool;  (** Turn on debugging messages for the file watcher *)
-//   defer_states: string list;  (** Defer watchman notifications while these states are asserted *)
-//   sync_timeout: int option;
-//       (** How long to wait for the file watcher to synchronize, in milliseconds *)
-// }
+// These are all the little bits of information which the Flow server monitor needs in order to
+// function.
+// Turn on debugging messages for the file watcher.
+// Defer watchman notifications while these states are asserted.
+// How long to wait for the file watcher to synchronize, in milliseconds.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WatchmanOptions {
     pub debug: bool,
@@ -21,14 +17,11 @@ pub struct WatchmanOptions {
     pub sync_timeout: Option<u32>,
 }
 
-// type edenfs_options = {
-//   edenfs_debug: bool;  (** Turn on debugging messages for the EdenFS watcher *)
-//   edenfs_timeout_secs: int;  (** Timeout for EdenFS watcher initialization *)
-//   edenfs_throttle_time_ms: int;  (** Throttle time for EdenFS watcher notifications *)
-//   edenfs_defer_states: string list;  (** States to track and defer in the EdenFS watcher *)
-//   edenfs_watchman_fallback: watchman_options;
-//       (** Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount) *)
-// }
+// Turn on debugging messages for the EdenFS watcher.
+// Timeout for EdenFS watcher initialization.
+// Throttle time for EdenFS watcher notifications.
+// States to track and defer in the EdenFS watcher.
+// Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EdenfsOptions {
     pub edenfs_debug: bool,
@@ -38,38 +31,54 @@ pub struct EdenfsOptions {
     pub edenfs_watchman_fallback: WatchmanOptions,
 }
 
-// type file_watcher =
-//   | NoFileWatcher
-//   | DFind
-//   | Watchman of watchman_options
-//   | EdenFS of edenfs_options
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FileWatcher {
     NoFileWatcher,
-    DFind,
     Watchman(WatchmanOptions),
     EdenFS(EdenfsOptions),
 }
 
-pub use FileWatcher::DFind;
 pub use FileWatcher::EdenFS;
 pub use FileWatcher::NoFileWatcher;
 pub use FileWatcher::Watchman;
 
+// The shared memory config.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SharedMemConfig {
+    pub heap_size: u64,
+    pub hash_table_pow: u32,
+}
+
+#[derive(Clone)]
+pub struct MonitorOptions {
+    // Where the monitor logs will go by default.
+    pub log_file: String,
+    // If true then the monitor will exit when the last client exits. This is used by lsp.
+    pub autostop: bool,
+    // If true then the monitor will always exit when a server exits, and will never try to create
+    // a new server. This is currently only used for testing what causes servers to die.
+    pub no_restart: bool,
+    // Where the server logs will go.
+    pub server_log_file: String,
+    // The server's options.
+    pub server_options: flow_common::options::Options,
+    // The shared memory config.
+    pub shared_mem_config: SharedMemConfig,
+    // The argv of the process which created the server monitor.
+    pub argv: Vec<String>,
+    // What to use for file watching.
+    pub file_watcher: FileWatcher,
+    // How long to wait for the file watcher to initialize, in seconds.
+    pub file_watcher_timeout: Option<f64>,
+    // Symbolic commit to find changes against.
+    pub file_watcher_mergebase_with: String,
+    pub signal_ready: bool,
+}
+
 pub fn string_of_file_watcher(file_watcher: &FileWatcher) -> &'static str {
     match file_watcher {
         FileWatcher::NoFileWatcher => "Dummy",
-        FileWatcher::DFind => "DFind",
         FileWatcher::Watchman(_) => "Watchman",
         FileWatcher::EdenFS(_) => "EdenFS",
-    }
-}
-
-pub fn cli_arg_of_file_watcher(file_watcher: &FileWatcher) -> &'static str {
-    match file_watcher {
-        FileWatcher::NoFileWatcher => "none",
-        FileWatcher::DFind => "dfind",
-        FileWatcher::Watchman(_) => "watchman",
-        FileWatcher::EdenFS(_) => "edenfs",
     }
 }

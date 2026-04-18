@@ -46,7 +46,7 @@ fn find_subcommand() -> command_spec::Command {
         let root = command_utils::guess_root(&flowconfig_name, root.as_deref())
             .to_string_lossy()
             .to_string();
-        crate::flow_event_logger::set_root(Some(root.clone()));
+        flow_event_logger::set_root(Some(root.clone()));
         if json || pretty {
             let json = serde_json::json!({ "root": root });
             flow_hh_json::print_json_endline(pretty, &json);
@@ -75,8 +75,6 @@ fn check_subcommand() -> command_spec::Command {
         spec.anon("file", &arg_spec::optional(arg_spec::string()))
     };
 
-    // If a flowconfig was passed in, confirm it exists; otherwise, search for it using the
-    // --root and --flowconfig-name flags.
     fn find_flowconfig(
         flowconfig_name: &str,
         root: Option<&str>,
@@ -140,7 +138,7 @@ fn check_subcommand() -> command_spec::Command {
         let file =
             command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
         let (file, root) = find_flowconfig(&flowconfig_name, root.as_deref(), file.as_deref());
-        crate::flow_event_logger::set_root(Some(root));
+        flow_event_logger::set_root(Some(root));
         match flow_config::get_with_ignored_version(&file, ignore_version) {
             Ok((config, warnings, _hash)) if warnings.is_empty() => {
                 if !ignore_version {

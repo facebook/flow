@@ -13,10 +13,6 @@ use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;
 
-// ***********************************************************************
-// flow get-def command
-// ***********************************************************************
-
 fn spec() -> command_spec::Spec {
     let exe_name = command_utils::exe_name();
     let spec = command_utils::add_base_flags(command_spec::Spec::new(
@@ -66,11 +62,6 @@ fn parse_args(
     (file, line, column)
 }
 
-// get-def command handler.
-// - json toggles JSON output
-// - strip_root toggles whether output positions are relativized w.r.t. root
-// - path is a user-specified path to use as incoming content source path
-// - args is mandatory command args; see parse_args above
 fn main(args: &arg_spec::Values) {
     let base_flags = command_utils::get_base_flags(args);
     let connect_flags = command_utils::get_connect_flags(args);
@@ -115,10 +106,7 @@ fn main(args: &arg_spec::Values) {
     );
     match response {
         server_prot::response::Response::GET_DEF(Ok(locs)) => {
-            // format output
             if json_flags.json || json_flags.pretty {
-                // TODO: this format is deprecated but can't be backwards-compatible.
-                // should be replaced with just `Reason.json_of_loc loc`.
                 let json = match locs.as_slice() {
                     [loc] => serde_json::Value::Object(
                         error_utils::deprecated_json_props_of_loc(strip_root.as_deref(), loc)
@@ -142,7 +130,7 @@ fn main(args: &arg_spec::Values) {
                 };
                 flow_hh_json::print_json_endline(json_flags.pretty, &json);
             } else {
-                let from = crate::flow_event_logger::get_from_i_am_a_clown();
+                let from = flow_event_logger::get_from_i_am_a_clown();
                 if from.as_deref() == Some("vim") || from.as_deref() == Some("emacs") {
                     for loc in &locs {
                         println!(

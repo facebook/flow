@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Port of serverCommand.ml
-// The OCaml version constructs FlowServerMonitorOptions and calls FlowServerMonitor.start.
-// In Rust, this still enters the simplified standalone server path via flow_server_monitor.
-
 use std::sync::Arc;
 
 use flow_server_monitor as monitor;
@@ -17,7 +13,6 @@ use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;
 
-// (* let spec = { CommandSpec.name = "server"; doc = "Runs a Flow server in the foreground"; ... } *)
 fn spec() -> command_spec::Spec {
     let spec = command_utils::add_shm_flags(command_utils::add_profile_flag(
         command_spec::Spec::new(
@@ -33,6 +28,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_utils::add_no_cgroup_flag(spec);
     let spec = command_utils::add_log_file_flags(spec);
     let spec = command_utils::add_no_restart_flag(spec);
+    let spec = command_utils::add_autostop_flag(spec);
     let spec = command_utils::add_file_watcher_flag(spec);
     let spec = command_utils::add_lazy_flags(spec);
     let spec = command_utils::add_saved_state_flags(spec);
@@ -227,6 +223,8 @@ fn main(args: &arg_spec::Values) {
             )
         });
 
+    let no_restart = command_spec::get(args, "--no-auto-restart", &arg_spec::truthy()).unwrap();
+    let autostop = command_spec::get(args, "--autostop", &arg_spec::truthy()).unwrap();
     if let Err(err) = monitor::start(
         options,
         monitor::StartArgs {
@@ -242,7 +240,9 @@ fn main(args: &arg_spec::Values) {
             file_watcher_sync_timeout: file_watcher_flags.file_watcher_sync_timeout,
             shm_heap_size: Some(shared_mem_config.heap_size),
             shm_hash_table_pow: Some(shared_mem_config.hash_table_pow),
-            from: crate::flow_event_logger::get_from_i_am_a_clown(),
+            from: flow_event_logger::get_from_i_am_a_clown(),
+            autostop,
+            no_restart,
         },
     ) {
         eprintln!("Error: {}", err);

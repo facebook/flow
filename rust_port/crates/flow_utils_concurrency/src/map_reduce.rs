@@ -502,6 +502,7 @@ where
 /// # Arguments
 ///
 /// - `num_workers`: Number of workers (threads) available
+/// - `progress_fn`: Optional callback `(total, completed, batch_size)` invoked per batch
 /// - `max_size`: Maximum batch size (optional, defaults to 500)
 /// - `work_items`: All work items to process
 ///
@@ -515,12 +516,13 @@ where
 /// let files = vec!["a.js", "b.js", "c.js", "d.js"];
 /// let num_workers = 4;
 ///
-/// let next = make_next(num_workers, Some(2), files);
+/// let next = make_next(num_workers, None::<fn(i32, i32, i32)>, Some(2), files);
 ///
 /// // Will create batches of size 2: ["a.js", "b.js"], ["c.js", "d.js"]
 /// ```
 pub fn make_next<W: Clone + Send + Sync + 'static>(
     num_workers: usize,
+    progress_fn: Option<impl Fn(i32, i32, i32) + Send + Sync + 'static>,
     max_size: Option<usize>,
     work_items: Vec<W>,
 ) -> impl Next<W> {
@@ -536,6 +538,7 @@ pub fn make_next<W: Clone + Send + Sync + 'static>(
 
     let items = Arc::new(work_items);
     let index = Arc::new(Mutex::new(0));
+    let total = num_jobs as i32;
 
     move || {
         let mut idx = index.lock();
@@ -545,6 +548,10 @@ pub fn make_next<W: Clone + Send + Sync + 'static>(
         }
 
         let end = (*idx + bucket_size).min(items.len());
+        let length = (end - *idx) as i32;
+        if let Some(ref progress_fn) = progress_fn {
+            progress_fn(total, *idx as i32, length);
+        }
         let batch = items[*idx..end].to_vec();
         *idx = end;
 
@@ -589,7 +596,12 @@ pub fn make_next<W: Clone + Send + Sync + 'static>(
 /// let files = vec!["a.js", "b.js", "c.js", "d.js"];
 /// let processed = Arc::new(Mutex::new(Vec::new()));
 ///
-/// let next = make_next(pool.num_workers(), Some(2), files);
+/// let next = make_next(
+///     pool.num_workers(),
+///     None::<fn(i32, i32, i32)>,
+///     Some(2),
+///     files,
+/// );
 ///
 /// let processed_clone = processed.clone();
 /// iter(&pool, next, move |batch| {

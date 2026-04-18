@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::RwLock;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
@@ -47,6 +48,7 @@ pub struct SharedMem {
     reader_cache: ReaderCache,
     configured_heap_size: Option<u64>,
     configured_hash_table_pow: Option<u32>,
+    on_compact: RwLock<Option<Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>>>,
 }
 
 pub struct HashStats {
@@ -70,6 +72,7 @@ impl SharedMem {
             reader_cache: ReaderCache::new(),
             configured_heap_size,
             configured_hash_table_pow,
+            on_compact: RwLock::new(None),
         }
     }
 
@@ -96,8 +99,14 @@ impl SharedMem {
         self.configured_heap_size
     }
 
-    /// Clear the reader cache (AST and ALoc table caches). Used during
-    /// lib file reinit to avoid returning stale cached ASTs.
+    pub fn set_on_compact(
+        &self,
+        on_compact: Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>,
+    ) {
+        let mut callback = self.on_compact.write().unwrap();
+        *callback = Some(on_compact);
+    }
+
     pub fn clear_reader_cache(&self) {
         self.reader_cache.clear();
     }
@@ -343,13 +352,8 @@ impl SharedMem {
     pub fn loc_of_aloc(&self, aloc: &ALoc) -> Loc {
         let source = match aloc.source() {
             Some(s) => s.dupe(),
-            // Concrete ALocs (from ALoc::of_loc) may not have a source.
-            // Fall back to to_loc_exn which handles concrete ALocs directly.
             None => return aloc.to_loc_exn().dupe(),
         };
-        // Try to get the aloc table. For files that failed parsing (e.g., parse errors),
-        // there may be no typed parse and hence no aloc table. In that case, the ALoc
-        // should be concrete (created via ALoc::of_loc) and to_loc_exn handles it.
         match self.get_aloc_table(&source) {
             Some(packed) => {
                 let lazy_table: LazyALocTable = Rc::new(LazyCell::new(Box::new(move || {
@@ -543,18 +547,14 @@ impl SharedMem {
             .collect()
     }
 
-    /// We choose the head file as the leader, and the tail as followers. It is *)
-    /// always OK to choose the head as leader, as explained below. *)
-    ///  
-    /// Note that cycles cannot happen between untyped files. Why? Because files *)
-    /// in cycles must have their dependencies recorded, yet dependencies are never *)
-    /// recorded for untyped files.
-    ///
-    /// It follows that when the head is untyped, there are no other files! We *)
-    /// don't have to worry that some other file may be typed when the head is *)
-    /// untyped.  
-    ///   
-    /// It also follows when the head is typed, the tail must be typed too!  
+    // We choose the head file as the leader, and the tail as followers.
+    // It is always OK to choose the head as leader, as explained below.
+    // Note that cycles cannot happen between untyped files.
+    // Why? Because files in cycles must have their dependencies recorded,
+    // yet dependencies are never recorded for untyped files.
+    // It follows that when the head is untyped, there are no other files.
+    // We don't have to worry that some other file may be typed when the head is untyped.
+    // It also follows when the head is typed, the tail must be typed too.
     pub fn typed_component(
         &self,
         leader_key: &FileKey,
@@ -571,8 +571,6 @@ impl SharedMem {
     }
 
     pub fn file_has_changed(&self, _file: &FileKey) -> bool {
-        // TODO: Implement proper versioning system like OCaml's entity_changed.
-        // For now, return false since we're building the heap from scratch during init.
         false
     }
 
@@ -594,23 +592,6 @@ impl SharedMem {
             .dupe()
     }
 
-    // Calculate the set of dirty modules and prepare those modules to be committed.
-    //
-    // If this file became a provider to a haste module, we add this file to the
-    // module's "all providers" list and mark the module as dirty.
-    //
-    // If this file no longer providers a haste module, we do not remove the file
-    // now, to avoid complexity around concurrent deletion. Instead, old providers
-    // are "logically" deleted, the module is marked as dirty, and we perform
-    // deferred deletions during commit_modules.
-    //
-    // We also mark modules as dirty even if the module itself does not need to be
-    // committed -- that is, we do not need to pick a new provider. A module is also
-    // considered dirty if the provider file's contents have changed.
-    //
-    // TODO: Regarding the above, we might profitably separate these two notions of
-    // dirtiness! We can skip re-picking a provider for modules which keep the same
-    // provider, but we still need to re-check its dependents.
     fn calc_dirty_modules(
         &self,
         file_key: &FileKey,
@@ -623,8 +604,6 @@ impl SharedMem {
             let old_info = haste_ent.read_committed_clone();
             (old_info, new_info, None)
         } else {
-            // Changing `file` does not cause `new_m`'s provider to be re-picked,
-            // but the module is still dirty because `file` changed. (see TODO)
             (None, None, new_info)
         };
 
@@ -646,8 +625,6 @@ impl SharedMem {
             dirty_modules.insert(Modulename::Haste(info));
         }
 
-        // Changing `file` does not cause the eponymous module's provider to be
-        // re-picked, but it is still dirty because `file` changed. (see TODO)
         dirty_modules.insert(Modulename::Filename(files::chop_flow_ext(file_key)));
 
         dirty_modules
@@ -658,11 +635,6 @@ impl SharedMem {
             return BTreeSet::new();
         }
         let impl_key = files::chop_declaration_ext(file);
-        // OCaml uses prepare_find_or_add_phantom_file, which creates a phantom
-        // entry with no parse (parse_ent None). We must NOT use add_unparsed here
-        // because that creates a Parse::Untyped entry, which makes get_provider
-        // return Some for the phantom file even when the .js.flow alternate has
-        // been deleted.
         if self.file_heap.get(&impl_key).is_none() {
             self.file_heap
                 .insert(impl_key.dupe(), FileEntry::new_phantom());
@@ -688,12 +660,7 @@ impl SharedMem {
     ) -> BTreeSet<Modulename> {
         let has_dependents = !file.as_str().ends_with(".flow");
 
-        // Check if file already exists - if so, reuse existing entities
-        // (resolved_requires, leader, sig_hash) from the existing typed parse,
-        // matching OCaml's behavior in prepare_add_parsed which preserves these
-        // entities across reparses to maintain transaction semantics.
         let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
-            // Try to get existing entities from the current typed parse
             let existing_typed = existing_entry.parse_latest().and_then(|p| match p {
                 Parse::Typed(t) => Some(t),
                 _ => None,
@@ -735,7 +702,6 @@ impl SharedMem {
             }
             self.calc_dirty_modules(&file, existing_entry)
         } else {
-            // Create new entry with fresh entities
             let typed_parse = TypedParse::new(
                 file_hash,
                 ast,
@@ -754,12 +720,23 @@ impl SharedMem {
             );
 
             let file_entry = FileEntry::new(
-                Parse::Typed(typed_parse),
+                Parse::Typed(typed_parse.dupe()),
                 haste_module_info.clone(),
                 has_dependents,
             );
-            self.file_heap.insert(file.dupe(), file_entry.dupe());
-            self.calc_dirty_modules(&file, &file_entry)
+            match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
+                None => self.calc_dirty_modules(&file, &file_entry),
+                Some(existing_entry) => match existing_entry.parse_latest() {
+                    None => {
+                        existing_entry.parse().set(Parse::Typed(typed_parse));
+                        if let Some(info) = haste_module_info {
+                            existing_entry.haste_info_entity().set(info);
+                        }
+                        self.calc_dirty_modules(&file, &existing_entry)
+                    }
+                    Some(_) => BTreeSet::new(),
+                },
+            }
         };
 
         dirty_modules.extend(self.handle_flow_ext(&file));
@@ -775,12 +752,7 @@ impl SharedMem {
         use crate::parse::UntypedParse;
         let has_dependents = !file.as_str().ends_with(".flow");
 
-        // Check if file already exists - if so, update parse entity
         let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
-            // (* the file was deleted or became untyped. to undo that, we have to restore
-            //    the revdeps ... *)
-            // When transitioning from Typed to Untyped/deleted, clear the reverse
-            // dependency edges (remove this file from all its dependencies' dependents lists).
             if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
                 if let Some(old_rr) = old_typed.resolved_requires.read_latest_clone() {
                     let old_deps = old_rr.all_dependencies();
@@ -797,22 +769,34 @@ impl SharedMem {
             }
             self.calc_dirty_modules(&file, existing_entry)
         } else {
+            let untyped_parse = UntypedParse::new(file_hash);
             let file_entry = FileEntry::new(
-                Parse::Untyped(UntypedParse::new(file_hash)),
-                haste_module_info,
+                Parse::Untyped(untyped_parse.dupe()),
+                haste_module_info.clone(),
                 has_dependents,
             );
-            self.file_heap.insert(file.dupe(), file_entry.dupe());
-            self.calc_dirty_modules(&file, &file_entry)
+            match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
+                None => self.calc_dirty_modules(&file, &file_entry),
+                Some(existing_entry) => match existing_entry.parse_latest() {
+                    None => {
+                        existing_entry.parse().set(Parse::Untyped(untyped_parse));
+                        if let Some(info) = haste_module_info {
+                            existing_entry.haste_info_entity().set(info);
+                        }
+                        self.calc_dirty_modules(&file, &existing_entry)
+                    }
+                    Some(_) => BTreeSet::new(),
+                },
+            }
         };
 
         dirty_modules.extend(self.handle_flow_ext(&file));
         dirty_modules
     }
 
-    /// If this file used to exist, but no longer does, then it was deleted. Record
-    /// the deletion by clearing parse information. Deletion might also require
-    /// re-picking module providers, so we return dirty modules.  
+    // If this file used to exist, but no longer does, then it was deleted.
+    // Record the deletion by clearing parse information.
+    // Deletion might also require re-picking module providers, so we return dirty modules.
     pub fn clear_file(
         &self,
         file_key: FileKey,
@@ -860,7 +844,6 @@ impl SharedMem {
         use crate::parse::PackageParse;
         let has_dependents = true;
 
-        // Check if file already exists - if so, update parse entity
         if let Some(existing_entry) = self.file_heap.get(&file) {
             existing_entry
                 .parse()
@@ -870,18 +853,30 @@ impl SharedMem {
             }
             self.calc_dirty_modules(&file, existing_entry)
         } else {
+            let package_parse = PackageParse::new(file_hash, package_info);
             let file_entry = FileEntry::new(
-                Parse::Package(PackageParse::new(file_hash, package_info)),
-                haste_module_info,
+                Parse::Package(package_parse.dupe()),
+                haste_module_info.clone(),
                 has_dependents,
             );
-            self.file_heap.insert(file.dupe(), file_entry.dupe());
-            self.calc_dirty_modules(&file, &file_entry)
+            match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
+                None => self.calc_dirty_modules(&file, &file_entry),
+                Some(existing_entry) => match existing_entry.parse_latest() {
+                    None => {
+                        existing_entry.parse().set(Parse::Package(package_parse));
+                        if let Some(info) = haste_module_info {
+                            existing_entry.haste_info_entity().set(info);
+                        }
+                        self.calc_dirty_modules(&file, &existing_entry)
+                    }
+                    Some(_) => BTreeSet::new(),
+                },
+            }
         }
     }
 
-    /// Given a file, it's old resolved requires, and new resolved requires, compute
-    /// the changes necessary to update the reverse dependency graph.  
+    // Given a file, it's old resolved requires, and new resolved requires,
+    // compute the changes necessary to update the reverse dependency graph.
     pub fn set_resolved_requires(
         &self,
         file: &FileKey,
@@ -897,17 +892,14 @@ impl SharedMem {
 
                 let new_deps = resolved_requires.all_dependencies();
 
-                // Update the entity
                 typed.resolved_requires.set(resolved_requires);
 
-                // Remove `file` from the dependents of `m`
                 for dep in &old_deps {
                     if !new_deps.contains(dep) {
                         self.remove_dependent_from(file, dep);
                     }
                 }
 
-                // add_new_dependent: Add `file` to the dependents of `m`
                 for dep in &new_deps {
                     if !old_deps.contains(dep) {
                         self.add_dependent_to(file, dep);
@@ -917,7 +909,6 @@ impl SharedMem {
         }
     }
 
-    // Remove `file` from the dependents of `m`.
     fn remove_dependent_from(&self, file: &FileKey, dep: &Dependency) {
         match dep {
             Dependency::HasteModule(Modulename::Haste(haste_info)) => {
@@ -934,26 +925,14 @@ impl SharedMem {
         }
     }
 
-    // Add `file` to the dependents of `m`.
     fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) {
         match dep {
             Dependency::HasteModule(Modulename::Haste(haste_info)) => {
-                // Use get_or_create so phantom dependencies (where the haste
-                // module doesn't have a provider yet) still register their
-                // dependents. When a provider is later added for this module,
-                // commit_modules will find these dependents and trigger a
-                // recheck.
                 let module = self.get_or_create_haste_module(haste_info.dupe());
                 module.add_dependent(file.dupe());
             }
             Dependency::HasteModule(Modulename::Filename(dep_file))
             | Dependency::File(dep_file) => {
-                // OCaml uses prepare_find_or_add_phantom_file to ensure a
-                // file_heap entry always exists for every dependency,
-                // including phantom (not-yet-existing) files. This is
-                // critical: without it, phantom dependencies' reverse-dep
-                // edges are lost, and when the file is later created, its
-                // dependents are not found during incremental recheck.
                 let dep_entry = self.file_heap.get(dep_file).cloned().unwrap_or_else(|| {
                     let phantom_entry = FileEntry::new_phantom();
                     self.file_heap.insert(dep_file.dupe(), phantom_entry.dupe());
@@ -1064,24 +1043,26 @@ impl SharedMem {
     }
 
     pub fn compact_parse(&self, file: &FileKey) {
-        // Placeholder for future: convert Live AST to Serialized form
-        // This would require interior mutability on TypedParse.ast
-        // For now, this is a no-op until we add that capability
         let _ = file;
     }
 
     pub fn collect_slice(&self, _work: usize) -> bool {
+        let finish_compaction = self
+            .on_compact
+            .read()
+            .unwrap()
+            .as_ref()
+            .map(|on_compact| on_compact());
         for (file, _) in self.file_heap.iter_unordered() {
             self.compact_parse(file);
         }
         self.clear_reader_cache();
+        if let Some(finish_compaction) = finish_compaction {
+            finish_compaction();
+        }
         true
     }
 
-    /// Commit sig_hash entity values in the heap, promoting latest values to committed.
-    /// This should be called at the end of a transaction (init or recheck) so that
-    /// `read_committed()` on sig_hash returns the current value in subsequent transactions,
-    /// enabling the merge skip optimization.
     pub fn commit_entities(&self) {
         for entry in self.file_heap.values() {
             entry.parse.commit();

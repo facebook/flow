@@ -20,6 +20,8 @@ use flow_heap::parsing_heaps::SharedMem;
 use flow_imports_exports::exports::Export;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports;
+use flow_monitor_rpc::monitor_rpc;
+use flow_monitor_rpc::server_status;
 use flow_parser::file_key::FileKey;
 
 use crate::export_index;
@@ -45,11 +47,11 @@ fn inferred_name_of_modulename(module_name: &str) -> FlowSmolStr {
     FlowSmolStr::new(utils_js::camelize(stripped))
 }
 
-/// In this module, we will generate a stream of resolved module information, for indexing star
-/// re-exports.
-/// The stream starts from the module we want to export. Given a mref with in the module, it will
-/// resolve information to reach the imported module's export, and so on.
-/// The stream is completely lazy. For modules without star re-exports, it will have zero cost.
+// In this module, we will generate a stream of resolved module information, for indexing star
+// re-exports.
+// The stream starts from the module we want to export. Given a mref with in the module, it will
+// resolve information to reach the imported module's export, and so on.
+// The stream is completely lazy. For modules without star re-exports, it will have zero cost.
 mod module_resolution_lazy_stream {
     use super::*;
 
@@ -208,7 +210,6 @@ fn with_reexports<'a>(
             next,
             shared_mem,
         }) => {
-            // Guard against potential re-exports cycle
             if visited_deps.contains(&file_key) {
                 return;
             }
@@ -247,9 +248,9 @@ fn entries_of_exports<'a>(
     acc
 }
 
-/// [add_exports ~source ~module_name exports index] adds [exports] to [index].
-/// For default and namespace exports, [module_name] is used as the exported name
-/// (converted to a valid identifier firist).
+// [add_exports ~source ~module_name exports index] adds [exports] to [index].
+// For default and namespace exports, [module_name] is used as the exported name
+// (converted to a valid identifier firist).
 fn add_exports<'a>(
     source: &Source,
     module_name: &str,
@@ -320,7 +321,6 @@ fn add_imports(
                             let (kind, name) = kind_and_name(&u);
                             export_index::add(&name, Source::Builtin(u), kind, index);
                         }
-                        // We should not index synthetic imports.
                         Err(Some(FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
                             ..
                         })) => {}
@@ -331,7 +331,6 @@ fn add_imports(
                             }
                         }
                     },
-                    // Could not find resolved_requires key for this unresolved_source
                     None => {}
                 }
             }
@@ -339,9 +338,9 @@ fn add_imports(
     }
 }
 
-/// [add_exports_of_checked_file file_key parse haste_info index] extracts the
-/// exports of [file_key] from its [parse] entry in shared memory. [haste_info]
-/// is used to fetch the module name from [file_key].
+// [add_exports_of_checked_file file_key parse haste_info index] extracts the
+// exports of [file_key] from its [parse] entry in shared memory. [haste_info]
+// is used to fetch the module name from [file_key].
 fn add_exports_of_checked_file(
     shared_mem: &SharedMem,
     file_key: &FileKey,
@@ -370,8 +369,8 @@ fn add_exports_of_checked_file(
     );
 }
 
-/// Adds builtins to [index]. See [Exports.of_builtins] for how libdefs
-/// are converted as if they "export" things.
+// Adds builtins to [index]. See [Exports.of_builtins] for how libdefs
+// are converted as if they "export" things.
 fn add_exports_of_builtins_inner(lib_exports: &Exports, index: &mut ExportIndex) {
     for export in lib_exports.iter() {
         match export {
@@ -395,10 +394,10 @@ fn add_exports_of_builtins_inner(lib_exports: &Exports, index: &mut ExportIndex)
             Export::NamedType(name) => {
                 export_index::add(name, Source::Global, Kind::NamedType, index);
             }
-            Export::DefaultType(_) => {}         // impossible
-            Export::Default(_) => {}             // impossible
-            Export::ReExportModule(_) => {}      // impossible
-            Export::ReExportModuleTypes(_) => {} // impossible
+            Export::DefaultType(_) => {}
+            Export::Default(_) => {}
+            Export::ReExportModule(_) => {}
+            Export::ReExportModuleTypes(_) => {}
         }
     }
 }
@@ -414,9 +413,9 @@ pub fn add_exports_of_builtins(
     }
 }
 
-/// [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from
-/// shared memory and adds all of the current exports to [exports_to_add], and all of the
-/// previous exports to [exports_to_remove].
+// [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from
+// shared memory and adds all of the current exports to [exports_to_add], and all of the
+// previous exports to [exports_to_remove].
 fn index_file(
     shared_mem: &SharedMem,
     file_key: &FileKey,
@@ -426,15 +425,9 @@ fn index_file(
     imports_to_remove: &mut ExportIndex,
 ) {
     if let flow_parser::file_key::FileKeyInner::ResourceFile(_) = file_key.inner() {
-        // TODO: where does filename need to be searchable?
         return;
     }
 
-    // TODO: when a file changes, the below removes the file entirely and then adds
-    // back the new info, even though much or all of it is probably still the same.
-    // instead, diff the old and new exports and make minimal changes.
-
-    // get old exports so we can remove outdated entries
     if let Some(old_parse) = shared_mem.get_typed_parse_committed(file_key) {
         let old_imports = shared_mem.get_imports_unsafe(file_key);
         let old_haste_info = shared_mem.get_haste_info_committed(file_key);
@@ -478,22 +471,30 @@ fn index_file(
     }
 }
 
-/// Indexes all of the files in [parsed] and returns two [Export_index.t]'s: the first is
-/// all of the exports to add to the final index, and the second are to be removed.
-/// The latter is important because exports are indexed by the export name, not the
-/// filename; it would be expensive to walk the entire export index to check each exported
-/// name to see if a changed file used to export it. Instead, we re-index the previous
-/// version of the file to know what to remove.
+// Indexes all of the files in [parsed] and returns two [Export_index.t]'s: the first is
+// all of the exports to add to the final index, and the second are to be removed.
+// The latter is important because exports are indexed by the export name, not the
+// filename; it would be expensive to walk the entire export index to check each exported
+// name to see if a changed file used to export it. Instead, we re-index the previous
+// version of the file to know what to remove.
 pub fn index(
     shared_mem: &SharedMem,
     parsed: &BTreeSet<FileKey>,
 ) -> (ExportIndex, ExportIndex, ExportIndex, ExportIndex) {
+    let total_count = parsed.len() as i32;
     let mut new_available_exports = export_index::empty();
     let mut old_available_exports = export_index::empty();
     let mut imports_to_add = export_index::empty();
     let mut imports_to_remove = export_index::empty();
 
-    for file_key in parsed {
+    monitor_rpc::status_update(server_status::Event::IndexingProgress(
+        server_status::Progress {
+            finished: 0,
+            total: Some(total_count),
+        },
+    ));
+
+    for (finished, file_key) in parsed.iter().enumerate() {
         index_file(
             shared_mem,
             file_key,
@@ -502,7 +503,16 @@ pub fn index(
             &mut imports_to_add,
             &mut imports_to_remove,
         );
+        let finished = (finished + 1) as i32;
+        monitor_rpc::status_update(server_status::Event::IndexingProgress(
+            server_status::Progress {
+                finished,
+                total: Some(total_count),
+            },
+        ));
     }
+
+    monitor_rpc::status_update(server_status::Event::IndexingPostProcess);
 
     (
         new_available_exports,
@@ -512,25 +522,26 @@ pub fn index(
     )
 }
 
-/// Initializes an [Export_search.t] with the exports of all of the [parsed] files
-/// as well as the builtin libdefs.
+// Initializes an [Export_search.t] with the exports of all of the [parsed] files
+// as well as the builtin libdefs.
 pub fn init(
     shared_mem: &SharedMem,
     libs: &(Exports, Vec<(String, Exports)>),
     parsed: &BTreeSet<FileKey>,
 ) -> ExportSearch {
-    // TODO: assert that _exports_to_remove is empty? should be on init
     let (new_available_exports, _old_available_exports, imports_to_add, _imports_to_remove) =
         index(shared_mem, parsed);
     let mut exports_to_add = new_available_exports;
     let (lib_exports, scoped_lib_exports) = libs;
     add_exports_of_builtins(lib_exports, scoped_lib_exports, &mut exports_to_add);
     let final_export_index = export_index::merge_export_import(&imports_to_add, &exports_to_add);
-    export_search::init(final_export_index)
+    let search = export_search::init(final_export_index);
+    monitor_rpc::status_update(server_status::Event::IndexingEnd);
+    search
 }
 
-/// [update ~changed previous] updates the exports for all of the [changed] files
-/// in the [previous] [Export_search.t].
+// [update ~changed previous] updates the exports for all of the [changed] files
+// in the [previous] [Export_search.t].
 pub fn update(
     shared_mem: &SharedMem,
     dirty_files: &BTreeSet<FileKey>,
@@ -544,7 +555,9 @@ pub fn update(
         previous,
     );
     let result = export_search::subtract_count(&imports_to_remove, &result);
-    export_search::merge_export_import(&imports_to_add, &result)
+    let result = export_search::merge_export_import(&imports_to_add, &result);
+    monitor_rpc::status_update(server_status::Event::IndexingEnd);
+    result
 }
 
 pub mod for_test {

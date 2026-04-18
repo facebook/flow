@@ -8,7 +8,6 @@
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum FileWatcher {
     NoFileWatcher,
-    DFind,
     Watchman,
     EdenFS,
 }
@@ -25,7 +24,6 @@ pub type Status = (FileWatcher, StatusKind);
 pub fn string_of_file_watcher(fw: &FileWatcher) -> &'static str {
     match fw {
         FileWatcher::NoFileWatcher => "Dummy",
-        FileWatcher::DFind => "Dfind",
         FileWatcher::Watchman => "Watchman",
         FileWatcher::EdenFS => "EdenFS",
     }

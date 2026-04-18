@@ -19,7 +19,6 @@ use flow_heap::parsing_heaps::SharedMem;
 use flow_server_env::error_collator;
 use flow_server_env::file_watcher_status;
 use flow_server_env::lsp_prot;
-use flow_server_env::monitor_prot;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
 use flow_server_env::server_env;
@@ -30,6 +29,7 @@ use flow_server_env::server_prot;
 use flow_server_env::server_status;
 use flow_services_inference::type_service;
 use flow_services_references::find_refs_types;
+use flow_utils_concurrency::worker_cancel;
 
 use crate::recheck_updates;
 
@@ -149,24 +149,20 @@ fn recheck(
     genv: &server_env::Genv,
     env: server_env::Env,
     files_to_force: CheckedSet,
-    find_ref_command: Option<server_monitor_listener_state::FindRefCommand>,
+    find_ref_command: &mut Option<server_monitor_listener_state::FindRefCommand>,
     incompatible_lib_change: bool,
     changed_mergebase: Option<bool>,
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
     updates: CheckedSet,
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
-) -> (ProfilingFinished, server_env::Env) {
+) -> Result<(ProfilingFinished, server_env::Env), type_service::RecheckError> {
     let options = &genv.options;
     let workers = genv.workers.as_ref().unwrap();
 
-    let (find_ref_request, find_ref_transformer_with_client) = match find_ref_command {
-        Some(server_monitor_listener_state::FindRefCommand {
-            request,
-            client_id,
-            references_to_lsp_response,
-        }) => (request, Some((references_to_lsp_response, client_id))),
-        None => (find_refs_types::empty_request(), None),
+    let find_ref_request = match find_ref_command.as_ref() {
+        Some(server_monitor_listener_state::FindRefCommand { request, .. }) => request.clone(),
+        None => find_refs_types::empty_request(),
     };
 
     let _should_print_summary = options.profile;
@@ -174,8 +170,6 @@ fn recheck(
 
     send_start_recheck(&env);
 
-    // Re-extract flowlib if temp dir was cleaned up (e.g. macOS /tmp cleanup).
-    // Only needed when a lib change triggers reinit, which re-parses flowlib files.
     if incompatible_lib_change {
         flow_flowlib::extract_if_missing_or_exit(options.file_options.default_lib_dir.as_ref());
     }
@@ -196,17 +190,21 @@ fn recheck(
     );
     let (log_recheck_event, recheck_stats, find_ref_results, env) = match recheck_result {
         Ok((log_event, stats, results, env)) => (log_event, stats, results, env),
-        Err(type_service::RecheckError::Canceled(_changed_files)) => {
-            log::error!("Recheck was canceled (unexpected without async runtime)");
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError);
+        Err(type_service::RecheckError::Canceled(changed_files)) => {
+            return Err(type_service::RecheckError::Canceled(changed_files));
         }
         Err(type_service::RecheckError::TooSlow) => {
             unreachable!("TooSlow is handled inside type_service::recheck");
         }
     };
 
-    if let Some((transformer, client_id)) = find_ref_transformer_with_client {
-        let (response, metadata) = transformer(find_ref_results);
+    if let Some(server_monitor_listener_state::FindRefCommand {
+        client_id,
+        references_to_lsp_response,
+        ..
+    }) = find_ref_command.take()
+    {
+        let (response, metadata) = references_to_lsp_response(find_ref_results);
         let metadata = lsp_prot::Metadata {
             server_logging_context: Some(persistent_server_logging_context()),
             ..metadata
@@ -233,7 +231,7 @@ fn recheck(
         stats: lsp_stats,
     });
 
-    (profiling, env)
+    Ok((profiling, env))
 }
 
 // We don't want to start running f until we're in the try block
@@ -279,28 +277,21 @@ pub(crate) fn recheck_single(
 
     let mut will_be_checked_files = env.checked_files.clone();
 
-    let (priority, workload) =
+    let (priority, mut workload) =
         server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates, &|| {
             will_be_checked_files.clone()
         });
 
-    let server_monitor_listener_state::RecheckWorkload {
-        metadata:
-            monitor_prot::FileWatcherMetadata {
-                changed_mergebase,
-                missed_changes,
-            },
-        files_to_recheck,
-        files_to_prioritize,
-        files_to_force,
-        find_ref_command,
-        incompatible_lib_change,
-    } = workload;
-
-    let did_change_mergebase = changed_mergebase.unwrap_or(false);
+    let did_change_mergebase = workload.metadata.changed_mergebase.unwrap_or(false);
+    let missed_changes = workload.metadata.missed_changes;
+    let incompatible_lib_change = workload.incompatible_lib_change;
 
     let mut files_to_recheck_set = CheckedSet::empty();
-    files_to_recheck_set.add(Some(files_to_recheck), None, Some(files_to_prioritize));
+    files_to_recheck_set.add(
+        Some(workload.files_to_recheck.dupe()),
+        None,
+        Some(workload.files_to_prioritize.dupe()),
+    );
 
     if missed_changes && !did_change_mergebase {
         files_to_recheck_set.add(Some(env.checked_files.focused().clone()), None, None);
@@ -309,12 +300,13 @@ pub(crate) fn recheck_single(
     if !incompatible_lib_change
         && !did_change_mergebase
         && files_to_recheck_set.is_empty()
-        && files_to_force.is_empty()
+        && workload.files_to_force.is_empty()
     {
         return RecheckOutcome::NothingToDo(env);
     }
 
     let stop_parallelizable_workloads = start_parallelizable_workloads(genv, &env);
+    let env_for_cancel = env.clone();
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
     // may have introduced garbage into shared memory. Since we immediately start another
@@ -327,28 +319,48 @@ pub(crate) fn recheck_single(
     // Adding files_to_force to will_be_checked_files makes sure that future requests for
     // the same files doesn't cause us to cancel a check that was already working on
     // files are definitely checked, so we can add them now.
-    will_be_checked_files.union(files_to_force.dupe());
+    worker_cancel::resume_workers();
+    will_be_checked_files.union(workload.files_to_force.dupe());
 
-    let f = move || {
-        let (profiling, env) = recheck(
-            genv,
-            env,
-            files_to_force,
-            find_ref_command,
-            incompatible_lib_change,
-            changed_mergebase,
-            missed_changes,
-            &mut will_be_checked_files,
-            files_to_recheck_set,
-            node_modules_containers,
-        );
-        stop_parallelizable_workloads();
-        server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
+    let f = move || match recheck(
+        genv,
+        env,
+        workload.files_to_force.dupe(),
+        &mut workload.find_ref_command,
+        incompatible_lib_change,
+        workload.metadata.changed_mergebase,
+        missed_changes,
+        &mut will_be_checked_files,
+        files_to_recheck_set,
+        node_modules_containers,
+    ) {
+        Ok((profiling, env)) => {
+            stop_parallelizable_workloads();
+            server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
 
-        RecheckOutcome::CompletedRecheck {
-            profiling,
-            env,
-            recheck_count,
+            RecheckOutcome::CompletedRecheck {
+                profiling,
+                env,
+                recheck_count,
+            }
+        }
+        Err(type_service::RecheckError::Canceled(_changed_files)) => {
+            stop_parallelizable_workloads();
+            log::info!(
+                "Recheck successfully canceled. Restarting the recheck to include new file changes"
+            );
+            let _done: bool = shared_mem.collect_slice(256000);
+            server_monitor_listener_state::requeue_workload(workload);
+            recheck_single(
+                recheck_count + 1,
+                genv,
+                env_for_cancel,
+                shared_mem,
+                node_modules_containers,
+            )
+        }
+        Err(type_service::RecheckError::TooSlow) => {
+            unreachable!("TooSlow is handled inside type_service::recheck");
         }
     };
     run_but_cancel_on_file_changes(

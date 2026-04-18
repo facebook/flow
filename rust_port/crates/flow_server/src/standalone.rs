@@ -75,19 +75,12 @@ pub fn start(
     server.run_with_signal_ready(signal_ready);
 }
 
-/// Shared state for the server, protected by a Mutex.
-/// The Condvar is used to wake the recheck thread when new work arrives.
 struct ServerState {
-    /// The current environment. None during init.
     env: Option<flow_server_env::server_env::Env>,
-    /// Monotonically increasing version for env snapshots visible to request handlers.
     env_generation: u64,
-    /// Whether init has completed.
     init_done: bool,
     pending_recheck: bool,
-    /// Whether a recheck is currently in progress.
     recheck_in_progress: bool,
-    /// Whether the server should shut down.
     should_shutdown: bool,
 }
 
@@ -220,7 +213,6 @@ impl FlowServer {
             let _mkdir_result = std::fs::create_dir_all(parent);
         }
 
-        // Bind TCP listener BEFORE init so clients can connect during init.
         let listener = match TcpListener::bind("127.0.0.1:0") {
             Ok(l) => l,
             Err(e) => {
@@ -236,7 +228,6 @@ impl FlowServer {
         };
         let port = listener.local_addr().unwrap().port();
 
-        // Write the port to the socket file so clients can connect
         if let Some(parent) = Path::new(&socket_path).parent() {
             let _mkdir_result = std::fs::create_dir_all(parent);
         }
@@ -245,7 +236,6 @@ impl FlowServer {
             cleanup_and_exit_with_code(&pids_path, &lock_path, &socket_path, Some(&ready_path), 1);
         });
 
-        // Create shared server state
         let state = Arc::new((
             Mutex::new(ServerState {
                 env: None,
@@ -288,7 +278,6 @@ impl FlowServer {
             }
         });
 
-        // Spawn initialization in a background thread
         let init_state = state.clone();
         let init_options = self.options.dupe();
         let init_shared_mem = self.shared_mem.dupe();
@@ -346,13 +335,11 @@ impl FlowServer {
                     );
                     flow_server_env::monitor_rpc::status_update(server_status::Event::FinishingUp);
 
-                    // Update node_modules_containers
                     {
                         let mut nmc_guard = nmc.write().unwrap();
                         *nmc_guard = init_nmc.read().unwrap().clone();
                     }
 
-                    // Store the env and mark init as done
                     {
                         let (lock, cvar) = &*init_state;
                         let mut server_state = lock.lock().unwrap();
@@ -367,13 +354,11 @@ impl FlowServer {
                             watcher_status,
                             &persistent_connection::all_clients(),
                         );
-                        // Drop the MutexGuard before calling process_pending_rechecks
-                        // to avoid deadlock (process_pending_rechecks acquires the same lock).
                     }
+                    flow_server_env::monitor_rpc::status_update(server_status::Event::Ready);
 
                     eprintln!("Server is ready (port {})", port);
 
-                    // Process any pending rechecks that arrived during init
                     process_pending_rechecks(
                         &init_state,
                         &init_options,
@@ -422,7 +407,6 @@ impl FlowServer {
 
         let connection_slots = Arc::new(ConnectionSlots::new());
 
-        // Accept connections in the main thread
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
@@ -467,9 +451,7 @@ impl FlowServer {
     }
 }
 
-/// Result of a force-recheck operation.
 enum RecheckOutcome {
-    /// Recheck completed successfully.
     Ok,
 }
 
@@ -667,6 +649,8 @@ fn do_rechecks(
                 server_state.env = Some(env.clone());
                 server_state.env_generation += 1;
                 cvar.notify_all();
+                drop(server_state);
+                flow_server_env::monitor_rpc::status_update(server_status::Event::Ready);
             }
             Err(type_service::RecheckError::TooSlow) => {
                 unreachable!("TooSlow is handled inside type_service::recheck");
@@ -675,9 +659,7 @@ fn do_rechecks(
                 eprintln!(
                     "Recheck successfully canceled. Restarting the recheck to include new file changes"
                 );
-                let on_compact = crate::server::on_compact(shared_mem);
                 let _done: bool = shared_mem.collect_slice(256000);
-                on_compact();
                 server_monitor_listener_state::requeue_workload(workload);
                 if !changed_files.is_empty()
                     && changed_files
@@ -715,8 +697,6 @@ fn do_rechecks(
     }
 }
 
-/// Process any pending rechecks. This is called by the background init/recheck
-/// thread after init completes and whenever new recheck requests arrive.
 fn process_pending_rechecks(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Arc<Options>,
@@ -734,20 +714,14 @@ fn process_pending_rechecks(
             let (lock, cvar) = &**state;
             let mut server_state = lock.lock().unwrap();
 
-            // Check for shutdown
             if server_state.should_shutdown {
                 cleanup_and_exit(pids_path, lock_path, socket_path, ready_path);
             }
 
             if !server_state.pending_recheck {
-                // No pending work -- mark recheck as not in progress.
-                // Notify waiters (e.g., status handlers waiting for
-                // recheck_in_progress == false).
                 server_state.recheck_in_progress = false;
                 if !ready_signaled {
-                    if let Some(ready_path) = ready_path {
-                        let _ = std::fs::write(ready_path, "ready");
-                    }
+                    crate::ready::signal_ready_file(ready_path);
                     ready_signaled = true;
                 }
                 cvar.notify_all();
@@ -777,7 +751,6 @@ fn process_pending_rechecks(
                     node_modules_containers,
                 )
             } else {
-                // Init not done yet, skip
                 RecheckOutcome::Ok
             }
         };
@@ -1148,7 +1121,6 @@ fn handle_connection(
             json_version,
             offset_kind,
         } => {
-            // Wait for init to complete and no recheck in progress or pending
             let (lock, cvar) = &**state;
             let server_state = lock.lock().unwrap();
             let server_state = cvar
@@ -1198,7 +1170,6 @@ fn handle_connection(
                     .collect();
 
                 if server_state.recheck_in_progress {
-                    // Signal cancellation of the current recheck
                     worker_cancel::stop_workers();
                 }
 

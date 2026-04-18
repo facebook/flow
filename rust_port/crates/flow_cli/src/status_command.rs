@@ -22,10 +22,6 @@ use crate::command_utils;
 use crate::command_utils::ConnectParams;
 use crate::command_utils::OffsetStyle;
 
-// ***********************************************************************
-// flow status (report current error set) command impl
-// ***********************************************************************
-
 struct StatusArgs {
     root: PathBuf,
     output_json: bool,
@@ -36,8 +32,6 @@ struct StatusArgs {
     strip_root: bool,
 }
 
-// explicit == called with "flow status ..."
-// rather than simply "flow ..."
 fn spec(name: &str, doc: &str, usage: String, explicit: bool) -> command_spec::Spec {
     let spec = command_spec::Spec::new(name, doc, usage);
     let spec = command_utils::add_base_flags(spec);
@@ -48,7 +42,6 @@ fn spec(name: &str, doc: &str, usage: String, explicit: bool) -> command_spec::S
     let spec = command_utils::add_strip_root_flag(spec);
     let spec = command_utils::add_from_flag(spec);
     let spec = if explicit {
-        // match --version below
         spec
     } else {
         spec.flag(
@@ -121,7 +114,7 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
             suppressed_errors,
         } => {
             let error_flags = &args.error_flags;
-            let from = crate::flow_event_logger::get_from_i_am_a_clown();
+            let from = flow_event_logger::get_from_i_am_a_clown();
             if args.output_json {
                 print_json(&errors, &warnings, &suppressed_errors)
             } else if matches!(from.as_deref(), Some("vim") | Some("emacs")) {

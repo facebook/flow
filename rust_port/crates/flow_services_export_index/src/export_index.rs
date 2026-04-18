@@ -13,7 +13,17 @@ use flow_common::flow_import_specifier::Userland;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Kind {
     DefaultType,
     Default,
@@ -22,10 +32,18 @@ pub enum Kind {
     Namespace,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Source {
     Global,
-    /// [Builtin "foo"] refers to a `declare module "foo"` lib
+    // [Builtin "foo"] refers to a `declare module "foo"` lib
     Builtin(Userland),
     FileKey(FileKey),
 }
@@ -40,11 +58,11 @@ impl std::fmt::Display for Source {
     }
 }
 
-/// Custom ordering where the "kind" (LibFile vs SourceFile vs JsonFile, etc) does
-/// not matter, and we compare filenames without extensions, so that something like
-/// [Foo.example.js] sorts _after_ [Foo.js] even though [e] comes before [j]; the
-/// extension is less important than the rest of the basename and we should suggest
-/// [import ... from 'Foo'] before [import ... from 'Foo.example'].
+// Custom ordering where the "kind" (LibFile vs SourceFile vs JsonFile, etc) does
+// not matter, and we compare filenames without extensions, so that something like
+// [Foo.example.js] sorts _after_ [Foo.js] even though [e] comes before [j]; the
+// extension is less important than the rest of the basename and we should suggest
+// [import ... from 'Foo'] before [import ... from 'Foo.example'].
 fn compare_file_key(a: &FileKey, b: &FileKey) -> std::cmp::Ordering {
     let a = a.as_str();
     let b = b.as_str();
@@ -62,21 +80,21 @@ fn compare_file_key(a: &FileKey, b: &FileKey) -> std::cmp::Ordering {
     }
 }
 
-/// Custom ordering where globals come first, followed by [declare module],
-/// followed by source files.
-///
-/// Exports are sorted by both source and kind. After sorting by kind (defaults
-/// before named before namespace), we then want globals first, followed by
-/// declared modules (builtins). In this way, if there is a module named `Map`
-/// with a default export, it'll be suggested before the builtin `Map`, but
-/// some other module with a named `Map` export will be suggested after. This
-/// is so that named exports from random modules don't shadow common globals,
-/// but you can still shadow the builtins with an entire module (e.g. a Promise
-/// polyfill defined by the `Promise` module).
-///
-/// TODO: this is a very coarse ranking. We could do much better. For example, we
-/// could track how commonly used each export is. For example, the `Promise` global
-/// is probably far more common than any source file exporting the same name.
+// Custom ordering where globals come first, followed by [declare module],
+// followed by source files.
+//
+// Exports are sorted by both source and kind. After sorting by kind (defaults
+// before named before namespace), we then want globals first, followed by
+// declared modules (builtins). In this way, if there is a module named `Map`
+// with a default export, it'll be suggested before the builtin `Map`, but
+// some other module with a named `Map` export will be suggested after. This
+// is so that named exports from random modules don't shadow common globals,
+// but you can still shadow the builtins with an entire module (e.g. a Promise
+// polyfill defined by the `Promise` module).
+//
+// TODO: this is a very coarse ranking. We could do much better. For example, we
+// could track how commonly used each export is. For example, the `Promise` global
+// is probably far more common than any source file exporting the same name.
 fn compare_source(a: &Source, b: &Source) -> std::cmp::Ordering {
     match (a, b) {
         // globals first
@@ -104,16 +122,16 @@ impl Ord for Source {
     }
 }
 
-/// Order by kind and then by source.
-///
-/// 1. Default exports from declared modules (builtins)
-/// 2. Default exports from user modules
-/// 3. Named exports from globals (e.g. `declare class Image`)
-/// 4. Named exports from declared modules
-/// 5. Named exports from user modules
-/// 6. Same for types
-/// 7. Namespaces of declared modules
-/// 8. Namespaces of user modules
+// Order by kind and then by source.
+//
+// 1. Default exports from declared modules (builtins)
+// 2. Default exports from user modules
+// 3. Named exports from globals (e.g. `declare class Image`)
+// 4. Named exports from declared modules
+// 5. Named exports from user modules
+// 6. Same for types
+// 7. Namespaces of declared modules
+// 8. Namespaces of user modules
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Export(pub Source, pub Kind);
 
@@ -168,16 +186,12 @@ pub fn merge_export_import(add_index: &ExportIndex, t: &ExportIndex) -> ExportIn
         for (export_key, add_count) in add_exports {
             let Export(source, _) = export_key;
             if let Some(existing_count) = entry.get_mut(export_key) {
-                // If the export key of an import matches export, we of course should update the count.
                 *existing_count += add_count;
             } else {
                 match source {
-                    // In most cases, we still want to conservatively update the count even with missing export.
                     Source::FileKey(_) => {
                         entry.insert(export_key.clone(), *add_count);
                     }
-                    // If the import site has Global, Builtin source, and there is no corresponding export entry,
-                    // it's likely that they are unresolved on the import site.
                     Source::Global | Source::Builtin(_) => {}
                 }
             }
@@ -221,8 +235,8 @@ pub fn map(f: impl Fn(&i32) -> i32, t: &ExportIndex) -> ExportIndex {
         .collect()
 }
 
-/// Returns tuple of two disjoint index: (addition_index, removal_index),
-/// to be passed to [merge] and [subtract].
+// Returns tuple of two disjoint index: (addition_index, removal_index),
+// to be passed to [merge] and [subtract].
 pub fn diff(old_index: &ExportIndex, new_index: &ExportIndex) -> (ExportIndex, ExportIndex) {
     let exist_in_index = |export_name: &str, export_key: &Export, map: &ExportIndex| -> bool {
         match map.get(export_name) {
@@ -249,8 +263,8 @@ pub fn diff(old_index: &ExportIndex, new_index: &ExportIndex) -> (ExportIndex, E
     )
 }
 
-/// [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
-/// also returns a list of keys that no longer are exported by any file.
+// [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
+// also returns a list of keys that no longer are exported by any file.
 pub fn subtract(old_t: &ExportIndex, t: &ExportIndex) -> (ExportIndex, Vec<FlowSmolStr>) {
     let mut result = t.clone();
     let mut dead_names: Vec<FlowSmolStr> = Vec::new();
@@ -289,7 +303,7 @@ pub fn subtract_count(rem: &ExportIndex, t: &ExportIndex) -> ExportIndex {
     acc
 }
 
-/// [find name t] returns all of the [(file_key, kind)] tuples that export [name]
+// [find name t] returns all of the [(file_key, kind)] tuples that export [name]
 pub fn find(name: &str, t: &ExportIndex) -> ExportMap<i32> {
     match t.get(name) {
         Some(exports) => exports.clone(),
@@ -304,7 +318,7 @@ pub fn find_seq(name: &str, t: &ExportIndex) -> Vec<(Export, i32)> {
     }
 }
 
-/// [keys t] returns all of the exported names from every file in [t]
+// [keys t] returns all of the exported names from every file in [t]
 pub fn keys(t: &ExportIndex) -> Vec<FlowSmolStr> {
     t.keys().duped().collect()
 }

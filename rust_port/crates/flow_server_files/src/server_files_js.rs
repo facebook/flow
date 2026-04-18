@@ -75,29 +75,15 @@ pub fn config_file(flowconfig_name: &str, root: &Path) -> String {
     root.join(flowconfig_name).to_string_lossy().into_owned()
 }
 
-/// Generating really long filenames can hit some limits. For example
-///
-/// /* /usr/include/linux/limits.h */
-/// #define NAME_MAX         255    /* # chars in a file name */
-///
-/// Which can cause ENAMETOOLONG or stuff like that. So let's cap our filenames (without extensions)
-/// at 200 characters  
+// Generating really long filenames can hit some limits, which can cause
+// ENAMETOOLONG or similar errors. So let's cap our filenames (without
+// extensions) at 200 characters.
 const MAX_ROOT_PART_LEN: usize = 200;
 
 pub fn log_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
     file_of_root(
         Some(MAX_ROOT_PART_LEN),
         "log",
-        flowconfig_name,
-        tmp_dir,
-        root,
-    )
-}
-
-pub fn dfind_log_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
-    file_of_root(
-        Some(MAX_ROOT_PART_LEN),
-        "dfind_log",
         flowconfig_name,
         tmp_dir,
         root,

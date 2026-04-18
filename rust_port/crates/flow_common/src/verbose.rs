@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Verbose {
     pub indent: u32,
     pub depth: u32,

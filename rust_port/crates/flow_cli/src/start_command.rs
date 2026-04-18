@@ -17,9 +17,7 @@ use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;
 
-// (***********************************************************************)
-// (* start command *)
-// (***********************************************************************)
+// start command
 
 fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
@@ -200,7 +198,6 @@ fn main(
     let file_watcher_timeout =
         command_utils::choose_file_watcher_timeout(&flowconfig, file_watcher_timeout)
             .map(|file_watcher_timeout| file_watcher_timeout as u32);
-    let _ = autostop;
     let canonical_root = root.canonicalize().unwrap_or_else(|_| root.clone());
     let lock_path = server_files_js::lock_file(
         &flowconfig_name,
@@ -256,13 +253,14 @@ fn main(
         verbose: server_options.verbose.is_some(),
         server_log_file: server_log_file.clone(),
         monitor_log_file: monitor_log_file.clone(),
-        from: crate::flow_event_logger::get_from_i_am_a_clown(),
+        from: flow_event_logger::get_from_i_am_a_clown(),
         saved_state_fetcher: saved_state_options_flags.saved_state_fetcher,
         saved_state_force_recheck: saved_state_options_flags.saved_state_force_recheck,
         saved_state_no_fallback: saved_state_options_flags.saved_state_no_fallback,
         saved_state_skip_version_check: saved_state_options_flags.saved_state_skip_version_check,
         saved_state_verify: saved_state_options_flags.saved_state_verify,
         no_restart,
+        autostop,
         no_cgroup,
         root: canonical_root,
         temp_dir: server_options.temp_dir.to_string(),
