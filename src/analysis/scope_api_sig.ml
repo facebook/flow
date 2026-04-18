@@ -87,10 +87,4 @@ module type S = sig
   val is_local_use : info -> use -> bool
 
   val fold_scope_chain : info -> (scope -> Scope.t -> 'a -> 'a) -> scope -> 'a -> 'a
-
-  val build_scope_tree : info -> Scope.t Tree.t
-
-  val compute_free_and_bound_variables : Scope.t Tree.t -> (Def.t SMap.t * SSet.t * SSet.t) Tree.t
-
-  val compute_all_in_scope_bindings_per_scope : info -> Def.t SMap.t IMap.t
 end

@@ -727,9 +727,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] listUtils.ml
     - [x] nel.ml → unnecessary in rust, use Vec1
     - [ ] optionUtils.ml
-    - [ ] resizableArray.ml
+    - [x] resizableArray.ml → `Vec in rust`
     - [ ] sMapUtils.ml
-    - [ ] tree.ml
     - [x] utils_js.ml → `flow_common_utils/src/utils_js.rs`
     - [x] utils_jsx.ml → `flow_common_utils/src/utils_jsx.rs`
   - [x] vcs/
