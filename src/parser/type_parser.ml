@@ -20,7 +20,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     | TupleElement of (Loc.t, Loc.t) Type.Tuple.element'
     | InexactTupleMarker
 
-  let maybe_variance ?(parse_readonly = false) ?(parse_in_out = false) env =
+  let maybe_variance ?(parse_property_variance_keyword = false) ?(parse_in_out = false) env =
     let loc = Peek.loc env in
     match Peek.token env with
     | T_PLUS ->
@@ -37,7 +37,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         ( loc,
           { Variance.kind = Variance.Minus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
         )
-    | T_READONLY when parse_readonly ->
+    | T_READONLY when parse_property_variance_keyword ->
       let leading = Peek.comments env in
       Eat.token env;
       Some
@@ -831,7 +831,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                    But `-foo` is only valid as a tuple label. *)
                 maybe_variance env
               | T_READONLY when Peek.ith_is_identifier ~i:1 env ->
-                maybe_variance ~parse_readonly:true env
+                maybe_variance ~parse_property_variance_keyword:true env
               | _ -> None
             in
             match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
@@ -2200,7 +2200,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           | Some (_, { Variance.kind = Variance.Minus; _ }) -> Some Type.Object.MappedType.Remove
           | _ -> None
         in
-        let variance = maybe_variance ~parse_readonly:true env in
+        let variance = maybe_variance ~parse_property_variance_keyword:true env in
         property
           env
           ~is_class

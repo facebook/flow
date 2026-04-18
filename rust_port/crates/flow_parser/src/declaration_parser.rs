@@ -573,7 +573,7 @@ pub(super) fn parse_function_body(
 
 pub(super) fn parse_variance(
     env: &mut ParserEnv,
-    parse_readonly: bool,
+    parse_property_variance_keyword: bool,
     is_async: bool,
     is_generator: bool,
 ) -> Result<Option<Variance<Loc>>, Rollback> {
@@ -597,7 +597,9 @@ pub(super) fn parse_variance(
                 comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
             })
         }
-        TokenKind::TIdentifier { raw, .. } if parse_readonly && raw == "readonly" => {
+        TokenKind::TIdentifier { raw, .. }
+            if parse_property_variance_keyword && raw == "readonly" =>
+        {
             let leading = peek::comments(env);
             eat::token(env)?;
             Some(Variance {

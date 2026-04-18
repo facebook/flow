@@ -1538,8 +1538,8 @@ module Object
             []
         in
         let (generator, leading_generator) = Declaration.generator env in
-        let parse_readonly = Peek.ith_is_object_key ~i:1 ~is_class:true env in
-        let variance = Declaration.variance env ~parse_readonly async generator in
+        let parse_property_variance_keyword = Peek.ith_is_object_key ~i:1 ~is_class:true env in
+        let variance = Declaration.variance env ~parse_property_variance_keyword async generator in
         let (generator, leading_generator) =
           match (generator, variance) with
           | (false, Some _) -> Declaration.generator env
@@ -1926,8 +1926,8 @@ module Object
         let (static, leading_static) = maybe_eat_and_get_comments T_STATIC env in
         let (async, leading_async) = maybe_eat_and_get_comments T_ASYNC env in
         let (generator, leading_generator) = Declaration.generator env in
-        let parse_readonly = Peek.ith_is_object_key ~i:1 ~is_class:false env in
-        let variance = Declaration.variance env ~parse_readonly async generator in
+        let parse_property_variance_keyword = Peek.ith_is_object_key ~i:1 ~is_class:false env in
+        let variance = Declaration.variance env ~parse_property_variance_keyword async generator in
         let (generator, leading_generator) =
           match (generator, variance) with
           | (false, Some _) -> Declaration.generator env

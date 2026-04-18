@@ -35,7 +35,7 @@ use crate::token::TokenKind;
 
 fn maybe_variance(
     env: &mut ParserEnv,
-    parse_readonly: bool,
+    parse_property_variance_keyword: bool,
     parse_in_out: bool,
 ) -> Result<Option<Variance<Loc>>, Rollback> {
     let loc = peek::loc(env).dupe();
@@ -58,7 +58,7 @@ fn maybe_variance(
                 comments: mk_comments_opt(Some(leading.into()), None),
             })
         }
-        TokenKind::TReadonly if parse_readonly => {
+        TokenKind::TReadonly if parse_property_variance_keyword => {
             let leading = peek::comments(env);
             eat::token(env)?;
             Some(Variance {

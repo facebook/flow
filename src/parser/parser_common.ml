@@ -257,7 +257,8 @@ module type DECLARATION = sig
 
   val generator : env -> bool * Loc.t Comment.t list
 
-  val variance : env -> parse_readonly:bool -> bool -> bool -> Loc.t Variance.t option
+  val variance :
+    env -> parse_property_variance_keyword:bool -> bool -> bool -> Loc.t Variance.t option
 
   val function_params : await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Function.Params.t
 

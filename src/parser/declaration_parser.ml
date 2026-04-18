@@ -116,7 +116,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       ignore (check_param acc argument)
     | None -> ()
 
-  let variance env ~parse_readonly is_async is_generator =
+  let variance env ~parse_property_variance_keyword is_async is_generator =
     let loc = Peek.loc env in
     let variance =
       match Peek.token env with
@@ -137,7 +137,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
           )
-      | T_IDENTIFIER { raw = "readonly"; _ } when parse_readonly ->
+      | T_IDENTIFIER { raw = "readonly"; _ } when parse_property_variance_keyword ->
         let leading = Peek.comments env in
         Eat.token env;
         Some
@@ -212,7 +212,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
 
   let function_params =
     let param_property env ts_accessibility =
-      let variance = variance env ~parse_readonly:true false false in
+      let variance = variance env ~parse_property_variance_keyword:true false false in
       let leading = Peek.comments env in
       let (name_loc, name_id) = Parse.identifier env in
       let key =

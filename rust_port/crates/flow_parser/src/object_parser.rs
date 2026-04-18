@@ -2092,8 +2092,13 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
     let (mut generator, mut leading_generator) = declaration_parser::parse_generator(env)?;
 
-    let parse_readonly = peek::ith_is_object_key(env, 1, true);
-    let variance = declaration_parser::parse_variance(env, parse_readonly, async_, generator)?;
+    let parse_property_variance_keyword = peek::ith_is_object_key(env, 1, true);
+    let variance = declaration_parser::parse_variance(
+        env,
+        parse_property_variance_keyword,
+        async_,
+        generator,
+    )?;
 
     if !generator && variance.is_some() {
         let result = declaration_parser::parse_generator(env)?;
@@ -2590,9 +2595,13 @@ fn record_body(
                     let (mut generator, mut leading_generator) =
                         declaration_parser::parse_generator(env)?;
 
-                    let parse_readonly = peek::ith_is_object_key(env, 1, false);
-                    let variance =
-                        declaration_parser::parse_variance(env, parse_readonly, async_, generator)?;
+                    let parse_property_variance_keyword = peek::ith_is_object_key(env, 1, false);
+                    let variance = declaration_parser::parse_variance(
+                        env,
+                        parse_property_variance_keyword,
+                        async_,
+                        generator,
+                    )?;
                     if !generator && variance.is_some() {
                         let result = declaration_parser::parse_generator(env)?;
                         generator = result.0;
