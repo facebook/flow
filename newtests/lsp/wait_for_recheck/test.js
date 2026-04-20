@@ -44,7 +44,7 @@ module.exports = (suite(
               },
             },
           ],
-          ['window/showStatus', '$/cancelRequest'],
+          [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(true),
 
@@ -70,7 +70,7 @@ module.exports = (suite(
               },
             },
           ],
-          ['window/showStatus', '$/cancelRequest'],
+          [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(false),
 
@@ -102,26 +102,12 @@ module.exports = (suite(
       })
         .verifyAllLSPMessagesInStep(
           [
-            {
-              method: 'textDocument/definition',
-              result: [
-                {
-                  range: {
-                    end: {
-                      character: 13,
-                      line: 2,
-                    },
-                    start: {
-                      character: 9,
-                      line: 2,
-                    },
-                  },
-                  uri: '<PLACEHOLDER_PROJECT_URL>/definition.js',
-                },
-              ],
-            },
+            [
+              'textDocument/definition',
+              '{definition.js,"start":{"character":9,"line":2}}',
+            ],
           ],
-          ['window/showStatus', '$/cancelRequest'],
+          [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),
     ]).waitForRecheck(false),
@@ -333,8 +319,8 @@ module.exports = (suite(
       ),
       lspRequestAndWaitUntilResponse('telemetry/rage', {})
         .verifyAllLSPMessagesInStep(
-          [],
-          ['window/showStatus', '$/cancelRequest'],
+          ['telemetry/rage'],
+          [...lspIgnoreStatusAndCancellation],
         )
         .timeout(10000),
     ]).waitForRecheck(false),
