@@ -20,9 +20,10 @@ use flow_common_vcs::vcs_utils;
 use flow_event_logger as FlowEventLogger;
 use flow_hh_json as Hh_json;
 use tokio::io::AsyncBufReadExt;
+use tokio::io::AsyncRead;
+use tokio::io::AsyncWrite;
 use tokio::io::AsyncWriteExt;
 use tokio::io::BufReader;
-use tokio::net::UnixStream;
 use tokio::sync::Mutex;
 
 #[derive(Debug, Clone)]
@@ -260,8 +261,8 @@ fn parse_response(debug_logging: bool, output: &str) -> Result<serde_json::Value
 }
 
 pub struct Conn {
-    reader: Mutex<BufReader<tokio::net::unix::OwnedReadHalf>>,
-    writer: Mutex<tokio::net::unix::OwnedWriteHalf>,
+    reader: Mutex<BufReader<Box<dyn AsyncRead + Unpin + Send>>>,
+    writer: Mutex<Box<dyn AsyncWrite + Unpin + Send>>,
 }
 
 const MAX_REINIT_ATTEMPTS: u32 = 8;
@@ -562,14 +563,34 @@ fn string_of_signal(signal: i32) -> String {
 
 async fn open_connection() -> Result<Arc<Conn>, ErrorKind> {
     let sockname = get_sockname().await?;
-    let stream = match UnixStream::connect(&sockname).await {
-        Ok(s) => s,
+    #[cfg(unix)]
+    let (read_half, write_half): (
+        Box<dyn AsyncRead + Unpin + Send>,
+        Box<dyn AsyncWrite + Unpin + Send>,
+    ) = match tokio::net::UnixStream::connect(&sockname).await {
+        Ok(s) => {
+            let (r, w) = tokio::io::split(s);
+            (Box::new(r), Box::new(w))
+        }
         Err(e) => {
             let msg = format!("{} (socket: {})", e, sockname);
             return Err(ErrorKind::SocketUnavailable { msg });
         }
     };
-    let (read_half, write_half) = stream.into_split();
+    #[cfg(windows)]
+    let (read_half, write_half): (
+        Box<dyn AsyncRead + Unpin + Send>,
+        Box<dyn AsyncWrite + Unpin + Send>,
+    ) = match tokio::net::windows::named_pipe::ClientOptions::new().open(&sockname) {
+        Ok(p) => {
+            let (r, w) = tokio::io::split(p);
+            (Box::new(r), Box::new(w))
+        }
+        Err(e) => {
+            let msg = format!("{} (socket: {})", e, sockname);
+            return Err(ErrorKind::SocketUnavailable { msg });
+        }
+    };
     let reader = BufReader::new(read_half);
     Ok(Arc::new(Conn {
         reader: Mutex::new(reader),
@@ -1419,13 +1440,13 @@ pub mod testing {
     }
 
     pub async fn get_test_env() -> Env {
-        let stream = UnixStream::connect("/dev/null")
-            .await
-            .expect("test env requires unix socket support");
-        let (read_half, write_half) = stream.into_split();
+        let (a, _b) = tokio::io::duplex(64);
+        let (read_half, write_half) = tokio::io::split(a);
         let conn = Arc::new(Conn {
-            reader: Mutex::new(BufReader::new(read_half)),
-            writer: Mutex::new(write_half),
+            reader: Mutex::new(BufReader::new(
+                Box::new(read_half) as Box<dyn AsyncRead + Unpin + Send>
+            )),
+            writer: Mutex::new(Box::new(write_half) as Box<dyn AsyncWrite + Unpin + Send>),
         });
         Env {
             settings: test_settings(),

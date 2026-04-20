@@ -15,7 +15,7 @@
 //
 // When a server dies, the monitor decides whether or not to die with the server. If it doesn't die,
 // it creates a new server. Any request that was written to the old server but never received a
-// response will be written again to the new server.
+// response will be written again to the new server
 pub enum Command {
     WriteEphemeralRequest {
         request: flow_server_env::server_command_with_context::ServerCommandWithContext,
@@ -36,7 +36,7 @@ pub enum Command {
 }
 
 // A wrapper for Stdlib.exit which gives other threads a second to handle their business
-// before the monitor exits.
+// before the monitor exits
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 static EXITING: AtomicBool = AtomicBool::new(false);
@@ -47,6 +47,8 @@ pub fn exit(
     exit_status: flow_common_exit_status::FlowExitStatus,
 ) -> ! {
     if EXITING.swap(true, Ordering::SeqCst) {
+        // We're already exiting, so there's nothing to do. But no one expects `exit` to return, so
+        // let's just wait forever
         loop {
             std::thread::park();
         }
@@ -56,13 +58,17 @@ pub fn exit(
     log::info!("Broadcasting to threads and waiting 1 second for them to exit");
     crate::exit_signal::SIGNAL.broadcast(exit_status, msg.to_string());
 
+    // Protect this thread from getting canceled
     std::thread::sleep(std::time::Duration::from_secs(1));
     flow_common_exit_status::exit(exit_status);
 }
 
 pub enum StopReason {
+    /// `flow stop`
     Stopped,
+    /// no more active connections
     Autostopped,
+    /// very old client tried to connect
     LegacyClient,
 }
 
@@ -84,7 +90,7 @@ pub fn stop(reason: StopReason) -> ! {
     exit(None, msg, status);
 }
 
-// Exit after 7 days of no requests.
+// Exit after 7 days of no requests
 pub mod doomsday {
     use std::sync::Mutex;
 
@@ -132,7 +138,7 @@ pub mod doomsday {
     }
 }
 
-// The long-lived stream of requests in the monitor that have arrived from client.
+// The long-lived stream of requests in the monitor that have arrived from client
 // This is unbounded, because otherwise lspCommand might deadlock.
 use std::sync::Mutex;
 
@@ -151,7 +157,7 @@ fn push_to_command_stream(cmd: Command) {
 }
 
 // ServerInstance.t is an individual Flow server instance. The code inside this module handles
-// interacting with a Flow server instance.
+// interacting with a Flow server instance
 pub mod server_instance {
     use std::sync::Arc;
     use std::sync::atomic::AtomicBool;
@@ -166,7 +172,7 @@ pub mod server_instance {
 
     pub struct ServerInstance {
         pub pid: i32,
-        pub watcher: Arc<tokio::sync::Mutex<crate::file_watcher::AnyWatcher>>,
+        pub watcher: Arc<crate::file_watcher::AnyWatcher>,
         pub connection: Arc<ServerConnection>,
         pub command_loop: Option<JoinHandle<()>>,
         pub file_watcher_loop: Option<JoinHandle<()>>,
@@ -255,8 +261,13 @@ pub mod server_instance {
         }
     }
 
+    // Writes a message to the out-stream of the monitor, to be eventually
+    // picked up by the server.
     fn send_request(msg: monitor_prot::MonitorToServerMessage, conn: &ServerConnection) {
         if !conn.write(msg) {
+            // Another Lwt thread has already closed ServerConnection. We trust
+            // that it will properly handle the server dying, so we can just drop
+            // it here.
             log::debug!("Server connection is closed. Throwing away request");
         }
     }
@@ -271,15 +282,16 @@ pub mod server_instance {
                 .is_some_and(|metadata| metadata.missed_changes)
     }
 
+    // In order to try and avoid races between the file system and a command (like `flow status`),
+    // we check for file system notification before sending a request to the server
     fn send_file_watcher_notification(
-        watcher: &Arc<tokio::sync::Mutex<crate::file_watcher::AnyWatcher>>,
+        watcher: &Arc<crate::file_watcher::AnyWatcher>,
         conn: &ServerConnection,
     ) {
         let watcher = watcher.clone();
         let (files, metadata, initial, debug) = crate::runtime::handle().block_on(async move {
-            let mut guard = watcher.lock().await;
-            let (files, metadata, initial) = guard.get_and_clear_changed_files().await;
-            let debug = guard.debug();
+            let (files, metadata, initial) = watcher.get_and_clear_changed_files().await;
+            let debug = watcher.debug();
             (files, metadata, initial, debug)
         });
         if file_watcher_notification_is_relevant(&files, &metadata) {
@@ -311,10 +323,7 @@ pub mod server_instance {
         }
     }
 
-    fn command_loop_main(
-        watcher: &Arc<tokio::sync::Mutex<crate::file_watcher::AnyWatcher>>,
-        conn: &ServerConnection,
-    ) {
+    fn command_loop_main(watcher: &Arc<crate::file_watcher::AnyWatcher>, conn: &ServerConnection) {
         let receiver = super::COMMAND_STREAM.1.lock().unwrap();
         let command = match receiver.recv_timeout(std::time::Duration::from_millis(100)) {
             Ok(cmd) => cmd,
@@ -366,6 +375,7 @@ pub mod server_instance {
         }
     }
 
+    // The monitor is exiting. Let's try and shut down the server gracefully
     fn cleanup_on_exit(
         exit_status: FlowExitStatus,
         exit_msg: &str,
@@ -375,7 +385,11 @@ pub mod server_instance {
         let msg = monitor_prot::MonitorToServerMessage::PleaseDie(
             monitor_prot::PleaseDieReason::MonitorExiting(exit_status, exit_msg.to_string()),
         );
-        if !connection.write(msg) {}
+        if !connection.write(msg) {
+            // Connection to the server has already closed. The server is likely already dead
+        }
+        // The monitor waits 1 second before exiting. So let's give the server .75 seconds to shutdown
+        // gracefully.
         let server_status = wait_for_pid_with_timeout(pid, std::time::Duration::from_millis(750));
 
         connection.close_immediately();
@@ -422,21 +436,31 @@ pub mod server_instance {
             }
         };
         if still_alive {
-            match nix::sys::signal::kill(
-                nix::unistd::Pid::from_raw(pid),
-                nix::sys::signal::Signal::SIGKILL,
-            ) {
-                Ok(()) => {}
-                Err(nix::errno::Errno::ESRCH) => {
-                    log::info!("Server process ({}) no longer exists", pretty_pid);
+            #[cfg(unix)]
+            {
+                match nix::sys::signal::kill(
+                    nix::unistd::Pid::from_raw(pid),
+                    nix::sys::signal::Signal::SIGKILL,
+                ) {
+                    Ok(()) => {}
+                    Err(nix::errno::Errno::ESRCH) => {
+                        log::info!("Server process ({}) no longer exists", pretty_pid);
+                    }
+                    Err(err) => {
+                        log::error!(
+                            "Failed to send SIGKILL to server process ({}): {}",
+                            pretty_pid,
+                            err
+                        );
+                    }
                 }
-                Err(err) => {
-                    log::error!(
-                        "Failed to send SIGKILL to server process ({}): {}",
-                        pretty_pid,
-                        err
-                    );
-                }
+            }
+            #[cfg(not(unix))]
+            {
+                log::error!(
+                    "Forced kill of server process ({}) is not supported on this platform",
+                    pretty_pid
+                );
             }
         }
     }
@@ -451,11 +475,12 @@ pub mod server_instance {
 
         let watcher = t.watcher.clone();
         let connection = t.connection.clone();
+        // Lwt.join will run these threads in parallel and only return when EVERY thread has returned
+        // or failed
         crate::runtime::handle().block_on(async move {
             tokio::join!(
                 async {
-                    let mut guard = watcher.lock().await;
-                    guard.stop().await;
+                    watcher.stop().await;
                 },
                 async {
                     connection.close_immediately();
@@ -470,6 +495,9 @@ pub mod server_instance {
         code: FlowExitStatus,
         watcher_name: &str,
     ) -> ! {
+        // TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
+        // We could probably just restart it. For dfind, we'd also need to start a new server, but for
+        // watchman we probably could just start a new watchman daemon and use the clockspec
         let msg = match msg {
             Some(m) => m.to_string(),
             None => format!("File watcher ({}) died", watcher_name),
@@ -477,18 +505,44 @@ pub mod server_instance {
         super::exit(_error, &msg, code);
     }
 
-    fn close_if_open(fd: std::os::unix::io::RawFd) {
+    /// `close_if_open fd` closes the `fd` file descriptor, ignoring errors if it's already closed.
+    ///
+    /// So it's actually important that we close the Lwt_unix.file_descr and not just the
+    /// underlying Unix.file_descr. Why?
+    ///
+    /// 1. Unix.file_descr is just an int
+    /// 2. File descriptors can be reused after they are closed
+    /// 3. You might get a reaaaally weird bug where your seemly closed Lwt_unix.file_descr
+    ///    suddenly starts getting data again. This totally happened to Gabe on halloween and it
+    ///    totally freaked him out.
+    ///
+    /// Lwt_unix.file_descr, on the otherhand, carries around some state, like whether it is open
+    /// or closed. So a closed Lwt_unix.file_descr won't resurrect.
+    fn close_if_open(fd: std::os::raw::c_int) {
+        #[cfg(unix)]
         match nix::unistd::close(fd) {
             Ok(()) => {}
-            Err(nix::errno::Errno::EBADF) => {} // already closed
+            Err(nix::errno::Errno::EBADF) => {} // If it's already closed, we'll get EBADF
             Err(err) => {
                 log::error!("Error closing fd {}: {}", fd, err);
             }
         }
+        #[cfg(not(unix))]
+        log::error!("Closing raw fd {} is not supported on this platform", fd);
     }
 
     static SERVER_NUM: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
+    // Spawn a brand new Flow server
+    #[cfg(not(unix))]
+    pub fn start(
+        _monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
+        _restart_reason: Option<flow_server_env::server_status::RestartReason>,
+    ) -> ServerInstance {
+        panic!("Flow server monitor server spawn is not supported on this platform");
+    }
+
+    #[cfg(unix)]
     pub fn start(
         monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
         restart_reason: Option<flow_server_env::server_status::RestartReason>,
@@ -508,9 +562,15 @@ pub mod server_instance {
         crate::status_stream::reset(file_watcher, restart_reason);
 
         use crate::file_watcher::Watcher as _;
-        let mut any_watcher: crate::file_watcher::AnyWatcher = match file_watcher {
+        let any_watcher: crate::file_watcher::AnyWatcher = match file_watcher {
             crate::flow_server_monitor_options::FileWatcher::NoFileWatcher => {
                 crate::file_watcher::AnyWatcher::Dummy(crate::file_watcher::Dummy::new())
+            }
+            crate::flow_server_monitor_options::FileWatcher::DFind => {
+                crate::file_watcher::AnyWatcher::DFind(crate::file_watcher::DFind::new(
+                    _mergebase_with.clone(),
+                    _server_options.clone(),
+                ))
             }
             crate::flow_server_monitor_options::FileWatcher::Watchman(watchman_options) => {
                 crate::file_watcher::AnyWatcher::Watchman(
@@ -522,12 +582,15 @@ pub mod server_instance {
                 )
             }
             crate::flow_server_monitor_options::FileWatcher::EdenFS(edenfs_options) => {
-                let mut edenfs_watcher = crate::file_watcher::edenfs_file_watcher::EdenFS::new(
+                // Try to initialize EdenFS watcher, fall back to Watchman on failure
+                let edenfs_watcher = crate::file_watcher::edenfs_file_watcher::EdenFS::new(
                     _mergebase_with.clone(),
                     _server_options.clone(),
                     edenfs_options.clone(),
                 );
                 edenfs_watcher.start_init();
+                // Wait for initialization, using the same file_watcher_timeout as Watchman.
+                // This respects the file_watcher_timeout .flowconfig option (default 120s).
                 let init_result = crate::runtime::handle()
                     .block_on(edenfs_watcher.wait_for_init(*_file_watcher_timeout));
                 match init_result {
@@ -563,6 +626,7 @@ pub mod server_instance {
         let watcher_name = any_watcher.name().to_string();
         log::info!("File watcher type: {}", watcher_name);
 
+        // For watchers that haven't been initialized yet (non-EdenFS or EdenFS fallback), initialize now
         if !already_initialized {
             log::debug!("Initializing file watcher ({})", watcher_name);
             any_watcher.start_init();
@@ -582,15 +646,6 @@ pub mod server_instance {
                 & 0xFFFFFFFFFFFFFFFFu128
         );
         let server_options_arc = std::sync::Arc::new(_server_options.clone());
-        let ready_path = if monitor_options.signal_ready {
-            Some(flow_server_files::server_files_js::ready_file(
-                &_server_options.flowconfig_name,
-                &_server_options.temp_dir,
-                _server_options.root.as_path(),
-            ))
-        } else {
-            None
-        };
 
         let (server_in_fd, monitor_out_fd) = nix::sys::socket::socketpair(
             nix::sys::socket::AddressFamily::Unix,
@@ -612,17 +667,23 @@ pub mod server_instance {
             _argv,
             file_watcher_pid.map(|p| p as u32),
             server_options_arc,
-            ready_path,
-            Some((server_in_fd, server_out_fd)),
+            Some((server_in_fd.into(), server_out_fd.into())),
         );
         let pid: i32 = std::process::id() as i32;
         let in_fd = monitor_in_fd;
         let out_fd = monitor_out_fd;
 
+        // we explicitly want to let Lwt determine the blocking mode here.
+        // the fd's created by Server.daemonize are (currently) pipes
+        // from Unix.pipe. Unix pipes are non-blocking, but Windows pipes
+        // are (currently?) blocking. we could explicitly use blocking mode
+        // on Windows, but it's too many implicit assumptions.
         use std::os::fd::AsRawFd;
-        let in_raw_fd: std::os::unix::io::RawFd = in_fd.as_raw_fd();
-        let out_raw_fd: std::os::unix::io::RawFd = out_fd.as_raw_fd();
+        let in_raw_fd: std::os::raw::c_int = in_fd.as_raw_fd();
+        let out_raw_fd: std::os::raw::c_int = out_fd.as_raw_fd();
         let close = move || {
+            // Lwt.join will run these threads in parallel and only finish when EVERY thread has finished
+            // or failed
             close_if_open(in_raw_fd);
             close_if_open(out_raw_fd);
         };
@@ -630,14 +691,18 @@ pub mod server_instance {
         let server_num = SERVER_NUM.fetch_add(1, Ordering::SeqCst) + 1;
         let name = format!("server #{}", server_num);
 
-        let (start_fn, connection) =
-            ServerConnection::create(name.clone(), in_fd, out_fd, close, |msg, connection| {
-                handle_response(msg, connection)
-            });
+        let (start_fn, connection) = ServerConnection::create(
+            name.clone(),
+            std::fs::File::from(in_fd),
+            std::fs::File::from(out_fd),
+            close,
+            handle_response,
+        );
         start_fn();
 
         log::info!("Spawned {} (pid={})", name, pid);
 
+        // Close the connection to the server when we're about to exit
         let on_exit_connection = connection.clone();
         let on_exit_thread = Some(std::thread::spawn(move || {
             let (exit_status, exit_msg) = crate::exit_signal::SIGNAL.wait();
@@ -645,6 +710,8 @@ pub mod server_instance {
         }));
 
         if !already_initialized {
+            // This may block for quite awhile. No messages will be sent to the server process until the
+            // file watcher is up and running
             let init_result = crate::runtime::handle()
                 .block_on(any_watcher.wait_for_init(*_file_watcher_timeout));
             match init_result {
@@ -663,7 +730,7 @@ pub mod server_instance {
 
         log::debug!("File watcher ({}) ready!", watcher_name);
 
-        let any_watcher_arc = std::sync::Arc::new(tokio::sync::Mutex::new(any_watcher));
+        let any_watcher_arc = std::sync::Arc::new(any_watcher);
 
         let shutdown = Arc::new(AtomicBool::new(false));
 
@@ -671,12 +738,10 @@ pub mod server_instance {
         let watcher_for_exit = any_watcher_arc.clone();
         let file_watcher_exit_thread: Option<JoinHandle<()>> =
             Some(std::thread::spawn(move || {
-                let waitpid_fut = {
-                    let guard = watcher_for_exit.blocking_lock();
-                    guard.waitpid_owned()
-                };
+                let waitpid_fut = watcher_for_exit.waitpid_owned();
                 let exit_reason = crate::runtime::handle().block_on(waitpid_fut);
                 match exit_reason {
+                    // file watcher was shut down intentionally, i.e. watcher#stop
                     crate::file_watcher::ExitReason::WatcherStopped => {}
                     crate::file_watcher::ExitReason::WatcherDied => {
                         handle_file_watcher_exit(
@@ -720,24 +785,27 @@ pub mod server_instance {
             file_watcher,
             crate::flow_server_monitor_options::FileWatcher::NoFileWatcher
         ) {
+            // Don't even bother
             None
         } else {
             let watcher_for_loop = any_watcher_arc.clone();
             let file_watcher_loop_shutdown = shutdown.clone();
             Some(std::thread::spawn(move || {
+                // Poll for file changes every second
                 while !super::EXITING.load(Ordering::SeqCst)
                     && !file_watcher_loop_shutdown.load(Ordering::SeqCst)
                 {
                     let watcher_for_iter = watcher_for_loop.clone();
                     crate::runtime::handle().block_on(async move {
-                        let mut guard = watcher_for_iter.lock().await;
-                        guard.wait_for_changed_files().await;
+                        watcher_for_iter.wait_for_changed_files().await;
                     });
                     super::push_to_command_stream(super::Command::NotifyFileChanges);
                 }
             }))
         };
 
+        // Check for changed files, which processes any files that have changed since the mergebase
+        // before we started up.
         super::push_to_command_stream(super::Command::NotifyFileChanges);
 
         ServerInstance {
@@ -763,6 +831,12 @@ pub mod server_instance {
         Stopped(i32),
     }
 
+    #[cfg(not(unix))]
+    fn wait_for_pid_with_timeout(_pid: i32, _timeout: std::time::Duration) -> Option<WaitStatus> {
+        panic!("wait_for_pid_with_timeout is not supported on this platform")
+    }
+
+    #[cfg(unix)]
     fn wait_for_pid_with_timeout(pid: i32, timeout: std::time::Duration) -> Option<WaitStatus> {
         use std::sync::mpsc;
         let (tx, rx) = mpsc::channel();
@@ -851,6 +925,7 @@ pub mod server_instance {
     }
 }
 
+// Monitor state that persists across server restarts
 pub struct MonitorState {
     pub options: crate::flow_server_monitor_options::MonitorOptions,
     pub edenfs_watcher_retries: i32,
@@ -858,11 +933,20 @@ pub struct MonitorState {
 
 pub const MAX_EDENFS_WATCHER_RETRIES: i32 = 3;
 
+// A loop who's job is to start a server and then wait for it to die
 mod keep_alive_loop {
     use super::MAX_EDENFS_WATCHER_RETRIES;
     use super::MonitorState;
     use super::server_instance;
 
+    // Given that a Flow server has just exited with this exit status, should the monitor exit too?
+    //
+    // Returns the tuple (should_monitor_exit_with_server, restart_reason, is_edenfs_watcher_failure)
+    //
+    // Note: For EdenFS watcher failures (Edenfs_watcher_failed, Edenfs_watcher_lost_changes),
+    // this function returns (false, None, true) to allow the caller to implement retry logic.
+    // The caller is responsible for checking retry counts and deciding whether to actually
+    // restart or exit.
     pub(super) fn process_server_exit(
         monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
         exit_status: flow_common_exit_status::FlowExitStatus,
@@ -876,40 +960,69 @@ mod keep_alive_loop {
         }
         use flow_common_exit_status::FlowExitStatus;
         match exit_status {
+            //*** Things the server might exit with that implies that the monitor should exit too ***
             FlowExitStatus::NoError
+            // Server exited cleanly
             | FlowExitStatus::WindowsKilledByTaskManager
+            // Windows task manager killed the server
             | FlowExitStatus::InvalidFlowconfig
+            // Parse/version/etc error. Server will never start correctly.
             | FlowExitStatus::PathIsNotAFile
+            // Required a file but privided path was not a file
             | FlowExitStatus::FlowconfigChanged
+            // We could survive some config changes, but it's too hard to tell
             | FlowExitStatus::InvalidSavedState
+            // The saved state file won't automatically recover by restarting
             | FlowExitStatus::UnusedServer
+            // The server appears unused for long enough that it decided to just die
             | FlowExitStatus::UnknownError
+            // Uncaught exn. We probably could survive this, but it's a little risky
             | FlowExitStatus::WatchmanError
+            // We ran into an issue with Watchman
             | FlowExitStatus::WatchmanFailed
+            // We ran into an issue with Watchman
             | FlowExitStatus::FileWatcherMissedChanges
+            // Watchman restarted. We probably could survive this by recrawling
             | FlowExitStatus::OutOfSharedMemory
+            // It's possible that restarting would GC enough to run for a while, but this
+            // is a serious problem that should be investigated so as to not end up in a
+            // crash loop.
             | FlowExitStatus::HashTableFull
+            // The hash table is full. It accumulates cruft, so restarting _might_ help, but
+            // if it's just too small, we could get stuck in a crash loop. Ideally we'd delete
+            // unused keys so that it being full is definitely a permanent failure.
             | FlowExitStatus::HeapFull
+            // The heap is full. Restarting might help clear out cruft, but it could also just
+            // be too small, leading to a crash loop. We should limit how often we try restarting
+            // before recovering from this.
             | FlowExitStatus::CouldNotExtractFlowlibs
+            //*** Things that the server shouldn't use, but would imply that the monitor should exit ***
             | FlowExitStatus::Interrupted
             | FlowExitStatus::BuildIdMismatch
+            // Client build differs from server build - only monitor uses this
             | FlowExitStatus::LockStolen
+            // Lock lost - only monitor should use this
             | FlowExitStatus::SocketError
-            | FlowExitStatus::DfindDied => (true, None, false),
+            // Failed to set up socket - only monitor should use this
+            | FlowExitStatus::DfindDied // Any file watcher died (it's misnamed) - only monitor should use this
+            => (true, None, false),
+            //*** EdenFS watcher failures - allow retry logic to handle these ***
             FlowExitStatus::EdenfsWatcherFailed | FlowExitStatus::EdenfsWatcherLostChanges => {
                 (false, None, true)
             }
-            FlowExitStatus::ServerOutOfDate => (
+            //*** Things the server might exit with which the monitor can survive ***
+            FlowExitStatus::ServerOutOfDate /* Server needs to restart, but monitor can survive */ => (
                 false,
                 Some(flow_server_env::server_status::RestartReason::ServerOutOfDate),
                 false,
             ),
-            FlowExitStatus::KilledByMonitor => (false, None, false),
-            FlowExitStatus::Restart => (
+            FlowExitStatus::KilledByMonitor /* The server died because we asked it to die */ => (false, None, false),
+            FlowExitStatus::Restart /* The server asked to be restarted */ => (
                 false,
                 Some(flow_server_env::server_status::RestartReason::Restart),
                 false,
             ),
+            //*** Unrelated exit codes. If we see them then something is wrong ***
             FlowExitStatus::TypeError
             | FlowExitStatus::OutOfTime
             | FlowExitStatus::KillError
@@ -922,10 +1035,14 @@ mod keep_alive_loop {
             | FlowExitStatus::NoInput
             | FlowExitStatus::MissingFlowlib
             | FlowExitStatus::ServerStartFailed
-            | FlowExitStatus::Autostop => (true, None, false),
+            | FlowExitStatus::Autostop /* is used by monitor to exit, not server */ => (true, None, false),
         }
     }
 
+    // Ephemeral commands are stateless, so they can survive a server restart. However a persistent
+    // connection might have state, so it's wrong to allow it to survive. Maybe in the future we can
+    // tell the persistent connection that the server has died and let it adjust its state, but for
+    // now lets close all persistent connections
     pub(super) fn killall_persistent_connections(
         exit_type: flow_common_exit_status::FlowExitStatus,
     ) {
@@ -934,15 +1051,44 @@ mod keep_alive_loop {
             let msg = flow_server_env::lsp_prot::MessageFromServer::NotificationFromServer(
                 flow_server_env::lsp_prot::NotificationFromServer::ServerExit(exit_type),
             );
+            // it's ok if the stream is already closed, we must be shutting down already
             conn.write(msg);
+            // it's also ok if the flush fails because the socket is already closed
             conn.try_flush_and_close();
         }
     }
 
     pub(super) fn should_monitor_exit_with_signaled_server(signal: i32) -> bool {
-        signal == libc::SIGSEGV || signal == libc::SIGBUS
+        // While there are many scary things which can cause segfaults, in practice we've mostly seen
+        // them when the Flow server hits some infinite or very deep recursion (like Base.List.map ~f:on a
+        // very large list). Often, this is triggered by some ephemeral command, which is rerun when
+        // the server starts back up, leading to a cycle of segfaulting servers.
+        //
+        // The easiest solution is for the monitor to exit as well when the server segfaults. This
+        // will cause the bad command to consume retries and eventually exit. This doesn't prevent
+        // future bad commands, but is better than the alternative.
+        #[cfg(unix)]
+        {
+            signal == libc::SIGSEGV || signal == libc::SIGBUS
+        }
+        #[cfg(not(unix))]
+        {
+            signal == libc::SIGSEGV
+        }
     }
 
+    #[cfg(not(unix))]
+    pub(super) fn wait_for_server_to_die(
+        _monitor_state: MonitorState,
+        _server: &mut server_instance::ServerInstance,
+    ) -> (
+        MonitorState,
+        Option<flow_server_env::server_status::RestartReason>,
+    ) {
+        panic!("wait_for_server_to_die is not supported on this platform")
+    }
+
+    #[cfg(unix)]
     pub(super) fn wait_for_server_to_die(
         monitor_state: MonitorState,
         server: &mut server_instance::ServerInstance,
@@ -1004,6 +1150,7 @@ mod keep_alive_loop {
                             is_edenfs_watcher_failure,
                         ) = process_server_exit(&monitor_state.options, exit_type);
                         if is_edenfs_watcher_failure {
+                            // EdenFS watcher failed - check retry count
                             if monitor_state.edenfs_watcher_retries < MAX_EDENFS_WATCHER_RETRIES {
                                 log::info!(
                                     "EdenFS watcher died. Restarting Flow server (attempt: {})",
@@ -1054,12 +1201,17 @@ mod keep_alive_loop {
                 }
             }
             nix::sys::wait::WaitStatus::Stopped(_, signal) => {
+                // If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
+                // could try to signal it to resume. Or we could wait for it to start up again. But killing
+                // it and starting a new server seems easier
                 let signal = signal as i32;
                 log::error!(
                     "Flow server (pid {}) was stopped with signal {}. Sending sigkill",
                     pid,
                     signal
                 );
+
+                // kill is not a blocking system call, which is likely why it is missing from Lwt_unix
                 if let Err(e) = nix::sys::signal::kill(
                     nix::unistd::Pid::from_raw(pid),
                     nix::sys::signal::Signal::SIGKILL,
@@ -1075,6 +1227,9 @@ mod keep_alive_loop {
         }
     }
 
+    // The RequestMap will contain all the requests which have been sent to the server but never
+    // received a response. If we're starting up a new server, we can resend all these requests to
+    // the new server
     pub(super) fn requeue_stalled_requests() {
         let requests = crate::request_map::remove_all();
         for (request, client) in requests {
@@ -1099,8 +1254,14 @@ mod keep_alive_loop {
     }
 }
 
+#[cfg(unix)]
 fn setup_signal_handlers() {
-    let signals = [libc::SIGINT, libc::SIGTERM, libc::SIGHUP, libc::SIGQUIT];
+    let signals = [
+        libc::SIGINT,  /* Interrupt - ctrl-c */
+        libc::SIGTERM, /* Termination - like a nicer sigkill giving you a chance to cleanup */
+        libc::SIGHUP,  /* Hang up - the terminal went away */
+        libc::SIGQUIT, /* Dump core - Kind of a meaner sigterm */
+    ];
 
     let signals_vec: Vec<i32> = signals.to_vec();
     std::thread::spawn(move || {
@@ -1119,6 +1280,12 @@ fn setup_signal_handlers() {
             EXITING.store(true, Ordering::SeqCst);
         }
     });
+}
+
+#[cfg(not(unix))]
+fn setup_signal_handlers() {
+    // Signal-based interruption is not supported on this platform; the monitor will
+    // exit only via explicit shutdown commands.
 }
 
 pub fn start(monitor_options: crate::flow_server_monitor_options::MonitorOptions) {

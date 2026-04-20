@@ -33,6 +33,7 @@ pub struct Error(pub u32, pub String);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileWatcher {
     NoFileWatcher,
+    DFind,
     Watchman,
     EdenFS,
 }
@@ -41,6 +42,7 @@ pub enum FileWatcher {
 pub enum LazyMode {
     Lazy,
     NonLazy,
+    /// lazy_mode=watchman is deprecated, but implies file_watcher=Watchman
     WatchmanDeprecated,
 }
 
@@ -99,14 +101,23 @@ pub mod opts {
         pub file_watcher_mergebase_with_hg: Option<String>,
         pub file_watcher_timeout: Option<u32>,
         pub files_implicitly_include_root: bool,
+        /// print spaces between brackets in object literals
         pub format_bracket_spacing: Option<bool>,
+        /// prefer single-quoted strings
         pub format_single_quotes: Option<bool>,
+        /// Gc.control's custom_major_ratio
         pub gc_worker_custom_major_ratio: Option<u32>,
+        /// Gc.control's custom_minor_max_size
         pub gc_worker_custom_minor_max_size: Option<u32>,
+        /// Gc.control's custom_minor_ratio
         pub gc_worker_custom_minor_ratio: Option<u32>,
+        /// Gc.control's major_heap_increment
         pub gc_worker_major_heap_increment: Option<u32>,
+        /// Gc.control's minor_heap_size
         pub gc_worker_minor_heap_size: Option<u32>,
+        /// Gc.control's space_overhead
         pub gc_worker_space_overhead: Option<u32>,
+        /// Gc.control's window_size
         pub gc_worker_window_size: Option<u32>,
         pub haste_module_ref_prefix: Option<String>,
         pub haste_paths_excludes: Vec<String>,
@@ -341,7 +352,7 @@ pub mod opts {
             saved_state_reinit_on_lib_change: false,
             saved_state_skip_version_check: false,
             shm_hash_table_pow: 19,
-            shm_heap_size: 1024 * 1024 * 25, // 25MB
+            shm_heap_size: /* 25GB */ 1024 * 1024 * 25,
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
             ts_syntax: false,
@@ -390,6 +401,14 @@ pub mod opts {
         Ok(RawOptions(result))
     }
 
+    /// `init` gets called on the options object immediately before
+    /// parsing the *first* occurrence of the user-specified config option. This
+    /// is useful in cases where the user's value should blow away the default
+    /// value (rather than being aggregated to it).
+    ///
+    /// For example: We want the default value of 'module.file_ext' to be
+    /// ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
+    /// settings, we want to start from a clean list.
     fn opt<T>(
         parser: impl Fn(&str) -> Result<T, String>,
         setter: fn(&mut Opts, T) -> Result<(), String>,
@@ -995,6 +1014,7 @@ pub mod opts {
                         return Err("method name must be a string".to_owned());
                     };
                     if &a == "timeout" {
+                        // timeout threshold is currently hardcoded as LspInteraction.max_age
                         b = None;
                     }
                     (a, b.unwrap_or(-1), c, d)
@@ -1209,7 +1229,7 @@ pub mod opts {
         enum_parser(
             &[
                 ("none", FileWatcher::NoFileWatcher),
-                ("dfind", FileWatcher::Watchman),
+                ("dfind", FileWatcher::DFind),
                 ("watchman", FileWatcher::Watchman),
                 ("edenfs", FileWatcher::EdenFS),
             ],
@@ -1478,7 +1498,7 @@ pub mod opts {
         let allowed = vec![
             ("true", LazyMode::Lazy),
             ("false", LazyMode::NonLazy),
-            // Legacy, deprecated
+            // legacy, deprecated
             ("fs", LazyMode::Lazy),
             ("watchman", LazyMode::WatchmanDeprecated),
             ("none", LazyMode::NonLazy),
@@ -2816,6 +2836,7 @@ pub mod opts {
                     config,
                 )),
                 _ => {
+                    // If the user specified any options that aren't defined, issue a warning
                     let msg = format!("Unsupported option specified! ({})", key);
                     warnings.extend(
                         values
@@ -2856,14 +2877,26 @@ pub struct Rollout {
 #[derive(Debug, Clone)]
 pub struct FlowConfig {
     pub rollouts: BTreeMap<String, Rollout>,
+    // completely ignored files (both module resolving and typing)
+    // This type *should* just be a string list, but we have an undocumented feature that allows
+    // you to specify a backup flowconfig to use if a file is ignored using our module-mapper syntax.
+    // This should be reverted to string list after we properly support multiplatform flow roots.
     pub ignores: Vec<(String, Option<String>)>,
+    // files that should be treated as untyped
     pub untyped: Vec<String>,
+    // files that should be treated as declarations
     pub declarations: Vec<String>,
+    // non-root include paths
     pub includes: Vec<String>,
+    // library paths. no wildcards
     pub libs: Vec<(Option<FlowSmolStr>, String)>,
+    // lint severities
     pub lint_severities: LintSettings<Severity>,
+    // strict mode
     pub strict_mode: StrictModeSettings,
+    // config options
     pub options: opts::Opts,
+    // version constraint
     pub version: Option<String>,
 }
 
@@ -2892,6 +2925,7 @@ fn group_into_sections(lines: Vec<(u32, String)>) -> Result<Vec<Section>, Error>
         }
     }
 
+    // finalize last section
     sections.push(current_section);
     Ok(sections)
 }
@@ -2924,6 +2958,7 @@ fn trim_numbered_lines(lines: &[(u32, String)]) -> Vec<(u32, String)> {
         .collect()
 }
 
+// parse [include] lines
 fn parse_includes(config: &mut FlowConfig, lines: &[(u32, String)]) {
     config.includes = trim_lines(lines);
 }
@@ -3056,6 +3091,12 @@ fn parse_strict(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), 
     Ok(())
 }
 
+// Rollouts are based on randomness, but we want it to be stable from run to run. So we seed our
+// pseudo random number generator with
+//
+// 1. The hostname
+// 2. The user
+// 3. The name of the rollout
 fn calculate_rollout_percentage(rollout_name: &str) -> u32 {
     use std::hash::Hash;
     use std::hash::Hasher;
@@ -3070,6 +3111,17 @@ fn calculate_rollout_percentage(rollout_name: &str) -> u32 {
     (hasher.finish() % 100) as u32
 }
 
+// The optional rollout section has 0 or more lines. Each line defines a single rollout. For example
+//
+// [rollouts]
+//
+// testA=40% on, 60% off
+// testB=50% blue, 20% yellow, 30% pink
+//
+// The first line defines a rollout named "testA" with two groups.
+// The second line defines a rollout named "testB" with three groups.
+//
+// Each rollout's groups must sum to 100.
 fn parse_rollouts(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
     let lines = trim_numbered_lines(lines);
     let mut rollouts = BTreeMap::new();
@@ -3078,7 +3130,7 @@ fn parse_rollouts(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<()
     let group_re = Regex::new(r"^([0-9]+)% ([a-zA-Z0-9._]+)$").unwrap();
 
     for (line_num, line) in lines {
-        // A rollout's name can only contain [a-zA-Z0-9._]
+        // A rollout's name is can only contain [a-zA-Z0-9._]
         if let Some(caps) = rollout_re.captures(&line) {
             let rollout_name = caps.get(1).unwrap().as_str();
             let rollout_values_raw = caps.get(2).unwrap().as_str();
@@ -3093,7 +3145,8 @@ fn parse_rollouts(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<()
             for raw_group in rollout_values_raw.split(',') {
                 let raw_group = raw_group.trim();
 
-                // A rollout group has the form "X% label", where label can only contain [a-zA-Z0-9._]
+                // A rollout group has the for "X% label", where label can only contain
+                // [a-zA-Z0-9._]
                 if let Some(group_caps) = group_re.captures(raw_group) {
                     let group_pct: u32 = group_caps.get(1).unwrap().as_str().parse().unwrap();
                     let group_name = group_caps.get(2).unwrap().as_str();
@@ -3232,6 +3285,11 @@ fn parse_section(
     }
 }
 
+/// Filter every section (except the rollouts section) for disabled rollouts. For example, if a
+/// line starts with (my_rollout=on) and the "on" group is not enabled for the "my_rollout"
+/// rollout, then drop the line completely.
+///
+/// Lines with enabled rollouts just have the prefix stripped
 fn filter_sections_by_rollout(
     sections: Vec<Section>,
     config: &FlowConfig,
@@ -3323,8 +3381,9 @@ fn is_meaningful_line(line: &str) -> bool {
     if line.is_empty() {
         return false;
     }
-    // Line starts with # or ; or 💩 (poop emoji, U+1F4A9 = \u{1F4A9})
-    !line.starts_with('#') && !line.starts_with(';') && !line.starts_with('\u{1F4A9}')
+    !line.starts_with('#') // Line starts with #
+        && !line.starts_with(';') // Line starts with ;
+        && !line.starts_with('\u{1F4A9}') // Line starts with poop emoji
 }
 
 fn read(filename: &str) -> Result<(Vec<(u32, String)>, u64), std::io::Error> {
@@ -3494,6 +3553,7 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
     fn write_lints(out: &mut dyn std::io::Write, config: &FlowConfig) -> std::io::Result<()> {
         let lint_severities = &config.lint_severities;
         let lint_default = lint_severities.get_default();
+        // Don't print an 'all' setting if it matches the default setting.
         if lint_default != LintSettings::<Severity>::empty_severities().get_default() {
             writeln!(out, "all={}", lint_default.as_str())?;
         }

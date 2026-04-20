@@ -22,22 +22,58 @@
 // However, glevi liked writing `ServerConnection.write conn` over `Connection.write conn`. So it's
 // a minor stylistic choice.
 
-use std::fs::File;
 use std::io;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use serde::Serialize;
-use serde::de::DeserializeOwned;
 use tokio::sync::Notify;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 use crate::runtime;
 
+// A `Channel` abstracts the wire I/O for a `Connection`. Each `ConnectionProcessor` chooses its
+// channel. All Flow monitor channels are bincode-framed (OCaml-faithful, matching
+// `Marshal_tools.{from,to}_fd_with_preamble`):
+//   - `BincodeChannel<File, _, _>`: monitor↔server pipe.
+//   - `BincodeChannel<TcpStream, ServerCommandWithContext, MonitorToClientMessage>`:
+//     ephemeral CLI socket.
+//   - `PersistentBincodeChannel`: persistent LSP socket. The persistent path layers an outbound
+//     queue on top of bincode reads to match the OCaml LSP poll/queue contract.
+pub trait Channel: Send + Sync + 'static {
+    type Reader: Send + 'static;
+    type Writer: Send + 'static;
+    type InMessage: Send + 'static;
+    type OutMessage: Send + 'static;
+
+    fn read(
+        reader: &mut Self::Reader,
+    ) -> io::Result<ReadOutcome<Self::InMessage, Self::OutMessage>>;
+    fn write(writer: &mut Self::Writer, msg: &Self::OutMessage) -> io::Result<()>;
+}
+
+// A read either yields a logical inbound message for `on_read`, or for some channels (the
+// persistent JSON-RPC channel in particular) it can produce a synchronous reply that must be
+// written back without going through `on_read` (e.g. `PersistentPoll`). `Skip` lets the channel
+// silently drop wire frames that have no logical mapping.
+pub enum ReadOutcome<I, O> {
+    Message(I),
+    Reply(O),
+    Skip,
+}
+
 pub trait ConnectionProcessor: Send + Sync + 'static {
-    type InMessage: Send + DeserializeOwned + 'static;
-    type OutMessage: Send + Serialize + 'static;
+    type Ch: Channel;
+}
+
+// Convenience aliases so existing code can continue to write `P::InMessage`/`P::OutMessage`.
+pub trait ProcessorTypes {
+    type InMessage: Send + 'static;
+    type OutMessage: Send + 'static;
+}
+impl<P: ConnectionProcessor> ProcessorTypes for P {
+    type InMessage = <P::Ch as Channel>::InMessage;
+    type OutMessage = <P::Ch as Channel>::OutMessage;
 }
 
 enum Command<OutMessage> {
@@ -46,12 +82,12 @@ enum Command<OutMessage> {
 }
 pub struct Connection<P: ConnectionProcessor> {
     name: String,
-    in_fd: Arc<Mutex<File>>,
-    out_fd: Arc<Mutex<File>>,
-    command_stream: Mutex<Option<mpsc::UnboundedReceiver<Command<P::OutMessage>>>>,
-    push_to_stream: Mutex<Option<mpsc::UnboundedSender<Command<P::OutMessage>>>>,
+    reader: Arc<Mutex<<P::Ch as Channel>::Reader>>,
+    writer: Arc<Mutex<<P::Ch as Channel>::Writer>>,
+    command_stream: Mutex<Option<mpsc::UnboundedReceiver<Command<<P::Ch as Channel>::OutMessage>>>>,
+    push_to_stream: Mutex<Option<mpsc::UnboundedSender<Command<<P::Ch as Channel>::OutMessage>>>>,
     close: Arc<dyn Fn() + Send + Sync>,
-    on_read: Arc<dyn Fn(P::InMessage, &Arc<Connection<P>>) + Send + Sync>,
+    on_read: Arc<dyn Fn(<P::Ch as Channel>::InMessage, &Arc<Connection<P>>) + Send + Sync>,
     read_thread: Mutex<Option<JoinHandle<()>>>,
     command_thread: Mutex<Option<JoinHandle<()>>>,
     wait_for_closed_thread: Arc<Notify>,
@@ -59,7 +95,7 @@ pub struct Connection<P: ConnectionProcessor> {
 }
 fn send_command<P: ConnectionProcessor>(
     conn: &Connection<P>,
-    command: Command<P::OutMessage>,
+    command: Command<<P::Ch as Channel>::OutMessage>,
 ) -> bool {
     let push = conn.push_to_stream.lock().unwrap();
     match push.as_ref() {
@@ -75,11 +111,11 @@ fn close_stream<P: ConnectionProcessor>(conn: &Connection<P>) {
 }
 
 impl<P: ConnectionProcessor> Connection<P> {
-    pub fn write(&self, msg: P::OutMessage) -> bool {
+    pub fn write(&self, msg: <P::Ch as Channel>::OutMessage) -> bool {
         send_command(self, Command::Write(msg))
     }
 
-    pub fn write_and_close(&self, msg: P::OutMessage) -> bool {
+    pub fn write_and_close(&self, msg: <P::Ch as Channel>::OutMessage) -> bool {
         let result = send_command(self, Command::WriteAndClose(msg));
         close_stream(self);
         result
@@ -101,14 +137,14 @@ impl<P: ConnectionProcessor> Connection<P> {
         (self.close)();
     }
 
-    fn handle_command(self: &Arc<Self>, command: Command<P::OutMessage>) -> io::Result<()> {
+    fn handle_command(
+        self: &Arc<Self>,
+        command: Command<<P::Ch as Channel>::OutMessage>,
+    ) -> io::Result<()> {
         match command {
             Command::Write(msg) => {
-                let mut out_fd = self.out_fd.lock().unwrap();
-                flow_parser::loc::with_full_source_serde(|| {
-                    bincode::serialize_into(&mut *out_fd, &msg)
-                        .map_err(|e| io::Error::other(e.to_string()))
-                })?;
+                let mut writer = self.writer.lock().unwrap();
+                P::Ch::write(&mut *writer, &msg)?;
                 Ok(())
             }
             Command::WriteAndClose(msg) => {
@@ -116,11 +152,8 @@ impl<P: ConnectionProcessor> Connection<P> {
                     h.abort();
                 }
                 {
-                    let mut out_fd = self.out_fd.lock().unwrap();
-                    flow_parser::loc::with_full_source_serde(|| {
-                        bincode::serialize_into(&mut *out_fd, &msg)
-                            .map_err(|e| io::Error::other(e.to_string()))
-                    })?;
+                    let mut writer = self.writer.lock().unwrap();
+                    P::Ch::write(&mut *writer, &msg)?;
                 }
                 self.close_immediately();
                 Ok(())
@@ -175,7 +208,7 @@ mod command_loop {
 
     async fn main<P: ConnectionProcessor>(
         conn: &Arc<Connection<P>>,
-        rx: &mut mpsc::UnboundedReceiver<Command<P::OutMessage>>,
+        rx: &mut mpsc::UnboundedReceiver<Command<<P::Ch as Channel>::OutMessage>>,
     ) -> Result<(), LoopExn> {
         let command = rx.recv().await.ok_or(LoopExn::StreamEmpty)?;
         let conn_for_block = conn.clone();
@@ -204,7 +237,7 @@ mod command_loop {
 
     pub(super) async fn run<P: ConnectionProcessor>(
         conn: Arc<Connection<P>>,
-        mut rx: mpsc::UnboundedReceiver<Command<P::OutMessage>>,
+        mut rx: mpsc::UnboundedReceiver<Command<<P::Ch as Channel>::OutMessage>>,
     ) {
         loop {
             tokio::task::yield_now().await;
@@ -237,20 +270,29 @@ mod read_loop {
     }
 
     async fn main<P: ConnectionProcessor>(connection: &Arc<Connection<P>>) -> Result<(), LoopExn> {
-        let in_fd = connection.in_fd.clone();
-        let msg_result = tokio::task::spawn_blocking(move || -> io::Result<P::InMessage> {
-            let mut in_fd = in_fd.lock().unwrap();
-            flow_parser::loc::with_full_source_serde(|| {
-                bincode::deserialize_from(&mut *in_fd).map_err(|e| match *e {
-                    bincode::ErrorKind::Io(io_err) => io_err,
-                    other => io::Error::other(other.to_string()),
-                })
-            })
-        })
+        let reader = connection.reader.clone();
+        let outcome_result = tokio::task::spawn_blocking(
+            move || -> io::Result<
+                ReadOutcome<<P::Ch as Channel>::InMessage, <P::Ch as Channel>::OutMessage>,
+            > {
+                let mut reader = reader.lock().unwrap();
+                P::Ch::read(&mut *reader)
+            },
+        )
         .await
         .map_err(|e| LoopExn::Other(format!("join error: {}", e)))?;
-        let msg = msg_result.map_err(|e| classify_io(&e))?;
-        (connection.on_read)(msg, connection);
+        let outcome = outcome_result.map_err(|e| classify_io(&e))?;
+        match outcome {
+            ReadOutcome::Message(msg) => {
+                (connection.on_read)(msg, connection);
+            }
+            ReadOutcome::Reply(reply) => {
+                if !connection.write(reply) {
+                    return Err(LoopExn::EndOfFile);
+                }
+            }
+            ReadOutcome::Skip => {}
+        }
         Ok(())
     }
 
@@ -290,10 +332,10 @@ mod read_loop {
 impl<P: ConnectionProcessor> Connection<P> {
     pub fn create(
         name: String,
-        in_fd: std::os::fd::OwnedFd,
-        out_fd: std::os::fd::OwnedFd,
+        reader: <P::Ch as Channel>::Reader,
+        writer: <P::Ch as Channel>::Writer,
         close: impl Fn() + Send + Sync + 'static,
-        on_read: impl Fn(P::InMessage, &Arc<Connection<P>>) + Send + Sync + 'static,
+        on_read: impl Fn(<P::Ch as Channel>::InMessage, &Arc<Connection<P>>) + Send + Sync + 'static,
     ) -> (Box<dyn FnOnce() + Send>, Arc<Connection<P>>) {
         let wait_for_closed_thread = Arc::new(Notify::new());
         let wakener = wait_for_closed_thread.clone();
@@ -311,8 +353,8 @@ impl<P: ConnectionProcessor> Connection<P> {
 
         let conn = Arc::new(Connection {
             name,
-            in_fd: Arc::new(Mutex::new(File::from(in_fd))),
-            out_fd: Arc::new(Mutex::new(File::from(out_fd))),
+            reader: Arc::new(Mutex::new(reader)),
+            writer: Arc::new(Mutex::new(writer)),
             command_stream: Mutex::new(Some(command_stream)),
             push_to_stream: Mutex::new(Some(push_to_stream)),
             close,
@@ -358,23 +400,138 @@ impl<P: ConnectionProcessor> Connection<P> {
         (start, conn)
     }
 }
+
+// ---- Channels ----
+
+// PipeBincodeChannel: used by ServerConnection (monitor↔server pipe). Each frame is a
+// bincode-serialized value over a File pipe, matching OCaml `Marshal_tools.{from,to}_fd_with_preamble`.
+pub struct PipeBincodeChannel<I, O>(std::marker::PhantomData<(I, O)>);
+
+impl<I, O> Channel for PipeBincodeChannel<I, O>
+where
+    I: Send + Sync + serde::de::DeserializeOwned + 'static,
+    O: Send + Sync + serde::Serialize + 'static,
+{
+    type Reader = std::fs::File;
+    type Writer = std::fs::File;
+    type InMessage = I;
+    type OutMessage = O;
+
+    fn read(reader: &mut Self::Reader) -> io::Result<ReadOutcome<I, O>> {
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::deserialize_from::<_, I>(reader)
+                .map(ReadOutcome::Message)
+                .map_err(|e| match *e {
+                    bincode::ErrorKind::Io(io_err) => io_err,
+                    other => io::Error::other(other.to_string()),
+                })
+        })
+    }
+
+    fn write(writer: &mut Self::Writer, msg: &O) -> io::Result<()> {
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::serialize_into(writer, msg).map_err(|e| io::Error::other(e.to_string()))
+        })
+    }
+}
+
+// TcpBincodeChannel: used by ephemeral CLI sockets. Each frame is a bincode-serialized value over
+// a TcpStream, matching OCaml `Marshal_tools.{from,to}_fd_with_preamble`.
+pub struct TcpBincodeChannel<I, O>(std::marker::PhantomData<(I, O)>);
+
+impl<I, O> Channel for TcpBincodeChannel<I, O>
+where
+    I: Send + Sync + serde::de::DeserializeOwned + 'static,
+    O: Send + Sync + serde::Serialize + 'static,
+{
+    type Reader = std::net::TcpStream;
+    type Writer = std::net::TcpStream;
+    type InMessage = I;
+    type OutMessage = O;
+
+    fn read(reader: &mut Self::Reader) -> io::Result<ReadOutcome<I, O>> {
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::deserialize_from::<_, I>(reader)
+                .map(ReadOutcome::Message)
+                .map_err(|e| match *e {
+                    bincode::ErrorKind::Io(io_err) => io_err,
+                    other => io::Error::other(other.to_string()),
+                })
+        })
+    }
+
+    fn write(writer: &mut Self::Writer, msg: &O) -> io::Result<()> {
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::serialize_into(writer, msg).map_err(|e| io::Error::other(e.to_string()))
+        })
+    }
+}
+
+// PersistentBincodeChannel: used by persistent LSP sockets.
+//
+// The persistent connection in OCaml exchanges `LspProt.request_with_metadata` (client→server) and
+// `LspProt.message_from_server` (server→client) directly over the socket via Marshal_tools (see
+// `flow/src/monitor/connections/persistentConnection.ml`). The Rust port keeps an outbound queue
+// inside `PersistentWriter` so that `Connection`'s command loop can drain it on the writer thread,
+// matching how OCaml's `EphemeralConnection.write` enqueues into the connection's command stream.
+pub struct PersistentBincodeChannel;
+
+impl Channel for PersistentBincodeChannel {
+    type Reader = PersistentReader;
+    type Writer = PersistentWriter;
+    type InMessage = flow_server_env::lsp_prot::RequestWithMetadata;
+    type OutMessage = flow_server_env::lsp_prot::MessageFromServer;
+
+    fn read(
+        reader: &mut Self::Reader,
+    ) -> io::Result<ReadOutcome<Self::InMessage, Self::OutMessage>> {
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::deserialize_from::<_, Self::InMessage>(&mut reader.stream)
+                .map(ReadOutcome::Message)
+                .map_err(|e| match *e {
+                    bincode::ErrorKind::Io(io_err) => io_err,
+                    other => io::Error::other(other.to_string()),
+                })
+        })
+    }
+
+    fn write(writer: &mut Self::Writer, msg: &Self::OutMessage) -> io::Result<()> {
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::serialize_into(&mut writer.stream, msg)
+                .map_err(|e| io::Error::other(e.to_string()))
+        })
+    }
+}
+
+pub struct PersistentReader {
+    pub stream: std::net::TcpStream,
+    pub disconnect: Arc<dyn Fn() + Send + Sync>,
+}
+
+pub struct PersistentWriter {
+    pub stream: std::net::TcpStream,
+}
+
 pub struct EphemeralConnectionProcessor;
 impl ConnectionProcessor for EphemeralConnectionProcessor {
-    type InMessage = flow_server_env::server_command_with_context::ServerCommandWithContext;
-    type OutMessage = flow_server_env::monitor_prot::MonitorToClientMessage;
+    type Ch = TcpBincodeChannel<
+        flow_server_env::server_command_with_context::ServerCommandWithContext,
+        flow_server_env::monitor_prot::MonitorToClientMessage,
+    >;
 }
 pub type EphemeralConnection = Connection<EphemeralConnectionProcessor>;
 
 pub struct PersistentConnectionProcessor;
 impl ConnectionProcessor for PersistentConnectionProcessor {
-    type InMessage = flow_server_env::lsp_prot::RequestWithMetadata;
-    type OutMessage = flow_server_env::lsp_prot::MessageFromServer;
+    type Ch = PersistentBincodeChannel;
 }
 pub type MonitorPersistentConnection = Connection<PersistentConnectionProcessor>;
 
 pub struct ServerConnectionProcessor;
 impl ConnectionProcessor for ServerConnectionProcessor {
-    type InMessage = flow_server_env::monitor_prot::ServerToMonitorMessage;
-    type OutMessage = flow_server_env::monitor_prot::MonitorToServerMessage;
+    type Ch = PipeBincodeChannel<
+        flow_server_env::monitor_prot::ServerToMonitorMessage,
+        flow_server_env::monitor_prot::MonitorToServerMessage,
+    >;
 }
 pub type ServerConnection = Connection<ServerConnectionProcessor>;

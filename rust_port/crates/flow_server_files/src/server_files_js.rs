@@ -90,6 +90,16 @@ pub fn log_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
     )
 }
 
+pub fn dfind_log_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
+    file_of_root(
+        Some(MAX_ROOT_PART_LEN),
+        "dfind_log",
+        flowconfig_name,
+        tmp_dir,
+        root,
+    )
+}
+
 pub fn monitor_log_file(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> String {
     file_of_root(
         Some(MAX_ROOT_PART_LEN),

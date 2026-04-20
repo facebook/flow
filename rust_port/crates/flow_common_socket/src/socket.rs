@@ -5,54 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+// The Rust port unifies on TCP-on-loopback for all platforms, for cross-platform consistency.
+// The on-disk port-file format is the decimal port number as text
+// (matching `flow_server::standalone`'s existing convention), so any
+// client can use `std::fs::read_to_string` + `parse::<u16>` to recover the port.
+
+use std::net::Ipv4Addr;
+use std::net::SocketAddr;
+use std::net::TcpListener;
+
 use md5::Digest;
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Addr {
-    Inet(std::net::IpAddr, u16),
-    Unix(String),
-}
-
-// On Linux/Mac/BSD, sockaddr_un.sun_path is a fixed length. To handle longer paths,
-// we chdir to that directory and use a relative path instead. The callback provides
-// a Unix.sockaddr with a relative path that you can use to bind or read from. Perform
-// as little as possible within the callback, since it has an unexpected working dir.
-// This function tries to make it awkward for the Unix.sockaddr with the relative path
-// to escape from the callback.
-pub fn with_addr<F, R>(addr: &Addr, f: F) -> R
-where
-    F: FnOnce(&str) -> R,
-{
-    static CHDIR_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    let _guard = CHDIR_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    match addr {
-        Addr::Inet(_, _) => {
-            panic!("Socket.with_addr: Inet addr not supported in Rust port");
-        }
-        Addr::Unix(file) => {
-            let cwd = std::env::current_dir().expect("getcwd failed");
-            let dir = std::path::Path::new(file)
-                .parent()
-                .unwrap_or_else(|| std::path::Path::new("."));
-            let base = std::path::Path::new(file)
-                .file_name()
-                .expect("Socket.with_addr: file has no basename");
-            std::env::set_current_dir(dir).expect("chdir to socket dir failed");
-            let relative = format!("./{}", base.to_string_lossy());
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(&relative)));
-            let _ = std::env::set_current_dir(&cwd);
-            match result {
-                Ok(r) => r,
-                Err(payload) => std::panic::resume_unwind(payload),
-            }
-        }
-    }
-}
 
 // The sockaddr_un structure puts a strict limit on the length of a socket
 // address. This appears to be 104 chars on mac os x and 108 chars on my
-// centos box. Since `with_addr` uses a relative path, `get_path` shortens
-// the basename to fit if necessary.
+// centos box. With the TCP unification, the path is used to store a port
+// number on disk; the same shortening rule still applies because the port
+// file path goes through the same temp-dir hierarchy.
 const MAX_ADDR_LENGTH: usize = 103;
 
 pub fn get_path(path: &str) -> String {
@@ -107,7 +75,56 @@ pub fn get_path(path: &str) -> String {
     format!("{}/{}{}", dir, root_part, extension)
 }
 
-pub fn addr_for_open(sockfile: &str) -> Addr {
-    let sock_name = get_path(sockfile);
-    Addr::Unix(sock_name)
+// Initializes a TCP listener on 127.0.0.1:0, writes the assigned port into `sock_name`
+// in decimal-text format (matching `flow_server::standalone`'s existing convention),
+// and returns the `TcpListener`. Mirrors OCaml `unix_socket` for the `Sys.win32` branch.
+fn tcp_socket(sock_name: &str) -> TcpListener {
+    if let Some(parent) = std::path::Path::new(sock_name).parent() {
+        if !parent.as_os_str().is_empty() {
+            match std::fs::create_dir_all(parent) {
+                Ok(()) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(e) => {
+                    eprintln!("{}", e);
+                    flow_common_exit_status::exit(
+                        flow_common_exit_status::FlowExitStatus::SocketError,
+                    );
+                }
+            }
+        }
+    }
+    if std::path::Path::new(sock_name).exists() {
+        match std::fs::remove_file(sock_name) {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => {
+                eprintln!("{}", e);
+                flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::SocketError);
+            }
+        }
+    }
+    let bind_addr = SocketAddr::from((Ipv4Addr::LOCALHOST, 0));
+    let listener = match TcpListener::bind(bind_addr) {
+        Ok(l) => l,
+        Err(e) => {
+            eprintln!("{}", e);
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::SocketError);
+        }
+    };
+    let port = match listener.local_addr() {
+        Ok(addr) => addr.port(),
+        Err(e) => {
+            eprintln!("{}", e);
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::SocketError);
+        }
+    };
+    if let Err(e) = std::fs::write(sock_name, port.to_string()) {
+        eprintln!("{}", e);
+        flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::SocketError);
+    }
+    listener
+}
+
+pub fn init_tcp_socket(socket_file: &str) -> TcpListener {
+    tcp_socket(&get_path(socket_file))
 }

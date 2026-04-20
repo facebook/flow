@@ -219,14 +219,8 @@ fn main(
             .map(pid_is_running)
             .unwrap_or_else(|| Path::new(&socket_path).exists());
         if !has_live_pid {
-            let ready_path = server_files_js::ready_file(
-                &flowconfig_name,
-                server_options.temp_dir.as_str(),
-                &canonical_root,
-            );
             let _ = std::fs::remove_file(&lock_path);
             let _ = std::fs::remove_file(&socket_path);
-            let _ = std::fs::remove_file(&ready_path);
         }
     }
     match monitor::daemonize(monitor::DaemonizeArgs {
@@ -242,7 +236,7 @@ fn main(
         long_lived_workers: options_flags.long_lived_workers,
         max_workers: options_flags.max_workers,
         wait_for_recheck: options_flags.wait_for_recheck,
-        file_watcher: Some(command_utils::file_watcher_arg(file_watcher).to_owned()),
+        file_watcher,
         file_watcher_debug,
         file_watcher_timeout,
         file_watcher_mergebase_with: Some(file_watcher_mergebase_with),

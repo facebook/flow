@@ -56,7 +56,6 @@ const INITIAL_CONNECTION_READ_TIMEOUT_SECS: u64 = 5;
 pub fn start(
     options: Arc<Options>,
     flowconfig_name: String,
-    signal_ready: bool,
     shm_heap_size: Option<u64>,
     shm_hash_table_pow: Option<u32>,
 ) {
@@ -72,7 +71,7 @@ pub fn start(
     ));
     let tmp_dir = options.temp_dir.to_string();
     let server = FlowServer::new(options, shared_mem, pool, flowconfig_name, tmp_dir);
-    server.run_with_signal_ready(signal_ready);
+    server.run();
 }
 
 struct ServerState {
@@ -171,17 +170,11 @@ impl FlowServer {
         }
     }
 
-    #[expect(dead_code)]
     pub(crate) fn run(&self) {
-        self.run_with_signal_ready(false);
-    }
-
-    pub(crate) fn run_with_signal_ready(&self, signal_ready: bool) {
         let root = &*self.options.root;
         let lock_path = server_files_js::lock_file(&self.flowconfig_name, &self.tmp_dir, root);
         let socket_path = server_files_js::socket_file(&self.flowconfig_name, &self.tmp_dir, root);
         let pids_path = server_files_js::pids_file(&self.flowconfig_name, &self.tmp_dir, root);
-        let ready_path = server_files_js::ready_file(&self.flowconfig_name, &self.tmp_dir, root);
 
         let _lock_file = match acquire_lock(&lock_path) {
             Ok(f) => f,
@@ -195,7 +188,6 @@ impl FlowServer {
             lock_path: lock_path.clone(),
             socket_path: socket_path.clone(),
             pids_path: pids_path.clone(),
-            ready_path: signal_ready.then_some(ready_path.clone()),
         };
 
         if let Some(parent) = Path::new(&pids_path).parent() {
@@ -203,11 +195,10 @@ impl FlowServer {
         }
         std::fs::write(&pids_path, format!("{}\tmain\n", std::process::id())).unwrap_or_else(|e| {
             eprintln!("Error: failed to write pids file {}: {}", pids_path, e);
-            cleanup_and_exit_with_code(&pids_path, &lock_path, &socket_path, Some(&ready_path), 1);
+            cleanup_and_exit_with_code(&pids_path, &lock_path, &socket_path, 1);
         });
 
         let _remove_result = std::fs::remove_file(&socket_path);
-        let _remove_ready_result = std::fs::remove_file(&ready_path);
 
         if let Some(parent) = Path::new(&socket_path).parent() {
             let _mkdir_result = std::fs::create_dir_all(parent);
@@ -217,13 +208,7 @@ impl FlowServer {
             Ok(l) => l,
             Err(e) => {
                 eprintln!("Error: failed to bind TCP listener: {}", e);
-                cleanup_and_exit_with_code(
-                    &pids_path,
-                    &lock_path,
-                    &socket_path,
-                    Some(&ready_path),
-                    1,
-                );
+                cleanup_and_exit_with_code(&pids_path, &lock_path, &socket_path, 1);
             }
         };
         let port = listener.local_addr().unwrap().port();
@@ -233,7 +218,7 @@ impl FlowServer {
         }
         std::fs::write(&socket_path, port.to_string()).unwrap_or_else(|e| {
             eprintln!("Error: failed to write socket file {}: {}", socket_path, e);
-            cleanup_and_exit_with_code(&pids_path, &lock_path, &socket_path, Some(&ready_path), 1);
+            cleanup_and_exit_with_code(&pids_path, &lock_path, &socket_path, 1);
         });
 
         let state = Arc::new((
@@ -290,7 +275,6 @@ impl FlowServer {
         let nmc = node_modules_containers.clone();
         let init_nmc_ref = nmc.clone();
         let init_pids_path = pids_path.clone();
-        let init_ready_path = ready_path.clone();
 
         std::thread::Builder::new()
             .stack_size(SERVER_THREAD_STACK_SIZE)
@@ -368,7 +352,6 @@ impl FlowServer {
                         &init_pids_path,
                         &init_lock_path,
                         &init_socket_path,
-                        signal_ready.then_some(init_ready_path.as_str()),
                     );
                 }));
                 if let Err(payload) = init_result {
@@ -382,7 +365,6 @@ impl FlowServer {
                         &init_pids_path,
                         &init_lock_path,
                         &init_socket_path,
-                        signal_ready.then_some(init_ready_path.as_str()),
                         1,
                     );
                 }
@@ -422,7 +404,6 @@ impl FlowServer {
                     let pids_path = pids_path.clone();
                     let lock_path = lock_path.clone();
                     let socket_path = socket_path.clone();
-                    let ready_path = ready_path.clone();
                     let nmc = node_modules_containers.clone();
                     std::thread::Builder::new()
                         .stack_size(CONNECTION_THREAD_STACK_SIZE)
@@ -437,7 +418,6 @@ impl FlowServer {
                                 &pids_path,
                                 &lock_path,
                                 &socket_path,
-                                signal_ready.then_some(ready_path.as_str()),
                                 &nmc,
                             );
                         })
@@ -706,31 +686,25 @@ fn process_pending_rechecks(
     pids_path: &str,
     lock_path: &str,
     socket_path: &str,
-    ready_path: Option<&str>,
 ) {
-    let mut ready_signaled = false;
     loop {
         {
             let (lock, cvar) = &**state;
             let mut server_state = lock.lock().unwrap();
 
             if server_state.should_shutdown {
-                cleanup_and_exit(pids_path, lock_path, socket_path, ready_path);
+                cleanup_and_exit(pids_path, lock_path, socket_path);
             }
 
             if !server_state.pending_recheck {
                 server_state.recheck_in_progress = false;
-                if !ready_signaled {
-                    crate::ready::signal_ready_file(ready_path);
-                    ready_signaled = true;
-                }
                 cvar.notify_all();
                 server_state = cvar
                     .wait_while(server_state, |s| !s.pending_recheck && !s.should_shutdown)
                     .unwrap();
 
                 if server_state.should_shutdown {
-                    cleanup_and_exit(pids_path, lock_path, socket_path, ready_path);
+                    cleanup_and_exit(pids_path, lock_path, socket_path);
                 }
             }
 
@@ -784,42 +758,29 @@ struct LockGuard {
     lock_path: String,
     socket_path: String,
     pids_path: String,
-    ready_path: Option<String>,
 }
 
 impl Drop for LockGuard {
     fn drop(&mut self) {
         let _ = std::fs::remove_file(&self.pids_path);
         let _ = std::fs::remove_file(&self.socket_path);
-        if let Some(ready_path) = &self.ready_path {
-            let _ = std::fs::remove_file(ready_path);
-        }
         let _ = std::fs::remove_file(&self.lock_path);
     }
 }
 
-fn cleanup_and_exit(
-    pids_path: &str,
-    lock_path: &str,
-    socket_path: &str,
-    ready_path: Option<&str>,
-) -> ! {
-    cleanup_and_exit_with_code(pids_path, lock_path, socket_path, ready_path, 0)
+fn cleanup_and_exit(pids_path: &str, lock_path: &str, socket_path: &str) -> ! {
+    cleanup_and_exit_with_code(pids_path, lock_path, socket_path, 0)
 }
 
 fn cleanup_and_exit_with_code(
     pids_path: &str,
     lock_path: &str,
     socket_path: &str,
-    ready_path: Option<&str>,
     exit_code: i32,
 ) -> ! {
     let _ = std::fs::remove_file(pids_path);
     let _ = std::fs::remove_file(socket_path);
     let _ = std::fs::remove_file(lock_path);
-    if let Some(ready_path) = ready_path {
-        let _ = std::fs::remove_file(ready_path);
-    }
     std::process::exit(exit_code);
 }
 
@@ -941,7 +902,6 @@ fn handle_connection(
     pids_path: &str,
     lock_path: &str,
     socket_path: &str,
-    ready_path: Option<&str>,
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
     let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(
@@ -1292,7 +1252,7 @@ fn handle_connection(
                 cvar.notify_all();
             }
 
-            cleanup_and_exit(pids_path, lock_path, socket_path, ready_path);
+            cleanup_and_exit(pids_path, lock_path, socket_path);
         }
     };
 
@@ -1402,7 +1362,8 @@ fn handle_status(
 
     let error_output = String::from_utf8_lossy(&buf).into_owned();
 
-    let checked_files = env.checked_files.cardinal() as i32;
+    let checked_files =
+        (env.checked_files.focused_cardinal() + env.checked_files.dependents_cardinal()) as i32;
     let total_files = env.files.len() as i32;
 
     ServerResponse::Status {

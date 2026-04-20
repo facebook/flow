@@ -6,7 +6,6 @@
  */
 
 use std::collections::BTreeSet;
-use std::os::fd::RawFd;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Condvar;
@@ -32,19 +31,31 @@ pub enum ExitReason {
     WatcherMissedChanges,
 }
 
-pub trait Watcher: Send {
+// TODO - Push-based API for dfind. While the FileWatcher API is push based, dfind is faking it
+// by polling every seconds.
+//
+// If we decide we care about this, we could Build DfindServerLwt which can listen for events and
+// write messages at the same time (we don't want to block the file watching if the writes block)
+// OCaml's `FileWatcher.watcher` is a class with `val mutable` fields and
+// per-instance `Lwt_mutex` for internal serialization. Rust expresses the same
+// shape with `&self` methods plus interior mutability inside each impl. This
+// avoids requiring callers to hold an outer `tokio::sync::Mutex<AnyWatcher>`,
+// which would deadlock the polling loop against the command loop (the polling
+// loop sleeps inside `wait_for_changed_files`; the command loop needs the
+// watcher on every client request).
+pub trait Watcher: Send + Sync {
     fn name(&self) -> &str;
     fn debug(&self) -> bool;
-    fn start_init(&mut self);
+    fn start_init(&self);
     fn wait_for_init(
-        &mut self,
+        &self,
         timeout: Option<f64>,
     ) -> impl std::future::Future<Output = Result<(), String>> + Send;
     fn get_and_clear_changed_files(
-        &mut self,
+        &self,
     ) -> impl std::future::Future<Output = (BTreeSet<String>, Option<FileWatcherMetadata>, bool)> + Send;
-    fn wait_for_changed_files(&mut self) -> impl std::future::Future<Output = ()> + Send;
-    fn stop(&mut self) -> impl std::future::Future<Output = ()> + Send;
+    fn wait_for_changed_files(&self) -> impl std::future::Future<Output = ()> + Send;
+    fn stop(&self) -> impl std::future::Future<Output = ()> + Send;
     fn waitpid(&self) -> impl std::future::Future<Output = ExitReason> + Send;
     fn getpid(&self) -> Option<i32>;
 }
@@ -64,17 +75,17 @@ impl Watcher for Dummy {
     fn debug(&self) -> bool {
         false
     }
-    fn start_init(&mut self) {}
-    async fn wait_for_init(&mut self, _timeout: Option<f64>) -> Result<(), String> {
+    fn start_init(&self) {}
+    async fn wait_for_init(&self, _timeout: Option<f64>) -> Result<(), String> {
         Ok(())
     }
     async fn get_and_clear_changed_files(
-        &mut self,
+        &self,
     ) -> (BTreeSet<String>, Option<FileWatcherMetadata>, bool) {
         (BTreeSet::new(), None, false)
     }
-    async fn wait_for_changed_files(&mut self) {}
-    async fn stop(&mut self) {}
+    async fn wait_for_changed_files(&self) {}
+    async fn stop(&self) {}
     async fn waitpid(&self) -> ExitReason {
         std::future::pending().await
     }
@@ -82,7 +93,10 @@ impl Watcher for Dummy {
         None
     }
 }
-pub fn changes_since_mergebase(mergebase_with: &str, watch_paths: &[PathBuf]) -> BTreeSet<String> {
+pub async fn changes_since_mergebase(
+    mergebase_with: &str,
+    watch_paths: &[PathBuf],
+) -> BTreeSet<String> {
     fn fold_relative_paths(
         mut acc: BTreeSet<String>,
         root: &std::path::Path,
@@ -166,37 +180,37 @@ pub fn changes_since_mergebase(mergebase_with: &str, watch_paths: &[PathBuf]) ->
         acc
     }
 
-    runtime::handle().block_on(async move {
-        helper(
-            mergebase_with,
-            BTreeSet::new(),
-            BTreeSet::new(),
-            watch_paths,
-        )
-        .await
-    })
+    helper(
+        mergebase_with,
+        BTreeSet::new(),
+        BTreeSet::new(),
+        watch_paths,
+    )
+    .await
 }
 
-pub fn query_mergebase(root: &std::path::Path, mergebase_with: &str) -> Result<String, String> {
-    runtime::handle().block_on(async move {
-        match vcs::find_root(None, root) {
-            None => Err("no VCS root found".to_string()),
-            Some((vcs, vcs_root)) => {
-                let cwd = vcs_root.to_string_lossy().to_string();
-                let result = match vcs {
-                    Vcs::Hg => hg::merge_base(Some(&cwd), ".", mergebase_with).await,
-                    Vcs::Git => git::merge_base(Some(&cwd), mergebase_with, "HEAD").await,
-                };
-                match result {
-                    Ok(hash) => Ok(hash),
-                    Err(vcs_utils::ErrorStatus::NotInstalled { path }) => {
-                        Err(format!("VCS not installed at {}", path))
-                    }
-                    Err(vcs_utils::ErrorStatus::Errored(msg)) => Err(msg),
+/// Query VCS for the current mergebase hash.
+pub async fn query_mergebase(
+    root: &std::path::Path,
+    mergebase_with: &str,
+) -> Result<String, String> {
+    match vcs::find_root(None, root) {
+        None => Err("no VCS root found".to_string()),
+        Some((vcs, vcs_root)) => {
+            let cwd = vcs_root.to_string_lossy().to_string();
+            let result = match vcs {
+                Vcs::Hg => hg::merge_base(Some(&cwd), ".", mergebase_with).await,
+                Vcs::Git => git::merge_base(Some(&cwd), mergebase_with, "HEAD").await,
+            };
+            match result {
+                Ok(hash) => Ok(hash),
+                Err(vcs_utils::ErrorStatus::NotInstalled { path }) => {
+                    Err(format!("VCS not installed at {}", path))
                 }
+                Err(vcs_utils::ErrorStatus::Errored(msg)) => Err(msg),
             }
         }
-    })
+    }
 }
 
 pub mod watchman_file_watcher {
@@ -285,6 +299,9 @@ pub mod watchman_file_watcher {
                     changes,
                     changed_mergebase,
                 } => {
+                    // this event tells us all the files that changed. if changed_mergebase,
+                    // then some of these changes are upstream files. we could avoid rechecking
+                    // them if we re-init. we signal this by setting changed_mergebase.
                     {
                         let mut shared = env.shared.lock().unwrap();
                         shared.files.extend(changes);
@@ -306,6 +323,21 @@ pub mod watchman_file_watcher {
                     mergebase,
                     changes_since_mergebase,
                 } => {
+                    // When watchman restarts, we miss any filesystem changes that might happen while it's
+                    // down. Likewise, if so many files change that Watchman's underlying file watchers
+                    // can't keep up, it acts like it restarted. To re-synchronize, we need to recheck
+                    // all of the files that could have changed while it wasn't watching:
+                    //
+                    // 1) a file that was previously unchanged is now changed
+                    // 2) a changed file changed again
+                    // 3) a previously changed file was reverted
+                    // 4) the mergebase changed, changing some committed files
+                    //
+                    // Since watchman told us the changes since mergebase, we know about (1) and (2).
+                    // We handle (3) by setting [missed_changes = true], which triggers a recheck of
+                    // all focused (i.e. previously changed) files. But we can't incrementally
+                    // handle (4): watchman can't tell us all the files that changed between the two
+                    // mergebase commits (`hg` can, but it's not worth implementing this).
                     let changed_mergebase = prev_mergebase != mergebase;
                     if changed_mergebase {
                         log::info!(
@@ -403,10 +435,13 @@ pub mod watchman_file_watcher {
     }
 
     pub struct Watchman {
-        env: Option<Arc<Env>>,
-        init_thread:
+        // Wrapped behind interior mutability so methods can take `&self`,
+        // matching OCaml's class-based shape with implicit field mutation.
+        env: std::sync::Mutex<Option<Arc<Env>>>,
+        init_thread: std::sync::Mutex<
             Option<tokio::task::JoinHandle<Result<(flow_watchman::Env, BTreeSet<String>), String>>>,
-        init_settings: Option<flow_watchman::InitSettings>,
+        >,
+        init_settings: std::sync::Mutex<Option<flow_watchman::InitSettings>>,
         mergebase_with: String,
         server_options: flow_common::options::Options,
         watchman_options: flow_server_monitor_options::WatchmanOptions,
@@ -419,24 +454,24 @@ pub mod watchman_file_watcher {
             watchman_options: flow_server_monitor_options::WatchmanOptions,
         ) -> Self {
             Watchman {
-                env: None,
-                init_thread: None,
-                init_settings: None,
+                env: std::sync::Mutex::new(None),
+                init_thread: std::sync::Mutex::new(None),
+                init_settings: std::sync::Mutex::new(None),
                 mergebase_with,
                 server_options,
                 watchman_options,
             }
         }
 
-        fn get_env(&self) -> &Arc<Env> {
-            match &self.env {
+        fn get_env(&self) -> Arc<Env> {
+            match self.env.lock().unwrap().as_ref() {
                 None => panic!("Watchman was not initialized"),
-                Some(env) => env,
+                Some(env) => env.clone(),
             }
         }
 
         pub fn get_env_for_waitpid(&self) -> Arc<Env> {
-            self.get_env().clone()
+            self.get_env()
         }
 
         fn log_watch_spec(&self) {
@@ -469,7 +504,7 @@ pub mod watchman_file_watcher {
             self.watchman_options.debug
         }
 
-        fn start_init(&mut self) {
+        fn start_init(&self) {
             let flow_server_monitor_options::WatchmanOptions {
                 debug,
                 defer_states,
@@ -486,19 +521,27 @@ pub mod watchman_file_watcher {
                 mergebase_with: self.mergebase_with.clone(),
                 roots: flow_common::files::watched_paths(&self.server_options.file_options),
                 should_track_mergebase,
+                // Defer updates during `hg.update` and defer_states
                 subscribe_mode: flow_watchman::SubscribeMode::DeferChanges,
                 subscription_prefix: "flow_watcher".to_string(),
                 sync_timeout: sync_timeout.map(|t| t as i64),
             };
-            self.init_settings = Some(settings.clone());
-            self.init_thread =
+            *self.init_settings.lock().unwrap() = Some(settings.clone());
+            *self.init_thread.lock().unwrap() =
                 Some(runtime::handle().spawn(async move { flow_watchman::init(settings).await }));
         }
 
-        async fn wait_for_init(&mut self, timeout: Option<f64>) -> Result<(), String> {
-            let init_thread = self.init_thread.take().expect("init_thread should be set");
+        async fn wait_for_init(&self, timeout: Option<f64>) -> Result<(), String> {
+            let init_thread = self
+                .init_thread
+                .lock()
+                .unwrap()
+                .take()
+                .expect("init_thread should be set");
             let init_settings = self
                 .init_settings
+                .lock()
+                .unwrap()
                 .clone()
                 .expect("init_settings should be set");
             let go = async move {
@@ -544,7 +587,7 @@ pub mod watchman_file_watcher {
                     let listening =
                         runtime::handle().spawn(async move { listen(listen_env).await });
                     *new_env.listening_thread.lock().await = Some(listening);
-                    self.env = Some(new_env);
+                    *self.env.lock().unwrap() = Some(new_env);
                     Ok(())
                 }
                 Err(msg) => Err(msg),
@@ -552,7 +595,7 @@ pub mod watchman_file_watcher {
         }
 
         async fn get_and_clear_changed_files(
-            &mut self,
+            &self,
         ) -> (BTreeSet<String>, Option<FileWatcherMetadata>, bool) {
             // Should we throw away metadata even if files is empty? glevi thinks that's fine, since we
             // probably don't care about hg updates or mergebase changing if no files were affected
@@ -568,7 +611,7 @@ pub mod watchman_file_watcher {
             ret
         }
 
-        async fn wait_for_changed_files(&mut self) {
+        async fn wait_for_changed_files(&self) {
             let env = self.get_env();
             let cv = env.changes_condition.clone();
             tokio::task::spawn_blocking(move || {
@@ -583,10 +626,10 @@ pub mod watchman_file_watcher {
             .expect("spawn_blocking for wait_for_changed_files panicked");
         }
 
-        async fn stop(&mut self) {
+        async fn stop(&self) {
             // Flow doesn't own the watchman process, so it's not Flow's job to stop the watchman
             // process. What we can do, though, is stop listening to the messages
-            let env = self.get_env().clone();
+            let env = self.get_env();
             log::info!("Canceling Watchman listening thread & closing connection");
             if let Some(handle) = env.listening_thread.lock().await.take() {
                 handle.abort();
@@ -605,6 +648,15 @@ pub mod watchman_file_watcher {
             // the watchman listening thread itself dies, then we need to tell the monitor that this
             // file watcher is dead.
             let env = self.get_env().clone();
+            // waitpid should return a thread that resolves when the listening_thread resolves. So why
+            // don't we just return the listening_thread?
+            //
+            // It's because we need to return a cancelable thread. The listening_thread will be fulfilled
+            // with [Watcher_stopped] when it is canceled, rather than rejected with [Lwt.Canceled] like
+            // normal. That is the wrong behavior.
+            //
+            // So how do we wrap the listening_thread in a cancelable thread? By running it
+            // asynchronously, having it signal when it resolves, and waiting for the signal
             let handle_opt = env.listening_thread.lock().await.take();
             match handle_opt {
                 Some(handle) => match handle.await {
@@ -635,7 +687,7 @@ pub mod edenfs_file_watcher {
 
     pub struct Env {
         pub instance: Arc<tokio::sync::Mutex<flow_edenfs_watcher::Instance>>,
-        pub notification_fd: RawFd,
+        pub notification_fd: std::os::raw::c_int,
         pub shared: Arc<std::sync::Mutex<EnvShared>>,
         pub listening_thread: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<ExitReason>>>>,
         pub changes_condition: Arc<(Mutex<bool>, Condvar)>,
@@ -643,10 +695,10 @@ pub mod edenfs_file_watcher {
         pub mergebase_with: String,
     }
 
-    // Query VCS for the current mergebase and compare with the stored value.
-    // Updates [env.mergebase] if it changed. Returns [Some bool] or [None] on error.
-    fn check_mergebase(env: &Env) -> Option<bool> {
-        match query_mergebase(&env.root, &env.mergebase_with) {
+    /// Query VCS for the current mergebase and compare with the stored value.
+    /// Updates [env.mergebase] if it changed. Returns [Some bool] or [None] on error.
+    async fn check_mergebase(env: &Env) -> Option<bool> {
+        match query_mergebase(&env.root, &env.mergebase_with).await {
             Err(_) => {
                 log::warn!("EdenFS: failed to query mergebase");
                 None
@@ -677,15 +729,16 @@ pub mod edenfs_file_watcher {
         }
     }
 
+    /// Convert EdenFS watcher changes to a set of file paths and metadata updates.
+    /// Note: The paths from EdenFS watcher are already absolute (the Rust code joins
+    /// them with root_absolute), so we just add them directly without concatenating
+    /// with root again.
     fn convert_changes(
         changes_list: &[flow_edenfs_watcher::Changes],
     ) -> (BTreeSet<String>, FileWatcherMetadata) {
-        // Convert EdenFS watcher changes to a set of file paths and metadata updates.
-        // Note: The paths from EdenFS watcher are already absolute (the Rust code joins
-        // them with root_absolute), so we just add them directly without concatenating
-        // with root again.
         fn add_files(mut files: BTreeSet<String>, paths: &[String]) -> BTreeSet<String> {
             for path in paths {
+                // Paths from EdenFS watcher are already absolute
                 files.insert(path.clone());
             }
             files
@@ -774,6 +827,9 @@ pub mod edenfs_file_watcher {
             }
         }
 
+        /// Wait for the notification fd to become readable, then get changes.
+        /// Uses the persistent Lwt_unix.file_descr created once during init, so
+        /// that Lwt's internal state for this fd stays consistent across calls.
         pub async fn get_changes_async_lwt(
             env: &Env,
         ) -> Result<
@@ -784,10 +840,9 @@ pub mod edenfs_file_watcher {
             ),
             flow_edenfs_watcher::EdenfsWatcherError,
         > {
-            // Wait for the notification fd to become readable, then get changes.
-            // Uses the persistent Lwt_unix.file_descr created once during init, so
-            // that Lwt's internal state for this fd stays consistent across calls.
+            #[cfg(unix)]
             let fd = env.notification_fd;
+            #[cfg(unix)]
             let wait_result =
                 match tokio::io::unix::AsyncFd::with_interest(fd, tokio::io::Interest::READABLE) {
                     Ok(async_fd) => match async_fd.readable().await {
@@ -813,6 +868,11 @@ pub mod edenfs_file_watcher {
                         format!("AsyncFd registration error: {}", e),
                     )),
                 };
+            #[cfg(not(unix))]
+            let wait_result: Result<(), flow_edenfs_watcher::EdenfsWatcherError> =
+                Err(flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
+                    "EdenFS notification fd polling is not supported on this platform".to_string(),
+                ));
             match wait_result {
                 Ok(()) => {
                     let instance = env.instance.lock().await;
@@ -842,6 +902,8 @@ pub mod edenfs_file_watcher {
                     Ok(())
                 }
                 Err(_) if flow_edenfs_watcher::is_instance_destroyed() => {
+                    // The instance was destroyed by the exit hook during shutdown.
+                    // This is expected and not an error — treat it as a clean stop.
                     log::info!("EdenFS watcher instance was destroyed (shutdown in progress)");
                     Err(flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
                         "Canceled".to_string(),
@@ -855,11 +917,12 @@ pub mod edenfs_file_watcher {
                 Ok((changes_list, _clock, _telemetry)) => {
                     handle_state_changes(&changes_list);
                     let (new_files, mut new_metadata) = convert_changes(&changes_list);
+                    // If a commit transition occurred, check if mergebase actually changed
                     if let Some(true) = new_metadata.changed_mergebase {
                         log::debug!(
                             "EdenFS: CommitTransition reported changed_mergebase=true; verifying with VCS"
                         );
-                        let actual_changed = check_mergebase(env);
+                        let actual_changed = check_mergebase(env).await;
                         let changed_mergebase = match actual_changed {
                             Some(changed) => {
                                 if !changed {
@@ -917,12 +980,16 @@ pub mod edenfs_file_watcher {
     }
 
     pub struct EdenFS {
-        env: Option<Arc<Env>>,
-        init_thread: Option<
-            tokio::task::JoinHandle<
-                Result<
-                    (flow_edenfs_watcher::Instance, flow_edenfs_watcher::Clock),
-                    flow_edenfs_watcher::EdenfsWatcherError,
+        // Wrapped behind interior mutability so methods can take `&self`,
+        // matching OCaml's class-based shape with implicit field mutation.
+        env: std::sync::Mutex<Option<Arc<Env>>>,
+        init_thread: std::sync::Mutex<
+            Option<
+                tokio::task::JoinHandle<
+                    Result<
+                        (flow_edenfs_watcher::Instance, flow_edenfs_watcher::Clock),
+                        flow_edenfs_watcher::EdenfsWatcherError,
+                    >,
                 >,
             >,
         >,
@@ -943,8 +1010,8 @@ pub mod edenfs_file_watcher {
             let root_path = (*server_options.root).clone();
             let watch_paths = flow_common::files::watched_paths(&server_options.file_options);
             EdenFS {
-                env: None,
-                init_thread: None,
+                env: std::sync::Mutex::new(None),
+                init_thread: std::sync::Mutex::new(None),
                 mergebase_with,
                 server_options,
                 edenfs_options,
@@ -953,18 +1020,20 @@ pub mod edenfs_file_watcher {
             }
         }
 
-        fn get_env(&self) -> &Arc<Env> {
-            match &self.env {
+        fn get_env(&self) -> Arc<Env> {
+            match self.env.lock().unwrap().as_ref() {
                 None => panic!("EdenFS watcher was not initialized"),
-                Some(env) => env,
+                Some(env) => env.clone(),
             }
         }
 
         pub fn get_env_for_waitpid(&self) -> Arc<Env> {
-            self.get_env().clone()
+            self.get_env()
         }
 
         fn log_watch_spec(&self) {
+            // Log absolute paths for consistency with Watchman's log format.
+            // Note: The actual watch_spec passed to Rust uses relative paths.
             let file_options = &self.server_options.file_options;
             let extensions =
                 flow_server_file_watcher_spec::file_watcher_spec::get_suffixes(file_options);
@@ -994,7 +1063,7 @@ pub mod edenfs_file_watcher {
             self.edenfs_options.edenfs_debug
         }
 
-        fn start_init(&mut self) {
+        fn start_init(&self) {
             let flow_server_monitor_options::EdenfsOptions {
                 edenfs_debug,
                 edenfs_timeout_secs,
@@ -1013,12 +1082,17 @@ pub mod edenfs_file_watcher {
                 sync_queries_obey_deferral: false,
                 defer_states: edenfs_defer_states.clone(),
             };
-            self.init_thread =
+            *self.init_thread.lock().unwrap() =
                 Some(runtime::handle().spawn(async move { flow_edenfs_watcher::init(settings) }));
         }
 
-        async fn wait_for_init(&mut self, timeout: Option<f64>) -> Result<(), String> {
-            let init_thread = self.init_thread.take().expect("init_thread should be set");
+        async fn wait_for_init(&self, timeout: Option<f64>) -> Result<(), String> {
+            let init_thread = self
+                .init_thread
+                .lock()
+                .unwrap()
+                .take()
+                .expect("init_thread should be set");
             let go = async move {
                 match init_thread.await {
                     Ok(Ok((instance, _clock))) => Ok(instance),
@@ -1044,6 +1118,9 @@ pub mod edenfs_file_watcher {
                     if self.edenfs_options.edenfs_debug {
                         self.log_watch_spec();
                     }
+                    // Create the Lwt fd wrapper once and reuse it for the lifetime of the
+                    // watcher. Recreating it on every poll call corrupts Lwt's internal
+                    // state for the fd, causing wait_read to stop waking up.
                     let notification_fd = match flow_edenfs_watcher::get_notification_fd(&instance)
                     {
                         Ok(fd) => fd,
@@ -1052,8 +1129,9 @@ pub mod edenfs_file_watcher {
                             return Err(format!("Failed to get EdenFS notification fd: {}", msg));
                         }
                     };
+                    // Query VCS for the initial mergebase
                     let initial_mergebase =
-                        match query_mergebase(&self.root_path, &self.mergebase_with) {
+                        match query_mergebase(&self.root_path, &self.mergebase_with).await {
                             Ok(hash) => {
                                 log::info!("EdenFS: initial mergebase is {:?}", hash);
                                 Some(hash)
@@ -1082,11 +1160,14 @@ pub mod edenfs_file_watcher {
                     let listening =
                         runtime::handle().spawn(async move { listen(listen_env).await });
                     *new_env.listening_thread.lock().await = Some(listening);
-                    self.env = Some(new_env);
+                    *self.env.lock().unwrap() = Some(new_env);
+                    // For lazy mode, get initial files changed since mergebase.
+                    // Unlike Watchman which returns initial files during init, we use the
+                    // VCS-based approach like dfind to get files changed since mergebase.
                     if self.server_options.lazy_mode {
                         let changes =
-                            changes_since_mergebase(&self.mergebase_with, &self.watch_paths);
-                        let env = self.env.as_ref().unwrap();
+                            changes_since_mergebase(&self.mergebase_with, &self.watch_paths).await;
+                        let env = self.get_env();
                         let mut shared = env.shared.lock().unwrap();
                         shared.files.extend(changes);
                     }
@@ -1097,7 +1178,7 @@ pub mod edenfs_file_watcher {
         }
 
         async fn get_and_clear_changed_files(
-            &mut self,
+            &self,
         ) -> (BTreeSet<String>, Option<FileWatcherMetadata>, bool) {
             let env = self.get_env();
             let mut shared = env.shared.lock().unwrap();
@@ -1111,7 +1192,7 @@ pub mod edenfs_file_watcher {
             ret
         }
 
-        async fn wait_for_changed_files(&mut self) {
+        async fn wait_for_changed_files(&self) {
             let env = self.get_env();
             let cv = env.changes_condition.clone();
             tokio::task::spawn_blocking(move || {
@@ -1126,16 +1207,19 @@ pub mod edenfs_file_watcher {
             .expect("spawn_blocking for wait_for_changed_files panicked");
         }
 
-        async fn stop(&mut self) {
-            let env = self.get_env().clone();
+        async fn stop(&self) {
+            let env = self.get_env();
             log::info!("Canceling EdenFS listening thread");
             if let Some(handle) = env.listening_thread.lock().await.take() {
                 handle.abort();
             }
+            // The exit hook will call destroy_instance_ffi on the Rust instance,
+            // which stops the worker thread and shuts down the Tokio runtime
+            // before Folly's atexit handlers run.
         }
 
         async fn waitpid(&self) -> ExitReason {
-            let env = self.get_env().clone();
+            let env = self.get_env();
             let handle_opt = env.listening_thread.lock().await.take();
             match handle_opt {
                 Some(handle) => match handle.await {
@@ -1154,8 +1238,168 @@ pub mod edenfs_file_watcher {
 
 pub use edenfs_file_watcher::EdenFS;
 
+pub mod dfind_file_watcher {
+    use super::*;
+
+    struct DFindFields {
+        instance: Option<Arc<flow_dfind::Dfind>>,
+        is_initial: bool,
+        watch_paths: Vec<PathBuf>,
+        files: BTreeSet<String>,
+    }
+
+    pub struct DFind {
+        fields: std::sync::Mutex<DFindFields>,
+        // OCaml: val dfind_mutex = Lwt_mutex.create ()
+        // "We don't want two threads to talk to dfind at the same time. And we
+        // don't want those two threads to get the same file change events"
+        dfind_mutex: tokio::sync::Mutex<()>,
+        mergebase_with: String,
+        server_options: flow_common::options::Options,
+    }
+
+    impl DFind {
+        pub fn new(mergebase_with: String, server_options: flow_common::options::Options) -> Self {
+            DFind {
+                fields: std::sync::Mutex::new(DFindFields {
+                    instance: None,
+                    is_initial: true,
+                    watch_paths: Vec::new(),
+                    files: BTreeSet::new(),
+                }),
+                dfind_mutex: tokio::sync::Mutex::new(()),
+                mergebase_with,
+                server_options,
+            }
+        }
+
+        fn get_dfind(&self) -> Arc<flow_dfind::Dfind> {
+            let fields = self.fields.lock().unwrap();
+            match &fields.instance {
+                None => panic!("Dfind was not initialized"),
+                Some(d) => d.clone(),
+            }
+        }
+
+        async fn fetch(&self) {
+            // Lwt_mutex.with_lock dfind_mutex (fun () -> ...)
+            let _guard = self.dfind_mutex.lock().await;
+            let dfind = self.get_dfind();
+            match flow_dfind::get_changes(&dfind).await {
+                Ok(new_files) => {
+                    let mut fields = self.fields.lock().unwrap();
+                    fields.files.extend(new_files);
+                }
+                // ignore the dfind server dying. use waitpid to detect this instead
+                Err(flow_dfind::Error::Stopped) => {
+                    log::debug!("Connection to dfind broke");
+                }
+                Err(err) => {
+                    log::debug!("dfind get_changes failed: {}", err);
+                }
+            }
+        }
+    }
+
+    impl Watcher for DFind {
+        fn name(&self) -> &str {
+            "dfind"
+        }
+
+        fn debug(&self) -> bool {
+            false
+        }
+
+        fn start_init(&self) {
+            let file_options = &self.server_options.file_options;
+            let watch_paths = flow_common::files::watched_paths(file_options);
+            let log_file = {
+                let flowconfig_name = &self.server_options.flowconfig_name;
+                let tmp_dir = &self.server_options.temp_dir;
+                let root = &self.server_options.root;
+                flow_server_files::server_files_js::dfind_log_file(flowconfig_name, tmp_dir, root)
+            };
+            let init_args = flow_dfind::InitArgs {
+                scuba_table: "flow_server_events".to_string(),
+                roots: watch_paths.clone(),
+            };
+            let fds = flow_dfind::DaemonFds {
+                log_file: PathBuf::from(log_file),
+            };
+            let mut fields = self.fields.lock().unwrap();
+            fields.watch_paths = watch_paths;
+            match flow_dfind::init(fds, init_args) {
+                Ok(d) => {
+                    fields.instance = Some(Arc::new(d));
+                }
+                Err(err) => {
+                    log::error!("Failed to initialize dfind: {}", err);
+                }
+            }
+        }
+
+        async fn wait_for_init(&self, _timeout: Option<f64>) -> Result<(), String> {
+            let dfind = {
+                let fields = self.fields.lock().unwrap();
+                match &fields.instance {
+                    None => return Err("Failed to initialize dfind".to_string()),
+                    Some(d) => d.clone(),
+                }
+            };
+            flow_dfind::wait_until_ready(&dfind).await;
+            if self.server_options.lazy_mode {
+                let watch_paths = self.fields.lock().unwrap().watch_paths.clone();
+                let changes = changes_since_mergebase(&self.mergebase_with, &watch_paths).await;
+                self.fields.lock().unwrap().files.extend(changes);
+            }
+            Ok(())
+        }
+
+        async fn get_and_clear_changed_files(
+            &self,
+        ) -> (BTreeSet<String>, Option<FileWatcherMetadata>, bool) {
+            self.fetch().await;
+            let mut fields = self.fields.lock().unwrap();
+            let ret = (std::mem::take(&mut fields.files), None, fields.is_initial);
+            fields.is_initial = false;
+            ret
+        }
+
+        async fn wait_for_changed_files(&self) {
+            loop {
+                self.fetch().await;
+                {
+                    let fields = self.fields.lock().unwrap();
+                    if !fields.files.is_empty() {
+                        return;
+                    }
+                }
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+
+        async fn stop(&self) {
+            let instance = self.fields.lock().unwrap().instance.take();
+            if let Some(dfind) = instance {
+                flow_dfind::stop(&dfind);
+            }
+        }
+
+        async fn waitpid(&self) -> ExitReason {
+            std::future::pending().await
+        }
+
+        fn getpid(&self) -> Option<i32> {
+            None
+        }
+    }
+}
+
+pub use dfind_file_watcher::DFind;
+
 pub enum AnyWatcher {
     Dummy(Dummy),
+    DFind(DFind),
     Watchman(Watchman),
     EdenFS(EdenFS),
 }
@@ -1164,6 +1408,7 @@ impl AnyWatcher {
     pub fn name(&self) -> &str {
         match self {
             AnyWatcher::Dummy(w) => w.name(),
+            AnyWatcher::DFind(w) => w.name(),
             AnyWatcher::Watchman(w) => w.name(),
             AnyWatcher::EdenFS(w) => w.name(),
         }
@@ -1172,48 +1417,54 @@ impl AnyWatcher {
     pub fn debug(&self) -> bool {
         match self {
             AnyWatcher::Dummy(w) => w.debug(),
+            AnyWatcher::DFind(w) => w.debug(),
             AnyWatcher::Watchman(w) => w.debug(),
             AnyWatcher::EdenFS(w) => w.debug(),
         }
     }
 
-    pub fn start_init(&mut self) {
+    pub fn start_init(&self) {
         match self {
             AnyWatcher::Dummy(w) => w.start_init(),
+            AnyWatcher::DFind(w) => w.start_init(),
             AnyWatcher::Watchman(w) => w.start_init(),
             AnyWatcher::EdenFS(w) => w.start_init(),
         }
     }
 
-    pub async fn wait_for_init(&mut self, timeout: Option<f64>) -> Result<(), String> {
+    pub async fn wait_for_init(&self, timeout: Option<f64>) -> Result<(), String> {
         match self {
             AnyWatcher::Dummy(w) => w.wait_for_init(timeout).await,
+            AnyWatcher::DFind(w) => w.wait_for_init(timeout).await,
             AnyWatcher::Watchman(w) => w.wait_for_init(timeout).await,
             AnyWatcher::EdenFS(w) => w.wait_for_init(timeout).await,
         }
     }
 
     pub async fn get_and_clear_changed_files(
-        &mut self,
+        &self,
     ) -> (BTreeSet<String>, Option<FileWatcherMetadata>, bool) {
         match self {
             AnyWatcher::Dummy(w) => w.get_and_clear_changed_files().await,
+            AnyWatcher::DFind(w) => w.get_and_clear_changed_files().await,
             AnyWatcher::Watchman(w) => w.get_and_clear_changed_files().await,
             AnyWatcher::EdenFS(w) => w.get_and_clear_changed_files().await,
         }
     }
 
-    pub async fn wait_for_changed_files(&mut self) {
+    pub async fn wait_for_changed_files(&self) {
         match self {
             AnyWatcher::Dummy(w) => w.wait_for_changed_files().await,
+            AnyWatcher::DFind(w) => w.wait_for_changed_files().await,
             AnyWatcher::Watchman(w) => w.wait_for_changed_files().await,
             AnyWatcher::EdenFS(w) => w.wait_for_changed_files().await,
         }
     }
 
-    pub async fn stop(&mut self) {
+    pub async fn stop(&self) {
         match self {
             AnyWatcher::Dummy(w) => w.stop().await,
+            AnyWatcher::DFind(w) => w.stop().await,
             AnyWatcher::Watchman(w) => w.stop().await,
             AnyWatcher::EdenFS(w) => w.stop().await,
         }
@@ -1222,6 +1473,7 @@ impl AnyWatcher {
     pub async fn waitpid(&self) -> ExitReason {
         match self {
             AnyWatcher::Dummy(w) => w.waitpid().await,
+            AnyWatcher::DFind(w) => w.waitpid().await,
             AnyWatcher::Watchman(w) => w.waitpid().await,
             AnyWatcher::EdenFS(w) => w.waitpid().await,
         }
@@ -1232,6 +1484,7 @@ impl AnyWatcher {
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = ExitReason> + Send + 'static>> {
         match self {
             AnyWatcher::Dummy(_) => Box::pin(std::future::pending()),
+            AnyWatcher::DFind(_) => Box::pin(std::future::pending()),
             AnyWatcher::Watchman(w) => {
                 let env = w.get_env_for_waitpid();
                 Box::pin(async move {
@@ -1264,6 +1517,7 @@ impl AnyWatcher {
     pub fn getpid(&self) -> Option<i32> {
         match self {
             AnyWatcher::Dummy(w) => w.getpid(),
+            AnyWatcher::DFind(w) => w.getpid(),
             AnyWatcher::Watchman(w) => w.getpid(),
             AnyWatcher::EdenFS(w) => w.getpid(),
         }

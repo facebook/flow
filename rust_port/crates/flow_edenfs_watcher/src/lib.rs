@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::os::fd::RawFd;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::OnceLock;
@@ -143,7 +142,9 @@ pub fn get_changes_async(
     panic!("not implemented")
 }
 
-pub fn get_notification_fd(_instance: &Instance) -> Result<RawFd, EdenfsWatcherError> {
+pub fn get_notification_fd(
+    _instance: &Instance,
+) -> Result<std::os::raw::c_int, EdenfsWatcherError> {
     panic!("not implemented")
 }
 

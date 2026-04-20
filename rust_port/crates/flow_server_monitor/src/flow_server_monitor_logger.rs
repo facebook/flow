@@ -85,7 +85,6 @@ pub fn min_level_stderr() -> Level {
     Level::from_u8(MIN_LEVEL_STDERR.load(Ordering::Acquire))
 }
 
-// We're using lwt's logger instead of Hh_logger, so let's map Hh_logger levels to lwt levels
 type MsgPayload = (Dest, Vec<String>);
 
 static MSG_SENDER: OnceLock<tokio::sync::mpsc::UnboundedSender<MsgPayload>> = OnceLock::new();
@@ -167,7 +166,6 @@ mod write_loop {
         }
     }
 
-    #[allow(dead_code)]
     pub(super) fn report_panic(payload: &dyn std::fmt::Display) {
         catch(payload);
     }
@@ -193,6 +191,7 @@ fn string_of_level(level: Level) -> &'static str {
     }
 }
 
+// We're using lwt's logger instead of Hh_logger, so let's map Hh_logger levels to lwt levels
 fn level_of_log_level(l: log::Level) -> Level {
     match l {
         log::Level::Error => Level::Error,
@@ -244,12 +243,7 @@ impl log::Log for MonitorLogger {
                 "flow_server_monitor_logger: stderr flush failed: {}\n",
                 io_err
             );
-            use std::os::fd::AsFd;
-            let stderr_handle = std::io::stderr();
-            if let Ok(()) =
-                nix::unistd::write(stderr_handle.as_fd(), diag.as_bytes()).map(|_n_written| ())
-            {
-            }
+            if let Ok(()) = std::io::Write::write_all(&mut std::io::stderr(), diag.as_bytes()) {}
         }
     }
 }
@@ -284,6 +278,7 @@ pub fn init_logger(log_file: Option<File>) {
         }
     });
 
+    // Set the default logger
     static LOGGER: MonitorLogger = MonitorLogger;
     if let Err(set_err) = log::set_logger(&LOGGER) {
         eprintln!(
@@ -292,6 +287,7 @@ pub fn init_logger(log_file: Option<File>) {
         );
     }
 
+    // Set the min level
     log::set_max_level(match min_level {
         Level::Off => log::LevelFilter::Off,
         Level::Fatal => log::LevelFilter::Error,

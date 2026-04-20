@@ -38,7 +38,7 @@ struct StatusInfo {
 // Multiple threads might call StreamStatus functions.
 static MUTEX: Mutex<()> = Mutex::new(());
 
-// A list of callbacks which will be invoked once the next time the server is free.
+// A list of callbacks which will be invoked once the next time the server is free
 static TO_CALL_ON_FREE: Mutex<Vec<Box<dyn FnOnce() + Send>>> = Mutex::new(Vec::new());
 
 static SIGNIFICANT_TRANSITION: (
@@ -86,7 +86,7 @@ mod update_loop {
         );
 
         let old_status = t.status.clone();
-        // We don't need a lock here, since we're the only thread processing statuses.
+        // We don't need a lock here, since we're the only thread processing statuses
         t.status = new_status.clone();
 
         check_if_free(t);
@@ -108,13 +108,7 @@ mod update_loop {
 
     pub(super) fn catch(_t: &Arc<Mutex<StatusInfo>>, exn: LoopError) {
         match exn {
-            LoopError::StreamEmpty => {}
-            LoopError::Other(e) => {
-                log::error!(
-                    "ServerStatus update loop hit an unexpected exception: {}",
-                    e
-                );
-            }
+            LoopError::StreamEmpty => {} // This is the signal to stop
         }
     }
 
@@ -122,8 +116,6 @@ mod update_loop {
 
     pub(super) enum LoopError {
         StreamEmpty,
-        #[allow(dead_code)]
-        Other(String),
     }
 
     impl From<StreamEmpty> for LoopError {
@@ -152,6 +144,7 @@ mod update_loop {
 fn file_watcher_for_status(fw: &FileWatcher) -> file_watcher_status::FileWatcher {
     match fw {
         FlowServerMonitorOptions::NoFileWatcher => file_watcher_status::FileWatcher::NoFileWatcher,
+        FlowServerMonitorOptions::DFind => file_watcher_status::FileWatcher::DFind,
         FlowServerMonitorOptions::Watchman(_) => file_watcher_status::FileWatcher::Watchman,
         FlowServerMonitorOptions::EdenFS(_) => file_watcher_status::FileWatcher::EdenFS,
     }
@@ -185,13 +178,13 @@ fn empty(
     ret
 }
 
-// This is the status info for the current Flow server.
+// This is the status info for the current Flow server
 static CURRENT_STATUS: std::sync::LazyLock<Mutex<Arc<Mutex<StatusInfo>>>> =
     std::sync::LazyLock::new(|| {
         Mutex::new(empty(file_watcher_status::FileWatcher::NoFileWatcher, None))
     });
 
-// Call f the next time the server is free. If the server is currently free, then call now.
+// Call f the next time the server is free. If the server is currently free, then call now
 pub fn call_on_free(f: Box<dyn FnOnce() + Send>) {
     let is_free = {
         let current = CURRENT_STATUS.lock().unwrap();
@@ -222,7 +215,7 @@ pub fn file_watcher_deferred(reason: String) {
     broadcast_significant_transition(&t);
 }
 
-// When a new server starts up, we close the old server's status stream and start over.
+// When a new server starts up, we close the old server's status stream and start over
 pub fn reset(file_watcher: &FileWatcher, restart_reason: Option<server_status::RestartReason>) {
     let file_watcher = file_watcher_for_status(file_watcher);
     let _lock = MUTEX.lock().unwrap();
@@ -251,7 +244,7 @@ pub fn ever_been_free() -> bool {
 }
 
 // If there is a significant transition before the timeout, the cancel the sleep and return the
-// new status. Otherwise, stop waiting on the condition variable and return the current status.
+// new status. Otherwise, stop waiting on the condition variable and return the current status
 pub fn wait_for_signficant_status(
     timeout: f64,
 ) -> (server_status::Status, file_watcher_status::Status) {
@@ -268,7 +261,7 @@ pub fn wait_for_signficant_status(
 }
 
 // Updates will show up on the connection in order. Let's push them immediately to a stream to
-// preserve that order.
+// preserve that order
 pub fn update(status: server_status::Status) {
     let current = CURRENT_STATUS.lock().unwrap();
     let info = current.lock().unwrap();

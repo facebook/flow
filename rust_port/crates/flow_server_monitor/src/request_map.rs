@@ -46,14 +46,12 @@ pub fn remove(
     request_id: &monitor_prot::RequestId,
 ) -> Option<(ServerCommandWithContext, Arc<EphemeralConnection>)> {
     let mut state = STATE.lock().unwrap();
-    let ret = state.map.remove(request_id);
-    ret
+    state.map.remove(request_id)
 }
 
 pub fn remove_all() -> Vec<(ServerCommandWithContext, Arc<EphemeralConnection>)> {
     let mut state = STATE.lock().unwrap();
-    let ret = std::mem::take(&mut state.map).into_values().collect();
-    ret
+    std::mem::take(&mut state.map).into_values().collect()
 }
 
 pub fn cardinal() -> usize {

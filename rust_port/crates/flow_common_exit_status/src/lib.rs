@@ -228,3 +228,8 @@ pub fn json_props_of_t(
 pub fn exit(status: FlowExitStatus) -> ! {
     std::process::exit(error_code(status))
 }
+
+pub fn exit_with_msg(status: FlowExitStatus, msg: &str) -> ! {
+    eprintln!("{}", msg);
+    std::process::exit(error_code(status))
+}

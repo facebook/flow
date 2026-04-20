@@ -734,6 +734,9 @@ pub fn load(
     path: &Path,
     options: &Options,
 ) -> Result<LoadedSavedState, InvalidReason> {
+    flow_server_env::monitor_rpc::status_update(
+        flow_server_env::server_status::Event::ReadSavedState,
+    );
     let mut file = File::open(path).map_err(|_| InvalidReason::File_does_not_exist)?;
     verify_version(options, &mut file)?;
     let mut bytes = Vec::new();
@@ -747,6 +750,16 @@ pub fn load(
         saved_state_compression::decompress_and_unmarshal(&compressed)?;
     match &mut loaded {
         SerializedLoadedSavedState::Legacy_saved_state(data) => {
+            // Signal progress so the status state machine transitions to Loading_saved_state,
+            // which is required before the Restoring_heaps_start event can fire.
+            flow_server_env::monitor_rpc::status_update(
+                flow_server_env::server_status::Event::LoadSavedStateProgress(
+                    flow_server_env::server_status::Progress {
+                        total: None,
+                        finished: 0,
+                    },
+                ),
+            );
             verify_flowconfig_hash(options, &data.flowconfig_hash)?;
             denormalize_paths(
                 options,
@@ -756,6 +769,14 @@ pub fn load(
             Ok(LoadedSavedState::Legacy_saved_state(data.clone()))
         }
         SerializedLoadedSavedState::Direct_saved_state(data) => {
+            flow_server_env::monitor_rpc::status_update(
+                flow_server_env::server_status::Event::LoadSavedStateProgress(
+                    flow_server_env::server_status::Progress {
+                        total: None,
+                        finished: 0,
+                    },
+                ),
+            );
             verify_flowconfig_hash(options, &data.flowconfig_hash)?;
             denormalize_paths(
                 options,

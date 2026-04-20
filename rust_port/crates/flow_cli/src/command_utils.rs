@@ -1293,7 +1293,6 @@ pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
     let lazy_mode =
         command_spec::get(args, "--lazy-mode", &arg_spec::optional(lazy_mode_flag())).unwrap();
     let lazy_mode = if lazy_ && lazy_mode.is_none() {
-        // --lazy === --lazy-mode true
         Some(LazyMode::Lazy)
     } else {
         lazy_mode
@@ -1781,27 +1780,17 @@ const DEFAULT_FILE_WATCHER_MERGEBASE_WITH: &str = "master";
 pub(crate) fn file_watcher_flag() -> arg_spec::FlagType<Option<flow_config::FileWatcher>> {
     arg_spec::enum_flag(vec![
         ("none", flow_config::FileWatcher::NoFileWatcher),
-        ("dfind", flow_config::FileWatcher::Watchman),
+        ("dfind", flow_config::FileWatcher::DFind),
         ("watchman", flow_config::FileWatcher::Watchman),
         ("edenfs", flow_config::FileWatcher::EdenFS),
     ])
-}
-
-pub(crate) fn file_watcher_arg(
-    file_watcher: FlowServerMonitorOptions::FileWatcher,
-) -> &'static str {
-    match file_watcher {
-        FlowServerMonitorOptions::FileWatcher::NoFileWatcher => "none",
-        FlowServerMonitorOptions::FileWatcher::Watchman(_) => "watchman",
-        FlowServerMonitorOptions::FileWatcher::EdenFS(_) => "edenfs",
-    }
 }
 
 pub(crate) fn add_file_watcher_flag(spec: command_spec::Spec) -> command_spec::Spec {
     spec.flag(
         "--file-watcher",
         &arg_spec::optional(file_watcher_flag()),
-        "Which file watcher Flow should use (none, watchman, edenfs). Flow will ignore file system events if this is set to none. (default: watchman)",
+        "Which file watcher Flow should use (none, dfind, watchman, edenfs). Flow will ignore file system events if this is set to none. (default: dfind)",
         None,
     )
     .flag(
@@ -3095,54 +3084,33 @@ fn connect_and_make_request_inner(
         &tmp_dir_str,
     );
 
-    let server_request = match request.clone() {
-        server_prot::request::Command::FORCE_RECHECK {
-            files,
-            focus,
-            missed_changes,
-            changed_mergebase,
-        } => flow_server_env::server_socket_rpc::ServerRequest::ForceRecheck {
-            files,
-            focus,
-            missed_changes,
-            changed_mergebase,
-        },
-        server_prot::request::Command::SAVE_STATE { out } => {
-            let out = match out {
-                server_prot::request::SaveStateOut::File(path) => {
-                    flow_server_env::server_socket_rpc::SaveStateOut::File(
-                        path.to_string_lossy().to_string(),
-                    )
-                }
-                server_prot::request::SaveStateOut::Scm => {
-                    flow_server_env::server_socket_rpc::SaveStateOut::Scm
-                }
-            };
-            flow_server_env::server_socket_rpc::ServerRequest::SaveState {
-                out,
-                from: flow_event_logger::get_from_i_am_a_clown(),
-            }
-        }
-        command => {
-            let cli_command = flow_server_env::server_socket_rpc::CliCommand::from(command);
-            flow_server_env::server_socket_rpc::ServerRequest::CliEphemeralCommand {
-                command: cli_command,
-            }
-        }
+    let logging_context = flow_event_logger::get_context();
+    let client_logging_context = flow_monitor_rpc::lsp_prot::LoggingContext {
+        from: logging_context.from,
+        agent_id: logging_context.agent_id,
     };
-    let server_response = crate::command_connect::connect(&env, &server_request);
+    let command = flow_monitor_rpc::server_command_with_context::ServerCommandWithContext {
+        client_logging_context,
+        command: request.clone(),
+    };
+    let server_response = crate::command_connect::connect(
+        &env,
+        &crate::command_connect_simple::ConnectRequest::Command(command),
+    );
     match server_response {
-        flow_server_env::server_socket_rpc::ServerResponse::CliEphemeralResponse { response } => {
-            response.into_server_response()
+        crate::command_connect_simple::ConnectResponse::Data(response) => response,
+        crate::command_connect_simple::ConnectResponse::ServerException(message) => {
+            let msg = format!("Server threw an exception: {}", message);
+            flow_common_exit_status::exit_with_msg(
+                flow_common_exit_status::FlowExitStatus::UnknownError,
+                &msg,
+            )
         }
-        flow_server_env::server_socket_rpc::ServerResponse::ForceRecheck => {
-            server_prot::response::Response::FORCE_RECHECK
-        }
-        flow_server_env::server_socket_rpc::ServerResponse::SaveState { result } => {
-            server_prot::response::Response::SAVE_STATE(result)
-        }
-        _ => {
-            panic!("Unexpected response from server");
+        crate::command_connect_simple::ConnectResponse::ShutdownAck => {
+            flow_common_exit_status::exit_with_msg(
+                flow_common_exit_status::FlowExitStatus::UnknownError,
+                "Unexpected ShutdownAck response for non-shutdown request",
+            )
         }
     }
 }
@@ -3179,7 +3147,10 @@ pub(crate) fn failwith_bad_response(
         server_prot::request::to_string(request),
         server_prot::response::to_string(response),
     );
-    panic!("{}", msg)
+    flow_common_exit_status::exit_with_msg(
+        flow_common_exit_status::FlowExitStatus::UnknownError,
+        &msg,
+    )
 }
 
 pub(super) fn get_check_or_status_exit_code(
@@ -3210,10 +3181,11 @@ pub(crate) fn choose_file_watcher(
         (None, _) => flowconfig
             .options
             .file_watcher
-            .unwrap_or(flow_config::FileWatcher::Watchman),
+            .unwrap_or(flow_config::FileWatcher::DFind),
     };
     match file_watcher {
         flow_config::FileWatcher::NoFileWatcher => FlowServerMonitorOptions::NoFileWatcher,
+        flow_config::FileWatcher::DFind => FlowServerMonitorOptions::DFind,
         flow_config::FileWatcher::Watchman => {
             let sync_timeout = sync_timeout.or(flowconfig.options.watchman_sync_timeout);
             let defer_states = flowconfig.options.watchman_defer_states.clone();

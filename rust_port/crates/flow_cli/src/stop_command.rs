@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use flow_server_env::server_socket_rpc::ServerRequest;
-use flow_server_env::server_socket_rpc::ServerResponse;
-
 use crate::command_connect_simple as CCS;
 use crate::command_connect_simple::CCSError;
+use crate::command_connect_simple::ConnectRequest;
+use crate::command_connect_simple::ConnectResponse;
 use crate::command_mean_kill;
 use crate::command_spec;
 use crate::command_spec::arg_spec;
@@ -79,10 +78,10 @@ fn main(args: &arg_spec::Values) {
         &flowconfig_name,
         &tmp_dir,
         &root,
-        &ServerRequest::Shutdown,
+        &ConnectRequest::Shutdown,
         Some(1),
     ) {
-        Ok(ServerResponse::ShutdownAck) => {
+        Ok(ConnectResponse::ShutdownAck) => {
             if !quiet {
                 eprintln!(
                     "Told server for `{}` to die. Waiting for confirmation...",
@@ -105,16 +104,16 @@ fn main(args: &arg_spec::Values) {
                 eprintln!("Successfully killed server for `{}`", root.display());
             }
         }
-        Ok(ServerResponse::Error { message }) => {
+        Ok(ConnectResponse::ServerException(message)) => {
             if !quiet {
                 eprintln!("Error: {}", message);
                 eprintln!("Attempting to meanly kill server for `{}`", root.display());
             }
             attempt_mean_kill();
         }
-        Ok(response) => {
+        Ok(ConnectResponse::Data(_)) => {
             if !quiet {
-                eprintln!("Unexpected response from server: {:?}", response);
+                eprintln!("Unexpected response from server (expected ShutdownAck)");
                 eprintln!("Attempting to meanly kill server for `{}`", root.display());
             }
             attempt_mean_kill();

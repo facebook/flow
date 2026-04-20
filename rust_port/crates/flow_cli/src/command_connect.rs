@@ -10,12 +10,12 @@ use std::time::Duration;
 use std::time::Instant;
 
 use flow_common::flow_version;
-use flow_server_env::server_socket_rpc::ServerRequest;
-use flow_server_env::server_socket_rpc::ServerResponse;
 
 use crate::command_connect_simple as CCS;
 use crate::command_connect_simple::BusyReason;
 use crate::command_connect_simple::CCSError;
+use crate::command_connect_simple::ConnectRequest;
+use crate::command_connect_simple::ConnectResponse;
 use crate::command_connect_simple::MismatchBehavior;
 
 pub(crate) struct Env<'a> {
@@ -139,7 +139,7 @@ struct RetryInfo {
     last_connect_time: Instant,
 }
 
-fn reset_retries_if_necessary(retries: &mut RetryInfo, conn: &Result<ServerResponse, CCSError>) {
+fn reset_retries_if_necessary(retries: &mut RetryInfo, conn: &Result<ConnectResponse, CCSError>) {
     match conn {
         Err(CCSError::ServerBusy(BusyReason::FailOnInit(..))) => {
             retries.retries_remaining = 0;
@@ -169,7 +169,7 @@ fn consume_retry(retries: &mut RetryInfo) {
 // A featureful wrapper around CommandConnectSimple.connect_once. This
 // function handles retries, timeouts, displaying messages during
 // initialization, etc
-fn connect_rec(env: &Env, request: &ServerRequest, retries: &mut RetryInfo) -> ServerResponse {
+fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> ConnectResponse {
     if retries.retries_remaining < 0 {
         eprintln!("\nOut of retries, exiting!");
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfRetries);
@@ -309,9 +309,9 @@ fn connect_rec(env: &Env, request: &ServerRequest, retries: &mut RetryInfo) -> S
 
 fn handle_missing_server(
     env: &Env,
-    request: &ServerRequest,
+    request: &ConnectRequest,
     retries: &mut RetryInfo,
-) -> ServerResponse {
+) -> ConnectResponse {
     if env.autostart {
         if !env.quiet {
             eprintln!("Launching Flow server for {}", env.root.display());
@@ -352,7 +352,7 @@ fn handle_missing_server(
     }
 }
 
-pub(crate) fn connect(env: &Env, request: &ServerRequest) -> ServerResponse {
+pub(crate) fn connect(env: &Env, request: &ConnectRequest) -> ConnectResponse {
     let mut retries = RetryInfo {
         retries_remaining: env.retries,
         original_retries: env.retries,

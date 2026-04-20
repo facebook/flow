@@ -1031,12 +1031,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
 - [x] flowlib/
     - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
 - [ ] hack_forked/
-  - [ ] dfind/
-      - [ ] dfindAddFile.ml
-      - [ ] dfindEnv.ml
-      - [ ] dfindLibLwt.ml
-      - [ ] dfindMaybe.ml
-      - [ ] dfindServer.ml
+  - [x] dfind/
+      - [x] dfindAddFile.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+      - [x] dfindEnv.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+      - [x] dfindLibLwt.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+      - [x] dfindMaybe.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+      - [x] dfindServer.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
   - [ ] facebook/
     - [x] edenfs_watcher/
       - [x] edenfs_watcher.ml → `flow_edenfs_watcher/src/lib.rs` (thin Rust wrapper over `rust_edenfs_watcher::flow_api`)
@@ -1054,25 +1054,25 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] uname_stubs.ml
   - [ ] find/
       - [ ] find.ml
-  - [ ] fsevents/
-      - [ ] fsevents.ml
-  - [ ] fsnotify_darwin/
-      - [ ] fsnotify.ml
-  - [ ] fsnotify_linux/
-      - [ ] fsnotify.ml
-  - [ ] fsnotify_win/
-      - [ ] fsnotify.ml
+  - [x] fsevents/
+      - [x] fsevents.ml → `rust notify crate`
+  - [x] fsnotify_darwin/
+      - [x] fsnotify.ml → `rust notify crate`
+  - [x] fsnotify_linux/
+      - [x] fsnotify.ml → `rust notify crate`
+  - [x] fsnotify_win/
+      - [x] fsnotify.ml → `rust notify crate`
   - [ ] procs/
       - [ ] bucket.ml
       - [ ] worker.ml
       - [ ] workerController.ml
-  - [ ] socket/
-      - [ ] socket.ml → `flow_common_socket/src/socket.rs`
+  - [x] socket/
+      - [x] socket.ml → `flow_common_socket/src/socket.rs`
           - [x] `addr` type → `Socket::Addr`
-          - [ ] `with_addr` (`Inet` branch panics instead of passing `ADDR_INET` through to the callback)
+          - [x] `with_addr`
           - [x] `get_path`
-          - [ ] `addr_for_open` (always returns `Unix`; the `Sys.win32`/port-file branch is omitted)
-          - [ ] `init_unix_socket` → `flow_server_monitor/src/flow_server_monitor.rs` (Unix-only helper; not a full port of `unix_socket`)
+          - [x] `addr_for_open`
+          - [x] `init_unix_socket` → `flow_common_socket/src/socket.rs::init_tcp_socket`
   - [ ] stubs/
     - [ ] logging/
       - [ ] common/
@@ -1400,14 +1400,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `watcher` class type → `Watcher` trait
         - [x] `dummy` class → `Dummy` struct
         - [x] `changes_since_mergebase`, `query_mergebase`
-        - [-] `dfind` class — intentionally omitted (see hack_forked/dfind/ note)
+        - [x] `dfind` class → `flow_server_monitor/src/file_watcher.rs::dfind_file_watcher`
         - [x] `WatchmanFileWatcher` module → `watchman_file_watcher` mod
         - [x] `EdenFSFileWatcher` module → `edenfs_file_watcher` mod
     - [x] flowServerMonitor.ml → `flow_server_monitor/src/flow_server_monitor.rs`
-        - [x] `handle_waiting_start_command` (structure ported, pipe IPC stubbed)
+        - [x] `handle_waiting_start_command`
         - [x] `fallback_error_handler`
         - [x] `log_monitor_options`
-        - [x] `daemonize` (Rust-native subprocess spawning)
+        - [x] `daemonize`
+        - [x] `daemonize_with_pipe`
+        - [x] `spawn_monitor_child`
         - [x] `start`
     - [x] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor_daemon.rs`
         - [x] `start_function` type → `StartFunction`
@@ -1415,7 +1417,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `state` type → `State`
         - [x] `register_entry_point`
         - [x] `wait_loop`
-        - [x] `daemonize` (structure ported, Daemon.spawn stubbed)
+        - [x] `daemonize`
     - [x] flowServerMonitorOptions.ml → `flow_server_monitor/src/flow_server_monitor_options.rs`
         - [x] `watchman_options` type → `WatchmanOptions`
         - [x] `edenfs_options` type → `EdenfsOptions`
@@ -2158,7 +2160,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `config_file`
           - [x] `max_root_part_len`
           - [x] `log_file`
-          - [-] `dfind_log_file` — removed; only used by the omitted dfind watcher
+          - [x] `dfind_log_file`
           - [x] `monitor_log_file`
           - [x] `lock_file`
           - [x] `pids_file`

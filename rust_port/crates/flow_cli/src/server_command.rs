@@ -107,10 +107,6 @@ fn main(args: &arg_spec::Values) {
     let all = command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
     let profile = command_utils::get_profile_flag(args);
     let lazy_mode = command_utils::get_lazy_flags(args);
-    let signal_ready = matches!(
-        std::env::var("FLOW_SERVER_SIGNAL_READY").as_deref(),
-        Ok("1") | Ok("true")
-    );
     let verbose = command_spec::get(args, "--verbose", &arg_spec::truthy()).unwrap();
     let quiet = command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap();
     let (log_file_flag, monitor_log_file_flag) = command_utils::get_log_file_flags(args);
@@ -184,14 +180,13 @@ fn main(args: &arg_spec::Values) {
     let (flowconfig, _) =
         command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
     let shared_mem_config = command_utils::shm_config(&shm_flags, &flowconfig);
-    let chosen_file_watcher = command_utils::choose_file_watcher(
+    let file_watcher = command_utils::choose_file_watcher(
         &flowconfig,
         lazy_mode,
         file_watcher_flags.file_watcher,
         file_watcher_flags.file_watcher_debug,
         file_watcher_flags.file_watcher_sync_timeout,
     );
-    let file_watcher = Some(command_utils::file_watcher_arg(chosen_file_watcher).to_owned());
     let vcs = flow_common_vcs::vcs::find(None, &root);
     let file_watcher_mergebase_with = Some(command_utils::choose_file_watcher_mergebase_with(
         &flowconfig,
@@ -229,7 +224,6 @@ fn main(args: &arg_spec::Values) {
         options,
         monitor::StartArgs {
             flowconfig_name,
-            signal_ready,
             server_log_file,
             monitor_log_file,
             wait_for_recheck,

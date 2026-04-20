@@ -7,12 +7,17 @@
 
 // This module listens to the socket, accepts new connections, and starts the
 // FlowServerMonitorConnections which handle those connects.
-use std::os::fd::AsRawFd;
-use std::os::fd::IntoRawFd;
-use std::os::fd::OwnedFd;
+//
+// Wire protocol:
+// All socket I/O — handshake AND post-handshake messages — uses bincode-framed serde, the closest
+// Rust analogue of OCaml's `Marshal_tools.{from,to}_fd_with_preamble`. The handshake exchanges
+// `ClientHandshakeWire = (json_string, bincode_bytes(client2))` and
+// `ServerHandshakeWire = (json_string, Option<bincode_bytes(server2)>)`. After the handshake, the
+// ephemeral channel exchanges `ServerCommandWithContext` (client→server) /
+// `MonitorToClientMessage` (server→client); the persistent channel exchanges
+// `RequestWithMetadata` / `MessageFromServer`. All bincode-framed.
 use std::sync::Arc;
 
-use nix::sys::socket::Shutdown;
 use tokio::sync::Notify;
 
 use crate::flow_server_monitor_server as Server;
@@ -94,17 +99,22 @@ impl StatusWriter for PersistentStatusWriter {
     }
 }
 
-fn create_ephemeral_connection(client_fd: OwnedFd, close: Arc<dyn Fn() + Send + Sync>) {
+fn create_ephemeral_connection(
+    client_stream: std::net::TcpStream,
+    close: Arc<dyn Fn() + Send + Sync>,
+) -> Arc<crate::flow_server_monitor_connection::EphemeralConnection> {
     log::debug!("Creating a new ephemeral connection");
 
-    let in_fd = client_fd;
-    let out_fd = nix::unistd::dup(&in_fd).expect("dup of socket fd failed");
+    let read_stream = client_stream
+        .try_clone()
+        .expect("clone of TcpStream for read failed");
+    let write_stream = client_stream;
 
     let close_for_create = close.clone();
     let (start, conn) = crate::flow_server_monitor_connection::EphemeralConnection::create(
         "some ephemeral connection".to_string(),
-        in_fd,
-        out_fd,
+        read_stream,
+        write_stream,
         move || close_for_create(),
         |msg, connection| {
             handle_ephemeral_request(msg, connection.clone());
@@ -156,6 +166,8 @@ fn create_ephemeral_connection(client_fd: OwnedFd, close: Arc<dyn Fn() + Send + 
     let status = crate::status_stream::get_status();
     let msg = flow_server_env::monitor_prot::MonitorToClientMessage::PleaseHold(status.0, status.1);
     conn.write(msg);
+
+    conn
 }
 
 // No lock needed, since the socket acceptor runs serially.
@@ -167,7 +179,7 @@ fn create_persistent_id() -> i32 {
 }
 
 fn create_persistent_connection(
-    client_fd: OwnedFd,
+    client_stream: std::net::TcpStream,
     close: Arc<dyn Fn() + Send + Sync>,
     lsp_init_params: lsp_types::InitializeParams,
 ) {
@@ -182,13 +194,27 @@ fn create_persistent_connection(
         outer_close();
     });
 
-    let in_fd = client_fd;
-    let out_fd = nix::unistd::dup(&in_fd).expect("dup of socket fd failed");
+    let close_for_disconnect = close.clone();
+    let disconnect: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+        close_for_disconnect();
+    });
+
+    let writer_stream = client_stream
+        .try_clone()
+        .expect("clone of TcpStream for persistent writer failed");
+    let reader = crate::flow_server_monitor_connection::PersistentReader {
+        stream: client_stream,
+        disconnect,
+    };
+    let writer = crate::flow_server_monitor_connection::PersistentWriter {
+        stream: writer_stream,
+    };
+
     let close_for_create = close.clone();
     let (start, conn) = crate::flow_server_monitor_connection::MonitorPersistentConnection::create(
         format!("persistent connection #{}", client_id),
-        in_fd,
-        out_fd,
+        reader,
+        writer,
         move || close_for_create(),
         move |msg, connection| {
             handle_persistent_message(client_id, msg, connection.clone());
@@ -252,48 +278,28 @@ fn create_persistent_connection(
     conn.write(msg);
 }
 
-// Close the client_fd, regardless of whether or not we were able to shutdown the connection.
+// Close the client_stream, regardless of whether or not we were able to shutdown the connection.
 // This prevents fd leaks.
-// To be perfectly honest, it's not clear whether the SHUTDOWN_ALL is really needed. I mean,
+// To be perfectly honest, it's not clear whether the SHUTDOWN_BOTH is really needed. I mean,
 // shutdown is useful to shutdown one direction of the socket, but if you're about to close
 // it, does shutting down first actually make any difference?
-fn close(client_fd: OwnedFd) {
-    log::debug!("Shutting down and closing a socket client fd");
+fn close(client_stream: std::net::TcpStream) {
+    log::debug!("Shutting down and closing a socket client stream");
 
-    match nix::sys::socket::shutdown(client_fd.as_raw_fd(), Shutdown::Both) {
+    match client_stream.shutdown(std::net::Shutdown::Both) {
         Ok(()) => {}
-        Err(errno) => match errno {
-            nix::errno::Errno::EBADF
-            | nix::errno::Errno::ENOTCONN
-            | nix::errno::Errno::ECONNRESET
-            | nix::errno::Errno::ECONNABORTED => {}
-            // These errors happen when the connection is already closed, so we can
-            // ignore them. Note that POSIX and Windows have different errors:
-            // see https://man7.org/linux/man-pages/man2/shutdown.2.html
-            // and https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-shutdown
-            _ => {
-                log::error!("Failed to shutdown socket client: {}", errno);
-            }
+        Err(err) => match err.kind() {
+            std::io::ErrorKind::NotConnected | std::io::ErrorKind::ConnectionReset => {}
+            _ => log::error!("Failed to shutdown socket client: {}", err),
         },
     }
-
-    let raw = client_fd.into_raw_fd();
-    match nix::unistd::close(raw) {
-        Ok(()) => {}
-        Err(errno) => match errno {
-            // Already closed.
-            nix::errno::Errno::EBADF => {}
-            _ => {
-                log::error!("Failed to close socket client fd: {}", errno);
-            }
-        },
-    }
+    drop(client_stream);
 }
 
 // Well...I mean this is a pretty descriptive function name. It performs the handshake and then
 // returns the client's side of the handshake.
 fn perform_handshake_and_get_client_handshake(
-    client_fd: &OwnedFd,
+    client_stream: &mut std::net::TcpStream,
 ) -> Option<flow_server_env::socket_handshake::ClientToMonitor2> {
     use flow_server_env::socket_handshake::*;
 
@@ -304,10 +310,8 @@ fn perform_handshake_and_get_client_handshake(
         .into_string()
         .expect("server executable path is not valid UTF-8");
 
-    // Handshake step 1: client sends handshake.
-    let dup_in = nix::unistd::dup(client_fd).expect("dup of socket fd failed");
-    let mut in_file = std::fs::File::from(dup_in);
-    let wire: ClientHandshakeWire = match bincode::deserialize_from(&mut in_file) {
+    // Handshake step 1: client sends handshake (bincode-framed, OCaml-faithful).
+    let wire: ClientHandshakeWire = match bincode::deserialize_from(&mut *client_stream) {
         Ok(w) => w,
         Err(e) => {
             log::error!("Malformed handshake preamble: {}", e);
@@ -333,68 +337,66 @@ fn perform_handshake_and_get_client_handshake(
         }
     };
 
+    // Decode the bincode tail of the handshake to recover ClientToMonitor2 (which carries the
+    // ClientType). If the tail is empty or malformed, fall back to Ephemeral.
     let client = if client_build_id != server_build_id {
         None
+    } else if wire.1.is_empty() {
+        Some(ClientToMonitor2 {
+            client_type: ClientType::Ephemeral,
+        })
     } else {
         match bincode::deserialize::<ClientToMonitor2>(&wire.1) {
             Ok(c) => Some(c),
             Err(e) => {
-                log::error!("Failed to deserialize client_to_monitor_2: {}", e);
-                None
+                log::error!("Failed to decode bincode tail of client handshake: {}", e);
+                Some(ClientToMonitor2 {
+                    client_type: ClientType::Ephemeral,
+                })
             }
         }
     };
 
-    // Handshake step 2: server sends back handshake.
-    let respond = |server_intent: ServerIntent, server2: Option<MonitorToClient2>| {
-        assert!(server2.is_none() || client_build_id == server_build_id);
+    // Handshake step 2: server sends back handshake (bincode-framed, OCaml-faithful).
+    let server_bin_for_respond = server_bin.clone();
+    let server_build_id_for_respond = server_build_id.clone();
+    let respond = |stream: &mut std::net::TcpStream,
+                   server_intent: ServerIntent,
+                   server2: Option<MonitorToClient2>| {
+        assert!(server2.is_none() || client_build_id == server_build_id_for_respond);
         let server_version = flow_common::flow_version::VERSION.to_string();
         let server1 = MonitorToClient1 {
-            server_build_id: server_build_id.clone(),
-            server_bin: server_bin.clone(),
+            server_build_id: server_build_id_for_respond.clone(),
+            server_bin: server_bin_for_respond.clone(),
             server_intent,
             server_version,
         };
         let json = monitor_to_client_1_to_json(&server1);
         let server2_bytes = server2.map(|s| bincode::serialize(&s).expect("bincode serialize"));
         let wire: ServerHandshakeWire = (json.to_string(), server2_bytes);
-        let dup_out = nix::unistd::dup(client_fd).expect("dup of socket fd failed");
-        let mut out_file = std::fs::File::from(dup_out);
-        if let Err(e) = bincode::serialize_into(&mut out_file, &wire) {
+        if let Err(e) = bincode::serialize_into(&mut *stream, &wire) {
             log::error!("Failed to write server handshake: {}", e);
         }
     };
 
-    let error_client =
-        |respond: &dyn Fn(ServerIntent, Option<MonitorToClient2>)| -> Option<ClientToMonitor2> {
-            respond(ServerIntent::ServerWillHangup, None);
-            log::error!("Build mismatch, so rejecting attempted connection");
-            None
-        };
-
-    let stop_server = |respond: &dyn Fn(ServerIntent, Option<MonitorToClient2>)| -> ! {
-        respond(ServerIntent::ServerWillExit, None);
-        let msg = "Client and server are different builds. Flow server is out of date. Exiting";
-        log::error!("{}", msg);
-        Server::exit(
-            None,
-            msg,
-            flow_common_exit_status::FlowExitStatus::BuildIdMismatch,
-        );
-    };
-
-    let fd_as_int: i32 = client_fd.as_raw_fd();
-
     // Stop request.
     if is_stop_request {
-        respond(ServerIntent::ServerWillExit, None);
-        let dup_for_close = nix::unistd::dup(client_fd).expect("dup of socket fd failed");
-        close(dup_for_close);
+        respond(client_stream, ServerIntent::ServerWillExit, None);
         Server::stop(Server::StopReason::Stopped);
     } else if client_build_id != build_revision() {
         // Binary version mismatch.
         match version_mismatch_strategy {
-            VersionMismatchStrategy::AlwaysStopServer => stop_server(&respond),
+            VersionMismatchStrategy::AlwaysStopServer => {
+                respond(client_stream, ServerIntent::ServerWillExit, None);
+                let msg =
+                    "Client and server are different builds. Flow server is out of date. Exiting";
+                log::error!("{}", msg);
+                Server::exit(
+                    None,
+                    msg,
+                    flow_common_exit_status::FlowExitStatus::BuildIdMismatch,
+                );
+            }
             VersionMismatchStrategy::StopServerIfOlder => {
                 let cmp: std::cmp::Ordering = match (
                     semver::Version::parse(flow_common::flow_version::VERSION),
@@ -404,34 +406,33 @@ fn perform_handshake_and_get_client_handshake(
                     _ => Ord::cmp(flow_common::flow_version::VERSION, client_version.as_str()),
                 };
                 if cmp < std::cmp::Ordering::Equal {
-                    stop_server(&respond)
+                    respond(client_stream, ServerIntent::ServerWillExit, None);
+                    let msg = "Client and server are different builds. Flow server is out of date. Exiting";
+                    log::error!("{}", msg);
+                    Server::exit(
+                        None,
+                        msg,
+                        flow_common_exit_status::FlowExitStatus::BuildIdMismatch,
+                    );
                 } else {
-                    error_client(&respond)
+                    respond(client_stream, ServerIntent::ServerWillHangup, None);
+                    log::error!("Build mismatch, so rejecting attempted connection");
+                    None
                 }
             }
-            VersionMismatchStrategy::ErrorClient => error_client(&respond),
+            VersionMismatchStrategy::ErrorClient => {
+                respond(client_stream, ServerIntent::ServerWillHangup, None);
+                log::error!("Build mismatch, so rejecting attempted connection");
+                None
+            }
         }
-    } else if cfg!(unix) && fd_as_int > 500 {
-        // Too many clients.
-        // We currently rely on using Unix.select, which doesn't work for fds >= FD_SETSIZE (1024).
-        // So we can't have an unlimited number of clients. So if the new fd is too large, let's
-        // reject it.
-        // TODO(glevi): Figure out whether this check is needed for Windows.
-        respond(
-            ServerIntent::ServerWillHangup,
-            Some(MonitorToClient2::ServerHasTooManyClients),
-        );
-        log::error!(
-            "Too many clients, so rejecting new connection ({})",
-            fd_as_int
-        );
-        None
     } else if !crate::status_stream::ever_been_free() {
         // Server still initializing.
         let client = client.expect("client is None despite matching build_id");
         let status = crate::status_stream::get_status();
         if server_should_hangup_if_still_initializing {
             respond(
+                client_stream,
                 ServerIntent::ServerWillHangup,
                 Some(MonitorToClient2::ServerStillInitializing(
                     status.0.clone(),
@@ -449,6 +450,7 @@ fn perform_handshake_and_get_client_handshake(
             None
         } else {
             respond(
+                client_stream,
                 ServerIntent::ServerWillContinue,
                 Some(MonitorToClient2::ServerStillInitializing(
                     status.0, status.1,
@@ -456,11 +458,11 @@ fn perform_handshake_and_get_client_handshake(
             );
             Some(client)
         }
-    }
-    // Success.
-    else {
+    } else {
+        // Success.
         let client = client.expect("client is None despite matching build_id");
         respond(
+            client_stream,
             ServerIntent::ServerWillContinue,
             Some(MonitorToClient2::ServerReady),
         );
@@ -469,22 +471,11 @@ fn perform_handshake_and_get_client_handshake(
 }
 
 pub trait Handler {
-    fn create_socket_connection(autostop: bool, client_fd: OwnedFd);
+    fn create_socket_connection(autostop: bool, client_stream: std::net::TcpStream);
     fn name() -> &'static str;
 }
 
-fn socket_acceptor_loop<H: Handler>(autostop: bool, socket_fd: &OwnedFd) {
-    let dup_listener_fd = match nix::unistd::dup(socket_fd) {
-        Ok(fd) => fd,
-        Err(errno) => {
-            log::error!(
-                "Uncaught exception in the socket acceptor: dup failed: {}",
-                errno
-            );
-            return;
-        }
-    };
-    let listener = std::os::unix::net::UnixListener::from(dup_listener_fd);
+fn socket_acceptor_loop<H: Handler>(autostop: bool, listener: std::net::TcpListener) {
     loop {
         log::debug!("Waiting for a new {}", H::name());
         let (client_stream, _addr) = match listener.accept() {
@@ -494,9 +485,8 @@ fn socket_acceptor_loop<H: Handler>(autostop: bool, socket_fd: &OwnedFd) {
                 return;
             }
         };
-        let client_fd: OwnedFd = OwnedFd::from(client_stream);
 
-        H::create_socket_connection(autostop, client_fd);
+        H::create_socket_connection(autostop, client_stream);
     }
 }
 
@@ -534,17 +524,20 @@ impl Handler for MonitorSocketHandler {
         "socket connection"
     }
 
-    fn create_socket_connection(autostop: bool, client_fd: OwnedFd) {
+    fn create_socket_connection(autostop: bool, mut client_stream: std::net::TcpStream) {
         // Autostop is meant to be "edge-triggered", i.e. when we transition
         // from 1 connections to 0 connections then it might stop the server.
         // But when an attempt to connect has failed, we need to close without
         // triggering an autostop.
-        let close_fd = std::sync::Mutex::new(Some(client_fd));
-        let close_fd = std::sync::Arc::new(close_fd);
-        let close_fd_for_close = close_fd.clone();
+        let close_stream_slot = std::sync::Arc::new(std::sync::Mutex::new(Some(
+            client_stream
+                .try_clone()
+                .expect("clone of TcpStream failed"),
+        )));
+        let close_stream_for_close = close_stream_slot.clone();
         let close_without_autostop: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
-            if let Some(fd) = close_fd_for_close.lock().unwrap().take() {
-                close(fd);
+            if let Some(s) = close_stream_for_close.lock().unwrap().take() {
+                close(s);
             }
         });
 
@@ -558,31 +551,19 @@ impl Handler for MonitorSocketHandler {
             }
         });
 
-        let handshake_result = {
-            let guard = close_fd.lock().unwrap();
-            match guard.as_ref() {
-                Some(fd) => perform_handshake_and_get_client_handshake(fd),
-                None => None,
-            }
-        };
+        let handshake_result = perform_handshake_and_get_client_handshake(&mut client_stream);
         match handshake_result {
             Some(client) => {
-                use flow_server_env::socket_handshake::*;
+                use flow_server_env::socket_handshake::ClientType;
                 autostop::cancel_countdown();
-                let owned_fd = match close_fd.lock().unwrap().take() {
-                    Some(fd) => fd,
-                    None => return,
-                };
-                match client {
-                    ClientToMonitor2 {
-                        client_type: ClientType::Ephemeral,
-                    } => {
-                        create_ephemeral_connection(owned_fd, close);
+                // Disarm the close_stream_slot — we now own the stream.
+                close_stream_slot.lock().unwrap().take();
+                match client.client_type {
+                    ClientType::Ephemeral => {
+                        create_ephemeral_connection(client_stream, close);
                     }
-                    ClientToMonitor2 {
-                        client_type: ClientType::Persistent { lsp_init_params },
-                    } => {
-                        create_persistent_connection(owned_fd, close, lsp_init_params);
+                    ClientType::Persistent { lsp_init_params } => {
+                        create_persistent_connection(client_stream, close, lsp_init_params);
                     }
                 }
             }
@@ -593,8 +574,8 @@ impl Handler for MonitorSocketHandler {
     }
 }
 
-pub fn run(monitor_socket_fd: &OwnedFd, autostop: bool) {
-    socket_acceptor_loop::<MonitorSocketHandler>(autostop, monitor_socket_fd);
+pub fn run(monitor_socket_listener: std::net::TcpListener, autostop: bool) {
+    socket_acceptor_loop::<MonitorSocketHandler>(autostop, monitor_socket_listener);
 }
 
 struct LegacySocketHandler;
@@ -603,14 +584,14 @@ impl Handler for LegacySocketHandler {
         "legacy socket connection"
     }
 
-    fn create_socket_connection(_autostop: bool, client_fd: OwnedFd) {
-        close(client_fd);
+    fn create_socket_connection(_autostop: bool, client_stream: std::net::TcpStream) {
+        close(client_stream);
         let msg = "Client and server are different builds. Flow server is out of date. Exiting";
         log::error!("{}", msg);
         Server::stop(Server::StopReason::LegacyClient);
     }
 }
 
-pub fn run_legacy(legacy_socket_fd: &OwnedFd) {
-    socket_acceptor_loop::<LegacySocketHandler>(false, legacy_socket_fd);
+pub fn run_legacy(legacy_socket_listener: std::net::TcpListener) {
+    socket_acceptor_loop::<LegacySocketHandler>(false, legacy_socket_listener);
 }

@@ -379,12 +379,7 @@ pub fn check_supported_operating_system(options: &Options) {
     }
 }
 
-fn run(
-    _init_id: &str,
-    _options: Arc<Options>,
-    ready_path: Option<&str>,
-    monitor_channels: Option<monitor_rpc::Channels>,
-) {
+fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_rpc::Channels>) {
     // Check if the current operating system is supported
     check_supported_operating_system(&_options);
 
@@ -473,8 +468,6 @@ fn run(
 
     log::info!("Server is READY");
 
-    crate::ready::signal_ready_file(ready_path);
-
     let t_prime = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -501,11 +494,10 @@ fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
 fn run_from_daemonize(
     _init_id: &str,
     _options: Arc<Options>,
-    ready_path: Option<String>,
     monitor_channels: Option<monitor_rpc::Channels>,
 ) {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(_init_id, _options, ready_path.as_deref(), monitor_channels);
+        run(_init_id, _options, monitor_channels);
     }));
     match result {
         Ok(()) => {}
@@ -629,14 +621,13 @@ pub fn daemonize(
     argv: &[String],
     file_watcher_pid: Option<u32>,
     options: Arc<Options>,
-    ready_path: Option<String>,
     monitor_channels: Option<monitor_rpc::Channels>,
 ) -> std::thread::JoinHandle<()> {
     let monitor_channels_slot = std::sync::Arc::new(std::sync::Mutex::new(monitor_channels));
     let entry_channels_slot = monitor_channels_slot.clone();
     let entry = server_daemon::register_entry_point(move |init_id, options| {
         let channels = entry_channels_slot.lock().unwrap().take();
-        run_from_daemonize(init_id, options, ready_path.clone(), channels);
+        run_from_daemonize(init_id, options, channels);
     });
     let init_id_owned = init_id.to_string();
     let log_file_owned = log_file.to_string();

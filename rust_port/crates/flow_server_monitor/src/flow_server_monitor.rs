@@ -6,17 +6,20 @@
  */
 
 use std::io::Write;
-use std::path::Path;
 use std::path::PathBuf;
-use std::process::ExitStatus;
 use std::sync::Arc;
-use std::time::Duration;
-use std::time::SystemTime;
+use std::sync::Mutex;
 
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
 pub use flow_server::standalone::LazyStats;
 use flow_server_files::server_files_js;
+
+use crate::flow_server_monitor_daemon::WaitMsg;
+use crate::flow_server_monitor_options::FileWatcher;
+use crate::flow_server_monitor_options::MonitorOptions;
+use crate::flow_server_monitor_options::SharedMemConfig;
+use crate::status_stream;
 
 pub struct DaemonizeArgs {
     pub flowconfig_name: String,
@@ -31,7 +34,7 @@ pub struct DaemonizeArgs {
     pub long_lived_workers: Option<bool>,
     pub max_workers: Option<i32>,
     pub wait_for_recheck: Option<bool>,
-    pub file_watcher: Option<String>,
+    pub file_watcher: FileWatcher,
     pub file_watcher_debug: bool,
     pub file_watcher_timeout: Option<u32>,
     pub file_watcher_mergebase_with: Option<String>,
@@ -55,11 +58,10 @@ pub struct DaemonizeArgs {
 
 pub struct StartArgs {
     pub flowconfig_name: String,
-    pub signal_ready: bool,
     pub server_log_file: String,
     pub monitor_log_file: String,
     pub wait_for_recheck: Option<bool>,
-    pub file_watcher: Option<String>,
+    pub file_watcher: FileWatcher,
     pub file_watcher_debug: bool,
     pub file_watcher_timeout: Option<u32>,
     pub file_watcher_mergebase_with: Option<String>,
@@ -71,88 +73,32 @@ pub struct StartArgs {
     pub no_restart: bool,
 }
 
-fn append_log_line(
-    log_file: &str,
-    component: &str,
-    root: &Path,
-    from: Option<&str>,
-    message: &str,
-) {
-    let timestamp = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs_f64();
-    let mut line = format!(
-        "[{timestamp:.3}] {component}: root={} {message}",
-        root.display()
-    );
-    if let Some(from) = from {
-        line.push_str(&format!(" from={from}"));
-    }
-    line.push('\n');
-    if let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_file)
-    {
-        let _ = file.write_all(line.as_bytes());
-    }
-}
-
 fn prepare_log_file(log_file: &str) -> Result<(), String> {
     flow_server::server_daemon::try_open_log_file(log_file).map(|_| ())
 }
 
-fn cleanup_startup_artifacts_if_owned(
-    lock_path: &str,
-    socket_path: &str,
-    ready_path: &str,
-    pids_path: &str,
-    child_pid: u32,
-) {
-    let owns_startup_files = std::fs::read_to_string(pids_path)
-        .ok()
-        .and_then(|contents| contents.lines().next().map(str::to_owned))
-        .and_then(|row| row.split_once('\t').map(|(pid, _reason)| pid.to_owned()))
-        .and_then(|pid| pid.parse::<u32>().ok())
-        == Some(child_pid);
-    if owns_startup_files {
-        let _ = std::fs::remove_file(pids_path);
-        let _ = std::fs::remove_file(lock_path);
-        let _ = std::fs::remove_file(socket_path);
-        let _ = std::fs::remove_file(ready_path);
-    }
-}
-
-fn exit_status_message(status: ExitStatus) -> String {
-    if let Some(code) = status.code() {
-        return format!("server exited with code {}", code);
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::process::ExitStatusExt;
-
-        if let Some(signal) = status.signal() {
-            return format!("server was terminated by signal {}", signal);
+fn remove_artifact_if_present(path: &str) {
+    match std::fs::remove_file(path) {
+        Ok(()) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(e) => {
+            eprintln!("monitor: failed to remove {}: {}", path, e);
         }
     }
-    "server exited unsuccessfully".to_string()
 }
 
-fn wait_for_child_exit(child: &mut std::process::Child) -> Result<Option<ExitStatus>, String> {
-    child
-        .try_wait()
-        .map_err(|e| format!("failed to wait for server process: {}", e))
-}
-
-pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
+fn spawn_monitor_child(
+    args: &DaemonizeArgs,
+    extra_env: &[(&str, String)],
+    stdout: std::process::Stdio,
+) -> Result<std::process::Child, String> {
     let DaemonizeArgs {
         flowconfig_name,
         no_flowlib,
         ignore_version,
         include_suppressions,
         all,
-        wait,
+        wait: _,
         no_restart,
         autostop,
         lazy_mode,
@@ -180,50 +126,35 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
         root,
         temp_dir,
     } = args;
-    // Keep the monitor cleanup paths in the same namespace the child server uses.
-    let root = root.canonicalize().unwrap_or(root);
-    let lock_path = server_files_js::lock_file(&flowconfig_name, &temp_dir, &root);
-    if Path::new(&lock_path).exists() {
-        return Err(format!(
-            "There is already a server running for {}",
-            root.display()
-        ));
-    }
 
-    prepare_log_file(&monitor_log_file)?;
+    prepare_log_file(monitor_log_file)?;
 
-    let pids_path = server_files_js::pids_file(&flowconfig_name, &temp_dir, &root);
-    let socket_path = server_files_js::socket_file(&flowconfig_name, &temp_dir, &root);
-    let ready_path = server_files_js::ready_file(&flowconfig_name, &temp_dir, &root);
-    let _ = std::fs::remove_file(&socket_path);
-    let _ = std::fs::remove_file(&ready_path);
-
-    let log_file = flow_server::server_daemon::try_open_log_file(&server_log_file)?;
-    let log_file_err = log_file
-        .try_clone()
-        .map_err(|e| format!("failed to clone log file {}: {}", server_log_file, e))?;
+    // The daemon child IS the monitor process. Its stderr should be wired to the monitor log
+    // file, not the server log file. The server (which runs as a thread inside the monitor
+    // process) writes to the server log file via its own logger initialization.
+    let log_file = flow_server::server_daemon::try_open_log_file(monitor_log_file)?;
     let exe = std::env::args_os()
         .next()
         .ok_or_else(|| "failed to get argv[0]".to_string())?;
 
     let mut cmd = std::process::Command::new(&exe);
     cmd.arg("server");
-    if no_flowlib {
+    if *no_flowlib {
         cmd.arg("--no-flowlib");
     }
-    if ignore_version {
+    if *ignore_version {
         cmd.arg("--ignore-version");
     }
-    if include_suppressions {
+    if *include_suppressions {
         cmd.arg("--include-suppressed");
     }
-    if all {
+    if *all {
         cmd.arg("--all");
     }
-    if no_restart {
+    if *no_restart {
         cmd.arg("--no-auto-restart");
     }
-    if autostop {
+    if *autostop {
         cmd.arg("--autostop");
     }
     if let Some(mode) = lazy_mode {
@@ -240,10 +171,14 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
         cmd.arg("--wait-for-recheck")
             .arg(wait_for_recheck.to_string());
     }
-    if let Some(file_watcher) = file_watcher {
-        cmd.arg("--file-watcher").arg(file_watcher);
-    }
-    if file_watcher_debug {
+    let file_watcher_str = match file_watcher {
+        FileWatcher::NoFileWatcher => "none",
+        FileWatcher::DFind => "dfind",
+        FileWatcher::Watchman(_) => "watchman",
+        FileWatcher::EdenFS(_) => "edenfs",
+    };
+    cmd.arg("--file-watcher").arg(file_watcher_str);
+    if *file_watcher_debug {
         cmd.arg("--file-watcher-debug");
     }
     if let Some(file_watcher_timeout) = file_watcher_timeout {
@@ -266,235 +201,338 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
         cmd.arg("--sharedmemory-hash-table-pow")
             .arg(shm_hash_table_pow.to_string());
     }
-    if profile {
+    if *profile {
         cmd.arg("--profile");
     }
-    if verbose {
+    if *verbose {
         cmd.arg("--verbose");
     }
-    if let Some(from) = from.as_deref() {
+    if *no_cgroup {
+        cmd.arg("--no-cgroup");
+    }
+    cmd.arg("--flowconfig-name").arg(flowconfig_name);
+    cmd.arg("--log-file").arg(server_log_file);
+    cmd.arg("--monitor-log-file").arg(monitor_log_file);
+    cmd.arg("--temp-dir").arg(temp_dir);
+    if let Some(from) = from {
         cmd.arg("--from").arg(from);
     }
-    if let Some(saved_state_fetcher) = saved_state_fetcher {
-        let saved_state_fetcher = match saved_state_fetcher {
+    if let Some(fetcher) = saved_state_fetcher {
+        let s = match fetcher {
             SavedStateFetcher::DummyFetcher => "none",
             SavedStateFetcher::LocalFetcher => "local",
             SavedStateFetcher::ScmFetcher => "scm",
             SavedStateFetcher::FbFetcher => "fb",
         };
-        cmd.arg("--saved-state-fetcher").arg(saved_state_fetcher);
+        cmd.arg("--saved-state-fetcher").arg(s);
     }
-    if saved_state_force_recheck {
+    if *saved_state_force_recheck {
         cmd.arg("--saved-state-force-recheck");
     }
-    if saved_state_no_fallback {
+    if *saved_state_no_fallback {
         cmd.arg("--saved-state-no-fallback");
     }
-    if saved_state_skip_version_check {
+    if *saved_state_skip_version_check {
         cmd.arg("--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED");
     }
-    if saved_state_verify {
+    if *saved_state_verify {
         cmd.arg("--saved-state-verify");
     }
-    if no_cgroup {
-        cmd.arg("--no-cgroup");
-    }
-    cmd.arg("--flowconfig-name").arg(&flowconfig_name);
-    cmd.arg("--log-file").arg(&server_log_file);
-    cmd.arg("--monitor-log-file").arg(&monitor_log_file);
-    cmd.arg("--temp-dir").arg(&temp_dir);
-    if wait {
-        cmd.env("FLOW_SERVER_SIGNAL_READY", "1");
+    for (k, v) in extra_env {
+        cmd.env(k, v);
     }
     cmd.arg(root.to_string_lossy().as_ref());
     cmd.stdin(std::process::Stdio::null());
-    cmd.stdout(std::process::Stdio::from(log_file));
-    cmd.stderr(std::process::Stdio::from(log_file_err));
+    cmd.stdout(stdout);
+    cmd.stderr(std::process::Stdio::from(log_file));
 
-    let mut child = cmd
-        .spawn()
-        .map_err(|e| format!("failed to spawn server: {}", e))?;
-    let pid = child.id();
-
-    if !wait {
-        loop {
-            if Path::new(&lock_path).exists() {
-                if let Some(status) = wait_for_child_exit(&mut child)? {
-                    let message = exit_status_message(status);
-                    cleanup_startup_artifacts_if_owned(
-                        &lock_path,
-                        &socket_path,
-                        &ready_path,
-                        &pids_path,
-                        pid,
-                    );
-                    append_log_line(
-                        &monitor_log_file,
-                        "monitor",
-                        &root,
-                        from.as_deref(),
-                        &format!("server exited after acquiring lock: {message}"),
-                    );
-                    return Err(format!("server exited after acquiring lock: {message}"));
-                }
-                std::thread::sleep(Duration::from_millis(50));
-                if let Some(status) = wait_for_child_exit(&mut child)? {
-                    let message = exit_status_message(status);
-                    cleanup_startup_artifacts_if_owned(
-                        &lock_path,
-                        &socket_path,
-                        &ready_path,
-                        &pids_path,
-                        pid,
-                    );
-                    append_log_line(
-                        &monitor_log_file,
-                        "monitor",
-                        &root,
-                        from.as_deref(),
-                        &format!("server exited immediately after acquiring lock: {message}"),
-                    );
-                    return Err(format!(
-                        "server exited immediately after acquiring lock: {message}"
-                    ));
-                }
-                append_log_line(
-                    &monitor_log_file,
-                    "monitor",
-                    &root,
-                    from.as_deref(),
-                    "server child acquired lock; returning without waiting for readiness",
-                );
-                return Ok(pid);
-            }
-            if let Some(status) = wait_for_child_exit(&mut child)? {
-                let message = exit_status_message(status);
-                cleanup_startup_artifacts_if_owned(
-                    &lock_path,
-                    &socket_path,
-                    &ready_path,
-                    &pids_path,
-                    pid,
-                );
-                append_log_line(
-                    &monitor_log_file,
-                    "monitor",
-                    &root,
-                    from.as_deref(),
-                    &format!("server exited before acquiring lock: {message}"),
-                );
-                return Err(format!("server exited before acquiring lock: {message}"));
-            }
-            std::thread::sleep(Duration::from_millis(50));
-        }
-    }
-
-    if wait {
-        loop {
-            if Path::new(&ready_path).exists() {
-                let _ = std::fs::remove_file(&ready_path);
-                if let Some(status) = wait_for_child_exit(&mut child)? {
-                    let message = exit_status_message(status);
-                    cleanup_startup_artifacts_if_owned(
-                        &lock_path,
-                        &socket_path,
-                        &ready_path,
-                        &pids_path,
-                        pid,
-                    );
-                    append_log_line(
-                        &monitor_log_file,
-                        "monitor",
-                        &root,
-                        from.as_deref(),
-                        &format!("server exited after signaling readiness: {message}"),
-                    );
-                    return Err(format!(
-                        "server exited after signaling readiness: {message}"
-                    ));
-                }
-                std::thread::sleep(Duration::from_millis(50));
-                if let Some(status) = wait_for_child_exit(&mut child)? {
-                    let message = exit_status_message(status);
-                    cleanup_startup_artifacts_if_owned(
-                        &lock_path,
-                        &socket_path,
-                        &ready_path,
-                        &pids_path,
-                        pid,
-                    );
-                    append_log_line(
-                        &monitor_log_file,
-                        "monitor",
-                        &root,
-                        from.as_deref(),
-                        &format!("server exited immediately after signaling readiness: {message}"),
-                    );
-                    return Err(format!(
-                        "server exited immediately after signaling readiness: {message}"
-                    ));
-                }
-                append_log_line(
-                    &monitor_log_file,
-                    "monitor",
-                    &root,
-                    from.as_deref(),
-                    "server child signaled readiness",
-                );
-                break;
-            }
-            if let Some(status) = wait_for_child_exit(&mut child)? {
-                let message = exit_status_message(status);
-                cleanup_startup_artifacts_if_owned(
-                    &lock_path,
-                    &socket_path,
-                    &ready_path,
-                    &pids_path,
-                    pid,
-                );
-                append_log_line(
-                    &monitor_log_file,
-                    "monitor",
-                    &root,
-                    from.as_deref(),
-                    &format!("server exited before signaling readiness: {message}"),
-                );
-                return Err(format!(
-                    "server exited before signaling readiness: {message}"
-                ));
-            }
-            std::thread::sleep(Duration::from_millis(50));
-        }
-    }
-
-    Ok(pid)
+    cmd.spawn()
+        .map_err(|e| format!("failed to spawn server: {}", e))
 }
 
-pub fn start(options: Arc<Options>, args: StartArgs) -> Result<(), String> {
-    if args.file_watcher.as_deref() == Some("edenfs") {
-        // Initialize Rust FFI layer for EdenFS file watcher
+pub fn daemonize_with_pipe(
+    args: DaemonizeArgs,
+    entry_point_name: &'static str,
+) -> Result<(std::process::Child, std::process::ChildStdout), String> {
+    let extra_env: [(&str, String); 1] = [(
+        crate::flow_server_monitor_daemon::ENTRY_POINT_ENV,
+        entry_point_name.to_string(),
+    )];
+
+    let mut child = spawn_monitor_child(&args, &extra_env, std::process::Stdio::piped())?;
+    let input_channel = child
+        .stdout
+        .take()
+        .ok_or_else(|| "child stdout pipe missing".to_string())?;
+
+    Ok((child, input_channel))
+}
+
+// We want to send a "Starting" message immediately and a "Ready" message when the Flow server is
+// ready for the first time. This function sends the "Starting" message immediately and sets up a
+// callback for when the server is ready
+// let handle_waiting_start_command waiting_fd =
+pub fn handle_waiting_start_command(waiting_fd: Box<dyn Write + Send>) {
+    let shared: Arc<Mutex<Option<Box<dyn Write + Send>>>> = Arc::new(Mutex::new(Some(waiting_fd)));
+    // Close the fd, but don't worry if it's already closed
+    let close = {
+        let shared = shared.clone();
+        move || {
+            let mut guard = shared.lock().unwrap();
+            if let Some(file) = guard.take() {
+                drop(file);
+            }
+        }
+    };
+    let send_message = {
+        let shared = shared.clone();
+        let close = close.clone();
+        move |msg: &WaitMsg| {
+            let mut guard = shared.lock().unwrap();
+            if let Some(file) = guard.as_mut() {
+                let write_err: Option<(std::io::ErrorKind, String)> =
+                    match bincode::serialize_into(&mut *file, msg) {
+                        Ok(()) => match file.flush() {
+                            Ok(()) => None,
+                            Err(e) => Some((e.kind(), e.to_string())),
+                        },
+                        Err(e) => {
+                            let kind = if let bincode::ErrorKind::Io(io_err) = e.as_ref() {
+                                io_err.kind()
+                            } else {
+                                std::io::ErrorKind::Other
+                            };
+                            Some((kind, e.to_string()))
+                        }
+                    };
+                if let Some((kind, msg)) = write_err {
+                    match kind {
+                        std::io::ErrorKind::BrokenPipe | std::io::ErrorKind::InvalidInput => {
+                            drop(guard);
+                            close();
+                        }
+                        _ => {
+                            log::error!(
+                                "Unexpected exception when talking to waiting start command: {}",
+                                msg
+                            );
+                            drop(guard);
+                            close();
+                        }
+                    }
+                }
+            }
+        }
+    };
+    //  Send a message to the fd, but don't worry if it's already closed
+    send_message(&WaitMsg::Starting);
+    let send_message_for_ready = send_message;
+    let close_for_ready = close;
+    status_stream::call_on_free(Box::new(move || {
+        send_message_for_ready(&WaitMsg::Ready);
+        close_for_ready();
+    }));
+}
+
+fn fallback_error_handler(msg: &str, payload: Box<dyn std::any::Any + Send>) -> ! {
+    let exn_str = if let Some(s) = payload.downcast_ref::<&'static str>() {
+        (*s).to_string()
+    } else if let Some(s) = payload.downcast_ref::<String>() {
+        s.clone()
+    } else {
+        "unknown panic payload".to_string()
+    };
+    let msg = format!("{}: {}", msg, exn_str);
+    log::error!("{}. Exiting", msg);
+    eprintln!("{}. Exiting", msg);
+    flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError);
+}
+
+// This is the common entry point for both daemonize and start.
+fn internal_start(
+    is_daemon: bool,
+    waiting_fd: Option<Box<dyn Write + Send>>,
+    options: Arc<Options>,
+    args: StartArgs,
+) -> Result<(), String> {
+    if matches!(args.file_watcher, FileWatcher::EdenFS(_)) {
         crate::startup_initializer::init();
     }
-    flow_event_logger::set_command(Some("monitor".to_string()));
     let lock_path = server_files_js::lock_file(
         &args.flowconfig_name,
         options.temp_dir.as_str(),
         options.root.as_path(),
     );
-    if Path::new(&lock_path).exists() {
+    if !flow_common::lock::grab(&lock_path) {
         return Err(format!(
             "There is already a server running for {}",
             options.root.display()
         ));
     }
-    prepare_log_file(&args.monitor_log_file)?;
-    prepare_log_file(&args.server_log_file)?;
-    flow_server::standalone::start(
-        options,
-        args.flowconfig_name,
-        args.signal_ready,
-        args.shm_heap_size,
-        args.shm_hash_table_pow,
-    );
+    // We can't open the log until we have the lock.
+    //
+    // The daemon wants to redirect all stderr to the log. So we can dup2
+    // `flow server` wants to output to both stderr and the log, so we initialize Logger with this fd
+    let log_fd = {
+        let fd = flow_server::server_daemon::try_open_log_file(&args.monitor_log_file)?;
+        if is_daemon { None } else { Some(fd) }
+    };
+    // Open up the socket immediately. When a client tries to connect to an
+    // open socket, it will block. When a client tries to connect to a not-yet-open
+    // socket, it will fail immediately. The blocking behavior is a little nicer
+    let monitor_socket_fd =
+        flow_common_socket::socket::init_tcp_socket(&server_files_js::socket_file(
+            &args.flowconfig_name,
+            options.temp_dir.as_str(),
+            options.root.as_path(),
+        ));
+    let legacy2_socket_fd =
+        flow_common_socket::socket::init_tcp_socket(&server_files_js::legacy2_socket_file(
+            &args.flowconfig_name,
+            options.temp_dir.as_str(),
+            options.root.as_path(),
+        ));
+    let legacy1_socket_fd =
+        flow_common_socket::socket::init_tcp_socket(&server_files_js::legacy1_socket_file(
+            &args.flowconfig_name,
+            options.temp_dir.as_str(),
+            options.root.as_path(),
+        ));
+    // ************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************
+    crate::flow_server_monitor_logger::init_logger(log_fd);
+    if let Some(fd) = waiting_fd {
+        handle_waiting_start_command(fd);
+    }
+    let StartArgs {
+        flowconfig_name: _,
+        server_log_file,
+        monitor_log_file,
+        wait_for_recheck: _,
+        file_watcher,
+        file_watcher_debug: _,
+        file_watcher_timeout,
+        file_watcher_mergebase_with,
+        file_watcher_sync_timeout: _,
+        shm_heap_size,
+        shm_hash_table_pow,
+        from: _,
+        autostop,
+        no_restart,
+    } = args;
+    let monitor_options = MonitorOptions {
+        log_file: monitor_log_file,
+        autostop,
+        no_restart,
+        server_log_file,
+        server_options: (*options).clone(),
+        shared_mem_config: SharedMemConfig {
+            heap_size: shm_heap_size.unwrap_or(0),
+            hash_table_pow: shm_hash_table_pow.unwrap_or(0),
+        },
+        argv: std::env::args().collect(),
+        file_watcher,
+        file_watcher_timeout: file_watcher_timeout.map(f64::from),
+        file_watcher_mergebase_with: file_watcher_mergebase_with.unwrap_or_default(),
+    };
+    let acceptor_autostop = monitor_options.autostop;
+    // We can start up the socket acceptor even before the server starts
+    std::thread::spawn(move || {
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            crate::socket_acceptor::run(monitor_socket_fd, acceptor_autostop);
+        })) {
+            Ok(()) => {}
+            Err(payload) => {
+                fallback_error_handler("Uncaught exception in SocketAcceptor thread", payload);
+            }
+        }
+    });
+    std::thread::spawn(move || {
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            crate::socket_acceptor::run_legacy(legacy2_socket_fd);
+        })) {
+            Ok(()) => {}
+            Err(payload) => {
+                fallback_error_handler(
+                    "Uncaught exception in SocketAcceptor legacy thread",
+                    payload,
+                );
+            }
+        }
+    });
+    std::thread::spawn(move || {
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            crate::socket_acceptor::run_legacy(legacy1_socket_fd);
+        })) {
+            Ok(()) => {}
+            Err(payload) => {
+                fallback_error_handler(
+                    "Uncaught exception in SocketAcceptor legacy thread",
+                    payload,
+                );
+            }
+        }
+    });
+    // Don't start the server until we've set up the threads to handle the waiting channel
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        crate::flow_server_monitor_server::start(monitor_options);
+    })) {
+        Ok(()) => {}
+        Err(payload) => {
+            fallback_error_handler(
+                "Uncaught exception in FlowServerMonitorServer thread",
+                payload,
+            );
+        }
+    }
     Ok(())
+}
+
+// The entry point for creating a daemonized flow server monitor (like from `flow start`)
+pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
+    // Let's make sure this isn't all for naught before we fork
+    let root = args
+        .root
+        .canonicalize()
+        .unwrap_or_else(|_| args.root.clone());
+    let lock_path = server_files_js::lock_file(&args.flowconfig_name, &args.temp_dir, &root);
+    if !flow_common::lock::check(&lock_path) {
+        return Err(format!(
+            "There is already a server running for {}",
+            root.display()
+        ));
+    }
+
+    let socket_path = server_files_js::socket_file(&args.flowconfig_name, &args.temp_dir, &root);
+    remove_artifact_if_present(&socket_path);
+
+    let wait = args.wait;
+
+    let (mut child, mut ic) =
+        daemonize_with_pipe(args, crate::flow_server_monitor_daemon::MONITOR_ENTRY_NAME)?;
+    let pid = child.id();
+
+    // If wait is true, wait for the "Ready" message.
+    // Otherwise, only wait for the "Starting message"
+    crate::flow_server_monitor_daemon::wait_loop(wait, &mut child, &mut ic);
+    drop(ic);
+
+    Ok(pid)
+}
+
+// The entry point for creating a non-daemonized flow server monitor (like from `flow server`)
+pub fn start(options: Arc<Options>, args: StartArgs) -> Result<(), String> {
+    // So this is a tricky situation. Technically this code is running in the `flow server` process.
+    // However, we kind of want the actual Flow server to log using the "server" command, and we don't
+    // want the monitor's logs to interfere. So instead, we'll pretend like the monitor was created
+    // with some imaginary `flow monitor` command
+    flow_event_logger::set_command(Some("monitor".to_string()));
+
+    let is_daemon = std::env::var_os(crate::flow_server_monitor_daemon::ENTRY_POINT_ENV).is_some();
+    if is_daemon {
+        let waiting_fd: Box<dyn Write + Send> = Box::new(std::io::stdout());
+        internal_start(true, Some(waiting_fd), options, args)
+    } else {
+        //   internal_start ~is_daemon:false ?waiting_fd:None monitor_options
+        internal_start(false, None, options, args)
+    }
 }
