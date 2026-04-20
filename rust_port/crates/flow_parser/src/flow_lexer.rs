@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use logos::Logos;
 
 use crate::ast::Comment;
 use crate::ast::CommentKind;
@@ -1074,10 +1075,10 @@ fn token_base_inner<'a>(
             )
         }
         MainToken::BinBigint => {
-            if lexer.remainder().starts_with(WORD_START) {
+            let remainder = lexer.remainder();
+            if remainder.starts_with(WORD_START) {
                 let range = lexer.span();
-                let loc = env.loc_of_offsets(range.start, range.end + 1);
-                errors.push(loc, ParseError::UnexpectedTokenIllegal);
+                handle_word_after_number(env, errors, remainder, &range)
             }
             let loc = env.loc_of_span(&lexer.span());
             let raw = FlowSmolStr::new(lexer.slice());
@@ -1191,6 +1192,36 @@ fn token_base_inner<'a>(
                     },
                 )
             };
+            // Defend against logos bug: for inputs like `0b2n`, `0xgn`, `0o9n`, logos
+            // returns `WholeNumber` with slice `0b`/`0x`/`0o` even though no digit followed.
+            // OCaml's sedlex falls back to matching just `0` as a whole number, so
+            // mimic that here by emitting `0`, pushing an "Unexpected token ILLEGAL"
+            // error spanning the rest of the bad word, and rewinding to position 1.
+            // See https://github.com/maciejhirsz/logos/issues/420
+            let slice = lexer.slice();
+            let span = lexer.span();
+            if matches!(token, MainToken::WholeNumber)
+                && (slice == "0b"
+                    || slice == "0B"
+                    || slice == "0o"
+                    || slice == "0O"
+                    || slice == "0x"
+                    || slice == "0X")
+            {
+                let source = lexer.source();
+                let after_zero = &source[span.start + 1..];
+                let mut len = 1;
+                while len < after_zero.len() && after_zero[len..].starts_with(ALPHA_NUMERIC) {
+                    len += 1;
+                }
+                let err_loc = env.loc_of_offsets(span.start, span.start + 1 + len);
+                errors.push(err_loc, ParseError::UnexpectedTokenIllegal);
+                let zero_loc = env.loc_of_offsets(span.start, span.start + 1);
+                let mut new_lexer = MainToken::lexer(source);
+                new_lexer.bump(span.start + 1);
+                *lexer = new_lexer;
+                return TokenResult::Token(zero_loc, gen_number(0.0, FlowSmolStr::new("0")));
+            }
             let (bump_counter, token_result) = lex_whole_number(
                 env,
                 errors,
@@ -2739,5 +2770,60 @@ mod tests {
                 crate::flow_lexer::TokenResult::Continue => panic!("Should not get continue"),
             };
         assert!(matches!(token_kind, TokenKind::TIdentifier { .. }));
+    }
+
+    #[test]
+    fn invalid_bigint_recovery() {
+        // For inputs like `0b2n`, `0xgn` we should recover by emitting `0` as
+        // a literal then identifier `b2n` / `xgn` and pushing exactly one
+        // "Unexpected token ILLEGAL" error spanning the bad word.
+        for (input, ident_text, ident_end) in &[
+            ("0b2n", "b2n", 4i32),
+            ("0xgn", "xgn", 4i32),
+            ("0o9n", "o9n", 4i32),
+        ] {
+            let mut lexer = MainToken::lexer(input);
+            let mut lex_env = LexEnv::new(None, false);
+            let mut lex_errors = LexErrors::empty();
+            // First token: literal 0
+            let r1 = super::token_base_inner(false, &mut lexer, &mut lex_env, &mut lex_errors);
+            let (loc1, kind1) = match r1 {
+                super::TokenResult::Token(l, k) => (l, k),
+                _ => panic!("input={:?}: expected Token", input),
+            };
+            match kind1 {
+                TokenKind::TNumber { raw, .. } => {
+                    assert_eq!(raw.as_str(), "0", "input={:?}", input);
+                    assert_eq!(loc1.start.column, 0, "input={:?}", input);
+                    assert_eq!(loc1.end.column, 1, "input={:?}", input);
+                }
+                _ => panic!("input={:?}: expected TNumber", input),
+            }
+            // Second token: identifier b2n / xgn
+            let r2 = super::token_base_inner(false, &mut lexer, &mut lex_env, &mut lex_errors);
+            let (loc2, kind2) = match r2 {
+                super::TokenResult::Token(l, k) => (l, k),
+                _ => panic!("input={:?}: expected Token", input),
+            };
+            match kind2 {
+                TokenKind::TIdentifier { value, .. } => {
+                    assert_eq!(value.as_str(), *ident_text, "input={:?}", input);
+                    assert_eq!(loc2.start.column, 1, "input={:?}", input);
+                    assert_eq!(loc2.end.column, *ident_end, "input={:?}", input);
+                }
+                _ => panic!("input={:?}: expected TIdentifier", input),
+            }
+            // Should have one "Unexpected token ILLEGAL" error spanning 0..ident_end
+            let errs = lex_errors.as_errors();
+            assert_eq!(
+                errs.len(),
+                1,
+                "input={:?}: errs.len()={}",
+                input,
+                errs.len()
+            );
+            assert_eq!(errs[0].0.start.column, 0, "input={:?}", input);
+            assert_eq!(errs[0].0.end.column, *ident_end, "input={:?}", input);
+        }
     }
 }

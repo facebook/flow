@@ -1608,16 +1608,8 @@ mod hardcoded_tests {
                         for err in &errs {
                             eprintln!("    {}", err);
                         }
-                        // TODO: hardcoded allowed failure. They are just different in errors.
-                        // If sam has time, let's finish this.
-                        if test_name.as_str() != "/bigint"
-                            || (&key != "binary-invalid-digit"
-                                && &key != "binary-invalid-word"
-                                && &key != "hexadecimal-invalid-digit")
-                        {
-                            result.failed += 1;
-                            shown_header = true;
-                        }
+                        result.failed += 1;
+                        shown_header = true;
                     }
                     Err(_) => {
                         if verbose_mode == VerboseMode::Quiet && !shown_header {
