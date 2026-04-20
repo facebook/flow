@@ -1,3 +1,11 @@
+### 0.310.0
+
+New Features:
+* Support constructor type signatures (`new (...) => Type`) in interfaces and `declare class`
+
+Misc:
+* When `allow_variance_keywords` is set to true, Flow stops erroring for `in` / `out` / `readonly`
+
 ### 0.309.0
 
 No significant changes.
