@@ -1,394 +1,394 @@
 Reading JS from stdin:
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":0}},
-  "range":[0,0],
   "body":[],
-  "comments":[]
+  "comments":[],
+  "errors":[],
+  "loc":{"end":{"column":0,"line":1},"source":null,"start":{"column":0,"line":1}},
+  "range":[0,0],
+  "tokens":[],
+  "type":"Program"
 }
 
 Reading JSON from stdin:
 {
   "errors":[],
-  "tokens":[],
-  "type":"ObjectExpression",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":2}},
+  "loc":{"end":{"column":2,"line":1},"source":null,"start":{"column":0,"line":1}},
+  "properties":[],
   "range":[0,2],
-  "properties":[]
+  "tokens":[],
+  "type":"ObjectExpression"
 }
 
 Reading JS from a file:
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{"source":"foo.js","start":{"line":1,"column":0},"end":{"line":1,"column":0}},
-  "range":[0,0],
   "body":[],
-  "comments":[]
+  "comments":[],
+  "errors":[],
+  "loc":{"end":{"column":0,"line":1},"source":"foo.js","start":{"column":0,"line":1}},
+  "range":[0,0],
+  "tokens":[],
+  "type":"Program"
 }
 
 Reading JSON from a file:
 {
   "errors":[],
-  "tokens":[],
-  "type":"ObjectExpression",
-  "loc":{"source":"bar.json","start":{"line":1,"column":0},"end":{"line":1,"column":2}},
+  "loc":{"end":{"column":2,"line":1},"source":"bar.json","start":{"column":0,"line":1}},
+  "properties":[],
   "range":[0,2],
-  "properties":[]
+  "tokens":[],
+  "type":"ObjectExpression"
 }
 
 Using absolute --path with stdin:
 {
+  "body":[],
+  "comments":[],
   "errors":[],
-  "tokens":[],
-  "type":"Program",
   "loc":{
+    "end":{"column":0,"line":1},
     "source":"/some/path.js",
-    "start":{"line":1,"column":0},
-    "end":{"line":1,"column":0}
+    "start":{"column":0,"line":1}
   },
   "range":[0,0],
-  "body":[],
-  "comments":[]
+  "tokens":[],
+  "type":"Program"
 }
 
 Using relative --path with stdin:
 {
+  "body":[],
+  "comments":[],
   "errors":[],
-  "tokens":[],
-  "type":"Program",
   "loc":{
+    "end":{"column":0,"line":1},
     "source":"my/relative/path.js",
-    "start":{"line":1,"column":0},
-    "end":{"line":1,"column":0}
+    "start":{"column":0,"line":1}
   },
   "range":[0,0],
-  "body":[],
-  "comments":[]
+  "tokens":[],
+  "type":"Program"
 }
 
 Using --path is ignore without stdin:
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{"source":"foo.js","start":{"line":1,"column":0},"end":{"line":1,"column":0}},
-  "range":[0,0],
   "body":[],
-  "comments":[]
+  "comments":[],
+  "errors":[],
+  "loc":{"end":{"column":0,"line":1},"source":"foo.js","start":{"column":0,"line":1}},
+  "range":[0,0],
+  "tokens":[],
+  "type":"Program"
 }
 
 Non-ASCII characters without specifying offset style:
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{
-    "source":"nonascii.js",
-    "start":{"line":4,"column":0},
-    "end":{"line":4,"column":16}
-  },
-  "range":[84,100],
   "body":[
     {
-      "type":"VariableDeclaration",
+      "declarations":[
+        {
+          "id":{
+            "loc":{
+              "end":{"column":9,"line":4},
+              "source":"nonascii.js",
+              "start":{"column":6,"line":4}
+            },
+            "name":"foo",
+            "optional":false,
+            "range":[90,93],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "init":{
+            "loc":{
+              "end":{"column":15,"line":4},
+              "source":"nonascii.js",
+              "start":{"column":12,"line":4}
+            },
+            "name":"bar",
+            "optional":false,
+            "range":[96,99],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{
+            "end":{"column":15,"line":4},
+            "source":"nonascii.js",
+            "start":{"column":6,"line":4}
+          },
+          "range":[90,99],
+          "type":"VariableDeclarator"
+        }
+      ],
+      "kind":"const",
       "leadingComments":[
         {
-          "type":"Line",
           "loc":{
+            "end":{"column":74,"line":1},
             "source":"nonascii.js",
-            "start":{"line":1,"column":0},
-            "end":{"line":1,"column":74}
+            "start":{"column":0,"line":1}
           },
           "range":[0,74],
+          "type":"Line",
           "value":" Has codepoint 0x1f60a. Represented by 4 bytes in both UTF-16 and UTF-8."
         },
         {
-          "type":"Line",
           "loc":{
+            "end":{"column":4,"line":2},
             "source":"nonascii.js",
-            "start":{"line":2,"column":0},
-            "end":{"line":2,"column":4}
+            "start":{"column":0,"line":2}
           },
           "range":[75,82],
+          "type":"Line",
           "value":" 😊"
         }
       ],
       "loc":{
+        "end":{"column":16,"line":4},
         "source":"nonascii.js",
-        "start":{"line":4,"column":0},
-        "end":{"line":4,"column":16}
+        "start":{"column":0,"line":4}
       },
       "range":[84,100],
-      "declarations":[
-        {
-          "type":"VariableDeclarator",
-          "loc":{
-            "source":"nonascii.js",
-            "start":{"line":4,"column":6},
-            "end":{"line":4,"column":15}
-          },
-          "range":[90,99],
-          "id":{
-            "type":"Identifier",
-            "loc":{
-              "source":"nonascii.js",
-              "start":{"line":4,"column":6},
-              "end":{"line":4,"column":9}
-            },
-            "range":[90,93],
-            "name":"foo",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "init":{
-            "type":"Identifier",
-            "loc":{
-              "source":"nonascii.js",
-              "start":{"line":4,"column":12},
-              "end":{"line":4,"column":15}
-            },
-            "range":[96,99],
-            "name":"bar",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        }
-      ],
-      "kind":"const"
+      "type":"VariableDeclaration"
     }
   ],
   "comments":[
     {
-      "type":"Line",
       "loc":{
+        "end":{"column":74,"line":1},
         "source":"nonascii.js",
-        "start":{"line":1,"column":0},
-        "end":{"line":1,"column":74}
+        "start":{"column":0,"line":1}
       },
       "range":[0,74],
+      "type":"Line",
       "value":" Has codepoint 0x1f60a. Represented by 4 bytes in both UTF-16 and UTF-8."
     },
     {
-      "type":"Line",
       "loc":{
+        "end":{"column":4,"line":2},
         "source":"nonascii.js",
-        "start":{"line":2,"column":0},
-        "end":{"line":2,"column":4}
+        "start":{"column":0,"line":2}
       },
       "range":[75,82],
+      "type":"Line",
       "value":" 😊"
     }
-  ]
+  ],
+  "errors":[],
+  "loc":{
+    "end":{"column":16,"line":4},
+    "source":"nonascii.js",
+    "start":{"column":0,"line":4}
+  },
+  "range":[84,100],
+  "tokens":[],
+  "type":"Program"
 }
 
 Non-ASCII characters with utf8-bytes offset style:
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{
-    "source":"nonascii.js",
-    "start":{"line":4,"column":0},
-    "end":{"line":4,"column":16}
-  },
-  "range":[84,100],
   "body":[
     {
-      "type":"VariableDeclaration",
+      "declarations":[
+        {
+          "id":{
+            "loc":{
+              "end":{"column":9,"line":4},
+              "source":"nonascii.js",
+              "start":{"column":6,"line":4}
+            },
+            "name":"foo",
+            "optional":false,
+            "range":[90,93],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "init":{
+            "loc":{
+              "end":{"column":15,"line":4},
+              "source":"nonascii.js",
+              "start":{"column":12,"line":4}
+            },
+            "name":"bar",
+            "optional":false,
+            "range":[96,99],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{
+            "end":{"column":15,"line":4},
+            "source":"nonascii.js",
+            "start":{"column":6,"line":4}
+          },
+          "range":[90,99],
+          "type":"VariableDeclarator"
+        }
+      ],
+      "kind":"const",
       "leadingComments":[
         {
-          "type":"Line",
           "loc":{
+            "end":{"column":74,"line":1},
             "source":"nonascii.js",
-            "start":{"line":1,"column":0},
-            "end":{"line":1,"column":74}
+            "start":{"column":0,"line":1}
           },
           "range":[0,74],
+          "type":"Line",
           "value":" Has codepoint 0x1f60a. Represented by 4 bytes in both UTF-16 and UTF-8."
         },
         {
-          "type":"Line",
           "loc":{
+            "end":{"column":4,"line":2},
             "source":"nonascii.js",
-            "start":{"line":2,"column":0},
-            "end":{"line":2,"column":4}
+            "start":{"column":0,"line":2}
           },
           "range":[75,82],
+          "type":"Line",
           "value":" 😊"
         }
       ],
       "loc":{
+        "end":{"column":16,"line":4},
         "source":"nonascii.js",
-        "start":{"line":4,"column":0},
-        "end":{"line":4,"column":16}
+        "start":{"column":0,"line":4}
       },
       "range":[84,100],
-      "declarations":[
-        {
-          "type":"VariableDeclarator",
-          "loc":{
-            "source":"nonascii.js",
-            "start":{"line":4,"column":6},
-            "end":{"line":4,"column":15}
-          },
-          "range":[90,99],
-          "id":{
-            "type":"Identifier",
-            "loc":{
-              "source":"nonascii.js",
-              "start":{"line":4,"column":6},
-              "end":{"line":4,"column":9}
-            },
-            "range":[90,93],
-            "name":"foo",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "init":{
-            "type":"Identifier",
-            "loc":{
-              "source":"nonascii.js",
-              "start":{"line":4,"column":12},
-              "end":{"line":4,"column":15}
-            },
-            "range":[96,99],
-            "name":"bar",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        }
-      ],
-      "kind":"const"
+      "type":"VariableDeclaration"
     }
   ],
   "comments":[
     {
-      "type":"Line",
       "loc":{
+        "end":{"column":74,"line":1},
         "source":"nonascii.js",
-        "start":{"line":1,"column":0},
-        "end":{"line":1,"column":74}
+        "start":{"column":0,"line":1}
       },
       "range":[0,74],
+      "type":"Line",
       "value":" Has codepoint 0x1f60a. Represented by 4 bytes in both UTF-16 and UTF-8."
     },
     {
-      "type":"Line",
       "loc":{
+        "end":{"column":4,"line":2},
         "source":"nonascii.js",
-        "start":{"line":2,"column":0},
-        "end":{"line":2,"column":4}
+        "start":{"column":0,"line":2}
       },
       "range":[75,82],
+      "type":"Line",
       "value":" 😊"
     }
-  ]
+  ],
+  "errors":[],
+  "loc":{
+    "end":{"column":16,"line":4},
+    "source":"nonascii.js",
+    "start":{"column":0,"line":4}
+  },
+  "range":[84,100],
+  "tokens":[],
+  "type":"Program"
 }
 
 Non-ASCII characters with js-indices offset style:
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{
-    "source":"nonascii.js",
-    "start":{"line":4,"column":0},
-    "end":{"line":4,"column":16}
-  },
-  "range":[82,98],
   "body":[
     {
-      "type":"VariableDeclaration",
+      "declarations":[
+        {
+          "id":{
+            "loc":{
+              "end":{"column":9,"line":4},
+              "source":"nonascii.js",
+              "start":{"column":6,"line":4}
+            },
+            "name":"foo",
+            "optional":false,
+            "range":[88,91],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "init":{
+            "loc":{
+              "end":{"column":15,"line":4},
+              "source":"nonascii.js",
+              "start":{"column":12,"line":4}
+            },
+            "name":"bar",
+            "optional":false,
+            "range":[94,97],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{
+            "end":{"column":15,"line":4},
+            "source":"nonascii.js",
+            "start":{"column":6,"line":4}
+          },
+          "range":[88,97],
+          "type":"VariableDeclarator"
+        }
+      ],
+      "kind":"const",
       "leadingComments":[
         {
-          "type":"Line",
           "loc":{
+            "end":{"column":74,"line":1},
             "source":"nonascii.js",
-            "start":{"line":1,"column":0},
-            "end":{"line":1,"column":74}
+            "start":{"column":0,"line":1}
           },
           "range":[0,74],
+          "type":"Line",
           "value":" Has codepoint 0x1f60a. Represented by 4 bytes in both UTF-16 and UTF-8."
         },
         {
-          "type":"Line",
           "loc":{
+            "end":{"column":4,"line":2},
             "source":"nonascii.js",
-            "start":{"line":2,"column":0},
-            "end":{"line":2,"column":4}
+            "start":{"column":0,"line":2}
           },
           "range":[75,80],
+          "type":"Line",
           "value":" 😊"
         }
       ],
       "loc":{
+        "end":{"column":16,"line":4},
         "source":"nonascii.js",
-        "start":{"line":4,"column":0},
-        "end":{"line":4,"column":16}
+        "start":{"column":0,"line":4}
       },
       "range":[82,98],
-      "declarations":[
-        {
-          "type":"VariableDeclarator",
-          "loc":{
-            "source":"nonascii.js",
-            "start":{"line":4,"column":6},
-            "end":{"line":4,"column":15}
-          },
-          "range":[88,97],
-          "id":{
-            "type":"Identifier",
-            "loc":{
-              "source":"nonascii.js",
-              "start":{"line":4,"column":6},
-              "end":{"line":4,"column":9}
-            },
-            "range":[88,91],
-            "name":"foo",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "init":{
-            "type":"Identifier",
-            "loc":{
-              "source":"nonascii.js",
-              "start":{"line":4,"column":12},
-              "end":{"line":4,"column":15}
-            },
-            "range":[94,97],
-            "name":"bar",
-            "typeAnnotation":null,
-            "optional":false
-          }
-        }
-      ],
-      "kind":"const"
+      "type":"VariableDeclaration"
     }
   ],
   "comments":[
     {
-      "type":"Line",
       "loc":{
+        "end":{"column":74,"line":1},
         "source":"nonascii.js",
-        "start":{"line":1,"column":0},
-        "end":{"line":1,"column":74}
+        "start":{"column":0,"line":1}
       },
       "range":[0,74],
+      "type":"Line",
       "value":" Has codepoint 0x1f60a. Represented by 4 bytes in both UTF-16 and UTF-8."
     },
     {
-      "type":"Line",
       "loc":{
+        "end":{"column":4,"line":2},
         "source":"nonascii.js",
-        "start":{"line":2,"column":0},
-        "end":{"line":2,"column":4}
+        "start":{"column":0,"line":2}
       },
       "range":[75,80],
+      "type":"Line",
       "value":" 😊"
     }
-  ]
+  ],
+  "errors":[],
+  "loc":{
+    "end":{"column":16,"line":4},
+    "source":"nonascii.js",
+    "start":{"column":0,"line":4}
+  },
+  "range":[82,98],
+  "tokens":[],
+  "type":"Program"
 }

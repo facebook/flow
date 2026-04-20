@@ -1,52 +1,52 @@
 requires.js:5:4
 Flags: --strip-root --pretty
-{"path":"module_exports.js","line":3,"endline":3,"start":1,"end":14}
+{"end":14,"endline":3,"line":3,"path":"module_exports.js","start":1}
 
 requires.js:10:4
 Flags: --strip-root --pretty
-{"path":"module_exports2.js","line":3,"endline":3,"start":7,"end":9}
+{"end":9,"endline":3,"line":3,"path":"module_exports2.js","start":7}
 
 requires.js:12:4
 Flags: --strip-root --pretty
-{"path":"module_exports2.js","line":5,"endline":5,"start":7,"end":9}
+{"end":9,"endline":5,"line":5,"path":"module_exports2.js","start":7}
 
 requires.js:14:4
 Flags: --strip-root --pretty
-{"path":"module_exports2.js","line":9,"endline":9,"start":30,"end":32}
+{"end":32,"endline":9,"line":9,"path":"module_exports2.js","start":30}
 
 types.js:10:7
 Flags: --strip-root --pretty
-{"path":"types.js","line":3,"endline":3,"start":6,"end":10}
+{"end":10,"endline":3,"line":3,"path":"types.js","start":6}
 
 types.js:12:7
 Flags: --strip-root --pretty
-{"path":"types.js","line":4,"endline":4,"start":6,"end":10}
+{"end":10,"endline":4,"line":4,"path":"types.js","start":6}
 
 types.js:14:7
 Flags: --strip-root --pretty
-{"path":"types.js","line":5,"endline":5,"start":7,"end":13}
+{"end":13,"endline":5,"line":5,"path":"types.js","start":7}
 
 types.js:16:7
 Flags: --strip-root --pretty
-{"path":"types.js","line":6,"endline":6,"start":11,"end":21}
+{"end":21,"endline":6,"line":6,"path":"types.js","start":11}
 
 types.js:18:7
 Flags: --strip-root --pretty
-{"path":"type-exports.js","line":3,"endline":3,"start":13,"end":21}
+{"end":21,"endline":3,"line":3,"path":"type-exports.js","start":13}
 
 types.js:20:7
 Flags: --strip-root --pretty
-{"path":"type-exports.js","line":4,"endline":4,"start":13,"end":21}
+{"end":21,"endline":4,"line":4,"path":"type-exports.js","start":13}
 
 types.js:22:7
 Flags: --strip-root --pretty
-{"path":"type-exports.js","line":5,"endline":5,"start":14,"end":24}
+{"end":24,"endline":5,"line":5,"path":"type-exports.js","start":14}
 
 types.js:24:7
 Flags: --strip-root --pretty
-{"path":"type-exports.js","line":6,"endline":6,"start":18,"end":32}
+{"end":32,"endline":6,"line":6,"path":"type-exports.js","start":18}
 
 types.js:28:7
 Flags: --strip-root --pretty
-{"path":"type-exports.js","line":8,"endline":8,"start":14,"end":24}
+{"end":24,"endline":8,"line":8,"path":"type-exports.js","start":14}
 

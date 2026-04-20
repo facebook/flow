@@ -1,93 +1,93 @@
 rank_intersection.js:8:3
 Flags: --lsp
 {
-  "label":"toString",
-  "labelDetails":{"detail":": (() => string) & number"},
-  "kind":6,
-  "detail":"(() => string) & number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
-    "newText":"toString"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"toString",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"toString",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"(() => string) & number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"toString",
+  "labelDetails":{"detail":": (() => string) & number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"toString",
+    "range":{"end":{"character":2,"line":7},"start":{"character":2,"line":7}}
   }
 }
 
 rank.js:7:11
 Flags: --lsp
 {
-  "label":"toString",
-  "labelDetails":{"detail":": number"},
-  "kind":6,
-  "detail":"number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
-    "newText":"toString"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"toString",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"toString",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"toString",
+  "labelDetails":{"detail":": number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"toString",
+    "range":{"end":{"character":10,"line":6},"start":{"character":10,"line":6}}
   }
 }
 
 rank_union.js:8:3
 Flags: --lsp
 {
-  "label":"toString",
-  "labelDetails":{"detail":": (() => string) | number"},
-  "kind":13,
-  "detail":"(() => string) | number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
-    "newText":"toString"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"toString",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"toString",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"(() => string) | number",
+  "insertTextFormat":1,
+  "kind":13,
+  "label":"toString",
+  "labelDetails":{"detail":": (() => string) | number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"toString",
+    "range":{"end":{"character":2,"line":7},"start":{"character":2,"line":7}}
   }
 }
 
@@ -100,698 +100,698 @@ Flags: --pretty
 string_literal.js:5:16
 Flags: --lsp
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"'foo'",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"async",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"async"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"async",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"async",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"async",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"async",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"await",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"await"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"await",
         "index":2,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"await",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"await",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"await",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"class",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"class"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"class",
         "index":3,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"class",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"class",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"class",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"delete",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"delete"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"delete",
         "index":4,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"delete",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"delete",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"delete",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"function",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"function"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"function",
         "index":5,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"function",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"function",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"function",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"import",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"import"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"import",
         "index":6,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"import",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"import",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"import",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"new",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"new"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"new",
         "index":7,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"new",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"new",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"new",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"typeof",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"typeof"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"typeof",
         "index":8,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"typeof",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"typeof",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"typeof",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"void",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"void"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"void",
         "index":9,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"void",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"void",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"void",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"yield",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"yield"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"yield",
         "index":10,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"yield",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"yield",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"yield",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 {
-  "label":"a",
-  "labelDetails":{"detail":": Foo"},
-  "kind":6,
-  "detail":"Foo",
-  "sortText":"00000000000000000001",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
-    "newText":"a"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"a",
         "index":11,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"a",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Foo",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"a",
+  "labelDetails":{"detail":": Foo"},
+  "sortText":"00000000000000000001",
+  "textEdit":{
+    "newText":"a",
+    "range":{"end":{"character":15,"line":4},"start":{"character":15,"line":4}}
   }
 }
 
 string_literal.js:7:17
 Flags: --lsp
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":6,"character":15},"end":{"line":6,"character":17}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"'foo'",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":17,"line":6},"start":{"character":15,"line":6}}
   }
 }
 
 string_literal.js:9:17
 Flags: --lsp
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":8,"character":15},"end":{"line":8,"character":15}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"'foo'",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":15,"line":8},"start":{"character":15,"line":8}}
   }
 }
 
 string_literal.js:11:17
 Flags: --lsp
 {
-  "label":"function",
-  "kind":14,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":16}},
-    "newText":"function"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "keyword",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"function",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"function",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":1,
+  "kind":14,
+  "label":"function",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"function",
+    "range":{"end":{"character":16,"line":10},"start":{"character":15,"line":10}}
   }
 }
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":16}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"'foo'",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":16,"line":10},"start":{"character":15,"line":10}}
   }
 }
 
 string_literal.js:13:18
 Flags: --lsp
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":12,"character":15},"end":{"line":12,"character":18}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"'foo'",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":18,"line":12},"start":{"character":15,"line":12}}
   }
 }
 
 string_literal.js:15:18
 Flags: --lsp
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":15},"end":{"line":14,"character":15}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"'foo'",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":15,"line":14},"start":{"character":15,"line":14}}
   }
 }
 
 string_literal.js:17:17
 Flags: --lsp
 {
-  "label":"\"foo\"",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":16,"character":15},"end":{"line":16,"character":17}},
-    "newText":"\"foo\""
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"\"foo\"",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"\"foo\"",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\"foo\"",
+    "range":{"end":{"character":17,"line":16},"start":{"character":15,"line":16}}
   }
 }
 
 string_literal.js:19:17
 Flags: --lsp
 {
-  "label":"\"foo\"",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":18,"character":15},"end":{"line":18,"character":15}},
-    "newText":"\"foo\""
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"\"foo\"",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"\"foo\"",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\"foo\"",
+    "range":{"end":{"character":15,"line":18},"start":{"character":15,"line":18}}
   }
 }
 
 string_literal.js:21:18
 Flags: --lsp
 {
-  "label":"\"foo\"",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":20,"character":15},"end":{"line":20,"character":18}},
-    "newText":"\"foo\""
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"\"foo\"",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"\"foo\"",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\"foo\"",
+    "range":{"end":{"character":18,"line":20},"start":{"character":15,"line":20}}
   }
 }
 
 string_literal.js:23:18
 Flags: --lsp
 {
-  "label":"\"foo\"",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":22,"character":15},"end":{"line":22,"character":15}},
-    "newText":"\"foo\""
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"\"foo\"",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"\"foo\"",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\"foo\"",
+    "range":{"end":{"character":15,"line":22},"start":{"character":15,"line":22}}
   }
 }
 
 string_literal.js:25:18
 Flags: --lsp
 {
-  "label":"'foo'",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":24,"character":15},"end":{"line":24,"character":20}},
-    "newText":"'foo'"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"'foo'",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"'foo'",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"'foo'",
+    "range":{"end":{"character":20,"line":24},"start":{"character":15,"line":24}}
   }
 }
 
 string_literal.js:27:18
 Flags: --lsp
 {
-  "label":"\"foo\"",
-  "labelDetails":{"detail":": \"foo\""},
-  "kind":12,
-  "detail":"\"foo\"",
-  "preselect":true,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":26,"character":15},"end":{"line":26,"character":20}},
-    "newText":"\"foo\""
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
       {
-        "token":null,
+        "ac_type":"Acliteral",
+        "completion":"\"foo\"",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"\"foo\"",
-        "ac_type":"Acliteral"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"\"foo\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\"foo\"",
+    "range":{"end":{"character":20,"line":26},"start":{"character":15,"line":26}}
   }
 }
 
@@ -883,121 +883,121 @@ Flags: --pretty
 suggest_optional_chaining_1.js:4:3
 Flags: --lsp
 {
-  "label":"?.foo",
-  "labelDetails":{"detail":": void | string"},
-  "kind":13,
-  "detail":"void | string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
-    "newText":"?.foo"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "start optional chain",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"?.foo",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"?.foo",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"void | string",
+  "insertTextFormat":1,
+  "kind":13,
+  "label":"?.foo",
+  "labelDetails":{"detail":": void | string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"?.foo",
+    "range":{"end":{"character":2,"line":3},"start":{"character":1,"line":3}}
   }
 }
 
 suggest_optional_chaining_2.js:4:3
 Flags: --lsp
 {
-  "label":"?.bar",
-  "labelDetails":{"detail":": void | number"},
-  "kind":13,
-  "detail":"void | number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
-    "newText":"?.bar"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "start optional chain",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"?.bar",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"?.bar",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"void | number",
+  "insertTextFormat":1,
+  "kind":13,
+  "label":"?.bar",
+  "labelDetails":{"detail":": void | number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"?.bar",
+    "range":{"end":{"character":2,"line":3},"start":{"character":1,"line":3}}
   }
 }
 {
-  "label":"foo",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
-    "newText":"foo"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"foo",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"foo",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"foo",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"foo",
+    "range":{"end":{"character":2,"line":3},"start":{"character":2,"line":3}}
   }
 }
 
 suggest_optional_chaining_3.js:4:3
 Flags: --lsp
 {
-  "label":"?.foo",
-  "labelDetails":{"detail":": void | number | string"},
-  "kind":13,
-  "detail":"void | number | string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
-    "newText":"?.foo"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "start optional chain",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"?.foo",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"?.foo",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"void | number | string",
+  "insertTextFormat":1,
+  "kind":13,
+  "label":"?.foo",
+  "labelDetails":{"detail":": void | number | string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"?.foo",
+    "range":{"end":{"character":2,"line":3},"start":{"character":1,"line":3}}
   }
 }
 
@@ -1161,93 +1161,93 @@ Flags: --pretty
 typeof_2.js:4:19
 Flags: --lsp
 {
-  "label":"b",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
-    "newText":"b"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"b",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"b",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"b",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"b",
+    "range":{"end":{"character":18,"line":3},"start":{"character":18,"line":3}}
   }
 }
 
 typeof.js:4:18
 Flags: --lsp
 {
-  "label":"abb",
-  "labelDetails":{"detail":": {b: string, ...}"},
-  "kind":6,
-  "detail":"{b: string, ...}",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":16},"end":{"line":3,"character":17}},
-    "newText":"abb"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"abb",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"abb",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"{b: string, ...}",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"abb",
+  "labelDetails":{"detail":": {b: string, ...}"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"abb",
+    "range":{"end":{"character":17,"line":3},"start":{"character":16,"line":3}}
   }
 }
 
 typeof_qualified.js:4:19
 Flags: --lsp
 {
-  "label":"['b-c']",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":3,"character":17},"end":{"line":3,"character":18}},
-    "newText":"['b-c']"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "dot-member switched to bracket-syntax member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"['b-c']",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"['b-c']",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"['b-c']",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"['b-c']",
+    "range":{"end":{"character":18,"line":3},"start":{"character":17,"line":3}}
   }
 }
 
@@ -1333,1238 +1333,1238 @@ Flags: --pretty
 unqualified-type-annotation.js:28:18
 Flags: --lsp
 {
-  "label":"Tympanic",
-  "kind":6,
-  "detail":"type Tympanic = number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Tympanic"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Tympanic",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Tympanic",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"type Tympanic = number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"Tympanic",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Tympanic",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typaram",
-  "kind":25,
-  "detail":"Typaram",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typaram"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type parameter",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typaram",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typaram",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Typaram",
+  "insertTextFormat":1,
+  "kind":25,
+  "label":"Typaram",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typaram",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Types",
-  "kind":9,
-  "detail":"module \"./type-exports.js\"",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Types."
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type -> qualified type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Types",
         "index":2,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Types",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"module \"./type-exports.js\"",
+  "insertTextFormat":1,
+  "kind":9,
+  "label":"Types",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Types.",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typesafe",
-  "kind":8,
-  "detail":"interface Typesafe",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typesafe"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typesafe",
         "index":3,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typesafe",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"interface Typesafe",
+  "insertTextFormat":1,
+  "kind":8,
+  "label":"Typesafe",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typesafe",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typeset",
-  "kind":8,
-  "detail":"interface Typeset",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typeset"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typeset",
         "index":4,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typeset",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"interface Typeset",
+  "insertTextFormat":1,
+  "kind":8,
+  "label":"Typeset",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typeset",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typewriter",
-  "kind":7,
-  "detail":"class Typewriter",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typewriter"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: class, record, enum",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typewriter",
         "index":5,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typewriter",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"class Typewriter",
+  "insertTextFormat":1,
+  "kind":7,
+  "label":"Typewriter",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typewriter",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typhoon",
-  "kind":12,
-  "detail":"type Typhoon = \"not a type\"",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typhoon"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typhoon",
         "index":6,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typhoon",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"type Typhoon = \"not a type\"",
+  "insertTextFormat":1,
+  "kind":12,
+  "label":"Typhoon",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typhoon",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typnotism",
-  "kind":6,
-  "detail":"type Typnotism = number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typnotism"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typnotism",
         "index":7,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typnotism",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"type Typnotism = number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"Typnotism",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typnotism",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typography",
-  "kind":7,
-  "detail":"class Typewriter",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typography"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: class, record, enum",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typography",
         "index":8,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typography",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"class Typewriter",
+  "insertTextFormat":1,
+  "kind":7,
+  "label":"Typography",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typography",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Typologies",
-  "kind":9,
-  "detail":"module \"./type-exports.js\"",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typologies."
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type -> qualified type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Typologies",
         "index":9,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Typologies",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"module \"./type-exports.js\"",
+  "insertTextFormat":1,
+  "kind":9,
+  "label":"Typologies",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Typologies.",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Tyrant",
-  "kind":6,
-  "detail":"type Tyrant = string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Tyrant"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "unqualified type: local type identifier",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Tyrant",
         "index":10,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Tyrant",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"type Tyrant = string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"Tyrant",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Tyrant",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"component",
-  "kind":14,
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "ac_type":"Actype",
+        "completion":"component",
+        "index":11,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
   "detail":"component",
   "documentation":{
     "kind":"markdown",
     "value":"[component type](https://flow.org/en/docs/react/component-types/)"
   },
-  "sortText":"00000000000000000100",
   "insertTextFormat":2,
+  "kind":14,
+  "label":"component",
+  "sortText":"00000000000000000100",
   "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"component($1)"
-  },
+    "newText":"component($1)",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
+  }
+}
+{
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type operators",
       {
-        "token":null,
-        "index":11,
+        "ac_type":"Actype",
+        "completion":"hook",
+        "index":12,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"component",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
-  }
-}
-{
-  "label":"hook",
-  "kind":14,
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
   "detail":"hook",
   "documentation":{
     "kind":"markdown",
     "value":"[hook type](https://flow.org/en/docs/react/hook-syntax/#hook-type-annotations)"
   },
-  "sortText":"00000000000000000100",
   "insertTextFormat":1,
+  "kind":14,
+  "label":"hook",
+  "sortText":"00000000000000000100",
   "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"hook "
-  },
+    "newText":"hook ",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
+  }
+}
+{
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type operators",
       {
-        "token":null,
-        "index":12,
+        "ac_type":"Actype",
+        "completion":"renders",
+        "index":13,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"hook",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
-  }
-}
-{
-  "label":"renders",
-  "kind":14,
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
   "detail":"renders",
   "documentation":{
     "kind":"markdown",
     "value":"`renders A` means that it will eventually render exactly one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
   },
-  "sortText":"00000000000000000100",
   "insertTextFormat":1,
+  "kind":14,
+  "label":"renders",
+  "sortText":"00000000000000000100",
   "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"renders "
-  },
+    "newText":"renders ",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
+  }
+}
+{
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type operators",
       {
-        "token":null,
-        "index":13,
+        "ac_type":"Actype",
+        "completion":"renders*",
+        "index":14,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"renders",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
-  }
-}
-{
-  "label":"renders*",
-  "kind":14,
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
   "detail":"renders*",
   "documentation":{
     "kind":"markdown",
     "value":"`renders* A` means that it will eventually render any amount of `A`. See https://flow.org/en/docs/react/render-types/ for more details."
   },
-  "sortText":"00000000000000000100",
   "insertTextFormat":1,
+  "kind":14,
+  "label":"renders*",
+  "sortText":"00000000000000000100",
   "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"renders* "
-  },
+    "newText":"renders* ",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
+  }
+}
+{
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type operators",
       {
-        "token":null,
-        "index":14,
+        "ac_type":"Actype",
+        "completion":"renders?",
+        "index":15,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"renders*",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
-  }
-}
-{
-  "label":"renders?",
-  "kind":14,
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
   "detail":"renders?",
   "documentation":{
     "kind":"markdown",
     "value":"`renders? A` means that it will eventually render zero or one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
   },
-  "sortText":"00000000000000000100",
   "insertTextFormat":1,
+  "kind":14,
+  "label":"renders?",
+  "sortText":"00000000000000000100",
   "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"renders? "
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type operators",
-      {
-        "token":null,
-        "index":15,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"renders?",
-        "ac_type":"Actype"
-      }
-    ]
+    "newText":"renders? ",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"any",
-  "kind":6,
-  "detail":"any",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"any"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"any",
         "index":16,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"any",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"any",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"any",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"any",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"bigint",
-  "kind":6,
-  "detail":"bigint",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"bigint"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"bigint",
         "index":17,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"bigint",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"bigint",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"bigint",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"bigint",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"boolean",
-  "kind":6,
-  "detail":"boolean",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"boolean"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"boolean",
         "index":18,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"boolean",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"boolean",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"boolean",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"boolean",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"empty",
-  "kind":6,
-  "detail":"empty",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"empty"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"empty",
         "index":19,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"empty",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"empty",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"empty",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"empty",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"false",
-  "kind":6,
-  "detail":"false",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"false"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"false",
         "index":20,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"false",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"false",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"false",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"false",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"mixed",
-  "kind":6,
-  "detail":"mixed",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"mixed"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"mixed",
         "index":21,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"mixed",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"mixed",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"mixed",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"mixed",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"null",
-  "kind":6,
-  "detail":"null",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"null"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"null",
         "index":22,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"null",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"null",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"null",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"null",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"number",
-  "kind":6,
-  "detail":"number",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"number"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"number",
         "index":23,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"number",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"number",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"number",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"string",
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"string"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"string",
         "index":24,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"string",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"string",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"string",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"symbol",
-  "kind":6,
-  "detail":"symbol",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"symbol"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"symbol",
         "index":25,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"symbol",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"symbol",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"symbol",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"symbol",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"true",
-  "kind":6,
-  "detail":"true",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"true"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"true",
         "index":26,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"true",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"true",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"true",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"true",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"unknown",
-  "kind":6,
-  "detail":"unknown",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"unknown"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"unknown",
         "index":27,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"unknown",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"unknown",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"unknown",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"unknown",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"void",
-  "kind":6,
-  "detail":"void",
-  "sortText":"00000000000000000200",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"void"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"void",
         "index":28,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"void",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"void",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"void",
+  "sortText":"00000000000000000200",
+  "textEdit":{
+    "newText":"void",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$Exact",
-  "kind":3,
-  "detail":"$Exact",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$Exact"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$Exact",
         "index":29,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$Exact",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$Exact",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$Exact",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$Exact",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$Exports",
-  "kind":3,
-  "detail":"$Exports",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$Exports"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$Exports",
         "index":30,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$Exports",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$Exports",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$Exports",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$Exports",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$KeyMirror",
-  "kind":3,
-  "detail":"$KeyMirror",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$KeyMirror"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$KeyMirror",
         "index":31,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$KeyMirror",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$KeyMirror",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$KeyMirror",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$KeyMirror",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$Keys",
-  "kind":3,
-  "detail":"$Keys",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$Keys"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$Keys",
         "index":32,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$Keys",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$Keys",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$Keys",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$Keys",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$NonMaybeType",
-  "kind":3,
-  "detail":"$NonMaybeType",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$NonMaybeType"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$NonMaybeType",
         "index":33,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$NonMaybeType",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$NonMaybeType",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$NonMaybeType",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$NonMaybeType",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$ReadOnly",
-  "kind":3,
-  "detail":"$ReadOnly",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$ReadOnly"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$ReadOnly",
         "index":34,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$ReadOnly",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$ReadOnly",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$ReadOnly",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$ReadOnly",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"$Values",
-  "kind":3,
-  "detail":"$Values",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"$Values"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"$Values",
         "index":35,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$Values",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"$Values",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"$Values",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"$Values",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Class",
-  "kind":3,
-  "detail":"Class",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Class"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Class",
         "index":36,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Class",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Class",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Class",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Class",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"keyof",
-  "kind":3,
-  "detail":"keyof",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"keyof"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"keyof",
         "index":37,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"keyof",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"keyof",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"keyof",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"keyof",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"NonNullable",
-  "kind":3,
-  "detail":"NonNullable",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"NonNullable"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"NonNullable",
         "index":38,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"NonNullable",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"NonNullable",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"NonNullable",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"NonNullable",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Partial",
-  "kind":3,
-  "detail":"Partial",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Partial"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Partial",
         "index":39,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Partial",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Partial",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Partial",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Partial",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Readonly",
-  "kind":3,
-  "detail":"Readonly",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Readonly"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Readonly",
         "index":40,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Readonly",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Readonly",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Readonly",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Readonly",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Required",
-  "kind":3,
-  "detail":"Required",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Required"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Required",
         "index":41,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Required",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Required",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Required",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Required",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"StringPrefix",
-  "kind":3,
-  "detail":"StringPrefix",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"StringPrefix"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"StringPrefix",
         "index":42,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"StringPrefix",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"StringPrefix",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"StringPrefix",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"StringPrefix",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"StringSuffix",
-  "kind":3,
-  "detail":"StringSuffix",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"StringSuffix"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"StringSuffix",
         "index":43,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"StringSuffix",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"StringSuffix",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"StringSuffix",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"StringSuffix",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 {
-  "label":"Values",
-  "kind":3,
-  "detail":"Values",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Values"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "builtin type",
       {
-        "token":null,
+        "ac_type":"Actype",
+        "completion":"Values",
         "index":44,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Values",
-        "ac_type":"Actype"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Values",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Values",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Values",
+    "range":{"end":{"character":17,"line":27},"start":{"character":17,"line":27}}
   }
 }
 

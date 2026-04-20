@@ -2,50 +2,50 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Insert inferred render type",
-      "kind": "refactor",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_inferred_render_type",
+          "Insert inferred render type"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/insert-render-type.js": [
             {
+              "newText": "import type { Exported } from \"./exports-for-insert-render-type\";",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
                 "end": {
-                  "line": 2,
-                  "character": 0
+                  "character": 0,
+                  "line": 2
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "import type { Exported } from \"./exports-for-insert-render-type\";"
+              }
             },
             {
+              "newText": "component Foo3() renders* (Bar | Baz | Exported) {\n  if (true) {\n    return null;\n  }\n  return [<Bar />, <Baz />, rendersExported];\n}",
               "range": {
-                "start": {
-                  "line": 18,
-                  "character": 0
-                },
                 "end": {
-                  "line": 23,
-                  "character": 1
+                  "character": 1,
+                  "line": 23
+                },
+                "start": {
+                  "character": 0,
+                  "line": 18
                 }
-              },
-              "newText": "component Foo3() renders* (Bar | Baz | Exported) {\n  if (true) {\n    return null;\n  }\n  return [<Bar />, <Baz />, rendersExported];\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "insert_inferred_render_type",
-          "Insert inferred render type"
-        ]
-      }
+      "kind": "refactor",
+      "title": "Insert inferred render type"
     }
   ]
 }

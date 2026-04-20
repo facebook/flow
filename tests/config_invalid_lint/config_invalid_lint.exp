@@ -11,18 +11,18 @@ flow config check:
 {
   "errors":[
     {
+      "level":"warning",
       "line":4,
-      "message":"Redundant argument. This argument doesn't change any lint settings.",
-      "level":"warning"
+      "message":"Redundant argument. This argument doesn't change any lint settings."
     },
     {
+      "level":"warning",
       "line":6,
-      "message":"Invalid lint rule \"nonexisting-lint\" encountered.",
-      "level":"warning"
+      "message":"Invalid lint rule \"nonexisting-lint\" encountered."
     }
   ],
-  "flowVersion":"<VERSION>",
-  "exit":{"code":8,"reason":"Invalid_flowconfig"}
+  "exit":{"code":8,"reason":"Invalid_flowconfig"},
+  "flowVersion":"<VERSION>"
 }
 
 flow config check --ignore-version:

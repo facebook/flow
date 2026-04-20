@@ -90,162 +90,162 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
       .stdout(
         `
           {
-            "errors": [],
-            "tokens": [
-              {
-                "type": "T_EXPORT",
-                "context": "normal",
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 0
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 6
-                  }
-                },
-                "range": [
-                  0,
-                  6
-                ],
-                "value": "export"
-              },
-              {
-                "type": "T_DEFAULT",
-                "context": "normal",
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 7
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 14
-                  }
-                },
-                "range": [
-                  7,
-                  14
-                ],
-                "value": "default"
-              },
-              {
-                "type": "T_NUMBER",
-                "context": "normal",
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 15
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 18
-                  }
-                },
-                "range": [
-                  15,
-                  18
-                ],
-                "value": "123"
-              },
-              {
-                "type": "T_SEMICOLON",
-                "context": "normal",
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 18
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 19
-                  }
-                },
-                "range": [
-                  18,
-                  19
-                ],
-                "value": ";"
-              },
-              {
-                "type": "T_EOF",
-                "context": "normal",
-                "loc": {
-                  "start": {
-                    "line": 2,
-                    "column": 0
-                  },
-                  "end": {
-                    "line": 2,
-                    "column": 0
-                  }
-                },
-                "range": [
-                  20,
-                  20
-                ],
-                "value": ""
-              }
-            ],
-            "type": "Program",
-            "loc": {
-              "source": null,
-              "start": {
-                "line": 1,
-                "column": 0
-              },
-              "end": {
-                "line": 1,
-                "column": 19
-              }
-            },
-            "range": [
-              0,
-              19
-            ],
             "body": [
               {
-                "type": "ExportDefaultDeclaration",
-                "loc": {
-                  "source": null,
-                  "start": {
-                    "line": 1,
-                    "column": 0
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 19
-                  }
-                },
-                "range": [
-                  0,
-                  19
-                ],
                 "declaration": {
-                  "type": "Literal",
                   "loc": {
+                    "end": {
+                      "column": 18,
+                      "line": 1
+                    },
                     "source": null,
                     "start": {
-                      "line": 1,
-                      "column": 15
-                    },
-                    "end": {
-                      "line": 1,
-                      "column": 18
+                      "column": 15,
+                      "line": 1
                     }
                   },
                   "range": [
                     15,
                     18
                   ],
-                  "value": 123,
-                  "raw": "123"
+                  "raw": "123",
+                  "type": "Literal",
+                  "value": 123
                 },
-                "exportKind": "value"
+                "exportKind": "value",
+                "loc": {
+                  "end": {
+                    "column": 19,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 0,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  0,
+                  19
+                ],
+                "type": "ExportDefaultDeclaration"
               }
             ],
-            "comments": []
+            "comments": [],
+            "errors": [],
+            "loc": {
+              "end": {
+                "column": 19,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 0,
+                "line": 1
+              }
+            },
+            "range": [
+              0,
+              19
+            ],
+            "tokens": [
+              {
+                "context": "normal",
+                "loc": {
+                  "end": {
+                    "column": 6,
+                    "line": 1
+                  },
+                  "start": {
+                    "column": 0,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  0,
+                  6
+                ],
+                "type": "T_EXPORT",
+                "value": "export"
+              },
+              {
+                "context": "normal",
+                "loc": {
+                  "end": {
+                    "column": 14,
+                    "line": 1
+                  },
+                  "start": {
+                    "column": 7,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  7,
+                  14
+                ],
+                "type": "T_DEFAULT",
+                "value": "default"
+              },
+              {
+                "context": "normal",
+                "loc": {
+                  "end": {
+                    "column": 18,
+                    "line": 1
+                  },
+                  "start": {
+                    "column": 15,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  15,
+                  18
+                ],
+                "type": "T_NUMBER",
+                "value": "123"
+              },
+              {
+                "context": "normal",
+                "loc": {
+                  "end": {
+                    "column": 19,
+                    "line": 1
+                  },
+                  "start": {
+                    "column": 18,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  18,
+                  19
+                ],
+                "type": "T_SEMICOLON",
+                "value": ";"
+              },
+              {
+                "context": "normal",
+                "loc": {
+                  "end": {
+                    "column": 0,
+                    "line": 2
+                  },
+                  "start": {
+                    "column": 0,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  20,
+                  20
+                ],
+                "type": "T_EOF",
+                "value": ""
+              }
+            ],
+            "type": "Program"
           }
         `,
       ),

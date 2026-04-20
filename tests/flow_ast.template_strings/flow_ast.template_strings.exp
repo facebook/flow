@@ -1,97 +1,97 @@
 {
+  "body":[
+    {
+      "directive":null,
+      "expression":{
+        "loc":{"end":{"column":17,"line":1},"source":null,"start":{"column":0,"line":1}},
+        "quasi":{
+          "expressions":[
+            {
+              "loc":{"end":{"column":11,"line":1},"source":null,"start":{"column":8,"line":1}},
+              "name":"bar",
+              "optional":false,
+              "range":[8,11],
+              "type":"Identifier",
+              "typeAnnotation":null
+            }
+          ],
+          "loc":{"end":{"column":17,"line":1},"source":null,"start":{"column":1,"line":1}},
+          "quasis":[
+            {
+              "loc":{"end":{"column":8,"line":1},"source":null,"start":{"column":1,"line":1}},
+              "range":[1,8],
+              "tail":false,
+              "type":"TemplateElement",
+              "value":{"cooked":"foo ","raw":"foo "}
+            },
+            {
+              "loc":{"end":{"column":17,"line":1},"source":null,"start":{"column":11,"line":1}},
+              "range":[11,17],
+              "tail":true,
+              "type":"TemplateElement",
+              "value":{"cooked":" baz","raw":" baz"}
+            }
+          ],
+          "range":[1,17],
+          "type":"TemplateLiteral"
+        },
+        "range":[0,17],
+        "tag":{
+          "loc":{"end":{"column":1,"line":1},"source":null,"start":{"column":0,"line":1}},
+          "name":"a",
+          "optional":false,
+          "range":[0,1],
+          "type":"Identifier",
+          "typeAnnotation":null
+        },
+        "type":"TaggedTemplateExpression",
+        "typeArguments":null
+      },
+      "loc":{"end":{"column":17,"line":1},"source":null,"start":{"column":0,"line":1}},
+      "range":[0,17],
+      "type":"ExpressionStatement"
+    }
+  ],
+  "comments":[],
   "errors":[],
+  "loc":{"end":{"column":17,"line":1},"source":null,"start":{"column":0,"line":1}},
+  "range":[0,17],
   "tokens":[
     {
-      "type":"T_IDENTIFIER",
       "context":"normal",
-      "loc":{"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
+      "loc":{"end":{"column":1,"line":1},"start":{"column":0,"line":1}},
       "range":[0,1],
+      "type":"T_IDENTIFIER",
       "value":"a"
     },
     {
-      "type":"T_TEMPLATE_PART",
       "context":"normal",
-      "loc":{"start":{"line":1,"column":1},"end":{"line":1,"column":8}},
+      "loc":{"end":{"column":8,"line":1},"start":{"column":1,"line":1}},
       "range":[1,8],
+      "type":"T_TEMPLATE_PART",
       "value":"`foo ${"
     },
     {
-      "type":"T_IDENTIFIER",
       "context":"normal",
-      "loc":{"start":{"line":1,"column":8},"end":{"line":1,"column":11}},
+      "loc":{"end":{"column":11,"line":1},"start":{"column":8,"line":1}},
       "range":[8,11],
+      "type":"T_IDENTIFIER",
       "value":"bar"
     },
     {
-      "type":"T_TEMPLATE_PART",
       "context":"normal",
-      "loc":{"start":{"line":1,"column":11},"end":{"line":1,"column":17}},
+      "loc":{"end":{"column":17,"line":1},"start":{"column":11,"line":1}},
       "range":[11,17],
+      "type":"T_TEMPLATE_PART",
       "value":"} baz`"
     },
     {
-      "type":"T_EOF",
       "context":"normal",
-      "loc":{"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "loc":{"end":{"column":0,"line":2},"start":{"column":0,"line":2}},
       "range":[18,18],
+      "type":"T_EOF",
       "value":""
     }
   ],
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
-  "range":[0,17],
-  "body":[
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
-      "range":[0,17],
-      "expression":{
-        "type":"TaggedTemplateExpression",
-        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":17}},
-        "range":[0,17],
-        "tag":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
-          "range":[0,1],
-          "name":"a",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "typeArguments":null,
-        "quasi":{
-          "type":"TemplateLiteral",
-          "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":17}},
-          "range":[1,17],
-          "quasis":[
-            {
-              "type":"TemplateElement",
-              "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":8}},
-              "range":[1,8],
-              "value":{"raw":"foo ","cooked":"foo "},
-              "tail":false
-            },
-            {
-              "type":"TemplateElement",
-              "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":17}},
-              "range":[11,17],
-              "value":{"raw":" baz","cooked":" baz"},
-              "tail":true
-            }
-          ],
-          "expressions":[
-            {
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":11}},
-              "range":[8,11],
-              "name":"bar",
-              "typeAnnotation":null,
-              "optional":false
-            }
-          ]
-        }
-      },
-      "directive":null
-    }
-  ],
-  "comments":[]
+  "type":"Program"
 }

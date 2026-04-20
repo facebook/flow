@@ -2,69 +2,69 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 22,
-          "character": 8
-        },
         "end": {
-          "line": 22,
-          "character": 9
+          "character": 9,
+          "line": 22
+        },
+        "start": {
+          "character": 8,
+          "line": 22
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 23,
-          "character": 0
-        },
         "end": {
-          "line": 23,
-          "character": 1
+          "character": 1,
+          "line": 23
+        },
+        "start": {
+          "character": 0,
+          "line": 23
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 25,
-          "character": 2
-        },
         "end": {
-          "line": 25,
-          "character": 3
+          "character": 3,
+          "line": 25
+        },
+        "start": {
+          "character": 2,
+          "line": 25
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 27,
-          "character": 6
-        },
         "end": {
-          "line": 27,
-          "character": 7
+          "character": 7,
+          "line": 27
+        },
+        "start": {
+          "character": 6,
+          "line": 27
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/to_be_imported.js",
       "range": {
-        "start": {
-          "line": 2,
-          "character": 13
-        },
         "end": {
-          "line": 2,
-          "character": 14
+          "character": 14,
+          "line": 2
+        },
+        "start": {
+          "character": 13,
+          "line": 2
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/to_be_imported.js"
     }
   ]
 }

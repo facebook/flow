@@ -98,173 +98,173 @@ Flags: --lsp
 enums.js:11:3
 Flags: --lsp
 {
-  "label":"Bar",
-  "labelDetails":{"detail":": E"},
-  "kind":6,
-  "detail":"E",
-  "documentation":{"kind":"markdown","value":"**@deprecated**"},
-  "tags":[1],
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
-    "newText":"Bar"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"Bar",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Bar",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"E",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"Bar",
+  "labelDetails":{"detail":": E"},
+  "sortText":"00000000000000000000",
+  "tags":[1],
+  "textEdit":{
+    "newText":"Bar",
+    "range":{"end":{"character":2,"line":10},"start":{"character":2,"line":10}}
   }
 }
 {
-  "label":"Foo",
-  "labelDetails":{"detail":": E"},
-  "kind":6,
-  "detail":"E",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
-    "newText":"Foo"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"Foo",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Foo",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"E",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"Foo",
+  "labelDetails":{"detail":": E"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Foo",
+    "range":{"end":{"character":2,"line":10},"start":{"character":2,"line":10}}
   }
 }
 {
-  "label":"cast",
-  "labelDetails":{"detail":": (input: ?string) => void | E"},
-  "kind":3,
-  "detail":"(input: ?string) => void | E",
-  "sortText":"00000000000000000001",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
-    "newText":"cast"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"cast",
         "index":2,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"cast",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"(input: ?string) => void | E",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?string) => void | E"},
+  "sortText":"00000000000000000001",
+  "textEdit":{
+    "newText":"cast",
+    "range":{"end":{"character":2,"line":10},"start":{"character":2,"line":10}}
   }
 }
 {
-  "label":"getName",
-  "labelDetails":{"detail":": (input: E) => string"},
-  "kind":3,
-  "detail":"(input: E) => string",
-  "sortText":"00000000000000000001",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
-    "newText":"getName"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"getName",
         "index":3,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"getName",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"(input: E) => string",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"getName",
+  "labelDetails":{"detail":": (input: E) => string"},
+  "sortText":"00000000000000000001",
+  "textEdit":{
+    "newText":"getName",
+    "range":{"end":{"character":2,"line":10},"start":{"character":2,"line":10}}
   }
 }
 {
-  "label":"isValid",
-  "labelDetails":{"detail":": (input: ?string | E) => boolean"},
-  "kind":3,
-  "detail":"(input: ?string | E) => boolean",
-  "sortText":"00000000000000000001",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
-    "newText":"isValid"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"isValid",
         "index":4,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"isValid",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"(input: ?string | E) => boolean",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?string | E) => boolean"},
+  "sortText":"00000000000000000001",
+  "textEdit":{
+    "newText":"isValid",
+    "range":{"end":{"character":2,"line":10},"start":{"character":2,"line":10}}
   }
 }
 {
-  "label":"members",
-  "labelDetails":{"detail":": () => Iterator<E>"},
-  "kind":3,
-  "detail":"() => Iterator<E>",
-  "sortText":"00000000000000000001",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
-    "newText":"members"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "member",
       {
-        "token":null,
+        "ac_type":"Acmem",
+        "completion":"members",
         "index":5,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"members",
-        "ac_type":"Acmem"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"() => Iterator<E>",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<E>"},
+  "sortText":"00000000000000000001",
+  "textEdit":{
+    "newText":"members",
+    "range":{"end":{"character":2,"line":10},"start":{"character":2,"line":10}}
   }
 }
 
@@ -327,29 +327,29 @@ Flags: --pretty
 fixme.js:14:8
 Flags: --lsp
 {
-  "label":"$FlowFixMe[unused-promise]",
-  "kind":1,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":2,
-  "textEdit":{
-    "range":{"start":{"line":13,"character":7},"end":{"line":13,"character":7}},
-    "newText":"\\$FlowFixMe[unused-promise] ${1:reason for suppression}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "fixme comment",
       {
-        "token":null,
+        "ac_type":"Ac_comment",
+        "completion":"$FlowFixMe[unused-promise]",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$FlowFixMe[unused-promise]",
-        "ac_type":"Ac_comment"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":2,
+  "kind":1,
+  "label":"$FlowFixMe[unused-promise]",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\\$FlowFixMe[unused-promise] ${1:reason for suppression}",
+    "range":{"end":{"character":7,"line":13},"start":{"character":7,"line":13}}
   }
 }
 
@@ -360,113 +360,113 @@ Flags: --pretty
 fixme.js:21:10
 Flags: --lsp
 {
-  "label":"$FlowFixMe[incompatible-type]",
-  "kind":1,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":2,
-  "textEdit":{
-    "range":{"start":{"line":20,"character":3},"end":{"line":20,"character":9}},
-    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "fixme comment",
       {
-        "token":null,
+        "ac_type":"Ac_comment",
+        "completion":"$FlowFixMe[incompatible-type]",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-type]",
-        "ac_type":"Ac_comment"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":2,
+  "kind":1,
+  "label":"$FlowFixMe[incompatible-type]",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}",
+    "range":{"end":{"character":9,"line":20},"start":{"character":3,"line":20}}
   }
 }
 
 fixme.js:5:4
 Flags: --lsp
 {
-  "label":"$FlowFixMe[incompatible-type]",
-  "kind":1,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":2,
-  "textEdit":{
-    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
-    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "fixme comment",
       {
-        "token":null,
+        "ac_type":"Ac_comment",
+        "completion":"$FlowFixMe[incompatible-type]",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-type]",
-        "ac_type":"Ac_comment"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":2,
+  "kind":1,
+  "label":"$FlowFixMe[incompatible-type]",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}",
+    "range":{"end":{"character":3,"line":4},"start":{"character":3,"line":4}}
   }
 }
 
 fixme.js:8:5
 Flags: --lsp
 {
-  "label":"$FlowFixMe[incompatible-type]",
-  "kind":1,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":2,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
-    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "fixme comment",
       {
-        "token":null,
+        "ac_type":"Ac_comment",
+        "completion":"$FlowFixMe[incompatible-type]",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-type]",
-        "ac_type":"Ac_comment"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":2,
+  "kind":1,
+  "label":"$FlowFixMe[incompatible-type]",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}",
+    "range":{"end":{"character":4,"line":7},"start":{"character":3,"line":7}}
   }
 }
 {
-  "label":"$FlowFixMe[unsafe-addition]",
-  "kind":1,
-  "sortText":"00000000000000000000",
-  "insertTextFormat":2,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
-    "newText":"\\$FlowFixMe[unsafe-addition] ${1:reason for suppression}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "fixme comment",
       {
-        "token":null,
+        "ac_type":"Ac_comment",
+        "completion":"$FlowFixMe[unsafe-addition]",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"$FlowFixMe[unsafe-addition]",
-        "ac_type":"Ac_comment"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "insertTextFormat":2,
+  "kind":1,
+  "label":"$FlowFixMe[unsafe-addition]",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"\\$FlowFixMe[unsafe-addition] ${1:reason for suppression}",
+    "range":{"end":{"character":4,"line":7},"start":{"character":3,"line":7}}
   }
 }
 

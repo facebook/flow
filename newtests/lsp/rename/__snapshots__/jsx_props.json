@@ -4,43 +4,43 @@
     "changes": {
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js": [
         {
+          "newText": "NEW_NAME",
           "range": {
-            "start": {
-              "line": 35,
-              "character": 14
-            },
             "end": {
-              "line": 35,
-              "character": 17
+              "character": 17,
+              "line": 35
+            },
+            "start": {
+              "character": 14,
+              "line": 35
             }
-          },
-          "newText": "NEW_NAME"
+          }
         },
         {
+          "newText": "{foo: NEW_NAME}: Props",
           "range": {
-            "start": {
-              "line": 36,
-              "character": 21
-            },
             "end": {
-              "line": 36,
-              "character": 33
+              "character": 33,
+              "line": 36
+            },
+            "start": {
+              "character": 21,
+              "line": 36
             }
-          },
-          "newText": "{foo: NEW_NAME}: Props"
+          }
         },
         {
+          "newText": "NEW_NAME",
           "range": {
-            "start": {
-              "line": 39,
-              "character": 13
-            },
             "end": {
-              "line": 39,
-              "character": 16
+              "character": 16,
+              "line": 39
+            },
+            "start": {
+              "character": 13,
+              "line": 39
             }
-          },
-          "newText": "NEW_NAME"
+          }
         }
       ]
     }

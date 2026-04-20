@@ -30,23 +30,23 @@ module.exports = (suite(
             result: {
               ranges: [
                 {
-                  start: {
-                    line: 5,
-                    character: 3,
-                  },
                   end: {
-                    line: 5,
                     character: 6,
+                    line: 5,
+                  },
+                  start: {
+                    character: 3,
+                    line: 5,
                   },
                 },
                 {
-                  start: {
-                    line: 7,
-                    character: 4,
-                  },
                   end: {
-                    line: 7,
                     character: 7,
+                    line: 7,
+                  },
+                  start: {
+                    character: 4,
+                    line: 7,
                   },
                 },
               ],
@@ -88,23 +88,23 @@ module.exports = (suite(
             result: {
               ranges: [
                 {
-                  start: {
-                    line: 11,
-                    character: 3,
-                  },
                   end: {
-                    line: 11,
                     character: 6,
+                    line: 11,
+                  },
+                  start: {
+                    character: 3,
+                    line: 11,
                   },
                 },
                 {
-                  start: {
-                    line: 15,
-                    character: 4,
-                  },
                   end: {
-                    line: 15,
                     character: 7,
+                    line: 15,
+                  },
+                  start: {
+                    character: 4,
+                    line: 15,
                   },
                 },
               ],
@@ -131,23 +131,23 @@ module.exports = (suite(
             result: {
               ranges: [
                 {
-                  start: {
-                    line: 12,
-                    character: 5,
-                  },
                   end: {
-                    line: 12,
                     character: 8,
+                    line: 12,
+                  },
+                  start: {
+                    character: 5,
+                    line: 12,
                   },
                 },
                 {
-                  start: {
-                    line: 14,
-                    character: 6,
-                  },
                   end: {
-                    line: 14,
                     character: 9,
+                    line: 14,
+                  },
+                  start: {
+                    character: 6,
+                    line: 14,
                   },
                 },
               ],
@@ -174,23 +174,23 @@ module.exports = (suite(
             result: {
               ranges: [
                 {
-                  start: {
-                    line: 19,
-                    character: 3,
-                  },
                   end: {
-                    line: 19,
                     character: 3,
+                    line: 19,
+                  },
+                  start: {
+                    character: 3,
+                    line: 19,
                   },
                 },
                 {
-                  start: {
-                    line: 21,
-                    character: 4,
-                  },
                   end: {
-                    line: 21,
                     character: 4,
+                    line: 21,
+                  },
+                  start: {
+                    character: 4,
+                    line: 21,
                   },
                 },
               ],

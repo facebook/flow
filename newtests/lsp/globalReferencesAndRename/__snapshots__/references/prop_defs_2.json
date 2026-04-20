@@ -2,134 +2,134 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/prop-def.js",
       "range": {
-        "start": {
-          "line": 3,
-          "character": 4
-        },
         "end": {
-          "line": 3,
-          "character": 7
+          "character": 7,
+          "line": 3
+        },
+        "start": {
+          "character": 4,
+          "line": 3
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/prop-def.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 4,
-          "character": 18
-        },
         "end": {
-          "line": 4,
-          "character": 21
+          "character": 21,
+          "line": 4
+        },
+        "start": {
+          "character": 18,
+          "line": 4
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 5,
-          "character": 4
-        },
         "end": {
-          "line": 5,
-          "character": 7
+          "character": 7,
+          "line": 5
+        },
+        "start": {
+          "character": 4,
+          "line": 5
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 7,
-          "character": 22
-        },
         "end": {
-          "line": 7,
-          "character": 25
+          "character": 25,
+          "line": 7
+        },
+        "start": {
+          "character": 22,
+          "line": 7
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 8,
-          "character": 2
-        },
         "end": {
-          "line": 8,
-          "character": 5
+          "character": 5,
+          "line": 8
+        },
+        "start": {
+          "character": 2,
+          "line": 8
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 11,
-          "character": 13
-        },
         "end": {
-          "line": 11,
-          "character": 16
+          "character": 16,
+          "line": 11
+        },
+        "start": {
+          "character": 13,
+          "line": 11
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 13,
-          "character": 7
-        },
         "end": {
-          "line": 13,
-          "character": 10
+          "character": 10,
+          "line": 13
+        },
+        "start": {
+          "character": 7,
+          "line": 13
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js",
       "range": {
-        "start": {
-          "line": 14,
-          "character": 12
-        },
         "end": {
-          "line": 14,
-          "character": 15
+          "character": 15,
+          "line": 14
+        },
+        "start": {
+          "character": 12,
+          "line": 14
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-b.js",
       "range": {
-        "start": {
-          "line": 4,
-          "character": 18
-        },
         "end": {
-          "line": 4,
-          "character": 21
+          "character": 21,
+          "line": 4
+        },
+        "start": {
+          "character": 18,
+          "line": 4
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-b.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-b.js",
       "range": {
-        "start": {
-          "line": 5,
-          "character": 4
-        },
         "end": {
-          "line": 5,
-          "character": 7
+          "character": 7,
+          "line": 5
+        },
+        "start": {
+          "character": 4,
+          "line": 5
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-prop-site-b.js"
     }
   ]
 }

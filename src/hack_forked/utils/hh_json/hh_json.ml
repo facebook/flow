@@ -450,7 +450,7 @@ end
 module Out_buffer = Make_streamer (Buffer_stream)
 module Out_channel = Make_streamer (Channel_stream)
 
-let rec json_to_string ?(sort_keys = false) ?(pretty = false) (json : json) : string =
+let rec json_to_string ?(sort_keys = true) ?(pretty = false) (json : json) : string =
   if pretty then
     json_to_multiline ~sort_keys json
   else
@@ -459,7 +459,7 @@ let rec json_to_string ?(sort_keys = false) ?(pretty = false) (json : json) : st
     Out_buffer.add_json ~sort_keys buf json;
     Buffer.contents buf
 
-and json_to_multiline ?(sort_keys = false) json =
+and json_to_multiline ?(sort_keys = true) json =
   let rec loop indent json =
     let single = json_to_string ~sort_keys json in
     if String.length single < 80 then
@@ -491,7 +491,7 @@ and json_to_multiline ?(sort_keys = false) json =
   in
   loop "" json
 
-let json_to_output oc (json : json) : unit = Out_channel.add_json ~sort_keys:false oc json
+let json_to_output oc (json : json) : unit = Out_channel.add_json ~sort_keys:true oc json
 
 let rec json_to_multiline_output oc (json : json) : unit =
   let json_assoc_to_output oc (k, v) : unit =
@@ -501,6 +501,7 @@ let rec json_to_multiline_output oc (json : json) : unit =
   in
   match json with
   | JSON_Object l ->
+    let l = sort_object l in
     Out_channel.concat ~lb:"{" ~rb:"}" ~sep:",\n" ~concat_elt:json_assoc_to_output oc l
   | JSON_Array l ->
     Out_channel.concat ~lb:"[" ~rb:"]" ~sep:",\n" ~concat_elt:json_to_multiline_output oc l

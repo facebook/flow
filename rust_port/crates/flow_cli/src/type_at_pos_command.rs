@@ -155,6 +155,11 @@ fn handle_response(
     } = response;
     match tys {
         server_prot::response::infer_type::Payload::Json(types) => {
+            // The server pre-serializes the JSON value into a string because
+            // bincode (the wire encoder) cannot encode `serde_json::Value`.
+            // Parse it back here before we re-embed it into the response.
+            let types: serde_json::Value =
+                serde_json::from_str(&types).expect("server-produced JSON must be valid");
             let mut json = serde_json::Map::new();
             json.insert("types".to_string(), types);
             json.insert("reasons".to_string(), serde_json::Value::Array(vec![]));

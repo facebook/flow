@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Fix invalid record syntax",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_record_invalid_syntax",
+          "Fix invalid record syntax"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/record-invalid-all.js": [
             {
+              "newText": "record R {\n  a: number | void = undefined,\n}",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
                 "end": {
-                  "line": 5,
-                  "character": 1
+                  "character": 1,
+                  "line": 5
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "record R {\n  a: number | void = undefined,\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_record_invalid_syntax",
-          "Fix invalid record syntax"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Fix invalid record syntax"
     }
   ]
 }

@@ -2,50 +2,50 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Switch to `renders?`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "switch_to_renders_maybe",
+          "Switch to `renders?`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/invalid-renders.js": [
             {
+              "newText": "renders?",
               "range": {
-                "start": {
-                  "line": 17,
-                  "character": 14
-                },
                 "end": {
-                  "line": 17,
-                  "character": 21
+                  "character": 21,
+                  "line": 17
+                },
+                "start": {
+                  "character": 14,
+                  "line": 17
                 }
-              },
-              "newText": "renders?"
+              }
             },
             {
+              "newText": "Foo | 1",
               "range": {
-                "start": {
-                  "line": 17,
-                  "character": 23
-                },
                 "end": {
-                  "line": 17,
-                  "character": 37
+                  "character": 37,
+                  "line": 17
+                },
+                "start": {
+                  "character": 23,
+                  "line": 17
                 }
-              },
-              "newText": "Foo | 1"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "switch_to_renders_maybe",
-          "Switch to `renders?`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Switch to `renders?`"
     }
   ]
 }

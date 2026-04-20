@@ -59,95 +59,95 @@ call.js
     "covered_count":5,
     "covered_locs":[
       {
+        "end":{"column":10,"line":3,"offset":20},
         "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":10,"offset":19},
-        "end":{"line":3,"column":10,"offset":20}
+        "start":{"column":10,"line":3,"offset":19},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":10,"line":8,"offset":68},
         "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":8,"column":10,"offset":67},
-        "end":{"line":8,"column":10,"offset":68}
+        "start":{"column":10,"line":8,"offset":67},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":12,"line":8,"offset":70},
         "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":8,"column":12,"offset":69},
-        "end":{"line":8,"column":12,"offset":70}
+        "start":{"column":12,"line":8,"offset":69},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":3,"line":9,"offset":88},
         "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":3,"offset":87},
-        "end":{"line":9,"column":3,"offset":88}
+        "start":{"column":3,"line":9,"offset":87},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":13,"line":10,"offset":105},
         "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":13,"offset":104},
-        "end":{"line":10,"column":13,"offset":105}
-      }
-    ],
-    "uncovered_count":9,
-    "uncovered_locs":[
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":12,"offset":21},
-        "end":{"line":3,"column":12,"offset":22}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":4,"column":3,"offset":33},
-        "end":{"line":4,"column":3,"offset":34}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":4,"column":3,"offset":33},
-        "end":{"line":4,"column":5,"offset":36}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":9,"offset":46},
-        "end":{"line":5,"column":9,"offset":47}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":13,"offset":50},
-        "end":{"line":5,"column":13,"offset":51}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":13,"offset":50},
-        "end":{"line":5,"column":15,"offset":53}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":3,"offset":87},
-        "end":{"line":9,"column":5,"offset":90}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":9,"offset":100},
-        "end":{"line":10,"column":9,"offset":101}
-      },
-      {
-        "source":"call.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":13,"offset":104},
-        "end":{"line":10,"column":15,"offset":107}
+        "start":{"column":13,"line":10,"offset":104},
+        "type":"SourceFile"
       }
     ],
     "empty_count":0,
-    "empty_locs":[]
+    "empty_locs":[],
+    "uncovered_count":9,
+    "uncovered_locs":[
+      {
+        "end":{"column":12,"line":3,"offset":22},
+        "source":"call.js",
+        "start":{"column":12,"line":3,"offset":21},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":3,"line":4,"offset":34},
+        "source":"call.js",
+        "start":{"column":3,"line":4,"offset":33},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":5,"line":4,"offset":36},
+        "source":"call.js",
+        "start":{"column":3,"line":4,"offset":33},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":9,"line":5,"offset":47},
+        "source":"call.js",
+        "start":{"column":9,"line":5,"offset":46},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":13,"line":5,"offset":51},
+        "source":"call.js",
+        "start":{"column":13,"line":5,"offset":50},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":15,"line":5,"offset":53},
+        "source":"call.js",
+        "start":{"column":13,"line":5,"offset":50},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":5,"line":9,"offset":90},
+        "source":"call.js",
+        "start":{"column":3,"line":9,"offset":87},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":9,"line":10,"offset":101},
+        "source":"call.js",
+        "start":{"column":9,"line":10,"offset":100},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":15,"line":10,"offset":107},
+        "source":"call.js",
+        "start":{"column":13,"line":10,"offset":104},
+        "type":"SourceFile"
+      }
+    ]
   }
 }
 -----------------------------
@@ -159,310 +159,310 @@ coverage.js
     "covered_count":16,
     "covered_locs":[
       {
+        "end":{"column":8,"line":3,"offset":18},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":7,"offset":16},
-        "end":{"line":3,"column":8,"offset":18}
+        "start":{"column":7,"line":3,"offset":16},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":12,"line":3,"offset":22},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":12,"offset":21},
-        "end":{"line":3,"column":12,"offset":22}
+        "start":{"column":12,"line":3,"offset":21},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":18,"line":4,"offset":42},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":4,"column":17,"offset":40},
-        "end":{"line":4,"column":18,"offset":42}
+        "start":{"column":17,"line":4,"offset":40},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":22,"line":4,"offset":46},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":4,"column":17,"offset":40},
-        "end":{"line":4,"column":22,"offset":46}
+        "start":{"column":17,"line":4,"offset":40},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":22,"line":4,"offset":46},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":4,"column":22,"offset":45},
-        "end":{"line":4,"column":22,"offset":46}
+        "start":{"column":22,"line":4,"offset":45},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":17,"line":5,"offset":65},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":17,"offset":64},
-        "end":{"line":5,"column":17,"offset":65}
+        "start":{"column":17,"line":5,"offset":64},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":11,"offset":159},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":11,"column":1,"offset":134},
-        "end":{"line":11,"column":25,"offset":159}
+        "start":{"column":1,"line":11,"offset":134},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":12,"offset":185},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":12,"column":1,"offset":160},
-        "end":{"line":12,"column":25,"offset":185}
+        "start":{"column":1,"line":12,"offset":160},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":26,"line":15,"offset":258},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":15,"column":1,"offset":232},
-        "end":{"line":15,"column":26,"offset":258}
+        "start":{"column":1,"line":15,"offset":232},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":26,"line":23,"offset":432},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":23,"column":1,"offset":406},
-        "end":{"line":23,"column":26,"offset":432}
+        "start":{"column":1,"line":23,"offset":406},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":11,"line":47,"offset":813},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":47,"column":7,"offset":808},
-        "end":{"line":47,"column":11,"offset":813}
+        "start":{"column":7,"line":47,"offset":808},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":21,"line":47,"offset":823},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":47,"column":15,"offset":816},
-        "end":{"line":47,"column":21,"offset":823}
+        "start":{"column":15,"line":47,"offset":816},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":30,"line":47,"offset":832},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":47,"column":15,"offset":816},
-        "end":{"line":47,"column":30,"offset":832}
+        "start":{"column":15,"line":47,"offset":816},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":29,"line":47,"offset":831},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":47,"column":23,"offset":824},
-        "end":{"line":47,"column":29,"offset":831}
+        "start":{"column":23,"line":47,"offset":824},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":16,"line":49,"offset":851},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":49,"column":1,"offset":835},
-        "end":{"line":49,"column":16,"offset":851}
+        "start":{"column":1,"line":49,"offset":835},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":13,"line":49,"offset":848},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":49,"column":12,"offset":846},
-        "end":{"line":49,"column":13,"offset":848}
-      }
-    ],
-    "uncovered_count":31,
-    "uncovered_locs":[
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":4,"column":7,"offset":30},
-        "end":{"line":4,"column":8,"offset":32}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":7,"offset":54},
-        "end":{"line":5,"column":8,"offset":56}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":12,"offset":59},
-        "end":{"line":5,"column":13,"offset":61}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":12,"offset":59},
-        "end":{"line":5,"column":17,"offset":65}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":7,"column":1,"offset":68},
-        "end":{"line":7,"column":16,"offset":84}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":1,"offset":86},
-        "end":{"line":9,"column":23,"offset":109}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":1,"offset":110},
-        "end":{"line":10,"column":23,"offset":133}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":13,"column":1,"offset":186},
-        "end":{"line":13,"column":22,"offset":208}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":14,"column":1,"offset":209},
-        "end":{"line":14,"column":22,"offset":231}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":17,"column":1,"offset":260},
-        "end":{"line":17,"column":23,"offset":283}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":18,"column":1,"offset":284},
-        "end":{"line":18,"column":23,"offset":307}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":19,"column":1,"offset":308},
-        "end":{"line":19,"column":25,"offset":333}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":20,"column":1,"offset":334},
-        "end":{"line":20,"column":25,"offset":359}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":21,"column":1,"offset":360},
-        "end":{"line":21,"column":22,"offset":382}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":22,"column":1,"offset":383},
-        "end":{"line":22,"column":22,"offset":405}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":25,"column":1,"offset":434},
-        "end":{"line":25,"column":11,"offset":445}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":27,"column":1,"offset":447},
-        "end":{"line":27,"column":21,"offset":468}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":28,"column":1,"offset":469},
-        "end":{"line":28,"column":23,"offset":492}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":29,"column":1,"offset":493},
-        "end":{"line":29,"column":21,"offset":514}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":30,"column":1,"offset":515},
-        "end":{"line":30,"column":23,"offset":538}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":31,"column":1,"offset":539},
-        "end":{"line":31,"column":15,"offset":554}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":32,"column":1,"offset":555},
-        "end":{"line":32,"column":24,"offset":579}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":33,"column":1,"offset":580},
-        "end":{"line":33,"column":24,"offset":604}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":34,"column":1,"offset":605},
-        "end":{"line":34,"column":21,"offset":626}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":36,"column":1,"offset":628},
-        "end":{"line":36,"column":21,"offset":649}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":37,"column":1,"offset":650},
-        "end":{"line":37,"column":23,"offset":673}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":38,"column":1,"offset":674},
-        "end":{"line":38,"column":21,"offset":695}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":39,"column":1,"offset":696},
-        "end":{"line":39,"column":23,"offset":719}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":40,"column":1,"offset":720},
-        "end":{"line":40,"column":24,"offset":744}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":41,"column":1,"offset":745},
-        "end":{"line":41,"column":24,"offset":769}
-      },
-      {
-        "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":42,"column":1,"offset":770},
-        "end":{"line":42,"column":21,"offset":791}
+        "start":{"column":12,"line":49,"offset":846},
+        "type":"SourceFile"
       }
     ],
     "empty_count":3,
     "empty_locs":[
       {
+        "end":{"column":16,"line":7,"offset":84},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":7,"column":1,"offset":68},
-        "end":{"line":7,"column":16,"offset":84}
+        "start":{"column":1,"line":7,"offset":68},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":19,"offset":333},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":19,"column":1,"offset":308},
-        "end":{"line":19,"column":25,"offset":333}
+        "start":{"column":1,"line":19,"offset":308},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":20,"offset":359},
         "source":"coverage.js",
-        "type":"SourceFile",
-        "start":{"line":20,"column":1,"offset":334},
-        "end":{"line":20,"column":25,"offset":359}
+        "start":{"column":1,"line":20,"offset":334},
+        "type":"SourceFile"
+      }
+    ],
+    "uncovered_count":31,
+    "uncovered_locs":[
+      {
+        "end":{"column":8,"line":4,"offset":32},
+        "source":"coverage.js",
+        "start":{"column":7,"line":4,"offset":30},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":8,"line":5,"offset":56},
+        "source":"coverage.js",
+        "start":{"column":7,"line":5,"offset":54},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":13,"line":5,"offset":61},
+        "source":"coverage.js",
+        "start":{"column":12,"line":5,"offset":59},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":17,"line":5,"offset":65},
+        "source":"coverage.js",
+        "start":{"column":12,"line":5,"offset":59},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":16,"line":7,"offset":84},
+        "source":"coverage.js",
+        "start":{"column":1,"line":7,"offset":68},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":9,"offset":109},
+        "source":"coverage.js",
+        "start":{"column":1,"line":9,"offset":86},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":10,"offset":133},
+        "source":"coverage.js",
+        "start":{"column":1,"line":10,"offset":110},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":22,"line":13,"offset":208},
+        "source":"coverage.js",
+        "start":{"column":1,"line":13,"offset":186},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":22,"line":14,"offset":231},
+        "source":"coverage.js",
+        "start":{"column":1,"line":14,"offset":209},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":17,"offset":283},
+        "source":"coverage.js",
+        "start":{"column":1,"line":17,"offset":260},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":18,"offset":307},
+        "source":"coverage.js",
+        "start":{"column":1,"line":18,"offset":284},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":25,"line":19,"offset":333},
+        "source":"coverage.js",
+        "start":{"column":1,"line":19,"offset":308},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":25,"line":20,"offset":359},
+        "source":"coverage.js",
+        "start":{"column":1,"line":20,"offset":334},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":22,"line":21,"offset":382},
+        "source":"coverage.js",
+        "start":{"column":1,"line":21,"offset":360},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":22,"line":22,"offset":405},
+        "source":"coverage.js",
+        "start":{"column":1,"line":22,"offset":383},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":11,"line":25,"offset":445},
+        "source":"coverage.js",
+        "start":{"column":1,"line":25,"offset":434},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":21,"line":27,"offset":468},
+        "source":"coverage.js",
+        "start":{"column":1,"line":27,"offset":447},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":28,"offset":492},
+        "source":"coverage.js",
+        "start":{"column":1,"line":28,"offset":469},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":21,"line":29,"offset":514},
+        "source":"coverage.js",
+        "start":{"column":1,"line":29,"offset":493},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":30,"offset":538},
+        "source":"coverage.js",
+        "start":{"column":1,"line":30,"offset":515},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":15,"line":31,"offset":554},
+        "source":"coverage.js",
+        "start":{"column":1,"line":31,"offset":539},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":24,"line":32,"offset":579},
+        "source":"coverage.js",
+        "start":{"column":1,"line":32,"offset":555},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":24,"line":33,"offset":604},
+        "source":"coverage.js",
+        "start":{"column":1,"line":33,"offset":580},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":21,"line":34,"offset":626},
+        "source":"coverage.js",
+        "start":{"column":1,"line":34,"offset":605},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":21,"line":36,"offset":649},
+        "source":"coverage.js",
+        "start":{"column":1,"line":36,"offset":628},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":37,"offset":673},
+        "source":"coverage.js",
+        "start":{"column":1,"line":37,"offset":650},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":21,"line":38,"offset":695},
+        "source":"coverage.js",
+        "start":{"column":1,"line":38,"offset":674},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":23,"line":39,"offset":719},
+        "source":"coverage.js",
+        "start":{"column":1,"line":39,"offset":696},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":24,"line":40,"offset":744},
+        "source":"coverage.js",
+        "start":{"column":1,"line":40,"offset":720},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":24,"line":41,"offset":769},
+        "source":"coverage.js",
+        "start":{"column":1,"line":41,"offset":745},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":21,"line":42,"offset":791},
+        "source":"coverage.js",
+        "start":{"column":1,"line":42,"offset":770},
+        "type":"SourceFile"
       }
     ]
   }
@@ -476,107 +476,107 @@ any-refinement.js
     "covered_count":12,
     "covered_locs":[
       {
+        "end":{"column":12,"line":5,"offset":43},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":5,"offset":35},
-        "end":{"line":5,"column":12,"offset":43}
+        "start":{"column":5,"line":5,"offset":35},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":5,"offset":56},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":5,"offset":35},
-        "end":{"line":5,"column":25,"offset":56}
+        "start":{"column":5,"line":5,"offset":35},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":5,"offset":56},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":18,"offset":48},
-        "end":{"line":5,"column":25,"offset":56}
+        "start":{"column":18,"line":5,"offset":48},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":3,"line":6,"offset":63},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":6,"column":3,"offset":62},
-        "end":{"line":6,"column":3,"offset":63}
+        "start":{"column":3,"line":6,"offset":62},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":12,"line":9,"offset":91},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":5,"offset":83},
-        "end":{"line":9,"column":12,"offset":91}
+        "start":{"column":5,"line":9,"offset":83},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":26,"line":9,"offset":105},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":5,"offset":83},
-        "end":{"line":9,"column":26,"offset":105}
+        "start":{"column":5,"line":9,"offset":83},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":26,"line":9,"offset":105},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":18,"offset":96},
-        "end":{"line":9,"column":26,"offset":105}
+        "start":{"column":18,"line":9,"offset":96},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":3,"line":10,"offset":112},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":10,"column":3,"offset":111},
-        "end":{"line":10,"column":3,"offset":112}
+        "start":{"column":3,"line":10,"offset":111},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":12,"line":13,"offset":140},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":13,"column":5,"offset":132},
-        "end":{"line":13,"column":12,"offset":140}
+        "start":{"column":5,"line":13,"offset":132},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":13,"offset":153},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":13,"column":5,"offset":132},
-        "end":{"line":13,"column":25,"offset":153}
+        "start":{"column":5,"line":13,"offset":132},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":25,"line":13,"offset":153},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":13,"column":18,"offset":145},
-        "end":{"line":13,"column":25,"offset":153}
+        "start":{"column":18,"line":13,"offset":145},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":3,"line":14,"offset":160},
         "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":14,"column":3,"offset":159},
-        "end":{"line":14,"column":3,"offset":160}
-      }
-    ],
-    "uncovered_count":4,
-    "uncovered_locs":[
-      {
-        "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":13,"offset":22},
-        "end":{"line":3,"column":13,"offset":23}
-      },
-      {
-        "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":12,"offset":42},
-        "end":{"line":5,"column":12,"offset":43}
-      },
-      {
-        "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":9,"column":12,"offset":90},
-        "end":{"line":9,"column":12,"offset":91}
-      },
-      {
-        "source":"any-refinement.js",
-        "type":"SourceFile",
-        "start":{"line":13,"column":12,"offset":139},
-        "end":{"line":13,"column":12,"offset":140}
+        "start":{"column":3,"line":14,"offset":159},
+        "type":"SourceFile"
       }
     ],
     "empty_count":0,
-    "empty_locs":[]
+    "empty_locs":[],
+    "uncovered_count":4,
+    "uncovered_locs":[
+      {
+        "end":{"column":13,"line":3,"offset":23},
+        "source":"any-refinement.js",
+        "start":{"column":13,"line":3,"offset":22},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":12,"line":5,"offset":43},
+        "source":"any-refinement.js",
+        "start":{"column":12,"line":5,"offset":42},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":12,"line":9,"offset":91},
+        "source":"any-refinement.js",
+        "start":{"column":12,"line":9,"offset":90},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":12,"line":13,"offset":140},
+        "source":"any-refinement.js",
+        "start":{"column":12,"line":13,"offset":139},
+        "type":"SourceFile"
+      }
+    ]
   }
 }
 -----------------------------
@@ -588,59 +588,59 @@ unicode.js
     "covered_count":5,
     "covered_locs":[
       {
+        "end":{"column":5,"line":3,"offset":15},
         "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":2,"offset":11},
-        "end":{"line":3,"column":5,"offset":15}
+        "start":{"column":2,"line":3,"offset":11},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":11,"line":5,"offset":35},
         "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":7,"offset":30},
-        "end":{"line":5,"column":11,"offset":35}
+        "start":{"column":7,"line":5,"offset":30},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":17,"line":5,"offset":44},
         "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":15,"offset":38},
-        "end":{"line":5,"column":17,"offset":44}
+        "start":{"column":15,"line":5,"offset":38},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":24,"line":5,"offset":51},
         "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":21,"offset":47},
-        "end":{"line":5,"column":24,"offset":51}
+        "start":{"column":21,"line":5,"offset":47},
+        "type":"SourceFile"
       },
       {
+        "end":{"column":5,"line":7,"offset":65},
         "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":7,"column":2,"offset":61},
-        "end":{"line":7,"column":5,"offset":65}
-      }
-    ],
-    "uncovered_count":3,
-    "uncovered_locs":[
-      {
-        "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":3,"column":1,"offset":10},
-        "end":{"line":3,"column":11,"offset":21}
-      },
-      {
-        "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":5,"column":20,"offset":46},
-        "end":{"line":5,"column":30,"offset":57}
-      },
-      {
-        "source":"unicode.js",
-        "type":"SourceFile",
-        "start":{"line":7,"column":1,"offset":60},
-        "end":{"line":7,"column":11,"offset":71}
+        "start":{"column":2,"line":7,"offset":61},
+        "type":"SourceFile"
       }
     ],
     "empty_count":0,
-    "empty_locs":[]
+    "empty_locs":[],
+    "uncovered_count":3,
+    "uncovered_locs":[
+      {
+        "end":{"column":11,"line":3,"offset":21},
+        "source":"unicode.js",
+        "start":{"column":1,"line":3,"offset":10},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":30,"line":5,"offset":57},
+        "source":"unicode.js",
+        "start":{"column":20,"line":5,"offset":46},
+        "type":"SourceFile"
+      },
+      {
+        "end":{"column":11,"line":7,"offset":71},
+        "source":"unicode.js",
+        "start":{"column":1,"line":7,"offset":60},
+        "type":"SourceFile"
+      }
+    ]
   }
 }
 [0m// @flow

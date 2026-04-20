@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Insert inferred render type",
-      "kind": "refactor",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "insert_inferred_render_type",
+          "Insert inferred render type"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/insert-render-type.js": [
             {
+              "newText": "component Foo2() renders? Bar {\n  if (true) {\n    return null;\n  }\n  return <Bar />;\n}",
               "range": {
-                "start": {
-                  "line": 11,
-                  "character": 0
-                },
                 "end": {
-                  "line": 16,
-                  "character": 1
+                  "character": 1,
+                  "line": 16
+                },
+                "start": {
+                  "character": 0,
+                  "line": 11
                 }
-              },
-              "newText": "component Foo2() renders? Bar {\n  if (true) {\n    return null;\n  }\n  return <Bar />;\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "insert_inferred_render_type",
-          "Insert inferred render type"
-        ]
-      }
+      "kind": "refactor",
+      "title": "Insert inferred render type"
     }
   ]
 }

@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Wrap spread prop with Omit",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "wrap_spread_prop_with_omit",
+          "Wrap spread prop with Omit"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/invalid-component-prop.js": [
             {
+              "newText": "Omit<BarProps, \"bar\" | \"foo\">",
               "range": {
-                "start": {
-                  "line": 16,
-                  "character": 8
-                },
                 "end": {
-                  "line": 16,
-                  "character": 16
+                  "character": 16,
+                  "line": 16
+                },
+                "start": {
+                  "character": 8,
+                  "line": 16
                 }
-              },
-              "newText": "Omit<BarProps, \"bar\" | \"foo\">"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "wrap_spread_prop_with_omit",
-          "Wrap spread prop with Omit"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Wrap spread prop with Omit"
     }
   ]
 }

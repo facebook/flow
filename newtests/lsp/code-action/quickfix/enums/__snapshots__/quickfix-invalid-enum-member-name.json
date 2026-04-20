@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Replace `bad` with `Bad`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "capitalize_enum_member",
+          "Replace `bad` with `Bad`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/invalid-enum-member-name.js": [
             {
+              "newText": "Bad",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 2
-                },
                 "end": {
-                  "line": 3,
-                  "character": 5
+                  "character": 5,
+                  "line": 3
+                },
+                "start": {
+                  "character": 2,
+                  "line": 3
                 }
-              },
-              "newText": "Bad"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "capitalize_enum_member",
-          "Replace `bad` with `Bad`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Replace `bad` with `Bad`"
     }
   ]
 }

@@ -1,225 +1,225 @@
 predicates.js - undefined: {
-  "types":{"unevaluated":{"type":"void"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":18,"line":5,"offset":60},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":10,"offset":51},
-    "end":{"line":5,"column":18,"offset":60}
+    "start":{"column":10,"line":5,"offset":51},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":10,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
 }
 predicates.js - Array: {
-  "types":{"unevaluated":{"type":"class Array<T>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":6,
+  "line":6,
   "loc":{
+    "end":{"column":9,"line":6,"offset":74},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":5,"offset":69},
-    "end":{"line":6,"column":9,"offset":74}
+    "start":{"column":5,"line":6,"offset":69},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":6,
-  "endline":6,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"class Array<T>"}}
 }
 predicates.js - isArray: {
-  "types":{"unevaluated":{"type":"any (implicit)"},"evaluated":null},
-  "reasons":[],
+  "end":17,
+  "endline":6,
+  "line":6,
   "loc":{
+    "end":{"column":17,"line":6,"offset":82},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":11,"offset":75},
-    "end":{"line":6,"column":17,"offset":82}
+    "start":{"column":11,"line":6,"offset":75},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":6,
-  "endline":6,
+  "reasons":[],
   "start":11,
-  "end":17
+  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
 }
 predicates.js - y (refined obj): {
-  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":5,"line":8,"offset":96},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":5,"offset":95},
-    "end":{"line":8,"column":5,"offset":96}
+    "start":{"column":5,"line":8,"offset":95},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
 }
 predicates.js - if (y.FOO) obj: {
-  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":5,"line":9,"offset":120},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":5,"offset":119},
-    "end":{"line":9,"column":5,"offset":120}
+    "start":{"column":5,"line":9,"offset":119},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
 }
 predicates.js - if (y.FOO) prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":9,"line":9,"offset":124},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":7,"offset":121},
-    "end":{"line":9,"column":9,"offset":124}
+    "start":{"column":7,"line":9,"offset":121},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":7,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 predicates.js - if (y.FOO == '') obj: {
-  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":5,"line":10,"offset":134},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":5,"offset":133},
-    "end":{"line":10,"column":5,"offset":134}
+    "start":{"column":5,"line":10,"offset":133},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
 }
 predicates.js - if (y.FOO == '') prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":9,"line":10,"offset":138},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":7,"offset":135},
-    "end":{"line":10,"column":9,"offset":138}
+    "start":{"column":7,"line":10,"offset":135},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":7,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 predicates.js - if (y.FOO === '') obj: {
-  "types":{"unevaluated":{"type":"{|FOO: string|}"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":5,"line":11,"offset":154},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":5,"offset":153},
-    "end":{"line":11,"column":5,"offset":154}
+    "start":{"column":5,"line":11,"offset":153},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
 }
 predicates.js - if (y.FOO === '') prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":9,"line":11,"offset":158},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":7,"offset":155},
-    "end":{"line":11,"column":9,"offset":158}
+    "start":{"column":7,"line":11,"offset":155},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":7,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 predicates.js - if (y.FOO == null) prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":12,
+  "line":12,
   "loc":{
+    "end":{"column":9,"line":12,"offset":179},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":7,"offset":176},
-    "end":{"line":12,"column":9,"offset":179}
+    "start":{"column":7,"line":12,"offset":176},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":12,
-  "endline":12,
+  "reasons":[],
   "start":7,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 predicates.js - if (y.FOO == undefined) prop: {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":13,
+  "line":13,
   "loc":{
+    "end":{"column":9,"line":13,"offset":201},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":7,"offset":198},
-    "end":{"line":13,"column":9,"offset":201}
+    "start":{"column":7,"line":13,"offset":198},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":13,
-  "endline":13,
+  "reasons":[],
   "start":7,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 predicates.js - if (Array.isArray(y.FOO)): {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":23,
+  "endline":14,
+  "line":14,
   "loc":{
+    "end":{"column":23,"line":14,"offset":242},
     "source":"predicates.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":21,"offset":239},
-    "end":{"line":14,"column":23,"offset":242}
+    "start":{"column":21,"line":14,"offset":239},
+    "type":"SourceFile"
   },
   "path":"predicates.js",
-  "line":14,
-  "endline":14,
+  "reasons":[],
   "start":21,
-  "end":23
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 refinement.js:7:25 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":26,
+  "endline":7,
+  "line":7,
   "loc":{
+    "end":{"column":26,"line":7,"offset":77},
     "source":"refinement.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":24,"offset":74},
-    "end":{"line":7,"column":26,"offset":77}
+    "start":{"column":24,"line":7,"offset":74},
+    "type":"SourceFile"
   },
   "path":"refinement.js",
-  "line":7,
-  "endline":7,
+  "reasons":[],
   "start":24,
-  "end":26
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 refinement.js:8:25 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":26,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":26,"line":8,"offset":107},
     "source":"refinement.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":24,"offset":104},
-    "end":{"line":8,"column":26,"offset":107}
+    "start":{"column":24,"line":8,"offset":104},
+    "type":"SourceFile"
   },
   "path":"refinement.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":24,
-  "end":26
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }

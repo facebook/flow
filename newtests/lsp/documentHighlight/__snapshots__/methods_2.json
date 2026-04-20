@@ -2,69 +2,69 @@
   "method": "textDocument/documentHighlight",
   "result": [
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 72,
-          "character": 2
-        },
         "end": {
-          "line": 72,
-          "character": 5
+          "character": 5,
+          "line": 72
+        },
+        "start": {
+          "character": 2,
+          "line": 72
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 83,
-          "character": 11
-        },
         "end": {
-          "line": 83,
-          "character": 14
+          "character": 14,
+          "line": 83
+        },
+        "start": {
+          "character": 11,
+          "line": 83
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 84,
-          "character": 11
-        },
         "end": {
-          "line": 84,
-          "character": 14
+          "character": 14,
+          "line": 84
+        },
+        "start": {
+          "character": 11,
+          "line": 84
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 88,
-          "character": 9
-        },
         "end": {
-          "line": 88,
-          "character": 12
+          "character": 12,
+          "line": 88
+        },
+        "start": {
+          "character": 9,
+          "line": 88
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 89,
-          "character": 9
-        },
         "end": {
-          "line": 89,
-          "character": 12
+          "character": 12,
+          "line": 89
+        },
+        "start": {
+          "character": 9,
+          "line": 89
         }
-      },
-      "kind": 1
+      }
     }
   ]
 }

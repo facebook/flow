@@ -2,30 +2,30 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/match.js",
       "range": {
-        "start": {
-          "line": 7,
-          "character": 9
-        },
         "end": {
-          "line": 7,
-          "character": 10
+          "character": 10,
+          "line": 7
+        },
+        "start": {
+          "character": 9,
+          "line": 7
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/match.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/match.js",
       "range": {
-        "start": {
-          "line": 7,
-          "character": 13
-        },
         "end": {
-          "line": 7,
-          "character": 14
+          "character": 14,
+          "line": 7
+        },
+        "start": {
+          "character": 13,
+          "line": 7
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/match.js"
     }
   ]
 }

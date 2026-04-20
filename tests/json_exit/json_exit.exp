@@ -1,14 +1,14 @@
-{"flowVersion":"<VERSION>","exit":{"code":12,"reason":"Could_not_find_flowconfig","msg":"Could not find file or directory pants; canceling search for .flowconfig.\nSee \"flow init --help\" for more info"}}
+{"exit":{"code":12,"msg":"Could not find file or directory pants; canceling search for .flowconfig.\nSee \"flow init --help\" for more info","reason":"Could_not_find_flowconfig"},"flowVersion":"<VERSION>"}
 {
-  "flowVersion":"<VERSION>",
   "exit":{
     "code":12,
-    "reason":"Could_not_find_flowconfig",
-    "msg":"Could not find file or directory pants; canceling search for .flowconfig.\nSee \"flow init --help\" for more info"
-  }
+    "msg":"Could not find file or directory pants; canceling search for .flowconfig.\nSee \"flow init --help\" for more info",
+    "reason":"Could_not_find_flowconfig"
+  },
+  "flowVersion":"<VERSION>"
 }
-{"flowVersion":"<VERSION>","exit":{"code":64,"reason":"Commandline_usage_error","msg":"Unknown option: --pants"}}
+{"exit":{"code":64,"msg":"Unknown option: --pants","reason":"Commandline_usage_error"},"flowVersion":"<VERSION>"}
 {
-  "flowVersion":"<VERSION>",
-  "exit":{"code":64,"reason":"Commandline_usage_error","msg":"Unknown option: --pants"}
+  "exit":{"code":64,"msg":"Unknown option: --pants","reason":"Commandline_usage_error"},
+  "flowVersion":"<VERSION>"
 }

@@ -30,25 +30,9 @@ module.exports = (suite(
           {
             method: 'llm/context',
             result: {
-              llmContext: [
-                'IMPORTANT:\n',
-                'The type `$ReadOnly<T>` is deprecated, use `Readonly<T>` instead.\n',
-                'The type `$ReadOnlyArray<T>` is deprecated, use `ReadonlyArray<T>` instead.\n',
-                'The type `mixed` is deprecated, use `unknown` instead.\n',
-                '=== File: sample.js ===\n',
-                '\n',
-                'Imports:\n',
-                "  import ... from './types'\n",
-                "  import ... from './utils'\n",
-                "  import ... from 'react'\n",
-                '\n',
-                'Declarations:\n',
-                '  export default component UserProfile: component UserProfile(age: number, isActive?: boolean, name: string)\n',
-                'where\n',
-                "'UserProfile' is defined at sample.js:13:16,17:1\n",
-                '\n',
-              ].join(''),
               filesProcessed: ['sample.js'],
+              llmContext:
+                "IMPORTANT:\nThe type `$ReadOnly<T>` is deprecated, use `Readonly<T>` instead.\nThe type `$ReadOnlyArray<T>` is deprecated, use `ReadonlyArray<T>` instead.\nThe type `mixed` is deprecated, use `unknown` instead.\n=== File: sample.js ===\n\nImports:\n  import ... from './types'\n  import ... from './utils'\n  import ... from 'react'\n\nDeclarations:\n  export default component UserProfile: component UserProfile(age: number, isActive?: boolean, name: string)\nwhere\n'UserProfile' is defined at sample.js:13:16,17:1\n\n",
               tokensUsed: 144,
               truncated: false,
             },
@@ -103,13 +87,9 @@ module.exports = (suite(
           {
             method: 'llm/context',
             result: {
-              llmContext: [
-                'IMPORTANT:\n',
-                'The type `$ReadOnly<T>` is deprecated, use `Readonly<T>` instead.\n',
-                'The type `$ReadOnlyArray<T>` is deprecated, use `ReadonlyArray<T>` instead.\n',
-                'The type `mixed` is deprecated, use `unknown` instead.\n',
-              ].join(''),
               filesProcessed: [],
+              llmContext:
+                'IMPORTANT:\nThe type `$ReadOnly<T>` is deprecated, use `Readonly<T>` instead.\nThe type `$ReadOnlyArray<T>` is deprecated, use `ReadonlyArray<T>` instead.\nThe type `mixed` is deprecated, use `unknown` instead.\n',
               tokensUsed: 60,
               truncated: true,
             },

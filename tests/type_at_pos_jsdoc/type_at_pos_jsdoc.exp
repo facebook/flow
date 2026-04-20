@@ -2,2013 +2,2013 @@ variable_declaration.js:8:8
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is foo!",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":9,"line":8,"offset":56},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":7,"offset":53},
-    "end":{"line":8,"column":9,"offset":56}
+    "start":{"column":7,"line":8,"offset":53},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":7,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 variable_declaration.js:11:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is foo!",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":5,"line":11,"offset":73},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":3,"offset":70},
-    "end":{"line":11,"column":5,"offset":73}
+    "start":{"column":3,"line":11,"offset":70},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 variable_declaration.js:19:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is bar!",
-  "types":{"unevaluated":{"type":"void"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":19,
+  "line":19,
   "loc":{
+    "end":{"column":5,"line":19,"offset":137},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":3,"offset":134},
-    "end":{"line":19,"column":5,"offset":137}
+    "start":{"column":3,"line":19,"offset":134},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":19,
-  "endline":19,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
 }
 
 variable_declaration.js:27:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is baz!",
-  "types":{"unevaluated":{"type":"void"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":27,
+  "line":27,
   "loc":{
+    "end":{"column":5,"line":27,"offset":192},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":27,"column":3,"offset":189},
-    "end":{"line":27,"column":5,"offset":192}
+    "start":{"column":3,"line":27,"offset":189},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":27,
-  "endline":27,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
 }
 
 variable_declaration.js:35:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is alpha!",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":35,
+  "line":35,
   "loc":{
+    "end":{"column":7,"line":35,"offset":251},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":35,"column":3,"offset":246},
-    "end":{"line":35,"column":7,"offset":251}
+    "start":{"column":3,"line":35,"offset":246},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":35,
-  "endline":35,
+  "reasons":[],
   "start":3,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 variable_declaration.js:43:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is beta!",
-  "types":{"unevaluated":{"type":"void"},"evaluated":null},
-  "reasons":[],
+  "end":6,
+  "endline":43,
+  "line":43,
   "loc":{
+    "end":{"column":6,"line":43,"offset":302},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":43,"column":3,"offset":298},
-    "end":{"line":43,"column":6,"offset":302}
+    "start":{"column":3,"line":43,"offset":298},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":43,
-  "endline":43,
+  "reasons":[],
   "start":3,
-  "end":6
+  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
 }
 
 variable_declaration.js:48:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is beta!",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":6,
+  "endline":48,
+  "line":48,
   "loc":{
+    "end":{"column":6,"line":48,"offset":329},
     "source":"variable_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":48,"column":3,"offset":325},
-    "end":{"line":48,"column":6,"offset":329}
+    "start":{"column":3,"line":48,"offset":325},
+    "type":"SourceFile"
   },
   "path":"variable_declaration.js",
-  "line":48,
-  "endline":48,
+  "reasons":[],
   "start":3,
-  "end":6
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 class_declaration.js:8:14
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is Foo!",
-  "types":{"unevaluated":{"type":"class Foo"},"evaluated":null},
-  "reasons":[],
+  "end":15,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":15,"line":8,"offset":62},
     "source":"class_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":13,"offset":59},
-    "end":{"line":8,"column":15,"offset":62}
+    "start":{"column":13,"line":8,"offset":59},
+    "type":"SourceFile"
   },
   "path":"class_declaration.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":13,
-  "end":15
+  "types":{"evaluated":null,"unevaluated":{"type":"class Foo"}}
 }
 
 function_declaration.js:8:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is foo!",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":5,"line":8,"offset":57},
     "source":"function_declaration.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":3,"offset":54},
-    "end":{"line":8,"column":5,"offset":57}
+    "start":{"column":3,"line":8,"offset":54},
+    "type":"SourceFile"
   },
   "path":"function_declaration.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 declare.js:8:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n declaration of foo",
-  "types":{"unevaluated":{"type":"empty"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":5,"line":8,"offset":69},
     "source":"declare.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":3,"offset":66},
-    "end":{"line":8,"column":5,"offset":69}
+    "start":{"column":3,"line":8,"offset":66},
+    "type":"SourceFile"
   },
   "path":"declare.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"empty"}}
 }
 
 declare.js:16:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n declaration of Bar",
-  "types":{"unevaluated":{"type":"class Bar"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":7,"line":16,"offset":137},
     "source":"declare.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":134},
-    "end":{"line":16,"column":7,"offset":137}
+    "start":{"column":5,"line":16,"offset":134},
+    "type":"SourceFile"
   },
   "path":"declare.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"class Bar"}}
 }
 
 declare.js:24:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n declaration of baz",
-  "types":{"unevaluated":{"type":"(x: any) => any"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":24,
+  "line":24,
   "loc":{
+    "end":{"column":5,"line":24,"offset":221},
     "source":"declare.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":3,"offset":218},
-    "end":{"line":24,"column":5,"offset":221}
+    "start":{"column":3,"line":24,"offset":218},
+    "type":"SourceFile"
   },
   "path":"declare.js",
-  "line":24,
-  "endline":24,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"(x: any) => any"}}
 }
 
 objects-requires.js:18:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n foo is an identifier property",
-  "types":{"unevaluated":{"type":"1"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":18,
+  "line":18,
   "loc":{
+    "end":{"column":7,"line":18,"offset":296},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":5,"offset":293},
-    "end":{"line":18,"column":7,"offset":296}
+    "start":{"column":5,"line":18,"offset":293},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":18,
-  "endline":18,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
 }
 
 objects-requires.js:20:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n bar is a getter property",
-  "types":{"unevaluated":{"type":"2"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":20,
+  "line":20,
   "loc":{
+    "end":{"column":7,"line":20,"offset":315},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":20,"column":5,"offset":312},
-    "end":{"line":20,"column":7,"offset":315}
+    "start":{"column":5,"line":20,"offset":312},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":20,
-  "endline":20,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
 }
 
 objects-requires.js:22:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"3"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":22,
+  "line":22,
   "loc":{
+    "end":{"column":7,"line":22,"offset":334},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":22,"column":5,"offset":331},
-    "end":{"line":22,"column":7,"offset":334}
+    "start":{"column":5,"line":22,"offset":331},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":22,
-  "endline":22,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
 }
 
 objects-requires.js:24:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n qux is a literal property",
-  "types":{"unevaluated":{"type":"4"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":24,
+  "line":24,
   "loc":{
+    "end":{"column":7,"line":24,"offset":353},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":5,"offset":350},
-    "end":{"line":24,"column":7,"offset":353}
+    "start":{"column":5,"line":24,"offset":350},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":24,
-  "endline":24,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"4"}}
 }
 
 objects-requires.js:30:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n foo is an identifier property",
-  "types":{"unevaluated":{"type":"1"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":30,
+  "line":30,
   "loc":{
+    "end":{"column":7,"line":30,"offset":433},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":30,"column":5,"offset":430},
-    "end":{"line":30,"column":7,"offset":433}
+    "start":{"column":5,"line":30,"offset":430},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":30,
-  "endline":30,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
 }
 
 objects-requires.js:32:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n bar is a getter property",
-  "types":{"unevaluated":{"type":"2"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":32,
+  "line":32,
   "loc":{
+    "end":{"column":7,"line":32,"offset":452},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":32,"column":5,"offset":449},
-    "end":{"line":32,"column":7,"offset":452}
+    "start":{"column":5,"line":32,"offset":449},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":32,
-  "endline":32,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
 }
 
 objects-requires.js:34:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"3"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":34,
+  "line":34,
   "loc":{
+    "end":{"column":7,"line":34,"offset":471},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":34,"column":5,"offset":468},
-    "end":{"line":34,"column":7,"offset":471}
+    "start":{"column":5,"line":34,"offset":468},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":34,
-  "endline":34,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
 }
 
 objects-requires.js:36:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n qux is a literal property",
-  "types":{"unevaluated":{"type":"4"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":36,
+  "line":36,
   "loc":{
+    "end":{"column":7,"line":36,"offset":490},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":36,"column":5,"offset":487},
-    "end":{"line":36,"column":7,"offset":490}
+    "start":{"column":5,"line":36,"offset":487},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":36,
-  "endline":36,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"4"}}
 }
 
 objects-requires.js:41:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n foo is an identifier property",
-  "types":{"unevaluated":{"type":"1"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":41,
+  "line":41,
   "loc":{
+    "end":{"column":7,"line":41,"offset":556},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":41,"column":5,"offset":553},
-    "end":{"line":41,"column":7,"offset":556}
+    "start":{"column":5,"line":41,"offset":553},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":41,
-  "endline":41,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
 }
 
 objects-requires.js:43:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n bar is a getter property",
-  "types":{"unevaluated":{"type":"2"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":43,
+  "line":43,
   "loc":{
+    "end":{"column":7,"line":43,"offset":572},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":43,"column":5,"offset":569},
-    "end":{"line":43,"column":7,"offset":572}
+    "start":{"column":5,"line":43,"offset":569},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":43,
-  "endline":43,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
 }
 
 objects-requires.js:45:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n baz is an identifier property with variance",
-  "types":{"unevaluated":{"type":"3"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":45,
+  "line":45,
   "loc":{
+    "end":{"column":7,"line":45,"offset":588},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":45,"column":5,"offset":585},
-    "end":{"line":45,"column":7,"offset":588}
+    "start":{"column":5,"line":45,"offset":585},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":45,
-  "endline":45,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
 }
 
 objects-requires.js:47:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n qux is a literal property",
-  "types":{"unevaluated":{"type":"4"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":47,
+  "line":47,
   "loc":{
+    "end":{"column":7,"line":47,"offset":604},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":47,"column":5,"offset":601},
-    "end":{"line":47,"column":7,"offset":604}
+    "start":{"column":5,"line":47,"offset":601},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":47,
-  "endline":47,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"4"}}
 }
 
 objects-requires.js:51:7
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is a static property",
-  "types":{"unevaluated":{"type":"1"},"evaluated":null},
-  "reasons":[],
+  "end":14,
+  "endline":51,
+  "line":51,
   "loc":{
+    "end":{"column":14,"line":51,"offset":631},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":51,"column":5,"offset":621},
-    "end":{"line":51,"column":14,"offset":631}
+    "start":{"column":5,"line":51,"offset":621},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":51,
-  "endline":51,
+  "reasons":[],
   "start":5,
-  "end":14
+  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
 }
 
 objects-requires.js:53:7
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is a static method",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":16,
+  "endline":53,
+  "line":53,
   "loc":{
+    "end":{"column":16,"line":53,"offset":656},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":53,"column":5,"offset":644},
-    "end":{"line":53,"column":16,"offset":656}
+    "start":{"column":5,"line":53,"offset":644},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":53,
-  "endline":53,
+  "reasons":[],
   "start":5,
-  "end":16
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 objects-requires.js:56:12
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is an instance property",
-  "types":{"unevaluated":{"type":"2"},"evaluated":null},
-  "reasons":[],
+  "end":20,
+  "endline":56,
+  "line":56,
   "loc":{
+    "end":{"column":20,"line":56,"offset":713},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":56,"column":9,"offset":701},
-    "end":{"line":56,"column":20,"offset":713}
+    "start":{"column":9,"line":56,"offset":701},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":56,
-  "endline":56,
+  "reasons":[],
   "start":9,
-  "end":20
+  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
 }
 
 objects-requires.js:58:12
 Flags: --strip-root --pretty
 {
   "documentation":"\n this is an instance method",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":22,
+  "endline":58,
+  "line":58,
   "loc":{
+    "end":{"column":22,"line":58,"offset":750},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":58,"column":9,"offset":736},
-    "end":{"line":58,"column":22,"offset":750}
+    "start":{"column":9,"line":58,"offset":736},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":58,
-  "endline":58,
+  "reasons":[],
   "start":9,
-  "end":22
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 objects-requires.js:60:12
 Flags: --strip-root --pretty
 {
   "documentation":"\n property with variance",
-  "types":{"unevaluated":{"type":"3"},"evaluated":null},
-  "reasons":[],
+  "end":20,
+  "endline":60,
+  "line":60,
   "loc":{
+    "end":{"column":20,"line":60,"offset":787},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":60,"column":9,"offset":775},
-    "end":{"line":60,"column":20,"offset":787}
+    "start":{"column":9,"line":60,"offset":775},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":60,
-  "endline":60,
+  "reasons":[],
   "start":9,
-  "end":20
+  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
 }
 
 objects-requires.js:63:8
 Flags: --strip-root --pretty
 {
   "documentation":"\n a defaulted string enum",
-  "types":{"unevaluated":{"type":"enum DefaultedStringEnum"},"evaluated":null},
-  "reasons":[],
+  "end":19,
+  "endline":63,
+  "line":63,
   "loc":{
+    "end":{"column":19,"line":63,"offset":822},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":63,"column":1,"offset":803},
-    "end":{"line":63,"column":19,"offset":822}
+    "start":{"column":1,"line":63,"offset":803},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":63,
-  "endline":63,
+  "reasons":[],
   "start":1,
-  "end":19
+  "types":{"evaluated":null,"unevaluated":{"type":"enum DefaultedStringEnum"}}
 }
 
 objects-requires.js:65:23
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a defaulted string enum",
-  "types":{"unevaluated":{"type":"DefaultedStringEnum"},"evaluated":null},
-  "reasons":[],
+  "end":27,
+  "endline":65,
+  "line":65,
   "loc":{
+    "end":{"column":27,"line":65,"offset":860},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":65,"column":21,"offset":853},
-    "end":{"line":65,"column":27,"offset":860}
+    "start":{"column":21,"line":65,"offset":853},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":65,
-  "endline":65,
+  "reasons":[],
   "start":21,
-  "end":27
+  "types":{"evaluated":null,"unevaluated":{"type":"DefaultedStringEnum"}}
 }
 
 objects-requires.js:67:23
 Flags: --strip-root --pretty
 {
   "documentation":"\n second member of a defaulted string enum",
-  "types":{"unevaluated":{"type":"DefaultedStringEnum"},"evaluated":null},
-  "reasons":[],
+  "end":27,
+  "endline":67,
+  "line":67,
   "loc":{
+    "end":{"column":27,"line":67,"offset":913},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":67,"column":21,"offset":906},
-    "end":{"line":67,"column":27,"offset":913}
+    "start":{"column":21,"line":67,"offset":906},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":67,
-  "endline":67,
+  "reasons":[],
   "start":21,
-  "end":27
+  "types":{"evaluated":null,"unevaluated":{"type":"DefaultedStringEnum"}}
 }
 
 objects-requires.js:69:8
 Flags: --strip-root --pretty
 {
   "documentation":"\n an initialized string enum",
-  "types":{"unevaluated":{"type":"enum InitializedStringEnum"},"evaluated":null},
-  "reasons":[],
+  "end":21,
+  "endline":69,
+  "line":69,
   "loc":{
+    "end":{"column":21,"line":69,"offset":960},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":69,"column":1,"offset":939},
-    "end":{"line":69,"column":21,"offset":960}
+    "start":{"column":1,"line":69,"offset":939},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":69,
-  "endline":69,
+  "reasons":[],
   "start":1,
-  "end":21
+  "types":{"evaluated":null,"unevaluated":{"type":"enum InitializedStringEnum"}}
 }
 
 objects-requires.js:71:25
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of an initialized string enum",
-  "types":{"unevaluated":{"type":"InitializedStringEnum"},"evaluated":null},
-  "reasons":[],
+  "end":29,
+  "endline":71,
+  "line":71,
   "loc":{
+    "end":{"column":29,"line":71,"offset":1000},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":71,"column":23,"offset":993},
-    "end":{"line":71,"column":29,"offset":1000}
+    "start":{"column":23,"line":71,"offset":993},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":71,
-  "endline":71,
+  "reasons":[],
   "start":23,
-  "end":29
+  "types":{"evaluated":null,"unevaluated":{"type":"InitializedStringEnum"}}
 }
 
 objects-requires.js:73:25
 Flags: --strip-root --pretty
 {
   "documentation":"\n second member of an initialized string enum",
-  "types":{"unevaluated":{"type":"InitializedStringEnum"},"evaluated":null},
-  "reasons":[],
+  "end":29,
+  "endline":73,
+  "line":73,
   "loc":{
+    "end":{"column":29,"line":73,"offset":1057},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":73,"column":23,"offset":1050},
-    "end":{"line":73,"column":29,"offset":1057}
+    "start":{"column":23,"line":73,"offset":1050},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":73,
-  "endline":73,
+  "reasons":[],
   "start":23,
-  "end":29
+  "types":{"evaluated":null,"unevaluated":{"type":"InitializedStringEnum"}}
 }
 
 objects-requires.js:75:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n a number enum",
-  "types":{"unevaluated":{"type":"enum NumberEnum"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":75,
+  "line":75,
   "loc":{
+    "end":{"column":10,"line":75,"offset":1095},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":75,"column":1,"offset":1085},
-    "end":{"line":75,"column":10,"offset":1095}
+    "start":{"column":1,"line":75,"offset":1085},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":75,
-  "endline":75,
+  "reasons":[],
   "start":1,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"enum NumberEnum"}}
 }
 
 objects-requires.js:77:14
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a number enum",
-  "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":77,
+  "line":77,
   "loc":{
+    "end":{"column":18,"line":77,"offset":1122},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":77,"column":12,"offset":1115},
-    "end":{"line":77,"column":18,"offset":1122}
+    "start":{"column":12,"line":77,"offset":1115},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":77,
-  "endline":77,
+  "reasons":[],
   "start":12,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"NumberEnum"}}
 }
 
 objects-requires.js:79:14
 Flags: --strip-root --pretty
 {
   "documentation":"\n second member of a number enum",
-  "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":79,
+  "line":79,
   "loc":{
+    "end":{"column":18,"line":79,"offset":1157},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":79,"column":12,"offset":1150},
-    "end":{"line":79,"column":18,"offset":1157}
+    "start":{"column":12,"line":79,"offset":1150},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":79,
-  "endline":79,
+  "reasons":[],
   "start":12,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"NumberEnum"}}
 }
 
 objects-requires.js:81:7
 Flags: --strip-root --pretty
 {
   "documentation":"\n a boolean enum",
-  "types":{"unevaluated":{"type":"enum BooleanEnum"},"evaluated":null},
-  "reasons":[],
+  "end":11,
+  "endline":81,
+  "line":81,
   "loc":{
+    "end":{"column":11,"line":81,"offset":1185},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":81,"column":1,"offset":1174},
-    "end":{"line":81,"column":11,"offset":1185}
+    "start":{"column":1,"line":81,"offset":1174},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":81,
-  "endline":81,
+  "reasons":[],
   "start":1,
-  "end":11
+  "types":{"evaluated":null,"unevaluated":{"type":"enum BooleanEnum"}}
 }
 
 objects-requires.js:83:15
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a boolean enum",
-  "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":null},
-  "reasons":[],
+  "end":19,
+  "endline":83,
+  "line":83,
   "loc":{
+    "end":{"column":19,"line":83,"offset":1214},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":83,"column":13,"offset":1207},
-    "end":{"line":83,"column":19,"offset":1214}
+    "start":{"column":13,"line":83,"offset":1207},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":83,
-  "endline":83,
+  "reasons":[],
   "start":13,
-  "end":19
+  "types":{"evaluated":null,"unevaluated":{"type":"BooleanEnum"}}
 }
 
 objects-requires.js:85:15
 Flags: --strip-root --pretty
 {
   "documentation":"\n second member of a boolean enum",
-  "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":null},
-  "reasons":[],
+  "end":19,
+  "endline":85,
+  "line":85,
   "loc":{
+    "end":{"column":19,"line":85,"offset":1251},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":85,"column":13,"offset":1244},
-    "end":{"line":85,"column":19,"offset":1251}
+    "start":{"column":13,"line":85,"offset":1244},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":85,
-  "endline":85,
+  "reasons":[],
   "start":13,
-  "end":19
+  "types":{"evaluated":null,"unevaluated":{"type":"BooleanEnum"}}
 }
 
 objects-requires.js:87:6
 Flags: --strip-root --pretty
 {
   "documentation":"\n a symbol enum",
-  "types":{"unevaluated":{"type":"enum SymbolEnum"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":87,
+  "line":87,
   "loc":{
+    "end":{"column":10,"line":87,"offset":1279},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":87,"column":1,"offset":1269},
-    "end":{"line":87,"column":10,"offset":1279}
+    "start":{"column":1,"line":87,"offset":1269},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":87,
-  "endline":87,
+  "reasons":[],
   "start":1,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"enum SymbolEnum"}}
 }
 
 objects-requires.js:89:15
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a symbol enum",
-  "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":89,
+  "line":89,
   "loc":{
+    "end":{"column":18,"line":89,"offset":1306},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":89,"column":12,"offset":1299},
-    "end":{"line":89,"column":18,"offset":1306}
+    "start":{"column":12,"line":89,"offset":1299},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":89,
-  "endline":89,
+  "reasons":[],
   "start":12,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"SymbolEnum"}}
 }
 
 objects-requires.js:91:15
 Flags: --strip-root --pretty
 {
   "documentation":"\n second member of a symbol enum",
-  "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":91,
+  "line":91,
   "loc":{
+    "end":{"column":18,"line":91,"offset":1342},
     "source":"objects-requires.js",
-    "type":"SourceFile",
-    "start":{"line":91,"column":12,"offset":1335},
-    "end":{"line":91,"column":18,"offset":1342}
+    "start":{"column":12,"line":91,"offset":1335},
+    "type":"SourceFile"
   },
   "path":"objects-requires.js",
-  "line":91,
-  "endline":91,
+  "reasons":[],
   "start":12,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"SymbolEnum"}}
 }
 
 objects.js:58:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a defaulted string enum",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 objects.js:73:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of an initialized string enum",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 objects.js:88:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a number enum",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 objects.js:103:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a boolean enum",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 objects.js:118:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a symbol enum",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 objects.js:168:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n identifier property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":168,
+  "line":168,
   "loc":{
+    "end":{"column":5,"line":168,"offset":2441},
     "source":"objects.js",
-    "type":"SourceFile",
-    "start":{"line":168,"column":5,"offset":2440},
-    "end":{"line":168,"column":5,"offset":2441}
+    "start":{"column":5,"line":168,"offset":2440},
+    "type":"SourceFile"
   },
   "path":"objects.js",
-  "line":168,
-  "endline":168,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 objects.js:170:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n literal property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":170,
+  "line":170,
   "loc":{
+    "end":{"column":5,"line":170,"offset":2454},
     "source":"objects.js",
-    "type":"SourceFile",
-    "start":{"line":170,"column":5,"offset":2453},
-    "end":{"line":170,"column":5,"offset":2454}
+    "start":{"column":5,"line":170,"offset":2453},
+    "type":"SourceFile"
   },
   "path":"objects.js",
-  "line":170,
-  "endline":170,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 objects.js:172:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n computed property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":172,
+  "line":172,
   "loc":{
+    "end":{"column":5,"line":172,"offset":2467},
     "source":"objects.js",
-    "type":"SourceFile",
-    "start":{"line":172,"column":5,"offset":2466},
-    "end":{"line":172,"column":5,"offset":2467}
+    "start":{"column":5,"line":172,"offset":2466},
+    "type":"SourceFile"
   },
   "path":"objects.js",
-  "line":172,
-  "endline":172,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 objects.js:174:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n annotated getter property of an object literal",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":174,
+  "line":174,
   "loc":{
+    "end":{"column":5,"line":174,"offset":2480},
     "source":"objects.js",
-    "type":"SourceFile",
-    "start":{"line":174,"column":5,"offset":2479},
-    "end":{"line":174,"column":5,"offset":2480}
+    "start":{"column":5,"line":174,"offset":2479},
+    "type":"SourceFile"
   },
   "path":"objects.js",
-  "line":174,
-  "endline":174,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 objects.js:178:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n method property of an object literal",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":178,
+  "line":178,
   "loc":{
+    "end":{"column":5,"line":178,"offset":2565},
     "source":"objects.js",
-    "type":"SourceFile",
-    "start":{"line":178,"column":5,"offset":2564},
-    "end":{"line":178,"column":5,"offset":2565}
+    "start":{"column":5,"line":178,"offset":2564},
+    "type":"SourceFile"
   },
   "path":"objects.js",
-  "line":178,
-  "endline":178,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 objects.js:180:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n async method property of an object literal",
-  "types":{"unevaluated":{"type":"() => Promise<void>"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":180,
+  "line":180,
   "loc":{
+    "end":{"column":5,"line":180,"offset":2578},
     "source":"objects.js",
-    "type":"SourceFile",
-    "start":{"line":180,"column":5,"offset":2577},
-    "end":{"line":180,"column":5,"offset":2578}
+    "start":{"column":5,"line":180,"offset":2577},
+    "type":"SourceFile"
   },
   "path":"objects.js",
-  "line":180,
-  "endline":180,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"() => Promise<void>"}}
 }
 
 requires.js:5:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n foo is a function",
-  "types":{"unevaluated":{"type":"(x: number, y: number) => number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":5,"line":5,"offset":70},
     "source":"requires.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":3,"offset":67},
-    "end":{"line":5,"column":5,"offset":70}
+    "start":{"column":3,"line":5,"offset":67},
+    "type":"SourceFile"
   },
   "path":"requires.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"(x: number, y: number) => number"}}
 }
 
 requires.js:7:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n Bar is a class",
-  "types":{"unevaluated":{"type":"class Bar"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":7,
+  "line":7,
   "loc":{
+    "end":{"column":5,"line":7,"offset":82},
     "source":"requires.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":3,"offset":79},
-    "end":{"line":7,"column":5,"offset":82}
+    "start":{"column":3,"line":7,"offset":79},
+    "type":"SourceFile"
   },
   "path":"requires.js",
-  "line":7,
-  "endline":7,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"class Bar"}}
 }
 
 requires.js:9:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n baz is a variable",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":5,"line":9,"offset":94},
     "source":"requires.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":3,"offset":91},
-    "end":{"line":9,"column":5,"offset":94}
+    "start":{"column":3,"line":9,"offset":91},
+    "type":"SourceFile"
   },
   "path":"requires.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 imports.js:7:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n foo is a function",
-  "types":{"unevaluated":{"type":"(x: number, y: number) => number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":7,
+  "line":7,
   "loc":{
+    "end":{"column":5,"line":7,"offset":199},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":3,"offset":196},
-    "end":{"line":7,"column":5,"offset":199}
+    "start":{"column":3,"line":7,"offset":196},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":7,
-  "endline":7,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"(x: number, y: number) => number"}}
 }
 
 imports.js:9:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n Bar is a class",
-  "types":{"unevaluated":{"type":"class Bar"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":5,"line":9,"offset":211},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":3,"offset":208},
-    "end":{"line":9,"column":5,"offset":211}
+    "start":{"column":3,"line":9,"offset":208},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"class Bar"}}
 }
 
 imports.js:11:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n baz is a variable",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":5,"line":11,"offset":223},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":3,"offset":220},
-    "end":{"line":11,"column":5,"offset":223}
+    "start":{"column":3,"line":11,"offset":220},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 imports.js:13:4
 Flags: --strip-root --pretty
 {
   "documentation":" alpha is a number",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":13,
+  "line":13,
   "loc":{
+    "end":{"column":7,"line":13,"offset":237},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":3,"offset":232},
-    "end":{"line":13,"column":7,"offset":237}
+    "start":{"column":3,"line":13,"offset":232},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":13,
-  "endline":13,
+  "reasons":[],
   "start":3,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 imports.js:15:4
 Flags: --strip-root --pretty
 {
   "documentation":" Beta is a class",
-  "types":{"unevaluated":{"type":"class Beta"},"evaluated":null},
-  "reasons":[],
+  "end":6,
+  "endline":15,
+  "line":15,
   "loc":{
+    "end":{"column":6,"line":15,"offset":249},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":3,"offset":245},
-    "end":{"line":15,"column":6,"offset":249}
+    "start":{"column":3,"line":15,"offset":245},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":15,
-  "endline":15,
+  "reasons":[],
   "start":3,
-  "end":6
+  "types":{"evaluated":null,"unevaluated":{"type":"class Beta"}}
 }
 
 imports.js:17:4
 Flags: --strip-root --pretty
 {
   "documentation":" gamma is a function",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":17,
+  "line":17,
   "loc":{
+    "end":{"column":7,"line":17,"offset":262},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":3,"offset":257},
-    "end":{"line":17,"column":7,"offset":262}
+    "start":{"column":3,"line":17,"offset":257},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":17,
-  "endline":17,
+  "reasons":[],
   "start":3,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 imports.js:19:4
 Flags: --strip-root --pretty
 {
   "documentation":" delta is a function",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":19,
+  "line":19,
   "loc":{
+    "end":{"column":7,"line":19,"offset":275},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":3,"offset":270},
-    "end":{"line":19,"column":7,"offset":275}
+    "start":{"column":3,"line":19,"offset":270},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":19,
-  "endline":19,
+  "reasons":[],
   "start":3,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 imports.js:21:4
 Flags: --strip-root --pretty
 {
   "documentation":" this is 2",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":21,
+  "line":21,
   "loc":{
+    "end":{"column":9,"line":21,"offset":290},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":21,"column":3,"offset":283},
-    "end":{"line":21,"column":9,"offset":290}
+    "start":{"column":3,"line":21,"offset":283},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":21,
-  "endline":21,
+  "reasons":[],
   "start":3,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 imports.js:23:4
 Flags: --strip-root --pretty
 {
   "documentation":" ε is a component",
-  "types":{
-    "unevaluated":{"type":"component Epsilon()"},
-    "evaluated":{"type":"component Epsilon()"}
-  },
-  "reasons":[],
+  "end":9,
+  "endline":23,
+  "line":23,
   "loc":{
+    "end":{"column":9,"line":23,"offset":305},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":23,"column":3,"offset":298},
-    "end":{"line":23,"column":9,"offset":305}
+    "start":{"column":3,"line":23,"offset":298},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":23,
-  "endline":23,
+  "reasons":[],
   "start":3,
-  "end":9
+  "types":{
+    "evaluated":{"type":"component Epsilon()"},
+    "unevaluated":{"type":"component Epsilon()"}
+  }
 }
 
 imports.js:25:4
 Flags: --strip-root --pretty
 {
   "documentation":" this is a lambda",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":6,
+  "endline":25,
+  "line":25,
   "loc":{
+    "end":{"column":6,"line":25,"offset":317},
     "source":"imports.js",
-    "type":"SourceFile",
-    "start":{"line":25,"column":3,"offset":313},
-    "end":{"line":25,"column":6,"offset":317}
+    "start":{"column":3,"line":25,"offset":313},
+    "type":"SourceFile"
   },
   "path":"imports.js",
-  "line":25,
-  "endline":25,
+  "reasons":[],
   "start":3,
-  "end":6
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 unrecognized_tags.js:14:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n description\n\n**@explorer-desc** \n  this is foo\n  it's a component\n\n**@explorer-ignore**\n\n**@explorer-title**  foo the component",
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":14,
+  "line":14,
   "loc":{
+    "end":{"column":5,"line":14,"offset":166},
     "source":"unrecognized_tags.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":3,"offset":163},
-    "end":{"line":14,"column":5,"offset":166}
+    "start":{"column":3,"line":14,"offset":163},
+    "type":"SourceFile"
   },
   "path":"unrecognized_tags.js",
-  "line":14,
-  "endline":14,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
 parse_error.js:6:5
 Flags: --strip-root --pretty
 {
   "documentation":" this is foo",
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":6,
+  "endline":6,
+  "line":6,
   "loc":{
+    "end":{"column":6,"line":6,"offset":53},
     "source":"parse_error.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":4,"offset":50},
-    "end":{"line":6,"column":6,"offset":53}
+    "start":{"column":4,"line":6,"offset":50},
+    "type":"SourceFile"
   },
   "path":"parse_error.js",
-  "line":6,
-  "endline":6,
+  "reasons":[],
   "start":4,
-  "end":6
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 
 types.js:16:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is myFoo",
-  "types":{"unevaluated":{"type":"type myFoo = number"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":10,"line":16,"offset":421},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":6,"offset":416},
-    "end":{"line":16,"column":10,"offset":421}
+    "start":{"column":6,"line":16,"offset":416},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":6,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"type myFoo = number"}}
 }
 
 types.js:18:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is myBar",
-  "types":{"unevaluated":{"type":"type myBar<T> = ?T"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":18,
+  "line":18,
   "loc":{
+    "end":{"column":10,"line":18,"offset":448},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":18,"column":6,"offset":443},
-    "end":{"line":18,"column":10,"offset":448}
+    "start":{"column":6,"line":18,"offset":443},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":18,
-  "endline":18,
+  "reasons":[],
   "start":6,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"type myBar<T> = ?T"}}
 }
 
 types.js:20:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is myOpaque",
-  "types":{"unevaluated":{"type":"type myOpaque<T> = [T, T]"},"evaluated":null},
-  "reasons":[],
+  "end":13,
+  "endline":20,
+  "line":20,
   "loc":{
+    "end":{"column":13,"line":20,"offset":486},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":20,"column":6,"offset":478},
-    "end":{"line":20,"column":13,"offset":486}
+    "start":{"column":6,"line":20,"offset":478},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":20,
-  "endline":20,
+  "reasons":[],
   "start":6,
-  "end":13
+  "types":{"evaluated":null,"unevaluated":{"type":"type myOpaque<T> = [T, T]"}}
 }
 
 types.js:22:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is myClass",
-  "types":{"unevaluated":{"type":"class myClass"},"evaluated":null},
-  "reasons":[],
+  "end":12,
+  "endline":22,
+  "line":22,
   "loc":{
+    "end":{"column":12,"line":22,"offset":523},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":22,"column":6,"offset":516},
-    "end":{"line":22,"column":12,"offset":523}
+    "start":{"column":6,"line":22,"offset":516},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":22,
-  "endline":22,
+  "reasons":[],
   "start":6,
-  "end":12
+  "types":{"evaluated":null,"unevaluated":{"type":"class myClass"}}
 }
 
 types.js:24:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is myInterface",
-  "types":{"unevaluated":{"type":"interface myInterface"},"evaluated":null},
-  "reasons":[],
+  "end":16,
+  "endline":24,
+  "line":24,
   "loc":{
+    "end":{"column":16,"line":24,"offset":556},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":6,"offset":545},
-    "end":{"line":24,"column":16,"offset":556}
+    "start":{"column":6,"line":24,"offset":545},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":24,
-  "endline":24,
+  "reasons":[],
   "start":6,
-  "end":16
+  "types":{"evaluated":null,"unevaluated":{"type":"interface myInterface"}}
 }
 
 types.js:26:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is ExportFoo",
-  "types":{"unevaluated":{"type":"type ExportFoo = number"},"evaluated":null},
-  "reasons":[],
+  "end":14,
+  "endline":26,
+  "line":26,
   "loc":{
+    "end":{"column":14,"line":26,"offset":587},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":26,"column":6,"offset":578},
-    "end":{"line":26,"column":14,"offset":587}
+    "start":{"column":6,"line":26,"offset":578},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":26,
-  "endline":26,
+  "reasons":[],
   "start":6,
-  "end":14
+  "types":{"evaluated":null,"unevaluated":{"type":"type ExportFoo = number"}}
 }
 
 types.js:28:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is ExportBar",
-  "types":{"unevaluated":{"type":"type ExportBar<T> = ?T"},"evaluated":null},
-  "reasons":[],
+  "end":14,
+  "endline":28,
+  "line":28,
   "loc":{
+    "end":{"column":14,"line":28,"offset":618},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":28,"column":6,"offset":609},
-    "end":{"line":28,"column":14,"offset":618}
+    "start":{"column":6,"line":28,"offset":609},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":28,
-  "endline":28,
+  "reasons":[],
   "start":6,
-  "end":14
+  "types":{"evaluated":null,"unevaluated":{"type":"type ExportBar<T> = ?T"}}
 }
 
 types.js:30:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is ExportOpaque",
-  "types":{"unevaluated":{"type":"type ExportOpaque<T>"},"evaluated":null},
-  "reasons":[],
+  "end":17,
+  "endline":30,
+  "line":30,
   "loc":{
+    "end":{"column":17,"line":30,"offset":660},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":30,"column":6,"offset":648},
-    "end":{"line":30,"column":17,"offset":660}
+    "start":{"column":6,"line":30,"offset":648},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":30,
-  "endline":30,
+  "reasons":[],
   "start":6,
-  "end":17
+  "types":{"evaluated":null,"unevaluated":{"type":"type ExportOpaque<T>"}}
 }
 
 types.js:32:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is ExportClass",
-  "types":{"unevaluated":{"type":"class ExportClass"},"evaluated":null},
-  "reasons":[],
+  "end":16,
+  "endline":32,
+  "line":32,
   "loc":{
+    "end":{"column":16,"line":32,"offset":701},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":32,"column":6,"offset":690},
-    "end":{"line":32,"column":16,"offset":701}
+    "start":{"column":6,"line":32,"offset":690},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":32,
-  "endline":32,
+  "reasons":[],
   "start":6,
-  "end":16
+  "types":{"evaluated":null,"unevaluated":{"type":"class ExportClass"}}
 }
 
 types.js:34:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is ExportInterface",
-  "types":{"unevaluated":{"type":"interface ExportInterface"},"evaluated":null},
-  "reasons":[],
+  "end":20,
+  "endline":34,
+  "line":34,
   "loc":{
+    "end":{"column":20,"line":34,"offset":738},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":34,"column":6,"offset":723},
-    "end":{"line":34,"column":20,"offset":738}
+    "start":{"column":6,"line":34,"offset":723},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":34,
-  "endline":34,
+  "reasons":[],
   "start":6,
-  "end":20
+  "types":{"evaluated":null,"unevaluated":{"type":"interface ExportInterface"}}
 }
 
 types.js:38:7
 Flags: --strip-root --pretty
 {
   "documentation":" this is ExportValue",
-  "types":{"unevaluated":{"type":"type exportValue = 1"},"evaluated":null},
-  "reasons":[],
+  "end":16,
+  "endline":38,
+  "line":38,
   "loc":{
+    "end":{"column":16,"line":38,"offset":843},
     "source":"types.js",
-    "type":"SourceFile",
-    "start":{"line":38,"column":6,"offset":832},
-    "end":{"line":38,"column":16,"offset":843}
+    "start":{"column":6,"line":38,"offset":832},
+    "type":"SourceFile"
   },
   "path":"types.js",
-  "line":38,
-  "endline":38,
+  "reasons":[],
   "start":6,
-  "end":16
+  "types":{"evaluated":null,"unevaluated":{"type":"type exportValue = 1"}}
 }
 
 react_api.js:3:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `Children`lets you manipulate and transform the JSX received as the\n children prop.\n\n Using `Children` is uncommon and can lead to fragile code.\n [See common alternatives](https://react.dev/reference/react/Children#alternatives).\n\n**@see**  https://react.dev/reference/react/Children",
-  "types":{
-    "unevaluated":{
-      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: NonNullable<T>, index: number) => U, thisArg: This): Array<NonNullable<U>>, only<T>(children: ChildrenArray<T>): NonNullable<T>, toArray<T>(children: ChildrenArray<T>): Array<NonNullable<T>>, ...}"
-    },
-    "evaluated":{
-      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => U, thisArg: This): Array<U>, only<T>(children: ChildrenArray<T>): T, toArray<T>(children: ChildrenArray<T>): Array<T>, ...}"
-    }
-  },
-  "reasons":[],
+  "end":14,
+  "endline":3,
+  "line":3,
   "loc":{
+    "end":{"column":14,"line":3,"offset":47},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":7,"offset":39},
-    "end":{"line":3,"column":14,"offset":47}
+    "start":{"column":7,"line":3,"offset":39},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":3,
-  "endline":3,
+  "reasons":[],
   "start":7,
-  "end":14
+  "types":{
+    "evaluated":{
+      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => U, thisArg: This): Array<U>, only<T>(children: ChildrenArray<T>): T, toArray<T>(children: ChildrenArray<T>): Array<T>, ...}"
+    },
+    "unevaluated":{
+      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: NonNullable<T>, index: number) => U, thisArg: This): Array<NonNullable<U>>, only<T>(children: ChildrenArray<T>): NonNullable<T>, toArray<T>(children: ChildrenArray<T>): Array<NonNullable<T>>, ...}"
+    }
+  }
 }
 
 react_api.js:5:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n Using cloneElement is uncommon and can lead to fragile code.\n [See common alternatives](https://react.dev/reference/react/cloneElement#alternatives)\n\n**@see**  https://react.dev/reference/react/cloneElement",
-  "types":{"unevaluated":{"type":"React$CloneElement"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":18,"line":5,"offset":78},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":7,"offset":66},
-    "end":{"line":5,"column":18,"offset":78}
+    "start":{"column":7,"line":5,"offset":66},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":7,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"React$CloneElement"}}
 }
 
 react_api.js:7:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `Component` lets you define a React component as a JavaScript class.\n\n We recommend defining components as functions instead of classes.\n [See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).\n\n**@see**  https://react.dev/reference/react/Component",
-  "types":{
-    "unevaluated":{"type":"class Component<Props, State = void>"},
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":15,
+  "endline":7,
+  "line":7,
   "loc":{
+    "end":{"column":15,"line":7,"offset":106},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":7,"offset":97},
-    "end":{"line":7,"column":15,"offset":106}
+    "start":{"column":7,"line":7,"offset":97},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":7,
-  "endline":7,
+  "reasons":[],
   "start":7,
-  "end":15
+  "types":{
+    "evaluated":null,
+    "unevaluated":{"type":"class Component<Props, State = void>"}
+  }
 }
 
 react_api.js:9:10
 Flags: --strip-root --pretty
 {
-  "types":{"unevaluated":{"type":"void"},"evaluated":null},
-  "reasons":[],
+  "end":17,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":17,"line":9,"offset":136},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":7,"offset":125},
-    "end":{"line":9,"column":17,"offset":136}
+    "start":{"column":7,"line":9,"offset":125},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":7,
-  "end":17
+  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
 }
 
 react_api.js:11:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `createContext` lets you create a context that components can provide or read.\n\n**@see**  https://react.dev/reference/react/createContext",
-  "types":{
-    "unevaluated":{
-      "type":"<T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => Context<T>"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":19,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":19,"line":11,"offset":168},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":7,"offset":155},
-    "end":{"line":11,"column":19,"offset":168}
+    "start":{"column":7,"line":11,"offset":155},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":7,
-  "end":19
+  "types":{
+    "evaluated":null,
+    "unevaluated":{
+      "type":"<T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => Context<T>"
+    }
+  }
 }
 
 react_api.js:13:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `createElement` lets you create a React element.\n It serves as an alternative to writing JSX.\n\n**@see**  https://react.dev/reference/react/createElement",
-  "types":{"unevaluated":{"type":"React$CreateElement"},"evaluated":null},
-  "reasons":[],
+  "end":19,
+  "endline":13,
+  "line":13,
   "loc":{
+    "end":{"column":19,"line":13,"offset":200},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":7,"offset":187},
-    "end":{"line":13,"column":19,"offset":200}
+    "start":{"column":7,"line":13,"offset":187},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":13,
-  "endline":13,
+  "reasons":[],
   "start":7,
-  "end":19
+  "types":{"evaluated":null,"unevaluated":{"type":"React$CreateElement"}}
 }
 
 react_api.js:15:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `createRef` creates a ref object which can contain arbitrary value.\n\n `createRef` is mostly used for class components.\n Function components typically rely on `useRef` instead.\n\n**@see**  https://react.dev/reference/react/createRef",
-  "types":{"unevaluated":{"type":"<T>() => React$RefObject<T | null>"},"evaluated":null},
-  "reasons":[],
+  "end":15,
+  "endline":15,
+  "line":15,
   "loc":{
+    "end":{"column":15,"line":15,"offset":228},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":7,"offset":219},
-    "end":{"line":15,"column":15,"offset":228}
+    "start":{"column":7,"line":15,"offset":219},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":15,
-  "endline":15,
+  "reasons":[],
   "start":7,
-  "end":15
+  "types":{"evaluated":null,"unevaluated":{"type":"<T>() => React$RefObject<T | null>"}}
 }
 
 react_api.js:17:10
 Flags: --strip-root --pretty
 {
   "documentation":"**@deprecated** \n\n\n In React 19, `forwardRef` is no longer necessary. Pass `ref` as a prop instead.\n forwardRef will deprecated in a future release.\n\n**@see**  https://react.dev/blog/2024/12/05/react-19#ref-as-a-prop",
-  "types":{
-    "unevaluated":{
-      "type":"<Config: {...}, Instance, Renders: React$Node = React$Node>(render: (props: Config, ref: RefSetter<Instance>) => Renders) => component(...{...Config, +ref?: RefSetter<Instance>}) renders Renders"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":16,
+  "endline":17,
+  "line":17,
   "loc":{
+    "end":{"column":16,"line":17,"offset":257},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":7,"offset":247},
-    "end":{"line":17,"column":16,"offset":257}
+    "start":{"column":7,"line":17,"offset":247},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":17,
-  "endline":17,
+  "reasons":[],
   "start":7,
-  "end":16
+  "types":{
+    "evaluated":null,
+    "unevaluated":{
+      "type":"<Config: {...}, Instance, Renders: React$Node = React$Node>(render: (props: Config, ref: RefSetter<Instance>) => Renders) => component(...{...Config, +ref?: RefSetter<Instance>}) renders Renders"
+    }
+  }
 }
 
 react_api.js:19:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `useState` is a React Hook that lets you add a\n [state variable](https://react.dev/learn/state-a-components-memory)\n to your component.\n\n**@see**  https://react.dev/reference/react/useState",
-  "types":{
-    "unevaluated":{
-      "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":14,
+  "endline":19,
+  "line":19,
   "loc":{
+    "end":{"column":14,"line":19,"offset":284},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":19,"column":7,"offset":276},
-    "end":{"line":19,"column":14,"offset":284}
+    "start":{"column":7,"line":19,"offset":276},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":19,
-  "endline":19,
+  "reasons":[],
   "start":7,
-  "end":14
+  "types":{
+    "evaluated":null,
+    "unevaluated":{
+      "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
+    }
+  }
 }
 
 react_api.js:21:10
 Flags: --strip-root --pretty
 {
   "documentation":"\n `useReducer` is a React Hook that lets you add a\n [reducer](https://react.dev/learn/extracting-state-logic-into-a-reducer)\n to your component.\n\n**@see**  https://react.dev/reference/react/useReducer",
-  "types":{
-    "unevaluated":{
-      "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":16,
+  "endline":21,
+  "line":21,
   "loc":{
+    "end":{"column":16,"line":21,"offset":313},
     "source":"react_api.js",
-    "type":"SourceFile",
-    "start":{"line":21,"column":7,"offset":303},
-    "end":{"line":21,"column":16,"offset":313}
+    "start":{"column":7,"line":21,"offset":303},
+    "type":"SourceFile"
   },
   "path":"react_api.js",
-  "line":21,
-  "endline":21,
+  "reasons":[],
   "start":7,
-  "end":16
+  "types":{
+    "evaluated":null,
+    "unevaluated":{
+      "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
+    }
+  }
 }
 
 redeclare_import.js:5:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first declaration",
-  "types":{
-    "unevaluated":{"type":"((x: number) => number) & ((x: string) => string)"},
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":9,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":9,"line":5,"offset":63},
     "source":"redeclare_import.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":1,"offset":54},
-    "end":{"line":5,"column":9,"offset":63}
+    "start":{"column":1,"line":5,"offset":54},
+    "type":"SourceFile"
   },
   "path":"redeclare_import.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":1,
-  "end":9
+  "types":{
+    "evaluated":null,
+    "unevaluated":{"type":"((x: number) => number) & ((x: string) => string)"}
+  }
 }
 
 components.js:10:4
 Flags: --strip-root --pretty
 {
   "documentation":" doc 1",
-  "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
-  "reasons":[],
+  "end":5,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":5,"line":10,"offset":110},
     "source":"components.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":3,"offset":107},
-    "end":{"line":10,"column":5,"offset":110}
+    "start":{"column":3,"line":10,"offset":107},
+    "type":"SourceFile"
   },
   "path":"components.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":{"type":"string"},"unevaluated":{"type":"string"}}
 }
 
 components.js:13:7
 Flags: --strip-root --pretty
 {
   "documentation":" doc 2",
-  "types":{"unevaluated":{"type":"{baz: string}"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":13,
+  "line":13,
   "loc":{
+    "end":{"column":9,"line":13,"offset":149},
     "source":"components.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":6,"offset":145},
-    "end":{"line":13,"column":9,"offset":149}
+    "start":{"column":6,"line":13,"offset":145},
+    "type":"SourceFile"
   },
   "path":"components.js",
-  "line":13,
-  "endline":13,
+  "reasons":[],
   "start":6,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"{baz: string}"}}
 }
 
 components.js:16:6
 Flags: --strip-root --pretty
 {
   "documentation":" doc 3",
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":7,"line":16,"offset":185},
     "source":"components.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":182},
-    "end":{"line":16,"column":7,"offset":185}
+    "start":{"column":5,"line":16,"offset":182},
+    "type":"SourceFile"
   },
   "path":"components.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":5,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 
 components.js:25:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n This is the component Foo!",
-  "types":{
-    "unevaluated":{"type":"component Foo(baz: string, bar: string)"},
-    "evaluated":{"type":"component Foo(bar: string, baz: string)"}
-  },
-  "reasons":[],
+  "end":5,
+  "endline":25,
+  "line":25,
   "loc":{
+    "end":{"column":5,"line":25,"offset":266},
     "source":"components.js",
-    "type":"SourceFile",
-    "start":{"line":25,"column":3,"offset":263},
-    "end":{"line":25,"column":5,"offset":266}
+    "start":{"column":3,"line":25,"offset":263},
+    "type":"SourceFile"
   },
   "path":"components.js",
-  "line":25,
-  "endline":25,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{
+    "evaluated":{"type":"component Foo(bar: string, baz: string)"},
+    "unevaluated":{"type":"component Foo(baz: string, bar: string)"}
+  }
 }
 
 components.js:29:4
 Flags: --strip-root --pretty
 {
   "documentation":" doc 1",
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":29,
+  "line":29,
   "loc":{
+    "end":{"column":5,"line":29,"offset":284},
     "source":"components.js",
-    "type":"SourceFile",
-    "start":{"line":29,"column":3,"offset":281},
-    "end":{"line":29,"column":5,"offset":284}
+    "start":{"column":3,"line":29,"offset":281},
+    "type":"SourceFile"
   },
   "path":"components.js",
-  "line":29,
-  "endline":29,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 
 components.js:31:4
 Flags: --strip-root --pretty
 {
   "documentation":" doc 3",
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":31,
+  "line":31,
   "loc":{
+    "end":{"column":5,"line":31,"offset":301},
     "source":"components.js",
-    "type":"SourceFile",
-    "start":{"line":31,"column":3,"offset":298},
-    "end":{"line":31,"column":5,"offset":301}
+    "start":{"column":3,"line":31,"offset":298},
+    "type":"SourceFile"
   },
   "path":"components.js",
-  "line":31,
-  "endline":31,
+  "reasons":[],
   "start":3,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 
 render_types.js:1:12
 Flags: --strip-root --pretty
 {
   "documentation":"`renders A` means that it will eventually render exactly one React element `A`.",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 render_types.js:3:12
 Flags: --strip-root --pretty
 {
   "documentation":"`renders? A` means that it will eventually render zero or one React element `A`.",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 render_types.js:5:12
 Flags: --strip-root --pretty
 {
   "documentation":"`renders* A` means that it will eventually render any amount of `A`.",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 render_types.js:8:27
 Flags: --strip-root --pretty
 {
   "documentation":"`renders A` means that it will eventually render exactly one React element `A`.",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 render_types.js:10:27
 Flags: --strip-root --pretty
 {
   "documentation":"`renders? A` means that it will eventually render zero or one React element `A`.",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 
 render_types.js:12:27
 Flags: --strip-root --pretty
 {
   "documentation":"`renders* A` means that it will eventually render any amount of `A`.",
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 

@@ -3,63 +3,63 @@
   "result": {
     "imports": [
       {
-        "remoteName": "default",
-        "localName": "bad",
-        "importType": "ImportNamedValue",
         "importSource": "bad",
-        "importSourceIsResolved": false
+        "importSourceIsResolved": false,
+        "importType": "ImportNamedValue",
+        "localName": "bad",
+        "remoteName": "default"
       },
       {
-        "remoteName": "default",
-        "localName": "React",
-        "importType": "ImportNamedValue",
         "importSource": "react",
-        "importSourceIsResolved": false
+        "importSourceIsResolved": false,
+        "importType": "ImportNamedValue",
+        "localName": "React",
+        "remoteName": "default"
       },
       {
-        "remoteName": "default",
-        "localName": "fooType",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true,
         "importType": "ImportNamedTypeOf",
-        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "localName": "fooType",
+        "remoteName": "default"
       },
       {
-        "remoteName": "NST",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true,
         "importType": "ImportTypeOfAsNamespace",
-        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "remoteName": "NST"
       },
       {
-        "remoteName": "NS",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true,
         "importType": "ImportValueAsNamespace",
-        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "remoteName": "NS"
       },
       {
-        "remoteName": "bar",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true,
         "importType": "ImportNamedValue",
-        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "remoteName": "bar"
       },
       {
-        "remoteName": "default",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true,
+        "importType": "ImportNamedValue",
         "localName": "foo",
-        "importType": "ImportNamedValue",
-        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "remoteName": "default"
       },
       {
-        "remoteName": "A",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true,
+        "importType": "ImportNamedType",
         "localName": "B",
-        "importType": "ImportNamedType",
-        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "remoteName": "A"
       },
       {
-        "remoteName": "A",
-        "importType": "ImportNamedType",
         "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
-        "importSourceIsResolved": true
+        "importSourceIsResolved": true,
+        "importType": "ImportNamedType",
+        "remoteName": "A"
       }
     ]
   }

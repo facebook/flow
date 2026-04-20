@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Remove",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "remove_in_out_variance",
+          "Remove"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-in-out-variance.js": [
             {
+              "newText": ": (<A>(A) => A)",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 18
-                },
                 "end": {
-                  "line": 2,
-                  "character": 34
+                  "character": 34,
+                  "line": 2
+                },
+                "start": {
+                  "character": 18,
+                  "line": 2
                 }
-              },
-              "newText": ": (<A>(A) => A)"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "remove_in_out_variance",
-          "Remove"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Remove"
     }
   ]
 }

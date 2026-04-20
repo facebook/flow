@@ -1,1354 +1,1354 @@
 [
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Type\",\"type_kind\":\"TypeAliasKind\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"exp.js:1: `Foo`\"}},\"reason\":\"exp.js:0: `Foo`\"}}",
-    "reasons":[],
+    "end":16,
+    "endline":2,
+    "line":2,
     "loc":{
+      "end":{"column":16,"line":2,"offset":24},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":2,"column":14,"offset":21},
-      "end":{"line":2,"column":16,"offset":24}
+      "start":{"column":14,"line":2,"offset":21},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":2,
-    "endline":2,
+    "reasons":[],
     "start":14,
-    "end":16
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Type\",\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"exp.js:1: `Foo`\"},\"type_kind\":\"TypeAliasKind\"},\"kind\":\"Def\",\"reason\":\"exp.js:0: `Foo`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:2:24-30: string\"}}",
-    "reasons":[],
+    "end":30,
+    "endline":2,
+    "line":2,
     "loc":{
+      "end":{"column":30,"line":2,"offset":38},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":2,"column":24,"offset":31},
-      "end":{"line":2,"column":30,"offset":38}
+      "start":{"column":24,"line":2,"offset":31},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":2,
-    "endline":2,
+    "reasons":[],
     "start":24,
-    "end":30
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:2:24-30: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:3:1-23: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:3:1-23: function\"}}",
-    "reasons":[],
+    "end":12,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":12,"line":3,"offset":52},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":10,"offset":49},
-      "end":{"line":3,"column":12,"offset":52}
+      "start":{"column":10,"line":3,"offset":49},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":10,
-    "end":12
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}",
-    "reasons":[],
+    "end":14,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":14,"line":3,"offset":54},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":14,"offset":53},
-      "end":{"line":3,"column":14,"offset":54}
+      "start":{"column":14,"line":3,"offset":53},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":14,
-    "end":14
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":62},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":14,"offset":53},
-      "end":{"line":3,"column":22,"offset":62}
+      "start":{"column":14,"line":3,"offset":53},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":14,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":62},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":17,"offset":56},
-      "end":{"line":3,"column":22,"offset":62}
+      "start":{"column":17,"line":3,"offset":56},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":17,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":24,"offset":63},
-      "end":{"line":3,"column":23,"offset":63}
-    },
-    "path":"test.js",
-    "line":3,
+    "end":23,
     "endline":3,
+    "line":3,
+    "loc":{
+      "end":{"column":23,"line":3,"offset":63},
+      "source":"test.js",
+      "start":{"column":24,"line":3,"offset":63},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":24,
-    "end":23
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:3:1-23: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:3:1-23: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:3:1-23: function\"}}",
-    "reasons":[],
+    "end":3,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":3,"line":4,"offset":71},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":1,"offset":68},
-      "end":{"line":4,"column":3,"offset":71}
+      "start":{"column":1,"line":4,"offset":68},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":1,
-    "end":3
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:3:1-23: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:3:1-23: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:3:1-23: function\"}}",
-    "reasons":[],
+    "end":3,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":3,"line":4,"offset":71},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":1,"offset":68},
-      "end":{"line":4,"column":3,"offset":71}
+      "start":{"column":1,"line":4,"offset":68},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":1,
-    "end":3
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:3:13-23: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:4:1-6: undefined\"}}",
-    "reasons":[],
+    "end":6,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":6,"line":4,"offset":74},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":1,"offset":68},
-      "end":{"line":4,"column":6,"offset":74}
+      "start":{"column":1,"line":4,"offset":68},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":1,
-    "end":6
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:4:1-6: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"SingletonNum\",\"from_annot\":false,\"number\":0,\"string\":\"0\"},\"reason\":\"test.js:4:5: number literal `0`\"}}",
-    "reasons":[],
+    "end":5,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":5,"line":4,"offset":73},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":5,"offset":72},
-      "end":{"line":4,"column":5,"offset":73}
+      "start":{"column":5,"line":4,"offset":72},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":5,
-    "end":5
+    "type":"{\"expression_type\":{\"def\":{\"from_annot\":false,\"kind\":\"SingletonNum\",\"number\":0,\"string\":\"0\"},\"kind\":\"Def\",\"reason\":\"test.js:4:5: number literal `0`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:1-84: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:1-84: function\"}}",
-    "reasons":[],
+    "end":31,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":31,"line":7,"offset":143},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":10,"offset":121},
-      "end":{"line":7,"column":31,"offset":143}
+      "start":{"column":10,"line":7,"offset":121},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":10,
-    "end":31
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}",
-    "reasons":[],
+    "end":33,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":33,"line":7,"offset":145},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":33,"offset":144},
-      "end":{"line":7,"column":33,"offset":145}
+      "start":{"column":33,"line":7,"offset":144},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":33,
-    "end":33
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}",
-    "reasons":[],
+    "end":83,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":83,"line":7,"offset":195},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":33,"offset":144},
-      "end":{"line":7,"column":83,"offset":195}
+      "start":{"column":33,"line":7,"offset":144},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":33,
-    "end":83
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}",
-    "reasons":[],
+    "end":83,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":83,"line":7,"offset":195},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":36,"offset":147},
-      "end":{"line":7,"column":83,"offset":195}
+      "start":{"column":36,"line":7,"offset":147},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":36,
-    "end":83
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":43,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":43,"line":7,"offset":155},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":37,"offset":148},
-      "end":{"line":7,"column":43,"offset":155}
+      "start":{"column":37,"line":7,"offset":148},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":37,
-    "end":43
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":73,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":73,"line":7,"offset":185},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":37,"offset":148},
-      "end":{"line":7,"column":73,"offset":185}
+      "start":{"column":37,"line":7,"offset":148},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":37,
-    "end":73
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":43,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":43,"line":7,"offset":155},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":38,"offset":149},
-      "end":{"line":7,"column":43,"offset":155}
+      "start":{"column":38,"line":7,"offset":149},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":38,
-    "end":43
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":43,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":43,"line":7,"offset":155},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":38,"offset":149},
-      "end":{"line":7,"column":43,"offset":155}
+      "start":{"column":38,"line":7,"offset":149},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":38,
-    "end":43
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":53,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":53,"line":7,"offset":165},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":47,"offset":158},
-      "end":{"line":7,"column":53,"offset":165}
+      "start":{"column":47,"line":7,"offset":158},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":47,
-    "end":53
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":53,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":53,"line":7,"offset":165},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":48,"offset":159},
-      "end":{"line":7,"column":53,"offset":165}
+      "start":{"column":48,"line":7,"offset":159},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":48,
-    "end":53
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":53,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":53,"line":7,"offset":165},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":48,"offset":159},
-      "end":{"line":7,"column":53,"offset":165}
+      "start":{"column":48,"line":7,"offset":159},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":48,
-    "end":53
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"}]}}",
-    "reasons":[],
+    "end":63,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":63,"line":7,"offset":175},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":57,"offset":168},
-      "end":{"line":7,"column":63,"offset":175}
+      "start":{"column":57,"line":7,"offset":168},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":57,
-    "end":63
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}}",
-    "reasons":[],
+    "end":63,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":63,"line":7,"offset":175},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":58,"offset":169},
-      "end":{"line":7,"column":63,"offset":175}
+      "start":{"column":58,"line":7,"offset":169},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":58,
-    "end":63
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"}]}}",
-    "reasons":[],
+    "end":73,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":73,"line":7,"offset":185},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":67,"offset":178},
-      "end":{"line":7,"column":73,"offset":185}
+      "start":{"column":67,"line":7,"offset":178},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":67,
-    "end":73
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}",
-    "reasons":[],
+    "end":73,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":73,"line":7,"offset":185},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":68,"offset":179},
-      "end":{"line":7,"column":73,"offset":185}
+      "start":{"column":68,"line":7,"offset":179},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":68,
-    "end":73
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"}}",
-    "reasons":[],
+    "end":83,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":83,"line":7,"offset":195},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":79,"offset":190},
-      "end":{"line":7,"column":83,"offset":195}
+      "start":{"column":79,"line":7,"offset":190},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":79,
-    "end":83
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":85,"offset":196},
-      "end":{"line":7,"column":84,"offset":196}
-    },
-    "path":"test.js",
-    "line":7,
+    "end":84,
     "endline":7,
+    "line":7,
+    "loc":{
+      "end":{"column":84,"line":7,"offset":196},
+      "source":"test.js",
+      "start":{"column":85,"line":7,"offset":196},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":85,
-    "end":84
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:1-84: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:1-84: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:1-84: function\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":22,"line":8,"offset":222},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":1,"offset":200},
-      "end":{"line":8,"column":22,"offset":222}
+      "start":{"column":1,"line":8,"offset":200},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":1,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:1-84: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:1-84: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:7:36-83: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:1-84: function\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":22,"line":8,"offset":222},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":1,"offset":200},
-      "end":{"line":8,"column":22,"offset":222}
+      "start":{"column":1,"line":8,"offset":200},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":1,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:1-63: undefined\"}}",
-    "reasons":[],
+    "end":63,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":63,"line":8,"offset":263},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":1,"offset":200},
-      "end":{"line":8,"column":63,"offset":263}
+      "start":{"column":1,"line":8,"offset":200},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":1,
-    "end":63
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-63: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:8:24-62: function\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:8:24-62: bound `this` in method\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"val\",\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:8:24-62: function\"}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":24,"offset":223},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":24,"line":8,"offset":223},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":24,
-    "end":62
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"val\",\"type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:8:24-62: bound `this` in method\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:8:24-62: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:24-62: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":27,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":27,"line":8,"offset":227},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":25,"offset":224},
-      "end":{"line":8,"column":27,"offset":227}
+      "start":{"column":25,"line":8,"offset":224},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":25,
-    "end":27
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":27,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":27,"line":8,"offset":227},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":25,"offset":224},
-      "end":{"line":8,"column":27,"offset":227}
+      "start":{"column":25,"line":8,"offset":224},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":25,
-    "end":27
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":27,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":27,"line":8,"offset":227},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":28,"offset":227},
-      "end":{"line":8,"column":27,"offset":227}
+      "start":{"column":28,"line":8,"offset":227},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":28,
-    "end":27
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":28,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":28,"line":8,"offset":228},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":29,"offset":228},
-      "end":{"line":8,"column":28,"offset":228}
+      "start":{"column":29,"line":8,"offset":228},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":29,
-    "end":28
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:33-35: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:33-35: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":35,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":35,"line":8,"offset":235},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":35,"offset":235}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":35
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:33-35: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:33-35: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":35,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":35,"line":8,"offset":235},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":35,"offset":235}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":35
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-35: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"BoolGeneral\"},\"reason\":\"test.js:8:33-44: boolean\"}}",
-    "reasons":[],
+    "end":44,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":44,"line":8,"offset":244},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":44,"offset":244}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":44
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"BoolGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-44: boolean\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":62
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:41-44: null\"}}",
-    "reasons":[],
+    "end":44,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":44,"line":8,"offset":244},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":41,"offset":240},
-      "end":{"line":8,"column":44,"offset":244}
+      "start":{"column":41,"line":8,"offset":240},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":41,
-    "end":44
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:41-44: null\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"}}",
-    "reasons":[],
+    "end":56,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":56,"line":8,"offset":256},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":48,"offset":247},
-      "end":{"line":8,"column":56,"offset":256}
+      "start":{"column":48,"line":8,"offset":247},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":48,
-    "end":56
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"}}",
-    "reasons":[],
+    "end":56,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":56,"line":8,"offset":256},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":48,"offset":247},
-      "end":{"line":8,"column":56,"offset":256}
+      "start":{"column":48,"line":8,"offset":247},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":48,
-    "end":56
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":60,"offset":259},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":60,"line":8,"offset":259},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":60,
-    "end":62
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:8:60-62: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:37-43: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:47-53: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:57-63: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":60,"offset":259},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":60,"line":8,"offset":259},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":60,
-    "end":62
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: string\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:60-62: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:37-43: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:47-53: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:57-63: null or undefined\"},{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:67-73: null or undefined\"},{\"kind\":\"Any\"},{\"kind\":\"Any\"}]}}"
   }
 ]
 [
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Type\",\"type_kind\":\"TypeAliasKind\",\"type\":\"<recursion>\"},\"reason\":\"exp.js:0: `Foo`\"}}",
-    "reasons":[],
+    "end":16,
+    "endline":2,
+    "line":2,
     "loc":{
+      "end":{"column":16,"line":2,"offset":24},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":2,"column":14,"offset":21},
-      "end":{"line":2,"column":16,"offset":24}
+      "start":{"column":14,"line":2,"offset":21},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":2,
-    "endline":2,
+    "reasons":[],
     "start":14,
-    "end":16
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Type\",\"type\":\"<recursion>\",\"type_kind\":\"TypeAliasKind\"},\"kind\":\"Def\",\"reason\":\"exp.js:0: `Foo`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:2:24-30: string\"}}",
-    "reasons":[],
+    "end":30,
+    "endline":2,
+    "line":2,
     "loc":{
+      "end":{"column":30,"line":2,"offset":38},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":2,"column":24,"offset":31},
-      "end":{"line":2,"column":30,"offset":38}
+      "start":{"column":24,"line":2,"offset":31},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":2,
-    "endline":2,
+    "reasons":[],
     "start":24,
-    "end":30
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:2:24-30: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:3:1-23: function\"}}",
-    "reasons":[],
+    "end":12,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":12,"line":3,"offset":52},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":10,"offset":49},
-      "end":{"line":3,"column":12,"offset":52}
+      "start":{"column":10,"line":3,"offset":49},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":10,
-    "end":12
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}",
-    "reasons":[],
+    "end":14,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":14,"line":3,"offset":54},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":14,"offset":53},
-      "end":{"line":3,"column":14,"offset":54}
+      "start":{"column":14,"line":3,"offset":53},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":14,
-    "end":14
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":62},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":14,"offset":53},
-      "end":{"line":3,"column":22,"offset":62}
+      "start":{"column":14,"line":3,"offset":53},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":14,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:3:17-22: number\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":62},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":17,"offset":56},
-      "end":{"line":3,"column":22,"offset":62}
+      "start":{"column":17,"line":3,"offset":56},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":17,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:3:17-22: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:3:24: undefined\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":24,"offset":63},
-      "end":{"line":3,"column":23,"offset":63}
-    },
-    "path":"test.js",
-    "line":3,
+    "end":23,
     "endline":3,
+    "line":3,
+    "loc":{
+      "end":{"column":23,"line":3,"offset":63},
+      "source":"test.js",
+      "start":{"column":24,"line":3,"offset":63},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":24,
-    "end":23
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:3:24: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:3:1-23: function\"}}",
-    "reasons":[],
+    "end":3,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":3,"line":4,"offset":71},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":1,"offset":68},
-      "end":{"line":4,"column":3,"offset":71}
+      "start":{"column":1,"line":4,"offset":68},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":1,
-    "end":3
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:3:1-23: function\"}}",
-    "reasons":[],
+    "end":3,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":3,"line":4,"offset":71},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":1,"offset":68},
-      "end":{"line":4,"column":3,"offset":71}
+      "start":{"column":1,"line":4,"offset":68},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":1,
-    "end":3
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:4:1-3: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"x\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:3:1-23: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:4:1-6: undefined\"}}",
-    "reasons":[],
+    "end":6,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":6,"line":4,"offset":74},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":1,"offset":68},
-      "end":{"line":4,"column":6,"offset":74}
+      "start":{"column":1,"line":4,"offset":68},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":1,
-    "end":6
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:4:1-6: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"SingletonNum\",\"from_annot\":false,\"number\":0,\"string\":\"0\"},\"reason\":\"test.js:4:5: number literal `0`\"}}",
-    "reasons":[],
+    "end":5,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":5,"line":4,"offset":73},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":5,"offset":72},
-      "end":{"line":4,"column":5,"offset":73}
+      "start":{"column":5,"line":4,"offset":72},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":5,
-    "end":5
+    "type":"{\"expression_type\":{\"def\":{\"from_annot\":false,\"kind\":\"SingletonNum\",\"number\":0,\"string\":\"0\"},\"kind\":\"Def\",\"reason\":\"test.js:4:5: number literal `0`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:1-84: function\"}}",
-    "reasons":[],
+    "end":31,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":31,"line":7,"offset":143},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":10,"offset":121},
-      "end":{"line":7,"column":31,"offset":143}
+      "start":{"column":10,"line":7,"offset":121},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":10,
-    "end":31
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}",
-    "reasons":[],
+    "end":33,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":33,"line":7,"offset":145},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":33,"offset":144},
-      "end":{"line":7,"column":33,"offset":145}
+      "start":{"column":33,"line":7,"offset":144},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":33,
-    "end":33
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}",
-    "reasons":[],
+    "end":83,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":83,"line":7,"offset":195},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":33,"offset":144},
-      "end":{"line":7,"column":83,"offset":195}
+      "start":{"column":33,"line":7,"offset":144},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":33,
-    "end":83
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:36-83: function type\"}}",
-    "reasons":[],
+    "end":83,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":83,"line":7,"offset":195},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":36,"offset":147},
-      "end":{"line":7,"column":83,"offset":195}
+      "start":{"column":36,"line":7,"offset":147},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":36,
-    "end":83
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":43,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":43,"line":7,"offset":155},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":37,"offset":148},
-      "end":{"line":7,"column":43,"offset":155}
+      "start":{"column":37,"line":7,"offset":148},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":37,
-    "end":43
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":73,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":73,"line":7,"offset":185},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":37,"offset":148},
-      "end":{"line":7,"column":73,"offset":185}
+      "start":{"column":37,"line":7,"offset":148},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":37,
-    "end":73
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":43,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":43,"line":7,"offset":155},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":38,"offset":149},
-      "end":{"line":7,"column":43,"offset":155}
+      "start":{"column":38,"line":7,"offset":149},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":38,
-    "end":43
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":43,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":43,"line":7,"offset":155},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":38,"offset":149},
-      "end":{"line":7,"column":43,"offset":155}
+      "start":{"column":38,"line":7,"offset":149},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":38,
-    "end":43
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":53,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":53,"line":7,"offset":165},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":47,"offset":158},
-      "end":{"line":7,"column":53,"offset":165}
+      "start":{"column":47,"line":7,"offset":158},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":47,
-    "end":53
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":53,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":53,"line":7,"offset":165},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":48,"offset":159},
-      "end":{"line":7,"column":53,"offset":165}
+      "start":{"column":48,"line":7,"offset":159},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":48,
-    "end":53
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Any\"}}",
-    "reasons":[],
+    "end":53,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":53,"line":7,"offset":165},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":48,"offset":159},
-      "end":{"line":7,"column":53,"offset":165}
+      "start":{"column":48,"line":7,"offset":159},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":48,
-    "end":53
+    "type":"{\"expression_type\":{\"kind\":\"Any\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":63,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":63,"line":7,"offset":175},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":57,"offset":168},
-      "end":{"line":7,"column":63,"offset":175}
+      "start":{"column":57,"line":7,"offset":168},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":57,
-    "end":63
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:58-63: string\"}}",
-    "reasons":[],
+    "end":63,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":63,"line":7,"offset":175},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":58,"offset":169},
-      "end":{"line":7,"column":63,"offset":175}
+      "start":{"column":58,"line":7,"offset":169},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":58,
-    "end":63
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":73,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":73,"line":7,"offset":185},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":67,"offset":178},
-      "end":{"line":7,"column":73,"offset":185}
+      "start":{"column":67,"line":7,"offset":178},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":67,
-    "end":73
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:7:68-73: string\"}}",
-    "reasons":[],
+    "end":73,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":73,"line":7,"offset":185},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":68,"offset":179},
-      "end":{"line":7,"column":73,"offset":185}
+      "start":{"column":68,"line":7,"offset":179},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":68,
-    "end":73
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:7:79-83: `unknown`\"}}",
-    "reasons":[],
+    "end":83,
+    "endline":7,
+    "line":7,
     "loc":{
+      "end":{"column":83,"line":7,"offset":195},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":79,"offset":190},
-      "end":{"line":7,"column":83,"offset":195}
+      "start":{"column":79,"line":7,"offset":190},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":7,
-    "endline":7,
+    "reasons":[],
     "start":79,
-    "end":83
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:7:85: undefined\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":85,"offset":196},
-      "end":{"line":7,"column":84,"offset":196}
-    },
-    "path":"test.js",
-    "line":7,
+    "end":84,
     "endline":7,
+    "line":7,
+    "loc":{
+      "end":{"column":84,"line":7,"offset":196},
+      "source":"test.js",
+      "start":{"column":85,"line":7,"offset":196},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":85,
-    "end":84
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:1-84: function\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":22,"line":8,"offset":222},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":1,"offset":200},
-      "end":{"line":8,"column":22,"offset":222}
+      "start":{"column":1,"line":8,"offset":200},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":1,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:7:1-84: function\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":22,"line":8,"offset":222},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":1,"offset":200},
-      "end":{"line":8,"column":22,"offset":222}
+      "start":{"column":1,"line":8,"offset":200},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":1,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:1-63: undefined\"}}",
-    "reasons":[],
+    "end":63,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":63,"line":8,"offset":263},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":1,"offset":200},
-      "end":{"line":8,"column":63,"offset":263}
+      "start":{"column":1,"line":8,"offset":200},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":1,
-    "end":63
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-63: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":\"<recursion>\",\"funtype\":{\"this_t\":{\"type\":\"<recursion>\",\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":\"val\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:8:24-62: function\"}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":24,"offset":223},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":24,"line":8,"offset":223},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":24,
-    "end":62
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"val\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:24-62: function\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":27,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":27,"line":8,"offset":227},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":25,"offset":224},
-      "end":{"line":8,"column":27,"offset":227}
+      "start":{"column":25,"line":8,"offset":224},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":25,
-    "end":27
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":27,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":27,"line":8,"offset":227},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":25,"offset":224},
-      "end":{"line":8,"column":27,"offset":227}
+      "start":{"column":25,"line":8,"offset":224},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":25,
-    "end":27
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":27,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":27,"line":8,"offset":227},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":28,"offset":227},
-      "end":{"line":8,"column":27,"offset":227}
+      "start":{"column":28,"line":8,"offset":227},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":28,
-    "end":27
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":28,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":28,"line":8,"offset":228},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":29,"offset":228},
-      "end":{"line":8,"column":28,"offset":228}
+      "start":{"column":29,"line":8,"offset":228},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":29,
-    "end":28
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":35,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":35,"line":8,"offset":235},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":35,"offset":235}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":35
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":35,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":35,"line":8,"offset":235},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":35,"offset":235}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":35
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"BoolGeneral\"},\"reason\":\"test.js:8:33-44: boolean\"}}",
-    "reasons":[],
+    "end":44,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":44,"line":8,"offset":244},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":44,"offset":244}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":44
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"BoolGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:8:33-44: boolean\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":33,"offset":232},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":33,"line":8,"offset":232},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":33,
-    "end":62
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Null\"},\"reason\":\"test.js:8:41-44: null\"}}",
-    "reasons":[],
+    "end":44,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":44,"line":8,"offset":244},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":41,"offset":240},
-      "end":{"line":8,"column":44,"offset":244}
+      "start":{"column":41,"line":8,"offset":240},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":41,
-    "end":44
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Null\"},\"kind\":\"Def\",\"reason\":\"test.js:8:41-44: null\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"}}",
-    "reasons":[],
+    "end":56,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":56,"line":8,"offset":256},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":48,"offset":247},
-      "end":{"line":8,"column":56,"offset":256}
+      "start":{"column":48,"line":8,"offset":247},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":48,
-    "end":56
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Void\"},\"reason\":\"test.js:8:48-56: undefined\"}}",
-    "reasons":[],
+    "end":56,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":56,"line":8,"offset":256},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":48,"offset":247},
-      "end":{"line":8,"column":56,"offset":256}
+      "start":{"column":48,"line":8,"offset":247},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":48,
-    "end":56
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:8:48-56: undefined\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":60,"offset":259},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":60,"line":8,"offset":259},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":60,
-    "end":62
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}",
-    "reasons":[],
+    "end":62,
+    "endline":8,
+    "line":8,
     "loc":{
+      "end":{"column":62,"line":8,"offset":262},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":8,"column":60,"offset":259},
-      "end":{"line":8,"column":62,"offset":262}
+      "start":{"column":60,"line":8,"offset":259},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":8,
-    "endline":8,
+    "reasons":[],
     "start":60,
-    "end":62
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]},\"provider_type\":{\"kind\":\"Union\",\"members\":[\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\",\"<recursion>\"]}}"
   }
 ]

@@ -4,54 +4,54 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "xyz",
-        "kind": 6,
-        "detail": "Import default from @example/xyz",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 2
-            }
-          },
-          "newText": "xyz"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import xyz from \"@example/xyz\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import xyz from \"@example/xyz\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "xyAUTO332",
+              "ac_type": "Acid",
+              "completion": "xyz",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 2,
-              "completion": "xyz",
-              "ac_type": "Acid"
+              "token": "xyAUTO332",
+              "typed_length": 2
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import default from @example/xyz",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "xyz",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "newText": "xyz",
+          "range": {
+            "end": {
+              "character": 2,
+              "line": 2
+            },
+            "start": {
+              "character": 0,
+              "line": 2
+            }
+          }
         }
       }
     ]

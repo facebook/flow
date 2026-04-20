@@ -507,7 +507,11 @@ pub mod response {
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub enum Payload {
             Friendly(Option<FriendlyResponse>),
-            Json(serde_json::Value),
+            // Carries pre-serialized JSON (a `serde_json::to_string` of the
+            // original `Hh_json.json` value). The wire encoder is bincode,
+            // which cannot encode `serde_json::Value` because that type
+            // requires `Deserializer::deserialize_any`.
+            Json(String),
         }
 
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Extract to method in class 'Test'",
-      "kind": "refactor.extract",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_extract",
+          "Extract to method in class 'Test'"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js": [
             {
+              "newText": "class Test {\n  test(): void {\n    this.newMethod();\n  }\n  newMethod(): void {\n    this.test();\n  }\n}",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
                 "end": {
-                  "line": 6,
-                  "character": 1
+                  "character": 1,
+                  "line": 6
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "class Test {\n  test(): void {\n    this.newMethod();\n  }\n  newMethod(): void {\n    this.test();\n  }\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "refactor_extract",
-          "Extract to method in class 'Test'"
-        ]
-      }
+      "kind": "refactor.extract",
+      "title": "Extract to method in class 'Test'"
     }
   ]
 }

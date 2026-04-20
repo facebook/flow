@@ -1,13 +1,13 @@
 {
   "method": "textDocument/prepareRename",
   "result": {
-    "start": {
-      "line": 23,
-      "character": 1
-    },
     "end": {
-      "line": 23,
-      "character": 5
+      "character": 5,
+      "line": 23
+    },
+    "start": {
+      "character": 1,
+      "line": 23
     }
   }
 }

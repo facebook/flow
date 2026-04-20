@@ -4,17 +4,17 @@
     "changes": {
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js": [
         {
+          "newText": "class Bar {\n      NEW_NAME(f: Foo, b: Bar) {\n        f.#foo;\n        b.NEW_NAME(f, b);\n      }\n    }",
           "range": {
-            "start": {
-              "line": 5,
-              "character": 4
-            },
             "end": {
-              "line": 10,
-              "character": 5
+              "character": 5,
+              "line": 10
+            },
+            "start": {
+              "character": 4,
+              "line": 5
             }
-          },
-          "newText": "class Bar {\n      NEW_NAME(f: Foo, b: Bar) {\n        f.#foo;\n        b.NEW_NAME(f, b);\n      }\n    }"
+          }
         }
       ]
     }

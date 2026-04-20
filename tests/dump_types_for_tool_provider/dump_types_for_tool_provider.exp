@@ -1,497 +1,497 @@
 [
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
+    "end":5,
+    "endline":5,
+    "line":5,
     "loc":{
+      "end":{"column":5,"line":5,"offset":135},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":5,"column":5,"offset":134},
-      "end":{"line":5,"column":5,"offset":135}
+      "start":{"column":5,"line":5,"offset":134},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":5,
-    "endline":5,
+    "reasons":[],
     "start":5,
-    "end":5
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
+    "end":22,
+    "endline":5,
+    "line":5,
     "loc":{
+      "end":{"column":22,"line":5,"offset":152},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":5,"column":5,"offset":134},
-      "end":{"line":5,"column":22,"offset":152}
+      "start":{"column":5,"line":5,"offset":134},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":5,
-    "endline":5,
+    "reasons":[],
     "start":5,
-    "end":22
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"}}",
-    "reasons":[],
+    "end":13,
+    "endline":5,
+    "line":5,
     "loc":{
+      "end":{"column":13,"line":5,"offset":143},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":5,"column":8,"offset":137},
-      "end":{"line":5,"column":13,"offset":143}
+      "start":{"column":8,"line":5,"offset":137},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":5,
-    "endline":5,
+    "reasons":[],
     "start":8,
-    "end":13
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
+    "end":22,
+    "endline":5,
+    "line":5,
     "loc":{
+      "end":{"column":22,"line":5,"offset":152},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":5,"column":8,"offset":137},
-      "end":{"line":5,"column":22,"offset":152}
+      "start":{"column":8,"line":5,"offset":137},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":5,
-    "endline":5,
+    "reasons":[],
     "start":8,
-    "end":22
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}}",
-    "reasons":[],
+    "end":22,
+    "endline":5,
+    "line":5,
     "loc":{
+      "end":{"column":22,"line":5,"offset":152},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":5,"column":17,"offset":146},
-      "end":{"line":5,"column":22,"offset":152}
+      "start":{"column":17,"line":5,"offset":146},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":5,
-    "endline":5,
+    "reasons":[],
     "start":17,
-    "end":22
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"SingletonNum\",\"from_annot\":false,\"number\":42,\"string\":\"42\"},\"reason\":\"test.js:5:26-27: number literal `42`\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":5,"column":26,"offset":155},
-      "end":{"line":5,"column":27,"offset":157}
-    },
-    "path":"test.js",
-    "line":5,
+    "end":27,
     "endline":5,
+    "line":5,
+    "loc":{
+      "end":{"column":27,"line":5,"offset":157},
+      "source":"test.js",
+      "start":{"column":26,"line":5,"offset":155},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":26,
-    "end":27
+    "type":"{\"expression_type\":{\"def\":{\"from_annot\":false,\"kind\":\"SingletonNum\",\"number\":42,\"string\":\"42\"},\"kind\":\"Def\",\"reason\":\"test.js:5:26-27: number literal `42`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:6:5-12: string\"}}",
-    "reasons":[],
+    "end":12,
+    "endline":6,
+    "line":6,
     "loc":{
+      "end":{"column":12,"line":6,"offset":171},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":6,"column":5,"offset":163},
-      "end":{"line":6,"column":12,"offset":171}
+      "start":{"column":5,"line":6,"offset":163},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":6,
-    "endline":6,
+    "reasons":[],
     "start":5,
-    "end":12
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:6:5-12: string\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"BoolGeneral\"},\"reason\":\"test.js:6:5-25: boolean\"}}",
-    "reasons":[],
+    "end":25,
+    "endline":6,
+    "line":6,
     "loc":{
+      "end":{"column":25,"line":6,"offset":184},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":6,"column":5,"offset":163},
-      "end":{"line":6,"column":25,"offset":184}
+      "start":{"column":5,"line":6,"offset":163},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":6,
-    "endline":6,
+    "reasons":[],
     "start":5,
-    "end":25
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"BoolGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:6:5-25: boolean\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:6:12: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:6:12: string\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
+    "end":12,
+    "endline":6,
+    "line":6,
     "loc":{
+      "end":{"column":12,"line":6,"offset":171},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":6,"column":12,"offset":170},
-      "end":{"line":6,"column":12,"offset":171}
+      "start":{"column":12,"line":6,"offset":170},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":6,
-    "endline":6,
+    "reasons":[],
     "start":12,
-    "end":12
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:6:12: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:6:12: string\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:6:12: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:6:12: string\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
+    "end":12,
+    "endline":6,
+    "line":6,
     "loc":{
+      "end":{"column":12,"line":6,"offset":171},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":6,"column":12,"offset":170},
-      "end":{"line":6,"column":12,"offset":171}
+      "start":{"column":12,"line":6,"offset":170},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":6,
-    "endline":6,
+    "reasons":[],
     "start":12,
-    "end":12
+    "type":"{\"expression_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:6:12: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:6:12: string\"}]},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"SingletonStr\",\"from_annot\":false,\"value\":\"number\"},\"reason\":\"test.js:6:18-25: string literal `number`\"}}",
-    "reasons":[],
+    "end":25,
+    "endline":6,
+    "line":6,
     "loc":{
+      "end":{"column":25,"line":6,"offset":184},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":6,"column":18,"offset":176},
-      "end":{"line":6,"column":25,"offset":184}
+      "start":{"column":18,"line":6,"offset":176},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":6,
-    "endline":6,
+    "reasons":[],
     "start":18,
-    "end":25
+    "type":"{\"expression_type\":{\"def\":{\"from_annot\":false,\"kind\":\"SingletonStr\",\"value\":\"number\"},\"kind\":\"Def\",\"reason\":\"test.js:6:18-25: string literal `number`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:7:3: number\"},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":3,"offset":190},
-      "end":{"line":7,"column":3,"offset":191}
-    },
-    "path":"test.js",
-    "line":7,
+    "end":3,
     "endline":7,
-    "start":3,
-    "end":3
-  },
-  {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:7:3: number\"},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:5:8-13: number\"},{\"kind\":\"Def\",\"def\":{\"kind\":\"StrGeneral\"},\"reason\":\"test.js:5:17-22: string\"}]}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":3,"offset":190},
-      "end":{"line":7,"column":3,"offset":191}
-    },
-    "path":"test.js",
     "line":7,
-    "endline":7,
-    "start":3,
-    "end":3
-  },
-  {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Poly\",\"tparams\":[{\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"polarity\":\"neutral\",\"default\":null}],\"t_out\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Type\",\"type_kind\":\"OpaqueKind\",\"type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"sub_t\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"polarity\":\"neutral\"}]}}},\"reason\":\"test.js:10:21: `F`\"},\"id\":\"14346\"},\"reason\":\"test.js:10:21: `F`\"}}",
-    "reasons":[],
     "loc":{
+      "end":{"column":3,"line":7,"offset":191},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":21,"offset":216},
-      "end":{"line":10,"column":21,"offset":217}
+      "start":{"column":3,"line":7,"offset":190},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":10,
+    "reasons":[],
+    "start":3,
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:3: number\"},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
+  },
+  {
+    "end":3,
+    "endline":7,
+    "line":7,
+    "loc":{
+      "end":{"column":3,"line":7,"offset":191},
+      "source":"test.js",
+      "start":{"column":3,"line":7,"offset":190},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
+    "start":3,
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:3: number\"},\"provider_type\":{\"kind\":\"Union\",\"members\":[{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:8-13: number\"},{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:5:17-22: string\"}]}}"
+  },
+  {
+    "end":21,
     "endline":10,
+    "line":10,
+    "loc":{
+      "end":{"column":21,"line":10,"offset":217},
+      "source":"test.js",
+      "start":{"column":21,"line":10,"offset":216},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":21,
-    "end":21
+    "type":"{\"expression_type\":{\"def\":{\"id\":\"14346\",\"kind\":\"Poly\",\"t_out\":{\"def\":{\"kind\":\"Type\",\"type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false}}],\"sub_t\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"super_t\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"underlying_t\":null}},\"type_kind\":\"OpaqueKind\"},\"kind\":\"Def\",\"reason\":\"test.js:10:21: `F`\"},\"tparams\":[{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"default\":null,\"name\":\"X\",\"polarity\":\"neutral\"}]},\"kind\":\"Def\",\"reason\":\"test.js:10:21: `F`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false}}",
-    "reasons":[],
+    "end":23,
+    "endline":10,
+    "line":10,
     "loc":{
+      "end":{"column":23,"line":10,"offset":219},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":23,"offset":218},
-      "end":{"line":10,"column":23,"offset":219}
+      "start":{"column":23,"line":10,"offset":218},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":10,
-    "endline":10,
+    "reasons":[],
     "start":23,
-    "end":23
+    "type":"{\"expression_type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"}}",
-    "reasons":[],
+    "end":23,
+    "endline":10,
+    "line":10,
     "loc":{
+      "end":{"column":23,"line":10,"offset":219},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":24,"offset":219},
-      "end":{"line":10,"column":23,"offset":219}
+      "start":{"column":24,"line":10,"offset":219},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":10,
-    "endline":10,
+    "reasons":[],
     "start":24,
-    "end":23
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: no providers\"}}",
-    "reasons":[],
+    "end":32,
+    "endline":10,
+    "line":10,
     "loc":{
+      "end":{"column":32,"line":10,"offset":228},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":32,"offset":227},
-      "end":{"line":10,"column":32,"offset":228}
+      "start":{"column":32,"line":10,"offset":227},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":10,
-    "endline":10,
+    "reasons":[],
     "start":32,
-    "end":32
+    "type":"{\"expression_type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"provider_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: no providers\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: no providers\"}}",
-    "reasons":[],
+    "end":32,
+    "endline":10,
+    "line":10,
     "loc":{
+      "end":{"column":32,"line":10,"offset":228},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":32,"offset":227},
-      "end":{"line":10,"column":32,"offset":228}
+      "start":{"column":32,"line":10,"offset":227},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":10,
-    "endline":10,
+    "reasons":[],
     "start":32,
-    "end":32
+    "type":"{\"expression_type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"provider_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: no providers\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: no providers\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":42,"offset":237},
-      "end":{"line":10,"column":42,"offset":238}
-    },
-    "path":"test.js",
-    "line":10,
+    "end":42,
     "endline":10,
-    "start":42,
-    "end":42
-  },
-  {
-    "type":"{\"expression_type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: no providers\"}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":10,"column":42,"offset":237},
-      "end":{"line":10,"column":42,"offset":238}
-    },
-    "path":"test.js",
     "line":10,
-    "endline":10,
+    "loc":{
+      "end":{"column":42,"line":10,"offset":238},
+      "source":"test.js",
+      "start":{"column":42,"line":10,"offset":237},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":42,
-    "end":42
+    "type":"{\"expression_type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"provider_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: no providers\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
+    "end":42,
+    "endline":10,
+    "line":10,
     "loc":{
+      "end":{"column":42,"line":10,"offset":238},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":15,"offset":255},
-      "end":{"line":12,"column":15,"offset":256}
+      "start":{"column":42,"line":10,"offset":237},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
+    "reasons":[],
+    "start":42,
+    "type":"{\"expression_type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"provider_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: no providers\"}}"
+  },
+  {
+    "end":15,
     "endline":12,
+    "line":12,
+    "loc":{
+      "end":{"column":15,"line":12,"offset":256},
+      "source":"test.js",
+      "start":{"column":15,"line":12,"offset":255},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":15,
-    "end":15
+    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
+    "end":36,
+    "endline":12,
+    "line":12,
     "loc":{
+      "end":{"column":36,"line":12,"offset":277},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":15,"offset":255},
-      "end":{"line":12,"column":36,"offset":277}
+      "start":{"column":15,"line":12,"offset":255},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
-    "endline":12,
+    "reasons":[],
     "start":15,
-    "end":36
+    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Poly\",\"tparams\":[{\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"polarity\":\"neutral\",\"default\":null}],\"t_out\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Type\",\"type_kind\":\"OpaqueKind\",\"type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"sub_t\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Generic\",\"name\":\"X\",\"bound\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:23: `unknown`\"},\"no_infer\":false},\"polarity\":\"neutral\"}]}}},\"reason\":\"test.js:10:21: `F`\"},\"id\":\"14346\"},\"reason\":\"test.js:10:21: `F`\"},\"provider_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Mixed\"},\"reason\":\"test.js:10:21: no providers\"}}",
-    "reasons":[],
+    "end":18,
+    "endline":12,
+    "line":12,
     "loc":{
+      "end":{"column":18,"line":12,"offset":259},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":18,"offset":258},
-      "end":{"line":12,"column":18,"offset":259}
+      "start":{"column":18,"line":12,"offset":258},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
-    "endline":12,
+    "reasons":[],
     "start":18,
-    "end":18
+    "type":"{\"expression_type\":{\"def\":{\"id\":\"14346\",\"kind\":\"Poly\",\"t_out\":{\"def\":{\"kind\":\"Type\",\"type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false}}],\"sub_t\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"super_t\":{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"kind\":\"Generic\",\"name\":\"X\",\"no_infer\":false},\"underlying_t\":null}},\"type_kind\":\"OpaqueKind\"},\"kind\":\"Def\",\"reason\":\"test.js:10:21: `F`\"},\"tparams\":[{\"bound\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:23: `unknown`\"},\"default\":null,\"name\":\"X\",\"polarity\":\"neutral\"}]},\"kind\":\"Def\",\"reason\":\"test.js:10:21: `F`\"},\"provider_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:10:21: no providers\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
+    "end":36,
+    "endline":12,
+    "line":12,
     "loc":{
+      "end":{"column":36,"line":12,"offset":277},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":18,"offset":258},
-      "end":{"line":12,"column":36,"offset":277}
+      "start":{"column":18,"line":12,"offset":258},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
-    "endline":12,
+    "reasons":[],
     "start":18,
-    "end":36
+    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}",
-    "reasons":[],
+    "end":25,
+    "endline":12,
+    "line":12,
     "loc":{
+      "end":{"column":25,"line":12,"offset":266},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":20,"offset":260},
-      "end":{"line":12,"column":25,"offset":266}
+      "start":{"column":20,"line":12,"offset":260},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
-    "endline":12,
+    "reasons":[],
     "start":20,
-    "end":25
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"}}",
-    "reasons":[],
+    "end":35,
+    "endline":12,
+    "line":12,
     "loc":{
+      "end":{"column":35,"line":12,"offset":276},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":20,"offset":260},
-      "end":{"line":12,"column":35,"offset":276}
+      "start":{"column":20,"line":12,"offset":260},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
-    "endline":12,
+    "reasons":[],
     "start":20,
-    "end":35
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"}}",
-    "reasons":[],
+    "end":35,
+    "endline":12,
+    "line":12,
     "loc":{
+      "end":{"column":35,"line":12,"offset":276},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":12,"column":30,"offset":270},
-      "end":{"line":12,"column":35,"offset":276}
+      "start":{"column":30,"line":12,"offset":270},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":12,
-    "endline":12,
+    "reasons":[],
     "start":30,
-    "end":35
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:13:1: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:13:1: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":13,"column":1,"offset":279},
-      "end":{"line":13,"column":1,"offset":280}
-    },
-    "path":"test.js",
-    "line":13,
+    "end":1,
     "endline":13,
-    "start":1,
-    "end":1
-  },
-  {
-    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:13:1: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:13:1: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":13,"column":1,"offset":279},
-      "end":{"line":13,"column":1,"offset":280}
-    },
-    "path":"test.js",
     "line":13,
+    "loc":{
+      "end":{"column":1,"line":13,"offset":280},
+      "source":"test.js",
+      "start":{"column":1,"line":13,"offset":279},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
+    "start":1,
+    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:13:1: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:13:1: function type\"},\"underlying_t\":null}},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
+  },
+  {
+    "end":1,
     "endline":13,
-    "start":1,
-    "end":1
-  },
-  {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:14:1: function type\"},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
+    "line":13,
     "loc":{
+      "end":{"column":1,"line":13,"offset":280},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":14,"column":1,"offset":282},
-      "end":{"line":14,"column":1,"offset":283}
+      "start":{"column":1,"line":13,"offset":279},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":14,
-    "endline":14,
+    "reasons":[],
     "start":1,
-    "end":1
+    "type":"{\"expression_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:13:1: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:13:1: function type\"},\"underlying_t\":null}},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:14:1: function type\"},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"underlying_t\":null,\"super_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"sub_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:18-36: function type\"},\"nominal_type_args\":[{\"name\":\"X\",\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Fun\",\"static\":{\"kind\":\"Def\",\"def\":{\"kind\":\"Obj\",\"objtype\":{\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"},\"call_t\":null}},\"reason\":\"test.js:12:20-35: statics of function type\"},\"funtype\":{\"this_t\":{\"type\":{\"kind\":\"Any\"},\"status\":{\"kind\":\"This_Function\"}},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:12:30-35: number\"},\"type_guard\":null,\"effect\":{\"kind\":\"ArbitraryEffect\"}}},\"reason\":\"test.js:12:20-35: function type\"},\"polarity\":\"neutral\"}]}}}",
-    "reasons":[],
+    "end":1,
+    "endline":14,
+    "line":14,
     "loc":{
+      "end":{"column":1,"line":14,"offset":283},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":14,"column":1,"offset":282},
-      "end":{"line":14,"column":1,"offset":283}
+      "start":{"column":1,"line":14,"offset":282},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":14,
-    "endline":14,
+    "reasons":[],
     "start":1,
-    "end":1
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:14:1: function type\"},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"NumGeneral\"},\"reason\":\"test.js:14:1-5: number\"}}",
-    "reasons":[],
+    "end":1,
+    "endline":14,
+    "line":14,
     "loc":{
+      "end":{"column":1,"line":14,"offset":283},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":14,"column":1,"offset":282},
-      "end":{"line":14,"column":5,"offset":287}
+      "start":{"column":1,"line":14,"offset":282},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":14,
-    "endline":14,
+    "reasons":[],
     "start":1,
-    "end":5
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:14:1: function type\"},\"provider_type\":{\"kind\":\"Opaque\",\"nominal_type\":{\"nominal_id\":\"user-defined F (<opaque>)\",\"nominal_type_args\":[{\"name\":\"X\",\"polarity\":\"neutral\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: function type\"}}],\"sub_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"super_t\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:20-25: number\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:12:30-35: number\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:12:20-35: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:12:18-36: function type\"},\"underlying_t\":null}}}"
   },
   {
-    "type":"{\"expression_type\":{\"kind\":\"Def\",\"def\":{\"kind\":\"SingletonNum\",\"from_annot\":false,\"number\":10,\"string\":\"10\"},\"reason\":\"test.js:14:3-4: number literal `10`\"}}",
-    "reasons":[],
+    "end":5,
+    "endline":14,
+    "line":14,
     "loc":{
+      "end":{"column":5,"line":14,"offset":287},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":14,"column":3,"offset":284},
-      "end":{"line":14,"column":4,"offset":286}
+      "start":{"column":1,"line":14,"offset":282},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":14,
+    "reasons":[],
+    "start":1,
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"NumGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:14:1-5: number\"}}"
+  },
+  {
+    "end":4,
     "endline":14,
+    "line":14,
+    "loc":{
+      "end":{"column":4,"line":14,"offset":286},
+      "source":"test.js",
+      "start":{"column":3,"line":14,"offset":284},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":3,
-    "end":4
+    "type":"{\"expression_type\":{\"def\":{\"from_annot\":false,\"kind\":\"SingletonNum\",\"number\":10,\"string\":\"10\"},\"kind\":\"Def\",\"reason\":\"test.js:14:3-4: number literal `10`\"}}"
   }
 ]

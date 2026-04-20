@@ -32,10 +32,13 @@ module.exports = (suite(
           [
             {
               method: 'telemetry/event',
-              params: {type: 1, message: 'Unhandled method barfoo'},
+              params: {
+                message: 'Unhandled method barfoo',
+                type: 1,
+              },
             },
           ],
-          [...lspIgnoreStatusAndCancellation],
+          ['window/showStatus', '$/cancelRequest'],
         ),
     ]),
 
@@ -47,12 +50,26 @@ module.exports = (suite(
         position: {line: 6, character: 1},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/definition',
-            '{definition.js,"start":{"line":2,"character":9}}',
-          ],
+          {
+            method: 'textDocument/definition',
+            result: [
+              {
+                range: {
+                  end: {
+                    character: 13,
+                    line: 2,
+                  },
+                  start: {
+                    character: 9,
+                    line: 2,
+                  },
+                },
+                uri: '<PLACEHOLDER_PROJECT_URL>/definition.js',
+              },
+            ],
+          },
         ],
-        [...lspIgnoreStatusAndCancellation],
+        ['window/showStatus', '$/cancelRequest'],
       ),
     ]),
 
@@ -149,13 +166,13 @@ module.exports = (suite(
                 '`T` defined at [`hover_refs.js:7:5`](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L7,6)',
               ],
               range: {
-                start: {
-                  line: 6,
-                  character: 5,
-                },
                 end: {
-                  line: 6,
                   character: 6,
+                  line: 6,
+                },
+                start: {
+                  character: 5,
+                  line: 6,
                 },
               },
             },
@@ -184,13 +201,13 @@ module.exports = (suite(
                 '`ValuesPoly` defined at [`cached_hover.js:3:5`](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
               range: {
-                start: {
-                  line: 2,
-                  character: 5,
-                },
                 end: {
-                  line: 2,
                   character: 15,
+                  line: 2,
+                },
+                start: {
+                  character: 5,
+                  line: 2,
                 },
               },
             },
@@ -214,13 +231,13 @@ module.exports = (suite(
                 '`ValuesPoly` defined at [`cached_hover.js:3:5`](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
               range: {
-                start: {
-                  line: 2,
-                  character: 5,
-                },
                 end: {
-                  line: 2,
                   character: 15,
+                  line: 2,
+                },
+                start: {
+                  character: 5,
+                  line: 2,
                 },
               },
             },

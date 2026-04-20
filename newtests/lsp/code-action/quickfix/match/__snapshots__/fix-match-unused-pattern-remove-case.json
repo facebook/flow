@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Remove",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_unused_pattern",
+          "Remove"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-remove-case.js": [
             {
+              "newText": "match (x) {\n  1 => {}\n  2 => {}\n  3 => {}\n}",
               "range": {
-                "start": {
-                  "line": 4,
-                  "character": 0
-                },
                 "end": {
-                  "line": 9,
-                  "character": 1
+                  "character": 1,
+                  "line": 9
+                },
+                "start": {
+                  "character": 0,
+                  "line": 4
                 }
-              },
-              "newText": "match (x) {\n  1 => {}\n  2 => {}\n  3 => {}\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_match_unused_pattern",
-          "Remove"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Remove"
     }
   ]
 }

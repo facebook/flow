@@ -2,43 +2,43 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 8,
-          "character": 12
-        },
         "end": {
-          "line": 8,
-          "character": 13
+          "character": 13,
+          "line": 8
+        },
+        "start": {
+          "character": 12,
+          "line": 8
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 9,
-          "character": 0
-        },
         "end": {
-          "line": 9,
-          "character": 1
+          "character": 1,
+          "line": 9
+        },
+        "start": {
+          "character": 0,
+          "line": 9
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 10,
-          "character": 16
-        },
         "end": {
-          "line": 10,
-          "character": 17
+          "character": 17,
+          "line": 10
+        },
+        "start": {
+          "character": 16,
+          "line": 10
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     }
   ]
 }

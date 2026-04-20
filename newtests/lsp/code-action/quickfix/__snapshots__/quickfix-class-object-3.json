@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Rewrite `T` as an interface",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "replace_obj_with_interface",
+          "Rewrite `T` as an interface"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js": [
             {
+              "newText": "interface { x: number }",
               "range": {
-                "start": {
-                  "line": 14,
-                  "character": 9
-                },
                 "end": {
-                  "line": 14,
-                  "character": 27
+                  "character": 27,
+                  "line": 14
+                },
+                "start": {
+                  "character": 9,
+                  "line": 14
                 }
-              },
-              "newText": "interface { x: number }"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "replace_obj_with_interface",
-          "Rewrite `T` as an interface"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Rewrite `T` as an interface"
     }
   ]
 }

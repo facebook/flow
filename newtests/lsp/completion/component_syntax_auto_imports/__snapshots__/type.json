@@ -4,207 +4,207 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "FooBarBaz",
-        "kind": 6,
-        "detail": "Import default type from ./__fixtures__/FooBarBaz4",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 9
-            },
-            "end": {
-              "line": 2,
-              "character": 18
-            }
-          },
-          "newText": "FooBarBaz"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import type FooBarBaz from \"./__fixtures__/FooBarBaz4\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import type FooBarBaz from \"./__fixtures__/FooBarBaz4\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "FooBarBazAUTO332",
+              "ac_type": "Actype",
+              "completion": "FooBarBaz",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 9,
-              "completion": "FooBarBaz",
-              "ac_type": "Actype"
+              "token": "FooBarBazAUTO332",
+              "typed_length": 9
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import default type from ./__fixtures__/FooBarBaz4",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "FooBarBaz",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "newText": "FooBarBaz",
+          "range": {
+            "end": {
+              "character": 18,
+              "line": 2
+            },
+            "start": {
+              "character": 9,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "FooBarBaz",
-        "kind": 6,
-        "detail": "Import type from ./__fixtures__/FooBarBaz1",
-        "sortText": "00000000000000000001",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 9
-            },
-            "end": {
-              "line": 2,
-              "character": 18
-            }
-          },
-          "newText": "FooBarBaz"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import type { FooBarBaz } from \"./__fixtures__/FooBarBaz1\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import type { FooBarBaz } from \"./__fixtures__/FooBarBaz1\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "FooBarBazAUTO332",
+              "ac_type": "Actype",
+              "completion": "FooBarBaz",
               "index": 1,
               "session_requests": 1,
-              "typed_length": 9,
-              "completion": "FooBarBaz",
-              "ac_type": "Actype"
+              "token": "FooBarBazAUTO332",
+              "typed_length": 9
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import type from ./__fixtures__/FooBarBaz1",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "FooBarBaz",
+        "sortText": "00000000000000000001",
+        "textEdit": {
+          "newText": "FooBarBaz",
+          "range": {
+            "end": {
+              "character": 18,
+              "line": 2
+            },
+            "start": {
+              "character": 9,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "FooBarBaz2",
-        "kind": 6,
-        "detail": "Import default type from ./__fixtures__/FooBarBaz2",
-        "sortText": "00000000000000000002",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 9
-            },
-            "end": {
-              "line": 2,
-              "character": 18
-            }
-          },
-          "newText": "FooBarBaz2"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import type FooBarBaz2 from \"./__fixtures__/FooBarBaz2\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import type FooBarBaz2 from \"./__fixtures__/FooBarBaz2\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "FooBarBazAUTO332",
+              "ac_type": "Actype",
+              "completion": "FooBarBaz2",
               "index": 2,
               "session_requests": 1,
-              "typed_length": 9,
-              "completion": "FooBarBaz2",
-              "ac_type": "Actype"
+              "token": "FooBarBazAUTO332",
+              "typed_length": 9
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import default type from ./__fixtures__/FooBarBaz2",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "FooBarBaz2",
+        "sortText": "00000000000000000002",
+        "textEdit": {
+          "newText": "FooBarBaz2",
+          "range": {
+            "end": {
+              "character": 18,
+              "line": 2
+            },
+            "start": {
+              "character": 9,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "FooBarBaz4",
-        "kind": 6,
-        "detail": "Import default type from ./__fixtures__/FooBarBaz4",
-        "sortText": "00000000000000000003",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 9
-            },
-            "end": {
-              "line": 2,
-              "character": 18
-            }
-          },
-          "newText": "FooBarBaz4"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import type FooBarBaz4 from \"./__fixtures__/FooBarBaz4\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import type FooBarBaz4 from \"./__fixtures__/FooBarBaz4\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "FooBarBazAUTO332",
+              "ac_type": "Actype",
+              "completion": "FooBarBaz4",
               "index": 3,
               "session_requests": 1,
-              "typed_length": 9,
-              "completion": "FooBarBaz4",
-              "ac_type": "Actype"
+              "token": "FooBarBazAUTO332",
+              "typed_length": 9
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import default type from ./__fixtures__/FooBarBaz4",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "FooBarBaz4",
+        "sortText": "00000000000000000003",
+        "textEdit": {
+          "newText": "FooBarBaz4",
+          "range": {
+            "end": {
+              "character": 18,
+              "line": 2
+            },
+            "start": {
+              "character": 9,
+              "line": 2
+            }
+          }
         }
       }
     ]

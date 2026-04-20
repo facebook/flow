@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `keyof`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_dollar_keys_type",
+          "Convert to `keyof`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-dollar-keys.js": [
             {
+              "newText": "keyof O",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 9
-                },
                 "end": {
-                  "line": 2,
-                  "character": 17
+                  "character": 17,
+                  "line": 2
+                },
+                "start": {
+                  "character": 9,
+                  "line": 2
                 }
-              },
-              "newText": "keyof O"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_dollar_keys_type",
-          "Convert to `keyof`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Convert to `keyof`"
     }
   ]
 }

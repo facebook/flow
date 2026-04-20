@@ -2,89 +2,89 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Refactor `match` coded like a switch",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_switch_to_match",
+          "Refactor `match` coded like a switch"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-coded-like-switch.js": [
             {
+              "newText": "dataPoint",
               "range": {
-                "start": {
-                  "line": 18,
-                  "character": 25
-                },
                 "end": {
-                  "line": 18,
-                  "character": 39
+                  "character": 39,
+                  "line": 18
+                },
+                "start": {
+                  "character": 25,
+                  "line": 18
                 }
-              },
-              "newText": "dataPoint"
+              }
             },
             {
+              "newText": "{type: \"avg\", const avg, ...} as dataPoint",
               "range": {
-                "start": {
-                  "line": 19,
-                  "character": 4
-                },
                 "end": {
-                  "line": 19,
-                  "character": 9
+                  "character": 9,
+                  "line": 19
+                },
+                "start": {
+                  "character": 4,
+                  "line": 19
                 }
-              },
-              "newText": "{type: \"avg\", const avg, ...} as dataPoint"
+              }
             },
             {
+              "newText": "avg",
               "range": {
-                "start": {
-                  "line": 19,
-                  "character": 13
-                },
                 "end": {
-                  "line": 19,
-                  "character": 26
+                  "character": 26,
+                  "line": 19
+                },
+                "start": {
+                  "character": 13,
+                  "line": 19
                 }
-              },
-              "newText": "avg"
+              }
             },
             {
+              "newText": "{type: \"p50\", const p50, ...} as dataPoint",
               "range": {
-                "start": {
-                  "line": 21,
-                  "character": 4
-                },
                 "end": {
-                  "line": 21,
-                  "character": 9
+                  "character": 9,
+                  "line": 21
+                },
+                "start": {
+                  "character": 4,
+                  "line": 21
                 }
-              },
-              "newText": "{type: \"p50\", const p50, ...} as dataPoint"
+              }
             },
             {
+              "newText": "p50",
               "range": {
-                "start": {
-                  "line": 21,
-                  "character": 13
-                },
                 "end": {
-                  "line": 21,
-                  "character": 26
+                  "character": 26,
+                  "line": 21
+                },
+                "start": {
+                  "character": 13,
+                  "line": 21
                 }
-              },
-              "newText": "p50"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "refactor_switch_to_match",
-          "Refactor `match` coded like a switch"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Refactor `match` coded like a switch"
     }
   ]
 }

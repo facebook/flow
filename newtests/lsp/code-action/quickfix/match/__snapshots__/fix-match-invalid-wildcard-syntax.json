@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Replace `default` with `_`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_invalid_wildcard_syntax",
+          "Replace `default` with `_`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-wildcard-syntax.js": [
             {
+              "newText": "_",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 2
-                },
                 "end": {
-                  "line": 3,
-                  "character": 9
+                  "character": 9,
+                  "line": 3
+                },
+                "start": {
+                  "character": 2,
+                  "line": 3
                 }
-              },
-              "newText": "_"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_match_invalid_wildcard_syntax",
-          "Replace `default` with `_`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Replace `default` with `_`"
     }
   ]
 }

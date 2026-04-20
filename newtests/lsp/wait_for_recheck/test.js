@@ -38,10 +38,13 @@ module.exports = (suite(
           [
             {
               method: 'telemetry/event',
-              params: {type: 1, message: 'Unhandled method barfoo'},
+              params: {
+                message: 'Unhandled method barfoo',
+                type: 1,
+              },
             },
           ],
-          [...lspIgnoreStatusAndCancellation],
+          ['window/showStatus', '$/cancelRequest'],
         ),
     ]).waitForRecheck(true),
 
@@ -61,10 +64,13 @@ module.exports = (suite(
           [
             {
               method: 'telemetry/event',
-              params: {type: 1, message: 'Unhandled method barfoo'},
+              params: {
+                message: 'Unhandled method barfoo',
+                type: 1,
+              },
             },
           ],
-          [...lspIgnoreStatusAndCancellation],
+          ['window/showStatus', '$/cancelRequest'],
         ),
     ]).waitForRecheck(false),
 
@@ -96,12 +102,26 @@ module.exports = (suite(
       })
         .verifyAllLSPMessagesInStep(
           [
-            [
-              'textDocument/definition',
-              '{definition.js,"start":{"line":2,"character":9}}',
-            ],
+            {
+              method: 'textDocument/definition',
+              result: [
+                {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 2,
+                    },
+                    start: {
+                      character: 9,
+                      line: 2,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/definition.js',
+                },
+              ],
+            },
           ],
-          [...lspIgnoreStatusAndCancellation],
+          ['window/showStatus', '$/cancelRequest'],
         )
         .timeout(2000),
     ]).waitForRecheck(false),
@@ -313,8 +333,8 @@ module.exports = (suite(
       ),
       lspRequestAndWaitUntilResponse('telemetry/rage', {})
         .verifyAllLSPMessagesInStep(
-          ['telemetry/rage'],
-          [...lspIgnoreStatusAndCancellation],
+          [],
+          ['window/showStatus', '$/cancelRequest'],
         )
         .timeout(10000),
     ]).waitForRecheck(false),

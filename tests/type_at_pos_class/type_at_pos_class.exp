@@ -1,647 +1,647 @@
 annot_t.js:9:21 = {
-  "types":{"unevaluated":{"type":"class KeyedSeq<K, +V>"},"evaluated":null},
-  "reasons":[],
+  "end":24,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":24,"line":9,"offset":158},
     "source":"annot_t.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":20,"offset":153},
-    "end":{"line":9,"column":24,"offset":158}
+    "start":{"column":20,"line":9,"offset":153},
+    "type":"SourceFile"
   },
   "path":"annot_t.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":20,
-  "end":24
+  "types":{"evaluated":null,"unevaluated":{"type":"class KeyedSeq<K, +V>"}}
 }
 class-0.js:3:7 = {
-  "types":{"unevaluated":{"type":"class A"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":3,
+  "line":3,
   "loc":{
+    "end":{"column":7,"line":3,"offset":17},
     "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":7,"offset":16},
-    "end":{"line":3,"column":7,"offset":17}
+    "start":{"column":7,"line":3,"offset":16},
+    "type":"SourceFile"
   },
   "path":"class-0.js",
-  "line":3,
-  "endline":3,
+  "reasons":[],
   "start":7,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"class A"}}
 }
 class-0.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":3,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":3,"line":4,"offset":23},
     "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":3,"offset":22},
-    "end":{"line":4,"column":3,"offset":23}
+    "start":{"column":3,"line":4,"offset":22},
+    "type":"SourceFile"
   },
   "path":"class-0.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":3,
-  "end":3
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 class-0.js:4:10 = {
-  "types":{"unevaluated":{"type":"this"},"evaluated":null},
-  "reasons":[],
+  "end":12,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":12,"line":4,"offset":32},
     "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":9,"offset":28},
-    "end":{"line":4,"column":12,"offset":32}
+    "start":{"column":9,"line":4,"offset":28},
+    "type":"SourceFile"
   },
   "path":"class-0.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":9,
-  "end":12
+  "types":{"evaluated":null,"unevaluated":{"type":"this"}}
 }
 class-0.js:12:5 = {
-  "types":{"unevaluated":{"type":"Class<mixed>"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":12,
+  "line":12,
   "loc":{
+    "end":{"column":5,"line":12,"offset":104},
     "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":5,"offset":103},
-    "end":{"line":12,"column":5,"offset":104}
+    "start":{"column":5,"line":12,"offset":103},
+    "type":"SourceFile"
   },
   "path":"class-0.js",
-  "line":12,
-  "endline":12,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<mixed>"}}
 }
 class-0.js:21:5 = {
-  "types":{"unevaluated":{"type":"Class<C1 & C2>"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":21,
+  "line":21,
   "loc":{
+    "end":{"column":5,"line":21,"offset":178},
     "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":21,"column":5,"offset":177},
-    "end":{"line":21,"column":5,"offset":178}
+    "start":{"column":5,"line":21,"offset":177},
+    "type":"SourceFile"
   },
   "path":"class-0.js",
-  "line":21,
-  "endline":21,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<C1 & C2>"}}
 }
 class-0.js:24:5 = {
-  "types":{"unevaluated":{"type":"Class<C1 | C2>"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":24,
+  "line":24,
   "loc":{
+    "end":{"column":5,"line":24,"offset":226},
     "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":24,"column":5,"offset":225},
-    "end":{"line":24,"column":5,"offset":226}
+    "start":{"column":5,"line":24,"offset":225},
+    "type":"SourceFile"
   },
   "path":"class-0.js",
-  "line":24,
-  "endline":24,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<C1 | C2>"}}
 }
 class-1.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":3,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":3,"line":4,"offset":23},
     "source":"class-1.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":3,"offset":22},
-    "end":{"line":4,"column":3,"offset":23}
+    "start":{"column":3,"line":4,"offset":22},
+    "type":"SourceFile"
   },
   "path":"class-1.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":3,
-  "end":3
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 class-1.js:8:3 = {
-  "types":{"unevaluated":{"type":"() => number"},"evaluated":null},
-  "reasons":[],
+  "end":3,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":3,"line":8,"offset":56},
     "source":"class-1.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":3,"offset":55},
-    "end":{"line":8,"column":3,"offset":56}
+    "start":{"column":3,"line":8,"offset":55},
+    "type":"SourceFile"
   },
   "path":"class-1.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":3,
-  "end":3
+  "types":{"evaluated":null,"unevaluated":{"type":"() => number"}}
 }
 class-2.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
-  "reasons":[],
+  "end":3,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":3,"line":4,"offset":23},
     "source":"class-2.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":3,"offset":22},
-    "end":{"line":4,"column":3,"offset":23}
+    "start":{"column":3,"line":4,"offset":22},
+    "type":"SourceFile"
   },
   "path":"class-2.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":3,
-  "end":3
+  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
 }
 class-2.js:9:9 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":9,"line":9,"offset":81},
     "source":"class-2.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":9,"offset":80},
-    "end":{"line":9,"column":9,"offset":81}
+    "start":{"column":9,"line":9,"offset":80},
+    "type":"SourceFile"
   },
   "path":"class-2.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":9,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
 }
 class-2.js:10:9 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":9,"line":10,"offset":92},
     "source":"class-2.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":9,"offset":91},
-    "end":{"line":10,"column":9,"offset":92}
+    "start":{"column":9,"line":10,"offset":91},
+    "type":"SourceFile"
   },
   "path":"class-2.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":9,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
 }
 class-2.js:12:7 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":12,
+  "line":12,
   "loc":{
+    "end":{"column":7,"line":12,"offset":102},
     "source":"class-2.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":7,"offset":101},
-    "end":{"line":12,"column":7,"offset":102}
+    "start":{"column":7,"line":12,"offset":101},
+    "type":"SourceFile"
   },
   "path":"class-2.js",
-  "line":12,
-  "endline":12,
+  "reasons":[],
   "start":7,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"A"}}
 }
 class-2.js:13:7 = {
-  "types":{"unevaluated":{"type":"A"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":13,
+  "line":13,
   "loc":{
+    "end":{"column":7,"line":13,"offset":125},
     "source":"class-2.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":7,"offset":124},
-    "end":{"line":13,"column":7,"offset":125}
+    "start":{"column":7,"line":13,"offset":124},
+    "type":"SourceFile"
   },
   "path":"class-2.js",
-  "line":13,
-  "endline":13,
+  "reasons":[],
   "start":7,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"A"}}
 }
 class-3.js:4:3 = {
-  "types":{"unevaluated":{"type":"() => this"},"evaluated":null},
-  "reasons":[],
+  "end":3,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":3,"line":4,"offset":31},
     "source":"class-3.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":3,"offset":30},
-    "end":{"line":4,"column":3,"offset":31}
+    "start":{"column":3,"line":4,"offset":30},
+    "type":"SourceFile"
   },
   "path":"class-3.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":3,
-  "end":3
+  "types":{"evaluated":null,"unevaluated":{"type":"() => this"}}
 }
 class-3.js:9:9 = {
-  "types":{"unevaluated":{"type":"() => A"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":9,"line":9,"offset":84},
     "source":"class-3.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":9,"offset":83},
-    "end":{"line":9,"column":9,"offset":84}
+    "start":{"column":9,"line":9,"offset":83},
+    "type":"SourceFile"
   },
   "path":"class-3.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":9,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
 }
 class-3.js:10:9 = {
-  "types":{"unevaluated":{"type":"() => B"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":9,"line":10,"offset":95},
     "source":"class-3.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":9,"offset":94},
-    "end":{"line":10,"column":9,"offset":95}
+    "start":{"column":9,"line":10,"offset":94},
+    "type":"SourceFile"
   },
   "path":"class-3.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":9,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"() => B"}}
 }
 class-4.js:9:6 = {
-  "types":{"unevaluated":{"type":"Y"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":10,"line":9,"offset":84},
     "source":"class-4.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":6,"offset":79},
-    "end":{"line":9,"column":10,"offset":84}
+    "start":{"column":6,"line":9,"offset":79},
+    "type":"SourceFile"
   },
   "path":"class-4.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":6,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"Y"}}
 }
 class-bound.js:4:6 = {
-  "types":{"unevaluated":{"type":"type C<T: R<any>> = Class<T>"},"evaluated":null},
-  "reasons":[],
+  "end":6,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":6,"line":4,"offset":30},
     "source":"class-bound.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":6,"offset":29},
-    "end":{"line":4,"column":6,"offset":30}
+    "start":{"column":6,"line":4,"offset":29},
+    "type":"SourceFile"
   },
   "path":"class-bound.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":6,
-  "end":6
+  "types":{"evaluated":null,"unevaluated":{"type":"type C<T: R<any>> = Class<T>"}}
 }
 class-getters-setters.js:6:7 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":6,
+  "line":6,
   "loc":{
+    "end":{"column":7,"line":6,"offset":51},
     "source":"class-getters-setters.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":7,"offset":50},
-    "end":{"line":6,"column":7,"offset":51}
+    "start":{"column":7,"line":6,"offset":50},
+    "type":"SourceFile"
   },
   "path":"class-getters-setters.js",
-  "line":6,
-  "endline":6,
+  "reasons":[],
   "start":7,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 class-getters-setters.js:9:7 = {
-  "types":{"unevaluated":{"type":"?string"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":7,"line":9,"offset":89},
     "source":"class-getters-setters.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":7,"offset":88},
-    "end":{"line":9,"column":7,"offset":89}
+    "start":{"column":7,"line":9,"offset":88},
+    "type":"SourceFile"
   },
   "path":"class-getters-setters.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":7,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"?string"}}
 }
 class-poly-0.js:5:7 = {
-  "types":{"unevaluated":{"type":"class A<X: Base>"},"evaluated":null},
-  "reasons":[],
+  "end":7,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":7,"line":5,"offset":33},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":7,"offset":32},
-    "end":{"line":5,"column":7,"offset":33}
+    "start":{"column":7,"line":5,"offset":32},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":7,
-  "end":7
+  "types":{"evaluated":null,"unevaluated":{"type":"class A<X: Base>"}}
 }
 class-poly-0.js:5:9 = {
-  "types":{"unevaluated":{"type":"X"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":9,"line":5,"offset":35},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":9,"offset":34},
-    "end":{"line":5,"column":9,"offset":35}
+    "start":{"column":9,"line":5,"offset":34},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":9,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"X"}}
 }
 class-poly-0.js:10:26 = {
-  "types":{"unevaluated":{"type":"class A<X: Base>"},"evaluated":null},
-  "reasons":[],
+  "end":26,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":26,"line":10,"offset":91},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":26,"offset":90},
-    "end":{"line":10,"column":26,"offset":91}
+    "start":{"column":26,"line":10,"offset":90},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":26,
-  "end":26
+  "types":{"evaluated":null,"unevaluated":{"type":"class A<X: Base>"}}
 }
 class-poly-0.js:12:7 = {
-  "types":{"unevaluated":{"type":"A<X>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":12,
+  "line":12,
   "loc":{
+    "end":{"column":9,"line":12,"offset":124},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":5,"offset":119},
-    "end":{"line":12,"column":9,"offset":124}
+    "start":{"column":5,"line":12,"offset":119},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":12,
-  "endline":12,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"A<X>"}}
 }
 class-poly-0.js:16:7 = {
-  "types":{"unevaluated":{"type":"this"},"evaluated":null},
-  "reasons":[],
+  "end":8,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":8,"line":16,"offset":157},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":153},
-    "end":{"line":16,"column":8,"offset":157}
+    "start":{"column":5,"line":16,"offset":153},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":5,
-  "end":8
+  "types":{"evaluated":null,"unevaluated":{"type":"this"}}
 }
 class-poly-0.js:16:10 = {
-  "types":{"unevaluated":{"type":"X"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":10,"line":16,"offset":159},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":10,"offset":158},
-    "end":{"line":16,"column":10,"offset":159}
+    "start":{"column":10,"line":16,"offset":158},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":10,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"X"}}
 }
 class-poly-0.js:17:7 = {
-  "types":{"unevaluated":{"type":"A<X>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":17,
+  "line":17,
   "loc":{
+    "end":{"column":9,"line":17,"offset":170},
     "source":"class-poly-0.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":5,"offset":165},
-    "end":{"line":17,"column":9,"offset":170}
+    "start":{"column":5,"line":17,"offset":165},
+    "type":"SourceFile"
   },
   "path":"class-poly-0.js",
-  "line":17,
-  "endline":17,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"A<X>"}}
 }
 class-poly-1.js:9:5 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":5,"line":9,"offset":100},
     "source":"class-poly-1.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":5,"offset":99},
-    "end":{"line":9,"column":5,"offset":100}
+    "start":{"column":5,"line":9,"offset":99},
+    "type":"SourceFile"
   },
   "path":"class-poly-1.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 class-poly-1.js:9:11 = {
-  "types":{"unevaluated":{"type":"() => number"},"evaluated":null},
-  "reasons":[],
+  "end":11,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":11,"line":9,"offset":106},
     "source":"class-poly-1.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":11,"offset":105},
-    "end":{"line":9,"column":11,"offset":106}
+    "start":{"column":11,"line":9,"offset":105},
+    "type":"SourceFile"
   },
   "path":"class-poly-1.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":11,
-  "end":11
+  "types":{"evaluated":null,"unevaluated":{"type":"() => number"}}
 }
 class-statics.js:4:10 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":10,"line":4,"offset":30},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":10,"offset":29},
-    "end":{"line":4,"column":10,"offset":30}
+    "start":{"column":10,"line":4,"offset":29},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":10,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 class-statics.js:8:10 = {
-  "types":{"unevaluated":{"type":"() => Class<this>"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":10,"line":8,"offset":69},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":10,"offset":68},
-    "end":{"line":8,"column":10,"offset":69}
+    "start":{"column":10,"line":8,"offset":68},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":10,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"() => Class<this>"}}
 }
 class-statics.js:9:7 = {
-  "types":{"unevaluated":{"type":"Class<this>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":9,"line":9,"offset":96},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":6,"offset":92},
-    "end":{"line":9,"column":9,"offset":96}
+    "start":{"column":6,"line":9,"offset":92},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":6,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<this>"}}
 }
 class-statics.js:11:8 = {
-  "types":{"unevaluated":{"type":"Class<A>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":9,"line":11,"offset":140},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":5,"offset":135},
-    "end":{"line":11,"column":9,"offset":140}
+    "start":{"column":5,"line":11,"offset":135},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<A>"}}
 }
 class-statics.js:16:5 = {
-  "types":{"unevaluated":{"type":"Class<B>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":9,"line":16,"offset":179},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":174},
-    "end":{"line":16,"column":9,"offset":179}
+    "start":{"column":5,"line":16,"offset":174},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<B>"}}
 }
 class-statics.js:17:5 = {
-  "types":{"unevaluated":{"type":"B"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":17,
+  "line":17,
   "loc":{
+    "end":{"column":5,"line":17,"offset":194},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":5,"offset":193},
-    "end":{"line":17,"column":5,"offset":194}
+    "start":{"column":5,"line":17,"offset":193},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":17,
-  "endline":17,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"B"}}
 }
 class-statics.js:20:11 = {
-  "types":{"unevaluated":{"type":"this"},"evaluated":null},
-  "reasons":[],
+  "end":11,
+  "endline":20,
+  "line":20,
   "loc":{
+    "end":{"column":11,"line":20,"offset":230},
     "source":"class-statics.js",
-    "type":"SourceFile",
-    "start":{"line":20,"column":11,"offset":229},
-    "end":{"line":20,"column":11,"offset":230}
+    "start":{"column":11,"line":20,"offset":229},
+    "type":"SourceFile"
   },
   "path":"class-statics.js",
-  "line":20,
-  "endline":20,
+  "reasons":[],
   "start":11,
-  "end":11
+  "types":{"evaluated":null,"unevaluated":{"type":"this"}}
 }
 class-statics-poly.js:4:10 = {
-  "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":10,"line":4,"offset":33},
     "source":"class-statics-poly.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":10,"offset":32},
-    "end":{"line":4,"column":10,"offset":33}
+    "start":{"column":10,"line":4,"offset":32},
+    "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":10,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
 }
 class-statics-poly.js:8:10 = {
-  "types":{"unevaluated":{"type":"() => Class<B<T>>"},"evaluated":null},
-  "reasons":[],
+  "end":10,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":10,"line":8,"offset":78},
     "source":"class-statics-poly.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":10,"offset":77},
-    "end":{"line":8,"column":10,"offset":78}
+    "start":{"column":10,"line":8,"offset":77},
+    "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":10,
-  "end":10
+  "types":{"evaluated":null,"unevaluated":{"type":"() => Class<B<T>>"}}
 }
 class-statics-poly.js:9:7 = {
-  "types":{"unevaluated":{"type":"Class<this>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":9,
+  "line":9,
   "loc":{
+    "end":{"column":9,"line":9,"offset":105},
     "source":"class-statics-poly.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":6,"offset":101},
-    "end":{"line":9,"column":9,"offset":105}
+    "start":{"column":6,"line":9,"offset":101},
+    "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
-  "line":9,
-  "endline":9,
+  "reasons":[],
   "start":6,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<this>"}}
 }
 class-statics-poly.js:11:8 = {
-  "types":{"unevaluated":{"type":"Class<A<T>>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":9,"line":11,"offset":155},
     "source":"class-statics-poly.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":5,"offset":150},
-    "end":{"line":11,"column":9,"offset":155}
+    "start":{"column":5,"line":11,"offset":150},
+    "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<A<T>>"}}
 }
 class-statics-poly.js:16:5 = {
-  "types":{"unevaluated":{"type":"Class<B<empty>>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":16,
+  "line":16,
   "loc":{
+    "end":{"column":9,"line":16,"offset":194},
     "source":"class-statics-poly.js",
-    "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":189},
-    "end":{"line":16,"column":9,"offset":194}
+    "start":{"column":5,"line":16,"offset":189},
+    "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
-  "line":16,
-  "endline":16,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<B<empty>>"}}
 }
 class-statics-poly.js:17:5 = {
-  "types":{"unevaluated":{"type":"B<empty>"},"evaluated":null},
-  "reasons":[],
+  "end":5,
+  "endline":17,
+  "line":17,
   "loc":{
+    "end":{"column":5,"line":17,"offset":209},
     "source":"class-statics-poly.js",
-    "type":"SourceFile",
-    "start":{"line":17,"column":5,"offset":208},
-    "end":{"line":17,"column":5,"offset":209}
+    "start":{"column":5,"line":17,"offset":208},
+    "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
-  "line":17,
-  "endline":17,
+  "reasons":[],
   "start":5,
-  "end":5
+  "types":{"evaluated":null,"unevaluated":{"type":"B<empty>"}}
 }
 declare_class.js:3:15 = class C
 
@@ -664,196 +664,196 @@ declare_class.js:7:5 = {P: typeof P}
 
 declare_class.js:7:5,7:5
 FluxStore.js:14:5 = {
-  "types":{"unevaluated":{"type":"Class<FluxStore<any>>"},"evaluated":null},
-  "reasons":[],
+  "end":9,
+  "endline":14,
+  "line":14,
   "loc":{
+    "end":{"column":9,"line":14,"offset":232},
     "source":"FluxStore.js",
-    "type":"SourceFile",
-    "start":{"line":14,"column":5,"offset":227},
-    "end":{"line":14,"column":9,"offset":232}
+    "start":{"column":5,"line":14,"offset":227},
+    "type":"SourceFile"
   },
   "path":"FluxStore.js",
-  "line":14,
-  "endline":14,
+  "reasons":[],
   "start":5,
-  "end":9
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<FluxStore<any>>"}}
 }
 implements.js:7:8 = {
-  "types":{"unevaluated":{"type":"interface IA<T>"},"evaluated":null},
-  "reasons":[],
+  "end":24,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":24,"line":4,"offset":53},
     "source":"implements.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":23,"offset":51},
-    "end":{"line":4,"column":24,"offset":53}
+    "start":{"column":23,"line":4,"offset":51},
+    "type":"SourceFile"
   },
   "path":"implements.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":23,
-  "end":24
+  "types":{"evaluated":null,"unevaluated":{"type":"interface IA<T>"}}
 }
 multi-inheritance.js:6:7 = {
-  "types":{"unevaluated":{"type":"Class<A> | Class<B>"},"evaluated":null},
-  "reasons":[],
+  "end":11,
+  "endline":6,
+  "line":6,
   "loc":{
+    "end":{"column":11,"line":6,"offset":116},
     "source":"multi-inheritance.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":7,"offset":111},
-    "end":{"line":6,"column":11,"offset":116}
+    "start":{"column":7,"line":6,"offset":111},
+    "type":"SourceFile"
   },
   "path":"multi-inheritance.js",
-  "line":6,
-  "endline":6,
+  "reasons":[],
   "start":7,
-  "end":11
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<A> | Class<B>"}}
 }
 type-utils.js:5:13 {
+  "end":20,
+  "endline":5,
+  "line":5,
+  "loc":{
+    "end":{"column":20,"line":5,"offset":54},
+    "source":"type-utils.js",
+    "start":{"column":13,"line":5,"offset":46},
+    "type":"SourceFile"
+  },
+  "path":"type-utils.js",
+  "reasons":[],
+  "start":13,
   "types":{
+    "evaluated":null,
     "unevaluated":{
       "expanded":{
         "kind":"ClassDecl",
-        "name":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-        "typeParams":[{"name":"P","bound":null,"polarity":"Neutral","const":false}]
+        "name":{"name":"C","provenance":{"kind":"Local","loc":"type-utils.js:3:15"}},
+        "typeParams":[{"bound":null,"const":false,"name":"P","polarity":"Neutral"}]
       },
       "type":"class C<P>"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"type-utils.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":13,"offset":46},
-    "end":{"line":5,"column":20,"offset":54}
-  },
-  "path":"type-utils.js",
-  "line":5,
-  "endline":5,
-  "start":13,
-  "end":20
+    }
+  }
 }
 type-utils.js:6:13 {
+  "end":29,
+  "endline":6,
+  "line":6,
+  "loc":{
+    "end":{"column":29,"line":6,"offset":95},
+    "source":"type-utils.js",
+    "start":{"column":13,"line":6,"offset":78},
+    "type":"SourceFile"
+  },
+  "path":"type-utils.js",
+  "reasons":[],
+  "start":13,
   "types":{
+    "evaluated":null,
     "unevaluated":{
       "expanded":{
         "kind":"Utility",
         "kind":"Class",
         "typeArgs":[
           {
+            "generic_kind":"class",
             "kind":"Generic",
-            "typeArgs":[{"kind":"Num"}],
-            "type":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-            "generic_kind":"class"
+            "type":{"name":"C","provenance":{"kind":"Local","loc":"type-utils.js:3:15"}},
+            "typeArgs":[{"kind":"Num"}]
           }
         ]
       },
       "type":"Class<C<number>>"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
-  "loc":{
-    "source":"type-utils.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":13,"offset":78},
-    "end":{"line":6,"column":29,"offset":95}
-  },
-  "path":"type-utils.js",
-  "line":6,
-  "endline":6,
-  "start":13,
-  "end":29
+    }
+  }
 }
 type-utils.js:10:13 {
-  "types":{"unevaluated":{"type":"Class<A>"},"evaluated":null},
-  "reasons":[],
+  "end":19,
+  "endline":10,
+  "line":10,
   "loc":{
+    "end":{"column":19,"line":10,"offset":156},
     "source":"type-utils.js",
-    "type":"SourceFile",
-    "start":{"line":10,"column":13,"offset":149},
-    "end":{"line":10,"column":19,"offset":156}
+    "start":{"column":13,"line":10,"offset":149},
+    "type":"SourceFile"
   },
   "path":"type-utils.js",
-  "line":10,
-  "endline":10,
+  "reasons":[],
   "start":13,
-  "end":19
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<A>"}}
 }
 type-utils.js:11:13 {
-  "types":{"unevaluated":{"type":"Class<Class<A>>"},"evaluated":null},
-  "reasons":[],
+  "end":25,
+  "endline":11,
+  "line":11,
   "loc":{
+    "end":{"column":25,"line":11,"offset":193},
     "source":"type-utils.js",
-    "type":"SourceFile",
-    "start":{"line":11,"column":13,"offset":180},
-    "end":{"line":11,"column":25,"offset":193}
+    "start":{"column":13,"line":11,"offset":180},
+    "type":"SourceFile"
   },
   "path":"type-utils.js",
-  "line":11,
-  "endline":11,
+  "reasons":[],
   "start":13,
-  "end":25
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<Class<A>>"}}
 }
 type-utils.js:12:13 {
-  "types":{"unevaluated":{"type":"Class<Class<Class<A>>>"},"evaluated":null},
-  "reasons":[],
+  "end":31,
+  "endline":12,
+  "line":12,
   "loc":{
+    "end":{"column":31,"line":12,"offset":243},
     "source":"type-utils.js",
-    "type":"SourceFile",
-    "start":{"line":12,"column":13,"offset":224},
-    "end":{"line":12,"column":31,"offset":243}
+    "start":{"column":13,"line":12,"offset":224},
+    "type":"SourceFile"
   },
   "path":"type-utils.js",
-  "line":12,
-  "endline":12,
+  "reasons":[],
   "start":13,
-  "end":31
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<Class<Class<A>>>"}}
 }
 default.js:4:17 {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":17,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":17,"line":4,"offset":38},
     "source":"default.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":17,"offset":37},
-    "end":{"line":4,"column":17,"offset":38}
+    "start":{"column":17,"line":4,"offset":37},
+    "type":"SourceFile"
   },
   "path":"default.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":17,
-  "end":17
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 default.js:5:18 {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":18,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":18,"line":5,"offset":63},
     "source":"default.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":18,"offset":62},
-    "end":{"line":5,"column":18,"offset":63}
+    "start":{"column":18,"line":5,"offset":62},
+    "type":"SourceFile"
   },
   "path":"default.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":18,
-  "end":18
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 constructor.js:4:7 {
-  "types":{"unevaluated":{"type":"(x: string) => void"},"evaluated":null},
-  "reasons":[],
+  "end":13,
+  "endline":4,
+  "line":4,
   "loc":{
+    "end":{"column":13,"line":4,"offset":35},
     "source":"constructor.js",
-    "type":"SourceFile",
-    "start":{"line":4,"column":3,"offset":24},
-    "end":{"line":4,"column":13,"offset":35}
+    "start":{"column":3,"line":4,"offset":24},
+    "type":"SourceFile"
   },
   "path":"constructor.js",
-  "line":4,
-  "endline":4,
+  "reasons":[],
   "start":3,
-  "end":13
+  "types":{"evaluated":null,"unevaluated":{"type":"(x: string) => void"}}
 }
 this.js:5:13 Readonly<this>
 this.js:5:13,5:15

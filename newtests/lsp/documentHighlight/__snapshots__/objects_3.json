@@ -2,121 +2,121 @@
   "method": "textDocument/documentHighlight",
   "result": [
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 3,
-          "character": 2
-        },
         "end": {
-          "line": 3,
-          "character": 5
+          "character": 5,
+          "line": 3
+        },
+        "start": {
+          "character": 2,
+          "line": 3
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 7,
-          "character": 19
-        },
         "end": {
-          "line": 7,
-          "character": 22
+          "character": 22,
+          "line": 7
+        },
+        "start": {
+          "character": 19,
+          "line": 7
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 8,
-          "character": 2
-        },
         "end": {
-          "line": 8,
-          "character": 5
+          "character": 5,
+          "line": 8
+        },
+        "start": {
+          "character": 2,
+          "line": 8
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 9,
-          "character": 2
-        },
         "end": {
-          "line": 9,
-          "character": 5
+          "character": 5,
+          "line": 9
+        },
+        "start": {
+          "character": 2,
+          "line": 9
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 21,
-          "character": 22
-        },
         "end": {
-          "line": 21,
-          "character": 25
+          "character": 25,
+          "line": 21
+        },
+        "start": {
+          "character": 22,
+          "line": 21
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 22,
-          "character": 6
-        },
         "end": {
-          "line": 22,
-          "character": 9
+          "character": 9,
+          "line": 22
+        },
+        "start": {
+          "character": 6,
+          "line": 22
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 22,
-          "character": 23
-        },
         "end": {
-          "line": 22,
-          "character": 26
+          "character": 26,
+          "line": 22
+        },
+        "start": {
+          "character": 23,
+          "line": 22
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 29,
-          "character": 12
-        },
         "end": {
-          "line": 29,
-          "character": 15
+          "character": 15,
+          "line": 29
+        },
+        "start": {
+          "character": 12,
+          "line": 29
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 34,
-          "character": 9
-        },
         "end": {
-          "line": 34,
-          "character": 12
+          "character": 12,
+          "line": 34
+        },
+        "start": {
+          "character": 9,
+          "line": 34
         }
-      },
-      "kind": 1
+      }
     }
   ]
 }

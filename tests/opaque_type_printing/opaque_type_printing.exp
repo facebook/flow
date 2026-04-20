@@ -1,45 +1,45 @@
 {
-  "types":{"unevaluated":{"type":"ID"},"evaluated":null},
-  "reasons":[],
+  "end":12,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":12,"line":5,"offset":80},
     "source":"test.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":12,"offset":79},
-    "end":{"line":5,"column":12,"offset":80}
+    "start":{"column":12,"line":5,"offset":79},
+    "type":"SourceFile"
   },
   "path":"test.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":12,
-  "end":12
+  "types":{"evaluated":null,"unevaluated":{"type":"ID"}}
 }
 {
-  "types":{"unevaluated":{"type":"ID"},"evaluated":null},
-  "reasons":[],
+  "end":12,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":12,"line":5,"offset":77},
     "source":"importtest.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":12,"offset":76},
-    "end":{"line":5,"column":12,"offset":77}
+    "start":{"column":12,"line":5,"offset":76},
+    "type":"SourceFile"
   },
   "path":"importtest.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":12,
-  "end":12
+  "types":{"evaluated":null,"unevaluated":{"type":"ID"}}
 }
 {
-  "types":{"unevaluated":{"type":"LDefId"},"evaluated":null},
-  "reasons":[],
-  "loc":{
-    "source":"importtest.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":12,"offset":129},
-    "end":{"line":9,"column":12,"offset":130}
-  },
-  "path":"importtest.js",
-  "line":9,
+  "end":12,
   "endline":9,
+  "line":9,
+  "loc":{
+    "end":{"column":12,"line":9,"offset":130},
+    "source":"importtest.js",
+    "start":{"column":12,"line":9,"offset":129},
+    "type":"SourceFile"
+  },
+  "path":"importtest.js",
+  "reasons":[],
   "start":12,
-  "end":12
+  "types":{"evaluated":null,"unevaluated":{"type":"LDefId"}}
 }

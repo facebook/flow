@@ -2,109 +2,109 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Extract to function in module scope",
-      "kind": "refactor.extract",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
-                "end": {
-                  "line": 2,
-                  "character": 0
-                }
-              },
-              "newText": "import type { Foo } from \"./refactor-extract-function-type-provider\";\n\n"
-            },
-            {
-              "range": {
-                "start": {
-                  "line": 7,
-                  "character": 2
-                },
-                "end": {
-                  "line": 7,
-                  "character": 13
-                }
-              },
-              "newText": "(newFunction)"
-            },
-            {
-              "range": {
-                "start": {
-                  "line": 8,
-                  "character": 1
-                },
-                "end": {
-                  "line": 8,
-                  "character": 1
-                }
-              },
-              "newText": "\nfunction newFunction(foo: Foo): void {\n  console.log(foo);\n}"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "refactor_extract",
           "Extract to function in module scope"
-        ]
-      }
-    },
-    {
-      "title": "Extract to inner function in function 'test'",
-      "kind": "refactor.extract",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js": [
             {
+              "newText": "import type { Foo } from \"./refactor-extract-function-type-provider\";\n\n",
               "range": {
-                "start": {
-                  "line": 7,
-                  "character": 2
-                },
                 "end": {
-                  "line": 7,
-                  "character": 18
+                  "character": 0,
+                  "line": 2
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "newFunction()"
+              }
             },
             {
+              "newText": "(newFunction)",
               "range": {
-                "start": {
-                  "line": 7,
-                  "character": 19
-                },
                 "end": {
-                  "line": 7,
-                  "character": 19
+                  "character": 13,
+                  "line": 7
+                },
+                "start": {
+                  "character": 2,
+                  "line": 7
                 }
-              },
-              "newText": "\nfunction newFunction(): void {\n    console.log(foo);\n  }"
+              }
+            },
+            {
+              "newText": "\nfunction newFunction(foo: Foo): void {\n  console.log(foo);\n}",
+              "range": {
+                "end": {
+                  "character": 1,
+                  "line": 8
+                },
+                "start": {
+                  "character": 1,
+                  "line": 8
+                }
+              }
             }
           ]
         }
       },
+      "kind": "refactor.extract",
+      "title": "Extract to function in module scope"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "refactor_extract",
           "Extract to inner function in function 'test'"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js": [
+            {
+              "newText": "newFunction()",
+              "range": {
+                "end": {
+                  "character": 18,
+                  "line": 7
+                },
+                "start": {
+                  "character": 2,
+                  "line": 7
+                }
+              }
+            },
+            {
+              "newText": "\nfunction newFunction(): void {\n    console.log(foo);\n  }",
+              "range": {
+                "end": {
+                  "character": 19,
+                  "line": 7
+                },
+                "start": {
+                  "character": 19,
+                  "line": 7
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "refactor.extract",
+      "title": "Extract to inner function in function 'test'"
     }
   ]
 }

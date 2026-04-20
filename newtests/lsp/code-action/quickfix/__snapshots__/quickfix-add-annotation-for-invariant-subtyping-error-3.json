@@ -2,70 +2,70 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add suggested annotation to the literal",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 15,
-                  "character": 9
-                },
-                "end": {
-                  "line": 15,
-                  "character": 9
-                }
-              },
-              "newText": ": C"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "fix_invariant_subtyping_error_with_annot",
           "Add suggested annotation to the literal"
-        ]
-      }
-    },
-    {
-      "title": "Make `C` readonly",
-      "kind": "quickfix",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js": [
             {
+              "newText": ": C",
               "range": {
-                "start": {
-                  "line": 14,
-                  "character": 9
-                },
                 "end": {
-                  "line": 14,
-                  "character": 21
+                  "character": 9,
+                  "line": 15
+                },
+                "start": {
+                  "character": 9,
+                  "line": 15
                 }
-              },
-              "newText": "Readonly<{ v?: string }>"
+              }
             }
           ]
         }
       },
+      "kind": "quickfix",
+      "title": "Add suggested annotation to the literal"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "fix_invariant_subtyping_error_with_readonly_conversion",
           "Make `C` readonly"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js": [
+            {
+              "newText": "Readonly<{ v?: string }>",
+              "range": {
+                "end": {
+                  "character": 21,
+                  "line": 14
+                },
+                "start": {
+                  "character": 9,
+                  "line": 14
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Make `C` readonly"
     }
   ]
 }

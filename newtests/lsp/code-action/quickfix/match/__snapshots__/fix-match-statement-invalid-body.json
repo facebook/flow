@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Wrap in a block",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_invalid_match_statement_body",
+          "Wrap in a block"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-statement-invalid-body.js": [
             {
+              "newText": "{\n        return true;\n      }",
               "range": {
-                "start": {
-                  "line": 4,
-                  "character": 9
-                },
                 "end": {
-                  "line": 4,
-                  "character": 21
+                  "character": 21,
+                  "line": 4
+                },
+                "start": {
+                  "character": 9,
+                  "line": 4
                 }
-              },
-              "newText": "{\n        return true;\n      }"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_invalid_match_statement_body",
-          "Wrap in a block"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Wrap in a block"
     }
   ]
 }

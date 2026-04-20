@@ -2,43 +2,43 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 29,
-          "character": 14
-        },
         "end": {
-          "line": 29,
-          "character": 17
+          "character": 17,
+          "line": 29
+        },
+        "start": {
+          "character": 14,
+          "line": 29
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 30,
-          "character": 22
-        },
         "end": {
-          "line": 30,
-          "character": 25
+          "character": 25,
+          "line": 30
+        },
+        "start": {
+          "character": 22,
+          "line": 30
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js",
       "range": {
-        "start": {
-          "line": 33,
-          "character": 13
-        },
         "end": {
-          "line": 33,
-          "character": 16
+          "character": 16,
+          "line": 33
+        },
+        "start": {
+          "character": 13,
+          "line": 33
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js"
     }
   ]
 }

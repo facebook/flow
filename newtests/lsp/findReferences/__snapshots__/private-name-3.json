@@ -2,30 +2,30 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js",
       "range": {
-        "start": {
-          "line": 18,
-          "character": 6
-        },
         "end": {
-          "line": 18,
-          "character": 10
+          "character": 10,
+          "line": 18
+        },
+        "start": {
+          "character": 6,
+          "line": 18
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js",
       "range": {
-        "start": {
-          "line": 20,
-          "character": 13
-        },
         "end": {
-          "line": 20,
-          "character": 17
+          "character": 17,
+          "line": 20
+        },
+        "start": {
+          "character": 13,
+          "line": 20
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js"
     }
   ]
 }

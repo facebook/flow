@@ -2,43 +2,43 @@
   "method": "textDocument/documentHighlight",
   "result": [
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 17,
-          "character": 6
-        },
         "end": {
-          "line": 17,
-          "character": 7
+          "character": 7,
+          "line": 17
+        },
+        "start": {
+          "character": 6,
+          "line": 17
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 18,
-          "character": 4
-        },
         "end": {
-          "line": 18,
-          "character": 5
+          "character": 5,
+          "line": 18
+        },
+        "start": {
+          "character": 4,
+          "line": 18
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 19,
-          "character": 16
-        },
         "end": {
-          "line": 19,
-          "character": 17
+          "character": 17,
+          "line": 19
+        },
+        "start": {
+          "character": 16,
+          "line": 19
         }
-      },
-      "kind": 1
+      }
     }
   ]
 }

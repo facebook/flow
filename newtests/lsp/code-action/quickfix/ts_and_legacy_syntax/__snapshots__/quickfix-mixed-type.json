@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `unknown`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_mixed_type",
+          "Convert to `unknown`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-mixed-type.js": [
             {
+              "newText": "unknown",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 9
-                },
                 "end": {
-                  "line": 2,
-                  "character": 14
+                  "character": 14,
+                  "line": 2
+                },
+                "start": {
+                  "character": 9,
+                  "line": 2
                 }
-              },
-              "newText": "unknown"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_mixed_type",
-          "Convert to `unknown`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Convert to `unknown`"
     }
   ]
 }

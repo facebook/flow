@@ -49,22 +49,22 @@ dependency.js
 
 
 get-def with --wait-for-recheck false runs immediately:
-{"path":"dependency.js","line":3,"endline":3,"start":8,"end":14}
+{"end":14,"endline":3,"line":3,"path":"dependency.js","start":8}
 
 
 type-at-pos with --wait-for-recheck false runs immediately:
 {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
-  "reasons":[],
+  "end":19,
+  "endline":5,
+  "line":5,
   "loc":{
+    "end":{"column":19,"line":5,"offset":64},
     "source":"focused.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":17,"offset":61},
-    "end":{"line":5,"column":19,"offset":64}
+    "start":{"column":17,"line":5,"offset":61},
+    "type":"SourceFile"
   },
   "path":"focused.js",
-  "line":5,
-  "endline":5,
+  "reasons":[],
   "start":17,
-  "end":19
+  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }

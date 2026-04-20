@@ -73,9 +73,26 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all stats =
   in
   if json then
     Hh_json.(
+      (* Format percentage to match Rust's serde_json: trim trailing zeros after the
+         decimal but keep at least one digit (e.g. "50.00" -> "50.0", "57.14" -> "57.14"). *)
+      let format_percentage p =
+        let s = spf "%0.2f" p in
+        match String.index_opt s '.' with
+        | None -> s
+        | Some _ ->
+          let len = String.length s in
+          let last = ref (len - 1) in
+          while !last > 0 && s.[!last] = '0' do
+            decr last
+          done;
+          if s.[!last] = '.' then
+            String.sub s 0 (!last + 2)
+          else
+            String.sub s 0 (!last + 1)
+      in
       let file_to_json stats =
         let (file, covered, total, percentage) = file_stats stats in
-        let percentage = [("percentage", JSON_Number (spf "%0.2f" percentage))] in
+        let percentage = [("percentage", JSON_Number (format_percentage percentage))] in
         let covered = [("covered", int_ covered)] in
         JSON_Object ([("file", string_ file)] @ percentage @ covered @ [("total", int_ total)])
       in
@@ -85,7 +102,7 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all stats =
         |> Base.List.map ~f:file_to_json
       in
       let covered_expressions = [("covered_expressions", int_ covered)] in
-      let percentage = [("percentage", JSON_Number (spf "%0.2f" percentage))] in
+      let percentage = [("percentage", JSON_Number (format_percentage percentage))] in
       let json_output =
         JSON_Object
           [

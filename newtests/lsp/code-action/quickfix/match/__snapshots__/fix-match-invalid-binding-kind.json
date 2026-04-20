@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Replace `let` with `const`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_invalid_binding_kind",
+          "Replace `let` with `const`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-binding-kind.js": [
             {
+              "newText": "const a",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 2
-                },
                 "end": {
-                  "line": 3,
-                  "character": 7
+                  "character": 7,
+                  "line": 3
+                },
+                "start": {
+                  "character": 2,
+                  "line": 3
                 }
-              },
-              "newText": "const a"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_match_invalid_binding_kind",
-          "Replace `let` with `const`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Replace `let` with `const`"
     }
   ]
 }

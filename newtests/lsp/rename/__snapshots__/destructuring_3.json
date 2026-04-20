@@ -4,56 +4,56 @@
     "changes": {
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/locals.js": [
         {
+          "newText": "{x: NEW_NAME, y}",
           "range": {
-            "start": {
-              "line": 14,
-              "character": 4
-            },
             "end": {
-              "line": 14,
-              "character": 12
+              "character": 12,
+              "line": 14
+            },
+            "start": {
+              "character": 4,
+              "line": 14
             }
-          },
-          "newText": "{x: NEW_NAME, y}"
+          }
         },
         {
+          "newText": "NEW_NAME",
           "range": {
-            "start": {
-              "line": 15,
-              "character": 6
-            },
             "end": {
-              "line": 15,
-              "character": 7
+              "character": 7,
+              "line": 15
+            },
+            "start": {
+              "character": 6,
+              "line": 15
             }
-          },
-          "newText": "NEW_NAME"
+          }
         },
         {
+          "newText": "x: NEW_NAME",
           "range": {
-            "start": {
-              "line": 15,
-              "character": 25
-            },
             "end": {
-              "line": 15,
-              "character": 26
+              "character": 26,
+              "line": 15
+            },
+            "start": {
+              "character": 25,
+              "line": 15
             }
-          },
-          "newText": "x: NEW_NAME"
+          }
         },
         {
+          "newText": "NEW_NAME",
           "range": {
-            "start": {
-              "line": 18,
-              "character": 7
-            },
             "end": {
-              "line": 18,
-              "character": 8
+              "character": 8,
+              "line": 18
+            },
+            "start": {
+              "character": 7,
+              "line": 18
             }
-          },
-          "newText": "NEW_NAME"
+          }
         }
       ]
     }

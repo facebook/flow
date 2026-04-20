@@ -1,122 +1,122 @@
 [
   {
-    "type":"(x: any) => any",
-    "reasons":[],
+    "end":20,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":20,"line":3,"offset":30},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":10,"offset":19},
-      "end":{"line":3,"column":20,"offset":30}
+      "start":{"column":10,"line":3,"offset":19},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":10,
-    "end":20
+    "type":"(x: any) => any"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":32},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":22,"offset":31},
-      "end":{"line":3,"column":22,"offset":32}
+      "start":{"column":22,"line":3,"offset":31},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":22,
-    "end":22
+    "type":"any (implicit)"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":32},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":22,"offset":31},
-      "end":{"line":3,"column":22,"offset":32}
+      "start":{"column":22,"line":3,"offset":31},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":22,
-    "end":22
+    "type":"any (implicit)"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
+    "end":22,
+    "endline":3,
+    "line":3,
     "loc":{
+      "end":{"column":22,"line":3,"offset":32},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":23,"offset":32},
-      "end":{"line":3,"column":22,"offset":32}
+      "start":{"column":23,"line":3,"offset":32},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":3,
-    "endline":3,
+    "reasons":[],
     "start":23,
-    "end":22
+    "type":"any (implicit)"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
-    "loc":{
-      "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":24,"offset":33},
-      "end":{"line":3,"column":23,"offset":33}
-    },
-    "path":"test.js",
-    "line":3,
+    "end":23,
     "endline":3,
+    "line":3,
+    "loc":{
+      "end":{"column":23,"line":3,"offset":33},
+      "source":"test.js",
+      "start":{"column":24,"line":3,"offset":33},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
     "start":24,
-    "end":23
+    "type":"any (implicit)"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
+    "end":11,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":11,"line":4,"offset":47},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":38},
-      "end":{"line":4,"column":11,"offset":47}
+      "start":{"column":3,"line":4,"offset":38},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":3,
-    "end":11
+    "type":"any (implicit)"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
+    "end":10,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":10,"line":4,"offset":46},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":10,"offset":45},
-      "end":{"line":4,"column":10,"offset":46}
+      "start":{"column":10,"line":4,"offset":45},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":10,
-    "end":10
+    "type":"any (implicit)"
   },
   {
-    "type":"any (implicit)",
-    "reasons":[],
+    "end":10,
+    "endline":4,
+    "line":4,
     "loc":{
+      "end":{"column":10,"line":4,"offset":46},
       "source":"test.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":10,"offset":45},
-      "end":{"line":4,"column":10,"offset":46}
+      "start":{"column":10,"line":4,"offset":45},
+      "type":"SourceFile"
     },
     "path":"test.js",
-    "line":4,
-    "endline":4,
+    "reasons":[],
     "start":10,
-    "end":10
+    "type":"any (implicit)"
   }
 ]

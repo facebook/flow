@@ -47,636 +47,636 @@ Flags: --pretty
 records.js:10:13
 Flags: --pretty --lsp
 {
-  "label":"Person",
-  "kind":22,
-  "detail":"record Person",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":9,"character":10},"end":{"line":9,"character":12}},
-    "newText":"Person {active: null, age: null, name: null}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Person",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Person",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Person",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Person",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Person {active: null, age: null, name: null}",
+    "range":{"end":{"character":12,"line":9},"start":{"character":10,"line":9}}
   }
 }
 {
-  "label":"Person",
-  "kind":22,
-  "detail":"record Person",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":9,"character":10},"end":{"line":9,"character":12}},
-    "newText":"Person"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Person",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Person",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Person",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Person",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Person",
+    "range":{"end":{"character":12,"line":9},"start":{"character":10,"line":9}}
   }
 }
 
 records.js:20:13
 Flags: --pretty --lsp
 {
-  "label":"User",
-  "kind":22,
-  "detail":"record User",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":19,"character":10},"end":{"line":19,"character":12}},
-    "newText":"User {id: null, verified: null}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"User",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"User",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record User",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"User",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"User {id: null, verified: null}",
+    "range":{"end":{"character":12,"line":19},"start":{"character":10,"line":19}}
   }
 }
 {
-  "label":"User",
-  "kind":22,
-  "detail":"record User",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":19,"character":10},"end":{"line":19,"character":12}},
-    "newText":"User"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"User",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"User",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record User",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"User",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"User",
+    "range":{"end":{"character":12,"line":19},"start":{"character":10,"line":19}}
   }
 }
 
 records.js:31:13
 Flags: --pretty --lsp
 {
-  "label":"Data",
-  "kind":22,
-  "detail":"record Data",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":30,"character":10},"end":{"line":30,"character":12}},
-    "newText":"Data {ref: null, value: null}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Data",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Data",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Data",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Data",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Data {ref: null, value: null}",
+    "range":{"end":{"character":12,"line":30},"start":{"character":10,"line":30}}
   }
 }
 {
-  "label":"Data",
-  "kind":22,
-  "detail":"record Data",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":30,"character":10},"end":{"line":30,"character":12}},
-    "newText":"Data"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Data",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Data",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Data",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Data",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Data",
+    "range":{"end":{"character":12,"line":30},"start":{"character":10,"line":30}}
   }
 }
 
 records.js:40:14
 Flags: --pretty --lsp
 {
-  "label":"Container",
-  "kind":22,
-  "detail":"record Container<T>",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":39,"character":10},"end":{"line":39,"character":13}},
-    "newText":"Container"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Container",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Container",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Container<T>",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Container",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Container",
+    "range":{"end":{"character":13,"line":39},"start":{"character":10,"line":39}}
   }
 }
 
 records.js:49:16
 Flags: --pretty --lsp
 {
-  "label":"Optional",
-  "kind":22,
-  "detail":"record Optional",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
-    "newText":"Optional {}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Optional",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Optional",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Optional",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Optional",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Optional {}",
+    "range":{"end":{"character":15,"line":48},"start":{"character":12,"line":48}}
   }
 }
 {
-  "label":"Optional",
-  "kind":22,
-  "detail":"record Optional",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
-    "newText":"Optional"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"Optional",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"Optional",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record Optional",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"Optional",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"Optional",
+    "range":{"end":{"character":15,"line":48},"start":{"character":12,"line":48}}
   }
 }
 {
-  "label":"opt",
-  "labelDetails":{"detail":": empty"},
-  "kind":6,
-  "detail":"empty",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
-    "newText":"opt"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"opt",
         "index":2,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"opt",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"empty",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"opt",
+  "labelDetails":{"detail":": empty"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"opt",
+    "range":{"end":{"character":15,"line":48},"start":{"character":12,"line":48}}
   }
 }
 
 records.js:58:18
 Flags: --pretty --lsp
 {
-  "label":"WithMethods",
-  "kind":22,
-  "detail":"record WithMethods",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":57,"character":11},"end":{"line":57,"character":17}},
-    "newText":"WithMethods {field: null}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"WithMethods",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"WithMethods",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record WithMethods",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"WithMethods",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"WithMethods {field: null}",
+    "range":{"end":{"character":17,"line":57},"start":{"character":11,"line":57}}
   }
 }
 {
-  "label":"WithMethods",
-  "kind":22,
-  "detail":"record WithMethods",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":57,"character":11},"end":{"line":57,"character":17}},
-    "newText":"WithMethods"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"WithMethods",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"WithMethods",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record WithMethods",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"WithMethods",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"WithMethods",
+    "range":{"end":{"character":17,"line":57},"start":{"character":11,"line":57}}
   }
 }
 
 records.js:67:18
 Flags: --pretty --lsp
 {
-  "label":"WithStatics",
-  "kind":22,
-  "detail":"record WithStatics",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":66,"character":11},"end":{"line":66,"character":17}},
-    "newText":"WithStatics {field: null}"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"WithStatics",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"WithStatics",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record WithStatics",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"WithStatics",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"WithStatics {field: null}",
+    "range":{"end":{"character":17,"line":66},"start":{"character":11,"line":66}}
   }
 }
 {
-  "label":"WithStatics",
-  "kind":22,
-  "detail":"record WithStatics",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":66,"character":11},"end":{"line":66,"character":17}},
-    "newText":"WithStatics"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "local value identifier",
       {
-        "token":null,
+        "ac_type":"Acid",
+        "completion":"WithStatics",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"WithStatics",
-        "ac_type":"Acid"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"record WithStatics",
+  "insertTextFormat":1,
+  "kind":22,
+  "label":"WithStatics",
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"WithStatics",
+    "range":{"end":{"character":17,"line":66},"start":{"character":11,"line":66}}
   }
 }
 
 fields.js:10:21
 Flags: --pretty --lsp
 {
-  "label":"active",
-  "labelDetails":{"detail":": boolean"},
-  "kind":6,
-  "detail":"boolean",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":9,"character":20},"end":{"line":9,"character":20}},
-    "newText":"active"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"active",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"active",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"boolean",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"active",
+  "labelDetails":{"detail":": boolean"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"active",
+    "range":{"end":{"character":20,"line":9},"start":{"character":20,"line":9}}
   }
 }
 {
-  "label":"age",
-  "labelDetails":{"detail":": number"},
-  "kind":6,
-  "detail":"number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":9,"character":20},"end":{"line":9,"character":20}},
-    "newText":"age"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"age",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"age",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"age",
+  "labelDetails":{"detail":": number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"age",
+    "range":{"end":{"character":20,"line":9},"start":{"character":20,"line":9}}
   }
 }
 {
-  "label":"name",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":9,"character":20},"end":{"line":9,"character":20}},
-    "newText":"name"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"name",
         "index":2,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"name",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"name",
+    "range":{"end":{"character":20,"line":9},"start":{"character":20,"line":9}}
   }
 }
 
 fields.js:14:23
 Flags: --pretty --lsp
 {
-  "label":"name",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":13,"character":20},"end":{"line":13,"character":22}},
-    "newText":"name"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"name",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"name",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"name",
+    "range":{"end":{"character":22,"line":13},"start":{"character":20,"line":13}}
   }
 }
 
 fields.js:18:35
 Flags: --pretty --lsp
 {
-  "label":"active",
-  "labelDetails":{"detail":": boolean"},
-  "kind":6,
-  "detail":"boolean",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":17,"character":34},"end":{"line":17,"character":34}},
-    "newText":"active"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"active",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"active",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"boolean",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"active",
+  "labelDetails":{"detail":": boolean"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"active",
+    "range":{"end":{"character":34,"line":17},"start":{"character":34,"line":17}}
   }
 }
 {
-  "label":"age",
-  "labelDetails":{"detail":": number"},
-  "kind":6,
-  "detail":"number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":17,"character":34},"end":{"line":17,"character":34}},
-    "newText":"age"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"age",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"age",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"age",
+  "labelDetails":{"detail":": number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"age",
+    "range":{"end":{"character":34,"line":17},"start":{"character":34,"line":17}}
   }
 }
 
 fields.js:22:37
 Flags: --pretty --lsp
 {
-  "label":"active",
-  "labelDetails":{"detail":": boolean"},
-  "kind":6,
-  "detail":"boolean",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":21,"character":36},"end":{"line":21,"character":36}},
-    "newText":"active"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"active",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"active",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"boolean",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"active",
+  "labelDetails":{"detail":": boolean"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"active",
+    "range":{"end":{"character":36,"line":21},"start":{"character":36,"line":21}}
   }
 }
 {
-  "label":"age",
-  "labelDetails":{"detail":": number"},
-  "kind":6,
-  "detail":"number",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":21,"character":36},"end":{"line":21,"character":36}},
-    "newText":"age"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"age",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"age",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"number",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"age",
+  "labelDetails":{"detail":": number"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"age",
+    "range":{"end":{"character":36,"line":21},"start":{"character":36,"line":21}}
   }
 }
 
@@ -686,326 +686,326 @@ Flags: --pretty --lsp
 fields.js:36:19
 Flags: --pretty --lsp
 {
-  "label":"email",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":35,"character":18},"end":{"line":35,"character":18}},
-    "newText":"email"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"email",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"email",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"email",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"email",
+    "range":{"end":{"character":18,"line":35},"start":{"character":18,"line":35}}
   }
 }
 {
-  "label":"id",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":35,"character":18},"end":{"line":35,"character":18}},
-    "newText":"id"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"id",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"id",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"id",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"id",
+    "range":{"end":{"character":18,"line":35},"start":{"character":18,"line":35}}
   }
 }
 {
-  "label":"verified",
-  "labelDetails":{"detail":": boolean"},
-  "kind":6,
-  "detail":"boolean",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":35,"character":18},"end":{"line":35,"character":18}},
-    "newText":"verified"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"verified",
         "index":2,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"verified",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"boolean",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"verified",
+  "labelDetails":{"detail":": boolean"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"verified",
+    "range":{"end":{"character":18,"line":35},"start":{"character":18,"line":35}}
   }
 }
 
 fields.js:40:30
 Flags: --pretty --lsp
 {
-  "label":"email",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":39,"character":29},"end":{"line":39,"character":29}},
-    "newText":"email"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"email",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"email",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"email",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"email",
+    "range":{"end":{"character":29,"line":39},"start":{"character":29,"line":39}}
   }
 }
 {
-  "label":"verified",
-  "labelDetails":{"detail":": boolean"},
-  "kind":6,
-  "detail":"boolean",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":39,"character":29},"end":{"line":39,"character":29}},
-    "newText":"verified"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"verified",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"verified",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"boolean",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"verified",
+  "labelDetails":{"detail":": boolean"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"verified",
+    "range":{"end":{"character":29,"line":39},"start":{"character":29,"line":39}}
   }
 }
 
 fields.js:54:23
 Flags: --pretty --lsp
 {
-  "label":"address",
-  "labelDetails":{"detail":": Address"},
-  "kind":6,
-  "detail":"Address",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":53,"character":22},"end":{"line":53,"character":22}},
-    "newText":"address"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"address",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"address",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Address",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"address",
+  "labelDetails":{"detail":": Address"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"address",
+    "range":{"end":{"character":22,"line":53},"start":{"character":22,"line":53}}
   }
 }
 {
-  "label":"name",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":53,"character":22},"end":{"line":53,"character":22}},
-    "newText":"name"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"name",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"name",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"name",
+    "range":{"end":{"character":22,"line":53},"start":{"character":22,"line":53}}
   }
 }
 
 fields.js:57:37
 Flags: --pretty --lsp
 {
-  "label":"address",
-  "labelDetails":{"detail":": Address"},
-  "kind":6,
-  "detail":"Address",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":56,"character":36},"end":{"line":56,"character":36}},
-    "newText":"address"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"address",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"address",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Address",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"address",
+  "labelDetails":{"detail":": Address"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"address",
+    "range":{"end":{"character":36,"line":56},"start":{"character":36,"line":56}}
   }
 }
 
 fields.js:66:24
 Flags: --pretty --lsp
 {
-  "label":"content",
-  "labelDetails":{"detail":": T"},
-  "kind":6,
-  "detail":"T",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":65,"character":23},"end":{"line":65,"character":23}},
-    "newText":"content"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"content",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"content",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"T",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"content",
+  "labelDetails":{"detail":": T"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"content",
+    "range":{"end":{"character":23,"line":65},"start":{"character":23,"line":65}}
   }
 }
 {
-  "label":"id",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":65,"character":23},"end":{"line":65,"character":23}},
-    "newText":"id"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"id",
         "index":1,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"id",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"id",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"id",
+    "range":{"end":{"character":23,"line":65},"start":{"character":23,"line":65}}
   }
 }
 
 fields.js:75:27
 Flags: --pretty --lsp
 {
-  "label":"field",
-  "labelDetails":{"detail":": string"},
-  "kind":6,
-  "detail":"string",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":74,"character":26},"end":{"line":74,"character":26}},
-    "newText":"field"
-  },
   "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
       "record field",
       {
-        "token":null,
+        "ac_type":"Ac_record_field",
+        "completion":"field",
         "index":0,
         "session_requests":null,
-        "typed_length":null,
-        "completion":"field",
-        "ac_type":"Ac_record_field"
+        "token":null,
+        "typed_length":null
       }
-    ]
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"string",
+  "insertTextFormat":1,
+  "kind":6,
+  "label":"field",
+  "labelDetails":{"detail":": string"},
+  "sortText":"00000000000000000000",
+  "textEdit":{
+    "newText":"field",
+    "range":{"end":{"character":26,"line":74},"start":{"character":26,"line":74}}
   }
 }
 

@@ -182,15 +182,15 @@ json
 -----------------------------
 {
   "files":[
-    {"file":"a.js","percentage":57.14,"covered":4,"total":7},
-    {"file":"folder/d.js","percentage":50.00,"covered":3,"total":6},
-    {"file":"folder/subfolder/j.js","percentage":100.00,"covered":6,"total":6}
+    {"covered":4,"file":"a.js","percentage":57.14,"total":7},
+    {"covered":3,"file":"folder/d.js","percentage":50.0,"total":6},
+    {"covered":6,"file":"folder/subfolder/j.js","percentage":100.0,"total":6}
   ],
   "statistics":{
-    "files_in_directory":3,
     "covered_expressions":13,
-    "total_expressions":19,
-    "percentage":68.42
+    "files_in_directory":3,
+    "percentage":68.42,
+    "total_expressions":19
   }
 }
 -----------------------------

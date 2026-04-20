@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Prefix with `this.`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "prefix_with_this",
+          "Prefix with `this.`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-class-member-access.js": [
             {
+              "newText": "this.field",
               "range": {
-                "start": {
-                  "line": 8,
-                  "character": 4
-                },
                 "end": {
-                  "line": 8,
-                  "character": 9
+                  "character": 9,
+                  "line": 8
+                },
+                "start": {
+                  "character": 4,
+                  "line": 8
                 }
-              },
-              "newText": "this.field"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "prefix_with_this",
-          "Prefix with `this.`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Prefix with `this.`"
     }
   ]
 }

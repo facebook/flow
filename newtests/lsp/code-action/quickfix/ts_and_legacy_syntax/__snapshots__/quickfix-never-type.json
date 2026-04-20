@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `empty`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_never_type",
+          "Convert to `empty`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-never-type.js": [
             {
+              "newText": "empty",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 9
-                },
                 "end": {
-                  "line": 2,
-                  "character": 14
+                  "character": 14,
+                  "line": 2
+                },
+                "start": {
+                  "character": 9,
+                  "line": 2
                 }
-              },
-              "newText": "empty"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_never_type",
-          "Convert to `empty`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Convert to `empty`"
     }
   ]
 }

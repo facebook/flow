@@ -1,22 +1,19 @@
 {
-  "jsonVersion":"1",
   "errors":[
     {
-      "kind":"lint",
-      "level":"error",
-      "suppressions":[],
+      "error_codes":["sketchy-null-number"],
       "extra":[
         {
           "message":[
             {
               "context":null,
               "descr":"References:",
-              "type":"Blame",
-              "path":"",
-              "line":0,
+              "end":0,
               "endline":0,
+              "line":0,
+              "path":"",
               "start":1,
-              "end":0
+              "type":"Blame"
             }
           ]
         },
@@ -25,18 +22,18 @@
             {
               "context":"var x: ?number = 0;",
               "descr":"[1]",
-              "type":"Blame",
+              "end":14,
+              "endline":5,
+              "line":5,
               "loc":{
+                "end":{"column":14,"line":5,"offset":190},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":5,"column":9,"offset":184},
-                "end":{"line":5,"column":14,"offset":190}
+                "start":{"column":9,"line":5,"offset":184},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":5,
-              "endline":5,
               "start":9,
-              "end":14
+              "type":"Blame"
             }
           ]
         },
@@ -45,58 +42,58 @@
             {
               "context":"var x: ?number = 0;",
               "descr":"[2]",
-              "type":"Blame",
+              "end":14,
+              "endline":5,
+              "line":5,
               "loc":{
+                "end":{"column":14,"line":5,"offset":190},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":5,"column":8,"offset":183},
-                "end":{"line":5,"column":14,"offset":190}
+                "start":{"column":8,"line":5,"offset":183},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":5,
-              "endline":5,
               "start":8,
-              "end":14
+              "type":"Blame"
             }
           ]
         }
       ],
+      "kind":"lint",
+      "level":"error",
       "message":[
         {
           "context":"if (x) {} //appears as an error",
           "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
-          "type":"Blame",
+          "end":5,
+          "endline":13,
+          "line":13,
           "loc":{
+            "end":{"column":5,"line":13,"offset":330},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":13,"column":5,"offset":329},
-            "end":{"line":13,"column":5,"offset":330}
+            "start":{"column":5,"line":13,"offset":329},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":13,
-          "endline":13,
           "start":5,
-          "end":5
+          "type":"Blame"
         }
       ],
-      "error_codes":["sketchy-null-number"]
+      "suppressions":[]
     },
     {
-      "kind":"lint",
-      "level":"warning",
-      "suppressions":[],
+      "error_codes":["sketchy-null-number"],
       "extra":[
         {
           "message":[
             {
               "context":null,
               "descr":"References:",
-              "type":"Blame",
-              "path":"",
-              "line":0,
+              "end":0,
               "endline":0,
+              "line":0,
+              "path":"",
               "start":1,
-              "end":0
+              "type":"Blame"
             }
           ]
         },
@@ -105,18 +102,18 @@
             {
               "context":"var x: ?number = 0;",
               "descr":"[1]",
-              "type":"Blame",
+              "end":14,
+              "endline":5,
+              "line":5,
               "loc":{
+                "end":{"column":14,"line":5,"offset":190},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":5,"column":9,"offset":184},
-                "end":{"line":5,"column":14,"offset":190}
+                "start":{"column":9,"line":5,"offset":184},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":5,
-              "endline":5,
               "start":9,
-              "end":14
+              "type":"Blame"
             }
           ]
         },
@@ -125,42 +122,45 @@
             {
               "context":"var x: ?number = 0;",
               "descr":"[2]",
-              "type":"Blame",
+              "end":14,
+              "endline":5,
+              "line":5,
               "loc":{
+                "end":{"column":14,"line":5,"offset":190},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":5,"column":8,"offset":183},
-                "end":{"line":5,"column":14,"offset":190}
+                "start":{"column":8,"line":5,"offset":183},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":5,
-              "endline":5,
               "start":8,
-              "end":14
+              "type":"Blame"
             }
           ]
         }
       ],
+      "kind":"lint",
+      "level":"warning",
       "message":[
         {
           "context":"if (x) {} //appears as a warning",
           "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? [sketchy-null-number]",
-          "type":"Blame",
+          "end":5,
+          "endline":10,
+          "line":10,
           "loc":{
+            "end":{"column":5,"line":10,"offset":266},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":10,"column":5,"offset":265},
-            "end":{"line":10,"column":5,"offset":266}
+            "start":{"column":5,"line":10,"offset":265},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":10,
-          "endline":10,
           "start":5,
-          "end":5
+          "type":"Blame"
         }
       ],
-      "error_codes":["sketchy-null-number"]
+      "suppressions":[]
     }
   ],
+  "jsonVersion":"1",
   "passed":false
 }

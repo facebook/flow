@@ -4,64 +4,64 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "not_null",
-        "kind": 6,
-        "detail": "Import from ./reserved",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "newText": "not_null",
-          "insert": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 3
-            }
-          },
-          "replace": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 4
-            }
-          }
-        },
         "additionalTextEdits": [
           {
+            "newText": "import { not_null } from \"./reserved\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import { not_null } from \"./reserved\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "nulAUTO332l",
+              "ac_type": "Acid",
+              "completion": "not_null",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 3,
-              "completion": "not_null",
-              "ac_type": "Acid"
+              "token": "nulAUTO332l",
+              "typed_length": 3
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import from ./reserved",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "not_null",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "insert": {
+            "end": {
+              "character": 3,
+              "line": 2
+            },
+            "start": {
+              "character": 0,
+              "line": 2
+            }
+          },
+          "newText": "not_null",
+          "replace": {
+            "end": {
+              "character": 4,
+              "line": 2
+            },
+            "start": {
+              "character": 0,
+              "line": 2
+            }
+          }
         }
       }
     ]

@@ -2,30 +2,30 @@
   "method": "textDocument/documentHighlight",
   "result": [
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 62,
-          "character": 13
-        },
         "end": {
-          "line": 62,
-          "character": 26
+          "character": 26,
+          "line": 62
+        },
+        "start": {
+          "character": 13,
+          "line": 62
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 65,
-          "character": 12
-        },
         "end": {
-          "line": 65,
-          "character": 25
+          "character": 25,
+          "line": 65
+        },
+        "start": {
+          "character": 12,
+          "line": 65
         }
-      },
-      "kind": 1
+      }
     }
   ]
 }

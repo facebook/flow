@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Import from ./import-provider",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "import",
+          "Import from ./import-provider"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-missing-import.js": [
             {
+              "newText": "\n\nimport { Map } from \"./import-provider\";",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 41
-                },
                 "end": {
-                  "line": 2,
-                  "character": 41
+                  "character": 41,
+                  "line": 2
+                },
+                "start": {
+                  "character": 41,
+                  "line": 2
                 }
-              },
-              "newText": "\n\nimport { Map } from \"./import-provider\";"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "import",
-          "Import from ./import-provider"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Import from ./import-provider"
     }
   ]
 }

@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add 9 missing cases to make `match` exhaustively checked",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_not_exhaustive",
+          "Add 9 missing cases to make `match` exhaustively checked"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-expression-basic.js": [
             {
+              "newText": "match (x) {\n  true => undefined,\n  \"foo\" => undefined,\n  1 => undefined,\n  99n => undefined,\n  null => undefined,\n  undefined => undefined,\n  E.A => undefined,\n  E.B => undefined,\n  C {...} => undefined,\n}",
               "range": {
-                "start": {
-                  "line": 8,
-                  "character": 10
-                },
                 "end": {
-                  "line": 8,
-                  "character": 22
+                  "character": 22,
+                  "line": 8
+                },
+                "start": {
+                  "character": 10,
+                  "line": 8
                 }
-              },
-              "newText": "match (x) {\n  true => undefined,\n  \"foo\" => undefined,\n  1 => undefined,\n  99n => undefined,\n  null => undefined,\n  undefined => undefined,\n  E.A => undefined,\n  E.B => undefined,\n  C {...} => undefined,\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_match_not_exhaustive",
-          "Add 9 missing cases to make `match` exhaustively checked"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Add 9 missing cases to make `match` exhaustively checked"
     }
   ]
 }

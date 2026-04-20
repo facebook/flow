@@ -2,55 +2,55 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Use as-renaming",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_parse_error",
+          "Use as-renaming"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [
         {
+          "code": "ParseError",
+          "message": "You must use `'string-key' as localBinding: <TYPE>` for props with invalid identifier names.",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 23
-            },
             "end": {
-              "line": 1,
-              "character": 24
+              "character": 24,
+              "line": 1
+            },
+            "start": {
+              "character": 23,
+              "line": 1
             }
           },
+          "relatedInformation": [],
           "severity": 1,
-          "code": "ParseError",
-          "source": "Flow",
-          "message": "You must use `'string-key' as localBinding: <TYPE>` for props with invalid identifier names.",
-          "relatedInformation": []
+          "source": "Flow"
         }
       ],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/component-as-renaming-parse-error.js": [
             {
+              "newText": " as dataId:",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 23
-                },
                 "end": {
-                  "line": 1,
-                  "character": 24
+                  "character": 24,
+                  "line": 1
+                },
+                "start": {
+                  "character": 23,
+                  "line": 1
                 }
-              },
-              "newText": " as dataId:"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_parse_error",
-          "Use as-renaming"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Use as-renaming"
     }
   ]
 }

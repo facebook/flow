@@ -38,86 +38,86 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 29,
-                    },
-                    end: {
-                      line: 8,
-                      character: 4,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 4,
-                      },
-                      end: {
-                        line: 8,
-                        character: 10,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 5,
-                          character: 7,
-                        },
-                        end: {
-                          line: 9,
-                          character: 2,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 5,
-                            character: 2,
-                          },
-                          end: {
-                            line: 9,
-                            character: 8,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 4,
-                              character: 0,
-                            },
-                            end: {
-                              line: 10,
-                              character: 2,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 2,
-                                character: 0,
-                              },
-                              end: {
-                                line: 10,
-                                character: 2,
-                              },
-                            },
                             parent: {
                               range: {
-                                start: {
-                                  line: 0,
-                                  character: 0,
-                                },
                                 end: {
-                                  line: 10,
                                   character: 2,
+                                  line: 10,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 0,
                                 },
                               },
                             },
+                            range: {
+                              end: {
+                                character: 2,
+                                line: 10,
+                              },
+                              start: {
+                                character: 0,
+                                line: 2,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 2,
+                              line: 10,
+                            },
+                            start: {
+                              character: 0,
+                              line: 4,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 8,
+                            line: 9,
+                          },
+                          start: {
+                            character: 2,
+                            line: 5,
                           },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 2,
+                          line: 9,
+                        },
+                        start: {
+                          character: 7,
+                          line: 5,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 10,
+                        line: 8,
+                      },
+                      start: {
+                        character: 4,
+                        line: 6,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 4,
+                      line: 8,
+                    },
+                    start: {
+                      character: 29,
+                      line: 6,
                     },
                   },
                 },
@@ -139,110 +139,110 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 9,
-                    },
-                    end: {
-                      line: 6,
-                      character: 12,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 9,
-                      },
-                      end: {
-                        line: 6,
-                        character: 18,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 4,
-                        },
-                        end: {
-                          line: 6,
-                          character: 29,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 4,
-                          },
-                          end: {
-                            line: 8,
-                            character: 10,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 5,
-                              character: 7,
-                            },
-                            end: {
-                              line: 9,
-                              character: 2,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 5,
-                                character: 2,
-                              },
-                              end: {
-                                line: 9,
-                                character: 8,
-                              },
-                            },
                             parent: {
-                              range: {
-                                start: {
-                                  line: 4,
-                                  character: 0,
-                                },
-                                end: {
-                                  line: 10,
-                                  character: 2,
-                                },
-                              },
                               parent: {
-                                range: {
-                                  start: {
-                                    line: 2,
-                                    character: 0,
-                                  },
-                                  end: {
-                                    line: 10,
-                                    character: 2,
-                                  },
-                                },
                                 parent: {
                                   range: {
-                                    start: {
-                                      line: 0,
-                                      character: 0,
-                                    },
                                     end: {
-                                      line: 10,
                                       character: 2,
+                                      line: 10,
+                                    },
+                                    start: {
+                                      character: 0,
+                                      line: 0,
                                     },
                                   },
                                 },
+                                range: {
+                                  end: {
+                                    character: 2,
+                                    line: 10,
+                                  },
+                                  start: {
+                                    character: 0,
+                                    line: 2,
+                                  },
+                                },
+                              },
+                              range: {
+                                end: {
+                                  character: 2,
+                                  line: 10,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 4,
+                                },
+                              },
+                            },
+                            range: {
+                              end: {
+                                character: 8,
+                                line: 9,
+                              },
+                              start: {
+                                character: 2,
+                                line: 5,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 2,
+                              line: 9,
+                            },
+                            start: {
+                              character: 7,
+                              line: 5,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 10,
+                            line: 8,
+                          },
+                          start: {
+                            character: 4,
+                            line: 6,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 29,
+                          line: 6,
+                        },
+                        start: {
+                          character: 4,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 18,
+                        line: 6,
+                      },
+                      start: {
+                        character: 9,
+                        line: 6,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 12,
+                      line: 6,
+                    },
+                    start: {
+                      character: 9,
+                      line: 6,
                     },
                   },
                 },
@@ -264,110 +264,110 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 13,
-                    },
-                    end: {
-                      line: 6,
-                      character: 18,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 9,
-                      },
-                      end: {
-                        line: 6,
-                        character: 18,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 4,
-                        },
-                        end: {
-                          line: 6,
-                          character: 29,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 4,
-                          },
-                          end: {
-                            line: 8,
-                            character: 10,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 5,
-                              character: 7,
-                            },
-                            end: {
-                              line: 9,
-                              character: 2,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 5,
-                                character: 2,
-                              },
-                              end: {
-                                line: 9,
-                                character: 8,
-                              },
-                            },
                             parent: {
-                              range: {
-                                start: {
-                                  line: 4,
-                                  character: 0,
-                                },
-                                end: {
-                                  line: 10,
-                                  character: 2,
-                                },
-                              },
                               parent: {
-                                range: {
-                                  start: {
-                                    line: 2,
-                                    character: 0,
-                                  },
-                                  end: {
-                                    line: 10,
-                                    character: 2,
-                                  },
-                                },
                                 parent: {
                                   range: {
-                                    start: {
-                                      line: 0,
-                                      character: 0,
-                                    },
                                     end: {
-                                      line: 10,
                                       character: 2,
+                                      line: 10,
+                                    },
+                                    start: {
+                                      character: 0,
+                                      line: 0,
                                     },
                                   },
                                 },
+                                range: {
+                                  end: {
+                                    character: 2,
+                                    line: 10,
+                                  },
+                                  start: {
+                                    character: 0,
+                                    line: 2,
+                                  },
+                                },
+                              },
+                              range: {
+                                end: {
+                                  character: 2,
+                                  line: 10,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 4,
+                                },
+                              },
+                            },
+                            range: {
+                              end: {
+                                character: 8,
+                                line: 9,
+                              },
+                              start: {
+                                character: 2,
+                                line: 5,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 2,
+                              line: 9,
+                            },
+                            start: {
+                              character: 7,
+                              line: 5,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 10,
+                            line: 8,
+                          },
+                          start: {
+                            character: 4,
+                            line: 6,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 29,
+                          line: 6,
+                        },
+                        start: {
+                          character: 4,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 18,
+                        line: 6,
+                      },
+                      start: {
+                        character: 9,
+                        line: 6,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 18,
+                      line: 6,
+                    },
+                    start: {
+                      character: 13,
+                      line: 6,
                     },
                   },
                 },
@@ -389,122 +389,122 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 24,
-                    },
-                    end: {
-                      line: 6,
-                      character: 27,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 23,
-                      },
-                      end: {
-                        line: 6,
-                        character: 28,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 19,
-                        },
-                        end: {
-                          line: 6,
-                          character: 28,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 4,
-                          },
-                          end: {
-                            line: 6,
-                            character: 29,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 6,
-                              character: 4,
-                            },
-                            end: {
-                              line: 8,
-                              character: 10,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 5,
-                                character: 7,
-                              },
-                              end: {
-                                line: 9,
-                                character: 2,
-                              },
-                            },
                             parent: {
-                              range: {
-                                start: {
-                                  line: 5,
-                                  character: 2,
-                                },
-                                end: {
-                                  line: 9,
-                                  character: 8,
-                                },
-                              },
                               parent: {
-                                range: {
-                                  start: {
-                                    line: 4,
-                                    character: 0,
-                                  },
-                                  end: {
-                                    line: 10,
-                                    character: 2,
-                                  },
-                                },
                                 parent: {
-                                  range: {
-                                    start: {
-                                      line: 2,
-                                      character: 0,
-                                    },
-                                    end: {
-                                      line: 10,
-                                      character: 2,
-                                    },
-                                  },
                                   parent: {
                                     range: {
-                                      start: {
-                                        line: 0,
-                                        character: 0,
-                                      },
                                       end: {
-                                        line: 10,
                                         character: 2,
+                                        line: 10,
+                                      },
+                                      start: {
+                                        character: 0,
+                                        line: 0,
                                       },
                                     },
                                   },
+                                  range: {
+                                    end: {
+                                      character: 2,
+                                      line: 10,
+                                    },
+                                    start: {
+                                      character: 0,
+                                      line: 2,
+                                    },
+                                  },
+                                },
+                                range: {
+                                  end: {
+                                    character: 2,
+                                    line: 10,
+                                  },
+                                  start: {
+                                    character: 0,
+                                    line: 4,
+                                  },
+                                },
+                              },
+                              range: {
+                                end: {
+                                  character: 8,
+                                  line: 9,
+                                },
+                                start: {
+                                  character: 2,
+                                  line: 5,
                                 },
                               },
                             },
+                            range: {
+                              end: {
+                                character: 2,
+                                line: 9,
+                              },
+                              start: {
+                                character: 7,
+                                line: 5,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 10,
+                              line: 8,
+                            },
+                            start: {
+                              character: 4,
+                              line: 6,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 29,
+                            line: 6,
+                          },
+                          start: {
+                            character: 4,
+                            line: 6,
                           },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 28,
+                          line: 6,
+                        },
+                        start: {
+                          character: 19,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 28,
+                        line: 6,
+                      },
+                      start: {
+                        character: 23,
+                        line: 6,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 27,
+                      line: 6,
+                    },
+                    start: {
+                      character: 24,
+                      line: 6,
                     },
                   },
                 },
@@ -530,74 +530,74 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 4,
-                      character: 14,
-                    },
-                    end: {
-                      line: 4,
-                      character: 17,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 4,
-                        character: 11,
-                      },
-                      end: {
-                        line: 4,
-                        character: 17,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 4,
-                          character: 0,
-                        },
-                        end: {
-                          line: 4,
-                          character: 18,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 4,
-                            character: 0,
-                          },
-                          end: {
-                            line: 4,
-                            character: 19,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 4,
-                              character: 19,
-                            },
-                          },
                           parent: {
                             range: {
-                              start: {
-                                line: 0,
-                                character: 0,
-                              },
                               end: {
-                                line: 4,
                                 character: 19,
+                                line: 4,
+                              },
+                              start: {
+                                character: 0,
+                                line: 0,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 19,
+                              line: 4,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 19,
+                            line: 4,
+                          },
+                          start: {
+                            character: 0,
+                            line: 4,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 18,
+                          line: 4,
+                        },
+                        start: {
+                          character: 0,
+                          line: 4,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 17,
+                        line: 4,
+                      },
+                      start: {
+                        character: 11,
+                        line: 4,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 17,
+                      line: 4,
+                    },
+                    start: {
+                      character: 14,
+                      line: 4,
                     },
                   },
                 },
@@ -624,50 +624,50 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 2,
-                      character: 48,
-                    },
-                    end: {
-                      line: 4,
-                      character: 1,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 4,
-                        character: 1,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 2,
-                          character: 0,
-                        },
-                        end: {
-                          line: 8,
-                          character: 2,
-                        },
-                      },
                       parent: {
                         range: {
-                          start: {
-                            line: 0,
-                            character: 0,
-                          },
                           end: {
-                            line: 8,
                             character: 2,
+                            line: 8,
+                          },
+                          start: {
+                            character: 0,
+                            line: 0,
                           },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 2,
+                          line: 8,
+                        },
+                        start: {
+                          character: 0,
+                          line: 2,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 4,
+                      },
+                      start: {
+                        character: 0,
+                        line: 2,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 4,
+                    },
+                    start: {
+                      character: 48,
+                      line: 2,
                     },
                   },
                 },
@@ -690,62 +690,62 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 30,
-                    },
-                    end: {
-                      line: 8,
-                      character: 1,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 1,
-                      },
-                      end: {
-                        line: 8,
-                        character: 1,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 0,
-                        },
-                        end: {
-                          line: 8,
-                          character: 2,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 2,
-                            character: 0,
-                          },
-                          end: {
-                            line: 8,
-                            character: 2,
-                          },
-                        },
                         parent: {
                           range: {
-                            start: {
-                              line: 0,
-                              character: 0,
-                            },
                             end: {
-                              line: 8,
                               character: 2,
+                              line: 8,
+                            },
+                            start: {
+                              character: 0,
+                              line: 0,
                             },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 2,
+                            line: 8,
+                          },
+                          start: {
+                            character: 0,
+                            line: 2,
+                          },
+                        },
                       },
+                      range: {
+                        end: {
+                          character: 2,
+                          line: 8,
+                        },
+                        start: {
+                          character: 0,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 8,
+                      },
+                      start: {
+                        character: 1,
+                        line: 6,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 8,
+                    },
+                    start: {
+                      character: 30,
+                      line: 6,
                     },
                   },
                 },
@@ -768,86 +768,86 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 2,
-                      character: 28,
-                    },
-                    end: {
-                      line: 2,
-                      character: 32,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 28,
-                      },
-                      end: {
-                        line: 2,
-                        character: 40,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 2,
-                          character: 13,
-                        },
-                        end: {
-                          line: 2,
-                          character: 41,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 2,
-                            character: 0,
-                          },
-                          end: {
-                            line: 2,
-                            character: 47,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 4,
-                              character: 1,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 2,
-                                character: 0,
-                              },
-                              end: {
-                                line: 8,
-                                character: 2,
-                              },
-                            },
                             parent: {
                               range: {
-                                start: {
-                                  line: 0,
-                                  character: 0,
-                                },
                                 end: {
-                                  line: 8,
                                   character: 2,
+                                  line: 8,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 0,
                                 },
                               },
                             },
+                            range: {
+                              end: {
+                                character: 2,
+                                line: 8,
+                              },
+                              start: {
+                                character: 0,
+                                line: 2,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 4,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 47,
+                            line: 2,
+                          },
+                          start: {
+                            character: 0,
+                            line: 2,
                           },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 41,
+                          line: 2,
+                        },
+                        start: {
+                          character: 13,
+                          line: 2,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 40,
+                        line: 2,
+                      },
+                      start: {
+                        character: 28,
+                        line: 2,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 32,
+                      line: 2,
+                    },
+                    start: {
+                      character: 28,
+                      line: 2,
                     },
                   },
                 },
@@ -873,62 +873,62 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 4,
-                      character: 12,
-                    },
-                    end: {
-                      line: 4,
-                      character: 16,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 4,
-                        character: 4,
-                      },
-                      end: {
-                        line: 4,
-                        character: 16,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 4,
-                          character: 0,
-                        },
-                        end: {
-                          line: 4,
-                          character: 17,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 2,
-                            character: 0,
-                          },
-                          end: {
-                            line: 4,
-                            character: 17,
-                          },
-                        },
                         parent: {
                           range: {
-                            start: {
-                              line: 0,
-                              character: 0,
-                            },
                             end: {
-                              line: 4,
                               character: 17,
+                              line: 4,
+                            },
+                            start: {
+                              character: 0,
+                              line: 0,
                             },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 17,
+                            line: 4,
+                          },
+                          start: {
+                            character: 0,
+                            line: 2,
+                          },
+                        },
                       },
+                      range: {
+                        end: {
+                          character: 17,
+                          line: 4,
+                        },
+                        start: {
+                          character: 0,
+                          line: 4,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 16,
+                        line: 4,
+                      },
+                      start: {
+                        character: 4,
+                        line: 4,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 16,
+                      line: 4,
+                    },
+                    start: {
+                      character: 12,
+                      line: 4,
                     },
                   },
                 },
@@ -950,86 +950,86 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 4,
-                      character: 8,
-                    },
-                    end: {
-                      line: 4,
-                      character: 9,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 4,
-                        character: 6,
-                      },
-                      end: {
-                        line: 4,
-                        character: 9,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 4,
-                          character: 4,
-                        },
-                        end: {
-                          line: 4,
-                          character: 9,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 4,
-                            character: 4,
-                          },
-                          end: {
-                            line: 4,
-                            character: 16,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 4,
-                              character: 0,
-                            },
-                            end: {
-                              line: 4,
-                              character: 17,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 2,
-                                character: 0,
-                              },
-                              end: {
-                                line: 4,
-                                character: 17,
-                              },
-                            },
                             parent: {
                               range: {
-                                start: {
-                                  line: 0,
-                                  character: 0,
-                                },
                                 end: {
-                                  line: 4,
                                   character: 17,
+                                  line: 4,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 0,
                                 },
                               },
                             },
+                            range: {
+                              end: {
+                                character: 17,
+                                line: 4,
+                              },
+                              start: {
+                                character: 0,
+                                line: 2,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 17,
+                              line: 4,
+                            },
+                            start: {
+                              character: 0,
+                              line: 4,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 16,
+                            line: 4,
+                          },
+                          start: {
+                            character: 4,
+                            line: 4,
                           },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 9,
+                          line: 4,
+                        },
+                        start: {
+                          character: 4,
+                          line: 4,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 9,
+                        line: 4,
+                      },
+                      start: {
+                        character: 6,
+                        line: 4,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 9,
+                      line: 4,
+                    },
+                    start: {
+                      character: 8,
+                      line: 4,
                     },
                   },
                 },
@@ -1055,26 +1055,26 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 2,
-                      character: 0,
-                    },
-                    end: {
-                      line: 2,
-                      character: 30,
-                    },
-                  },
                   parent: {
                     range: {
-                      start: {
-                        line: 0,
-                        character: 0,
-                      },
                       end: {
-                        line: 2,
                         character: 30,
+                        line: 2,
                       },
+                      start: {
+                        character: 0,
+                        line: 0,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 30,
+                      line: 2,
+                    },
+                    start: {
+                      character: 0,
+                      line: 2,
                     },
                   },
                 },
@@ -1100,38 +1100,38 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 0,
-                    },
-                    end: {
-                      line: 22,
-                      character: 1,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 0,
-                      },
-                      end: {
-                        line: 22,
-                        character: 1,
-                      },
-                    },
                     parent: {
                       range: {
-                        start: {
-                          line: 0,
-                          character: 0,
-                        },
                         end: {
-                          line: 22,
                           character: 1,
+                          line: 22,
+                        },
+                        start: {
+                          character: 0,
+                          line: 0,
                         },
                       },
+                    },
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 22,
+                      },
+                      start: {
+                        character: 0,
+                        line: 2,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 22,
+                    },
+                    start: {
+                      character: 0,
+                      line: 6,
                     },
                   },
                 },
@@ -1156,50 +1156,50 @@ module.exports = (suite(
                 method: 'textDocument/selectionRange',
                 result: [
                   {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 16,
-                      },
-                      end: {
-                        line: 6,
-                        character: 17,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 0,
-                        },
-                        end: {
-                          line: 22,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 2,
-                            character: 0,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
                           range: {
-                            start: {
-                              line: 0,
-                              character: 0,
-                            },
                             end: {
-                              line: 22,
                               character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 0,
                             },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 0,
+                            line: 2,
+                          },
+                        },
+                      },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 22,
+                        },
+                        start: {
+                          character: 0,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 17,
+                        line: 6,
+                      },
+                      start: {
+                        character: 16,
+                        line: 6,
                       },
                     },
                   },
@@ -1221,62 +1221,62 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 29,
-                    },
-                    end: {
-                      line: 6,
-                      character: 30,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 18,
-                      },
-                      end: {
-                        line: 6,
-                        character: 30,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 0,
-                        },
-                        end: {
-                          line: 22,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 2,
-                            character: 0,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
                           range: {
-                            start: {
-                              line: 0,
-                              character: 0,
-                            },
                             end: {
-                              line: 22,
                               character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 0,
                             },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 0,
+                            line: 2,
+                          },
+                        },
                       },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 22,
+                        },
+                        start: {
+                          character: 0,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 30,
+                        line: 6,
+                      },
+                      start: {
+                        character: 18,
+                        line: 6,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 30,
+                      line: 6,
+                    },
+                    start: {
+                      character: 29,
+                      line: 6,
                     },
                   },
                 },
@@ -1298,98 +1298,98 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 7,
-                      character: 9,
-                    },
-                    end: {
-                      line: 7,
-                      character: 13,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 7,
-                      },
-                      end: {
-                        line: 7,
-                        character: 13,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 7,
-                          character: 5,
-                        },
-                        end: {
-                          line: 7,
-                          character: 13,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 7,
-                            character: 2,
-                          },
-                          end: {
-                            line: 9,
-                            character: 3,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 6,
-                              character: 31,
-                            },
-                            end: {
-                              line: 22,
-                              character: 1,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 6,
-                                character: 0,
-                              },
-                              end: {
-                                line: 22,
-                                character: 1,
-                              },
-                            },
                             parent: {
-                              range: {
-                                start: {
-                                  line: 2,
-                                  character: 0,
-                                },
-                                end: {
-                                  line: 22,
-                                  character: 1,
-                                },
-                              },
                               parent: {
                                 range: {
-                                  start: {
-                                    line: 0,
-                                    character: 0,
-                                  },
                                   end: {
-                                    line: 22,
                                     character: 1,
+                                    line: 22,
+                                  },
+                                  start: {
+                                    character: 0,
+                                    line: 0,
                                   },
                                 },
                               },
+                              range: {
+                                end: {
+                                  character: 1,
+                                  line: 22,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 2,
+                                },
+                              },
+                            },
+                            range: {
+                              end: {
+                                character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 0,
+                                line: 6,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 31,
+                              line: 6,
                             },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 3,
+                            line: 9,
+                          },
+                          start: {
+                            character: 2,
+                            line: 7,
+                          },
+                        },
                       },
+                      range: {
+                        end: {
+                          character: 13,
+                          line: 7,
+                        },
+                        start: {
+                          character: 5,
+                          line: 7,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 7,
+                      },
+                      start: {
+                        character: 7,
+                        line: 7,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 7,
+                    },
+                    start: {
+                      character: 9,
+                      line: 7,
                     },
                   },
                 },
@@ -1411,74 +1411,74 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 7,
-                      character: 14,
-                    },
-                    end: {
-                      line: 9,
-                      character: 3,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 7,
-                        character: 2,
-                      },
-                      end: {
-                        line: 9,
-                        character: 3,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 31,
-                        },
-                        end: {
-                          line: 22,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 0,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 22,
-                              character: 1,
-                            },
-                          },
                           parent: {
                             range: {
-                              start: {
-                                line: 0,
-                                character: 0,
-                              },
                               end: {
-                                line: 22,
                                 character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 0,
+                                line: 0,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 0,
+                            line: 6,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 22,
+                        },
+                        start: {
+                          character: 31,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 3,
+                        line: 9,
+                      },
+                      start: {
+                        character: 2,
+                        line: 7,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 3,
+                      line: 9,
+                    },
+                    start: {
+                      character: 14,
+                      line: 7,
                     },
                   },
                 },
@@ -1502,74 +1502,74 @@ module.exports = (suite(
                 method: 'textDocument/selectionRange',
                 result: [
                   {
-                    range: {
-                      start: {
-                        line: 11,
-                        character: 6,
-                      },
-                      end: {
-                        line: 11,
-                        character: 9,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 11,
-                          character: 2,
-                        },
-                        end: {
-                          line: 13,
-                          character: 3,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 31,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 6,
-                              character: 0,
-                            },
-                            end: {
-                              line: 22,
-                              character: 1,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 2,
-                                character: 0,
-                              },
-                              end: {
-                                line: 22,
-                                character: 1,
-                              },
-                            },
                             parent: {
                               range: {
-                                start: {
-                                  line: 0,
-                                  character: 0,
-                                },
                                 end: {
-                                  line: 22,
                                   character: 1,
+                                  line: 22,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 0,
                                 },
                               },
                             },
+                            range: {
+                              end: {
+                                character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 0,
+                                line: 2,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 6,
+                            },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 31,
+                            line: 6,
+                          },
+                        },
+                      },
+                      range: {
+                        end: {
+                          character: 3,
+                          line: 13,
+                        },
+                        start: {
+                          character: 2,
+                          line: 11,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 9,
+                        line: 11,
+                      },
+                      start: {
+                        character: 6,
+                        line: 11,
                       },
                     },
                   },
@@ -1593,98 +1593,98 @@ module.exports = (suite(
                 method: 'textDocument/selectionRange',
                 result: [
                   {
-                    range: {
-                      start: {
-                        line: 15,
-                        character: 6,
-                      },
-                      end: {
-                        line: 15,
-                        character: 7,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 15,
-                          character: 5,
-                        },
-                        end: {
-                          line: 15,
-                          character: 8,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 15,
-                            character: 5,
-                          },
-                          end: {
-                            line: 15,
-                            character: 16,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 15,
-                              character: 2,
-                            },
-                            end: {
-                              line: 17,
-                              character: 3,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 6,
-                                character: 31,
-                              },
-                              end: {
-                                line: 22,
-                                character: 1,
-                              },
-                            },
                             parent: {
-                              range: {
-                                start: {
-                                  line: 6,
-                                  character: 0,
-                                },
-                                end: {
-                                  line: 22,
-                                  character: 1,
-                                },
-                              },
                               parent: {
-                                range: {
-                                  start: {
-                                    line: 2,
-                                    character: 0,
-                                  },
-                                  end: {
-                                    line: 22,
-                                    character: 1,
-                                  },
-                                },
                                 parent: {
                                   range: {
-                                    start: {
-                                      line: 0,
-                                      character: 0,
-                                    },
                                     end: {
-                                      line: 22,
                                       character: 1,
+                                      line: 22,
+                                    },
+                                    start: {
+                                      character: 0,
+                                      line: 0,
                                     },
                                   },
                                 },
+                                range: {
+                                  end: {
+                                    character: 1,
+                                    line: 22,
+                                  },
+                                  start: {
+                                    character: 0,
+                                    line: 2,
+                                  },
+                                },
+                              },
+                              range: {
+                                end: {
+                                  character: 1,
+                                  line: 22,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 6,
+                                },
+                              },
+                            },
+                            range: {
+                              end: {
+                                character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 31,
+                                line: 6,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 3,
+                              line: 17,
+                            },
+                            start: {
+                              character: 2,
+                              line: 15,
+                            },
+                          },
                         },
+                        range: {
+                          end: {
+                            character: 16,
+                            line: 15,
+                          },
+                          start: {
+                            character: 5,
+                            line: 15,
+                          },
+                        },
+                      },
+                      range: {
+                        end: {
+                          character: 8,
+                          line: 15,
+                        },
+                        start: {
+                          character: 5,
+                          line: 15,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 7,
+                        line: 15,
+                      },
+                      start: {
+                        character: 6,
+                        line: 15,
                       },
                     },
                   },
@@ -1706,74 +1706,74 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 19,
-                      character: 2,
-                    },
-                    end: {
-                      line: 19,
-                      character: 7,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 19,
-                        character: 2,
-                      },
-                      end: {
-                        line: 19,
-                        character: 16,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 31,
-                        },
-                        end: {
-                          line: 22,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 0,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 22,
-                              character: 1,
-                            },
-                          },
                           parent: {
                             range: {
-                              start: {
-                                line: 0,
-                                character: 0,
-                              },
                               end: {
-                                line: 22,
                                 character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 0,
+                                line: 0,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 0,
+                            line: 6,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 22,
+                        },
+                        start: {
+                          character: 31,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 16,
+                        line: 19,
+                      },
+                      start: {
+                        character: 2,
+                        line: 19,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 7,
+                      line: 19,
+                    },
+                    start: {
+                      character: 2,
+                      line: 19,
                     },
                   },
                 },
@@ -1795,86 +1795,86 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 19,
-                      character: 9,
-                    },
-                    end: {
-                      line: 19,
-                      character: 15,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 19,
-                        character: 7,
-                      },
-                      end: {
-                        line: 19,
-                        character: 15,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 19,
-                          character: 2,
-                        },
-                        end: {
-                          line: 19,
-                          character: 16,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 31,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 6,
-                              character: 0,
-                            },
-                            end: {
-                              line: 22,
-                              character: 1,
-                            },
-                          },
                           parent: {
-                            range: {
-                              start: {
-                                line: 2,
-                                character: 0,
-                              },
-                              end: {
-                                line: 22,
-                                character: 1,
-                              },
-                            },
                             parent: {
                               range: {
-                                start: {
-                                  line: 0,
-                                  character: 0,
-                                },
                                 end: {
-                                  line: 22,
                                   character: 1,
+                                  line: 22,
+                                },
+                                start: {
+                                  character: 0,
+                                  line: 0,
                                 },
                               },
                             },
+                            range: {
+                              end: {
+                                character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 0,
+                                line: 2,
+                              },
+                            },
+                          },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 6,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 31,
+                            line: 6,
                           },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 16,
+                          line: 19,
+                        },
+                        start: {
+                          character: 2,
+                          line: 19,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 19,
+                      },
+                      start: {
+                        character: 7,
+                        line: 19,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 15,
+                      line: 19,
+                    },
+                    start: {
+                      character: 9,
+                      line: 19,
                     },
                   },
                 },
@@ -1896,74 +1896,74 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 21,
-                      character: 19,
-                    },
-                    end: {
-                      line: 21,
-                      character: 24,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 21,
-                        character: 2,
-                      },
-                      end: {
-                        line: 21,
-                        character: 25,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 6,
-                          character: 31,
-                        },
-                        end: {
-                          line: 22,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 6,
-                            character: 0,
-                          },
-                          end: {
-                            line: 22,
-                            character: 1,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 22,
-                              character: 1,
-                            },
-                          },
                           parent: {
                             range: {
-                              start: {
-                                line: 0,
-                                character: 0,
-                              },
                               end: {
-                                line: 22,
                                 character: 1,
+                                line: 22,
+                              },
+                              start: {
+                                character: 0,
+                                line: 0,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 1,
+                              line: 22,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 1,
+                            line: 22,
+                          },
+                          start: {
+                            character: 0,
+                            line: 6,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 22,
+                        },
+                        start: {
+                          character: 31,
+                          line: 6,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 25,
+                        line: 21,
+                      },
+                      start: {
+                        character: 2,
+                        line: 21,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 24,
+                      line: 21,
+                    },
+                    start: {
+                      character: 19,
+                      line: 21,
                     },
                   },
                 },
@@ -1988,62 +1988,62 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 2,
-                      character: 10,
-                    },
-                    end: {
-                      line: 6,
-                      character: 1,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 2,
-                        character: 6,
-                      },
-                      end: {
-                        line: 6,
-                        character: 1,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 2,
-                          character: 0,
-                        },
-                        end: {
-                          line: 6,
-                          character: 2,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 2,
-                            character: 0,
-                          },
-                          end: {
-                            line: 14,
-                            character: 2,
-                          },
-                        },
                         parent: {
                           range: {
-                            start: {
-                              line: 0,
-                              character: 0,
-                            },
                             end: {
-                              line: 14,
                               character: 2,
+                              line: 14,
+                            },
+                            start: {
+                              character: 0,
+                              line: 0,
                             },
                           },
                         },
+                        range: {
+                          end: {
+                            character: 2,
+                            line: 14,
+                          },
+                          start: {
+                            character: 0,
+                            line: 2,
+                          },
+                        },
                       },
+                      range: {
+                        end: {
+                          character: 2,
+                          line: 6,
+                        },
+                        start: {
+                          character: 0,
+                          line: 2,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 6,
+                      },
+                      start: {
+                        character: 6,
+                        line: 2,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 6,
+                    },
+                    start: {
+                      character: 10,
+                      line: 2,
                     },
                   },
                 },
@@ -2064,74 +2064,74 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 10,
-                      character: 10,
-                    },
-                    end: {
-                      line: 10,
-                      character: 13,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 10,
-                        character: 10,
-                      },
-                      end: {
-                        line: 14,
-                        character: 1,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 10,
-                          character: 6,
-                        },
-                        end: {
-                          line: 14,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 10,
-                            character: 0,
-                          },
-                          end: {
-                            line: 14,
-                            character: 2,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 14,
-                              character: 2,
-                            },
-                          },
                           parent: {
                             range: {
-                              start: {
-                                line: 0,
-                                character: 0,
-                              },
                               end: {
-                                line: 14,
                                 character: 2,
+                                line: 14,
+                              },
+                              start: {
+                                character: 0,
+                                line: 0,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 2,
+                              line: 14,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 2,
+                            line: 14,
+                          },
+                          start: {
+                            character: 0,
+                            line: 10,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 14,
+                        },
+                        start: {
+                          character: 6,
+                          line: 10,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 14,
+                      },
+                      start: {
+                        character: 10,
+                        line: 10,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 10,
+                    },
+                    start: {
+                      character: 10,
+                      line: 10,
                     },
                   },
                 },
@@ -2152,74 +2152,74 @@ module.exports = (suite(
               method: 'textDocument/selectionRange',
               result: [
                 {
-                  range: {
-                    start: {
-                      line: 10,
-                      character: 13,
-                    },
-                    end: {
-                      line: 14,
-                      character: 1,
-                    },
-                  },
                   parent: {
-                    range: {
-                      start: {
-                        line: 10,
-                        character: 10,
-                      },
-                      end: {
-                        line: 14,
-                        character: 1,
-                      },
-                    },
                     parent: {
-                      range: {
-                        start: {
-                          line: 10,
-                          character: 6,
-                        },
-                        end: {
-                          line: 14,
-                          character: 1,
-                        },
-                      },
                       parent: {
-                        range: {
-                          start: {
-                            line: 10,
-                            character: 0,
-                          },
-                          end: {
-                            line: 14,
-                            character: 2,
-                          },
-                        },
                         parent: {
-                          range: {
-                            start: {
-                              line: 2,
-                              character: 0,
-                            },
-                            end: {
-                              line: 14,
-                              character: 2,
-                            },
-                          },
                           parent: {
                             range: {
-                              start: {
-                                line: 0,
-                                character: 0,
-                              },
                               end: {
-                                line: 14,
                                 character: 2,
+                                line: 14,
+                              },
+                              start: {
+                                character: 0,
+                                line: 0,
                               },
                             },
                           },
+                          range: {
+                            end: {
+                              character: 2,
+                              line: 14,
+                            },
+                            start: {
+                              character: 0,
+                              line: 2,
+                            },
+                          },
+                        },
+                        range: {
+                          end: {
+                            character: 2,
+                            line: 14,
+                          },
+                          start: {
+                            character: 0,
+                            line: 10,
+                          },
                         },
                       },
+                      range: {
+                        end: {
+                          character: 1,
+                          line: 14,
+                        },
+                        start: {
+                          character: 6,
+                          line: 10,
+                        },
+                      },
+                    },
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 14,
+                      },
+                      start: {
+                        character: 10,
+                        line: 10,
+                      },
+                    },
+                  },
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 14,
+                    },
+                    start: {
+                      character: 13,
+                      line: 10,
                     },
                   },
                 },

@@ -42,97 +42,117 @@ react_component.js:18:17 = State
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
   "documentation":"\n `<Fragment>`, often used via `<>...</>` syntax,\n lets you group elements without a wrapper node.\n\n**@see**  https://react.dev/reference/react/Fragment",
+  "end":14,
+  "endline":31,
+  "line":31,
+  "loc":{
+    "end":{"column":14,"line":31,"offset":462},
+    "source":"react_component.js",
+    "start":{"column":7,"line":31,"offset":454},
+    "type":"SourceFile"
+  },
+  "path":"react_component.js",
+  "reasons":[],
+  "start":7,
   "types":{
-    "unevaluated":{
+    "evaluated":{
       "expanded":{
+        "isType":false,
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:749:5,751:22"},
-          "name":"Fragment"
+          "name":"Fragment",
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:749:5,751:22"}
+        },
+        "regularProps":{
+          "inexact":false,
+          "kind":"flattened",
+          "types":[{"name":"children","optional":true,"type":{"bound":"Renders","kind":"Bound"}}]
+        },
+        "renders":{
+          "argument":{"bound":"Renders","kind":"Bound"},
+          "kind":"Renders",
+          "variant":"normal"
         },
         "typeParams":[
           {
-            "name":"Renders",
             "bound":{
+              "generic_kind":"type alias",
               "kind":"Generic",
               "type":{
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
-                "name":"React$Node"
-              },
-              "generic_kind":"type alias"
+                "name":"React$Node",
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"}
+              }
             },
-            "polarity":"Neutral",
             "const":false,
-            "default":{"kind":"Void"}
+            "default":{"kind":"Void"},
+            "name":"Renders",
+            "polarity":"Neutral"
           }
-        ],
-        "isType":false,
-        "regularProps":{
-          "kind":"flattened",
-          "types":[{"name":"children","optional":true,"type":{"kind":"Bound","bound":"Renders"}}],
-          "inexact":false
-        },
-        "renders":{
-          "kind":"Renders",
-          "argument":{"kind":"Bound","bound":"Renders"},
-          "variant":"normal"
-        }
+        ]
       },
       "type":"component Fragment<Renders: React$Node = void>(children?: Renders) renders Renders"
     },
-    "evaluated":{
+    "unevaluated":{
       "expanded":{
+        "isType":false,
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:749:5,751:22"},
-          "name":"Fragment"
+          "name":"Fragment",
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:749:5,751:22"}
+        },
+        "regularProps":{
+          "inexact":false,
+          "kind":"flattened",
+          "types":[{"name":"children","optional":true,"type":{"bound":"Renders","kind":"Bound"}}]
+        },
+        "renders":{
+          "argument":{"bound":"Renders","kind":"Bound"},
+          "kind":"Renders",
+          "variant":"normal"
         },
         "typeParams":[
           {
-            "name":"Renders",
             "bound":{
+              "generic_kind":"type alias",
               "kind":"Generic",
               "type":{
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"},
-                "name":"React$Node"
-              },
-              "generic_kind":"type alias"
+                "name":"React$Node",
+                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"}
+              }
             },
-            "polarity":"Neutral",
             "const":false,
-            "default":{"kind":"Void"}
+            "default":{"kind":"Void"},
+            "name":"Renders",
+            "polarity":"Neutral"
           }
-        ],
-        "isType":false,
-        "regularProps":{
-          "kind":"flattened",
-          "types":[{"name":"children","optional":true,"type":{"kind":"Bound","bound":"Renders"}}],
-          "inexact":false
-        },
-        "renders":{
-          "kind":"Renders",
-          "argument":{"kind":"Bound","bound":"Renders"},
-          "variant":"normal"
-        }
+        ]
       },
       "type":"component Fragment<Renders: React$Node = void>(children?: Renders) renders Renders"
     }
-  },
-  "reasons":[],
-  "loc":{
-    "source":"react_component.js",
-    "type":"SourceFile",
-    "start":{"line":31,"column":7,"offset":454},
-    "end":{"line":31,"column":14,"offset":462}
-  },
-  "path":"react_component.js",
-  "line":31,
-  "endline":31,
-  "start":7,
-  "end":14
+  }
 }
 react_component.js:32:13 = {
+  "end":20,
+  "endline":32,
+  "line":32,
+  "loc":{
+    "end":{"column":20,"line":32,"offset":483},
+    "source":"react_component.js",
+    "start":{"column":13,"line":32,"offset":475},
+    "type":"SourceFile"
+  },
+  "path":"react_component.js",
+  "reasons":[],
+  "start":13,
   "types":{
+    "evaluated":{
+      "expanded":{
+        "kind":"Component",
+        "regularProps":{"kind":"unflattened","type":{"any":"implicit","kind":"Implicit Any"}},
+        "renders":null
+      },
+      "type":"component(...any)"
+    },
     "unevaluated":{
       "expanded":{
         "kind":"Component",
@@ -140,43 +160,23 @@ react_component.js:32:13 = {
         "renders":null
       },
       "type":"component(...number)"
-    },
-    "evaluated":{
-      "expanded":{
-        "kind":"Component",
-        "regularProps":{"kind":"unflattened","type":{"kind":"Implicit Any","any":"implicit"}},
-        "renders":null
-      },
-      "type":"component(...any)"
     }
-  },
-  "reasons":[],
-  "loc":{
-    "source":"react_component.js",
-    "type":"SourceFile",
-    "start":{"line":32,"column":13,"offset":475},
-    "end":{"line":32,"column":20,"offset":483}
-  },
-  "path":"react_component.js",
-  "line":32,
-  "endline":32,
-  "start":13,
-  "end":20
+  }
 }
 react_component.js:32:29 = {
-  "types":null,
-  "reasons":[],
+  "end":0,
+  "endline":0,
+  "line":0,
   "loc":{
+    "end":{"column":0,"line":0,"offset":0},
     "source":null,
-    "type":null,
-    "start":{"line":0,"column":1,"offset":0},
-    "end":{"line":0,"column":0,"offset":0}
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
   },
   "path":"",
-  "line":0,
-  "endline":0,
+  "reasons":[],
   "start":1,
-  "end":0
+  "types":null
 }
 react.js:4:7
 Flags:

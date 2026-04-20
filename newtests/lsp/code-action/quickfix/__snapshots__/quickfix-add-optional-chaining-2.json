@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add optional chaining for object that might be `null`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "add_optional_chaining",
+          "Add optional chaining for object that might be `null`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js": [
             {
+              "newText": "(nested?.foo)",
               "range": {
-                "start": {
-                  "line": 6,
-                  "character": 0
-                },
                 "end": {
-                  "line": 6,
-                  "character": 10
+                  "character": 10,
+                  "line": 6
+                },
+                "start": {
+                  "character": 0,
+                  "line": 6
                 }
-              },
-              "newText": "(nested?.foo)"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "add_optional_chaining",
-          "Add optional chaining for object that might be `null`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Add optional chaining for object that might be `null`"
     }
   ]
 }

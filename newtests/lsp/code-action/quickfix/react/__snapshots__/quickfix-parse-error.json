@@ -2,55 +2,55 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Replace `>` with `{'>'}`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_parse_error",
+          "Replace `>` with `{'>'}`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [
         {
+          "code": "ParseError",
+          "message": "Unexpected token `>`. Did you mean `{'>'}`?",
           "range": {
-            "start": {
-              "line": 4,
-              "character": 6
-            },
             "end": {
-              "line": 4,
-              "character": 7
+              "character": 7,
+              "line": 4
+            },
+            "start": {
+              "character": 6,
+              "line": 4
             }
           },
+          "relatedInformation": [],
           "severity": 1,
-          "code": "ParseError",
-          "source": "Flow",
-          "message": "Unexpected token `>`. Did you mean `{'>'}`?",
-          "relatedInformation": []
+          "source": "Flow"
         }
       ],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/parse-error.js": [
             {
+              "newText": "{'>'}",
               "range": {
-                "start": {
-                  "line": 4,
-                  "character": 6
-                },
                 "end": {
-                  "line": 4,
-                  "character": 7
+                  "character": 7,
+                  "line": 4
+                },
+                "start": {
+                  "character": 6,
+                  "line": 4
                 }
-              },
-              "newText": "{'>'}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_parse_error",
-          "Replace `>` with `{'>'}`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Replace `>` with `{'>'}`"
     }
   ]
 }

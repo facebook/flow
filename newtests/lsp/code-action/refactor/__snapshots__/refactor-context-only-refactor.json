@@ -2,70 +2,70 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Extract to constant in module scope",
-      "kind": "refactor.extract",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
-                "end": {
-                  "line": 3,
-                  "character": 8
-                }
-              },
-              "newText": "const newLocal = foo.bar;\nnewLocal;"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "refactor_extract",
           "Extract to constant in module scope"
-        ]
-      }
-    },
-    {
-      "title": "Insert inferred type as a type cast",
-      "kind": "refactor",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
             {
+              "newText": "const newLocal = foo.bar;\nnewLocal;",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
                 "end": {
-                  "line": 3,
-                  "character": 7
+                  "character": 8,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
                 }
-              },
-              "newText": "foo.bar as any | number"
+              }
             }
           ]
         }
       },
+      "kind": "refactor.extract",
+      "title": "Extract to constant in module scope"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "insert_inferred_type_as_cast",
           "Insert inferred type as a type cast"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
+            {
+              "newText": "foo.bar as any | number",
+              "range": {
+                "end": {
+                  "character": 7,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "refactor",
+      "title": "Insert inferred type as a type cast"
     }
   ]
 }

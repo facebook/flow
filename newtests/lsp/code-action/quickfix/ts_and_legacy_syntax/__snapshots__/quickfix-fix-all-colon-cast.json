@@ -2,96 +2,96 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert all colon casts to `as` expressions",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-all-colon-cast.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 2,
-                  "character": 18
-                },
-                "end": {
-                  "line": 2,
-                  "character": 29
-                }
-              },
-              "newText": "1 as number"
-            },
-            {
-              "range": {
-                "start": {
-                  "line": 4,
-                  "character": 18
-                },
-                "end": {
-                  "line": 4,
-                  "character": 35
-                }
-              },
-              "newText": "\"hello\" as string"
-            },
-            {
-              "range": {
-                "start": {
-                  "line": 5,
-                  "character": 19
-                },
-                "end": {
-                  "line": 5,
-                  "character": 34
-                }
-              },
-              "newText": "true as boolean"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "convert_all_colon_cast",
           "Convert all colon casts to `as` expressions"
-        ]
-      }
-    },
-    {
-      "title": "Convert to `as` expression `<expr> as <type>`",
-      "kind": "quickfix",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-all-colon-cast.js": [
             {
+              "newText": "1 as number",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 18
-                },
                 "end": {
-                  "line": 2,
-                  "character": 29
+                  "character": 29,
+                  "line": 2
+                },
+                "start": {
+                  "character": 18,
+                  "line": 2
                 }
-              },
-              "newText": "1 as number"
+              }
+            },
+            {
+              "newText": "\"hello\" as string",
+              "range": {
+                "end": {
+                  "character": 35,
+                  "line": 4
+                },
+                "start": {
+                  "character": 18,
+                  "line": 4
+                }
+              }
+            },
+            {
+              "newText": "true as boolean",
+              "range": {
+                "end": {
+                  "character": 34,
+                  "line": 5
+                },
+                "start": {
+                  "character": 19,
+                  "line": 5
+                }
+              }
             }
           ]
         }
       },
+      "kind": "quickfix",
+      "title": "Convert all colon casts to `as` expressions"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "convert_colon_cast",
           "Convert to `as` expression `<expr> as <type>`"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-all-colon-cast.js": [
+            {
+              "newText": "1 as number",
+              "range": {
+                "end": {
+                  "character": 29,
+                  "line": 2
+                },
+                "start": {
+                  "character": 18,
+                  "line": 2
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Convert to `as` expression `<expr> as <type>`"
     }
   ]
 }

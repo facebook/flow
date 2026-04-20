@@ -13,23 +13,23 @@ flow config check:
 {
   "errors":[
     {
+      "level":"warning",
       "line":3,
-      "message":"Unsupported option specified! (invalid_option1)",
-      "level":"warning"
+      "message":"Unsupported option specified! (invalid_option1)"
     },
     {
+      "level":"warning",
       "line":4,
-      "message":"Unsupported option specified! (invalid_option2)",
-      "level":"warning"
+      "message":"Unsupported option specified! (invalid_option2)"
     },
     {
+      "level":"warning",
       "line":5,
-      "message":"Unsupported option specified! (invalid_option2)",
-      "level":"warning"
+      "message":"Unsupported option specified! (invalid_option2)"
     }
   ],
-  "flowVersion":"<VERSION>",
-  "exit":{"code":8,"reason":"Invalid_flowconfig"}
+  "exit":{"code":8,"reason":"Invalid_flowconfig"},
+  "flowVersion":"<VERSION>"
 }
 
 flow config check --ignore-version:

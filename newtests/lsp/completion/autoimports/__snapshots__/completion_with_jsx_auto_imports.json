@@ -4,105 +4,105 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "Foo",
-        "kind": 3,
-        "detail": "(props: {...}) => null",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 4,
-              "character": 2
-            },
-            "end": {
-              "line": 4,
-              "character": 3
-            }
-          },
-          "newText": "Foo"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import * as React from \"react\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import * as React from \"react\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "local value identifier",
             {
-              "token": "FAUTO332",
+              "ac_type": "Ac_jsx_element",
+              "completion": "Foo",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "Foo",
-              "ac_type": "Ac_jsx_element"
+              "token": "FAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "(props: {...}) => null",
+        "insertTextFormat": 1,
+        "kind": 3,
+        "label": "Foo",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "newText": "Foo",
+          "range": {
+            "end": {
+              "character": 3,
+              "line": 4
+            },
+            "start": {
+              "character": 2,
+              "line": 4
+            }
+          }
         }
       },
       {
-        "label": "Function",
-        "kind": 6,
-        "detail": "(global)",
-        "sortText": "00000000000000000001",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 4,
-              "character": 2
-            },
-            "end": {
-              "line": 4,
-              "character": 3
-            }
-          },
-          "newText": "Function"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import * as React from \"react\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import * as React from \"react\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "global",
             {
-              "token": "FAUTO332",
+              "ac_type": "Ac_jsx_element",
+              "completion": "Function",
               "index": 1,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "Function",
-              "ac_type": "Ac_jsx_element"
+              "token": "FAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "(global)",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "Function",
+        "sortText": "00000000000000000001",
+        "textEdit": {
+          "newText": "Function",
+          "range": {
+            "end": {
+              "character": 3,
+              "line": 4
+            },
+            "start": {
+              "character": 2,
+              "line": 4
+            }
+          }
         }
       }
     ]

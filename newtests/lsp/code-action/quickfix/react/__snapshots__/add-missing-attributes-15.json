@@ -2,76 +2,76 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add missing attributes",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "add_missing_jsx_props",
+          "Add missing attributes"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js": [
             {
+              "newText": " a0={a0}",
               "range": {
-                "start": {
-                  "line": 87,
-                  "character": 50
-                },
                 "end": {
-                  "line": 87,
-                  "character": 50
+                  "character": 50,
+                  "line": 87
+                },
+                "start": {
+                  "character": 50,
+                  "line": 87
                 }
-              },
-              "newText": " a0={a0}"
+              }
             },
             {
+              "newText": " a3={a3}",
               "range": {
-                "start": {
-                  "line": 87,
-                  "character": 50
-                },
                 "end": {
-                  "line": 87,
-                  "character": 50
+                  "character": 50,
+                  "line": 87
+                },
+                "start": {
+                  "character": 50,
+                  "line": 87
                 }
-              },
-              "newText": " a3={a3}"
+              }
             },
             {
+              "newText": " b2={b2}",
               "range": {
-                "start": {
-                  "line": 87,
-                  "character": 50
-                },
                 "end": {
-                  "line": 87,
-                  "character": 50
+                  "character": 50,
+                  "line": 87
+                },
+                "start": {
+                  "character": 50,
+                  "line": 87
                 }
-              },
-              "newText": " b2={b2}"
+              }
             },
             {
+              "newText": " c2={c2}",
               "range": {
-                "start": {
-                  "line": 87,
-                  "character": 50
-                },
                 "end": {
-                  "line": 87,
-                  "character": 50
+                  "character": 50,
+                  "line": 87
+                },
+                "start": {
+                  "character": 50,
+                  "line": 87
                 }
-              },
-              "newText": " c2={c2}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "add_missing_jsx_props",
-          "Add missing attributes"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Add missing attributes"
     }
   ]
 }

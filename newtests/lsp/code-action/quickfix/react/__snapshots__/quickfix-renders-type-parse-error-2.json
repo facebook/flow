@@ -2,55 +2,55 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Remove `:`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_parse_error",
+          "Remove `:`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [
         {
+          "code": "ParseError",
+          "message": "Components use `renders` instead of `:` to annotate the render type of a component.",
           "range": {
-            "start": {
-              "line": 5,
-              "character": 15
-            },
             "end": {
-              "line": 5,
-              "character": 16
+              "character": 16,
+              "line": 5
+            },
+            "start": {
+              "character": 15,
+              "line": 5
             }
           },
+          "relatedInformation": [],
           "severity": 1,
-          "code": "ParseError",
-          "source": "Flow",
-          "message": "Components use `renders` instead of `:` to annotate the render type of a component.",
-          "relatedInformation": []
+          "source": "Flow"
         }
       ],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/component-render-parse-error.js": [
             {
+              "newText": "",
               "range": {
-                "start": {
-                  "line": 5,
-                  "character": 15
-                },
                 "end": {
-                  "line": 5,
-                  "character": 16
+                  "character": 16,
+                  "line": 5
+                },
+                "start": {
+                  "character": 15,
+                  "line": 5
                 }
-              },
-              "newText": ""
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_parse_error",
-          "Remove `:`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Remove `:`"
     }
   ]
 }

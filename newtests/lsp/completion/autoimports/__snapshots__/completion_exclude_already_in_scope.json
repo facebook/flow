@@ -4,90 +4,90 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "foobar",
-        "kind": 12,
-        "detail": "\"\"",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 19
-            },
-            "end": {
-              "line": 2,
-              "character": 25
-            }
-          },
-          "newText": "foobar"
-        },
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "local value identifier",
             {
-              "token": "foobarAUTO332",
+              "ac_type": "Acid",
+              "completion": "foobar",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 6,
-              "completion": "foobar",
-              "ac_type": "Acid"
+              "token": "foobarAUTO332",
+              "typed_length": 6
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "\"\"",
+        "insertTextFormat": 1,
+        "kind": 12,
+        "label": "foobar",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "newText": "foobar",
+          "range": {
+            "end": {
+              "character": 25,
+              "line": 2
+            },
+            "start": {
+              "character": 19,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "FooBar",
-        "kind": 6,
-        "detail": "Import default from ./foobar",
-        "sortText": "00000000000000000001",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 19
-            },
-            "end": {
-              "line": 2,
-              "character": 25
-            }
-          },
-          "newText": "FooBar"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import FooBar from \"./foobar\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import FooBar from \"./foobar\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "foobarAUTO332",
+              "ac_type": "Acid",
+              "completion": "FooBar",
               "index": 1,
               "session_requests": 1,
-              "typed_length": 6,
-              "completion": "FooBar",
-              "ac_type": "Acid"
+              "token": "foobarAUTO332",
+              "typed_length": 6
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import default from ./foobar",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "FooBar",
+        "sortText": "00000000000000000001",
+        "textEdit": {
+          "newText": "FooBar",
+          "range": {
+            "end": {
+              "character": 25,
+              "line": 2
+            },
+            "start": {
+              "character": 19,
+              "line": 2
+            }
+          }
         }
       }
     ]

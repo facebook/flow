@@ -1,77 +1,77 @@
 {
-  "errors":[],
-  "tokens":[],
-  "type":"Program",
-  "loc":{"source":"a.js","start":{"line":3,"column":0},"end":{"line":3,"column":34}},
-  "range":[9,43],
   "body":[
     {
-      "type":"VariableDeclaration",
-      "loc":{"source":"a.js","start":{"line":3,"column":0},"end":{"line":3,"column":34}},
-      "range":[9,43],
       "declarations":[
         {
-          "type":"VariableDeclarator",
-          "loc":{"source":"a.js","start":{"line":3,"column":6},"end":{"line":3,"column":33}},
-          "range":[15,42],
           "id":{
-            "type":"ObjectPattern",
-            "loc":{"source":"a.js","start":{"line":3,"column":6},"end":{"line":3,"column":29}},
-            "range":[15,38],
+            "loc":{"end":{"column":29,"line":3},"source":"a.js","start":{"column":6,"line":3}},
+            "optional":false,
             "properties":[
               {
-                "type":"Property",
-                "loc":{"source":"a.js","start":{"line":3,"column":22},"end":{"line":3,"column":27}},
-                "range":[31,36],
+                "computed":false,
                 "key":{
-                  "type":"Identifier",
-                  "loc":{"source":"a.js","start":{"line":3,"column":22},"end":{"line":3,"column":23}},
-                  "range":[31,32],
+                  "loc":{"end":{"column":23,"line":3},"source":"a.js","start":{"column":22,"line":3}},
                   "name":"a",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "value":{
-                  "type":"AssignmentPattern",
-                  "loc":{"source":"a.js","start":{"line":3,"column":22},"end":{"line":3,"column":27}},
-                  "range":[31,36],
-                  "left":{
-                    "type":"Identifier",
-                    "loc":{"source":"a.js","start":{"line":3,"column":22},"end":{"line":3,"column":23}},
-                    "range":[31,32],
-                    "name":"a",
-                    "typeAnnotation":null,
-                    "optional":false
-                  },
-                  "right":{
-                    "type":"Literal",
-                    "loc":{"source":"a.js","start":{"line":3,"column":26},"end":{"line":3,"column":27}},
-                    "range":[35,36],
-                    "value":0,
-                    "raw":"0"
-                  }
+                  "optional":false,
+                  "range":[31,32],
+                  "type":"Identifier",
+                  "typeAnnotation":null
                 },
                 "kind":"init",
+                "loc":{"end":{"column":27,"line":3},"source":"a.js","start":{"column":22,"line":3}},
                 "method":false,
+                "range":[31,36],
                 "shorthand":true,
-                "computed":false
+                "type":"Property",
+                "value":{
+                  "left":{
+                    "loc":{"end":{"column":23,"line":3},"source":"a.js","start":{"column":22,"line":3}},
+                    "name":"a",
+                    "optional":false,
+                    "range":[31,32],
+                    "type":"Identifier",
+                    "typeAnnotation":null
+                  },
+                  "loc":{"end":{"column":27,"line":3},"source":"a.js","start":{"column":22,"line":3}},
+                  "range":[31,36],
+                  "right":{
+                    "loc":{"end":{"column":27,"line":3},"source":"a.js","start":{"column":26,"line":3}},
+                    "range":[35,36],
+                    "raw":"0",
+                    "type":"Literal",
+                    "value":0
+                  },
+                  "type":"AssignmentPattern"
+                }
               }
             ],
-            "typeAnnotation":null,
-            "optional":false
+            "range":[15,38],
+            "type":"ObjectPattern",
+            "typeAnnotation":null
           },
           "init":{
-            "type":"Identifier",
-            "loc":{"source":"a.js","start":{"line":3,"column":32},"end":{"line":3,"column":33}},
-            "range":[41,42],
+            "loc":{"end":{"column":33,"line":3},"source":"a.js","start":{"column":32,"line":3}},
             "name":"b",
-            "typeAnnotation":null,
-            "optional":false
-          }
+            "optional":false,
+            "range":[41,42],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":33,"line":3},"source":"a.js","start":{"column":6,"line":3}},
+          "range":[15,42],
+          "type":"VariableDeclarator"
         }
       ],
-      "kind":"const"
+      "kind":"const",
+      "loc":{"end":{"column":34,"line":3},"source":"a.js","start":{"column":0,"line":3}},
+      "range":[9,43],
+      "type":"VariableDeclaration"
     }
   ],
-  "comments":[]
+  "comments":[],
+  "errors":[],
+  "loc":{"end":{"column":34,"line":3},"source":"a.js","start":{"column":0,"line":3}},
+  "range":[9,43],
+  "tokens":[],
+  "type":"Program"
 }

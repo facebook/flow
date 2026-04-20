@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `Readonly`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_readonly_tuple_type",
+          "Convert to `Readonly`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-readonly-tuple-type.js": [
             {
+              "newText": "Readonly<[string, number]>",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 9
-                },
                 "end": {
-                  "line": 2,
-                  "character": 34
+                  "character": 34,
+                  "line": 2
+                },
+                "start": {
+                  "character": 9,
+                  "line": 2
                 }
-              },
-              "newText": "Readonly<[string, number]>"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_readonly_tuple_type",
-          "Convert to `Readonly`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Convert to `Readonly`"
     }
   ]
 }

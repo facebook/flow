@@ -35,2086 +35,2086 @@ module.exports = (suite(
             method: 'textDocument/documentSymbol',
             result: [
               {
-                name: 'x',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 2,
-                    character: 6,
-                  },
-                  end: {
-                    line: 7,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 2,
-                    character: 6,
-                  },
-                  end: {
-                    line: 2,
-                    character: 7,
-                  },
-                },
                 children: [
                   {
-                    name: 'obj',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 6,
-                        character: 2,
-                      },
-                      end: {
-                        line: 6,
-                        character: 24,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 6,
-                        character: 2,
-                      },
-                      end: {
-                        line: 6,
-                        character: 5,
-                      },
-                    },
                     children: [
                       {
+                        kind: 7,
                         name: 'nested',
-                        kind: 7,
                         range: {
-                          start: {
-                            line: 6,
-                            character: 9,
-                          },
                           end: {
-                            line: 6,
                             character: 22,
+                            line: 6,
+                          },
+                          start: {
+                            character: 9,
+                            line: 6,
                           },
                         },
                         selectionRange: {
-                          start: {
-                            line: 6,
-                            character: 9,
-                          },
                           end: {
-                            line: 6,
                             character: 15,
+                            line: 6,
+                          },
+                          start: {
+                            character: 9,
+                            line: 6,
                           },
                         },
                       },
                     ],
-                  },
-                  {
-                    name: 'bar',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 5,
-                        character: 2,
-                      },
-                      end: {
-                        line: 5,
-                        character: 20,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 5,
-                        character: 2,
-                      },
-                      end: {
-                        line: 5,
-                        character: 5,
-                      },
-                    },
-                  },
-                  {
-                    name: 'foo',
                     kind: 7,
+                    name: 'obj',
                     range: {
-                      start: {
-                        line: 4,
-                        character: 2,
-                      },
                       end: {
-                        line: 4,
-                        character: 10,
+                        character: 24,
+                        line: 6,
+                      },
+                      start: {
+                        character: 2,
+                        line: 6,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 4,
-                        character: 2,
-                      },
                       end: {
-                        line: 4,
                         character: 5,
+                        line: 6,
+                      },
+                      start: {
+                        character: 2,
+                        line: 6,
                       },
                     },
                   },
                   {
-                    name: 'C',
-                    kind: 5,
+                    kind: 6,
+                    name: 'bar',
                     range: {
-                      start: {
-                        line: 3,
-                        character: 2,
-                      },
                       end: {
-                        line: 3,
-                        character: 13,
+                        character: 20,
+                        line: 5,
+                      },
+                      start: {
+                        character: 2,
+                        line: 5,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 3,
-                        character: 2,
-                      },
                       end: {
+                        character: 5,
+                        line: 5,
+                      },
+                      start: {
+                        character: 2,
+                        line: 5,
+                      },
+                    },
+                  },
+                  {
+                    kind: 7,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 10,
+                        line: 4,
+                      },
+                      start: {
+                        character: 2,
+                        line: 4,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 4,
+                      },
+                      start: {
+                        character: 2,
+                        line: 4,
+                      },
+                    },
+                  },
+                  {
+                    kind: 5,
+                    name: 'C',
+                    range: {
+                      end: {
+                        character: 13,
                         line: 3,
+                      },
+                      start: {
+                        character: 2,
+                        line: 3,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
                         character: 3,
+                        line: 3,
+                      },
+                      start: {
+                        character: 2,
+                        line: 3,
                       },
                     },
                   },
                 ],
-              },
-              {
-                name: 'Y',
-                kind: 5,
+                kind: 13,
+                name: 'x',
                 range: {
-                  start: {
-                    line: 9,
-                    character: 0,
-                  },
                   end: {
-                    line: 19,
                     character: 1,
+                    line: 7,
+                  },
+                  start: {
+                    character: 6,
+                    line: 2,
                   },
                 },
                 selectionRange: {
-                  start: {
-                    line: 9,
-                    character: 6,
-                  },
                   end: {
-                    line: 9,
                     character: 7,
+                    line: 2,
+                  },
+                  start: {
+                    character: 6,
+                    line: 2,
                   },
                 },
+              },
+              {
                 children: [
                   {
-                    name: 'Z',
-                    kind: 5,
-                    range: {
-                      start: {
-                        line: 16,
-                        character: 2,
-                      },
-                      end: {
-                        line: 18,
-                        character: 3,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 16,
-                        character: 2,
-                      },
-                      end: {
-                        line: 16,
-                        character: 3,
-                      },
-                    },
                     children: [
                       {
+                        kind: 6,
                         name: 'zmeth',
-                        kind: 6,
                         range: {
-                          start: {
-                            line: 17,
-                            character: 4,
-                          },
                           end: {
-                            line: 17,
                             character: 14,
-                          },
-                        },
-                        selectionRange: {
-                          start: {
                             line: 17,
+                          },
+                          start: {
                             character: 4,
-                          },
-                          end: {
                             line: 17,
+                          },
+                        },
+                        selectionRange: {
+                          end: {
                             character: 9,
+                            line: 17,
+                          },
+                          start: {
+                            character: 4,
+                            line: 17,
                           },
                         },
                       },
                     ],
+                    kind: 5,
+                    name: 'Z',
+                    range: {
+                      end: {
+                        character: 3,
+                        line: 18,
+                      },
+                      start: {
+                        character: 2,
+                        line: 16,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 3,
+                        line: 16,
+                      },
+                      start: {
+                        character: 2,
+                        line: 16,
+                      },
+                    },
                   },
                   {
+                    kind: 7,
                     name: '(set) abc',
-                    kind: 7,
                     range: {
-                      start: {
-                        line: 15,
-                        character: 2,
-                      },
                       end: {
-                        line: 15,
                         character: 23,
+                        line: 15,
+                      },
+                      start: {
+                        character: 2,
+                        line: 15,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 15,
-                        character: 6,
-                      },
                       end: {
-                        line: 15,
                         character: 9,
+                        line: 15,
+                      },
+                      start: {
+                        character: 6,
+                        line: 15,
                       },
                     },
                   },
                   {
+                    kind: 7,
                     name: '(get) abc',
-                    kind: 7,
                     range: {
-                      start: {
-                        line: 14,
-                        character: 2,
-                      },
                       end: {
-                        line: 14,
                         character: 14,
+                        line: 14,
+                      },
+                      start: {
+                        character: 2,
+                        line: 14,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 14,
-                        character: 6,
-                      },
                       end: {
-                        line: 14,
                         character: 9,
+                        line: 14,
+                      },
+                      start: {
+                        character: 6,
+                        line: 14,
                       },
                     },
                   },
                   {
+                    kind: 7,
                     name: '#baz',
-                    kind: 7,
                     range: {
-                      start: {
-                        line: 13,
-                        character: 2,
-                      },
                       end: {
-                        line: 13,
                         character: 15,
+                        line: 13,
+                      },
+                      start: {
+                        character: 2,
+                        line: 13,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 13,
-                        character: 2,
-                      },
                       end: {
-                        line: 13,
                         character: 6,
+                        line: 13,
+                      },
+                      start: {
+                        character: 2,
+                        line: 13,
                       },
                     },
                   },
                   {
-                    name: 'bar',
                     kind: 7,
+                    name: 'bar',
                     range: {
-                      start: {
-                        line: 12,
-                        character: 2,
-                      },
                       end: {
-                        line: 12,
                         character: 12,
+                        line: 12,
+                      },
+                      start: {
+                        character: 2,
+                        line: 12,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 12,
-                        character: 2,
-                      },
                       end: {
-                        line: 12,
                         character: 5,
+                        line: 12,
+                      },
+                      start: {
+                        character: 2,
+                        line: 12,
                       },
                     },
                   },
                   {
-                    name: 'foo',
                     kind: 6,
+                    name: 'foo',
                     range: {
-                      start: {
-                        line: 11,
-                        character: 2,
-                      },
                       end: {
-                        line: 11,
                         character: 10,
+                        line: 11,
+                      },
+                      start: {
+                        character: 2,
+                        line: 11,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 11,
-                        character: 2,
-                      },
                       end: {
-                        line: 11,
                         character: 5,
+                        line: 11,
+                      },
+                      start: {
+                        character: 2,
+                        line: 11,
                       },
                     },
                   },
                   {
+                    kind: 6,
                     name: '#foo',
-                    kind: 6,
                     range: {
-                      start: {
-                        line: 10,
-                        character: 2,
-                      },
                       end: {
-                        line: 10,
                         character: 11,
+                        line: 10,
+                      },
+                      start: {
+                        character: 2,
+                        line: 10,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 10,
-                        character: 2,
-                      },
                       end: {
-                        line: 10,
                         character: 6,
+                        line: 10,
+                      },
+                      start: {
+                        character: 2,
+                        line: 10,
                       },
                     },
                   },
                 ],
+                kind: 5,
+                name: 'Y',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 19,
+                  },
+                  start: {
+                    character: 0,
+                    line: 9,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 7,
+                    line: 9,
+                  },
+                  start: {
+                    character: 6,
+                    line: 9,
+                  },
+                },
               },
               {
+                children: [
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 10,
+                        line: 22,
+                      },
+                      start: {
+                        character: 2,
+                        line: 22,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 22,
+                      },
+                      start: {
+                        character: 2,
+                        line: 22,
+                      },
+                    },
+                  },
+                ],
+                kind: 5,
                 name: 'z',
-                kind: 5,
                 range: {
-                  start: {
-                    line: 21,
-                    character: 6,
-                  },
                   end: {
+                    character: 2,
                     line: 23,
-                    character: 2,
+                  },
+                  start: {
+                    character: 6,
+                    line: 21,
                   },
                 },
                 selectionRange: {
-                  start: {
-                    line: 21,
-                    character: 6,
-                  },
                   end: {
-                    line: 21,
                     character: 7,
+                    line: 21,
+                  },
+                  start: {
+                    character: 6,
+                    line: 21,
                   },
                 },
+              },
+              {
                 children: [
                   {
-                    name: 'foo',
                     kind: 6,
+                    name: 'foo',
                     range: {
-                      start: {
-                        line: 22,
-                        character: 2,
-                      },
                       end: {
-                        line: 22,
                         character: 10,
+                        line: 26,
+                      },
+                      start: {
+                        character: 2,
+                        line: 26,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 22,
-                        character: 2,
-                      },
                       end: {
-                        line: 22,
                         character: 5,
+                        line: 26,
+                      },
+                      start: {
+                        character: 2,
+                        line: 26,
                       },
                     },
                   },
                 ],
-              },
-              {
+                kind: 5,
                 name: 'Z1',
-                kind: 5,
                 range: {
-                  start: {
-                    line: 25,
-                    character: 6,
-                  },
                   end: {
+                    character: 1,
                     line: 27,
-                    character: 1,
+                  },
+                  start: {
+                    character: 6,
+                    line: 25,
                   },
                 },
                 selectionRange: {
-                  start: {
-                    line: 25,
-                    character: 6,
-                  },
                   end: {
-                    line: 25,
                     character: 8,
+                    line: 25,
+                  },
+                  start: {
+                    character: 6,
+                    line: 25,
                   },
                 },
+              },
+              {
                 children: [
                   {
-                    name: 'foo',
                     kind: 6,
+                    name: 'foo',
                     range: {
-                      start: {
-                        line: 26,
-                        character: 2,
-                      },
                       end: {
-                        line: 26,
                         character: 10,
+                        line: 30,
+                      },
+                      start: {
+                        character: 2,
+                        line: 30,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 26,
-                        character: 2,
-                      },
                       end: {
-                        line: 26,
                         character: 5,
+                        line: 30,
+                      },
+                      start: {
+                        character: 2,
+                        line: 30,
                       },
                     },
                   },
                 ],
-              },
-              {
+                kind: 5,
                 name: 'Z2',
-                kind: 5,
                 range: {
-                  start: {
-                    line: 29,
-                    character: 6,
-                  },
                   end: {
+                    character: 2,
                     line: 31,
-                    character: 2,
+                  },
+                  start: {
+                    character: 6,
+                    line: 29,
                   },
                 },
                 selectionRange: {
-                  start: {
-                    line: 29,
-                    character: 6,
-                  },
                   end: {
-                    line: 29,
                     character: 8,
+                    line: 29,
+                  },
+                  start: {
+                    character: 6,
+                    line: 29,
                   },
                 },
+              },
+              {
                 children: [
                   {
-                    name: 'foo',
                     kind: 6,
+                    name: 'foo',
                     range: {
-                      start: {
-                        line: 30,
-                        character: 2,
-                      },
                       end: {
-                        line: 30,
                         character: 10,
+                        line: 34,
+                      },
+                      start: {
+                        character: 2,
+                        line: 34,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 30,
-                        character: 2,
-                      },
                       end: {
-                        line: 30,
                         character: 5,
+                        line: 34,
+                      },
+                      start: {
+                        character: 2,
+                        line: 34,
                       },
                     },
                   },
                 ],
-              },
-              {
+                kind: 5,
                 name: 'Z3',
-                kind: 5,
                 range: {
-                  start: {
-                    line: 33,
-                    character: 6,
-                  },
                   end: {
+                    character: 1,
                     line: 35,
-                    character: 1,
+                  },
+                  start: {
+                    character: 6,
+                    line: 33,
                   },
                 },
                 selectionRange: {
-                  start: {
-                    line: 33,
-                    character: 6,
-                  },
                   end: {
-                    line: 33,
                     character: 8,
+                    line: 33,
+                  },
+                  start: {
+                    character: 6,
+                    line: 33,
                   },
                 },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 34,
-                        character: 2,
-                      },
-                      end: {
-                        line: 34,
-                        character: 10,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 34,
-                        character: 2,
-                      },
-                      end: {
-                        line: 34,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
               },
               {
-                name: 'z4',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 38,
-                    character: 6,
-                  },
-                  end: {
-                    line: 40,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 38,
-                    character: 6,
-                  },
-                  end: {
-                    line: 38,
-                    character: 8,
-                  },
-                },
                 children: [
                   {
-                    name: 'Z4',
-                    kind: 5,
-                    range: {
-                      start: {
-                        line: 38,
-                        character: 11,
-                      },
-                      end: {
-                        line: 40,
-                        character: 1,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 38,
-                        character: 17,
-                      },
-                      end: {
-                        line: 38,
-                        character: 19,
-                      },
-                    },
                     children: [
                       {
-                        name: 'foo',
                         kind: 6,
+                        name: 'foo',
                         range: {
-                          start: {
-                            line: 39,
-                            character: 2,
-                          },
                           end: {
-                            line: 39,
                             character: 10,
-                          },
-                        },
-                        selectionRange: {
-                          start: {
                             line: 39,
+                          },
+                          start: {
                             character: 2,
-                          },
-                          end: {
                             line: 39,
+                          },
+                        },
+                        selectionRange: {
+                          end: {
                             character: 5,
+                            line: 39,
+                          },
+                          start: {
+                            character: 2,
+                            line: 39,
                           },
                         },
                       },
                     ],
-                  },
-                ],
-              },
-              {
-                name: 'Z5',
-                kind: 5,
-                range: {
-                  start: {
-                    line: 42,
-                    character: 0,
-                  },
-                  end: {
-                    line: 44,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 42,
-                    character: 14,
-                  },
-                  end: {
-                    line: 42,
-                    character: 16,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 6,
+                    kind: 5,
+                    name: 'Z4',
                     range: {
-                      start: {
-                        line: 43,
-                        character: 2,
-                      },
                       end: {
-                        line: 43,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 43,
-                        character: 2,
-                      },
-                      end: {
-                        line: 43,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'Z6',
-                kind: 5,
-                range: {
-                  start: {
-                    line: 46,
-                    character: 15,
-                  },
-                  end: {
-                    line: 48,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 46,
-                    character: 21,
-                  },
-                  end: {
-                    line: 46,
-                    character: 23,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 47,
-                        character: 2,
-                      },
-                      end: {
-                        line: 47,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 47,
-                        character: 2,
-                      },
-                      end: {
-                        line: 47,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'Z7',
-                kind: 5,
-                range: {
-                  start: {
-                    line: 50,
-                    character: 7,
-                  },
-                  end: {
-                    line: 52,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 50,
-                    character: 13,
-                  },
-                  end: {
-                    line: 50,
-                    character: 15,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 51,
-                        character: 2,
-                      },
-                      end: {
-                        line: 51,
-                        character: 10,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 51,
-                        character: 2,
-                      },
-                      end: {
-                        line: 51,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'f1',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 54,
-                    character: 0,
-                  },
-                  end: {
-                    line: 56,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 54,
-                    character: 9,
-                  },
-                  end: {
-                    line: 54,
-                    character: 11,
-                  },
-                },
-                children: [
-                  {
-                    name: 'f1_x',
-                    kind: 13,
-                    range: {
-                      start: {
-                        line: 55,
-                        character: 8,
-                      },
-                      end: {
-                        line: 55,
-                        character: 18,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 55,
-                        character: 8,
-                      },
-                      end: {
-                        line: 55,
-                        character: 12,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'f2',
-                kind: 6,
-                range: {
-                  start: {
-                    line: 58,
-                    character: 6,
-                  },
-                  end: {
-                    line: 60,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 58,
-                    character: 6,
-                  },
-                  end: {
-                    line: 58,
-                    character: 8,
-                  },
-                },
-                children: [
-                  {
-                    name: 'f2_x',
-                    kind: 13,
-                    range: {
-                      start: {
-                        line: 59,
-                        character: 8,
-                      },
-                      end: {
-                        line: 59,
-                        character: 18,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 59,
-                        character: 8,
-                      },
-                      end: {
-                        line: 59,
-                        character: 12,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'f3',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 62,
-                    character: 6,
-                  },
-                  end: {
-                    line: 64,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 62,
-                    character: 6,
-                  },
-                  end: {
-                    line: 62,
-                    character: 8,
-                  },
-                },
-                children: [
-                  {
-                    name: 'f3_expr',
-                    kind: 12,
-                    range: {
-                      start: {
-                        line: 62,
-                        character: 11,
-                      },
-                      end: {
-                        line: 64,
                         character: 1,
+                        line: 40,
                       },
-                    },
-                    selectionRange: {
                       start: {
-                        line: 62,
-                        character: 20,
-                      },
-                      end: {
-                        line: 62,
-                        character: 27,
-                      },
-                    },
-                    children: [
-                      {
-                        name: 'f3_x',
-                        kind: 13,
-                        range: {
-                          start: {
-                            line: 63,
-                            character: 8,
-                          },
-                          end: {
-                            line: 63,
-                            character: 18,
-                          },
-                        },
-                        selectionRange: {
-                          start: {
-                            line: 63,
-                            character: 8,
-                          },
-                          end: {
-                            line: 63,
-                            character: 12,
-                          },
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                name: 'f4',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 66,
-                    character: 0,
-                  },
-                  end: {
-                    line: 66,
-                    character: 28,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 66,
-                    character: 17,
-                  },
-                  end: {
-                    line: 66,
-                    character: 19,
-                  },
-                },
-              },
-              {
-                name: 'f5',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 68,
-                    character: 15,
-                  },
-                  end: {
-                    line: 68,
-                    character: 35,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 68,
-                    character: 24,
-                  },
-                  end: {
-                    line: 68,
-                    character: 26,
-                  },
-                },
-              },
-              {
-                name: 'f6',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 70,
-                    character: 7,
-                  },
-                  end: {
-                    line: 72,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 70,
-                    character: 16,
-                  },
-                  end: {
-                    line: 70,
-                    character: 18,
-                  },
-                },
-                children: [
-                  {
-                    name: 'f6_x',
-                    kind: 13,
-                    range: {
-                      start: {
-                        line: 71,
-                        character: 8,
-                      },
-                      end: {
-                        line: 71,
-                        character: 18,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 71,
-                        character: 8,
-                      },
-                      end: {
-                        line: 71,
-                        character: 12,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: '<function>',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 74,
-                    character: 1,
-                  },
-                  end: {
-                    line: 76,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 74,
-                    character: 1,
-                  },
-                  end: {
-                    line: 76,
-                    character: 1,
-                  },
-                },
-                children: [
-                  {
-                    name: 'iife_x',
-                    kind: 13,
-                    range: {
-                      start: {
-                        line: 75,
-                        character: 8,
-                      },
-                      end: {
-                        line: 75,
-                        character: 20,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 75,
-                        character: 8,
-                      },
-                      end: {
-                        line: 75,
-                        character: 14,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'T1',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 78,
-                    character: 0,
-                  },
-                  end: {
-                    line: 83,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 78,
-                    character: 5,
-                  },
-                  end: {
-                    line: 78,
-                    character: 7,
-                  },
-                },
-                children: [
-                  {
-                    name: '[[call]]',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 82,
-                        character: 2,
-                      },
-                      end: {
-                        line: 82,
-                        character: 16,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 82,
-                        character: 4,
-                      },
-                      end: {
-                        line: 82,
-                        character: 8,
-                      },
-                    },
-                  },
-                  {
-                    name: '[key]',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 81,
-                        character: 2,
-                      },
-                      end: {
-                        line: 81,
-                        character: 23,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 81,
-                        character: 3,
-                      },
-                      end: {
-                        line: 81,
-                        character: 6,
-                      },
-                    },
-                  },
-                  {
-                    name: 'bar',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 80,
-                        character: 2,
-                      },
-                      end: {
-                        line: 80,
-                        character: 22,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 80,
-                        character: 2,
-                      },
-                      end: {
-                        line: 80,
-                        character: 5,
-                      },
-                    },
-                    children: [
-                      {
-                        name: 'baz',
-                        kind: 7,
-                        range: {
-                          start: {
-                            line: 80,
-                            character: 9,
-                          },
-                          end: {
-                            line: 80,
-                            character: 20,
-                          },
-                        },
-                        selectionRange: {
-                          start: {
-                            line: 80,
-                            character: 9,
-                          },
-                          end: {
-                            line: 80,
-                            character: 12,
-                          },
-                        },
-                      },
-                    ],
-                  },
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 79,
-                        character: 2,
-                      },
-                      end: {
-                        line: 79,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 79,
-                        character: 2,
-                      },
-                      end: {
-                        line: 79,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'I1',
-                kind: 11,
-                range: {
-                  start: {
-                    line: 85,
-                    character: 0,
-                  },
-                  end: {
-                    line: 89,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 85,
-                    character: 10,
-                  },
-                  end: {
-                    line: 85,
-                    character: 12,
-                  },
-                },
-                children: [
-                  {
-                    name: '[key]',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 88,
-                        character: 2,
-                      },
-                      end: {
-                        line: 88,
-                        character: 23,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 88,
-                        character: 3,
-                      },
-                      end: {
-                        line: 88,
-                        character: 6,
-                      },
-                    },
-                  },
-                  {
-                    name: 'bar',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 87,
-                        character: 2,
-                      },
-                      end: {
-                        line: 87,
-                        character: 22,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 87,
-                        character: 2,
-                      },
-                      end: {
-                        line: 87,
-                        character: 5,
-                      },
-                    },
-                    children: [
-                      {
-                        name: 'baz',
-                        kind: 7,
-                        range: {
-                          start: {
-                            line: 87,
-                            character: 9,
-                          },
-                          end: {
-                            line: 87,
-                            character: 20,
-                          },
-                        },
-                        selectionRange: {
-                          start: {
-                            line: 87,
-                            character: 9,
-                          },
-                          end: {
-                            line: 87,
-                            character: 12,
-                          },
-                        },
-                      },
-                    ],
-                  },
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 86,
-                        character: 2,
-                      },
-                      end: {
-                        line: 86,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 86,
-                        character: 2,
-                      },
-                      end: {
-                        line: 86,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'I2',
-                kind: 11,
-                range: {
-                  start: {
-                    line: 91,
-                    character: 0,
-                  },
-                  end: {
-                    line: 93,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 91,
-                    character: 18,
-                  },
-                  end: {
-                    line: 91,
-                    character: 20,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 92,
-                        character: 2,
-                      },
-                      end: {
-                        line: 92,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 92,
-                        character: 2,
-                      },
-                      end: {
-                        line: 92,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'I3',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 95,
-                    character: 0,
-                  },
-                  end: {
-                    line: 97,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 95,
-                    character: 5,
-                  },
-                  end: {
-                    line: 95,
-                    character: 7,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 6,
-                    range: {
-                      start: {
-                        line: 96,
-                        character: 2,
-                      },
-                      end: {
-                        line: 96,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 96,
-                        character: 2,
-                      },
-                      end: {
-                        line: 96,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'I4',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 99,
-                    character: 0,
-                  },
-                  end: {
-                    line: 101,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 99,
-                    character: 12,
-                  },
-                  end: {
-                    line: 99,
-                    character: 14,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 100,
-                        character: 2,
-                      },
-                      end: {
-                        line: 100,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 100,
-                        character: 2,
-                      },
-                      end: {
-                        line: 100,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'I5',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 103,
-                    character: 0,
-                  },
-                  end: {
-                    line: 105,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 103,
-                    character: 20,
-                  },
-                  end: {
-                    line: 103,
-                    character: 22,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 104,
-                        character: 2,
-                      },
-                      end: {
-                        line: 104,
-                        character: 13,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 104,
-                        character: 2,
-                      },
-                      end: {
-                        line: 104,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'decl1',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 107,
-                    character: 0,
-                  },
-                  end: {
-                    line: 107,
-                    character: 35,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 107,
-                    character: 12,
-                  },
-                  end: {
-                    line: 107,
-                    character: 17,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 107,
-                        character: 21,
-                      },
-                      end: {
-                        line: 107,
-                        character: 32,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 107,
-                        character: 21,
-                      },
-                      end: {
-                        line: 107,
-                        character: 24,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'decl2',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 109,
-                    character: 15,
-                  },
-                  end: {
-                    line: 109,
-                    character: 42,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 109,
-                    character: 19,
-                  },
-                  end: {
-                    line: 109,
-                    character: 24,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 109,
-                        character: 28,
-                      },
-                      end: {
-                        line: 109,
-                        character: 39,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 109,
-                        character: 28,
-                      },
-                      end: {
-                        line: 109,
-                        character: 31,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                range: {
-                  start: {
-                    line: 111,
-                    character: 25,
-                  },
-                  end: {
-                    line: 111,
-                    character: 36,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 111,
-                    character: 25,
-                  },
-                  end: {
-                    line: 111,
-                    character: 28,
-                  },
-                },
-              },
-              {
-                name: 'default',
-                kind: 13,
-                range: {
-                  start: {
-                    line: 113,
-                    character: 0,
-                  },
-                  end: {
-                    line: 115,
-                    character: 2,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 113,
-                    character: 7,
-                  },
-                  end: {
-                    line: 113,
-                    character: 14,
-                  },
-                },
-                children: [
-                  {
-                    name: 'foo',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 114,
-                        character: 2,
-                      },
-                      end: {
-                        line: 114,
-                        character: 10,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 114,
-                        character: 2,
-                      },
-                      end: {
-                        line: 114,
-                        character: 5,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'M1',
-                kind: 2,
-                range: {
-                  start: {
-                    line: 117,
-                    character: 0,
-                  },
-                  end: {
-                    line: 119,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 117,
-                    character: 15,
-                  },
-                  end: {
-                    line: 117,
-                    character: 17,
-                  },
-                },
-                children: [
-                  {
-                    name: 'C',
-                    kind: 5,
-                    range: {
-                      start: {
-                        line: 118,
-                        character: 2,
-                      },
-                      end: {
-                        line: 118,
-                        character: 20,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 118,
-                        character: 16,
-                      },
-                      end: {
-                        line: 118,
-                        character: 17,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: '"M2"',
-                kind: 2,
-                range: {
-                  start: {
-                    line: 121,
-                    character: 0,
-                  },
-                  end: {
-                    line: 123,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 121,
-                    character: 15,
-                  },
-                  end: {
-                    line: 121,
-                    character: 19,
-                  },
-                },
-                children: [
-                  {
-                    name: 'C',
-                    kind: 5,
-                    range: {
-                      start: {
-                        line: 122,
-                        character: 2,
-                      },
-                      end: {
-                        line: 122,
-                        character: 20,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 122,
-                        character: 16,
-                      },
-                      end: {
-                        line: 122,
-                        character: 17,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'E1',
-                kind: 10,
-                range: {
-                  start: {
-                    line: 125,
-                    character: 0,
-                  },
-                  end: {
-                    line: 127,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 125,
-                    character: 5,
-                  },
-                  end: {
-                    line: 125,
-                    character: 7,
-                  },
-                },
-                children: [
-                  {
-                    name: 'X',
-                    kind: 22,
-                    range: {
-                      start: {
-                        line: 126,
-                        character: 2,
-                      },
-                      end: {
-                        line: 126,
-                        character: 3,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 126,
-                        character: 2,
-                      },
-                      end: {
-                        line: 126,
-                        character: 3,
-                      },
-                    },
-                  },
-                ],
-              },
-              {
-                name: 'loops',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 129,
-                    character: 0,
-                  },
-                  end: {
-                    line: 133,
-                    character: 1,
-                  },
-                },
-                selectionRange: {
-                  start: {
-                    line: 129,
-                    character: 9,
-                  },
-                  end: {
-                    line: 129,
-                    character: 14,
-                  },
-                },
-                children: [
-                  {
-                    name: 'k',
-                    kind: 13,
-                    range: {
-                      start: {
-                        line: 132,
                         character: 11,
-                      },
-                      end: {
-                        line: 132,
-                        character: 12,
+                        line: 38,
                       },
                     },
                     selectionRange: {
-                      start: {
-                        line: 132,
-                        character: 11,
-                      },
                       end: {
-                        line: 132,
-                        character: 12,
-                      },
-                    },
-                  },
-                  {
-                    name: 'x',
-                    kind: 7,
-                    range: {
-                      start: {
-                        line: 131,
-                        character: 18,
-                      },
-                      end: {
-                        line: 131,
-                        character: 24,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 131,
-                        character: 18,
-                      },
-                      end: {
-                        line: 131,
                         character: 19,
+                        line: 38,
                       },
-                    },
-                  },
-                  {
-                    name: 'j',
-                    kind: 13,
-                    range: {
                       start: {
-                        line: 131,
-                        character: 11,
-                      },
-                      end: {
-                        line: 131,
-                        character: 12,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 131,
-                        character: 11,
-                      },
-                      end: {
-                        line: 131,
-                        character: 12,
-                      },
-                    },
-                  },
-                  {
-                    name: 'i',
-                    kind: 13,
-                    range: {
-                      start: {
-                        line: 130,
-                        character: 11,
-                      },
-                      end: {
-                        line: 130,
-                        character: 16,
-                      },
-                    },
-                    selectionRange: {
-                      start: {
-                        line: 130,
-                        character: 11,
-                      },
-                      end: {
-                        line: 130,
-                        character: 12,
+                        character: 17,
+                        line: 38,
                       },
                     },
                   },
                 ],
-              },
-              {
-                name: 'ComponentFoo',
-                kind: 12,
+                kind: 13,
+                name: 'z4',
                 range: {
-                  start: {
-                    line: 135,
-                    character: 0,
-                  },
                   end: {
-                    line: 135,
-                    character: 27,
+                    character: 1,
+                    line: 40,
+                  },
+                  start: {
+                    character: 6,
+                    line: 38,
                   },
                 },
                 selectionRange: {
-                  start: {
-                    line: 135,
-                    character: 10,
-                  },
                   end: {
-                    line: 135,
-                    character: 22,
+                    character: 8,
+                    line: 38,
+                  },
+                  start: {
+                    character: 6,
+                    line: 38,
                   },
                 },
               },
               {
-                name: 'ComponentBar',
-                kind: 12,
-                range: {
-                  start: {
-                    line: 136,
-                    character: 0,
+                children: [
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 43,
+                      },
+                      start: {
+                        character: 2,
+                        line: 43,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 43,
+                      },
+                      start: {
+                        character: 2,
+                        line: 43,
+                      },
+                    },
                   },
+                ],
+                kind: 5,
+                name: 'Z5',
+                range: {
                   end: {
-                    line: 136,
-                    character: 33,
+                    character: 1,
+                    line: 44,
+                  },
+                  start: {
+                    character: 0,
+                    line: 42,
                   },
                 },
                 selectionRange: {
+                  end: {
+                    character: 16,
+                    line: 42,
+                  },
                   start: {
-                    line: 136,
+                    character: 14,
+                    line: 42,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 47,
+                      },
+                      start: {
+                        character: 2,
+                        line: 47,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 47,
+                      },
+                      start: {
+                        character: 2,
+                        line: 47,
+                      },
+                    },
+                  },
+                ],
+                kind: 5,
+                name: 'Z6',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 48,
+                  },
+                  start: {
+                    character: 15,
+                    line: 46,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 23,
+                    line: 46,
+                  },
+                  start: {
+                    character: 21,
+                    line: 46,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 10,
+                        line: 51,
+                      },
+                      start: {
+                        character: 2,
+                        line: 51,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 51,
+                      },
+                      start: {
+                        character: 2,
+                        line: 51,
+                      },
+                    },
+                  },
+                ],
+                kind: 5,
+                name: 'Z7',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 52,
+                  },
+                  start: {
+                    character: 7,
+                    line: 50,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 15,
+                    line: 50,
+                  },
+                  start: {
+                    character: 13,
+                    line: 50,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 13,
+                    name: 'f1_x',
+                    range: {
+                      end: {
+                        character: 18,
+                        line: 55,
+                      },
+                      start: {
+                        character: 8,
+                        line: 55,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 12,
+                        line: 55,
+                      },
+                      start: {
+                        character: 8,
+                        line: 55,
+                      },
+                    },
+                  },
+                ],
+                kind: 12,
+                name: 'f1',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 56,
+                  },
+                  start: {
+                    character: 0,
+                    line: 54,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 11,
+                    line: 54,
+                  },
+                  start: {
+                    character: 9,
+                    line: 54,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 13,
+                    name: 'f2_x',
+                    range: {
+                      end: {
+                        character: 18,
+                        line: 59,
+                      },
+                      start: {
+                        character: 8,
+                        line: 59,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 12,
+                        line: 59,
+                      },
+                      start: {
+                        character: 8,
+                        line: 59,
+                      },
+                    },
+                  },
+                ],
+                kind: 6,
+                name: 'f2',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 60,
+                  },
+                  start: {
+                    character: 6,
+                    line: 58,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 8,
+                    line: 58,
+                  },
+                  start: {
+                    character: 6,
+                    line: 58,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    children: [
+                      {
+                        kind: 13,
+                        name: 'f3_x',
+                        range: {
+                          end: {
+                            character: 18,
+                            line: 63,
+                          },
+                          start: {
+                            character: 8,
+                            line: 63,
+                          },
+                        },
+                        selectionRange: {
+                          end: {
+                            character: 12,
+                            line: 63,
+                          },
+                          start: {
+                            character: 8,
+                            line: 63,
+                          },
+                        },
+                      },
+                    ],
+                    kind: 12,
+                    name: 'f3_expr',
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 64,
+                      },
+                      start: {
+                        character: 11,
+                        line: 62,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 27,
+                        line: 62,
+                      },
+                      start: {
+                        character: 20,
+                        line: 62,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'f3',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 64,
+                  },
+                  start: {
+                    character: 6,
+                    line: 62,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 8,
+                    line: 62,
+                  },
+                  start: {
+                    character: 6,
+                    line: 62,
+                  },
+                },
+              },
+              {
+                kind: 12,
+                name: 'f4',
+                range: {
+                  end: {
+                    character: 28,
+                    line: 66,
+                  },
+                  start: {
+                    character: 0,
+                    line: 66,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 19,
+                    line: 66,
+                  },
+                  start: {
+                    character: 17,
+                    line: 66,
+                  },
+                },
+              },
+              {
+                kind: 12,
+                name: 'f5',
+                range: {
+                  end: {
+                    character: 35,
+                    line: 68,
+                  },
+                  start: {
+                    character: 15,
+                    line: 68,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 26,
+                    line: 68,
+                  },
+                  start: {
+                    character: 24,
+                    line: 68,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 13,
+                    name: 'f6_x',
+                    range: {
+                      end: {
+                        character: 18,
+                        line: 71,
+                      },
+                      start: {
+                        character: 8,
+                        line: 71,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 12,
+                        line: 71,
+                      },
+                      start: {
+                        character: 8,
+                        line: 71,
+                      },
+                    },
+                  },
+                ],
+                kind: 12,
+                name: 'f6',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 72,
+                  },
+                  start: {
+                    character: 7,
+                    line: 70,
+                  },
+                },
+                selectionRange: {
+                  end: {
                     character: 18,
+                    line: 70,
                   },
+                  start: {
+                    character: 16,
+                    line: 70,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 13,
+                    name: 'iife_x',
+                    range: {
+                      end: {
+                        character: 20,
+                        line: 75,
+                      },
+                      start: {
+                        character: 8,
+                        line: 75,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 14,
+                        line: 75,
+                      },
+                      start: {
+                        character: 8,
+                        line: 75,
+                      },
+                    },
+                  },
+                ],
+                kind: 12,
+                name: '<function>',
+                range: {
                   end: {
+                    character: 1,
+                    line: 76,
+                  },
+                  start: {
+                    character: 1,
+                    line: 74,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 1,
+                    line: 76,
+                  },
+                  start: {
+                    character: 1,
+                    line: 74,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: '[[call]]',
+                    range: {
+                      end: {
+                        character: 16,
+                        line: 82,
+                      },
+                      start: {
+                        character: 2,
+                        line: 82,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 8,
+                        line: 82,
+                      },
+                      start: {
+                        character: 4,
+                        line: 82,
+                      },
+                    },
+                  },
+                  {
+                    kind: 7,
+                    name: '[key]',
+                    range: {
+                      end: {
+                        character: 23,
+                        line: 81,
+                      },
+                      start: {
+                        character: 2,
+                        line: 81,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 6,
+                        line: 81,
+                      },
+                      start: {
+                        character: 3,
+                        line: 81,
+                      },
+                    },
+                  },
+                  {
+                    children: [
+                      {
+                        kind: 7,
+                        name: 'baz',
+                        range: {
+                          end: {
+                            character: 20,
+                            line: 80,
+                          },
+                          start: {
+                            character: 9,
+                            line: 80,
+                          },
+                        },
+                        selectionRange: {
+                          end: {
+                            character: 12,
+                            line: 80,
+                          },
+                          start: {
+                            character: 9,
+                            line: 80,
+                          },
+                        },
+                      },
+                    ],
+                    kind: 7,
+                    name: 'bar',
+                    range: {
+                      end: {
+                        character: 22,
+                        line: 80,
+                      },
+                      start: {
+                        character: 2,
+                        line: 80,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 80,
+                      },
+                      start: {
+                        character: 2,
+                        line: 80,
+                      },
+                    },
+                  },
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 79,
+                      },
+                      start: {
+                        character: 2,
+                        line: 79,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 79,
+                      },
+                      start: {
+                        character: 2,
+                        line: 79,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'T1',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 83,
+                  },
+                  start: {
+                    character: 0,
+                    line: 78,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 7,
+                    line: 78,
+                  },
+                  start: {
+                    character: 5,
+                    line: 78,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: '[key]',
+                    range: {
+                      end: {
+                        character: 23,
+                        line: 88,
+                      },
+                      start: {
+                        character: 2,
+                        line: 88,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 6,
+                        line: 88,
+                      },
+                      start: {
+                        character: 3,
+                        line: 88,
+                      },
+                    },
+                  },
+                  {
+                    children: [
+                      {
+                        kind: 7,
+                        name: 'baz',
+                        range: {
+                          end: {
+                            character: 20,
+                            line: 87,
+                          },
+                          start: {
+                            character: 9,
+                            line: 87,
+                          },
+                        },
+                        selectionRange: {
+                          end: {
+                            character: 12,
+                            line: 87,
+                          },
+                          start: {
+                            character: 9,
+                            line: 87,
+                          },
+                        },
+                      },
+                    ],
+                    kind: 7,
+                    name: 'bar',
+                    range: {
+                      end: {
+                        character: 22,
+                        line: 87,
+                      },
+                      start: {
+                        character: 2,
+                        line: 87,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 87,
+                      },
+                      start: {
+                        character: 2,
+                        line: 87,
+                      },
+                    },
+                  },
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 86,
+                      },
+                      start: {
+                        character: 2,
+                        line: 86,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 86,
+                      },
+                      start: {
+                        character: 2,
+                        line: 86,
+                      },
+                    },
+                  },
+                ],
+                kind: 11,
+                name: 'I1',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 89,
+                  },
+                  start: {
+                    character: 0,
+                    line: 85,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 12,
+                    line: 85,
+                  },
+                  start: {
+                    character: 10,
+                    line: 85,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 92,
+                      },
+                      start: {
+                        character: 2,
+                        line: 92,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 92,
+                      },
+                      start: {
+                        character: 2,
+                        line: 92,
+                      },
+                    },
+                  },
+                ],
+                kind: 11,
+                name: 'I2',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 93,
+                  },
+                  start: {
+                    character: 0,
+                    line: 91,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 20,
+                    line: 91,
+                  },
+                  start: {
+                    character: 18,
+                    line: 91,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 6,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 96,
+                      },
+                      start: {
+                        character: 2,
+                        line: 96,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 96,
+                      },
+                      start: {
+                        character: 2,
+                        line: 96,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'I3',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 97,
+                  },
+                  start: {
+                    character: 0,
+                    line: 95,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 7,
+                    line: 95,
+                  },
+                  start: {
+                    character: 5,
+                    line: 95,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 100,
+                      },
+                      start: {
+                        character: 2,
+                        line: 100,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 100,
+                      },
+                      start: {
+                        character: 2,
+                        line: 100,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'I4',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 101,
+                  },
+                  start: {
+                    character: 0,
+                    line: 99,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 14,
+                    line: 99,
+                  },
+                  start: {
+                    character: 12,
+                    line: 99,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 13,
+                        line: 104,
+                      },
+                      start: {
+                        character: 2,
+                        line: 104,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 104,
+                      },
+                      start: {
+                        character: 2,
+                        line: 104,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'I5',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 105,
+                  },
+                  start: {
+                    character: 0,
+                    line: 103,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 22,
+                    line: 103,
+                  },
+                  start: {
+                    character: 20,
+                    line: 103,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 32,
+                        line: 107,
+                      },
+                      start: {
+                        character: 21,
+                        line: 107,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 24,
+                        line: 107,
+                      },
+                      start: {
+                        character: 21,
+                        line: 107,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'decl1',
+                range: {
+                  end: {
+                    character: 35,
+                    line: 107,
+                  },
+                  start: {
+                    character: 0,
+                    line: 107,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 17,
+                    line: 107,
+                  },
+                  start: {
+                    character: 12,
+                    line: 107,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 39,
+                        line: 109,
+                      },
+                      start: {
+                        character: 28,
+                        line: 109,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 31,
+                        line: 109,
+                      },
+                      start: {
+                        character: 28,
+                        line: 109,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'decl2',
+                range: {
+                  end: {
+                    character: 42,
+                    line: 109,
+                  },
+                  start: {
+                    character: 15,
+                    line: 109,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 24,
+                    line: 109,
+                  },
+                  start: {
+                    character: 19,
+                    line: 109,
+                  },
+                },
+              },
+              {
+                kind: 7,
+                name: 'foo',
+                range: {
+                  end: {
+                    character: 36,
+                    line: 111,
+                  },
+                  start: {
+                    character: 25,
+                    line: 111,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 28,
+                    line: 111,
+                  },
+                  start: {
+                    character: 25,
+                    line: 111,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 7,
+                    name: 'foo',
+                    range: {
+                      end: {
+                        character: 10,
+                        line: 114,
+                      },
+                      start: {
+                        character: 2,
+                        line: 114,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 5,
+                        line: 114,
+                      },
+                      start: {
+                        character: 2,
+                        line: 114,
+                      },
+                    },
+                  },
+                ],
+                kind: 13,
+                name: 'default',
+                range: {
+                  end: {
+                    character: 2,
+                    line: 115,
+                  },
+                  start: {
+                    character: 0,
+                    line: 113,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 14,
+                    line: 113,
+                  },
+                  start: {
+                    character: 7,
+                    line: 113,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 5,
+                    name: 'C',
+                    range: {
+                      end: {
+                        character: 20,
+                        line: 118,
+                      },
+                      start: {
+                        character: 2,
+                        line: 118,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 17,
+                        line: 118,
+                      },
+                      start: {
+                        character: 16,
+                        line: 118,
+                      },
+                    },
+                  },
+                ],
+                kind: 2,
+                name: 'M1',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 119,
+                  },
+                  start: {
+                    character: 0,
+                    line: 117,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 17,
+                    line: 117,
+                  },
+                  start: {
+                    character: 15,
+                    line: 117,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 5,
+                    name: 'C',
+                    range: {
+                      end: {
+                        character: 20,
+                        line: 122,
+                      },
+                      start: {
+                        character: 2,
+                        line: 122,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 17,
+                        line: 122,
+                      },
+                      start: {
+                        character: 16,
+                        line: 122,
+                      },
+                    },
+                  },
+                ],
+                kind: 2,
+                name: '"M2"',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 123,
+                  },
+                  start: {
+                    character: 0,
+                    line: 121,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 19,
+                    line: 121,
+                  },
+                  start: {
+                    character: 15,
+                    line: 121,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 22,
+                    name: 'X',
+                    range: {
+                      end: {
+                        character: 3,
+                        line: 126,
+                      },
+                      start: {
+                        character: 2,
+                        line: 126,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 3,
+                        line: 126,
+                      },
+                      start: {
+                        character: 2,
+                        line: 126,
+                      },
+                    },
+                  },
+                ],
+                kind: 10,
+                name: 'E1',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 127,
+                  },
+                  start: {
+                    character: 0,
+                    line: 125,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 7,
+                    line: 125,
+                  },
+                  start: {
+                    character: 5,
+                    line: 125,
+                  },
+                },
+              },
+              {
+                children: [
+                  {
+                    kind: 13,
+                    name: 'k',
+                    range: {
+                      end: {
+                        character: 12,
+                        line: 132,
+                      },
+                      start: {
+                        character: 11,
+                        line: 132,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 12,
+                        line: 132,
+                      },
+                      start: {
+                        character: 11,
+                        line: 132,
+                      },
+                    },
+                  },
+                  {
+                    kind: 7,
+                    name: 'x',
+                    range: {
+                      end: {
+                        character: 24,
+                        line: 131,
+                      },
+                      start: {
+                        character: 18,
+                        line: 131,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 19,
+                        line: 131,
+                      },
+                      start: {
+                        character: 18,
+                        line: 131,
+                      },
+                    },
+                  },
+                  {
+                    kind: 13,
+                    name: 'j',
+                    range: {
+                      end: {
+                        character: 12,
+                        line: 131,
+                      },
+                      start: {
+                        character: 11,
+                        line: 131,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 12,
+                        line: 131,
+                      },
+                      start: {
+                        character: 11,
+                        line: 131,
+                      },
+                    },
+                  },
+                  {
+                    kind: 13,
+                    name: 'i',
+                    range: {
+                      end: {
+                        character: 16,
+                        line: 130,
+                      },
+                      start: {
+                        character: 11,
+                        line: 130,
+                      },
+                    },
+                    selectionRange: {
+                      end: {
+                        character: 12,
+                        line: 130,
+                      },
+                      start: {
+                        character: 11,
+                        line: 130,
+                      },
+                    },
+                  },
+                ],
+                kind: 12,
+                name: 'loops',
+                range: {
+                  end: {
+                    character: 1,
+                    line: 133,
+                  },
+                  start: {
+                    character: 0,
+                    line: 129,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 14,
+                    line: 129,
+                  },
+                  start: {
+                    character: 9,
+                    line: 129,
+                  },
+                },
+              },
+              {
+                kind: 12,
+                name: 'ComponentFoo',
+                range: {
+                  end: {
+                    character: 27,
+                    line: 135,
+                  },
+                  start: {
+                    character: 0,
+                    line: 135,
+                  },
+                },
+                selectionRange: {
+                  end: {
+                    character: 22,
+                    line: 135,
+                  },
+                  start: {
+                    character: 10,
+                    line: 135,
+                  },
+                },
+              },
+              {
+                kind: 12,
+                name: 'ComponentBar',
+                range: {
+                  end: {
+                    character: 33,
                     line: 136,
+                  },
+                  start: {
+                    character: 0,
+                    line: 136,
+                  },
+                },
+                selectionRange: {
+                  end: {
                     character: 30,
+                    line: 136,
+                  },
+                  start: {
+                    character: 18,
+                    line: 136,
                   },
                 },
               },
@@ -2139,1483 +2139,1483 @@ module.exports = (suite(
             method: 'textDocument/documentSymbol',
             result: [
               {
-                name: 'x',
                 kind: 13,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 2,
-                      character: 6,
-                    },
                     end: {
+                      character: 1,
                       line: 7,
-                      character: 1,
+                    },
+                    start: {
+                      character: 6,
+                      line: 2,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'x',
               },
               {
-                name: 'obj',
+                containerName: 'x',
                 kind: 7,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 6,
-                      character: 2,
-                    },
                     end: {
-                      line: 6,
                       character: 24,
+                      line: 6,
+                    },
+                    start: {
+                      character: 2,
+                      line: 6,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'x',
+                name: 'obj',
               },
               {
-                name: 'nested',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 6,
-                      character: 9,
-                    },
-                    end: {
-                      line: 6,
-                      character: 22,
-                    },
-                  },
-                },
                 containerName: 'obj',
-              },
-              {
-                name: 'bar',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 5,
-                      character: 2,
-                    },
-                    end: {
-                      line: 5,
-                      character: 20,
-                    },
-                  },
-                },
-                containerName: 'x',
-              },
-              {
-                name: 'foo',
                 kind: 7,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 4,
-                      character: 2,
-                    },
                     end: {
-                      line: 4,
+                      character: 22,
+                      line: 6,
+                    },
+                    start: {
+                      character: 9,
+                      line: 6,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'nested',
+              },
+              {
+                containerName: 'x',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 20,
+                      line: 5,
+                    },
+                    start: {
+                      character: 2,
+                      line: 5,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'bar',
+              },
+              {
+                containerName: 'x',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
                       character: 10,
+                      line: 4,
                     },
-                  },
-                },
-                containerName: 'x',
-              },
-              {
-                name: 'C',
-                kind: 5,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
                     start: {
-                      line: 3,
                       character: 2,
-                    },
-                    end: {
-                      line: 3,
-                      character: 13,
+                      line: 4,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'x',
+                name: 'foo',
               },
               {
-                name: 'Y',
+                containerName: 'x',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 9,
-                      character: 0,
-                    },
                     end: {
+                      character: 13,
+                      line: 3,
+                    },
+                    start: {
+                      character: 2,
+                      line: 3,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'C',
+              },
+              {
+                kind: 5,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
                       line: 19,
-                      character: 1,
+                    },
+                    start: {
+                      character: 0,
+                      line: 9,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'Y',
               },
               {
-                name: 'Z',
+                containerName: 'Y',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 16,
-                      character: 2,
-                    },
                     end: {
-                      line: 18,
                       character: 3,
+                      line: 18,
+                    },
+                    start: {
+                      character: 2,
+                      line: 16,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'Y',
+                name: 'Z',
               },
               {
-                name: 'zmeth',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 17,
-                      character: 4,
-                    },
-                    end: {
-                      line: 17,
-                      character: 14,
-                    },
-                  },
-                },
                 containerName: 'Z',
-              },
-              {
-                name: '(set) abc',
-                kind: 7,
+                kind: 6,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 15,
-                      character: 2,
-                    },
                     end: {
-                      line: 15,
-                      character: 23,
-                    },
-                  },
-                },
-                containerName: 'Y',
-              },
-              {
-                name: '(get) abc',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 14,
-                      character: 2,
-                    },
-                    end: {
-                      line: 14,
                       character: 14,
+                      line: 17,
+                    },
+                    start: {
+                      character: 4,
+                      line: 17,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'Y',
+                name: 'zmeth',
               },
               {
+                containerName: 'Y',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 23,
+                      line: 15,
+                    },
+                    start: {
+                      character: 2,
+                      line: 15,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: '(set) abc',
+              },
+              {
+                containerName: 'Y',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 14,
+                      line: 14,
+                    },
+                    start: {
+                      character: 2,
+                      line: 14,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: '(get) abc',
+              },
+              {
+                containerName: 'Y',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 15,
+                      line: 13,
+                    },
+                    start: {
+                      character: 2,
+                      line: 13,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
                 name: '#baz',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 13,
-                      character: 2,
-                    },
-                    end: {
-                      line: 13,
-                      character: 15,
-                    },
-                  },
-                },
-                containerName: 'Y',
               },
               {
-                name: 'bar',
+                containerName: 'Y',
                 kind: 7,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 12,
-                      character: 2,
-                    },
                     end: {
-                      line: 12,
                       character: 12,
+                      line: 12,
+                    },
+                    start: {
+                      character: 2,
+                      line: 12,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'Y',
+                name: 'bar',
               },
               {
-                name: 'foo',
+                containerName: 'Y',
                 kind: 6,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 11,
-                      character: 2,
-                    },
                     end: {
-                      line: 11,
                       character: 10,
+                      line: 11,
+                    },
+                    start: {
+                      character: 2,
+                      line: 11,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'Y',
+                name: 'foo',
               },
               {
+                containerName: 'Y',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 11,
+                      line: 10,
+                    },
+                    start: {
+                      character: 2,
+                      line: 10,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
                 name: '#foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 10,
-                      character: 2,
-                    },
-                    end: {
-                      line: 10,
-                      character: 11,
-                    },
-                  },
-                },
-                containerName: 'Y',
               },
               {
-                name: 'z',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 21,
-                      character: 6,
-                    },
                     end: {
+                      character: 2,
                       line: 23,
-                      character: 2,
+                    },
+                    start: {
+                      character: 6,
+                      line: 21,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'z',
               },
               {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 22,
-                      character: 2,
-                    },
-                    end: {
-                      line: 22,
-                      character: 10,
-                    },
-                  },
-                },
                 containerName: 'z',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 10,
+                      line: 22,
+                    },
+                    start: {
+                      character: 2,
+                      line: 22,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
               },
               {
-                name: 'Z1',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 25,
-                      character: 6,
-                    },
                     end: {
+                      character: 1,
                       line: 27,
-                      character: 1,
+                    },
+                    start: {
+                      character: 6,
+                      line: 25,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'Z1',
               },
               {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 26,
-                      character: 2,
-                    },
-                    end: {
-                      line: 26,
-                      character: 10,
-                    },
-                  },
-                },
                 containerName: 'Z1',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 10,
+                      line: 26,
+                    },
+                    start: {
+                      character: 2,
+                      line: 26,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
               },
               {
-                name: 'Z2',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 29,
-                      character: 6,
-                    },
                     end: {
+                      character: 2,
                       line: 31,
-                      character: 2,
+                    },
+                    start: {
+                      character: 6,
+                      line: 29,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'Z2',
               },
               {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 30,
-                      character: 2,
-                    },
-                    end: {
-                      line: 30,
-                      character: 10,
-                    },
-                  },
-                },
                 containerName: 'Z2',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 10,
+                      line: 30,
+                    },
+                    start: {
+                      character: 2,
+                      line: 30,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
               },
               {
-                name: 'Z3',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 33,
-                      character: 6,
-                    },
                     end: {
+                      character: 1,
                       line: 35,
-                      character: 1,
+                    },
+                    start: {
+                      character: 6,
+                      line: 33,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'Z3',
               },
               {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 34,
-                      character: 2,
-                    },
-                    end: {
-                      line: 34,
-                      character: 10,
-                    },
-                  },
-                },
                 containerName: 'Z3',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 10,
+                      line: 34,
+                    },
+                    start: {
+                      character: 2,
+                      line: 34,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
               },
               {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 40,
+                    },
+                    start: {
+                      character: 6,
+                      line: 38,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
                 name: 'z4',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 38,
-                      character: 6,
-                    },
-                    end: {
-                      line: 40,
-                      character: 1,
-                    },
-                  },
-                },
               },
               {
-                name: 'Z4',
-                kind: 5,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 38,
-                      character: 11,
-                    },
-                    end: {
-                      line: 40,
-                      character: 1,
-                    },
-                  },
-                },
                 containerName: 'z4',
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 39,
-                      character: 2,
-                    },
-                    end: {
-                      line: 39,
-                      character: 10,
-                    },
-                  },
-                },
-                containerName: 'Z4',
-              },
-              {
-                name: 'Z5',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 42,
-                      character: 0,
-                    },
                     end: {
-                      line: 44,
                       character: 1,
+                      line: 40,
                     },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
                     start: {
-                      line: 43,
-                      character: 2,
-                    },
-                    end: {
-                      line: 43,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'Z5',
-              },
-              {
-                name: 'Z6',
-                kind: 5,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 46,
-                      character: 15,
-                    },
-                    end: {
-                      line: 48,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 47,
-                      character: 2,
-                    },
-                    end: {
-                      line: 47,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'Z6',
-              },
-              {
-                name: 'Z7',
-                kind: 5,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 50,
-                      character: 7,
-                    },
-                    end: {
-                      line: 52,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 51,
-                      character: 2,
-                    },
-                    end: {
-                      line: 51,
-                      character: 10,
-                    },
-                  },
-                },
-                containerName: 'Z7',
-              },
-              {
-                name: 'f1',
-                kind: 12,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 54,
-                      character: 0,
-                    },
-                    end: {
-                      line: 56,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'f1_x',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 55,
-                      character: 8,
-                    },
-                    end: {
-                      line: 55,
-                      character: 18,
-                    },
-                  },
-                },
-                containerName: 'f1',
-              },
-              {
-                name: 'f2',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 58,
-                      character: 6,
-                    },
-                    end: {
-                      line: 60,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'f2_x',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 59,
-                      character: 8,
-                    },
-                    end: {
-                      line: 59,
-                      character: 18,
-                    },
-                  },
-                },
-                containerName: 'f2',
-              },
-              {
-                name: 'f3',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 62,
-                      character: 6,
-                    },
-                    end: {
-                      line: 64,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'f3_expr',
-                kind: 12,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 62,
                       character: 11,
-                    },
-                    end: {
-                      line: 64,
-                      character: 1,
+                      line: 38,
                     },
                   },
-                },
-                containerName: 'f3',
-              },
-              {
-                name: 'f3_x',
-                kind: 13,
-                location: {
                   uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 63,
-                      character: 8,
-                    },
-                    end: {
-                      line: 63,
-                      character: 18,
-                    },
-                  },
                 },
-                containerName: 'f3_expr',
+                name: 'Z4',
               },
               {
-                name: 'f4',
-                kind: 12,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 66,
-                      character: 0,
-                    },
-                    end: {
-                      line: 66,
-                      character: 28,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'f5',
-                kind: 12,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 68,
-                      character: 15,
-                    },
-                    end: {
-                      line: 68,
-                      character: 35,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'f6',
-                kind: 12,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 70,
-                      character: 7,
-                    },
-                    end: {
-                      line: 72,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'f6_x',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 71,
-                      character: 8,
-                    },
-                    end: {
-                      line: 71,
-                      character: 18,
-                    },
-                  },
-                },
-                containerName: 'f6',
-              },
-              {
-                name: '<function>',
-                kind: 12,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 74,
-                      character: 1,
-                    },
-                    end: {
-                      line: 76,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'iife_x',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 75,
-                      character: 8,
-                    },
-                    end: {
-                      line: 75,
-                      character: 20,
-                    },
-                  },
-                },
-                containerName: '<function>',
-              },
-              {
-                name: 'T1',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 78,
-                      character: 0,
-                    },
-                    end: {
-                      line: 83,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: '[[call]]',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 82,
-                      character: 2,
-                    },
-                    end: {
-                      line: 82,
-                      character: 16,
-                    },
-                  },
-                },
-                containerName: 'T1',
-              },
-              {
-                name: '[key]',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 81,
-                      character: 2,
-                    },
-                    end: {
-                      line: 81,
-                      character: 23,
-                    },
-                  },
-                },
-                containerName: 'T1',
-              },
-              {
-                name: 'bar',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 80,
-                      character: 2,
-                    },
-                    end: {
-                      line: 80,
-                      character: 22,
-                    },
-                  },
-                },
-                containerName: 'T1',
-              },
-              {
-                name: 'baz',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 80,
-                      character: 9,
-                    },
-                    end: {
-                      line: 80,
-                      character: 20,
-                    },
-                  },
-                },
-                containerName: 'bar',
-              },
-              {
-                name: 'foo',
+                containerName: 'Z4',
                 kind: 6,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 79,
-                      character: 2,
-                    },
                     end: {
-                      line: 79,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'T1',
-              },
-              {
-                name: 'I1',
-                kind: 11,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 85,
-                      character: 0,
-                    },
-                    end: {
-                      line: 89,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: '[key]',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 88,
-                      character: 2,
-                    },
-                    end: {
-                      line: 88,
-                      character: 23,
-                    },
-                  },
-                },
-                containerName: 'I1',
-              },
-              {
-                name: 'bar',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 87,
-                      character: 2,
-                    },
-                    end: {
-                      line: 87,
-                      character: 22,
-                    },
-                  },
-                },
-                containerName: 'I1',
-              },
-              {
-                name: 'baz',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 87,
-                      character: 9,
-                    },
-                    end: {
-                      line: 87,
-                      character: 20,
-                    },
-                  },
-                },
-                containerName: 'bar',
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 86,
-                      character: 2,
-                    },
-                    end: {
-                      line: 86,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'I1',
-              },
-              {
-                name: 'I2',
-                kind: 11,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 91,
-                      character: 0,
-                    },
-                    end: {
-                      line: 93,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 92,
-                      character: 2,
-                    },
-                    end: {
-                      line: 92,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'I2',
-              },
-              {
-                name: 'I3',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 95,
-                      character: 0,
-                    },
-                    end: {
-                      line: 97,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 6,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 96,
-                      character: 2,
-                    },
-                    end: {
-                      line: 96,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'I3',
-              },
-              {
-                name: 'I4',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 99,
-                      character: 0,
-                    },
-                    end: {
-                      line: 101,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 100,
-                      character: 2,
-                    },
-                    end: {
-                      line: 100,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'I4',
-              },
-              {
-                name: 'I5',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 103,
-                      character: 0,
-                    },
-                    end: {
-                      line: 105,
-                      character: 1,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 104,
-                      character: 2,
-                    },
-                    end: {
-                      line: 104,
-                      character: 13,
-                    },
-                  },
-                },
-                containerName: 'I5',
-              },
-              {
-                name: 'decl1',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 107,
-                      character: 0,
-                    },
-                    end: {
-                      line: 107,
-                      character: 35,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 107,
-                      character: 21,
-                    },
-                    end: {
-                      line: 107,
-                      character: 32,
-                    },
-                  },
-                },
-                containerName: 'decl1',
-              },
-              {
-                name: 'decl2',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 109,
-                      character: 15,
-                    },
-                    end: {
-                      line: 109,
-                      character: 42,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 109,
-                      character: 28,
-                    },
-                    end: {
-                      line: 109,
-                      character: 39,
-                    },
-                  },
-                },
-                containerName: 'decl2',
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 111,
-                      character: 25,
-                    },
-                    end: {
-                      line: 111,
-                      character: 36,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'default',
-                kind: 13,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 113,
-                      character: 0,
-                    },
-                    end: {
-                      line: 115,
-                      character: 2,
-                    },
-                  },
-                },
-              },
-              {
-                name: 'foo',
-                kind: 7,
-                location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
-                  range: {
-                    start: {
-                      line: 114,
-                      character: 2,
-                    },
-                    end: {
-                      line: 114,
                       character: 10,
+                      line: 39,
+                    },
+                    start: {
+                      character: 2,
+                      line: 39,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'foo',
+              },
+              {
+                kind: 5,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 44,
+                    },
+                    start: {
+                      character: 0,
+                      line: 42,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'Z5',
+              },
+              {
+                containerName: 'Z5',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 43,
+                    },
+                    start: {
+                      character: 2,
+                      line: 43,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 5,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 48,
+                    },
+                    start: {
+                      character: 15,
+                      line: 46,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'Z6',
+              },
+              {
+                containerName: 'Z6',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 47,
+                    },
+                    start: {
+                      character: 2,
+                      line: 47,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 5,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 52,
+                    },
+                    start: {
+                      character: 7,
+                      line: 50,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'Z7',
+              },
+              {
+                containerName: 'Z7',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 10,
+                      line: 51,
+                    },
+                    start: {
+                      character: 2,
+                      line: 51,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 12,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 56,
+                    },
+                    start: {
+                      character: 0,
+                      line: 54,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f1',
+              },
+              {
+                containerName: 'f1',
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 18,
+                      line: 55,
+                    },
+                    start: {
+                      character: 8,
+                      line: 55,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f1_x',
+              },
+              {
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 60,
+                    },
+                    start: {
+                      character: 6,
+                      line: 58,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f2',
+              },
+              {
+                containerName: 'f2',
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 18,
+                      line: 59,
+                    },
+                    start: {
+                      character: 8,
+                      line: 59,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f2_x',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 64,
+                    },
+                    start: {
+                      character: 6,
+                      line: 62,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f3',
+              },
+              {
+                containerName: 'f3',
+                kind: 12,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 64,
+                    },
+                    start: {
+                      character: 11,
+                      line: 62,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f3_expr',
+              },
+              {
+                containerName: 'f3_expr',
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 18,
+                      line: 63,
+                    },
+                    start: {
+                      character: 8,
+                      line: 63,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f3_x',
+              },
+              {
+                kind: 12,
+                location: {
+                  range: {
+                    end: {
+                      character: 28,
+                      line: 66,
+                    },
+                    start: {
+                      character: 0,
+                      line: 66,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f4',
+              },
+              {
+                kind: 12,
+                location: {
+                  range: {
+                    end: {
+                      character: 35,
+                      line: 68,
+                    },
+                    start: {
+                      character: 15,
+                      line: 68,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f5',
+              },
+              {
+                kind: 12,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 72,
+                    },
+                    start: {
+                      character: 7,
+                      line: 70,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f6',
+              },
+              {
+                containerName: 'f6',
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 18,
+                      line: 71,
+                    },
+                    start: {
+                      character: 8,
+                      line: 71,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'f6_x',
+              },
+              {
+                kind: 12,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 76,
+                    },
+                    start: {
+                      character: 1,
+                      line: 74,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: '<function>',
+              },
+              {
+                containerName: '<function>',
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 20,
+                      line: 75,
+                    },
+                    start: {
+                      character: 8,
+                      line: 75,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'iife_x',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 83,
+                    },
+                    start: {
+                      character: 0,
+                      line: 78,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'T1',
+              },
+              {
+                containerName: 'T1',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 16,
+                      line: 82,
+                    },
+                    start: {
+                      character: 2,
+                      line: 82,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: '[[call]]',
+              },
+              {
+                containerName: 'T1',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 23,
+                      line: 81,
+                    },
+                    start: {
+                      character: 2,
+                      line: 81,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: '[key]',
+              },
+              {
+                containerName: 'T1',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 22,
+                      line: 80,
+                    },
+                    start: {
+                      character: 2,
+                      line: 80,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'bar',
+              },
+              {
+                containerName: 'bar',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 20,
+                      line: 80,
+                    },
+                    start: {
+                      character: 9,
+                      line: 80,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'baz',
+              },
+              {
+                containerName: 'T1',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 79,
+                    },
+                    start: {
+                      character: 2,
+                      line: 79,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 11,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 89,
+                    },
+                    start: {
+                      character: 0,
+                      line: 85,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'I1',
+              },
+              {
+                containerName: 'I1',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 23,
+                      line: 88,
+                    },
+                    start: {
+                      character: 2,
+                      line: 88,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: '[key]',
+              },
+              {
+                containerName: 'I1',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 22,
+                      line: 87,
+                    },
+                    start: {
+                      character: 2,
+                      line: 87,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'bar',
+              },
+              {
+                containerName: 'bar',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 20,
+                      line: 87,
+                    },
+                    start: {
+                      character: 9,
+                      line: 87,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'baz',
+              },
+              {
+                containerName: 'I1',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 86,
+                    },
+                    start: {
+                      character: 2,
+                      line: 86,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 11,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 93,
+                    },
+                    start: {
+                      character: 0,
+                      line: 91,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'I2',
+              },
+              {
+                containerName: 'I2',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 92,
+                    },
+                    start: {
+                      character: 2,
+                      line: 92,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 97,
+                    },
+                    start: {
+                      character: 0,
+                      line: 95,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'I3',
+              },
+              {
+                containerName: 'I3',
+                kind: 6,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 96,
+                    },
+                    start: {
+                      character: 2,
+                      line: 96,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 101,
+                    },
+                    start: {
+                      character: 0,
+                      line: 99,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'I4',
+              },
+              {
+                containerName: 'I4',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 100,
+                    },
+                    start: {
+                      character: 2,
+                      line: 100,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 1,
+                      line: 105,
+                    },
+                    start: {
+                      character: 0,
+                      line: 103,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'I5',
+              },
+              {
+                containerName: 'I5',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 13,
+                      line: 104,
+                    },
+                    start: {
+                      character: 2,
+                      line: 104,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 35,
+                      line: 107,
+                    },
+                    start: {
+                      character: 0,
+                      line: 107,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'decl1',
+              },
+              {
+                containerName: 'decl1',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 32,
+                      line: 107,
+                    },
+                    start: {
+                      character: 21,
+                      line: 107,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 42,
+                      line: 109,
+                    },
+                    start: {
+                      character: 15,
+                      line: 109,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'decl2',
+              },
+              {
+                containerName: 'decl2',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 39,
+                      line: 109,
+                    },
+                    start: {
+                      character: 28,
+                      line: 109,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 36,
+                      line: 111,
+                    },
+                    start: {
+                      character: 25,
+                      line: 111,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
+              },
+              {
+                kind: 13,
+                location: {
+                  range: {
+                    end: {
+                      character: 2,
+                      line: 115,
+                    },
+                    start: {
+                      character: 0,
+                      line: 113,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'default',
+              },
+              {
                 containerName: 'default',
+                kind: 7,
+                location: {
+                  range: {
+                    end: {
+                      character: 10,
+                      line: 114,
+                    },
+                    start: {
+                      character: 2,
+                      line: 114,
+                    },
+                  },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                },
+                name: 'foo',
               },
               {
-                name: 'M1',
                 kind: 2,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 117,
-                      character: 0,
-                    },
                     end: {
+                      character: 1,
                       line: 119,
-                      character: 1,
+                    },
+                    start: {
+                      character: 0,
+                      line: 117,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'M1',
               },
               {
-                name: 'C',
+                containerName: 'M1',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 118,
-                      character: 2,
-                    },
                     end: {
-                      line: 118,
                       character: 20,
+                      line: 118,
+                    },
+                    start: {
+                      character: 2,
+                      line: 118,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'M1',
+                name: 'C',
               },
               {
-                name: '"M2"',
                 kind: 2,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 121,
-                      character: 0,
-                    },
                     end: {
-                      line: 123,
                       character: 1,
+                      line: 123,
+                    },
+                    start: {
+                      character: 0,
+                      line: 121,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: '"M2"',
               },
               {
-                name: 'C',
+                containerName: '"M2"',
                 kind: 5,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 122,
-                      character: 2,
-                    },
                     end: {
-                      line: 122,
                       character: 20,
+                      line: 122,
+                    },
+                    start: {
+                      character: 2,
+                      line: 122,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: '"M2"',
+                name: 'C',
               },
               {
-                name: 'E1',
                 kind: 10,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 125,
-                      character: 0,
-                    },
                     end: {
-                      line: 127,
                       character: 1,
+                      line: 127,
+                    },
+                    start: {
+                      character: 0,
+                      line: 125,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'E1',
               },
               {
-                name: 'X',
+                containerName: 'E1',
                 kind: 22,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 126,
-                      character: 2,
-                    },
                     end: {
-                      line: 126,
                       character: 3,
+                      line: 126,
+                    },
+                    start: {
+                      character: 2,
+                      line: 126,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'E1',
+                name: 'X',
               },
               {
-                name: 'loops',
                 kind: 12,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 129,
-                      character: 0,
-                    },
                     end: {
-                      line: 133,
                       character: 1,
+                      line: 133,
+                    },
+                    start: {
+                      character: 0,
+                      line: 129,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'loops',
               },
               {
-                name: 'k',
+                containerName: 'loops',
                 kind: 13,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 132,
-                      character: 11,
-                    },
                     end: {
-                      line: 132,
                       character: 12,
+                      line: 132,
+                    },
+                    start: {
+                      character: 11,
+                      line: 132,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'loops',
+                name: 'k',
               },
               {
-                name: 'x',
+                containerName: 'loops',
                 kind: 7,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 131,
-                      character: 18,
-                    },
                     end: {
-                      line: 131,
                       character: 24,
+                      line: 131,
+                    },
+                    start: {
+                      character: 18,
+                      line: 131,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'loops',
+                name: 'x',
               },
               {
-                name: 'j',
+                containerName: 'loops',
                 kind: 13,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 131,
-                      character: 11,
-                    },
                     end: {
-                      line: 131,
                       character: 12,
+                      line: 131,
+                    },
+                    start: {
+                      character: 11,
+                      line: 131,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'loops',
+                name: 'j',
               },
               {
-                name: 'i',
+                containerName: 'loops',
                 kind: 13,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 130,
-                      character: 11,
-                    },
                     end: {
-                      line: 130,
                       character: 16,
+                      line: 130,
+                    },
+                    start: {
+                      character: 11,
+                      line: 130,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
-                containerName: 'loops',
+                name: 'i',
               },
               {
-                name: 'ComponentFoo',
                 kind: 12,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 135,
-                      character: 0,
-                    },
                     end: {
-                      line: 135,
                       character: 27,
+                      line: 135,
+                    },
+                    start: {
+                      character: 0,
+                      line: 135,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'ComponentFoo',
               },
               {
-                name: 'ComponentBar',
                 kind: 12,
                 location: {
-                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                   range: {
-                    start: {
-                      line: 136,
-                      character: 0,
-                    },
                     end: {
-                      line: 136,
                       character: 33,
+                      line: 136,
+                    },
+                    start: {
+                      character: 0,
+                      line: 136,
                     },
                   },
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
                 },
+                name: 'ComponentBar',
               },
             ],
           },

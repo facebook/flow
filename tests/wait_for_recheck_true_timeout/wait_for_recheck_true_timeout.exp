@@ -5,8 +5,8 @@ Trigger a 1000s recheck
 
 autocomplete times out:
 {
-  "flowVersion":"<VERSION>",
-  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+  "exit":{"code":3,"msg":"Timeout exceeded, exiting","reason":"Out_of_time"},
+  "flowVersion":"<VERSION>"
 }
 
 
@@ -24,13 +24,13 @@ find-module times out:
 
 get-def times out:
 {
-  "flowVersion":"<VERSION>",
-  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+  "exit":{"code":3,"msg":"Timeout exceeded, exiting","reason":"Out_of_time"},
+  "flowVersion":"<VERSION>"
 }
 
 
 type-at-pos times out:
 {
-  "flowVersion":"<VERSION>",
-  "exit":{"code":3,"reason":"Out_of_time","msg":"Timeout exceeded, exiting"}
+  "exit":{"code":3,"msg":"Timeout exceeded, exiting","reason":"Out_of_time"},
+  "flowVersion":"<VERSION>"
 }

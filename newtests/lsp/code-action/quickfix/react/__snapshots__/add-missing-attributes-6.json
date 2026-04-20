@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add missing attributes",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "add_missing_jsx_props",
+          "Add missing attributes"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/add-missing-attributes.js": [
             {
+              "newText": " foo={foo}",
               "range": {
-                "start": {
-                  "line": 35,
-                  "character": 15
-                },
                 "end": {
-                  "line": 35,
-                  "character": 15
+                  "character": 15,
+                  "line": 35
+                },
+                "start": {
+                  "character": 15,
+                  "line": 35
                 }
-              },
-              "newText": " foo={foo}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "add_missing_jsx_props",
-          "Add missing attributes"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Add missing attributes"
     }
   ]
 }

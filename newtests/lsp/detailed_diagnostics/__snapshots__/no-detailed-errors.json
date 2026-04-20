@@ -1,140 +1,140 @@
 {
   "method": "textDocument/diagnostics",
   "result": {
-    "kind": "full",
     "items": [
       {
+        "code": "incompatible-type",
+        "message": "Cannot assign `3` to `a` because  number [1] is incompatible with  string [2].",
         "range": {
-          "start": {
-            "line": 0,
-            "character": 18
-          },
           "end": {
-            "line": 0,
-            "character": 19
+            "character": 19,
+            "line": 0
+          },
+          "start": {
+            "character": 18,
+            "line": 0
           }
         },
-        "severity": 1,
-        "code": "incompatible-type",
-        "source": "Flow",
-        "message": "Cannot assign `3` to `a` because  number [1] is incompatible with  string [2].",
         "relatedInformation": [
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 0,
-                  "character": 18
-                },
                 "end": {
-                  "line": 0,
-                  "character": 19
+                  "character": 19,
+                  "line": 0
+                },
+                "start": {
+                  "character": 18,
+                  "line": 0
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[1] number"
           },
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 0,
-                  "character": 9
-                },
                 "end": {
-                  "line": 0,
-                  "character": 15
+                  "character": 15,
+                  "line": 0
+                },
+                "start": {
+                  "character": 9,
+                  "line": 0
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[2] string"
           }
-        ]
+        ],
+        "severity": 1,
+        "source": "Flow"
       },
       {
+        "code": "incompatible-type",
+        "message": "Cannot assign `4` to `b` because:\n • Either  number [1] is incompatible with  string [2].\n • Or  number [1] is incompatible with  boolean [3].",
         "range": {
-          "start": {
-            "line": 1,
-            "character": 28
-          },
           "end": {
-            "line": 1,
-            "character": 29
+            "character": 29,
+            "line": 1
+          },
+          "start": {
+            "character": 28,
+            "line": 1
           }
         },
-        "severity": 1,
-        "code": "incompatible-type",
-        "source": "Flow",
-        "message": "Cannot assign `4` to `b` because:\n • Either  number [1] is incompatible with  string [2].\n • Or  number [1] is incompatible with  boolean [3].",
         "relatedInformation": [
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 28
-                },
                 "end": {
-                  "line": 1,
-                  "character": 29
+                  "character": 29,
+                  "line": 1
+                },
+                "start": {
+                  "character": 28,
+                  "line": 1
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[1] number"
           },
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 9
-                },
                 "end": {
-                  "line": 1,
-                  "character": 15
+                  "character": 15,
+                  "line": 1
+                },
+                "start": {
+                  "character": 9,
+                  "line": 1
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[2] string"
           },
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 28
-                },
                 "end": {
-                  "line": 1,
-                  "character": 29
+                  "character": 29,
+                  "line": 1
+                },
+                "start": {
+                  "character": 28,
+                  "line": 1
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[1] number"
           },
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 18
-                },
                 "end": {
-                  "line": 1,
-                  "character": 25
+                  "character": 25,
+                  "line": 1
+                },
+                "start": {
+                  "character": 18,
+                  "line": 1
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[3] boolean"
           }
-        ]
+        ],
+        "severity": 1,
+        "source": "Flow"
       }
-    ]
+    ],
+    "kind": "full"
   }
 }

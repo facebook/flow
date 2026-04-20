@@ -2,69 +2,69 @@
   "method": "textDocument/documentHighlight",
   "result": [
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 27,
-          "character": 4
-        },
         "end": {
-          "line": 27,
-          "character": 12
+          "character": 12,
+          "line": 27
+        },
+        "start": {
+          "character": 4,
+          "line": 27
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 28,
-          "character": 4
-        },
         "end": {
-          "line": 28,
-          "character": 12
+          "character": 12,
+          "line": 28
+        },
+        "start": {
+          "character": 4,
+          "line": 28
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 29,
-          "character": 14
-        },
         "end": {
-          "line": 29,
-          "character": 22
+          "character": 22,
+          "line": 29
+        },
+        "start": {
+          "character": 14,
+          "line": 29
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 30,
-          "character": 2
-        },
         "end": {
-          "line": 30,
-          "character": 10
+          "character": 10,
+          "line": 30
+        },
+        "start": {
+          "character": 2,
+          "line": 30
         }
-      },
-      "kind": 1
+      }
     },
     {
+      "kind": 1,
       "range": {
-        "start": {
-          "line": 32,
-          "character": 1
-        },
         "end": {
-          "line": 32,
-          "character": 9
+          "character": 9,
+          "line": 32
+        },
+        "start": {
+          "character": 1,
+          "line": 32
         }
-      },
-      "kind": 1
+      }
     }
   ]
 }

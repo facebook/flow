@@ -2,70 +2,70 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Insert `await`",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 5,
-                  "character": 4
-                },
-                "end": {
-                  "line": 5,
-                  "character": 9
-                }
-              },
-              "newText": "await foo()"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "insert_await",
           "Insert `await`"
-        ]
-      }
-    },
-    {
-      "title": "Insert `void`",
-      "kind": "quickfix",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
             {
+              "newText": "await foo()",
               "range": {
-                "start": {
-                  "line": 5,
-                  "character": 4
-                },
                 "end": {
-                  "line": 5,
-                  "character": 9
+                  "character": 9,
+                  "line": 5
+                },
+                "start": {
+                  "character": 4,
+                  "line": 5
                 }
-              },
-              "newText": "void foo()"
+              }
             }
           ]
         }
       },
+      "kind": "quickfix",
+      "title": "Insert `await`"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "insert_void",
           "Insert `void`"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-unused-promise.js": [
+            {
+              "newText": "void foo()",
+              "range": {
+                "end": {
+                  "character": 9,
+                  "line": 5
+                },
+                "start": {
+                  "character": 4,
+                  "line": 5
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Insert `void`"
     }
   ]
 }

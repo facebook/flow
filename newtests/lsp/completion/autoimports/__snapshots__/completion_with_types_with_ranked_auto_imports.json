@@ -4,249 +4,249 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "Test",
-        "kind": 6,
-        "detail": "type Test = any",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "Test"
-        },
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "unqualified type: local type identifier",
             {
-              "token": "TAUTO332",
+              "ac_type": "Actype",
+              "completion": "Test",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "Test",
-              "ac_type": "Actype"
+              "token": "TAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "type Test = any",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "Test",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "newText": "Test",
+          "range": {
+            "end": {
+              "character": 13,
+              "line": 2
+            },
+            "start": {
+              "character": 12,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "true",
-        "kind": 6,
-        "detail": "true",
-        "sortText": "00000000000000000001",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "true"
-        },
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "builtin type",
             {
-              "token": "TAUTO332",
+              "ac_type": "Actype",
+              "completion": "true",
               "index": 1,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "true",
-              "ac_type": "Actype"
+              "token": "TAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "true",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "true",
+        "sortText": "00000000000000000001",
+        "textEdit": {
+          "newText": "true",
+          "range": {
+            "end": {
+              "character": 13,
+              "line": 2
+            },
+            "start": {
+              "character": 12,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "$NonMaybeType",
-        "kind": 3,
-        "detail": "$NonMaybeType",
-        "sortText": "00000000000000000002",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "$NonMaybeType"
-        },
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "builtin type",
             {
-              "token": "TAUTO332",
+              "ac_type": "Actype",
+              "completion": "$NonMaybeType",
               "index": 2,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "$NonMaybeType",
-              "ac_type": "Actype"
+              "token": "TAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "$NonMaybeType",
+        "insertTextFormat": 1,
+        "kind": 3,
+        "label": "$NonMaybeType",
+        "sortText": "00000000000000000002",
+        "textEdit": {
+          "newText": "$NonMaybeType",
+          "range": {
+            "end": {
+              "character": 13,
+              "line": 2
+            },
+            "start": {
+              "character": 12,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "T",
-        "kind": 6,
-        "detail": "Import type from ./types",
-        "sortText": "00000000000000000003",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "T"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import type { T } from \"./types\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import type { T } from \"./types\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "TAUTO332",
+              "ac_type": "Actype",
+              "completion": "T",
               "index": 3,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "T",
-              "ac_type": "Actype"
+              "token": "TAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import type from ./types",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "T",
+        "sortText": "00000000000000000003",
+        "textEdit": {
+          "newText": "T",
+          "range": {
+            "end": {
+              "character": 13,
+              "line": 2
+            },
+            "start": {
+              "character": 12,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "TaggedTemplateLiteralArray",
-        "kind": 6,
-        "detail": "(global)",
-        "sortText": "00000000000000000004",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "TaggedTemplateLiteralArray"
-        },
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "global",
             {
-              "token": "TAUTO332",
+              "ac_type": "Actype",
+              "completion": "TaggedTemplateLiteralArray",
               "index": 4,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "TaggedTemplateLiteralArray",
-              "ac_type": "Actype"
+              "token": "TAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "(global)",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "TaggedTemplateLiteralArray",
+        "sortText": "00000000000000000004",
+        "textEdit": {
+          "newText": "TaggedTemplateLiteralArray",
+          "range": {
+            "end": {
+              "character": 13,
+              "line": 2
+            },
+            "start": {
+              "character": 12,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "Toodle",
-        "kind": 6,
-        "detail": "Import type from ./types",
-        "sortText": "00000000000000000005",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 12
-            },
-            "end": {
-              "line": 2,
-              "character": 13
-            }
-          },
-          "newText": "Toodle"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import type { Toodle } from \"./types\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import type { Toodle } from \"./types\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "TAUTO332",
+              "ac_type": "Actype",
+              "completion": "Toodle",
               "index": 5,
               "session_requests": 1,
-              "typed_length": 1,
-              "completion": "Toodle",
-              "ac_type": "Actype"
+              "token": "TAUTO332",
+              "typed_length": 1
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import type from ./types",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "Toodle",
+        "sortText": "00000000000000000005",
+        "textEdit": {
+          "newText": "Toodle",
+          "range": {
+            "end": {
+              "character": 13,
+              "line": 2
+            },
+            "start": {
+              "character": 12,
+              "line": 2
+            }
+          }
         }
       }
     ]

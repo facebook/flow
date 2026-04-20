@@ -2,117 +2,117 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Organize imports",
-      "kind": "source.organizeImports.flow",
-      "diagnostics": [],
       "command": {
-        "title": "",
-        "command": "source.organizeImports:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           {
             "uri": "<PLACEHOLDER_PROJECT_URL>/only-filter.js"
           }
-        ]
-      }
+        ],
+        "command": "source.organizeImports:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "kind": "source.organizeImports.flow",
+      "title": "Organize imports"
     },
     {
-      "title": "Add optional chaining for object that might be `undefined`",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
-                "end": {
-                  "line": 3,
-                  "character": 7
-                }
-              },
-              "newText": "foo?.bar"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "add_optional_chaining",
           "Add optional chaining for object that might be `undefined`"
-        ]
-      }
-    },
-    {
-      "title": "Extract to constant in module scope",
-      "kind": "refactor.extract",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
             {
+              "newText": "foo?.bar",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
                 "end": {
-                  "line": 3,
-                  "character": 8
+                  "character": 7,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
                 }
-              },
-              "newText": "const newLocal = foo.bar;\nnewLocal;"
+              }
             }
           ]
         }
       },
+      "kind": "quickfix",
+      "title": "Add optional chaining for object that might be `undefined`"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "refactor_extract",
           "Extract to constant in module scope"
-        ]
-      }
-    },
-    {
-      "title": "Insert inferred type as a type cast",
-      "kind": "refactor",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
             {
+              "newText": "const newLocal = foo.bar;\nnewLocal;",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
                 "end": {
-                  "line": 3,
-                  "character": 7
+                  "character": 8,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
                 }
-              },
-              "newText": "foo.bar as any | number"
+              }
             }
           ]
         }
       },
+      "kind": "refactor.extract",
+      "title": "Extract to constant in module scope"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "insert_inferred_type_as_cast",
           "Insert inferred type as a type cast"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/only-filter.js": [
+            {
+              "newText": "foo.bar as any | number",
+              "range": {
+                "end": {
+                  "character": 7,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "refactor",
+      "title": "Insert inferred type as a type cast"
     }
   ]
 }

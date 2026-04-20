@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Remove",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_unused_pattern",
+          "Remove"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-array-rest.js": [
             {
+              "newText": "[0]",
               "range": {
-                "start": {
-                  "line": 5,
-                  "character": 2
-                },
                 "end": {
-                  "line": 5,
-                  "character": 10
+                  "character": 10,
+                  "line": 5
+                },
+                "start": {
+                  "character": 2,
+                  "line": 5
                 }
-              },
-              "newText": "[0]"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_match_unused_pattern",
-          "Remove"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Remove"
     }
   ]
 }

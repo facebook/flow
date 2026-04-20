@@ -1,1606 +1,1606 @@
 {
   "method": "textDocument/diagnostics",
   "result": {
-    "kind": "full",
     "items": [
       {
-        "range": {
-          "start": {
-            "line": 0,
-            "character": 18
-          },
-          "end": {
-            "line": 0,
-            "character": 19
-          }
-        },
-        "severity": 1,
         "code": "incompatible-type",
-        "source": "Flow",
-        "message": "Cannot assign `3` to `a` because  number [1] is incompatible with  string [2].",
-        "relatedInformation": [
-          {
-            "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
-              "range": {
-                "start": {
-                  "line": 0,
-                  "character": 18
-                },
-                "end": {
-                  "line": 0,
-                  "character": 19
-                }
-              }
-            },
-            "message": "[1] number"
-          },
-          {
-            "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
-              "range": {
-                "start": {
-                  "line": 0,
-                  "character": 9
-                },
-                "end": {
-                  "line": 0,
-                  "character": 15
-                }
-              }
-            },
-            "message": "[2] string"
-          }
-        ],
         "data": {
-          "version": 0,
           "rendered": [
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ file_with_simple_error.js:1:19"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "Cannot"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "assign"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "bold",
-                "color": "default"
+                "color": "default",
+                "type": "bold"
               },
               "text": "3"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "to"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "bold",
-                "color": "default"
+                "color": "default",
+                "type": "bold"
               },
               "text": "a"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "because"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "underline",
-                "color": "default"
+                "color": "default",
+                "type": "underline"
               },
               "text": "number"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "1"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "is"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "incompatible"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "with"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "underline",
-                "color": "default"
+                "color": "default",
+                "type": "underline"
               },
               "text": "string"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "2"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "."
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "incompatible-type"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "file_with_simple_error.js:1:19"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "1"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "│"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "const a: string = "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "3"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": ";"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "      "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "                  ^"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": " [1]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\nReferences:\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "file_with_simple_error.js:1:10"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "1"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "│"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "const a: "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "string"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": " = 3;"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "      "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "         ^^^^^^"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": " [2]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             }
-          ]
-        }
-      },
-      {
+          ],
+          "version": 0
+        },
+        "message": "Cannot assign `3` to `a` because  number [1] is incompatible with  string [2].",
         "range": {
-          "start": {
-            "line": 1,
-            "character": 28
-          },
           "end": {
-            "line": 1,
-            "character": 29
+            "character": 19,
+            "line": 0
+          },
+          "start": {
+            "character": 18,
+            "line": 0
           }
         },
-        "severity": 1,
-        "code": "incompatible-type",
-        "source": "Flow",
-        "message": "Cannot assign `4` to `b` because:\n • Either  number [1] is incompatible with  string [2].\n • Or  number [1] is incompatible with  boolean [3].",
         "relatedInformation": [
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 28
-                },
                 "end": {
-                  "line": 1,
-                  "character": 29
+                  "character": 19,
+                  "line": 0
+                },
+                "start": {
+                  "character": 18,
+                  "line": 0
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[1] number"
           },
           {
             "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 9
-                },
                 "end": {
-                  "line": 1,
-                  "character": 15
+                  "character": 15,
+                  "line": 0
+                },
+                "start": {
+                  "character": 9,
+                  "line": 0
                 }
-              }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
             "message": "[2] string"
-          },
-          {
-            "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
-              "range": {
-                "start": {
-                  "line": 1,
-                  "character": 28
-                },
-                "end": {
-                  "line": 1,
-                  "character": 29
-                }
-              }
-            },
-            "message": "[1] number"
-          },
-          {
-            "location": {
-              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
-              "range": {
-                "start": {
-                  "line": 1,
-                  "character": 18
-                },
-                "end": {
-                  "line": 1,
-                  "character": 25
-                }
-              }
-            },
-            "message": "[3] boolean"
           }
         ],
+        "severity": 1,
+        "source": "Flow"
+      },
+      {
+        "code": "incompatible-type",
         "data": {
-          "version": 0,
           "rendered": [
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ file_with_simple_error.js:2:29"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "Cannot"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "assign"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "bold",
-                "color": "default"
+                "color": "default",
+                "type": "bold"
               },
               "text": "4"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "to"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "bold",
-                "color": "default"
+                "color": "default",
+                "type": "bold"
               },
               "text": "b"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "because"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ":"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "incompatible-type"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " • "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "Either"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "underline",
-                "color": "default"
+                "color": "default",
+                "type": "underline"
               },
               "text": "number"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "1"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "is"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "incompatible"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "with"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "underline",
-                "color": "default"
+                "color": "default",
+                "type": "underline"
               },
               "text": "string"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "2"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "."
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " • "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "Or"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "underline",
-                "color": "default"
+                "color": "default",
+                "type": "underline"
               },
               "text": "number"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "1"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "is"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "incompatible"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "with"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": ""
             },
             {
               "style": {
-                "type": "underline",
-                "color": "default"
+                "color": "default",
+                "type": "underline"
               },
               "text": "boolean"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "["
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "3"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "."
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "file_with_simple_error.js:2:29"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "2"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "│"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "const b: string | boolean = "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "4"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": ";"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "      "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": "                            ^"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "red"
+                "color": "red",
+                "type": "normal"
               },
               "text": " [1]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\nReferences:\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "file_with_simple_error.js:2:10"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "2"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "│"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "const b: "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "string"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": " | boolean = 4;"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "      "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "         ^^^^^^"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": " [2]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "file_with_simple_error.js:2:19"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "   "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "2"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "│"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": " "
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": "const b: string | "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "boolean"
             },
             {
               "style": {
-                "type": "dim",
-                "color": "default"
+                "color": "default",
+                "type": "dim"
               },
               "text": " = 4;"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "      "
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": "                  ^^^^^^^"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "cyan"
+                "color": "cyan",
+                "type": "normal"
               },
               "text": " [3]"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             },
             {
               "style": {
-                "type": "normal",
-                "color": "default"
+                "color": "default",
+                "type": "normal"
               },
               "text": "\n"
             }
-          ]
-        }
+          ],
+          "version": 0
+        },
+        "message": "Cannot assign `4` to `b` because:\n • Either  number [1] is incompatible with  string [2].\n • Or  number [1] is incompatible with  boolean [3].",
+        "range": {
+          "end": {
+            "character": 29,
+            "line": 1
+          },
+          "start": {
+            "character": 28,
+            "line": 1
+          }
+        },
+        "relatedInformation": [
+          {
+            "location": {
+              "range": {
+                "end": {
+                  "character": 29,
+                  "line": 1
+                },
+                "start": {
+                  "character": 28,
+                  "line": 1
+                }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
+            },
+            "message": "[1] number"
+          },
+          {
+            "location": {
+              "range": {
+                "end": {
+                  "character": 15,
+                  "line": 1
+                },
+                "start": {
+                  "character": 9,
+                  "line": 1
+                }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
+            },
+            "message": "[2] string"
+          },
+          {
+            "location": {
+              "range": {
+                "end": {
+                  "character": 29,
+                  "line": 1
+                },
+                "start": {
+                  "character": 28,
+                  "line": 1
+                }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
+            },
+            "message": "[1] number"
+          },
+          {
+            "location": {
+              "range": {
+                "end": {
+                  "character": 25,
+                  "line": 1
+                },
+                "start": {
+                  "character": 18,
+                  "line": 1
+                }
+              },
+              "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
+            },
+            "message": "[3] boolean"
+          }
+        ],
+        "severity": 1,
+        "source": "Flow"
       }
-    ]
+    ],
+    "kind": "full"
   }
 }

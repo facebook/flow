@@ -2,70 +2,70 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add optional chaining for object that might be `null`",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
-                "end": {
-                  "line": 3,
-                  "character": 7
-                }
-              },
-              "newText": "foo?.bar"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "add_optional_chaining",
           "Add optional chaining for object that might be `null`"
-        ]
-      }
-    },
-    {
-      "title": "Add optional chaining for object that might be `undefined`",
-      "kind": "quickfix",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js": [
             {
+              "newText": "foo?.bar",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 0
-                },
                 "end": {
-                  "line": 3,
-                  "character": 7
+                  "character": 7,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
                 }
-              },
-              "newText": "foo?.bar"
+              }
             }
           ]
         }
       },
+      "kind": "quickfix",
+      "title": "Add optional chaining for object that might be `null`"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "add_optional_chaining",
           "Add optional chaining for object that might be `undefined`"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js": [
+            {
+              "newText": "foo?.bar",
+              "range": {
+                "end": {
+                  "character": 7,
+                  "line": 3
+                },
+                "start": {
+                  "character": 0,
+                  "line": 3
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Add optional chaining for object that might be `undefined`"
     }
   ]
 }

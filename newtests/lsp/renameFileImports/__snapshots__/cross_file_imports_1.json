@@ -2,75 +2,75 @@
   "method": "flow/renameFileImports",
   "result": {
     "changes": {
-      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/requires.js": [
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/imports.js": [
         {
+          "newText": "\"NEW_NAME\"",
           "range": {
-            "start": {
-              "line": 4,
-              "character": 54
-            },
             "end": {
-              "line": 4,
-              "character": 72
+              "character": 48,
+              "line": 4
+            },
+            "start": {
+              "character": 32,
+              "line": 4
             }
-          },
-          "newText": "\"m#NEW_NAME\""
+          }
         },
         {
+          "newText": "\"NEW_NAME\"",
           "range": {
-            "start": {
-              "line": 2,
-              "character": 22
-            },
             "end": {
-              "line": 2,
-              "character": 38
+              "character": 34,
+              "line": 2
+            },
+            "start": {
+              "character": 18,
+              "line": 2
             }
-          },
-          "newText": "\"NEW_NAME\""
+          }
         }
       ],
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/imports_1.js": [
         {
+          "newText": "\"NEW_NAME\"",
           "range": {
-            "start": {
-              "line": 2,
-              "character": 18
-            },
             "end": {
-              "line": 2,
-              "character": 34
+              "character": 34,
+              "line": 2
+            },
+            "start": {
+              "character": 18,
+              "line": 2
             }
-          },
-          "newText": "\"NEW_NAME\""
+          }
         }
       ],
-      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/imports.js": [
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/requires.js": [
         {
+          "newText": "\"m#NEW_NAME\"",
           "range": {
-            "start": {
-              "line": 4,
-              "character": 32
-            },
             "end": {
-              "line": 4,
-              "character": 48
+              "character": 72,
+              "line": 4
+            },
+            "start": {
+              "character": 54,
+              "line": 4
             }
-          },
-          "newText": "\"NEW_NAME\""
+          }
         },
         {
+          "newText": "\"NEW_NAME\"",
           "range": {
-            "start": {
-              "line": 2,
-              "character": 18
-            },
             "end": {
-              "line": 2,
-              "character": 34
+              "character": 38,
+              "line": 2
+            },
+            "start": {
+              "character": 22,
+              "line": 2
             }
-          },
-          "newText": "\"NEW_NAME\""
+          }
         }
       ]
     }

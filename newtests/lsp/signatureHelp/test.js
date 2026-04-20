@@ -39,6 +39,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: mixed): void',
@@ -49,8 +51,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -68,6 +68,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: mixed): void',
@@ -78,8 +80,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -113,6 +113,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(a: string, f: F, b: number): void',
@@ -129,8 +131,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -164,6 +164,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(arg[0]: string, arg[1]: number): void',
@@ -177,8 +179,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -196,6 +196,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(params[0]: string, params[1]: number): void',
@@ -209,8 +211,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -228,6 +228,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(foo: string, bar: number): void',
@@ -241,8 +243,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -260,6 +260,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(foo: string, bar: number): void',
@@ -273,8 +275,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -292,6 +292,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(foo: string, arg[1]: number): void',
@@ -305,8 +307,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -324,6 +324,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(foo: string, params[1]: number): void',
@@ -337,8 +339,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -358,35 +358,35 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(bar: string, baz: number): void',
                   documentation: {
                     kind: 'markdown',
                     value:
                       '\n foo\n\n**@unrecognized**  this tag is unrecognized',
                   },
+                  label: '(bar: string, baz: number): void',
                   parameters: [
                     {
-                      label: 'bar: string',
                       documentation: {
                         kind: 'markdown',
                         value: 'bar -  the first summand',
                       },
+                      label: 'bar: string',
                     },
                     {
-                      label: 'baz: number',
                       documentation: {
                         kind: 'markdown',
                         value:
                           'baz -  the second and third summands\nbaz.x (optional)  -  the second summand\nbaz.y (optional, defaults to 0)  -  the third summand',
                       },
+                      label: 'baz: number',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -406,26 +406,26 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: string): void',
                   documentation: {
                     kind: 'markdown',
                     value: '\n foo',
                   },
+                  label: '(x: string): void',
                   parameters: [
                     {
-                      label: 'x: string',
                       documentation: {
                         kind: 'markdown',
                         value: 'x - a string',
                       },
+                      label: 'x: string',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -445,26 +445,26 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(y: number): void',
                   documentation: {
                     kind: 'markdown',
                     value: '\n bar',
                   },
+                  label: '(y: number): void',
                   parameters: [
                     {
-                      label: 'y: number',
                       documentation: {
                         kind: 'markdown',
                         value: 'y - a number',
                       },
+                      label: 'y: number',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -484,26 +484,26 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(z: bigint): void',
                   documentation: {
                     kind: 'markdown',
                     value: '\n baz',
                   },
+                  label: '(z: bigint): void',
                   parameters: [
                     {
-                      label: 'z: bigint',
                       documentation: {
                         kind: 'markdown',
                         value: 'z - a bigint',
                       },
+                      label: 'z: bigint',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -523,33 +523,33 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: string, y: number): void',
                   documentation: {
                     kind: 'markdown',
                     value: '\n constructor docs',
                   },
+                  label: '(x: string, y: number): void',
                   parameters: [
                     {
-                      label: 'x: string',
                       documentation: {
                         kind: 'markdown',
                         value: 'x - is an x',
                       },
+                      label: 'x: string',
                     },
                     {
-                      label: 'y: number',
                       documentation: {
                         kind: 'markdown',
                         value: 'y - does a y',
                       },
+                      label: 'y: number',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -569,26 +569,26 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: string): void',
                   documentation: {
                     kind: 'markdown',
                     value: '\n variable declaration',
                   },
+                  label: '(x: string): void',
                   parameters: [
                     {
-                      label: 'x: string',
                       documentation: {
                         kind: 'markdown',
                         value: 'x - is a string',
                       },
+                      label: 'x: string',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -608,6 +608,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: string): void',
@@ -618,8 +620,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -639,6 +639,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: string): void',
@@ -649,8 +651,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -670,6 +670,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: string): void',
@@ -680,8 +682,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -701,6 +701,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: string): void',
@@ -711,8 +713,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -732,6 +732,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: string): void',
@@ -742,8 +744,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -763,6 +763,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: string): void',
@@ -773,8 +775,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -794,29 +794,29 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1, y: 2): 1',
                   parameters: [
                     {
-                      label: 'x: 1',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param',
+                        value: 'x -  1st param',
                       },
+                      label: 'x: 1',
                     },
                     {
-                      label: 'y: 2',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param',
+                        value: 'y -  2nd param',
                       },
+                      label: 'y: 2',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -836,29 +836,29 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1, y: 2): 1',
                   parameters: [
                     {
-                      label: 'x: 1',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param',
+                        value: 'x -  1st param',
                       },
+                      label: 'x: 1',
                     },
                     {
-                      label: 'y: 2',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param',
+                        value: 'y -  2nd param',
                       },
+                      label: 'y: 2',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -878,6 +878,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -903,8 +905,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -924,6 +924,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -949,8 +951,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -970,6 +970,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -995,8 +997,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1016,6 +1016,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1041,8 +1043,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1062,6 +1062,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1087,8 +1089,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1108,6 +1108,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1133,8 +1135,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1154,6 +1154,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1179,8 +1181,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1200,6 +1200,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1225,8 +1227,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1246,6 +1246,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1271,8 +1273,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1292,6 +1292,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1317,8 +1319,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1338,6 +1338,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1363,8 +1365,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1384,6 +1384,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1409,8 +1411,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1430,6 +1430,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1455,8 +1457,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1476,6 +1476,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1501,8 +1503,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1522,6 +1522,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1547,8 +1549,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1568,6 +1568,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(): void',
@@ -1593,8 +1595,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1614,6 +1614,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1): 1',
@@ -1632,8 +1634,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1653,6 +1653,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1): 1',
@@ -1671,8 +1673,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1692,6 +1692,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1): 1',
@@ -1710,8 +1712,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1731,6 +1731,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1): void',
@@ -1749,8 +1751,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1770,6 +1770,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: X): void',
@@ -1788,8 +1790,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1809,6 +1809,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: 1): void',
@@ -1827,8 +1829,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1848,56 +1848,56 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: 10, y: 11): 1',
                   documentation: {
                     kind: 'markdown',
                     value: '\n first overload',
                   },
+                  label: '(x: 10, y: 11): 1',
                   parameters: [
                     {
-                      label: 'x: 10',
                       documentation: {
                         kind: 'markdown',
                         value: 'x -  1st param of first overload',
                       },
+                      label: 'x: 10',
                     },
                     {
-                      label: 'y: 11',
                       documentation: {
                         kind: 'markdown',
                         value: 'y -  2nd param of first overload',
                       },
+                      label: 'y: 11',
                     },
                   ],
                 },
                 {
-                  label: '(x: 20, y: 21): 2',
                   documentation: {
                     kind: 'markdown',
                     value: '\n second overload',
                   },
+                  label: '(x: 20, y: 21): 2',
                   parameters: [
                     {
-                      label: 'x: 20',
                       documentation: {
                         kind: 'markdown',
                         value: 'x -  1st param of second overload',
                       },
+                      label: 'x: 20',
                     },
                     {
-                      label: 'y: 21',
                       documentation: {
                         kind: 'markdown',
                         value: 'y -  2nd param of second overload',
                       },
+                      label: 'y: 21',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -1917,56 +1917,56 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: 10, y: 11): 1',
                   documentation: {
                     kind: 'markdown',
                     value: '\n first overload',
                   },
+                  label: '(x: 10, y: 11): 1',
                   parameters: [
                     {
-                      label: 'x: 10',
                       documentation: {
                         kind: 'markdown',
                         value: 'x -  1st param of first overload',
                       },
+                      label: 'x: 10',
                     },
                     {
-                      label: 'y: 11',
                       documentation: {
                         kind: 'markdown',
                         value: 'y -  2nd param of first overload',
                       },
+                      label: 'y: 11',
                     },
                   ],
                 },
                 {
-                  label: '(x: 20, y: 21): 2',
                   documentation: {
                     kind: 'markdown',
                     value: '\n second overload',
                   },
+                  label: '(x: 20, y: 21): 2',
                   parameters: [
                     {
-                      label: 'x: 20',
                       documentation: {
                         kind: 'markdown',
                         value: 'x -  1st param of second overload',
                       },
+                      label: 'x: 20',
                     },
                     {
-                      label: 'y: 21',
                       documentation: {
                         kind: 'markdown',
                         value: 'y -  2nd param of second overload',
                       },
+                      label: 'y: 21',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -1986,56 +1986,56 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: 10, y: 11): 1',
                   documentation: {
                     kind: 'markdown',
                     value: '\n first overload',
                   },
+                  label: '(x: 10, y: 11): 1',
                   parameters: [
                     {
-                      label: 'x: 10',
                       documentation: {
                         kind: 'markdown',
                         value: 'x -  1st param of first overload',
                       },
+                      label: 'x: 10',
                     },
                     {
-                      label: 'y: 11',
                       documentation: {
                         kind: 'markdown',
                         value: 'y -  2nd param of first overload',
                       },
+                      label: 'y: 11',
                     },
                   ],
                 },
                 {
-                  label: '(x: 20, y: 21): 2',
                   documentation: {
                     kind: 'markdown',
                     value: '\n second overload',
                   },
+                  label: '(x: 20, y: 21): 2',
                   parameters: [
                     {
-                      label: 'x: 20',
                       documentation: {
                         kind: 'markdown',
                         value: 'x -  1st param of second overload',
                       },
+                      label: 'x: 20',
                     },
                     {
-                      label: 'y: 21',
                       documentation: {
                         kind: 'markdown',
                         value: 'y -  2nd param of second overload',
                       },
+                      label: 'y: 21',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2055,6 +2055,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2071,8 +2073,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2092,6 +2092,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2109,8 +2111,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2130,6 +2130,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2147,8 +2149,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2168,6 +2168,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2184,8 +2186,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2205,6 +2205,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2222,8 +2224,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2243,6 +2243,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2260,8 +2262,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2282,6 +2282,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2298,8 +2300,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2319,6 +2319,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2336,8 +2338,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2357,6 +2357,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2374,8 +2376,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2396,6 +2396,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2412,8 +2414,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2433,6 +2433,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2450,8 +2452,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2471,6 +2471,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2488,8 +2490,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2510,6 +2510,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2526,8 +2528,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2547,6 +2547,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2564,8 +2566,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2585,6 +2585,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2602,8 +2604,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2624,6 +2624,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2640,8 +2642,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2661,6 +2661,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2678,8 +2680,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2699,6 +2699,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2716,8 +2718,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2738,6 +2738,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: '(x: void, y: void, z: Array<void>): void',
@@ -2754,8 +2756,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2775,6 +2775,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 1,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2792,8 +2794,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 1,
             },
           },
         ],
@@ -2813,6 +2813,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 2,
+              activeSignature: 0,
               signatures: [
                 {
                   label:
@@ -2830,8 +2832,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 2,
             },
           },
         ],
@@ -2851,6 +2851,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -2861,8 +2863,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2883,6 +2883,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -2893,8 +2895,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2915,6 +2915,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -2925,8 +2927,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2947,6 +2947,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -2957,8 +2959,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -2979,6 +2979,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -2989,8 +2991,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3011,6 +3011,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: P',
@@ -3021,8 +3023,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3043,6 +3043,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: P',
@@ -3053,8 +3055,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3075,6 +3075,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3085,8 +3087,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3107,6 +3107,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3117,8 +3119,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3139,6 +3139,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3157,8 +3159,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3179,6 +3179,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3197,8 +3199,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3219,6 +3219,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3237,8 +3239,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3259,6 +3259,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number & boolean',
@@ -3269,8 +3271,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3291,6 +3291,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: boolean & string',
@@ -3301,8 +3303,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3323,6 +3323,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3341,8 +3343,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3363,18 +3363,26 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo?: string',
-                  parameters: [{label: 'foo?: string'}],
+                  parameters: [
+                    {
+                      label: 'foo?: string',
+                    },
+                  ],
                 },
                 {
                   label: 'foo: boolean',
-                  parameters: [{label: 'foo: boolean'}],
+                  parameters: [
+                    {
+                      label: 'foo: boolean',
+                    },
+                  ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3395,6 +3403,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
@@ -3405,8 +3415,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3427,6 +3435,8 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: () => PropsA["foo"]',
@@ -3437,8 +3447,6 @@ module.exports = (suite(
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3459,9 +3467,9 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
-              signatures: [],
-              activeSignature: 0,
               activeParameter: 0,
+              activeSignature: 0,
+              signatures: [],
             },
           },
         ],
@@ -3482,23 +3490,23 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
                   parameters: [
                     {
-                      label: 'foo: number',
                       documentation: {
                         kind: 'markdown',
                         value:
                           '\n This is documentation for Props1.foo property',
                       },
+                      label: 'foo: number',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],
@@ -3518,17 +3526,19 @@ module.exports = (suite(
           {
             method: 'textDocument/signatureHelp',
             result: {
+              activeParameter: 0,
+              activeSignature: 0,
               signatures: [
                 {
                   label: 'foo: number',
                   parameters: [
                     {
-                      label: 'foo: number',
                       documentation: {
                         kind: 'markdown',
                         value:
                           '\n This is documentation for Props1.foo property',
                       },
+                      label: 'foo: number',
                     },
                   ],
                 },
@@ -3536,18 +3546,16 @@ module.exports = (suite(
                   label: 'foo: string',
                   parameters: [
                     {
-                      label: 'foo: string',
                       documentation: {
                         kind: 'markdown',
                         value:
                           '\n This is documentation for Props2.foo property',
                       },
+                      label: 'foo: string',
                     },
                   ],
                 },
               ],
-              activeSignature: 0,
-              activeParameter: 0,
             },
           },
         ],

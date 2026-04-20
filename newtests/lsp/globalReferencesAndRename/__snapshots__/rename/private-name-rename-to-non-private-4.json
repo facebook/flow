@@ -4,30 +4,30 @@
     "changes": {
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/private-name.js": [
         {
+          "newText": "NEW_NAME = 1;",
           "range": {
-            "start": {
-              "line": 15,
-              "character": 2
-            },
             "end": {
-              "line": 15,
-              "character": 11
+              "character": 11,
+              "line": 15
+            },
+            "start": {
+              "character": 2,
+              "line": 15
             }
-          },
-          "newText": "NEW_NAME = 1;"
+          }
         },
         {
+          "newText": "this.NEW_NAME",
           "range": {
-            "start": {
-              "line": 23,
-              "character": 4
-            },
             "end": {
-              "line": 23,
-              "character": 13
+              "character": 13,
+              "line": 23
+            },
+            "start": {
+              "character": 4,
+              "line": 23
             }
-          },
-          "newText": "this.NEW_NAME"
+          }
         }
       ]
     }

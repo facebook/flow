@@ -4,156 +4,156 @@
     "isIncomplete": false,
     "items": [
       {
-        "label": "AllTheThings",
-        "kind": 6,
-        "detail": "Import default from ./AllTheThings",
-        "sortText": "00000000000000000000",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 3
-            }
-          },
-          "newText": "AllTheThings"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import AllTheThings from \"./AllTheThings\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import AllTheThings from \"./AllTheThings\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "AllAUTO332",
+              "ac_type": "Acid",
+              "completion": "AllTheThings",
               "index": 0,
               "session_requests": 1,
-              "typed_length": 3,
-              "completion": "AllTheThings",
-              "ac_type": "Acid"
+              "token": "AllAUTO332",
+              "typed_length": 3
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import default from ./AllTheThings",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "AllTheThings",
+        "sortText": "00000000000000000000",
+        "textEdit": {
+          "newText": "AllTheThings",
+          "range": {
+            "end": {
+              "character": 3,
+              "line": 2
+            },
+            "start": {
+              "character": 0,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "AllTheThings",
-        "kind": 6,
-        "detail": "Import from ./AllTheThings",
-        "sortText": "00000000000000000001",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 3
-            }
-          },
-          "newText": "AllTheThings"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import { AllTheThings } from \"./AllTheThings\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import { AllTheThings } from \"./AllTheThings\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "AllAUTO332",
+              "ac_type": "Acid",
+              "completion": "AllTheThings",
               "index": 1,
               "session_requests": 1,
-              "typed_length": 3,
-              "completion": "AllTheThings",
-              "ac_type": "Acid"
+              "token": "AllAUTO332",
+              "typed_length": 3
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import from ./AllTheThings",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "AllTheThings",
+        "sortText": "00000000000000000001",
+        "textEdit": {
+          "newText": "AllTheThings",
+          "range": {
+            "end": {
+              "character": 3,
+              "line": 2
+            },
+            "start": {
+              "character": 0,
+              "line": 2
+            }
+          }
         }
       },
       {
-        "label": "AllTheThings",
-        "kind": 6,
-        "detail": "Import * from ./AllTheThings",
-        "sortText": "00000000000000000002",
-        "insertTextFormat": 1,
-        "textEdit": {
-          "range": {
-            "start": {
-              "line": 2,
-              "character": 0
-            },
-            "end": {
-              "line": 2,
-              "character": 3
-            }
-          },
-          "newText": "AllTheThings"
-        },
         "additionalTextEdits": [
           {
+            "newText": "import * as AllTheThings from \"./AllTheThings\";\n\n",
             "range": {
-              "start": {
-                "line": 2,
-                "character": 0
-              },
               "end": {
-                "line": 2,
-                "character": 0
+                "character": 0,
+                "line": 2
+              },
+              "start": {
+                "character": 0,
+                "line": 2
               }
-            },
-            "newText": "import * as AllTheThings from \"./AllTheThings\";\n\n"
+            }
           }
         ],
         "command": {
-          "title": "",
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
           "arguments": [
             "textDocument/completion",
             "autoimport",
             {
-              "token": "AllAUTO332",
+              "ac_type": "Acid",
+              "completion": "AllTheThings",
               "index": 2,
               "session_requests": 1,
-              "typed_length": 3,
-              "completion": "AllTheThings",
-              "ac_type": "Acid"
+              "token": "AllAUTO332",
+              "typed_length": 3
             }
-          ]
+          ],
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "title": ""
+        },
+        "detail": "Import * from ./AllTheThings",
+        "insertTextFormat": 1,
+        "kind": 6,
+        "label": "AllTheThings",
+        "sortText": "00000000000000000002",
+        "textEdit": {
+          "newText": "AllTheThings",
+          "range": {
+            "end": {
+              "character": 3,
+              "line": 2
+            },
+            "start": {
+              "character": 0,
+              "line": 2
+            }
+          }
         }
       }
     ]

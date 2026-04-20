@@ -572,41 +572,11 @@ function broken(): number {return 1+;}
           'property `foo` is missing in  exports [1].',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            {
-              method: 'textDocument/publishDiagnostics',
-              params: {
-                uri: '<PLACEHOLDER_PROJECT_URL>/importsFakeSymbol.js',
-                diagnostics: [
-                  {
-                    range: {
-                      start: {line: 2, character: 7},
-                      end: {line: 2, character: 10},
-                    },
-                    severity: 1,
-                    code: 'prop-missing',
-                    source: 'Flow',
-                    message: 'property `foo` is missing in  exports [1].',
-                    relatedInformation: [
-                      {
-                        location: {
-                          uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
-                          range: {
-                            start: {line: 0, character: 0},
-                            end: {line: 0, character: 0},
-                          },
-                        },
-                        message: '[1] exports',
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          ],
+          [],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
     ]),

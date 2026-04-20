@@ -2,50 +2,50 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Switch to `renders*`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "switch_to_renders_star",
+          "Switch to `renders*`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/invalid-renders.js": [
             {
+              "newText": "renders*",
               "range": {
-                "start": {
-                  "line": 12,
-                  "character": 13
-                },
                 "end": {
-                  "line": 12,
-                  "character": 20
+                  "character": 20,
+                  "line": 12
+                },
+                "start": {
+                  "character": 13,
+                  "line": 12
                 }
-              },
-              "newText": "renders*"
+              }
             },
             {
+              "newText": "Foo",
               "range": {
-                "start": {
-                  "line": 12,
-                  "character": 22
-                },
                 "end": {
-                  "line": 12,
-                  "character": 52
+                  "character": 52,
+                  "line": 12
+                },
+                "start": {
+                  "character": 22,
+                  "line": 12
                 }
-              },
-              "newText": "Foo"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "switch_to_renders_star",
-          "Switch to `renders*`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Switch to `renders*`"
     }
   ]
 }

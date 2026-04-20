@@ -212,36 +212,36 @@ type UnionPoly = renders (Poly | Poly2)
 render_types.js:35:6,35:14
 
 render_types.js:8:7 = {
-  "types":{
-    "unevaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{"provenance":{"kind":"Local","loc":"render_types.js:8:6"},"name":"Z"},
-        "typeParams":null,
-        "body":{
-          "kind":"Renders",
-          "argument":{
-            "kind":"Generic",
-            "type":{"provenance":{"kind":"Local","loc":"render_types.js:5:11-13"},"name":"Foo"},
-            "generic_kind":"component"
-          },
-          "variant":"normal"
-        }
-      },
-      "type":"type Z = renders Foo"
-    },
-    "evaluated":null
-  },
-  "reasons":[],
+  "end":6,
+  "endline":8,
+  "line":8,
   "loc":{
+    "end":{"column":6,"line":8,"offset":142},
     "source":"render_types.js",
-    "type":"SourceFile",
-    "start":{"line":8,"column":6,"offset":141},
-    "end":{"line":8,"column":6,"offset":142}
+    "start":{"column":6,"line":8,"offset":141},
+    "type":"SourceFile"
   },
   "path":"render_types.js",
-  "line":8,
-  "endline":8,
+  "reasons":[],
   "start":6,
-  "end":6
+  "types":{
+    "evaluated":null,
+    "unevaluated":{
+      "expanded":{
+        "body":{
+          "argument":{
+            "generic_kind":"component",
+            "kind":"Generic",
+            "type":{"name":"Foo","provenance":{"kind":"Local","loc":"render_types.js:5:11-13"}}
+          },
+          "kind":"Renders",
+          "variant":"normal"
+        },
+        "kind":"TypeAlias",
+        "name":{"name":"Z","provenance":{"kind":"Local","loc":"render_types.js:8:6"}},
+        "typeParams":null
+      },
+      "type":"type Z = renders Foo"
+    }
+  }
 }

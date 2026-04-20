@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Refactor `switch` to `match`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_switch_to_match",
+          "Refactor `switch` to `match`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/refactor-switch-to-match-expression-returned.js": [
             {
+              "newText": "return match (x) {\n    0 => \"a\",\n    1 | 2 => \"b\",\n    _ => \"c\",\n  };",
               "range": {
-                "start": {
-                  "line": 3,
-                  "character": 2
-                },
                 "end": {
-                  "line": 11,
-                  "character": 3
+                  "character": 3,
+                  "line": 11
+                },
+                "start": {
+                  "character": 2,
+                  "line": 3
                 }
-              },
-              "newText": "return match (x) {\n    0 => \"a\",\n    1 | 2 => \"b\",\n    _ => \"c\",\n  };"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "refactor_switch_to_match",
-          "Refactor `switch` to `match`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Refactor `switch` to `match`"
     }
   ]
 }

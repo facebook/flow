@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Fix invalid record syntax",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_record_invalid_syntax",
+          "Fix invalid record syntax"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/record-invalid-optional-full.js": [
             {
+              "newText": "record R {\n  //     ^\n  //     ^\n  a: number | void = undefined,\n  b: number | void = undefined,\n  c: ?number = undefined,\n  d: number | void = 0,\n}",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
                 "end": {
-                  "line": 8,
-                  "character": 1
+                  "character": 1,
+                  "line": 8
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "record R {\n  //     ^\n  //     ^\n  a: number | void = undefined,\n  b: number | void = undefined,\n  c: ?number = undefined,\n  d: number | void = 0,\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_record_invalid_syntax",
-          "Fix invalid record syntax"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Fix invalid record syntax"
     }
   ]
 }

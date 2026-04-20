@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Rewrite function as an arrow function",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "replace_method_with_arrow",
+          "Rewrite function as an arrow function"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/method-unbinding.js": [
             {
+              "newText": "// Should quickfix\nclass A {\n  f = (x: number): number => {\n    return x;\n  };\n}",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
                 "end": {
-                  "line": 5,
-                  "character": 1
+                  "character": 1,
+                  "line": 5
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "// Should quickfix\nclass A {\n  f = (x: number): number => {\n    return x;\n  };\n}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "replace_method_with_arrow",
-          "Rewrite function as an arrow function"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Rewrite function as an arrow function"
     }
   ]
 }

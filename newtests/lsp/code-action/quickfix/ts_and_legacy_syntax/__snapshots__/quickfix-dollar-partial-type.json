@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `Partial`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_$Partial_type",
+          "Convert to `Partial`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-partial-type.js": [
             {
+              "newText": "Partial",
               "range": {
-                "start": {
-                  "line": 1,
-                  "character": 9
-                },
                 "end": {
-                  "line": 1,
-                  "character": 17
+                  "character": 17,
+                  "line": 1
+                },
+                "start": {
+                  "character": 9,
+                  "line": 1
                 }
-              },
-              "newText": "Partial"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_$Partial_type",
-          "Convert to `Partial`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Convert to `Partial`"
     }
   ]
 }

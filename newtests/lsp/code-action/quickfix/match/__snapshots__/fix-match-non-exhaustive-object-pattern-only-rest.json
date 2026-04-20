@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add rest `...` to object pattern",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_non_exhaustive_object_pattern_add_rest",
+          "Add rest `...` to object pattern"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-only-rest.js": [
             {
+              "newText": "{foo: 1, ...}",
               "range": {
-                "start": {
-                  "line": 5,
-                  "character": 2
-                },
                 "end": {
-                  "line": 5,
-                  "character": 10
+                  "character": 10,
+                  "line": 5
+                },
+                "start": {
+                  "character": 2,
+                  "line": 5
                 }
-              },
-              "newText": "{foo: 1, ...}"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "fix_match_non_exhaustive_object_pattern_add_rest",
-          "Add rest `...` to object pattern"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Add rest `...` to object pattern"
     }
   ]
 }

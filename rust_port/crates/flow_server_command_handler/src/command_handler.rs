@@ -1572,6 +1572,11 @@ fn infer_type_to_response(
             }
             None => serde_json::Value::Null,
         };
+        // Bincode cannot encode `serde_json::Value` (uses `deserialize_any`),
+        // so we pre-serialize it to a string for the wire. The OCaml original
+        // shipped `Hh_json.json` directly because `Marshal` is self-describing.
+        let json =
+            serde_json::to_string(&json).expect("serde_json::to_string never fails on Value");
         server_prot::response::infer_type::Payload::Json(json)
     } else {
         let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
@@ -1679,7 +1684,7 @@ fn infer_type(
         Err(IdeFileError::Failed(msg)) => (Err(msg), None),
         Err(IdeFileError::Skipped(reason)) => {
             let tys = if json {
-                server_prot::response::infer_type::Payload::Json(serde_json::Value::Null)
+                server_prot::response::infer_type::Payload::Json("null".to_string())
             } else {
                 server_prot::response::infer_type::Payload::Friendly(None)
             };

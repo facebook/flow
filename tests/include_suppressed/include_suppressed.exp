@@ -68,24 +68,21 @@ Found 3 errors
 
 JSON without --include-suppressed
 {
-  "jsonVersion":"1",
   "errors":[
     {
-      "kind":"infer",
-      "level":"error",
-      "suppressions":[],
+      "error_codes":["incompatible-type"],
       "extra":[
         {
           "message":[
             {
               "context":null,
               "descr":"References:",
-              "type":"Blame",
-              "path":"",
-              "line":0,
+              "end":0,
               "endline":0,
+              "line":0,
+              "path":"",
               "start":1,
-              "end":0
+              "type":"Blame"
             }
           ]
         },
@@ -94,18 +91,18 @@ JSON without --include-suppressed
             {
               "context":"(123: string); // Normal error",
               "descr":"[1]",
-              "type":"Blame",
+              "end":4,
+              "endline":3,
+              "line":3,
               "loc":{
+                "end":{"column":4,"line":3,"offset":14},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":3,"column":2,"offset":11},
-                "end":{"line":3,"column":4,"offset":14}
+                "start":{"column":2,"line":3,"offset":11},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":3,
-              "endline":3,
               "start":2,
-              "end":4
+              "type":"Blame"
             }
           ]
         },
@@ -114,91 +111,91 @@ JSON without --include-suppressed
             {
               "context":"(123: string); // Normal error",
               "descr":"[2]",
-              "type":"Blame",
+              "end":12,
+              "endline":3,
+              "line":3,
               "loc":{
+                "end":{"column":12,"line":3,"offset":22},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":3,"column":7,"offset":16},
-                "end":{"line":3,"column":12,"offset":22}
+                "start":{"column":7,"line":3,"offset":16},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":3,
-              "endline":3,
               "start":7,
-              "end":12
+              "type":"Blame"
             }
           ]
         }
       ],
+      "kind":"infer",
+      "level":"error",
       "message":[
         {
           "context":"(123: string); // Normal error",
           "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]",
-          "type":"Blame",
+          "end":4,
+          "endline":3,
+          "line":3,
           "loc":{
+            "end":{"column":4,"line":3,"offset":14},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":3,"column":2,"offset":11},
-            "end":{"line":3,"column":4,"offset":14}
+            "start":{"column":2,"line":3,"offset":11},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":3,
-          "endline":3,
           "start":2,
-          "end":4
+          "type":"Blame"
         }
       ],
-      "error_codes":["incompatible-type"]
+      "suppressions":[]
     },
     {
+      "error_codes":[],
       "kind":"infer",
       "level":"error",
-      "suppressions":[],
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
           "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]",
-          "type":"Blame",
+          "end":42,
+          "endline":8,
+          "line":8,
           "loc":{
+            "end":{"column":42,"line":8,"offset":153},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":8,"column":1,"offset":111},
-            "end":{"line":8,"column":42,"offset":153}
+            "start":{"column":1,"line":8,"offset":111},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":8,
-          "endline":8,
           "start":1,
-          "end":42
+          "type":"Blame"
         }
       ],
-      "error_codes":[]
+      "suppressions":[]
     }
   ],
+  "jsonVersion":"1",
   "passed":false
 }
 
 
 JSON with --include-suppressed
 {
-  "jsonVersion":"1",
   "errors":[
     {
-      "kind":"infer",
-      "level":"error",
-      "suppressions":[],
+      "error_codes":["incompatible-type"],
       "extra":[
         {
           "message":[
             {
               "context":null,
               "descr":"References:",
-              "type":"Blame",
-              "path":"",
-              "line":0,
+              "end":0,
               "endline":0,
+              "line":0,
+              "path":"",
               "start":1,
-              "end":0
+              "type":"Blame"
             }
           ]
         },
@@ -207,18 +204,18 @@ JSON with --include-suppressed
             {
               "context":"(123: string); // Normal error",
               "descr":"[1]",
-              "type":"Blame",
+              "end":4,
+              "endline":3,
+              "line":3,
               "loc":{
+                "end":{"column":4,"line":3,"offset":14},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":3,"column":2,"offset":11},
-                "end":{"line":3,"column":4,"offset":14}
+                "start":{"column":2,"line":3,"offset":11},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":3,
-              "endline":3,
               "start":2,
-              "end":4
+              "type":"Blame"
             }
           ]
         },
@@ -227,91 +224,82 @@ JSON with --include-suppressed
             {
               "context":"(123: string); // Normal error",
               "descr":"[2]",
-              "type":"Blame",
+              "end":12,
+              "endline":3,
+              "line":3,
               "loc":{
+                "end":{"column":12,"line":3,"offset":22},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":3,"column":7,"offset":16},
-                "end":{"line":3,"column":12,"offset":22}
+                "start":{"column":7,"line":3,"offset":16},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":3,
-              "endline":3,
               "start":7,
-              "end":12
+              "type":"Blame"
             }
           ]
         }
       ],
+      "kind":"infer",
+      "level":"error",
       "message":[
         {
           "context":"(123: string); // Normal error",
           "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]",
-          "type":"Blame",
+          "end":4,
+          "endline":3,
+          "line":3,
           "loc":{
+            "end":{"column":4,"line":3,"offset":14},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":3,"column":2,"offset":11},
-            "end":{"line":3,"column":4,"offset":14}
+            "start":{"column":2,"line":3,"offset":11},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":3,
-          "endline":3,
           "start":2,
-          "end":4
+          "type":"Blame"
         }
       ],
-      "error_codes":["incompatible-type"]
+      "suppressions":[]
     },
     {
+      "error_codes":[],
       "kind":"infer",
       "level":"error",
-      "suppressions":[],
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
           "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]",
-          "type":"Blame",
+          "end":42,
+          "endline":8,
+          "line":8,
           "loc":{
+            "end":{"column":42,"line":8,"offset":153},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":8,"column":1,"offset":111},
-            "end":{"line":8,"column":42,"offset":153}
+            "start":{"column":1,"line":8,"offset":111},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":8,
-          "endline":8,
           "start":1,
-          "end":42
+          "type":"Blame"
         }
       ],
-      "error_codes":[]
+      "suppressions":[]
     },
     {
-      "kind":"infer",
-      "level":"error",
-      "suppressions":[
-        {
-          "loc":{
-            "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":5,"column":1,"offset":42},
-            "end":{"line":5,"column":32,"offset":74}
-          }
-        }
-      ],
+      "error_codes":["incompatible-type"],
       "extra":[
         {
           "message":[
             {
               "context":null,
               "descr":"References:",
-              "type":"Blame",
-              "path":"",
-              "line":0,
+              "end":0,
               "endline":0,
+              "line":0,
+              "path":"",
               "start":1,
-              "end":0
+              "type":"Blame"
             }
           ]
         },
@@ -320,18 +308,18 @@ JSON with --include-suppressed
             {
               "context":"(123: string); // Suppressed error",
               "descr":"[1]",
-              "type":"Blame",
+              "end":4,
+              "endline":6,
+              "line":6,
               "loc":{
+                "end":{"column":4,"line":6,"offset":79},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":6,"column":2,"offset":76},
-                "end":{"line":6,"column":4,"offset":79}
+                "start":{"column":2,"line":6,"offset":76},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":6,
-              "endline":6,
               "start":2,
-              "end":4
+              "type":"Blame"
             }
           ]
         },
@@ -340,43 +328,55 @@ JSON with --include-suppressed
             {
               "context":"(123: string); // Suppressed error",
               "descr":"[2]",
-              "type":"Blame",
+              "end":12,
+              "endline":6,
+              "line":6,
               "loc":{
+                "end":{"column":12,"line":6,"offset":87},
                 "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":6,"column":7,"offset":81},
-                "end":{"line":6,"column":12,"offset":87}
+                "start":{"column":7,"line":6,"offset":81},
+                "type":"SourceFile"
               },
               "path":"test.js",
-              "line":6,
-              "endline":6,
               "start":7,
-              "end":12
+              "type":"Blame"
             }
           ]
         }
       ],
+      "kind":"infer",
+      "level":"error",
       "message":[
         {
           "context":"(123: string); // Suppressed error",
           "descr":"Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]",
-          "type":"Blame",
+          "end":4,
+          "endline":6,
+          "line":6,
           "loc":{
+            "end":{"column":4,"line":6,"offset":79},
             "source":"test.js",
-            "type":"SourceFile",
-            "start":{"line":6,"column":2,"offset":76},
-            "end":{"line":6,"column":4,"offset":79}
+            "start":{"column":2,"line":6,"offset":76},
+            "type":"SourceFile"
           },
           "path":"test.js",
-          "line":6,
-          "endline":6,
           "start":2,
-          "end":4
+          "type":"Blame"
         }
       ],
-      "error_codes":["incompatible-type"]
+      "suppressions":[
+        {
+          "loc":{
+            "end":{"column":32,"line":5,"offset":74},
+            "source":"test.js",
+            "start":{"column":1,"line":5,"offset":42},
+            "type":"SourceFile"
+          }
+        }
+      ]
     }
   ],
+  "jsonVersion":"1",
   "passed":false
 }
 

@@ -2,70 +2,70 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert all colon casts to `as` expressions",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
-                "end": {
-                  "line": 2,
-                  "character": 14
-                }
-              },
-              "newText": "\"foo\" as mixed"
-            }
-          ]
-        }
-      },
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "convert_all_colon_cast",
           "Convert all colon casts to `as` expressions"
-        ]
-      }
-    },
-    {
-      "title": "Convert to `as` expression `<expr> as <type>`",
-      "kind": "quickfix",
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js": [
             {
+              "newText": "\"foo\" as mixed",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 0
-                },
                 "end": {
-                  "line": 2,
-                  "character": 14
+                  "character": 14,
+                  "line": 2
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
                 }
-              },
-              "newText": "\"foo\" as mixed"
+              }
             }
           ]
         }
       },
+      "kind": "quickfix",
+      "title": "Convert all colon casts to `as` expressions"
+    },
+    {
       "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
           "convert_colon_cast",
           "Convert to `as` expression `<expr> as <type>`"
-        ]
-      }
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js": [
+            {
+              "newText": "\"foo\" as mixed",
+              "range": {
+                "end": {
+                  "character": 14,
+                  "line": 2
+                },
+                "start": {
+                  "character": 0,
+                  "line": 2
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Convert to `as` expression `<expr> as <type>`"
     }
   ]
 }

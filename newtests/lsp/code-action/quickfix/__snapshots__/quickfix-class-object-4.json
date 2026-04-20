@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Rewrite object type as an interface",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "replace_obj_with_interface",
+          "Rewrite object type as an interface"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/lib.js": [
             {
+              "newText": "interface { x: number }",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 24
-                },
                 "end": {
-                  "line": 2,
-                  "character": 42
+                  "character": 42,
+                  "line": 2
+                },
+                "start": {
+                  "character": 24,
+                  "line": 2
                 }
-              },
-              "newText": "interface { x: number }"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "replace_obj_with_interface",
-          "Rewrite object type as an interface"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Rewrite object type as an interface"
     }
   ]
 }

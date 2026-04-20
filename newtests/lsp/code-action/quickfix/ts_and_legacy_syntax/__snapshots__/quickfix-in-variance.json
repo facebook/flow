@@ -2,37 +2,37 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `-`",
-      "kind": "quickfix",
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_in_variance",
+          "Convert to `-`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
       "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/fix-in-variance.js": [
             {
+              "newText": ": (<-A>(A) => void)",
               "range": {
-                "start": {
-                  "line": 2,
-                  "character": 18
-                },
                 "end": {
-                  "line": 2,
-                  "character": 33
+                  "character": 33,
+                  "line": 2
+                },
+                "start": {
+                  "character": 18,
+                  "line": 2
                 }
-              },
-              "newText": ": (<-A>(A) => void)"
+              }
             }
           ]
         }
       },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_in_variance",
-          "Convert to `-`"
-        ]
-      }
+      "kind": "quickfix",
+      "title": "Convert to `-`"
     }
   ]
 }

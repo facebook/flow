@@ -65,7 +65,7 @@ JSON output without --explain should be an array
 ================================================================================
 JSON output with --explain should be JSON object
 ================================================================================
-{"../other/explicitly_included.js":{"explanation":"ExplicitlyIncluded"},"../other/implicitly_ignored.js":{"explanation":"ImplicitlyIgnored"},".flowconfig":{"explanation":"ConfigFile"},"explicit_lib.js":{"explanation":"ExplicitLib"},"explicitly_ignored.js":{"explanation":"ExplicitlyIgnored"},"explicitly_ignored_with_backup.js":{"explanation":"ExplicitlyIgnored","backup":"other/.flowconfig"},"flow-typed/implicit_lib.js":{"explanation":"ImplicitLib"},"implicitly_included.js":{"explanation":"ImplicitlyIncluded"}}
+{"../other/explicitly_included.js":{"explanation":"ExplicitlyIncluded"},"../other/implicitly_ignored.js":{"explanation":"ImplicitlyIgnored"},".flowconfig":{"explanation":"ConfigFile"},"explicit_lib.js":{"explanation":"ExplicitLib"},"explicitly_ignored.js":{"explanation":"ExplicitlyIgnored"},"explicitly_ignored_with_backup.js":{"backup":"other/.flowconfig","explanation":"ExplicitlyIgnored"},"flow-typed/implicit_lib.js":{"explanation":"ImplicitLib"},"implicitly_included.js":{"explanation":"ImplicitlyIncluded"}}
 
 ================================================================================
 Listing files over stdin

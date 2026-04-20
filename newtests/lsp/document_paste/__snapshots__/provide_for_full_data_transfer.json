@@ -4,147 +4,147 @@
     "changes": {
       "<PLACEHOLDER_PROJECT_URL>/__fixtures__/test.js": [
         {
+          "newText": "import typeof fooType from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import typeof fooType from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import typeof * as NST from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import typeof * as NST from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import typeof { bar as barType } from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import typeof { bar as barType } from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import type { A as B } from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import type { A as B } from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import type { A } from \"./import_source\";\n\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import type { A } from \"./import_source\";\n\n"
+          }
         },
         {
+          "newText": "import foo from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import foo from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import * as NS from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import * as NS from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import { Foo } from \"./import_source\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import { Foo } from \"./import_source\";\n"
+          }
         },
         {
+          "newText": "import { bar } from \"./import_source\";\n\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import { bar } from \"./import_source\";\n\n"
+          }
         },
         {
+          "newText": "import bad from \"bad\";\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import bad from \"bad\";\n"
+          }
         },
         {
+          "newText": "import React from \"react\";\n\n",
           "range": {
-            "start": {
-              "line": 1,
-              "character": 0
-            },
             "end": {
-              "line": 1,
-              "character": 0
+              "character": 0,
+              "line": 1
+            },
+            "start": {
+              "character": 0,
+              "line": 1
             }
-          },
-          "newText": "import React from \"react\";\n\n"
+          }
         }
       ]
     }

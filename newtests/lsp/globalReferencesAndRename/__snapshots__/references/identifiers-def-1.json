@@ -2,173 +2,173 @@
   "method": "textDocument/references",
   "result": [
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js",
       "range": {
-        "start": {
-          "line": 2,
-          "character": 13
-        },
         "end": {
-          "line": 2,
-          "character": 14
+          "character": 14,
+          "line": 2
+        },
+        "start": {
+          "character": 13,
+          "line": 2
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/identifiers-def.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 2,
-          "character": 8
-        },
         "end": {
-          "line": 2,
-          "character": 9
+          "character": 9,
+          "line": 2
+        },
+        "start": {
+          "character": 8,
+          "line": 2
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 3,
-          "character": 8
-        },
         "end": {
-          "line": 3,
-          "character": 9
+          "character": 9,
+          "line": 3
+        },
+        "start": {
+          "character": 8,
+          "line": 3
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 5,
-          "character": 0
-        },
         "end": {
-          "line": 5,
-          "character": 1
+          "character": 1,
+          "line": 5
+        },
+        "start": {
+          "character": 0,
+          "line": 5
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 10,
-          "character": 9
-        },
         "end": {
-          "line": 10,
-          "character": 10
+          "character": 10,
+          "line": 10
+        },
+        "start": {
+          "character": 9,
+          "line": 10
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 10,
-          "character": 12
-        },
         "end": {
-          "line": 10,
-          "character": 13
+          "character": 13,
+          "line": 10
+        },
+        "start": {
+          "character": 12,
+          "line": 10
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 11,
-          "character": 2
-        },
         "end": {
-          "line": 11,
-          "character": 3
+          "character": 3,
+          "line": 11
+        },
+        "start": {
+          "character": 2,
+          "line": 11
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 12,
-          "character": 9
-        },
         "end": {
-          "line": 12,
-          "character": 10
+          "character": 10,
+          "line": 12
+        },
+        "start": {
+          "character": 9,
+          "line": 12
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js",
       "range": {
-        "start": {
-          "line": 13,
-          "character": 2
-        },
         "end": {
-          "line": 13,
-          "character": 3
+          "character": 3,
+          "line": 13
+        },
+        "start": {
+          "character": 2,
+          "line": 13
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-a.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 4,
-          "character": 2
-        },
         "end": {
-          "line": 4,
-          "character": 3
+          "character": 3,
+          "line": 4
+        },
+        "start": {
+          "character": 2,
+          "line": 4
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 6,
-          "character": 6
-        },
         "end": {
-          "line": 6,
-          "character": 7
+          "character": 7,
+          "line": 6
+        },
+        "start": {
+          "character": 6,
+          "line": 6
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 9,
-          "character": 2
-        },
         "end": {
-          "line": 9,
-          "character": 3
+          "character": 3,
+          "line": 9
+        },
+        "start": {
+          "character": 2,
+          "line": 9
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     },
     {
-      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js",
       "range": {
-        "start": {
-          "line": 11,
-          "character": 6
-        },
         "end": {
-          "line": 11,
-          "character": 7
+          "character": 7,
+          "line": 11
+        },
+        "start": {
+          "character": 6,
+          "line": 11
         }
-      }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/use-exported-identifiers-site-b.js"
     }
   ]
 }
