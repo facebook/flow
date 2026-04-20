@@ -60,5 +60,5 @@ Sometimes you may want to ignore all files inside a directory with the exception
 
 ## See Also {#toc-see-also}
 
-- [`.flowconfig [declarations]`](../declarations) — parsing files in declaration mode instead of ignoring them
-- [`.flowconfig [untyped]`](../untyped) — treating modules as `any` while still resolving imports
+- [`.flowconfig [declarations]`](./declarations.md) — parsing files in declaration mode instead of ignoring them
+- [`.flowconfig [untyped]`](./untyped.md) — treating modules as `any` while still resolving imports

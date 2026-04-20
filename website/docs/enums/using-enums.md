@@ -6,7 +6,7 @@ description: "How to use Flow Enums: accessing members, using as type annotation
 
 import {SinceVersion} from '../../components/VersionTags';
 
-Flow Enums are not a syntax for [union types](../../types/unions/). They are their own type, and each member of a Flow Enum has the same type.
+Flow Enums are not a syntax for [union types](../types/unions.md). They are their own type, and each member of a Flow Enum has the same type.
 Large union types can cause performance issues, as Flow has to consider each member as a separate type. With Flow Enums, no matter how large your enum is,
 Flow will always exhibit good performance as it only has one type to keep track of.
 
@@ -110,8 +110,8 @@ Set a default value in one line with the `??` operator:
 const status: Status = Status.cast(data) ?? Status.Off;
 ```
 
-The type of the argument of `cast` depends on the type of enum. If it is a [string enum](../defining-enums/#toc-string-enums), the type of the argument will be `string`.
-If it is a [number enum](../defining-enums/#toc-number-enums), the type of the argument will be `number`, and so on.
+The type of the argument of `cast` depends on the type of enum. If it is a [string enum](./defining-enums.md#toc-string-enums), the type of the argument will be `string`.
+If it is a [number enum](./defining-enums.md#toc-number-enums), the type of the argument will be `number`, and so on.
 If you wish to cast a `unknown` value, first use a `typeof` refinement:
 ```js
 const data: unknown = ...;
@@ -127,7 +127,7 @@ const strings: Array<string> = ...;
 const statuses: Array<?Status> = strings.map((input) => Status.cast(input)); // Correct
 ```
 
-Runtime cost: For [mirrored string enums](../defining-enums/#toc-string-enums) (e.g `enum E {A, B}`), as the member names are the same as the values, the runtime cost is constant -
+Runtime cost: For [mirrored string enums](./defining-enums.md#toc-string-enums) (e.g `enum E {A, B}`), as the member names are the same as the values, the runtime cost is constant -
 equivalent to calling `.hasOwnProperty`. For other enums, a `Map` is created on the first call, and subsequent calls simply call `.has` on the cached map.
 Thus the cost is amortized constant.
 
@@ -202,7 +202,7 @@ The first call of any of those methods will create this cached map.
 ### Exhaustively checking enums with a `switch` {#toc-exhaustively-checking-enums-with-a-switch}
 When checking an enum value in a `switch` statement, we enforce that you check against all possible enum members, and don’t include redundant cases.
 This helps ensure you consider all possibilities when writing code that uses enums. It especially helps with refactoring when adding or removing members,
-by pointing out the different places you need to update. If you have [match](../../match) enabled, use `match` expressions and statements instead of `switch` statements.
+by pointing out the different places you need to update. If you have [match](../match/index.md) enabled, use `match` expressions and statements instead of `switch` statements.
 
 ```js
 const status: Status = ...;
@@ -306,7 +306,7 @@ switch (status) {
     break;
 }
 ```
-Except if you are switching over an enum with [unknown members](../defining-enums/#toc-flow-enums-with-unknown-members).
+Except if you are switching over an enum with [unknown members](./defining-enums.md#toc-flow-enums-with-unknown-members).
 
 If you nest exhaustively checked switches inside exhaustively checked switches, and are returning from each branch, you must add a `break;` after the nested switch:
 ```js
@@ -354,7 +354,7 @@ If you didn't add blocks in this example, the two declarations of `const x` woul
 Enums are not checked exhaustively in `if` statements, or other contexts other than `switch` statements and `match` expressions/statements.
 
 ### Exhaustively checking enums with a `match`
-All values are exhaustively checked in a [match](../../match), including Flow Enums:
+All values are exhaustively checked in a [match](../match/index.md), including Flow Enums:
 
 ```js
 const status: Status = ...;
@@ -366,7 +366,7 @@ match (status) { // Good, all members checked
 }
 ```
 
-You can use a [wildcard](../../match/patterns/#wildcard-patterns) `_` to match all members not checked so far:
+You can use a [wildcard](../match/patterns.md#wildcard-patterns) `_` to match all members not checked so far:
 ```js
 match (status) {
   Status.Active => {}
@@ -374,7 +374,7 @@ match (status) {
 }
 ```
 
-You can check [multiple](../../match/patterns/#or-patterns) enum members in one `match` case:
+You can check [multiple](../match/patterns.md#or-patterns) enum members in one `match` case:
 ```js
 match (status) {
   Status.Active | Status.Paused => {}
@@ -399,7 +399,7 @@ match (status) {
 ```
 
 ### Exhaustive checking with unknown members {#toc-exhaustive-checking-with-unknown-members}
-If your enum has [unknown members](../defining-enums/#toc-flow-enums-with-unknown-members) (specified with the `...`), e.g.
+If your enum has [unknown members](./defining-enums.md#toc-flow-enums-with-unknown-members) (specified with the `...`), e.g.
 
 ```js
 enum Status {
@@ -410,7 +410,7 @@ enum Status {
 }
 ```
 
-Then a `default` is always required when switching over the enum, and a wildcard `_` is always required when using a [`match`](../../match). The `default`/`_` checks for "unknown" members you haven't explicitly listed.
+Then a `default` is always required when switching over the enum, and a wildcard `_` is always required when using a [`match`](../match/index.md). The `default`/`_` checks for "unknown" members you haven't explicitly listed.
 
 ```js
 switch (status) {
@@ -434,7 +434,7 @@ match (status) {
 }
 ```
 
-You can use the `require-explicit-enum-switch-cases` [Flow Lint](../../linting/flowlint-comments/) for `switch` or the `require-explicit-enum-checks` lint for `match` to require that all known members are explicitly listed as cases. For example:
+You can use the `require-explicit-enum-switch-cases` [Flow Lint](../linting/flowlint-comments.md) for `switch` or the `require-explicit-enum-checks` lint for `match` to require that all known members are explicitly listed as cases. For example:
 
 ```js flow-check
 enum Status {
@@ -503,7 +503,7 @@ It in effect bans the usage of `default` in that `switch` statement, by requirin
 ### Mapping enums to other values {#toc-mapping-enums-to-other-values}
 There are a variety of reasons you may want to map an enum value to another value, e.g. a label, icon, element, and so on.
 
-With previous patterns, it was common to use object literals for this purpose, however with Flow Enums we prefer functions which contain a switch, or better yet [match](../../match) expressions if enabled, as we can exhaustively check these.
+With previous patterns, it was common to use object literals for this purpose, however with Flow Enums we prefer functions which contain a switch, or better yet [match](../match/index.md) expressions if enabled, as we can exhaustively check these.
 
 Instead of:
 ```js
@@ -564,7 +564,7 @@ const counts = new Map<Status, number>([
 const activeCount: Status | void = counts.get(Status.Active);
 ```
 
-You can use enum members as computed keys in object literals if you type the object with an [indexer type](../../types/objects/#toc-objects-as-maps), as [explained later on this page](#toc-enum-members-as-distinct-object-keys).
+You can use enum members as computed keys in object literals if you type the object with an [indexer type](../types/objects.md#toc-objects-as-maps), as [explained later on this page](#toc-enum-members-as-distinct-object-keys).
 
 
 ### Enums in a union {#toc-enums-in-a-union}
@@ -805,7 +805,7 @@ If you need to map each enum member to a different value type, use a [function w
 #### Disjoint object unions {#toc-disjoint-object-unions}
 A defining feature of enums is that unlike unions, each enum member does not form its own separate type. Every member has the same type, the enum type.
 This allows enum usage to be analyzed by Flow in a consistently fast way, however it means that in certain situations which require separate types, we can’t use enums.
-Consider the following union, following the [disjoint object union](../../types/unions/#toc-disjoint-object-unions) pattern:
+Consider the following union, following the [disjoint object union](../types/unions.md#toc-disjoint-object-unions) pattern:
 
 ```js flow-check
 type Action =
@@ -821,13 +821,13 @@ In the future, we might add the ability for enums to encapsulate additional data
 
 
 #### Guaranteed inlining {#toc-guaranteed-inlining}
-Flow Enums are designed to allow for inlining (e.g. [member values must be literals](../defining-enums/#toc-literal-member-values),
-[enums are frozen](../defining-enums/#toc-fixed-at-declaration)), however the inlining itself needs to be part of the build system (whatever you use) rather than Flow itself.
+Flow Enums are designed to allow for inlining (e.g. [member values must be literals](./defining-enums.md#toc-literal-member-values),
+[enums are frozen](./defining-enums.md#toc-fixed-at-declaration)), however the inlining itself needs to be part of the build system (whatever you use) rather than Flow itself.
 
-While enum member access (e.g. `Status.Active`) can be inlined (other than [symbol enums](../defining-enums/#toc-symbol-enums) which cannot be inlined due to the nature of symbols),
+While enum member access (e.g. `Status.Active`) can be inlined (other than [symbol enums](./defining-enums.md#toc-symbol-enums) which cannot be inlined due to the nature of symbols),
 usage of its methods (e.g. `Status.cast(x)`) cannot be inlined.
 
 ## See Also {#toc-see-also}
 
-- [Unions](../../types/unions) — an alternative to enums for some use cases
-- [Match](../../match/) — pattern matching works well with enums for exhaustive checking
+- [Unions](../types/unions.md) — an alternative to enums for some use cases
+- [Match](../match/index.md) — pattern matching works well with enums for exhaustive checking

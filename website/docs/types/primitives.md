@@ -44,7 +44,7 @@ function func(a: number, b: string, c: boolean, d: bigint) { /* ... */ }
 func(3.14, "hello", true, 3n);
 ```
 
-Some literals can also be used as [literal types](../literals):
+Some literals can also be used as [literal types](./literals.md):
 
 ```js flow-check
 function acceptTwo(x: 2) { /* ... */ }
@@ -110,7 +110,7 @@ acceptsBoolean(Boolean(0)); // Works!
 acceptsBoolean(!!0);        // Works!
 ```
 
-You can [refine](../../lang/refinements/) a value to `boolean` using a `typeof` check:
+You can [refine](../lang/refinements.md) a value to `boolean` using a `typeof` check:
 
 ```js flow-check
 function acceptsBoolean(value: boolean) { /* ... */ }
@@ -147,7 +147,7 @@ acceptsNumber("foo");    // Error!
 acceptsNumber(123n);     // Error!
 ```
 
-You can [refine](../../lang/refinements/) a value to `number` using a `typeof` check:
+You can [refine](../lang/refinements.md) a value to `number` using a `typeof` check:
 
 ```js flow-check
 function acceptsNumber(value: number) { /* ... */ }
@@ -207,7 +207,7 @@ using the String function or using another method for stringifying values.
 "" + JSON.stringify({}) // Works!
 ```
 
-You can [refine](../../lang/refinements/) a value to `string` using a `typeof` check:
+You can [refine](../lang/refinements.md) a value to `string` using a `typeof` check:
 
 ```js flow-check
 function acceptsString(value: string) { /* ... */ }
@@ -242,7 +242,7 @@ acceptsUndefined(undefined); // Works!
 acceptsUndefined(null);      // Error!
 ```
 
-You can [refine](../../lang/refinements/) a value to `null` or `void` using equality checks:
+You can [refine](../lang/refinements.md) a value to `null` or `void` using equality checks:
 
 ```js flow-check
 function acceptsNull(value: null) { /* ... */ }
@@ -268,7 +268,7 @@ function func(value: unknown) {
 
 ### Maybe types {#toc-maybe-types}
 
-[Maybe types](../maybe) are for places where a value is optional and you can create them by
+[Maybe types](./maybe.md) are for places where a value is optional and you can create them by
 adding a question mark in front of the type such as `?string` or `?number`.
 
 `?T` is equivalent to `T | null | void`.
@@ -284,7 +284,7 @@ acceptsMaybeString();          // Works!
 
 To refine, `value == null` checks exactly for both `null` and `undefined`.
 
-Read the [maybe type docs](../maybe) for more details.
+Read the [maybe type docs](./maybe.md) for more details.
 
 ### Optional object properties {#toc-optional-object-properties}
 
@@ -364,7 +364,7 @@ acceptsSymbol(Symbol.isConcatSpreadable); // Works!
 acceptsSymbol(false); // Error!
 ```
 
-You can [refine](../../lang/refinements/) a value to `symbol` using a `typeof` check:
+You can [refine](../lang/refinements.md) a value to `symbol` using a `typeof` check:
 
 ```js flow-check
 function acceptsSymbol(value: symbol) { /* ... */ }
@@ -392,7 +392,7 @@ acceptsBigInt(42n); // Works!
 acceptsBigInt(42); // Error!
 ```
 
-You can [refine](../../lang/refinements/) a value to `bigint` using a `typeof` check:
+You can [refine](../lang/refinements.md) a value to `bigint` using a `typeof` check:
 
 ```js flow-check
 function acceptsBigInt(value: bigint) { /* ... */ }
@@ -406,6 +406,6 @@ function func(value: unknown) {
 
 ## See Also {#toc-see-also}
 
-- [Literal Types](../literals) — using specific primitive values (like `2` or `"foo"`) as types
-- [Maybe Types](../maybe) — making any type nullable with the `?T` shorthand
-- [Refinements](../../lang/refinements) — narrowing from broad types to specific primitives using `typeof`
+- [Literal Types](./literals.md) — using specific primitive values (like `2` or `"foo"`) as types
+- [Maybe Types](./maybe.md) — making any type nullable with the `?T` shorthand
+- [Refinements](../lang/refinements.md) — narrowing from broad types to specific primitives using `typeof`

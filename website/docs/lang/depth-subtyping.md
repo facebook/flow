@@ -6,7 +6,7 @@ description: "How Flow handles subtyping for objects, including depth subtyping 
 
 ## Depth Subtyping {#toc-depth-subtyping}
 
-Assume we have two [classes](../../types/classes), which have a subtype relationship using `extends`:
+Assume we have two [classes](../types/classes.md), which have a subtype relationship using `extends`:
 
 ```js flow-check
 class Person {
@@ -66,17 +66,17 @@ const person: {+who: Person} = employee; // OK
 person.who = new Person(); // Error!
 ```
 
-The plus sign `+` indicates that the `who` property is [covariant](../variance/#toc-covariance).
+The plus sign `+` indicates that the `who` property is [covariant](./variance.md#toc-covariance).
 Using a covariant property allows us to use objects which have subtype-compatible
 values for that property. By default, object properties are invariant, which allow
 both reads and writes, but are more restrictive in the values they accept.
 
-Read more about [property variance](../variance/).
+Read more about [property variance](./variance.md).
 
 ## Width Subtyping {#toc-width-subtyping}
 
 It's safe to use an object with "extra" properties in a position that is
-annotated with a specific set of properties, if that object type is [inexact](../../types/objects/#exact-and-inexact-object-types).
+annotated with a specific set of properties, if that object type is [inexact](../types/objects.md#exact-and-inexact-object-types).
 
 ```js flow-check
 function func(obj: {foo: string, ...}) {
@@ -120,7 +120,7 @@ is a subtype of `{bar: number, ...}`, one of the members of the parameter's unio
 type.
 
 For cases like this where it's useful to assert the absence of a property,
-You can use [exact object types](../../types/objects/#exact-and-inexact-object-types).
+You can use [exact object types](../types/objects.md#exact-and-inexact-object-types).
 
 ```js flow-check
 function func(obj: {foo: string} | {bar: number}) {
@@ -130,14 +130,14 @@ function func(obj: {foo: string} | {bar: number}) {
 }
 ```
 
-[Exact object types](../../types/objects/#exact-and-inexact-object-types) disable width
+[Exact object types](../types/objects.md#exact-and-inexact-object-types) disable width
 subtyping, and do not allow additional properties to exist.
 
 Using exact object types lets Flow know that no extra properties will exist at
-runtime, which allows [refinements](../refinements/) to get more specific.
+runtime, which allows [refinements](./refinements.md) to get more specific.
 
 ## See Also {#toc-see-also}
 
-- [Variance](../variance) — how covariance enables depth subtyping with read-only properties
-- [Subtypes](../subtypes) — the general theory of subtyping
-- [Objects](../../types/objects) — read-only and write-only object properties
+- [Variance](./variance.md) — how covariance enables depth subtyping with read-only properties
+- [Subtypes](./subtypes.md) — the general theory of subtyping
+- [Objects](../types/objects.md) — read-only and write-only object properties

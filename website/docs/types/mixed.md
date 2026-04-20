@@ -6,7 +6,7 @@ description: "How the mixed type works in Flow as the supertype of all types, no
 
 import {SinceVersion} from '../../components/VersionTags';
 
-`mixed` (replaced by [`unknown`](unknown.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../../lang/type-hierarchy). All values are `mixed`.
+`mixed` (replaced by [`unknown`](./unknown.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../lang/type-hierarchy.md). All values are `mixed`.
 However, this means that very few operations are permitted on it, without refining to some more specific type.
 That's because the valid operations on `mixed` must be valid for all types.
 
@@ -90,7 +90,7 @@ function stringify(value: mixed) {
 stringify("foo");
 ```
 
-Instead you must ensure the value is a certain type by [refining](../../lang/refinements/) it.
+Instead you must ensure the value is a certain type by [refining](../lang/refinements.md) it.
 
 ```js flow-check
 function stringify(value: mixed) {
@@ -106,18 +106,18 @@ stringify("foo");
 
 Because of the `typeof value === 'string'` check, Flow knows the `value` can
 only be a `string` inside of the `if` statement. This is known as a
-[refinement](../../lang/refinements/).
+[refinement](../lang/refinements.md).
 
 ## Versus `any`
-`mixed` is safe, while [`any`](../any) is not. Both accept all values, but `any` also unsafely allows all operations.
+`mixed` is safe, while [`any`](./any.md) is not. Both accept all values, but `any` also unsafely allows all operations.
 
 ## Versus `empty`
-`mixed` is the opposite of [`empty`](../empty):
+`mixed` is the opposite of [`empty`](./empty.md):
 - Everything is a `mixed`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
 - Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
 
 ## See Also {#toc-see-also}
 
-- [Unknown](../unknown) — the replacement for `mixed` since Flow v0.290
-- [Refinements](../../lang/refinements) — how to narrow `mixed` values to specific types before use
-- [Type Hierarchy](../../lang/type-hierarchy) — how `mixed`, `any`, and `empty` relate in the full type hierarchy
+- [Unknown](./unknown.md) — the replacement for `mixed` since Flow v0.290
+- [Refinements](../lang/refinements.md) — how to narrow `mixed` values to specific types before use
+- [Type Hierarchy](../lang/type-hierarchy.md) — how `mixed`, `any`, and `empty` relate in the full type hierarchy

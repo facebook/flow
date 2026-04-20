@@ -10,7 +10,7 @@ There are a number of ways to type them in order to support the different use ca
 - Exact object types: An object which has exactly a set of properties, e.g. `{a: number}`. We recommend using exact object types rather than inexact ones, as they are more precise and interact better with other type system features, like [spreads](#object-type-spread).
 - [Inexact object types](#exact-and-inexact-object-types): An object with at least a set of properties, but potentially other, unknown ones, e.g. `{a: number, ...}`.
 - [Objects with indexers](#toc-objects-as-maps): An object that can used as a map from a key type to a value type, e.g. `{[string]: boolean}`.
-- [Interfaces](../interfaces): Interfaces are separate from object types. Only they can describe instances of classes. E.g. `interfaces {a: number}`.
+- [Interfaces](./interfaces.md): Interfaces are separate from object types. Only they can describe instances of classes. E.g. `interfaces {a: number}`.
 
 Object types try to match the syntax for objects in JavaScript as much as
 possible. Using curly braces `{}` and name-value pairs using a colon `:` split
@@ -65,7 +65,7 @@ acceptsObject({foo: null});      // Error!
 ```
 
 
-To make all properties in an object type optional, you can use the [`Partial`](../utilities/#toc-partial) utility type:
+To make all properties in an object type optional, you can use the [`Partial`](./utilities.md#toc-partial) utility type:
 
 ```js flow-check
 type Obj = {
@@ -75,7 +75,7 @@ type Obj = {
 type PartialObj = Partial<Obj>; // Same as `{foo?: string}`
 ```
 
-To make all properties in an object type required, you can use the [`Required`](../utilities/#toc-required) utility type:
+To make all properties in an object type required, you can use the [`Required`](./utilities.md#toc-required) utility type:
 
 ```js flow-check
 type PartialObj = {
@@ -87,7 +87,7 @@ type Obj = Required<PartialObj>; // Same as `{foo: string}`
 
 ## Read-only object properties
 
-You can add [variance](../../lang/variance) annotations to your object properties.
+You can add [variance](../lang/variance.md) annotations to your object properties.
 
 To mark a property as read-only, you can use the `+`:
 
@@ -102,7 +102,7 @@ function func(o: Obj) {
 }
 ```
 
-To make all object properties in an object type read-only, you can use the [`Readonly`](../utilities/#toc-readonly) utility type:
+To make all object properties in an object type read-only, you can use the [`Readonly`](./utilities.md#toc-readonly) utility type:
 
 ```js flow-check
 type Obj = {
@@ -140,7 +140,7 @@ const b = {
 ```
 
 However, despite their equivalent runtime behavior, Flow checks them slightly differently. In particular, object
-properties written with method syntax are [read-only](../../lang/variance); Flow will not allow you to write a new value to them.
+properties written with method syntax are [read-only](../lang/variance.md); Flow will not allow you to write a new value to them.
 
 ```js flow-check
 const b = {
@@ -246,7 +246,7 @@ const FixedUtils = { // Works!
 
 ## Exact and inexact object types
 
-Exact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../../config/options#toc-exact-by-default) in your `.flowconfig`.
+Exact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../config/options.md#toc-exact-by-default) in your `.flowconfig`.
 
 Inexact objects (denoted with the `...`) allow extra properties to be passed in:
 
@@ -256,7 +256,7 @@ function method(obj: {foo: string, ...}) { /* ... */ }
 method({foo: "test", bar: 42}); // Works!
 ```
 
-> **Note:** This is because of ["width subtyping"](../../lang/object-subtyping/#toc-width-subtyping).
+> **Note:** This is because of ["width subtyping"](../lang/depth-subtyping.md#toc-width-subtyping).
 
 But exact object types do not:
 
@@ -272,7 +272,7 @@ If you have set `exact_by_default=false`, you can denote exact object types by a
 const x: {|foo: string|} = {foo: "Hello", bar: "World!"}; // Error!
 ```
 
-[Intersections](../intersections) of exact object types may not work as you expect. If you need to combine exact object types, use [object type spread](#object-type-spread):
+[Intersections](./intersections.md) of exact object types may not work as you expect. If you need to combine exact object types, use [object type spread](#object-type-spread):
 
 ```js flow-check
 type FooT = {foo: string};
@@ -342,7 +342,7 @@ const x: ObjB = {a: 1, b: 2, c: true};
 
 Spreading an object value at runtime only spreads "own" properties, that is properties that are on the object directly, not the prototype chain.
 Object type spread works in the same way.
-Because of this, you can't spread [interfaces](../interfaces), as they don't track whether a property is "own" or not:
+Because of this, you can't spread [interfaces](./interfaces.md), as they don't track whether a property is "own" or not:
 
 ```js flow-check
 interface Iface {
@@ -413,7 +413,7 @@ function add(id: number, name: string) {
 }
 ```
 
-You can mark an indexer property as read-only (or write-only) using [variance](../../lang/variance) annotations:
+You can mark an indexer property as read-only (or write-only) using [variance](../lang/variance.md) annotations:
 
 ```js flow-check
 type ReadOnly = {+[string]: number};
@@ -422,7 +422,7 @@ type WriteOnly = {-[string]: number};
 
 ## Keys, values, and indexed access
 
-You can extract the keys of an object type using the [`keyof`](../utilities/#toc-keys) utility type:
+You can extract the keys of an object type using the [`keyof`](./utilities.md#toc-keys) utility type:
 
 ```js flow-check
 type Obj = {
@@ -439,7 +439,7 @@ acceptsKeys('bar'); // Works!
 acceptsKeys('hi'); // Error!
 ```
 
-You can extract the values of an object type using the [`Values`](../utilities/#toc-values) utility type:
+You can extract the values of an object type using the [`Values`](./utilities.md#toc-values) utility type:
 
 ```js flow-check
 type Obj = {
@@ -456,7 +456,7 @@ acceptsValues('hi'); // Works!
 acceptsValues(true); // Error!
 ```
 
-You can get the type of an object type's specific property using [indexed access types](../indexed-access):
+You can get the type of an object type's specific property using [indexed access types](./indexed-access.md):
 
 ```js flow-check
 type Obj = {
@@ -487,7 +487,7 @@ func({}); // Works!
 func({a: 1, b: "foo"}); // Works!
 ```
 
-It's often the right choice for a [generic](../generics) bounded to accept any object:
+It's often the right choice for a [generic](./generics.md) bounded to accept any object:
 
 ```js flow-check
 function func<T: {...}>(obj: T) {
@@ -500,7 +500,7 @@ func({a: 1, b: "foo"}); // Works!
 
 However, you can't access any properties off of `{...}`.
 
-You can also try using a [dictionary](#toc-objects-as-maps) with [`unknown`](../unknown) values, which would allow you to access any property (with a resulting `unknown` type):
+You can also try using a [dictionary](#toc-objects-as-maps) with [`unknown`](./unknown.md) values, which would allow you to access any property (with a resulting `unknown` type):
 
 ```js flow-check
 function func(obj: {+[string]: unknown}) {
@@ -511,8 +511,8 @@ func({}); // Works!
 func({a: 1, b: "foo"}); // Works!
 ```
 
-The type `Object` is just an alias for [`any`](../any), and is unsafe.
-You can ban its use in your code with the [unclear-type lint](../../linting/rule-reference/#toc-unclear-type).
+The type `Object` is just an alias for [`any`](./any.md), and is unsafe.
+You can ban its use in your code with the [unclear-type lint](../linting/rule-reference.md#toc-unclear-type).
 
 ## Common Issues
 
@@ -581,8 +581,8 @@ const obj: Flags = {...flags1, ...flags2};
 
 ## See Also {#toc-see-also}
 
-- [Interfaces](../interfaces) — structural types that can describe both class instances and objects
-- [Classes](../classes) — nominally typed values; use interfaces to bridge between classes and object types
-- [Tuples](../tuples) — fixed-length collections with per-element types
-- [Indexed Access Types](../indexed-access) — accessing specific property types from object types
-- [Utility Types](../utilities) — `Partial`, `Required`, `Readonly`, `keyof`, and other object helpers
+- [Interfaces](./interfaces.md) — structural types that can describe both class instances and objects
+- [Classes](./classes.md) — nominally typed values; use interfaces to bridge between classes and object types
+- [Tuples](./tuples.md) — fixed-length collections with per-element types
+- [Indexed Access Types](./indexed-access.md) — accessing specific property types from object types
+- [Utility Types](./utilities.md) — `Partial`, `Required`, `Readonly`, `keyof`, and other object helpers

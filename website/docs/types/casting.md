@@ -103,8 +103,8 @@ const otherObj = fooObj as {foo: number, bar: string};  // ERROR
 To use the `as` keyword for type casts, you need to upgrade your infrastructure so that it supports the syntax:
 - Flow and Flow Parser: 0.229+
 - Prettier: 3.1+
-- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../../tools/babel) for more details.
-- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../../tools/eslint) for more details.
+- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../tools/babel.md) for more details.
+- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../tools/eslint.md) for more details.
 
 For more details on how to migrate to the new casting syntax (`as`) check out our [blog post](https://medium.com/flow-type/new-type-casting-syntax-for-flow-as-3ef41567ff3e).
 
@@ -120,7 +120,7 @@ Because type casts work the same as all other type annotations, you can only
 cast values to less specific types. You cannot change the type or make it
 something more specific.
 
-But you can use [any](../any) to cast to whatever type you want.
+But you can use [any](./any.md) to cast to whatever type you want.
 
 ```js flow-check
 let value = 42;
@@ -194,5 +194,5 @@ add a colon `:` with the `Type` and wrap the expression with parentheses `(` `)`
 
 ## See Also {#toc-see-also}
 
-- [Any](../any) — casting through `any` for unsafe type conversions
-- [Subtypes](../../lang/subtypes) — understanding which casts are allowed based on subtyping rules
+- [Any](./any.md) — casting through `any` for unsafe type conversions
+- [Subtypes](../lang/subtypes.md) — understanding which casts are allowed based on subtyping rules

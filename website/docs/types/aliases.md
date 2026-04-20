@@ -37,7 +37,7 @@ declare function foo(x: number): void;
 foo(x); // ok, because MyNumber = number
 ```
 
-[Opaque type aliases](../opaque-types) offer an alternative for when you don't want to treat the
+[Opaque type aliases](./opaque-types.md) offer an alternative for when you don't want to treat the
 types as the same.
 
 ## Type Alias Syntax {#toc-type-alias-syntax}
@@ -63,7 +63,7 @@ type AliasAlias = ObjectAlias;
 
 #### Type Alias Generics {#toc-type-alias-generics}
 
-Type aliases can also have their own [generics](../generics).
+Type aliases can also have their own [generics](./generics.md).
 
 ```js flow-check
 type MyObject<A, B, C> = {
@@ -72,7 +72,7 @@ type MyObject<A, B, C> = {
 };
 ```
 
-Type alias generics are [parameterized](../generics#toc-parameterized-generics).
+Type alias generics are [parameterized](./generics.md#toc-parameterized-generics).
 When you use a type alias you need to pass parameters for each of its generics.
 
 ```js flow-check
@@ -91,6 +91,6 @@ const val: MyObject<number, boolean, string> = {
 
 ## See Also {#toc-see-also}
 
-- [Opaque Type Aliases](../opaque-types) — type aliases that hide their underlying type outside of the defining file
-- [Generics](../generics) — parameterized types used with type aliases and functions
-- [Interfaces](../interfaces) — another way to define reusable types, with structural (shape-based) checking for class instances
+- [Opaque Type Aliases](./opaque-types.md) — type aliases that hide their underlying type outside of the defining file
+- [Generics](./generics.md) — parameterized types used with type aliases and functions
+- [Interfaces](./interfaces.md) — another way to define reusable types, with structural (shape-based) checking for class instances

@@ -6,10 +6,10 @@ description: "How to define Flow Enums, including string, number, boolean, bigin
 
 import {SinceVersion} from '../../components/VersionTags';
 
-Learn how to define a Flow Enum. Looking for a quick overview? Check out the [Quickstart Guide](../#toc-quickstart).
+Learn how to define a Flow Enum. Looking for a quick overview? Check out the [Quickstart Guide](./index.md#toc-quickstart).
 
-An enum declaration is a statement. Its name defines both a value (from which to [access its members](../using-enums/#toc-accessing-enum-members),
-and call its [methods](../using-enums/#toc-methods)), and a type (which can be [used as an annotation](../using-enums/#toc-using-as-a-type-annotation) for the type of its members).
+An enum declaration is a statement. Its name defines both a value (from which to [access its members](./using-enums.md#toc-accessing-enum-members),
+and call its [methods](./using-enums.md#toc-methods)), and a type (which can be [used as an annotation](./using-enums.md#toc-using-as-a-type-annotation) for the type of its members).
 
 Enum members must all be of the same type, and those members can be one of five types:
 [string](#toc-string-enums), [number](#toc-number-enums), [boolean](#toc-boolean-enums), [bigint](#toc-bigint-enums), and [symbol](#toc-symbol-enums).
@@ -22,7 +22,7 @@ They must all be strings, numbers, booleans, or bigints (you do not provide valu
 
 #### Member name starting character {#toc-member-name-starting-character}
 Member names must be valid identifiers (e.g. not start with numbers), and must not start with lowercase `a` through `z`.
-Names starting with those letters are reserved for enum [methods](../using-enums/#toc-methods) (e.g. `Status.cast(...)`).
+Names starting with those letters are reserved for enum [methods](./using-enums.md#toc-methods) (e.g. `Status.cast(...)`).
 
 This is not allowed:
 
@@ -255,7 +255,7 @@ match (status) { // Error
 }
 ```
 
-When this is used, Flow will always require a `default` (for `switch`) or wildcard `_` (for [`match`](../../match))when [checking the enum](../using-enums/#toc-exhaustive-checking-with-unknown-members),
+When this is used, Flow will always require a `default` (for `switch`) or wildcard `_` (for [`match`](../match/index.md))when [checking the enum](./using-enums.md#toc-exhaustive-checking-with-unknown-members),
 even if all known enum members are checked. The `default`/`_` checks for "unknown" members you haven't explicitly listed.
 
 This feature is useful when an enum value crosses some boundary and the enum declaration on each side may have different members.
@@ -268,11 +268,11 @@ Flow Enums with unknown members could be used instead of the added `'%future add
 
 ## Enums at runtime {#toc-enums-at-runtime}
 Enums exist as values at runtime. We use a [Babel transform](https://www.npmjs.com/package/babel-plugin-transform-flow-enums) to transform
-Flow Enum declarations into calls to the [enums runtime](https://www.npmjs.com/package/flow-enums-runtime) (read more in the [enabling enums section](../../enums/#toc-enabling-enums)).
-We use a runtime so all enums can share an implementation of the enum [methods](../using-enums/#toc-methods).
+Flow Enum declarations into calls to the [enums runtime](https://www.npmjs.com/package/flow-enums-runtime) (read more in the [enabling enums section](../enums/index.md#toc-enabling-enums)).
+We use a runtime so all enums can share an implementation of the enum [methods](./using-enums.md#toc-methods).
 
 We use `Object.create(null)` for enums' prototype (which has the enum methods), so properties in `Object.prototype` will not pollute enums.
-The only own properties of the enum object are the enum members. The members are non-enumerable (use the [`.members()` method](../using-enums/#toc-members) for that).
+The only own properties of the enum object are the enum members. The members are non-enumerable (use the [`.members()` method](./using-enums.md#toc-members) for that).
 The entire enum object is frozen, so it cannot be modified.
 
 
@@ -296,8 +296,8 @@ A Flow Enum, like a class, is both a type and a value. You don't need to create 
 
 #### Use dot access for accessing members {#toc-use-dot-access-for-accessing-members}
 Prefer `Status.Active` vs. `const {Active} = Status;`. This makes it easier find uses of the enum with text search, and makes it clearer to the reader what enum is involved.
- Additionally, this is required for [switch statements involving enums](../using-enums/#toc-exhaustively-checking-enums-with-a-switch).
+ Additionally, this is required for [switch statements involving enums](./using-enums.md#toc-exhaustively-checking-enums-with-a-switch).
 
 ## See Also {#toc-see-also}
 
-- [Nominal & Structural Typing](../../lang/nominal-structural) — enums are nominally typed like classes
+- [Nominal & Structural Typing](../lang/nominal-structural.md) — enums are nominally typed like classes

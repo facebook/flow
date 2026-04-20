@@ -29,7 +29,7 @@ flow start --lints "all=warn, untyped-type-import=error, sketchy-null-bool=off"
 
 Lint settings can be specified inside a file using `flowlint` comments. These
 settings apply to a region of a file, or a single line, or part of a line. For
-more details see [Flowlint Comments](./flowlint-comments).
+more details see [Flowlint Comments](./flowlint-comments.md).
 
 ```js flow-check
 // flowlint sketchy-null:error
@@ -81,6 +81,6 @@ Lints with severity `error` are treated exactly the same as any other Flow error
 
 ## See Also {#toc-see-also}
 
-- [`.flowconfig [lints]`](../config/lints) — configuring lint severities in your `.flowconfig`
-- [Flow Strict](../strict/) — enabling stricter type checking with `@flow strict`
-- [ESLint](../tools/eslint) — using ESLint alongside Flow for additional linting
+- [`.flowconfig [lints]`](../config/lints.md) — configuring lint severities in your `.flowconfig`
+- [Flow Strict](../strict/index.md) — enabling stricter type checking with `@flow strict`
+- [ESLint](../tools/eslint.md) — using ESLint alongside Flow for additional linting

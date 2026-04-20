@@ -5,7 +5,7 @@ description: "Legacy patterns for typing React function and class components in 
 ---
 
 :::danger
-Function and class component typing patterns are legacy. For new code, use [Component Syntax](../component-syntax) instead.
+Function and class component typing patterns are legacy. For new code, use [Component Syntax](./component-syntax.md) instead.
 :::
 
 Adding Flow types to your [React components](https://react.dev/learn/your-first-component) is incredibly powerful. After typing
@@ -14,7 +14,7 @@ the way it was designed to be used.
 
 ## Functional Components {#toc-functional-components}
 
-Adding Flow types to a functional component is the same as [adding types to a standard function](../../types/functions/).
+Adding Flow types to a functional component is the same as [adding types to a standard function](../types/functions.md).
 Just create an object type for the props and Flow will ensure that the props passed to the component match up with what is expected.
 
 ```js flow-check
@@ -90,7 +90,7 @@ the `Props` type we defined.
 > **Note:** If you don't need to use the `Props` type again you could also
 > define it inline: `extends React.Component<{ foo: number, bar?: string }>`.
 
-`React.Component<Props, State>` is a [generic type](../../types/generics) that takes two type
+`React.Component<Props, State>` is a [generic type](../types/generics.md) that takes two type
 arguments: props and state. The second type argument, `State`, is optional. By
 default it is `undefined` so you can see in the example above we did not include
 `State`. We will learn more about state in the next section...
@@ -191,6 +191,6 @@ This way you avoid duplicating the properties that happen to have a default valu
 
 ## See Also {#toc-see-also}
 
-- [Classes](../../types/classes) — how class types work in Flow (relevant for class components)
-- [Objects](../../types/objects) — props are typed as object types
-- [Annotation Requirement](../../lang/annotation-requirement) — when explicit type annotations are needed on component props
+- [Classes](../types/classes.md) — how class types work in Flow (relevant for class components)
+- [Objects](../types/objects.md) — props are typed as object types
+- [Annotation Requirement](../lang/annotation-requirement.md) — when explicit type annotations are needed on component props

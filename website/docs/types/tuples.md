@@ -5,7 +5,7 @@ description: "How to type tuples in Flow, including labeled elements, optional e
 ---
 
 Tuple types represent a **fixed length** list, where the elements can have **different types**.
-This is in contrast to [array types](../arrays), which have an unknown length and all elements have the same type.
+This is in contrast to [array types](./arrays.md), which have an unknown length and all elements have the same type.
 
 ## Tuple Basics
 
@@ -113,7 +113,7 @@ const tuple: [number, number] = [1, 2];
 const array: Array<number> = tuple; // Error!
 ```
 
-However, you can pass it to a [`ReadonlyArray`](../arrays/#toc-readonlyarray) type, since mutation is disallowed:
+However, you can pass it to a [`ReadonlyArray`](./arrays.md#toc-readonlyarray) type, since mutation is disallowed:
 
 ```js flow-check
 const tuple: [number, number] = [1, 2];
@@ -134,7 +134,7 @@ tuple.push(3); // Error!
 
 ## Length refinement
 
-You can refine a [union](../unions) of tuples by their length:
+You can refine a [union](./unions.md) of tuples by their length:
 
 ```js flow-check
 type Union = [number, string] | [boolean];
@@ -165,7 +165,7 @@ The label is also necessary to add a variance annotation or optionality modifier
 
 ## Variance annotations and read-only tuples
 
-You can add [variance](../../lang/variance)  annotations (to denote read-only/write-only) on labeled tuple elements, just like on object properties:
+You can add [variance](../lang/variance.md)  annotations (to denote read-only/write-only) on labeled tuple elements, just like on object properties:
 
 ```js flow-check
 type T = [+foo: number, -bar: string];
@@ -180,7 +180,7 @@ function f(readOnlyTuple: [+foo: number, +bar: string]) {
 }
 ```
 
-You can also use the [`Readonly`](../utilities/#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
+You can also use the [`Readonly`](./utilities.md#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
 
 ```js flow-check
 type T = Readonly<[number, string]>; // Same as `[+a: number, +b: string]`
@@ -208,7 +208,7 @@ x[0] = undefined; // ERROR
 x[1] = undefined; // OK: we've added `| void` to the element type
 ```
 
-You can also use the [`Partial`](../utilities/#toc-partial) and [`Required`](../utilities/#toc-required) utility types to make all elements optional or required respectively:
+You can also use the [`Partial`](./utilities.md#toc-partial) and [`Required`](./utilities.md#toc-required) utility types to make all elements optional or required respectively:
 
 ```js flow-check
 type AllRequired = [number, string];
@@ -250,7 +250,7 @@ e as ReadonlyArray<number | void>; // OK
 ```
 
 ## Inexact tuples
-Inexact tuple types work like [inexact objects](../objects#exact-and-inexact-object-types): they allow for unknown members at the end of the tuple.
+Inexact tuple types work like [inexact objects](./objects.md#exact-and-inexact-object-types): they allow for unknown members at the end of the tuple.
 
 ```js flow-check
 [] as [...]; // OK
@@ -297,17 +297,17 @@ you need to upgrade your infrastructure so that it supports the syntax:
 
 - `flow` and `flow-parser`: 0.212
 - `prettier`: 3
-- `babel` with `babel-plugin-syntax-hermes-parser` (v0.15). See [our Babel guide](../../tools/babel/) for setup instructions.
-- `eslint` with `hermes-eslint` (v0.15). See [our ESLint guide](../../tools/eslint/) for setup instructions.
+- `babel` with `babel-plugin-syntax-hermes-parser` (v0.15). See [our Babel guide](../tools/babel.md) for setup instructions.
+- `eslint` with `hermes-eslint` (v0.15). See [our ESLint guide](../tools/eslint.md) for setup instructions.
 
 To use inexact tuples, upgrade to:
 - `flow` and `flow-parser`: 0.243
 - `prettier`: 3.3
-- `babel` with `babel-plugin-syntax-hermes-parser` (v0.23). See [our Babel guide](../../tools/babel/) for setup instructions.
-- `eslint` with `hermes-eslint` (v0.23). See [our ESLint guide](../../tools/eslint/) for setup instructions.
+- `babel` with `babel-plugin-syntax-hermes-parser` (v0.23). See [our Babel guide](../tools/babel.md) for setup instructions.
+- `eslint` with `hermes-eslint` (v0.23). See [our ESLint guide](../tools/eslint.md) for setup instructions.
 
 ## See Also {#toc-see-also}
 
-- [Arrays](../arrays) — variable-length collections where all elements share one type
-- [Unions](../unions) — disjoint tuple unions for type-safe tagged patterns
-- [Objects](../objects) — another core data structure type in Flow
+- [Arrays](./arrays.md) — variable-length collections where all elements share one type
+- [Unions](./unions.md) — disjoint tuple unions for type-safe tagged patterns
+- [Objects](./objects.md) — another core data structure type in Flow

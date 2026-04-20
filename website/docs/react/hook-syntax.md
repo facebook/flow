@@ -164,5 +164,5 @@ component Component() {
 
 ## See Also {#toc-see-also}
 
-- [Generics](../../types/generics) — generic type parameters used in hook signatures
-- [Functions](../../types/functions) — hooks follow similar typing rules to functions
+- [Generics](../types/generics.md) — generic type parameters used in hook signatures
+- [Functions](../types/functions.md) — hooks follow similar typing rules to functions

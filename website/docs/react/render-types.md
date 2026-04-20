@@ -312,7 +312,7 @@ Render types are a type-only concept — you cannot inspect or compare component
 if (icon === FancyIcon) { ... }
 ```
 
-If you need to distinguish between different rendered components at runtime, use a [disjoint union](../../types/unions/#toc-disjoint-object-unions) wrapper instead:
+If you need to distinguish between different rendered components at runtime, use a [disjoint union](../types/unions.md#toc-disjoint-object-unions) wrapper instead:
 
 ```js flow-check
 import * as React from 'react';
@@ -334,5 +334,5 @@ component Layout(icon: IconProp) {
 
 ## See Also {#toc-see-also}
 
-- [Unions](../../types/unions) — render types interact with union types for flexible rendering
-- [Subtypes](../../lang/subtypes) — how render type subtyping works
+- [Unions](../types/unions.md) — render types interact with union types for flexible rendering
+- [Subtypes](../lang/subtypes.md) — how render type subtyping works

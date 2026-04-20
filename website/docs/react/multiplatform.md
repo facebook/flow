@@ -97,7 +97,7 @@ When you enabled multiplatform support, you will likely see that error that the 
 
 One option is to write a common interface file in `.js.flow`:
 
-With [Component Types](../component-types/)
+With [Component Types](./component-types.md)
 ```jsx title=Image.js.flow
 import * as React from 'react';
 
@@ -107,7 +107,7 @@ declare const Image: component(...Props);
 export default Image;
 ```
 
-With [React.ComponentType](../types#toc-react-componenttype)
+With [React.ComponentType](./types.md#toc-react-componenttype)
 ```jsx title=Image.js.flow
 import * as React from 'react';
 

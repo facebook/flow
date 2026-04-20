@@ -40,7 +40,7 @@ choose between [Babel](https://babeljs.io/) and
 
 [Babel](https://babeljs.io/) is a compiler for JavaScript code that has
 support for Flow. Babel will take your Flow code and strip out any type
-annotations. If you already use Babel in your project, see [using Babel](../tools/babel).
+annotations. If you already use Babel in your project, see [using Babel](./tools/babel.md).
 
 First install `@babel/core`, `@babel/cli`, `@babel/preset-flow`, and `babel-plugin-syntax-hermes-parser` with
 either [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
@@ -198,7 +198,7 @@ project targets.
 
 ### Setup ESLint {#toc-setup-eslint}
 
-If you use ESLint, you can read [our page on ESLint](../tools/eslint) to set it up to support Flow.
+If you use ESLint, you can read [our page on ESLint](./tools/eslint.md) to set it up to support Flow.
 
 ## Usage {#toc-usage}
 
@@ -210,11 +210,11 @@ Preparing a project for Flow requires only one command:
 flow init
 ```
 
-Run this command at the top level of your project to create one, empty file called [`.flowconfig`](../config/). At its most basic level, `.flowconfig` tells the Flow background process the root of where to begin checking Flow code for errors.
+Run this command at the top level of your project to create one, empty file called [`.flowconfig`](./config/index.md). At its most basic level, `.flowconfig` tells the Flow background process the root of where to begin checking Flow code for errors.
 
 And that is it. Your project is now Flow-enabled.
 
-> It is common to have an empty `.flowconfig` file for your project. However, you can [configure and customize Flow](../config/) in many ways through options available to be added to `.flowconfig`.
+> It is common to have an empty `.flowconfig` file for your project. However, you can [configure and customize Flow](./config/index.md) in many ways through options available to be added to `.flowconfig`.
 
 ### Run the Flow Background Process {#toc-run-the-flow-background-process}
 
@@ -280,8 +280,8 @@ For the [code above](#toc-write-flow-code), running `flow` will yield:
 
 ## See Also {#toc-see-also}
 
-- [Configuration](../config/) — customizing Flow behavior with `.flowconfig`
-- [Type Annotations](../types/) — all the types you can use in Flow
-- [Editor Setup](../editors/) — integrating Flow into your IDE
-- [Babel](../tools/babel) — detailed Babel setup for stripping Flow types
-- [ESLint](../tools/eslint) — setting up ESLint to work with Flow
+- [Configuration](./config/index.md) — customizing Flow behavior with `.flowconfig`
+- [Type Annotations](./types/index.md) — all the types you can use in Flow
+- [Editor Setup](./editors/index.md) — integrating Flow into your IDE
+- [Babel](./tools/babel.md) — detailed Babel setup for stripping Flow types
+- [ESLint](./tools/eslint.md) — setting up ESLint to work with Flow

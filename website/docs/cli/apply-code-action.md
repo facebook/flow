@@ -137,4 +137,4 @@ When multiple modules export the same name, all candidates are listed so you can
 
 ## See Also {#toc-see-also}
 
-- [Editor Setup](../../editors/) — IDE integrations that provide code actions interactively
+- [Editor Setup](../editors/index.md) — IDE integrations that provide code actions interactively

@@ -17,13 +17,13 @@ like `react-native` as well.
 
 Flow and Babel work well together, so it doesn't take much to adopt Flow as a
 React user who already uses Babel. If you need to setup Babel with Flow, you can
-follow [this guide](../tools/babel/).
+follow [this guide](../tools/babel.md).
 
 ## Check Out Component Syntax
 Flow supports a dedicated syntax for writing React components and hooks that we recommend instead of using regular
 function/class components. Ensure you are set up using our [most up-to-date instructions to
-configure your toolchain](../getting-started#toc-installation) and then take a look at the [Component Syntax](./component-syntax)
-and [Hook Syntax](./hook-syntax) docs.
+configure your toolchain](../getting-started.md#toc-installation) and then take a look at the [Component Syntax](./component-syntax.md)
+and [Hook Syntax](./hook-syntax.md) docs.
 
 ## React Runtimes
 

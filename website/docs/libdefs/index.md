@@ -26,9 +26,9 @@ normal JS files.
 >       enables Flow to JustWork™ out of the box and encourages consistency
 >       across projects that use Flow, but it is also possible to explicitly
 >       configure Flow to look elsewhere for libdefs using the [`[libs]` section
->       of your `.flowconfig`](../config/libs).
+>       of your `.flowconfig`](../config/libs.md).
 
-You can also learn about [declaration files](../declarations).
+You can also learn about [declaration files](../declarations/index.md).
 
 ## General Best Practices {#toc-general-best-practices}
 
@@ -47,6 +47,6 @@ third-party dependencies.
 
 ## See Also {#toc-see-also}
 
-- [Declaration Files](../declarations/) — `.flow` files for declaring types alongside untyped modules
-- [Module Types](../types/modules) — how to import and export types between modules
-- [`.flowconfig [libs]`](../config/libs) — configuring library definition paths
+- [Declaration Files](../declarations/index.md) — `.flow` files for declaring types alongside untyped modules
+- [Module Types](../types/modules.md) — how to import and export types between modules
+- [`.flowconfig [libs]`](../config/libs.md) — configuring library definition paths

@@ -12,7 +12,7 @@ refer to these expressions as const-expressions.
 
 ## Typing for Const Expressions {#toc-const-expression-typing}
 
-The inferred type of const-expressions is the [singleton type](../literals) for primitive values
+The inferred type of const-expressions is the [singleton type](./literals.md) for primitive values
 and the read-only versions for container types. Array literals are inferred as tuple types.
 
 Here are some examples of primitive values:
@@ -83,7 +83,7 @@ would make it unsuitable as a distinguishing tag in a disjoint union.
 ## Const Expressions for React JSX <SinceVersion version="0.284" />{#toc-const-expression-jsx}
 
 :::info
-Check out [render types](../../react/render-types/) and [react type references](../../react/types/) if you are not familiar with React typing in Flow.
+Check out [render types](../react/render-types.md) and [react type references](../react/types.md) if you are not familiar with React typing in Flow.
 :::
 
 Since version 0.284, Flow will infer a more general type for React JSX elements by default.
@@ -131,8 +131,8 @@ onlyAllowsExactDiv(divSpecific); // OK
 To use the `as const` syntax, you need to upgrade your infrastructure:
 - Flow and Flow Parser: 0.256+
 - Prettier: 3.1+
-- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../../tools/babel) for more details.
-- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../../tools/eslint) for more details.
+- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../tools/babel.md) for more details.
+- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../tools/eslint.md) for more details.
 
 ## `const` Type Parameters
 
@@ -174,5 +174,5 @@ To use the `as const` syntax, you need to upgrade your infrastructure:
   * 0.267 and 0.268 and passing the `experimental.const_type_params=true` flag in the flowconfig
   * 0.269+ without the flag.
 - Prettier: 3.5+
-- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../../tools/babel) for more details.
-- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../../tools/eslint) for more details.
+- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../tools/babel.md) for more details.
+- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../tools/eslint.md) for more details.

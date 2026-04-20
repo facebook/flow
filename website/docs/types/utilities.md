@@ -10,7 +10,7 @@ Flow provides a set of utility types to operate on other types to create new typ
 
 ## `keyof T` <SinceVersion version="0.290" /> (alias `$Keys<T>`) {#toc-keys}
 
-You can extract the type of the keys from an [object type](../objects). Typically this will be a [union](../unions) of [string literal](../literals) types:
+You can extract the type of the keys from an [object type](./objects.md). Typically this will be a [union](./unions.md) of [string literal](./literals.md) types:
 
 ```js flow-check
 const countries = {
@@ -27,12 +27,12 @@ const nope: Country = 'nope'; // Error!
 
 In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
 
-If you want to create an enum type, [Flow Enums](../../enums) might be a better fit for your use-case.
+If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
 ## `Values<T>` <SinceVersion version="0.290" /> (alias `$Values<T>`) {#toc-values}
 
-`Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](../objects/),
-or the elements of an [array](../arrays) or [tuple](../tuples) type (support for arrays and tuples in Flow version <SinceVersion version="0.240" />):
+`Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](./objects.md),
+or the elements of an [array](./arrays.md) or [tuple](./tuples.md) type (support for arrays and tuples in Flow version <SinceVersion version="0.240" />):
 
 ```js flow-check
 type Props = {
@@ -60,7 +60,7 @@ type Num = Values<Tup>; //=> 1 | 2
 1 as Num; // OK
 ```
 
-Note that using `Values` on the [`typeof`](../typeof) an object or array literal will result in a type more general than you might expect:
+Note that using `Values` on the [`typeof`](./typeof.md) an object or array literal will result in a type more general than you might expect:
 
 ```js flow-check
 const obj = {
@@ -88,14 +88,14 @@ acceptsValues(1); // Works
 acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
 ```
 
-If you want to create an enum type, [Flow Enums](../../enums) might be a better fit for your use-case.
+If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
 ## `Readonly<T>` <SinceVersion version="0.290" /> (alias `$ReadOnly<T>`) {#toc-readonly}
 
-`Readonly<T>` is a type that represents the read-only version of a given [object type](../objects/)
-or [tuple type](../tuples) `T` (support for tuples is for Flow <SinceVersion version="0.212" />).
-A read-only object type is an object type whose keys are all [read-only](../objects/#read-only-object-properties).
-Similarly, a read-only tuple is one where each element is [read-only](../tuples/#variance-annotations-and-read-only-tuples).
+`Readonly<T>` is a type that represents the read-only version of a given [object type](./objects.md)
+or [tuple type](./tuples.md) `T` (support for tuples is for Flow <SinceVersion version="0.212" />).
+A read-only object type is an object type whose keys are all [read-only](./objects.md#read-only-object-properties).
+Similarly, a read-only tuple is one where each element is [read-only](./tuples.md#variance-annotations-and-read-only-tuples).
 
 This means that the following are equivalent:
 ```js flow-check
@@ -128,7 +128,7 @@ function render(props: ReadOnlyProps) {
 }
 ```
 
-Additionally, other utility types, such as [spread](../objects/#object-type-spread), may strip any read/write annotations, so `Readonly<T>` is a handy way to quickly make the object read-only again after operating on it:
+Additionally, other utility types, such as [spread](./objects.md#object-type-spread), may strip any read/write annotations, so `Readonly<T>` is a handy way to quickly make the object read-only again after operating on it:
 
 ```js flow-check
 type Obj = {
@@ -140,7 +140,7 @@ type MappedObj = Readonly<{...Obj, foo: string}> // Still read-only
 
 The `Readonly` utility works on object and tuple types.
 If you want to make other types read-only, you can use one of the following:
-- `Array<T>` -> [`ReadonlyArray<T>`](../arrays/#toc-readonlyarray)
+- `Array<T>` -> [`ReadonlyArray<T>`](./arrays.md#toc-readonlyarray)
 - `Set<T>` -> `ReadonlySet<T>`
 - `Map<K, V>` -> `ReadonlyMap<K, V>`
 - `WeakSet<T>` -> `ReadonlyWeakSet<T>`
@@ -152,7 +152,7 @@ This utility converts all of an object or interface's named fields to be optiona
 while maintaining all the object's other properties (e.g. exactness, variance).
 Use this utility instead of `$Shape`.
 
-Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [optional](../tuples/#optional-tuple-elements).
+Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [optional](./tuples.md#optional-tuple-elements).
 
 Example for objects:
 ```js flow-check
@@ -205,7 +205,7 @@ Note: Up until Flow version 0.201, this utility type was named `$Partial`.
 The `Required` utility type is the opposite of [`Partial`](#toc-partial):
 it converts all of an object or interface’s optional fields to be required.
 
-Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [required](../tuples/#optional-tuple-elements).
+Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [required](./tuples.md#optional-tuple-elements).
 
 Example for objects:
 ```js flow-check
@@ -239,7 +239,7 @@ true as Bool;
 
 ## `Parameters<F>` <SinceVersion version="0.209" /> {#toc-parameters}
 
-This utility type extracts the parameter types from a given function type into a [tuple type](../tuples/).
+This utility type extracts the parameter types from a given function type into a [tuple type](./tuples.md).
 
 ```js flow-check
 declare function f(s: string, n: number): boolean;
@@ -389,7 +389,7 @@ const idx: IndexedObject = {}; // no error
 
 ## `$Exact<T>` {#toc-exact}
 
-You can use `$Exact` to make an [inexact object type](../objects/#exact-and-inexact-object-types) exact:
+You can use `$Exact` to make an [inexact object type](./objects.md#exact-and-inexact-object-types) exact:
 
 ```js flow-check
 type InexactUser = {name: string, ...};
@@ -401,7 +401,7 @@ const a: ExactUser = user;
 const b: {name: string} = user;
 ```
 
-This is a utility type to avoid, as it's clearer and more concise to start off with an exact object type and make it inexact using [object type spread](../objects/#object-type-spread)
+This is a utility type to avoid, as it's clearer and more concise to start off with an exact object type and make it inexact using [object type spread](./objects.md#object-type-spread)
 (if you wish to have both inexact and exact variants of one object type):
 
 ```js flow-check
@@ -414,7 +414,7 @@ const a: ExactUser = user;
 
 ## `NonNullable<T>` <SinceVersion version="0.290" /> (alias `$NonMaybeType<T>`) {#toc-nonmaybe}
 
-`NonNullable<T>` converts a type `T` to a non-[maybe type](../maybe).
+`NonNullable<T>` converts a type `T` to a non-[maybe type](./maybe.md).
 In other words, the values of `NonNullable<T>` are the values of `T` except for `null` and `undefined`.
 
 ```js flow-check
@@ -589,7 +589,7 @@ type Exclaim = StringSuffix<'!'>;
 'random string' as Exclaim; // ERROR
 ```
 
-You can combine these with [intersection types](../intersections):
+You can combine these with [intersection types](./intersections.md):
 
 ```js flow-check
 type CSSVar = StringPrefix<'var(--'> & StringSuffix<')'>;
@@ -622,31 +622,31 @@ Removed. Use [`Omit`](#toc-omit) instead.
 
 ### `$PropertyType<T, k>` <UntilVersion version="0.265" /> {#toc-propertytype}
 
-Removed. Use the `T['k']` [indexed access type](../indexed-access) instead.
+Removed. Use the `T['k']` [indexed access type](./indexed-access.md) instead.
 
 ### `$ElementType<T, K>` <UntilVersion version="0.265" /> {#toc-elementtype}
 
-Removed. Use the `T[K]` [indexed access type](../indexed-access) instead.
+Removed. Use the `T[K]` [indexed access type](./indexed-access.md) instead.
 
 ### `$TupleMap<T, F>` <UntilVersion version="0.247" /> {#toc-tuplemap}
 
-Removed. Use [Mapped Types](../mapped-types) instead.
+Removed. Use [Mapped Types](./mapped-types.md) instead.
 
 ### `$Call<F, T...>` <UntilVersion version="0.247" /> {#toc-call}
 
-Removed. Use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) instead.
+Removed. Use [Conditional Types](./conditional.md) or [Indexed Access Types](./indexed-access.md) instead.
 
 ### `$ObjMap<T, F>` <UntilVersion version="0.246" /> {#toc-objmap}
 
-Removed. Use [Mapped Types](../mapped-types) instead.
+Removed. Use [Mapped Types](./mapped-types.md) instead.
 
 ### `$ObjMapi<T, F>` <UntilVersion version="0.246" /> {#toc-objmapi}
 
-Removed. Use [Mapped Types](../mapped-types) instead.
+Removed. Use [Mapped Types](./mapped-types.md) instead.
 
 ### `$ObjMapConst<O, T>` <UntilVersion version="0.246" /> {#toc-objmapconst}
 
-Removed. Use [Mapped Types](../mapped-types) instead.
+Removed. Use [Mapped Types](./mapped-types.md) instead.
 
 ### `$Partial` <UntilVersion version="0.202" />
 
@@ -658,7 +658,7 @@ Removed. Use [`Partial`](#toc-partial) instead.
 
 ## See Also {#toc-see-also}
 
-- [Mapped Types](../mapped-types) — a general mechanism for transforming object types (generalizes many utility types)
-- [Conditional Types](../conditional) — type-level conditionals for more complex transformations
-- [Generics](../generics) — most utility types are generic; understanding generics helps use them effectively
-- [Indexed Access Types](../indexed-access) — extracting property types from objects and tuples
+- [Mapped Types](./mapped-types.md) — a general mechanism for transforming object types (generalizes many utility types)
+- [Conditional Types](./conditional.md) — type-level conditionals for more complex transformations
+- [Generics](./generics.md) — most utility types are generic; understanding generics helps use them effectively
+- [Indexed Access Types](./indexed-access.md) — extracting property types from objects and tuples

@@ -14,15 +14,15 @@ The `.flowconfig` uses a custom format that vaguely resembles INI files.
 
 The `.flowconfig` consists of different sections:
 
-* [`[version]`](./version)
-* [`[options]`](./options)
-* [`[include]`](./include)
-* [`[ignore]`](./ignore)
-* [`[untyped]`](./untyped)
-* [`[declarations]`](./declarations)
-* [`[libs]`](./libs)
-* [`[lints]`](./lints)
-* [`[strict]`](../strict/#toc-enabling-flow-strict-in-a-flowconfig)
+* [`[version]`](./version.md)
+* [`[options]`](./options.md)
+* [`[include]`](./include.md)
+* [`[ignore]`](./ignore.md)
+* [`[untyped]`](./untyped.md)
+* [`[declarations]`](./declarations.md)
+* [`[libs]`](./libs.md)
+* [`[lints]`](./lints.md)
+* [`[strict]`](../strict/index.md#toc-enabling-flow-strict-in-a-flowconfig)
 
 ### Comments {#toc-comments}
 
@@ -43,7 +43,7 @@ ignored. For example:
 The location of the `.flowconfig` is significant. Flow treats the directory that
 contains the `.flowconfig` as the _project root_. By default Flow includes all
 the source code under the project root. The paths in the
-[[include] section](./include) are relative to the project root. Some other
+[[include] section](./include.md) are relative to the project root. Some other
 configuration also lets you reference the project root via the macro
 `<PROJECT_ROOT>`.
 

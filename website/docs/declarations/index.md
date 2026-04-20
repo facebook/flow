@@ -46,7 +46,7 @@ will be used instead of the code in `src/Misc.js`. Let's say we have the
 following declarations in `src/Misc.js.flow`.
 
 > NOTE: The syntax for declarations in a declaration file is the same as we've seen in
->       [Creating Library Definitions section](../libdefs/creation).
+>       [Creating Library Definitions section](../libdefs/creation.md).
 
 ```js flow-check
 declare export function isLeapYear(year: string): boolean;
@@ -88,6 +88,6 @@ Just don't forget to replace the declarations with proper implementations.
 
 ## See Also {#toc-see-also}
 
-- [Library Definitions](../libdefs/) — declaring types for third-party npm packages
-- [Module Types](../types/modules) — importing and exporting types between modules
-- [`.flowconfig [declarations]`](../config/declarations) — configuring declaration mode for third-party code
+- [Library Definitions](../libdefs/index.md) — declaring types for third-party npm packages
+- [Module Types](../types/modules.md) — importing and exporting types between modules
+- [`.flowconfig [declarations]`](../config/declarations.md) — configuring declaration mode for third-party code

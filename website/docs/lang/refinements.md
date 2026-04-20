@@ -6,7 +6,7 @@ description: "How Flow narrows types based on conditional checks, typeof, equali
 
 Refinements allow us to narrow the type of a value based on conditional tests.
 
-For example, in the function below `value` is a [union](../../types/unions) of `"A"` or `"B"`.
+For example, in the function below `value` is a [union](../types/unions.md) of `"A"` or `"B"`.
 
 ```js flow-check
 function func(value: "A" | "B") {
@@ -69,7 +69,7 @@ function func(value: unknown) {
 }
 ```
 
-To check for [arrays](../../types/arrays), use `Array.isArray`:
+To check for [arrays](../types/arrays.md), use `Array.isArray`:
 
 ```js flow-check
 function func(value: unknown) {
@@ -108,7 +108,7 @@ function func(value: "A" | "B" | "C") {
 
 While in general it is not recommended to use `==` in JavaScript, due to the coercions it performs,
 doing `value == null` (or `value != null`) checks `value` exactly for `null` and `void`.
-This works well with Flow's [maybe](../../types/maybe) types, which create a union with `null` and `void`.
+This works well with Flow's [maybe](../types/maybe.md) types, which create a union with `null` and `void`.
 
 ```js flow-check
 function func(value: ?string) {
@@ -120,7 +120,7 @@ function func(value: ?string) {
 }
 ```
 
-You can refine a union of object types based on a common tag, which we call [disjoint object unions](../../types/unions/#toc-disjoint-object-unions):
+You can refine a union of object types based on a common tag, which we call [disjoint object unions](../types/unions.md#toc-disjoint-object-unions):
 
 ```js flow-check
 type A = {type: "A", s: string};
@@ -155,7 +155,7 @@ function func(value: ?string) {
 
 You can see in the above example why doing a truthy check when your value can be a string or number is not suggested:
 it is possible to unintentionally check against the `""` or `0`.
-We created a [Flow lint](../../linting) called [sketchy-null](../../linting/rule-reference/#toc-sketchy-null) to guard against this scenario:
+We created a [Flow lint](../linting/index.md) called [sketchy-null](../linting/rule-reference.md#toc-sketchy-null) to guard against this scenario:
 
 ```js flow-check
 // flowlint sketchy-null:error
@@ -181,13 +181,13 @@ function func(obj: {foo: string, value: boolean} | {bar: string, value: number})
 }
 ```
 
-This works best on unions of [exact objects](../../types/objects/#exact-and-inexact-object-types), since in the negation we know the property does not exist.
-We cannot say the same for [inexact objects](../../types/objects/#exact-and-inexact-object-types), [interfaces](../../types/interfaces/), and [instance types](../../types/classes/),
+This works best on unions of [exact objects](../types/objects.md#exact-and-inexact-object-types), since in the negation we know the property does not exist.
+We cannot say the same for [inexact objects](../types/objects.md#exact-and-inexact-object-types), [interfaces](../types/interfaces.md), and [instance types](../types/classes.md),
 since they may have other unknown properties, including the one we are checking.
-Additionally, [optional properties](../../types/objects/#toc-optional-object-type-properties) may or may not exist, so are not particularly useful to check against.
+Additionally, [optional properties](../types/objects.md#toc-optional-object-type-properties) may or may not exist, so are not particularly useful to check against.
 
-If you want to refine a union of [tuple types](../../types/tuples/) based on whether an element exists,
-check the [length](../../types/tuples/#length-refinement) property instead of attempting to use `in`.
+If you want to refine a union of [tuple types](../types/tuples.md) based on whether an element exists,
+check the [length](../types/tuples.md#length-refinement) property instead of attempting to use `in`.
 
 ### `instanceof` checks
 
@@ -238,7 +238,7 @@ x as string; // Works
 
 ### Type Guards
 
-You can create a reusable refinement by defining a function which is a [type guard](../../types/type-guards/).
+You can create a reusable refinement by defining a function which is a [type guard](../types/type-guards.md).
 
 ```js flow-check
 function nonMaybe<T>(x: ?T): implies x is T {
@@ -310,7 +310,7 @@ function func(value: {prop?: string}) {
 
 ## See Also {#toc-see-also}
 
-- [Type Guards](../../types/type-guards) — custom functions that act as user-defined refinements
-- [Unions](../../types/unions) — refinements are most commonly used to narrow union types
-- [Maybe Types](../../types/maybe) — refining nullable values with `!= null` checks
-- [Variables](../variables) — how variable declarations interact with refinement
+- [Type Guards](../types/type-guards.md) — custom functions that act as user-defined refinements
+- [Unions](../types/unions.md) — refinements are most commonly used to narrow union types
+- [Maybe Types](../types/maybe.md) — refining nullable values with `!= null` checks
+- [Variables](./variables.md) — how variable declarations interact with refinement

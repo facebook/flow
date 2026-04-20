@@ -202,9 +202,9 @@ function findIDValue<T>(dict: {[key: string]: T}): T {
 ## Catch variables <SinceVersion version="0.197" />
 
 If a `catch` variable does not have an annotation, its default type is
-[`any`](../../types/any).
+[`any`](../types/any.md).
 
-You can optionally annotate it with exactly [`unknown`](../../types/unknown) or
+You can optionally annotate it with exactly [`unknown`](../types/unknown.md) or
 `any`. E.g.
 
 ```js flow-check
@@ -221,14 +221,14 @@ try {
 ```
 
 By using `unknown`, you can improve your safety and Flow
-[coverage](../../cli/coverage/), at the trade-off of increased runtime checks.
+[coverage](../cli/coverage.md), at the trade-off of increased runtime checks.
 
 You can change the default type of `catch` variables when there is no annotation
 by setting the
-[`use_unknown_in_catch_variables`](../../config/options/#toc-use-unknown-in-catch-variables)
+[`use_unknown_in_catch_variables`](../config/options.md#toc-use-unknown-in-catch-variables)
 option to true.
 
 ## See Also {#toc-see-also}
 
-- [Annotation Requirement](../annotation-requirement) — when Flow requires explicit type annotations
-- [Refinements](../refinements) — how variable types are narrowed by conditional checks
+- [Annotation Requirement](./annotation-requirement.md) — when Flow requires explicit type annotations
+- [Refinements](./refinements.md) — how variable types are narrowed by conditional checks

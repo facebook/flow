@@ -5,13 +5,13 @@ description: "Configure Flow to skip typechecking for files matching specified p
 ---
 
 The `[untyped]` section in a `.flowconfig` file tells Flow to not typecheck files
-matching the specified regular expressions and instead throw away types and treat modules as [`any`](../../types/any).
+matching the specified regular expressions and instead throw away types and treat modules as [`any`](../types/any.md).
 
-This is different from the [`[ignore]`](../ignore) config section that causes matching files to be ignored by the module resolver,
+This is different from the [`[ignore]`](./ignore.md) config section that causes matching files to be ignored by the module resolver,
 which inherently makes them un-typechecked, and also unresolvable by `import` or `require`.
-When ignored, [`[libs]`](../libs) must then be specified for each `import` using `flow-typed`, which may not always be desired.
+When ignored, [`[libs]`](./libs.md) must then be specified for each `import` using `flow-typed`, which may not always be desired.
 
-It is also different from the [`[declarations]`](../declarations) section.
+It is also different from the [`[declarations]`](./declarations.md) section.
 This also does not typecheck the file contents, but `[declarations]` does extract and use the signatures of functions, classes, etc, when checking other code.
 
 `[untyped]` instead causes a file to be ignored by the typechecker as if it had `@noflow` in it,
@@ -58,6 +58,6 @@ directories named `third_party/`, like `src/third_party/`.
 
 ## See Also {#toc-see-also}
 
-- [`.flowconfig [declarations]`](../declarations) — a related mode that extracts type signatures without typechecking
-- [`.flowconfig [ignore]`](../ignore) — completely excluding files from Flow's module resolver
-- [Any](../../types/any) — the type that untyped modules are treated as
+- [`.flowconfig [declarations]`](./declarations.md) — a related mode that extracts type signatures without typechecking
+- [`.flowconfig [ignore]`](./ignore.md) — completely excluding files from Flow's module resolver
+- [Any](../types/any.md) — the type that untyped modules are treated as

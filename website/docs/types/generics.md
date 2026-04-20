@@ -403,7 +403,7 @@ parentheses for a function call).
 You can also specify the subtyping behavior of a generic via variance sigils.
 By default, generics behave invariantly, but you may add a `+` to their
 declaration to make them behave covariantly, or a `-` to their declaration to
-make them behave contravariantly. See [our docs on variance](../../lang/variance)
+make them behave contravariantly. See [our docs on variance](../lang/variance.md)
 for a more information on variance in Flow.
 
 Variance sigils allow you to be more specific about how you intend to
@@ -437,8 +437,8 @@ type NotActuallyCovariant<+T> = (T) => void; // Error
 
 ## See Also {#toc-see-also}
 
-- [Type Aliases](../aliases) — defining named types, often combined with generics
-- [Functions](../functions) — using generics in function signatures
-- [Variance](../../lang/variance) — how covariance and contravariance interact with generics
-- [Conditional Types](../conditional) — types computed from generic type parameters
-- [Mapped Types](../mapped-types) — transforming object types using generics
+- [Type Aliases](./aliases.md) — defining named types, often combined with generics
+- [Functions](./functions.md) — using generics in function signatures
+- [Variance](../lang/variance.md) — how covariance and contravariance interact with generics
+- [Conditional Types](./conditional.md) — types computed from generic type parameters
+- [Mapped Types](./mapped-types.md) — transforming object types using generics

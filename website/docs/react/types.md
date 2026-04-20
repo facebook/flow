@@ -119,11 +119,11 @@ const array: Array<number> = React.Children.toArray(children);
 
 ## `React.ComponentType<Props>` {#toc-react-componenttype}
 
-This is an alias for `component(...Props)`. See [Component Types](../component-types).
+This is an alias for `component(...Props)`. See [Component Types](./component-types.md).
 
 ## `React.ElementType` {#toc-react-elementtype}
 
-Similar to [Component Types](../component-types) except it also
+Similar to [Component Types](./component-types.md) except it also
 includes JSX intrinsics (strings).
 
 The definition for `React.ElementType` is roughly:
@@ -181,7 +181,7 @@ type Ref<-T> =
 ```
 
 ## `React.PropsOf<Component>` {#toc-react-propsof}
-When `Component` is written using [Component Syntax](../component-syntax), `React.PropsOf<Component>`
+When `Component` is written using [Component Syntax](./component-syntax.md), `React.PropsOf<Component>`
 gives you the type of an object that you must pass in to instantiate `Component` with JSX.
 Importantly, the props with defaults are optional in the resulting type.
 
@@ -201,7 +201,7 @@ component MyComponent(foo: number, bar: string = 'str') {
 
 Like [React.PropsOf](#toc-react-propsof), this utility gets the type of the object that you must pass in to a
 component in order to instantiate it via `createElement()` or `jsx()`. While `PropsOf` takes in an element of
-a component, which is convenient when using [Component Syntax](../component-syntax), `ElementConfig` takes in the type of a component
+a component, which is convenient when using [Component Syntax](./component-syntax.md), `ElementConfig` takes in the type of a component
 instead. `typeof Component` must be the type *of* a React component so you need to use `typeof` as in
 `React.ElementConfig<typeof Component>`.
 
@@ -234,7 +234,7 @@ Note that `typeof Component` must be the type *of* a React component so you need
 ## `React.ElementProps<typeof Component>` <UntilVersion version="0.287" /> {#toc-react-elementprops}
 
 :::warning
-Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is the right choice, especially for simple props pass-through as with [higher-order components](../hoc/).
+Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is the right choice, especially for simple props pass-through as with [higher-order components](./hoc.md).
 Therefore, this type was removed in 0.288.0.
 :::
 
@@ -246,7 +246,7 @@ Note that `typeof Component` must be the type *of* a React component so you need
 `typeof` as in `React.ElementProps<typeof MyComponent>`.
 ## `React.RefOf<Component>` {#toc-react-refof}
 
-When using [Component Syntax](../component-syntax), `React.RefOf<Component>` will give you
+When using [Component Syntax](./component-syntax.md), `React.RefOf<Component>` will give you
 the type of the `current` field on the `ref` prop of the component. If there is no `ref` prop
 on the component it will return `void`.
 
@@ -274,7 +274,7 @@ Note that `typeof Component` must be the type *of* a React component so you need
 :::warning
 This is an exact replacement of the removed 'React.Element' type since 0.245.
 You should use `React.MixedElement` or `React.Node` instead.
-If you want to enforce design system constraints, use [render types](../render-types) instead.
+If you want to enforce design system constraints, use [render types](./render-types.md) instead.
 :::
 
 A React element is the type for the value of a JSX element:
@@ -324,7 +324,7 @@ These types used to exist, but no longer exist in latest versions of Flow.
 ### `React.AbstractComponent<Config, Instance, Renders>` <UntilVersion version="0.250" /> {#toc-react-abstractcomponent}
 
 :::warning
-In Flow v0.243.0+, consider using [Component Types](../component-types) instead, which will make
+In Flow v0.243.0+, consider using [Component Types](./component-types.md) instead, which will make
 it easier to migrate your Flow code to React 19. The type was removed in Flow v0.251.0.
 :::
 
@@ -334,8 +334,8 @@ a config of type Config and instance of type Instance that renders something of 
 The `Config` of a component is the type of the object you need to pass in to JSX in order
 to create an element with that component. The `Instance` of a component is the type of the value
 that is written to the `current` field of a ref object passed into the `ref` prop in JSX.
-`Renders` is a [Component Syntax](../component-syntax) feature that allows you to specify what your
-component renders via [Render Types](../render-types)
+`Renders` is a [Component Syntax](./component-syntax.md) feature that allows you to specify what your
+component renders via [Render Types](./render-types.md)
 
 `Config` is required, but `Instance` is optional and defaults to `unknown` and `Renders` is optional and defaults to `React.Node`.
 
@@ -393,5 +393,5 @@ type Ref<C> =
 
 ## See Also {#toc-see-also}
 
-- [Utility Types](../../types/utilities) — Flow's general-purpose utility types
-- [Generics](../../types/generics) — many React types are parameterized with generics
+- [Utility Types](../types/utilities.md) — Flow's general-purpose utility types
+- [Generics](../types/generics.md) — many React types are parameterized with generics

@@ -181,7 +181,7 @@ declare module "some-third-party-library" {
 The name specified in quotes after `declare module` can be any string, but it
 should correspond to the same string you'd use to `require` or `import` the
 third-party module into your project. For defining modules that are accessed via
-a relative `require`/`import` path, please see the docs on the [`.flow` files](../../declarations)
+a relative `require`/`import` path, please see the docs on the [`.flow` files](../declarations/index.md)
 
 Within the body of a `declare module` block, you can specify the set of exports
 for that module. However, before we start talking about exports we have to talk
@@ -291,5 +291,5 @@ NOTE: Because a given module cannot be both an ES module and a CommonJS module,
 
 ## See Also {#toc-see-also}
 
-- [Declaration Files](../../declarations/) — an alternative approach using `.flow` files
-- [Module Types](../../types/modules) — how types are imported and exported between modules
+- [Declaration Files](../declarations/index.md) — an alternative approach using `.flow` files
+- [Module Types](../types/modules.md) — how types are imported and exported between modules

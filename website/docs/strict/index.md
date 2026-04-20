@@ -10,16 +10,16 @@ You can enable stronger safety guarantees in Flow (such as banning `any`/`Object
 Flow was designed for easy adoption, so it allows you opt-out of type checking in certain situations, permitting unsafe behaviors. But since many codebases now have a high adoption of Flow types, this trade-off can be flipped.  You can use *Flow Strict* to disallow previously-allowed unsafe patterns. This gives you improved safety guarantees that catch more bugs and make refactoring easier. And you can implement these stronger guarantees incrementally, on a file-by-file basis.
 
 ### Features {#toc-features}
-Enabling Flow Strict for a file means that several previously-allowed patterns will now trigger a Flow error. Each disallowed pattern has a corresponding [Flow Lint](../linting/) rule which triggers the error. The list of rules enabled for `@flow strict` is configured in each `.flowconfig`. Here are the recommended rules:
+Enabling Flow Strict for a file means that several previously-allowed patterns will now trigger a Flow error. Each disallowed pattern has a corresponding [Flow Lint](../linting/index.md) rule which triggers the error. The list of rules enabled for `@flow strict` is configured in each `.flowconfig`. Here are the recommended rules:
 
- - [`nonstrict-import`](../linting/rule-reference/#toc-nonstrict-import): Triggers an error when importing from a module which is not also `@flow strict`. This is very important, because it means that when a file is marked as strict, all of its dependencies are strict as well.
- - [`unclear-type`](../linting/rule-reference/#toc-unclear-type): Triggers an error when using `Object`, `Function`, or `any` in a type annotation.
- - [`untyped-import`](../linting/rule-reference/#toc-untyped-import): Triggers an error when importing from an untyped module.
- - [`untyped-type-import`](../linting/rule-reference/#toc-untyped-type-import): Triggers an error when importing a type from an untyped module.
- - [`unsafe-getters-setters`](../linting/rule-reference/#toc-unsafe-getters-setters): Triggers an error when using getters and setters, which can be unsafe.
- - [`sketchy-null`](../linting/rule-reference/#toc-sketchy-null): Triggers an error when doing an existence check on a value that could be null/undefined or falsey.
+ - [`nonstrict-import`](../linting/rule-reference.md#toc-nonstrict-import): Triggers an error when importing from a module which is not also `@flow strict`. This is very important, because it means that when a file is marked as strict, all of its dependencies are strict as well.
+ - [`unclear-type`](../linting/rule-reference.md#toc-unclear-type): Triggers an error when using `Object`, `Function`, or `any` in a type annotation.
+ - [`untyped-import`](../linting/rule-reference.md#toc-untyped-import): Triggers an error when importing from an untyped module.
+ - [`untyped-type-import`](../linting/rule-reference.md#toc-untyped-type-import): Triggers an error when importing a type from an untyped module.
+ - [`unsafe-getters-setters`](../linting/rule-reference.md#toc-unsafe-getters-setters): Triggers an error when using getters and setters, which can be unsafe.
+ - [`sketchy-null`](../linting/rule-reference.md#toc-sketchy-null): Triggers an error when doing an existence check on a value that could be null/undefined or falsey.
 
-For a full list of available lint rules, see the [Lint Rule Reference](../linting/rule-reference/).
+For a full list of available lint rules, see the [Lint Rule Reference](../linting/rule-reference.md).
 
 Additionally, note that function parameters are considered const (i.e., treated as if they were declared with `const` rather than `let`). This feature is not yet configurable in Flow Strict; it is always on.
 
@@ -59,5 +59,5 @@ Eventually, some features of Flow Strict could become the default behavior of Fl
 
 ## See Also {#toc-see-also}
 
-- [Linting](../linting/) — Flow's linting framework for catching additional issues
-- [Lint Rule Reference](../linting/rule-reference) — all lint rules, many of which are enforced by strict mode
+- [Linting](../linting/index.md) — Flow's linting framework for catching additional issues
+- [Lint Rule Reference](../linting/rule-reference.md) — all lint rules, many of which are enforced by strict mode

@@ -7,7 +7,7 @@ description: "How to type arrays in Flow, including Array<T> syntax, read-only a
 import {SinceVersion} from '../../components/VersionTags';
 
 Array types represent lists of **unknown length**, where all items have the **same type**.
-This is in contrast to [tuple types](../tuples), which have a fixed length and where each element can have a different type.
+This is in contrast to [tuple types](./tuples.md), which have a fixed length and where each element can have a different type.
 
 JavaScript array literal values can be used to create both tuple and array types:
 
@@ -35,7 +35,7 @@ const arr3: Array<unknown> = [1, true, "three"];
 
 ## `ReadonlyArray<T>` <SinceVersion version="0.290" /> (alias `$ReadOnlyArray`) Type {#toc-readonlyarray}
 
-You can use the type `ReadonlyArray<T>` instead of `Array<T>` to represent a [read-only](../../lang/variance) array which cannot be mutated.
+You can use the type `ReadonlyArray<T>` instead of `Array<T>` to represent a [read-only](../lang/variance.md) array which cannot be mutated.
 You can't write to a read-only array directly, and can't use methods which mutate the array like `.push()`, `.unshift()`, etc.
 
 ```js flow-check
@@ -56,8 +56,8 @@ readonlyArray[0].x = 42; // Works
 ```
 
 The main advantage to using `ReadonlyArray` instead of `Array` is that `ReadonlyArray`'s
-type parameter is [*covariant*](../../lang/variance/#toc-covariance)
-while `Array`'s type parameter is [*invariant*](../../lang/variance/#toc-invariance).
+type parameter is [*covariant*](../lang/variance.md#toc-covariance)
+while `Array`'s type parameter is [*invariant*](../lang/variance.md#toc-invariance).
 That means that `ReadonlyArray<number>` is a subtype of `ReadonlyArray<number | string>` while
 `Array<number>` is NOT a subtype of `Array<number | string>`. So it's often useful to use
 `ReadonlyArray` in type annotations for arrays of various types of elements.
@@ -87,7 +87,7 @@ const array: Array<number> = [1];
 someOperation(array); // Works
 ```
 
-`ReadonlyArray<unknown>` represents the supertype of all arrays and all [tuples](../tuples):
+`ReadonlyArray<unknown>` represents the supertype of all arrays and all [tuples](./tuples.md):
 
 ```js flow-check
 const tup: [number, string] = [1, 'hi'];
@@ -101,7 +101,7 @@ f(arr); // Works
 
 ## Empty Array Literals {#toc-empty-array-literals}
 
-Empty array literals (`[]`) are handled specially in Flow when it comes to their [annotation requirements](../../lang/annotation-requirement).
+Empty array literals (`[]`) are handled specially in Flow when it comes to their [annotation requirements](../lang/annotation-requirement.md).
 What makes them special is that they do not contain enough information to
 determine their type, and at the same time they are too common to always
 require type annotations in their immediate context.
@@ -110,7 +110,7 @@ So, to type empty arrays Flow follows these rules:
 
 ### Contextual Inference
 
-First, if [contextual information](../../lang/annotation-requirement/#toc-contextual-typing) exists,
+First, if [contextual information](../lang/annotation-requirement.md#toc-contextual-typing) exists,
 we'll use it to determine the array element type:
 
 ```js flow-check
@@ -145,7 +145,7 @@ const arr3 = [];
 ```
 
 The way it does this is reminiscent of the typing of
-[variables without initializers](../../lang/variables/#toc-variables-declared-without-initializers):
+[variables without initializers](../lang/variables.md#toc-variables-declared-without-initializers):
 Flow tries to choose the "first" *assignment* or *assignments*
 to the variable to define its type. In the case of empty arrays, an assignment is either
 * an indexed write statement `a[i] = e;`, or
@@ -270,6 +270,6 @@ const arr3: (?number)[] = [null]; // Works
 
 ## See Also {#toc-see-also}
 
-- [Tuples](../tuples) — fixed-length collections where each element can have a different type
-- [Variance](../../lang/variance) — why `ReadonlyArray` is covariant and `Array` is invariant
-- [Objects](../objects) — another core data structure type in Flow
+- [Tuples](./tuples.md) — fixed-length collections where each element can have a different type
+- [Variance](../lang/variance.md) — why `ReadonlyArray` is covariant and `Array` is invariant
+- [Objects](./objects.md) — another core data structure type in Flow

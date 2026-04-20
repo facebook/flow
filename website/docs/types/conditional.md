@@ -136,7 +136,7 @@ type NonDistributiveTypeOf<T> =
 type Other = NonDistributiveTypeOf<string | null>; // evaluates to 'other'
 ```
 
-This trick works because Flow will only enable the distributive behavior of conditional type if the check type is a generic type. The example above does not choose any true branch of the conditional type, because `[string | null]` is not a subtype of `[null]`, `[void]`, or `[string]`, since tuples are [invariantly](../../lang/variance/#toc-invariance) typed.
+This trick works because Flow will only enable the distributive behavior of conditional type if the check type is a generic type. The example above does not choose any true branch of the conditional type, because `[string | null]` is not a subtype of `[null]`, `[void]`, or `[string]`, since tuples are [invariantly](../lang/variance.md#toc-invariance) typed.
 
 ## Adoption {#toc-adoption}
 
@@ -144,12 +144,12 @@ To use conditional types, you need to upgrade your infrastructure so that it sup
 
 - `flow` and `flow-parser`: 0.208.0. Between v0.208 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `conditional_type=true`.
 - `prettier`: 3
-- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
-- `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
+- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../tools/babel.md) for setup instructions.
+- `eslint` with `hermes-eslint`. See [our ESLint guide](../tools/eslint.md) for setup instructions.
 
 ## See Also {#toc-see-also}
 
-- [Mapped Types](../mapped-types) — another advanced type for transforming object types
-- [Indexed Access Types](../indexed-access) — extracting property types, often combined with conditional types
-- [Generics](../generics) — conditional types are most useful with generic type parameters
-- [Utility Types](../utilities) — built-in type transformations like `Partial`, `Readonly`, and `Pick`
+- [Mapped Types](./mapped-types.md) — another advanced type for transforming object types
+- [Indexed Access Types](./indexed-access.md) — extracting property types, often combined with conditional types
+- [Generics](./generics.md) — conditional types are most useful with generic type parameters
+- [Utility Types](./utilities.md) — built-in type transformations like `Partial`, `Readonly`, and `Pick`

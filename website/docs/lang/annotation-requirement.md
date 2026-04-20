@@ -34,7 +34,7 @@ if (typeof maybeString === "string") {
 }
 ```
 Flow can still determine that `len` is a `number`, but in order to do so it looks
-ahead to multiple initializer statements. See section on [variable declarations](../variables)
+ahead to multiple initializer statements. See section on [variable declarations](./variables.md)
 for details on how various initializer patterns determine the type of a variable,
 and when an annotation on a variable declaration is necessary.
 
@@ -159,7 +159,7 @@ of the recursive definition restriction. The recursion is possible through acces
 
 ## Generic Calls {#toc-generic-calls}
 
-In calls to [generic functions](../../types/generics) the type of the result may
+In calls to [generic functions](../types/generics.md) the type of the result may
 depend on the types of the values passed in as arguments.
 This section discusses how this result is computed, when type arguments are not
 explicitly provided.
@@ -349,10 +349,10 @@ IDE feedback, since each module's type can be understood without typechecking it
 dependencies' implementations.
 
 ## Empty Array Literals {#toc-empty-array-literals}
-Empty array literals (`[]`) are handled specially in Flow. You can read about their [behavior and requirements](../../types/arrays/#toc-empty-array-literals).
+Empty array literals (`[]`) are handled specially in Flow. You can read about their [behavior and requirements](../types/arrays.md#toc-empty-array-literals).
 
 ## See Also {#toc-see-also}
 
-- [Variables](../variables) — how variable declarations determine when annotations are needed
-- [Generics](../../types/generics) — generic return types are a common trigger for annotation requirements
-- [Functions](../../types/functions) — function parameters typically require annotations
+- [Variables](./variables.md) — how variable declarations determine when annotations are needed
+- [Generics](../types/generics.md) — generic return types are a common trigger for annotation requirements
+- [Functions](../types/functions.md) — function parameters typically require annotations

@@ -70,5 +70,5 @@ related to are:
 
 ## See Also {#toc-see-also}
 
-- [Functions](../../types/functions) — event handlers are typed as function types
-- [Generics](../../types/generics) — synthetic event types are generic over the DOM element type
+- [Functions](../types/functions.md) — event handlers are typed as function types
+- [Generics](../types/generics.md) — synthetic event types are generic over the DOM element type

@@ -170,12 +170,12 @@ To use mapped types, you need to upgrade your infrastructure so that it supports
 
 - `flow` and `flow-parser`: 0.210.0. Between v0.210.0 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `mapped_type=true`.
 - `prettier`: 3
-- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
-- `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
+- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../tools/babel.md) for setup instructions.
+- `eslint` with `hermes-eslint`. See [our ESLint guide](../tools/eslint.md) for setup instructions.
 
 ## See Also {#toc-see-also}
 
-- [Indexed Access Types](../indexed-access) — extracting property types, commonly used in mapped type bodies
-- [Conditional Types](../conditional) — another advanced type feature for type-level logic
-- [Generics](../generics) — mapped types rely on generic type parameters
-- [Utility Types](../utilities) — built-in types like `Partial`, `Readonly`, and `Pick` (which mapped types generalize)
+- [Indexed Access Types](./indexed-access.md) — extracting property types, commonly used in mapped type bodies
+- [Conditional Types](./conditional.md) — another advanced type feature for type-level logic
+- [Generics](./generics.md) — mapped types rely on generic type parameters
+- [Utility Types](./utilities.md) — built-in types like `Partial`, `Readonly`, and `Pick` (which mapped types generalize)

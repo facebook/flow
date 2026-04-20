@@ -5,7 +5,7 @@ description: "How to type React higher-order components in Flow using Component 
 ---
 
 :::danger
-Higher-order components are discouraged in modern React code and will not be updated for [Component Syntax](../component-syntax).
+Higher-order components are discouraged in modern React code and will not be updated for [Component Syntax](./component-syntax.md).
 Consider using a hook to accomplish your task instead.
 :::
 
@@ -18,7 +18,7 @@ continuing.
 [higher-order component pattern]: https://legacy.reactjs.org/docs/higher-order-components.html
 [React documentation on higher-order components]: https://legacy.reactjs.org/docs/higher-order-components.html
 
-You can make use of the [Component Types](../component-types/) to annotate your higher order components.
+You can make use of the [Component Types](./component-types.md) to annotate your higher order components.
 
 ### The Trivial HOC {#toc-the-trivial-hoc}
 
@@ -187,6 +187,6 @@ export const MyEnhancedComponent: component(...Props) = trivialHOC(MyComponent);
 
 ## See Also {#toc-see-also}
 
-- [Generics](../../types/generics) — HOC patterns make heavy use of generic type parameters
-- [Functions](../../types/functions) — HOCs are functions that take and return components
-- [Annotation Requirement](../../lang/annotation-requirement) — HOC exports typically require type annotations
+- [Generics](../types/generics.md) — HOC patterns make heavy use of generic type parameters
+- [Functions](../types/functions.md) — HOCs are functions that take and return components
+- [Annotation Requirement](../lang/annotation-requirement.md) — HOC exports typically require type annotations

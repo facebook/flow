@@ -4,7 +4,7 @@ slug: /types/any
 description: "How the any type works in Flow, why it is unsafe, and how to avoid it."
 ---
 
-> **Warning:** Do not mistake `any` with [`unknown`](../unknown). It's also not the same as [`empty`](../empty).
+> **Warning:** Do not mistake `any` with [`unknown`](./unknown.md). It's also not the same as [`empty`](./empty.md).
 
 If you want a way to opt-out of using the type checker, `any` is the way to do
 it. **Using `any` is completely unsafe, and should be avoided whenever
@@ -41,9 +41,9 @@ There are only a couple of scenarios where you might consider using `any`:
   type check it correctly. There are a (decreasing) number of idioms in
   JavaScript that Flow is unable to statically type.
 
-You can ban `any` by enabling the [`unclear-type`](../../linting/rule-reference/#toc-unclear-type) lint rule.
+You can ban `any` by enabling the [`unclear-type`](../linting/rule-reference.md#toc-unclear-type) lint rule.
 
-You can use the [coverage](../../cli/coverage/) command to identify code typed as `any`.
+You can use the [coverage](../cli/coverage.md) command to identify code typed as `any`.
 
 ## Avoid leaking `any` {#toc-avoid-leaking-any}
 
@@ -95,6 +95,6 @@ Now your code will not leak `any`.
 
 ## See Also {#toc-see-also}
 
-- [Unknown](../unknown) — the safe supertype of all types, requiring refinement before use
-- [Empty](../empty) — the bottom type, the subtype of all types
-- [Type Hierarchy](../../lang/type-hierarchy) — how `any`, `unknown`, and `empty` relate in the type system
+- [Unknown](./unknown.md) — the safe supertype of all types, requiring refinement before use
+- [Empty](./empty.md) — the bottom type, the subtype of all types
+- [Type Hierarchy](../lang/type-hierarchy.md) — how `any`, `unknown`, and `empty` relate in the type system

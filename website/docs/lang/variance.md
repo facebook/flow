@@ -15,7 +15,7 @@ class City extends Noun {}
 class SanFrancisco extends City {}
 ```
 
-We saw in the section on [generic types](../../types/generics/#toc-variance-sigils)
+We saw in the section on [generic types](../types/generics.md#toc-variance-sigils)
 that it is possible to
 use variance sigils to describe when a type parameter is used in an output position,
 when it is used in an input position, and when it is used in either one.
@@ -63,7 +63,7 @@ values of type `Noun` are expected.
 Combining these two, it will always be safe to use `CovariantOf<City>` whenever a
 `CovariantOf<Noun>` is expected.
 
-A commonly used example where covariance is used is [`ReadonlyArray<T>`](../../types/arrays/#toc-readonlyarray).
+A commonly used example where covariance is used is [`ReadonlyArray<T>`](../types/arrays.md#toc-readonlyarray).
 Just like with the `prop` property, one cannot use a `ReadonlyArray` reference to write data
 to an array. This allows more flexible subtyping rules: Flow only needs to prove that
 `S` is a subtype of `T` to determine that `ReadonlyArray<S>` is also a subtype
@@ -166,8 +166,8 @@ the function types are flipped due to contravariance.
 
 ## See Also {#toc-see-also}
 
-- [Subtypes](../subtypes) — the underlying subtyping relationships that variance builds on
-- [Generics](../../types/generics) — variance sigils on generic type parameters
-- [Arrays](../../types/arrays) — `ReadonlyArray` (covariant) vs `Array` (invariant)
-- [Interfaces](../../types/interfaces) — covariant and contravariant interface properties
-- [Objects](../../types/objects) — read-only and write-only object properties
+- [Subtypes](./subtypes.md) — the underlying subtyping relationships that variance builds on
+- [Generics](../types/generics.md) — variance sigils on generic type parameters
+- [Arrays](../types/arrays.md) — `ReadonlyArray` (covariant) vs `Array` (invariant)
+- [Interfaces](../types/interfaces.md) — covariant and contravariant interface properties
+- [Objects](../types/objects.md) — read-only and write-only object properties

@@ -43,4 +43,4 @@ You can add this to your `package.json` scripts easily.
 
 ## See Also {#toc-see-also}
 
-- [Getting Started](../../getting-started) — full setup guide including compiler configuration
+- [Getting Started](../getting-started.md) — full setup guide including compiler configuration

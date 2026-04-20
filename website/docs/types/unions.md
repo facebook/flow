@@ -51,11 +51,11 @@ type Colors = 'red' | 'blue'
 type Fish = Numbers | Colors;
 ```
 
-If you have enabled [Flow Enums](../../enums/), they may be an alternative to unions of [literal types](../literals).
+If you have enabled [Flow Enums](../enums/index.md), they may be an alternative to unions of [literal types](./literals.md).
 
 ## Union shorthands
 
-The union of some type `T` with `null` or `void` is common, so we provide a shorthand called [maybe types](../maybe), by using the `?` prefix. The type `?T` is equivalent to `T | null | void`:
+The union of some type `T` with `null` or `void` is common, so we provide a shorthand called [maybe types](./maybe.md), by using the `?` prefix. The type `?T` is equivalent to `T | null | void`:
 
 ```js flow-check
 function maybeString(x: ?string) { /* ... */ }
@@ -64,7 +64,7 @@ maybeString(null); // Works!
 maybeString(undefined); // Works!
 ```
 
-The union of every single type that exists is the [`unknown`](../unknown) type:
+The union of every single type that exists is the [`unknown`](./unknown.md) type:
 
 ```js flow-check
 function everything(x: unknown) { /* ... */ }
@@ -79,7 +79,7 @@ everything(new Error()); // Works!
 
 When you have a value which is a union type it's often useful to break it apart
 and handle each individual type separately. With union types in Flow you can
-[refine](../../lang/refinements) the value down to a single type.
+[refine](../lang/refinements.md) the value down to a single type.
 
 For example, if we have a value with a union type that is a `number`, a
 `boolean`, or a `string`, we can treat the number case separately by using
@@ -104,7 +104,7 @@ When calling a function that accepts a union type we must pass in ***one of
 those types***. But inside of the function we are required to handle ***all of
 the possible types***.
 
-Let's rewrite the function to handle each type individually using [refinements](../../lang/refinements).
+Let's rewrite the function to handle each type individually using [refinements](../lang/refinements.md).
 
 ```js flow-check
 function toStringPrimitives(value: number | boolean | string): string {
@@ -131,7 +131,7 @@ function toStringPrimitives(value: number | boolean | string): string {
 ## Disjoint Object Unions {#toc-disjoint-object-unions}
 
 There's a special type of union in Flow known as a "disjoint object union" which can
-be used with [refinements](../../lang/refinements/). These disjoint object unions are
+be used with [refinements](../lang/refinements.md). These disjoint object unions are
 made up of any number of object types which are each tagged by a single property.
 
 For example, imagine we have a function for handling a response from a server
@@ -191,7 +191,7 @@ function handleResponse(response: Response) {
 ```
 
 In order to use this pattern, there must be a key that is in every object in your union (in our example above, `type`),
-and every object must set a different [literal type](../literals) for that key (in our example, the string `'success'`, and the string `'error'`).
+and every object must set a different [literal type](./literals.md) for that key (in our example, the string `'success'`, and the string `'error'`).
 You can use any kind of literal type, including numbers and booleans.
 
 ### Disjoint unions with generic types {#toc-disjoint-unions-with-generic-types}
@@ -231,7 +231,7 @@ function handle(message: Message) {
 ### Disjoint object unions with exact types {#toc-disjoint-unions-with-exact-types}
 
 Disjoint unions require you to use a single property to distinguish each object
-type. You cannot distinguish two different [inexact objects](../objects/#exact-and-inexact-object-types) by different properties.
+type. You cannot distinguish two different [inexact objects](./objects.md#exact-and-inexact-object-types) by different properties.
 
 ```js flow-check
 type Success = {success: true, value: boolean, ...};
@@ -245,7 +245,7 @@ function handleResponse(response:  Success | Failed) {
 ```
 
 This is because in Flow it is okay to pass an object value with more properties
-than the inexact object type expects (because of [width subtyping](../../lang/object-subtyping/#toc-width-subtyping)).
+than the inexact object type expects (because of [width subtyping](../lang/depth-subtyping.md#toc-width-subtyping)).
 
 ```js flow-check
 type Success = {success: true, value: boolean, ...};
@@ -306,7 +306,7 @@ function handleResponse(response: Response) {
 ```
 
 This feature is particularly useful for function arguments, which are tuples.
-Note the use of [tuple element labels](../tuples/#tuple-element-labels) to make the code more clear.
+Note the use of [tuple element labels](./tuples.md#tuple-element-labels) to make the code more clear.
 
 ```js flow-check
 function prettyPrint(
@@ -330,8 +330,8 @@ prettyPrint("currency", true); // ERROR - wrong type arg
 
 ## See Also {#toc-see-also}
 
-- [Intersections](../intersections) — the dual of unions: values that are *all of* a set of types
-- [Refinements](../../lang/refinements) — how to narrow union types to specific members
-- [Maybe Types](../maybe) — shorthand for `T | null | void`
-- [Literal Types](../literals) — using specific values as types, commonly combined with unions
-- [Flow Enums](../../enums/) — a structured alternative to unions of literal types
+- [Intersections](./intersections.md) — the dual of unions: values that are *all of* a set of types
+- [Refinements](../lang/refinements.md) — how to narrow union types to specific members
+- [Maybe Types](./maybe.md) — shorthand for `T | null | void`
+- [Literal Types](./literals.md) — using specific values as types, commonly combined with unions
+- [Flow Enums](../enums/index.md) — a structured alternative to unions of literal types

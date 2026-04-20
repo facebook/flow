@@ -16,7 +16,7 @@ semantics than would be expected.
 ### `ambiguous-object-type` {#toc-ambiguous-object-type}
 Triggers when you use object type syntax without explicitly specifying exactness or inexactness.
 
-This lint setting is ignored when [`exact_by_default`](../../config/options/#toc-exact-by-default) is set to `false`.
+This lint setting is ignored when [`exact_by_default`](../config/options.md#toc-exact-by-default) is set to `false`.
 
 ```js flow-check
 // flowlint ambiguous-object-type:error
@@ -39,9 +39,9 @@ type A = Array<bool>; // Error
 Like [`ambiguous-object-type`](#toc-ambiguous-object-type), except triggers even when the `exact_by_default` option is set to `false`.
 
 ### `nested-component` {#toc-nested-component}
-Triggers when a [component](../../react/component-syntax) is defined directly inside another component or hook. Nested components are problematic because React cannot preserve the state of a nested component across re-renders of the parent — each render creates a brand new component type, so React always unmounts and remounts it.
+Triggers when a [component](../react/component-syntax.md) is defined directly inside another component or hook. Nested components are problematic because React cannot preserve the state of a nested component across re-renders of the parent — each render creates a brand new component type, so React always unmounts and remounts it.
 
-This lint is enabled as an error by default. It applies to [component syntax](../../react/component-syntax) declarations, which require `component_syntax=true` in your `.flowconfig`.
+This lint is enabled as an error by default. It applies to [component syntax](../react/component-syntax.md) declarations, which require `component_syntax=true` in your `.flowconfig`.
 
 ```js flow-check
 import * as React from 'react';
@@ -80,9 +80,9 @@ component Outer() {
 ```
 
 ### `nested-hook` {#toc-nested-hook}
-Triggers when a [hook](../../react/hook-syntax) is defined directly inside another component or hook. Nested hooks are problematic because they break the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks) — React relies on hooks being called in a consistent order at the top level of a component or hook, and a nested hook definition obscures the call structure.
+Triggers when a [hook](../react/hook-syntax.md) is defined directly inside another component or hook. Nested hooks are problematic because they break the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks) — React relies on hooks being called in a consistent order at the top level of a component or hook, and a nested hook definition obscures the call structure.
 
-This lint is enabled as an error by default. It applies to [hook syntax](../../react/hook-syntax) declarations, which require `component_syntax=true` in your `.flowconfig`.
+This lint is enabled as an error by default. It applies to [hook syntax](../react/hook-syntax.md) declarations, which require `component_syntax=true` in your `.flowconfig`.
 
 ```js flow-check
 import * as React from 'react';
@@ -124,7 +124,7 @@ component Foo() {
 ```
 
 ### `libdef-override` <SinceVersion version="0.265" /> {#toc-libdef-override}
-Triggers when a [library definition](../../libdefs/) overrides an existing built-in definition. This can happen when a `.js.flow` library file or a `flow-typed` stub re-declares a global variable, type, or module that Flow already provides in its builtins. Overriding built-in definitions can lead to surprising behaviors, because the order in which library files are loaded affects which definition wins.
+Triggers when a [library definition](../libdefs/index.md) overrides an existing built-in definition. This can happen when a `.js.flow` library file or a `flow-typed` stub re-declares a global variable, type, or module that Flow already provides in its builtins. Overriding built-in definitions can lead to surprising behaviors, because the order in which library files are loaded affects which definition wins.
 
 This lint is enabled as an error by default.
 
@@ -182,7 +182,7 @@ type B = React.Node; // Ok
 ```
 
 ### `nonstrict-import` {#toc-nonstrict-import}
-Used in conjunction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
+Used in conjunction with [Flow Strict](../strict/index.md). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
 ### `react-intrinsic-overlap` {#toc-react-intrinsic-overlap}
 Triggers when a local definition shares its name with an intrinsic JSX element (such as `div`, `span`, or `input`) and has a type that could be used as a React component. Because JSX treats lowercase element names as intrinsics, writing `<div />` always refers to the HTML element, never to a local binding called `div`. If the local binding is a function, class, abstract component, callable object, or `mixed`, this overlap is likely a mistake that leads to confusing behavior.
@@ -434,6 +434,6 @@ Note: As of v0.201.0, this rule subsumed the `unused-promise-in-async-scope` and
 
 ## See Also {#toc-see-also}
 
-- [Flowlint Comments](../flowlint-comments) — controlling lint severity within a file using comments
-- [`.flowconfig [lints]`](../../config/lints) — configuring lint severities project-wide
-- [Flow Strict](../../strict/) — stricter type checking that enables additional lint-like rules
+- [Flowlint Comments](./flowlint-comments.md) — controlling lint severity within a file using comments
+- [`.flowconfig [lints]`](../config/lints.md) — configuring lint severities project-wide
+- [Flow Strict](../strict/index.md) — stricter type checking that enables additional lint-like rules

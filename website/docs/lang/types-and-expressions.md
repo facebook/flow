@@ -103,5 +103,5 @@ are the most complicated to find, leaving that part up to the developer.
 
 ## See Also {#toc-see-also}
 
-- [Subtypes](../subtypes) — understanding how types relate to each other
-- [Annotation Requirement](../annotation-requirement) — when Flow can infer types and when you must annotate
+- [Subtypes](./subtypes.md) — understanding how types relate to each other
+- [Annotation Requirement](./annotation-requirement.md) — when Flow can infer types and when you must annotate

@@ -4,7 +4,7 @@ slug: /types/maybe
 description: "How to use maybe types (?T) in Flow to represent values that can be null or undefined."
 ---
 
-You can prefix a type with `?` to make it a [union](../unions) with `null` and `void`:
+You can prefix a type with `?` to make it a [union](./unions.md) with `null` and `void`:
 `?T` is equivalent to the union `T | null | void`.
 
 For example, `?number` is equivalent to `number | null | void`, and allows for numbers, `null`, and `undefined` as values. It's "maybe" a number.
@@ -46,7 +46,7 @@ acceptsMaybeProp({value: undefined}); // Works!
 acceptsMaybeProp({});                 // Error!
 ```
 
-If you want to allow missing properties, use the [optional property](../objects/#toc-optional-object-type-properties) syntax, where the `?` is placed _before_ the colon.
+If you want to allow missing properties, use the [optional property](./objects.md#toc-optional-object-type-properties) syntax, where the `?` is placed _before_ the colon.
 It is also possible to combine both syntaxes for an optional maybe type, for example `{value?: ?number}`.
 
 
@@ -90,11 +90,11 @@ function acceptsMaybeNumber(value: ?number): number {
 ```
 
 However, type refinements can be lost. For instance, calling a function after refining the type of an object's property will invalidate this refinement.
-Consult the [refinement invalidations](../../lang/refinements/#toc-refinement-invalidations) docs for more details, to understand why Flow works this way,
+Consult the [refinement invalidations](../lang/refinements.md#toc-refinement-invalidations) docs for more details, to understand why Flow works this way,
 and how you can avoid this common pitfall.
 
 ## See Also {#toc-see-also}
 
-- [Unions](../unions) — the general form: `?T` is shorthand for `T | null | void`
-- [Refinements](../../lang/refinements) — how to narrow maybe types before use
-- [Primitives](../primitives) — `null` and `void` types, and optional parameters
+- [Unions](./unions.md) — the general form: `?T` is shorthand for `T | null | void`
+- [Refinements](../lang/refinements.md) — how to narrow maybe types before use
+- [Primitives](./primitives.md) — `null` and `void` types, and optional parameters

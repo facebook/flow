@@ -106,5 +106,5 @@ Search ["eslint-plugin" on npm](https://www.npmjs.com/search?q=eslint-plugin) fo
 
 ## See Also {#toc-see-also}
 
-- [Linting](../../linting/) — Flow's built-in linting framework (complementary to ESLint)
-- [Lint Rule Reference](../../linting/rule-reference) — all available Flow lint rules
+- [Linting](../linting/index.md) — Flow's built-in linting framework (complementary to ESLint)
+- [Lint Rule Reference](../linting/rule-reference.md) — all available Flow lint rules

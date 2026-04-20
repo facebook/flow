@@ -4,7 +4,7 @@ slug: /types/literals
 description: "How to use literal types in Flow to restrict values to specific strings, numbers, booleans, or bigints."
 ---
 
-Flow has [primitive types](../primitives) for
+Flow has [primitive types](./primitives.md) for
 literal values, but can also use literal values as types.
 
 For example, instead of accepting `number` type, we could accept only the
@@ -26,7 +26,7 @@ You can use primitive values for these types:
 - Strings: like `"foo"` or `"bar"`
 - BigInts: like `42n`
 
-Using these with [union types](../unions) is powerful:
+Using these with [union types](./unions.md) is powerful:
 
 ```js flow-check
 function getColor(name: "success" | "warning" | "danger") {
@@ -43,10 +43,10 @@ getColor("danger");  // Works!
 getColor("error");   // Error!
 ```
 
-Consider using [Flow Enums](../../enums) instead of unions of literal types, if they fit your use-case.
+Consider using [Flow Enums](../enums/index.md) instead of unions of literal types, if they fit your use-case.
 
 ## See Also {#toc-see-also}
 
-- [Primitive Types](../primitives) — the base types (`number`, `string`, etc.) that literals specialize
-- [Unions](../unions) — commonly used with literals to define finite sets of values
-- [Flow Enums](../../enums/) — a structured alternative to unions of literal types
+- [Primitive Types](./primitives.md) — the base types (`number`, `string`, etc.) that literals specialize
+- [Unions](./unions.md) — commonly used with literals to define finite sets of values
+- [Flow Enums](../enums/index.md) — a structured alternative to unions of literal types

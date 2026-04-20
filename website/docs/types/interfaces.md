@@ -4,7 +4,7 @@ slug: /types/interfaces
 description: "How to use interfaces in Flow for structural typing of classes and objects, including implementing and extending interfaces."
 ---
 
-[Classes](../classes) in Flow are [nominally typed](../../lang/nominal-structural). This means that when you have two separate
+[Classes](./classes.md) in Flow are [nominally typed](../lang/nominal-structural.md). This means that when you have two separate
 classes you cannot use one in place of the other even when they have the same
 exact properties and methods:
 
@@ -102,7 +102,7 @@ acceptsObj(o); // Works!
 acceptsObj(foo); // Error!
 ```
 
-Unlike objects, interfaces cannot be [exact](../objects/#exact-and-inexact-object-types), as they can always have other, unknown properties.
+Unlike objects, interfaces cannot be [exact](./objects.md#exact-and-inexact-object-types), as they can always have other, unknown properties.
 
 ## Interface Syntax {#toc-interface-syntax}
 
@@ -119,7 +119,7 @@ The syntax of the block matches the syntax of object types.
 
 ### Interface Methods {#toc-interface-methods}
 
-You can add methods to interfaces following the same syntax as class methods. Any [`this` parameters](../functions/#this-parameter) you
+You can add methods to interfaces following the same syntax as class methods. Any [`this` parameters](./functions.md#this-parameter) you
 provide are also subject to the same restrictions as class methods.
 
 ```js flow-check
@@ -128,9 +128,9 @@ interface MyInterface {
 }
 ```
 
-Also like [class methods](../classes#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
+Also like [class methods](./classes.md#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
 
-You can define [overloaded methods](../intersections/#declaring-overloaded-functions) by declaring the same method name multiple times with different type signatures:
+You can define [overloaded methods](./intersections.md#declaring-overloaded-functions) by declaring the same method name multiple times with different type signatures:
 
 ```js flow-check
 interface MyInterface {
@@ -167,7 +167,7 @@ interface MyInterface {
 
 ### Interfaces as maps {#toc-interfaces-as-maps}
 
-You can create [indexer properties](../objects#toc-objects-as-maps) the same
+You can create [indexer properties](./objects.md#toc-objects-as-maps) the same
 way as with objects:
 
 ```js flow-check
@@ -178,7 +178,7 @@ interface MyInterface {
 
 ### Interface Generics {#toc-interface-generics}
 
-Interfaces can also have their own [generics](../generics/):
+Interfaces can also have their own [generics](./generics.md):
 
 ```js flow-check
 interface MyInterface<A, B, C> {
@@ -187,7 +187,7 @@ interface MyInterface<A, B, C> {
 }
 ```
 
-Interface generics are [parameterized](../generics#toc-parameterized-generics).
+Interface generics are [parameterized](./generics.md#toc-parameterized-generics).
 When you use an interface you need to pass parameters for each of its generics:
 
 ```js flow-check
@@ -206,7 +206,7 @@ const val: MyInterface<number, boolean, string> = {
 
 ## Interface property variance (read-only and write-only) {#toc-interface-property-variance-read-only-and-write-only}
 
-Interface properties are [invariant](../../lang/variance/) by default. But you
+Interface properties are [invariant](../lang/variance.md) by default. But you
 can add modifiers to make them covariant (read-only) or contravariant
 (write-only).
 
@@ -318,7 +318,7 @@ function func2(value: Contravariant) {
 
 ## See Also {#toc-see-also}
 
-- [Classes](../classes) — nominally typed values that can implement interfaces
-- [Objects](../objects) — structurally typed object types, which cannot describe class instances
-- [Nominal & Structural Typing](../../lang/nominal-structural) — the difference between name-based and shape-based typing
-- [Variance](../../lang/variance) — covariant (read-only) and contravariant (write-only) properties
+- [Classes](./classes.md) — nominally typed values that can implement interfaces
+- [Objects](./objects.md) — structurally typed object types, which cannot describe class instances
+- [Nominal & Structural Typing](../lang/nominal-structural.md) — the difference between name-based and shape-based typing
+- [Variance](../lang/variance.md) — covariant (read-only) and contravariant (write-only) properties

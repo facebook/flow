@@ -6,7 +6,7 @@ description: "How to use intersection types in Flow to combine multiple types."
 
 Sometimes it is useful to create a type which is ***all of*** a set of other
 types. For example, you might want to write a function which accepts a value that
-implements two different [interfaces](../interfaces):
+implements two different [interfaces](./interfaces.md):
 
 ```js flow-check
 interface Serializable {
@@ -146,12 +146,12 @@ function fn(x: unknown) {
 ```
 Flow silently accepts it (and uses `Fn` as the inferred type), but does not check
 the implementation against this signature. This makes this kind of declaration
-a better suited candidate for [library definitions](../../libdefs/), where implementations are omitted.
+a better suited candidate for [library definitions](../libdefs/index.md), where implementations are omitted.
 
 
 ## Intersections of object types {#toc-intersections-of-object-types}
 
-When you create an intersection of [inexact object types](../objects/#exact-and-inexact-object-types),
+When you create an intersection of [inexact object types](./objects.md#exact-and-inexact-object-types),
 you are saying that your object satisfies each member of the intersection.
 
 For example, when you create an intersection of two inexact objects with different sets
@@ -187,7 +187,7 @@ const prop1: number = both.prop; // Works
 const prop2: boolean = both.prop; // Error!
 ```
 
-To combine exact object types, you should use [object type spread](../objects/#object-type-spread) instead:
+To combine exact object types, you should use [object type spread](./objects.md#object-type-spread) instead:
 
 ```js flow-check
 type One = {foo: number};
@@ -234,7 +234,7 @@ but you can create a type for it. There's no practical use for creating types
 like this, but it's a side effect of how intersection types work.
 
 An accidental way to create an impossible type is to create an intersection of
-[exact object types](../objects/#exact-and-inexact-object-types). For example:
+[exact object types](./objects.md#exact-and-inexact-object-types). For example:
 
 ```js flow-check
 function func(obj: {a: number} & {b: string}) { /* ... */ }
@@ -249,6 +249,6 @@ properties, and simultaneously exactly the property `b` and no other properties.
 
 ## See Also {#toc-see-also}
 
-- [Unions](../unions) — the dual of intersections: values that are *one of* a set of types
-- [Interfaces](../interfaces) — a common way to define types that intersections combine
-- [Objects](../objects) — including object type spread, the preferred way to combine exact object types
+- [Unions](./unions.md) — the dual of intersections: values that are *one of* a set of types
+- [Interfaces](./interfaces.md) — a common way to define types that intersections combine
+- [Objects](./objects.md) — including object type spread, the preferred way to combine exact object types

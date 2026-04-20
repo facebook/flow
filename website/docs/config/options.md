@@ -102,8 +102,8 @@ The default value for `emoji` is `false`.
 
 Type: `boolean`
 
-Set this to `true` to enable [Flow Enums](../../enums).
-[Additional setup steps](../../enums/#toc-enabling-enums) are required beyond just
+Set this to `true` to enable [Flow Enums](../enums/index.md).
+[Additional setup steps](../enums/index.md#toc-enabling-enums) are required beyond just
 enabling the `.flowconfig` option.
 
 The default value for `enums` is `false`.
@@ -161,7 +161,7 @@ Without `experimental.strict_es6_import_export=true`, the rules have no effect
 even if they are configured in the `[lints]` section. Each rule can be set to
 `error`, `warn`, or `off` independently.
 
-See the [strict import/export lints](../../linting/strict-import-export-lints)
+See the [strict import/export lints](../linting/strict-import-export-lints.md)
 page for the full list of rules, detailed examples, and explanations.
 
 The default value for `experimental.strict_es6_import_export` is `false`.
@@ -333,7 +333,7 @@ Type: `string`
 By default, Flow looks for declaration (`.flow`) files in the `@flowtyped` directory at the
 project root. Declaration files in these directories let you provide type definitions for
 third-party modules without modifying the original packages (see
-[declaring a module in the `@flowtyped` directory](../../libdefs/creation#toc-declaring-a-module-in-at-flowtyped)).
+[declaring a module in the `@flowtyped` directory](../libdefs/creation.md#toc-declaring-a-module-in-at-flowtyped)).
 
 You can use `module.declaration_dirnames` to customize which directories Flow searches for
 declaration files. When you explicitly set this option, it **replaces** the default
@@ -745,7 +745,7 @@ react.custom_jsx_typing=true
 ```
 
 Then define `React$CustomJSXFactory` as a global type in a
-[library definition](../../libdefs/creation) file (`.js.flow`):
+[library definition](../libdefs/creation.md) file (`.js.flow`):
 
 ```js
 // flow-typed/custom-jsx.js.flow
@@ -899,8 +899,8 @@ This config was first introduced as `use_mixed_in_catch_variables`
 
 Type: `boolean`
 
-Changes the default type of `catch` variables from [`any`](../../types/any) to
-[`unknown`](../../types/unknown). E.g.
+Changes the default type of `catch` variables from [`any`](../types/any.md) to
+[`unknown`](../types/unknown.md). E.g.
 
 ```js flow-check
 try {
@@ -1000,7 +1000,7 @@ Type: `classic | constrain-writes`
 Setting this to `constrain-writes` will enable the constrained-writes inference
 mode.
 
-For more info, see the [variable declaration docs](../../lang/variables).
+For more info, see the [variable declaration docs](../lang/variables.md).
 
 The default value is `classic`
 

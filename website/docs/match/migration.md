@@ -27,8 +27,8 @@ Most `switch` statements can be turned into match statements:
 * Replace the colon `:` after the case test with an arrow  `=>`
 * Wrap the case body in a block `{ ... }`
 * Remove the `break;`
-* If multiple cases share a body, use an ["or" pattern](../patterns#or-patterns) `|`
-* Replace the `default` with a [wildcard](../patterns#wildcard-patterns) `_`
+* If multiple cases share a body, use an ["or" pattern](./patterns.md#or-patterns) `|`
+* Replace the `default` with a [wildcard](./patterns.md#wildcard-patterns) `_`
 
 ```js
 // Before
@@ -186,7 +186,7 @@ const b = match (obj) {
 
 ## Dealing with disjoint object unions
 
-[Disjoint object unions](../../types/unions#toc-disjoint-object-unions) are unions of object types with some distinguishing property. In the following example, that would be the `type` property:
+[Disjoint object unions](../types/unions.md#toc-disjoint-object-unions) are unions of object types with some distinguishing property. In the following example, that would be the `type` property:
 
 ```js flow-check
 type Result = {type: 'ok', value: number} | {type: 'error', error: Error};
@@ -244,7 +244,7 @@ match (result) {
 declare function processError(err: Err): Error;
 ```
 
-If you don't need the `type` property included, you could also use an [object rest pattern](../patterns#object-patterns):
+If you don't need the `type` property included, you could also use an [object rest pattern](./patterns.md#object-patterns):
 
 ```js flow-check
 type Result = {type: 'ok', value: number} | {type: 'error', error: Error};
@@ -265,5 +265,5 @@ declare function processError(err: {error: Error}): Error;
 
 ## See Also {#toc-see-also}
 
-- [Refinements](../../lang/refinements) — how `switch` and `if` narrowing translates to match patterns
-- [Unions](../../types/unions) — disjoint union patterns often migrated to match expressions
+- [Refinements](../lang/refinements.md) — how `switch` and `if` narrowing translates to match patterns
+- [Unions](../types/unions.md) — disjoint union patterns often migrated to match expressions

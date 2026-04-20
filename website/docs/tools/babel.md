@@ -32,4 +32,4 @@ You can read the documentation of [babel-plugin-syntax-hermes-parser](https://gi
 
 ## See Also {#toc-see-also}
 
-- [Getting Started](../../getting-started) — full setup guide including Babel configuration
+- [Getting Started](../getting-started.md) — full setup guide including Babel configuration

@@ -17,7 +17,7 @@ etc are extracted and used by the typechecker when checking other code.
 Conceptually one can think of declaration mode as if Flow still typechecks the
 files but acts as if there is a `$FlowFixMe` comment on every line.
 
-See also [`[untyped]`](../untyped) for not typechecking files, and instead using `any` for all contents.
+See also [`[untyped]`](./untyped.md) for not typechecking files, and instead using `any` for all contents.
 
 Things to keep in mind:
 
@@ -61,6 +61,6 @@ directories named `third_party/`, like `src/third_party/`.
 
 ## See Also {#toc-see-also}
 
-- [`.flowconfig [untyped]`](../untyped) — treating modules as `any` instead of extracting type signatures
-- [`.flowconfig [ignore]`](../ignore) — completely excluding files from Flow's module resolver
-- [Declaration Files](../../declarations/) — `.flow` files for manually declaring module types
+- [`.flowconfig [untyped]`](./untyped.md) — treating modules as `any` instead of extracting type signatures
+- [`.flowconfig [ignore]`](./ignore.md) — completely excluding files from Flow's module resolver
+- [Declaration Files](../declarations/index.md) — `.flow` files for manually declaring module types

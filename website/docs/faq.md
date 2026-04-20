@@ -7,7 +7,7 @@ slug: /faq
 ## I checked that `foo.bar` is not `null`, but Flow still thinks it is. Why does this happen and how can I fix it?
 
 Flow does not keep track of side effects, so any function call may potentially nullify your check.
-This is called [refinement invalidation](../lang/refinements/#toc-refinement-invalidations). Example:
+This is called [refinement invalidation](./lang/refinements.md#toc-refinement-invalidations). Example:
 
 ```js flow-check
 type Param = {
@@ -107,12 +107,12 @@ if (oldPerson.age) {
 
 ## But Flow should understand that this function cannot invalidate this refinement, right?
 
-Flow is not [complete](../lang/types-and-expressions/#toc-soundness-and-completeness), so it cannot check all code perfectly. Instead,
+Flow is not [complete](./lang/types-and-expressions.md#toc-soundness-and-completeness), so it cannot check all code perfectly. Instead,
 Flow will make conservative assumptions to try to be sound.
 
 ## Why can't I use a function in my if-clause to check the type of a property?
 
-Flow doesn't track [refinements](../lang/refinements/) made in separate function calls:
+Flow doesn't track [refinements](./lang/refinements.md) made in separate function calls:
 
 ```js flow-check
 const add = (first: number, second: number) => first + second;
@@ -123,7 +123,7 @@ if (isNumber(val)) {
 }
 ```
 
-However, you can annotate your function with a [type guard](../types/type-guards/) to get this behavior:
+However, you can annotate your function with a [type guard](./types/type-guards.md) to get this behavior:
 
 ```js flow-check
 const add = (first: number, second: number) => first + second;
@@ -140,7 +140,7 @@ if (isNumber(val)) {
 The function's argument allows `string` values in its array, but in this case Flow prevents the original array from receiving a `number`.
 Inside the function, you would be able to push a `number` to the argument array, causing the type of the original array to no longer be accurate.
 
-You can fix this error by changing the type of the argument to `ReadonlyArray<string | number>`, making it [covariant](../lang/variance/#toc-covariance).
+You can fix this error by changing the type of the argument to `ReadonlyArray<string | number>`, making it [covariant](./lang/variance.md#toc-covariance).
 This prevents the function body from pushing anything to the array, allowing it to accept narrower types.
 
 As an example, this would not work:
@@ -174,7 +174,7 @@ fn(arr);
 The function argument allows `string` values in its field, but in this case Flow prevents the original object from having a `number` written to it.
 Within the body of the function you would be able to mutate the object so that the property `a` would receive a `number`, causing the type of the original object to no longer be accurate.
 
-You can fix this error by making the property [covariant](../lang/variance/#toc-covariance) (read-only): `{+a: string | number}`.
+You can fix this error by making the property [covariant](./lang/variance.md#toc-covariance) (read-only): `{+a: string | number}`.
 This prevents the function body from writing to the property, making it safe to pass more restricted types to the function.
 
 As an example, this would not work:
@@ -257,7 +257,7 @@ The fix here is to add types to the parameters of `add`:
 export const add = (a: number): number => a + 1;
 ```
 
-To see how you can annotate exported React components, check out our docs on [HOCs](../react/hoc/#toc-exporting-wrapped-components).
+To see how you can annotate exported React components, check out our docs on [HOCs](./react/hoc.md#toc-exporting-wrapped-components).
 
 There are other cases where this happens, and they might be harder to understand. You'll get an error like `Missing type annotation for U` For instance, you wrote this code:
 
@@ -266,7 +266,7 @@ const array = ['a', 'b']
 export const genericArray = array.map(a => a) // Error
 ```
 
-Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. The type of `Array.prototype.map` is `map<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any): Array<U>`. The `<U>` corresponds to what is called a [generic](../types/generics/), to express the fact that the type of the function passed to map is linked to the type of the array.
+Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. The type of `Array.prototype.map` is `map<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any): Array<U>`. The `<U>` corresponds to what is called a [generic](./types/generics.md), to express the fact that the type of the function passed to map is linked to the type of the array.
 
 Understanding the logic behind generics might be useful, but what you really need to know to make your typings valid is that you need to help Flow to understand the type of `genericArray`.
 

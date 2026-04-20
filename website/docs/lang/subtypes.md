@@ -16,7 +16,7 @@ all the possible values for both types and figure out if the other has a
 _subset_ of the values.
 
 For example, if we had a `TypeA` which described the numbers 1 through 3
-(a [union](../../types/unions) of [literal types](../../types/literals)), and
+(a [union](../types/unions.md) of [literal types](../types/literals.md)), and
 a `TypeB` which described the numbers 1 through 5: `TypeA` would be considered
 a _subtype_ of `TypeB`, because `TypeA` is a subset of `TypeB`.
 
@@ -146,10 +146,10 @@ are a subset of `A`'s. The subtype must accept _at least_ the same inputs as its
 and must return _at most_ the same outputs.
 
 The decision of which direction to apply the subtyping rule on inputs and outputs is
-governed by [variance](../variance), which is the topic of the next section.
+governed by [variance](./variance.md), which is the topic of the next section.
 
 ## See Also {#toc-see-also}
 
-- [Variance](../variance) — how subtyping interacts with generic type parameters
-- [Type Hierarchy](../type-hierarchy) — a visual overview of how all types relate
-- [Nominal & Structural Typing](../nominal-structural) — how classes and objects determine subtype relationships
+- [Variance](./variance.md) — how subtyping interacts with generic type parameters
+- [Type Hierarchy](./type-hierarchy.md) — a visual overview of how all types relate
+- [Nominal & Structural Typing](./nominal-structural.md) — how classes and objects determine subtype relationships

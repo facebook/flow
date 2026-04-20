@@ -10,7 +10,7 @@ Match patterns both define a condition that must be matched, and new variables t
 
 Primitive value patterns include string literals (e.g. `'light'`), number literals (e.g. `42`), BigInt literals (e.g. `10n`), boolean literals (e.g. `true`), `null`, and `undefined`.
 
-You can use variables (e.g. `name`) or property accesses (e.g. `Status.Active`) which are either typed as a [literal type](../../types/literals), or a [Flow Enum](../../enums) member. Using variables that are a general type like `string` or `number` is not allowed for match patterns \- they must be a literal type like `'light'`. You can add a type annotation or [`as const`](../../types/const-expression/) to your string value to type it with a literal type. Computed properties in match patterns only allow literals like `foo['bar']` or `foo[2]`.
+You can use variables (e.g. `name`) or property accesses (e.g. `Status.Active`) which are either typed as a [literal type](../types/literals.md), or a [Flow Enum](../enums/index.md) member. Using variables that are a general type like `string` or `number` is not allowed for match patterns \- they must be a literal type like `'light'`. You can add a type annotation or [`as const`](../types/const-expression.md) to your string value to type it with a literal type. Computed properties in match patterns only allow literals like `foo['bar']` or `foo[2]`.
 
 The identifier `_` is special cased for “Wildcard patterns”, if you want to match against a value with that name, rename it to something else first. If you want to create a new variable, take a look at “variable declaration patterns” below \- it is done by doing `const x`.
 
@@ -133,5 +133,5 @@ const e = match (x) {
 
 ## See Also {#toc-see-also}
 
-- [Tuples](../../types/tuples) — tuple patterns in match expressions
-- [Objects](../../types/objects) — object patterns in match expressions
+- [Tuples](../types/tuples.md) — tuple patterns in match expressions
+- [Objects](../types/objects.md) — object patterns in match expressions

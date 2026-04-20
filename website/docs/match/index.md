@@ -6,11 +6,11 @@ slug: /match
 
 *An experimental Flow language feature. See [adoption](#adoption) for how to enable.*
 
-`match` an input value against a series of [patterns](./patterns), which conditionally check the structure of the input and extract values, and either produce an expression (`match` expressions) or execute a block (`match` statements).
+`match` an input value against a series of [patterns](./patterns.md), which conditionally check the structure of the input and extract values, and either produce an expression (`match` expressions) or execute a block (`match` statements).
 
-You can [replace `switch` statements](./migration#replacing-switch) using `match`, avoiding the problems associated with `switch` (like fall-through behavior) while gaining benefits like [exhaustiveness checks](#exhaustive-checking) and complex pattern support.
+You can [replace `switch` statements](./migration.md#replacing-switch) using `match`, avoiding the problems associated with `switch` (like fall-through behavior) while gaining benefits like [exhaustiveness checks](#exhaustive-checking) and complex pattern support.
 
-You can also [replace nested conditional ternary expressions](./migration#replacing-conditional-ternary-expressions) using `match` expressions, making your code much more readable while gaining the power of `match`.
+You can also [replace nested conditional ternary expressions](./migration.md#replacing-conditional-ternary-expressions) using `match` expressions, making your code much more readable while gaining the power of `match`.
 
 ```js
 component AgePane(
@@ -43,7 +43,7 @@ const e = match (<arg>) {
 };
 ```
 
-The guard applies to the entire pattern, including ["or" patterns](./patterns#or-patterns), e.g. `1 | 2 if (cond)` will first match if the value is `1 | 2`, and then finally succeed if `cond` is also true. Guarded cases do not count toward [exhaustiveness checks](#exhaustive-checking), since they may or may not match based on the condition.
+The guard applies to the entire pattern, including ["or" patterns](./patterns.md#or-patterns), e.g. `1 | 2 if (cond)` will first match if the value is `1 | 2`, and then finally succeed if `cond` is also true. Guarded cases do not count toward [exhaustiveness checks](#exhaustive-checking), since they may or may not match based on the condition.
 
 You can initialize two or more variables using a `match`:
 ```js
@@ -68,7 +68,7 @@ Match expressions cannot be used in an expression statement position, as that is
 match (<arg>) {} //  This is a match statement, not a match expression
 ```
 
-If no pattern matches, Flow will error due to a non-exhaustive match, and an exception will be thrown at runtime. You can use a [wildcard](./patterns#wildcard-patterns) (`_`) or [variable declaration pattern](./patterns#variable-declaration-patterns) (`const x`) as the last case of a match to catch all remaining possible matches.
+If no pattern matches, Flow will error due to a non-exhaustive match, and an exception will be thrown at runtime. You can use a [wildcard](./patterns.md#wildcard-patterns) (`_`) or [variable declaration pattern](./patterns.md#variable-declaration-patterns) (`const x`) as the last case of a match to catch all remaining possible matches.
 
 To throw an exception in a `match` expression case body you can't use `throw` as it is a statement, and `match` expressions require expression bodies. Instead, you can use `invariant(false, <msg>)`, which Flow understands will always throw (with the supplied message).
 
@@ -78,7 +78,7 @@ Match expression case bodies do not yet support usage of `yield`, `yield*`, or `
 
 ## Match Statements
 
-Match statements can replace `switch` statements or chained `if`\-`else` statements. Similar to match expressions, they have an argument and a series of cases. The difference is each case body is a block (i.e. `{ ...statements... }`) instead of an expression, and the construct is a statement so it does not result in a value. No `break` needed: the cases don’t fall\-through (but you can still combine multiple patterns using ["or" patterns](./patterns#or-patterns) `|`).
+Match statements can replace `switch` statements or chained `if`\-`else` statements. Similar to match expressions, they have an argument and a series of cases. The difference is each case body is a block (i.e. `{ ...statements... }`) instead of an expression, and the construct is a statement so it does not result in a value. No `break` needed: the cases don’t fall\-through (but you can still combine multiple patterns using ["or" patterns](./patterns.md#or-patterns) `|`).
 
 Example structure:
 ```js
@@ -110,7 +110,7 @@ match (tab) { // ERROR
 }
 ```
 
-Checks on [disjoint object unions](../types/unions#toc-disjoint-object-unions) are supported.
+Checks on [disjoint object unions](../types/unions.md#toc-disjoint-object-unions) are supported.
 ```js flow-check
 declare const result: {type: 'ok', value: number} | {type: 'error'};
 
@@ -149,17 +149,17 @@ match (tab) {
 
 ## More
 
-Learn more about [match patterns](./patterns), including primitive value patterns, array and object patterns, variable declaration patterns, and “or” and “as” patterns.
+Learn more about [match patterns](./patterns.md), including primitive value patterns, array and object patterns, variable declaration patterns, and “or” and “as” patterns.
 
-You can also [migrate from existing patterns](./migration) like `switch` or conditional ternary expressions.
+You can also [migrate from existing patterns](./migration.md) like `switch` or conditional ternary expressions.
 
 ## Adoption
 
 * Flow: 0.274.1+ with option: `experimental.pattern_matching=true`
-* Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.29+, see our [Babel guide](../tools/babel) for more details.
-* ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.29+, see our [ESLint guide](../tools/eslint) for more details.
+* Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.29+, see our [Babel guide](../tools/babel.md) for more details.
+* ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.29+, see our [ESLint guide](../tools/eslint.md) for more details.
 
 ## See Also {#toc-see-also}
 
-- [Unions](../types/unions) — disjoint unions are commonly matched against
-- [Flow Enums](../enums/) — enums work well with match expressions for exhaustive checking
+- [Unions](../types/unions.md) — disjoint unions are commonly matched against
+- [Flow Enums](../enums/index.md) — enums work well with match expressions for exhaustive checking

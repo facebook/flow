@@ -15,7 +15,7 @@ class MyClass {
 const myInstance: MyClass = new MyClass(); // Works!
 ```
 
-This is because classes in Flow are [nominally typed](../../lang/nominal-structural).
+This is because classes in Flow are [nominally typed](../lang/nominal-structural.md).
 
 This means two classes with identical shapes are not compatible:
 
@@ -30,7 +30,7 @@ const foo: B = new A(); // Error!
 const bar: A = new B(); // Error!
 ```
 
-You also cannot use an [object type](../objects) to describe an instance of a class:
+You also cannot use an [object type](./objects.md) to describe an instance of a class:
 
 ```js flow-check
 class MyClass {
@@ -39,7 +39,7 @@ class MyClass {
 const foo: {x: number, ...} = new MyClass(); // Error!
 ```
 
-You can use [interfaces](../interfaces) to accomplish this instead:
+You can use [interfaces](./interfaces.md) to accomplish this instead:
 
 ```js flow-check
 class A {
@@ -65,7 +65,7 @@ Classes in Flow are just like normal JavaScript classes, but with added types.
 
 ### Class Methods {#toc-class-methods}
 
-Just like in [functions](../functions), class methods can have annotations for both parameters
+Just like in [functions](./functions.md), class methods can have annotations for both parameters
 (input) and returns (output):
 
 ```js flow-check
@@ -78,7 +78,7 @@ class MyClass {
 
 Also just like regular functions, class methods may have `this` annotations as well.
 However, if one is not provided, Flow will infer the class instance type (or the class type for static methods)
-instead of `mixed`. When an explicit `this` parameter is provided, it must be a [supertype](../../lang/subtypes/) of
+instead of `mixed`. When an explicit `this` parameter is provided, it must be a [supertype](../lang/subtypes.md) of
 the class instance type (or class type for static methods).
 
 ```js flow-check
@@ -98,7 +98,7 @@ const {method} = a; // Error!
 a.method.bind({}); // Error!
 ```
 
-Methods are considered [read-only](../../lang/variance):
+Methods are considered [read-only](../lang/variance.md):
 
 ```js flow-check
 class MyClass {
@@ -212,7 +212,7 @@ class MyClass {
 }
 ```
 
-You can mark a class field as read-only (or write-only) using [variance](../../lang/variance) annotations.
+You can mark a class field as read-only (or write-only) using [variance](../lang/variance.md) annotations.
 These can only be written to in the constructor:
 
 ```js flow-check
@@ -268,7 +268,7 @@ class MyClass extends Base {
 }
 ```
 
-And also implement multiple [interfaces](../interfaces):
+And also implement multiple [interfaces](./interfaces.md):
 
 ```js flow-check
 interface WithXNum {
@@ -352,7 +352,7 @@ class MyClass {
 
 ### Class Generics {#toc-class-generics}
 
-Classes can also have their own [generics](../generics):
+Classes can also have their own [generics](./generics.md):
 
 ```js flow-check
 class MyClass<A, B, C> {
@@ -363,7 +363,7 @@ class MyClass<A, B, C> {
 }
 ```
 
-Class generics are [parameterized](../generics#toc-parameterized-generics).
+Class generics are [parameterized](./generics.md#toc-parameterized-generics).
 When you use a class as a type you need to pass parameters for each of its
 generics:
 
@@ -388,12 +388,12 @@ const b: MyClass = new MyClass(); // Works!
 const a: MyClass = MyClass; // Error!
 ```
 
-See [here](../utilities#toc-class) for details on `Class<T>`, which allows you
+See [here](./utilities.md#toc-class) for details on `Class<T>`, which allows you
 to refer to the type of the class in an annotation.
 
 ## See Also {#toc-see-also}
 
-- [Interfaces](../interfaces) — structural typing for classes, allowing different classes to be used interchangeably
-- [Nominal & Structural Typing](../../lang/nominal-structural) — why classes are compared by name, not shape
-- [Generics](../generics) — parameterized types, used with classes, functions, and type aliases
-- [Variance](../../lang/variance) — controlling read-only and write-only properties
+- [Interfaces](./interfaces.md) — structural typing for classes, allowing different classes to be used interchangeably
+- [Nominal & Structural Typing](../lang/nominal-structural.md) — why classes are compared by name, not shape
+- [Generics](./generics.md) — parameterized types, used with classes, functions, and type aliases
+- [Variance](../lang/variance.md) — controlling read-only and write-only properties

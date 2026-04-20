@@ -4,7 +4,7 @@ slug: /linting/strict-import-export-lints
 description: "Lint rules that enforce stricter ES module import and export usage, requiring the experimental.strict_es6_import_export option."
 ---
 
-These lint rules enforce stricter usage of ES module `import` and `export` syntax. They all require the [`experimental.strict_es6_import_export`](../../config/options/#toc-experimental-strict-es6-import-export) option to be set to `true` in your `.flowconfig`.
+These lint rules enforce stricter usage of ES module `import` and `export` syntax. They all require the [`experimental.strict_es6_import_export`](../config/options.md#toc-experimental-strict-es6-import-export) option to be set to `true` in your `.flowconfig`.
 
 ### `default-import-access` {#toc-default-import-access}
 Triggers when you access the `default` export of a module indirectly, rather than importing it directly. This includes accessing the `default` property on an `import *` namespace object (via member access or destructuring), and using `import { default as ... }` syntax.
@@ -238,4 +238,4 @@ export function outer() {
 
 ## See Also {#toc-see-also}
 
-- [`.flowconfig [options]`](../../config/options) — the `experimental.strict_es6_import_export` option that enables these rules
+- [`.flowconfig [options]`](../config/options.md) — the `experimental.strict_es6_import_export` option that enables these rules

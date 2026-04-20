@@ -58,7 +58,7 @@ opaque type VeryOpaque: AliasAlias = ObjectAlias;
 ### Within the Defining File {#toc-within-the-defining-file}
 
 When in the same file the alias is defined, opaque type aliases behave exactly
-as regular [type aliases](../aliases/) do.
+as regular [type aliases](./aliases.md) do.
 
 ```js flow-check
 opaque type NumberAlias = number;
@@ -75,7 +75,7 @@ function toNumber(x: NumberAlias): number { return x; }
 ### Outside the Defining File {#toc-outside-the-defining-file}
 
 When importing an opaque type alias, it behaves like a
-[nominal type](../../lang/nominal-structural/#toc-nominal-typing), hiding its
+[nominal type](../lang/nominal-structural.md#toc-nominal-typing), hiding its
 underlying type.
 
 **`exports.js`**
@@ -133,8 +133,8 @@ opaque type Good: {x: string, ...} = {x: string, y: number};
 
 ### Generics {#toc-generics}
 
-Opaque type aliases can also have their own [generics](../generics/),
-and they work exactly as generics do in regular [type aliases](../aliases#toc-type-alias-generics)
+Opaque type aliases can also have their own [generics](./generics.md),
+and they work exactly as generics do in regular [type aliases](./aliases.md#toc-type-alias-generics)
 
 ```js flow-check
 opaque type MyObject<A, B, C>: {foo: A, bar: B, ...} = {
@@ -153,7 +153,7 @@ const val: MyObject<number, boolean, string> = {
 ### Library Definitions {#toc-library-definitions}
 
 You can also declare opaque type aliases in
-[libdefs](../../libdefs). There, you omit the underlying
+[libdefs](../libdefs/index.md). There, you omit the underlying
 type, but may still optionally include a super type.
 
 ```js flow-check
@@ -163,5 +163,5 @@ declare opaque type PositiveNumber: number;
 
 ## See Also {#toc-see-also}
 
-- [Type Aliases](../aliases) — regular (transparent) type aliases
-- [Nominal & Structural Typing](../../lang/nominal-structural) — opaque types are nominally typed, unlike regular type aliases
+- [Type Aliases](./aliases.md) — regular (transparent) type aliases
+- [Nominal & Structural Typing](../lang/nominal-structural.md) — opaque types are nominally typed, unlike regular type aliases

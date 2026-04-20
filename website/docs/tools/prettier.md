@@ -22,4 +22,4 @@ to your `.prettierrc` file.
 
 ## See Also {#toc-see-also}
 
-- [Getting Started](../../getting-started) — full setup guide for Flow projects
+- [Getting Started](../getting-started.md) — full setup guide for Flow projects

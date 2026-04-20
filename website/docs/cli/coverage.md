@@ -7,7 +7,7 @@ The coverage command provides a metric of the amount of checking that Flow has
 performed on each part of your code. A program with high Flow coverage should
 increase your confidence that Flow has detected any potential runtime errors.
 
-The determining factor for this is the presence of [`any`](../../types/any/) in the
+The determining factor for this is the presence of [`any`](../types/any.md) in the
 inferred type of each expression. An expression whose inferred type is `any` is
 considered *uncovered*, otherwise it is considered *covered*.
 
@@ -62,7 +62,7 @@ of `x` as a number. Thus `x` is considered uncovered.
 
 **The empty type**
 
-An interesting type from a coverage perspective is the [`empty`](../../types/empty) type.
+An interesting type from a coverage perspective is the [`empty`](../types/empty.md) type.
 This type roughly corresponds to *dead code*. As such checking around expressions with
 type `empty` is more relaxed, but for a good reason: this code will not be executed at
 runtime. Since it is a common practice to clean up such code, Flow coverage will
@@ -130,5 +130,5 @@ Note that `batch-coverage` requires a non-lazy Flow server.
 
 ## See Also {#toc-see-also}
 
-- [Any](../../types/any) — the type that reduces coverage, and how to avoid it
-- [Unknown](../../types/unknown) — the safe alternative to `any` that maintains coverage
+- [Any](../types/any.md) — the type that reduces coverage, and how to avoid it
+- [Unknown](../types/unknown.md) — the safe alternative to `any` that maintains coverage

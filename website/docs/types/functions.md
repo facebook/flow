@@ -170,7 +170,7 @@ const str: string = func.call({x : 42}); // Error!
 
 This parameter has no effect at runtime, and is erased along with types when Flow is transformed into JavaScript.
 When present, `this` parameters must always appear at the very beginning of the function's parameter list, and must
-have an annotation. Additionally, [arrow functions](./#toc-arrow-functions) may not have a `this` parameter annotation, as
+have an annotation. Additionally, [arrow functions](#toc-arrow-functions) may not have a `this` parameter annotation, as
 these functions bind their `this` parameter at the definition site, rather than the call site.
 
 If an explicit `this` parameter is not provided, Flow will attempt to infer one based on usage. If `this` is not mentioned
@@ -209,7 +209,7 @@ async function func(): Promise<number> {
 ```
 
 You can also use a special return type to declare that your function refines the type of a parameter.
-These are called [type guards](../type-guards):
+These are called [type guards](./type-guards.md):
 
 ```js flow-check
 function isString(x: mixed): x is string {
@@ -244,7 +244,7 @@ the format `f.prop = <expr>;`, in the same statement list as the function defini
 Note that the object representing the static properties assigned to the function is inexact.
 
 ## Overloaded functions
-You can use intersection types to define [overloaded function types](../intersections/#toc-intersection-of-function-types):
+You can use intersection types to define [overloaded function types](./intersections.md#toc-intersection-of-function-types):
 
 ```js flow-check
 declare const fn:
@@ -289,11 +289,11 @@ const f: (boolean, string, number) => Array<string> =
   func((x: string, y: number) => x.slice(y)); // OK
 ```
 
-The type `Function` is just an alias for [`any`](../any), and is unsafe.
-You can ban its use in your code with the [unclear-type lint](../../linting/rule-reference/#toc-unclear-type).
+The type `Function` is just an alias for [`any`](./any.md), and is unsafe.
+You can ban its use in your code with the [unclear-type lint](../linting/rule-reference.md#toc-unclear-type).
 
 ## See Also {#toc-see-also}
 
-- [Generics](../generics) — parameterized types used with functions for type-safe reusable code
-- [Type Guards](../type-guards) — special return types that refine parameter types
-- [Intersections](../intersections) — defining overloaded function types
+- [Generics](./generics.md) — parameterized types used with functions for type-safe reusable code
+- [Type Guards](./type-guards.md) — special return types that refine parameter types
+- [Intersections](./intersections.md) — defining overloaded function types

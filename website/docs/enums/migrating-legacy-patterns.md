@@ -88,7 +88,7 @@ Then, take a look at [how to update files that import and use the enum](#toc-upd
 #### Fix type imports {#toc-fix-type-imports}
 Previous patterns required you to export (and then import) a type separate from the enum itself.
 Flow Enums are both types and values (like a class), so you just need to export the Flow Enum itself. Since there is now one export, you only need one import.
-Read more about [exporting enums](../using-enums/#toc-exporting-enums) and [importing enums](../using-enums/#toc-importing-enums).
+Read more about [exporting enums](./using-enums.md#toc-exporting-enums) and [importing enums](./using-enums.md#toc-importing-enums).
 
 If you previously had:
 ```js flow-check
@@ -153,7 +153,7 @@ function isActive(status: Status) { ... } // Changed type annotation to just `St
 
 #### Mapping enums to other values {#toc-mapping-enums-to-other-values}
 Sometimes you want to map from an enum value to some other value. Previously, we sometimes used object literals for this.
-With Flow Enums, use a function with a `switch` instead. The switch is [exhaustively checked](../using-enums/#toc-exhaustively-checking-enums-with-a-switch),
+With Flow Enums, use a function with a `switch` instead. The switch is [exhaustively checked](./using-enums.md#toc-exhaustively-checking-enums-with-a-switch),
 so Flow will ensure you update your mapping when you add or remove Flow Enum members.
 
 Replace this pattern
@@ -182,14 +182,14 @@ function statusIcon(status: Status): string {
 }
 const icon = statusIcon(status);
 ```
-Read more about [mapping enums to other values](../using-enums/#toc-mapping-enums-to-other-values).
+Read more about [mapping enums to other values](./using-enums.md#toc-mapping-enums-to-other-values).
 
 
 #### Usage as the representation type (e.g. a string) {#toc-usage-as-the-representation-type-e-g-a-string}
 You can't use a Flow Enum directly as its representation type (e.g. a `string`).
 If you get Flow errors about using an enum as its representation type, first try to refactor your code so that it expects the enum type instead of the representation type
 (e.g. change annotations from `string` to `Status`). If you really want to use the enum as its representation type, you can add in explicit casts.
-See [casting to representation type](../using-enums/#toc-casting-to-representation-type).
+See [casting to representation type](./using-enums.md#toc-casting-to-representation-type).
 
 
 #### Casting to the enum type {#toc-casting-to-the-enum-type}
@@ -208,7 +208,7 @@ function castToStatus(input: number): StatusType | void {
 castToStatus(x);
 ```
 
-You can now just use the [cast](../using-enums/#toc-cast) method:
+You can now just use the [cast](./using-enums.md#toc-cast) method:
 
 ```js
 Status.cast(x);
@@ -217,14 +217,14 @@ Status.cast(x);
 
 #### Update switch statements {#toc-update-switch-statements}
 Flow Enums are exhaustively checked in `switch` statements. You might need to update your code when you are switching over an enum value.
-Read more at [exhaustively checking enums in switch statements](../using-enums/#toc-exhaustively-checking-enums-with-a-switch).
+Read more at [exhaustively checking enums in switch statements](./using-enums.md#toc-exhaustively-checking-enums-with-a-switch).
 
 
 #### Operations over enum members {#toc-operations-over-enum-members}
 If previously you used functionality like `Object.values`, `Object.keys`, or `for-in` loops to get and operate on the enum members,
-you can use the [members method](../using-enums/#toc-members) instead.
+you can use the [members method](./using-enums.md#toc-members) instead.
 
 ## See Also {#toc-see-also}
 
-- [Unions](../../types/unions) — the pattern that Flow Enums replace in many cases
-- [Literal Types](../../types/literals) — the type-level building blocks of union-based enum patterns
+- [Unions](../types/unions.md) — the pattern that Flow Enums replace in many cases
+- [Literal Types](../types/literals.md) — the type-level building blocks of union-based enum patterns

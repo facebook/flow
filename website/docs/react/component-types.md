@@ -4,10 +4,10 @@ slug: /react/component-types
 description: "How to use Component Types to describe the type of a React component, useful for library definitions and higher-order components."
 ---
 :::info
-Component Types are only available in Flow v0.243.0+. If you are on an older version, please use [React.AbstractComponent](../types#toc-react-abstractcomponent)
+Component Types are only available in Flow v0.243.0+. If you are on an older version, please use [React.AbstractComponent](./types.md#toc-react-abstractcomponent)
 :::
 
-Component Types have syntax similar to our runtime [Component Syntax](../component-syntax) to make it easy to describe
+Component Types have syntax similar to our runtime [Component Syntax](./component-syntax.md) to make it easy to describe
 the type of a component. Component Types are most useful for writing library definitions.
 
 ## Specifying Props
@@ -23,7 +23,7 @@ declare const Component: ComponentType;
 <Component numberProp={3} />; // OK! optionalProp is optional
 ```
 
-Like [Component Syntax](../component-syntax/#rest-parameters), Component Types also accept a rest parameter:
+Like [Component Syntax](./component-syntax.md#rest-parameters), Component Types also accept a rest parameter:
 ```js
 import * as React from 'react';
 
@@ -49,8 +49,8 @@ component Example() {
 ```
 ## Specifying Render Types
 
-You can also specify the [Render Type](../render-types) for your component just like you can with
-[Component Syntax](../render-types/#basic-behavior)
+You can also specify the [Render Type](./render-types.md) for your component just like you can with
+[Component Syntax](./render-types.md#basic-behavior)
 
 ```js flow-check
 import * as React from 'react';
@@ -104,5 +104,5 @@ PolymorphicExample as component<T: React.Node>(children: T) renders T; // OK!
 
 ## See Also {#toc-see-also}
 
-- [Generics](../../types/generics) — generic type parameters used in component type signatures
-- [Library Definitions](../../libdefs/) — declaring component types in library definition files
+- [Generics](../types/generics.md) — generic type parameters used in component type signatures
+- [Library Definitions](../libdefs/index.md) — declaring component types in library definition files

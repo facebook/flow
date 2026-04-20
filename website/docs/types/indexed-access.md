@@ -4,7 +4,7 @@ slug: /types/indexed-access
 description: "How to use indexed access types to extract a property type from an object, array, or tuple type."
 ---
 
-Flow’s Indexed Access Types allow you to get the type of a property from an [object](../objects), [array](../arrays), or [tuple](../tuples) type.
+Flow’s Indexed Access Types allow you to get the type of a property from an [object](./objects.md), [array](./arrays.md), or [tuple](./tuples.md) type.
 
 ## Usage {#toc-indexed-access-type-usage}
 
@@ -42,7 +42,7 @@ const age: Pair[1] = 6; // OK - `Pair[1]` is an alias for `number`
 const wrong: Pair[2] = true; // Error - `Pair` only has two elements
 ```
 
-The index can be a union, including the result of calling [`keyof`](../utilities/#toc-keys):
+The index can be a union, including the result of calling [`keyof`](./utilities.md#toc-keys):
 ```js flow-check
 type Cat = {
   name: string,
@@ -130,7 +130,7 @@ To use Indexed Access Types, you need to upgrade your infrastructure so that it 
 - `prettier`: 2.3.2
 - `babel`: 7.14
 
-Indexed Access Types are a replacement for the [`$PropertyType`](../utilities#toc-propertytype) and [`$ElementType`](../utilities#toc-elementtype) utility types.
+Indexed Access Types are a replacement for the [`$PropertyType`](./utilities.md#toc-propertytype) and [`$ElementType`](./utilities.md#toc-elementtype) utility types.
 If you're familiar with those utility types already, here is a quick conversion guide:
 - `$PropertyType<Obj, 'prop'>` &rarr;  `Obj['prop']`
 - `$ElementType<Obj, T>` &rarr; `Obj[T]`
@@ -148,7 +148,7 @@ Then enable the rule in your ESLint config:
 
 ## See Also {#toc-see-also}
 
-- [Objects](../objects) — the primary type indexed access is used with
-- [Mapped Types](../mapped-types) — transforming object types, often combined with indexed access
-- [Conditional Types](../conditional) — type-level conditionals, frequently used alongside indexed access
-- [Utility Types](../utilities) — `keyof`, `Pick`, and other built-in type helpers
+- [Objects](./objects.md) — the primary type indexed access is used with
+- [Mapped Types](./mapped-types.md) — transforming object types, often combined with indexed access
+- [Conditional Types](./conditional.md) — type-level conditionals, frequently used alongside indexed access
+- [Utility Types](./utilities.md) — `keyof`, `Pick`, and other built-in type helpers

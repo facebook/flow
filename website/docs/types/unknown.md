@@ -6,7 +6,7 @@ description: "How the unknown type works in Flow as the safe supertype of all ty
 
 import {SinceVersion} from '../../components/VersionTags';
 
-`unknown` (replacing [`mixed`](mixed.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../../lang/type-hierarchy). All values are `unknown`.
+`unknown` (replacing [`mixed`](./mixed.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../lang/type-hierarchy.md). All values are `unknown`.
 However, this means that very few operations are permitted on it, without refining to some more specific type.
 That's because the valid operations on `unknown` must be valid for all types.
 
@@ -90,7 +90,7 @@ function stringify(value: unknown) {
 stringify("foo");
 ```
 
-Instead you must ensure the value is a certain type by [refining](../../lang/refinements/) it.
+Instead you must ensure the value is a certain type by [refining](../lang/refinements.md) it.
 
 ```js flow-check
 function stringify(value: unknown) {
@@ -106,18 +106,18 @@ stringify("foo");
 
 Because of the `typeof value === 'string'` check, Flow knows the `value` can
 only be a `string` inside of the `if` statement. This is known as a
-[refinement](../../lang/refinements/).
+[refinement](../lang/refinements.md).
 
 ## Versus `any`
-`unknown` is safe, while [`any`](../any) is not. Both accept all values, but `any` also unsafely allows all operations.
+`unknown` is safe, while [`any`](./any.md) is not. Both accept all values, but `any` also unsafely allows all operations.
 
 ## Versus `empty`
-`unknown` is the opposite of [`empty`](../empty):
+`unknown` is the opposite of [`empty`](./empty.md):
 - Everything is a `unknown`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
 - Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
 
 ## See Also {#toc-see-also}
 
-- [Mixed](../mixed) — the predecessor to `unknown`, with the same behavior
-- [Refinements](../../lang/refinements) — how to narrow `unknown` values to specific types before use
-- [Type Hierarchy](../../lang/type-hierarchy) — how `unknown`, `any`, and `empty` relate in the full type hierarchy
+- [Mixed](./mixed.md) — the predecessor to `unknown`, with the same behavior
+- [Refinements](../lang/refinements.md) — how to narrow `unknown` values to specific types before use
+- [Type Hierarchy](../lang/type-hierarchy.md) — how `unknown`, `any`, and `empty` relate in the full type hierarchy

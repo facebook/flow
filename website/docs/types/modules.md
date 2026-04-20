@@ -27,7 +27,7 @@ import type MyClass, {MyObject, MyInterface} from './exports';
 
 ## Importing and exporting values as types {#toc-importing-and-exporting-values}
 
-Flow also supports importing the type of values exported by other modules using [`typeof`](../typeof/).
+Flow also supports importing the type of values exported by other modules using [`typeof`](./typeof.md).
 
 **`exports.js`**
 
@@ -51,5 +51,5 @@ that it does not add a runtime dependency on the other module.
 
 ## See Also {#toc-see-also}
 
-- [Declaration Files](../../declarations/) — `.flow` files that declare types for untyped modules
-- [Library Definitions](../../libdefs/) — declaring types for third-party packages
+- [Declaration Files](../declarations/index.md) — `.flow` files that declare types for untyped modules
+- [Library Definitions](../libdefs/index.md) — declaring types for third-party packages

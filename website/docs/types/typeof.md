@@ -117,5 +117,5 @@ let test2: typeof MyClass = MyClass;   // Works!
 
 ## See Also {#toc-see-also}
 
-- [Classes](../classes) — `typeof` is commonly used with classes to refer to the class value (not instance) type
-- [Modules](../modules) — `typeof` imports for getting the type of an imported value
+- [Classes](./classes.md) — `typeof` is commonly used with classes to refer to the class value (not instance) type
+- [Modules](./modules.md) — `typeof` imports for getting the type of an imported value

@@ -5,7 +5,7 @@ description: "How Flow uses nominal typing for classes and structural typing for
 ---
 
 A static type checker can use either the name (nominal typing) or the structure (structural typing)
-of types when comparing them against other types (like when checking if one is a [subtype](../subtypes) of another).
+of types when comparing them against other types (like when checking if one is a [subtype](./subtypes.md) of another).
 
 ## Nominal typing {#toc-nominal-typing}
 
@@ -58,7 +58,7 @@ Flow uses structural typing for objects and functions, but nominal typing for cl
 
 ### Functions are structurally typed {#toc-functions-are-structurally-typed}
 
-When comparing a [function type](../../types/functions) with a function it must have the same structure
+When comparing a [function type](../types/functions.md) with a function it must have the same structure
 in order to be considered valid.
 
 ```js flow-check
@@ -69,7 +69,7 @@ let test: FuncType = func; // Works!
 
 ### Objects are structurally typed {#toc-objects-are-structurally-typed}
 
-When comparing an [object type](../../types/objects) with an object it must have the same structure
+When comparing an [object type](../types/objects.md) with an object it must have the same structure
 in order to be considered valid.
 
 ```js flow-check
@@ -80,7 +80,7 @@ let test: ObjType = obj; // Works
 
 ### Classes are nominally typed {#toc-classes-are-nominally-typed}
 
-When you have two [classes](../../types/classes) with the same structure, they still are not
+When you have two [classes](../types/classes.md) with the same structure, they still are not
 considered equivalent because Flow uses nominal typing for classes.
 
 ```js flow-check
@@ -89,7 +89,7 @@ class Bar { method(input: string) { /* ... */ } }
 let test: Foo = new Bar(); // Error!
 ```
 
-If you wanted to use a class structurally you could do that using an [interface](../../types/interfaces):
+If you wanted to use a class structurally you could do that using an [interface](../types/interfaces.md):
 
 ```js flow-check
 interface Interface {
@@ -104,7 +104,7 @@ let test2: Interface = new Bar(); // Works
 ```
 
 ### Opaque types
-You can use [opaque types](../../types/opaque-types) to turn a previously structurally typed alias into a nominal one (outside of the file that it is defined).
+You can use [opaque types](../types/opaque-types.md) to turn a previously structurally typed alias into a nominal one (outside of the file that it is defined).
 
 ```js flow-check
 // A.js
@@ -128,7 +128,7 @@ const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable wi
 
 ### Flow Enums
 
-[Flow Enums](../../enums) do not allow enum members with the same value, but which belong to different enums, to be used interchangeably.
+[Flow Enums](../enums/index.md) do not allow enum members with the same value, but which belong to different enums, to be used interchangeably.
 
 ```js flow-check
 enum A {
@@ -143,8 +143,8 @@ const a: A = B.X; // Error!
 
 ## See Also {#toc-see-also}
 
-- [Classes](../../types/classes) — nominally typed: compared by class name
-- [Interfaces](../../types/interfaces) — structurally typed: allow different classes with the same shape
-- [Objects](../../types/objects) — structurally typed: compared by shape
-- [Opaque Type Aliases](../../types/opaque-types) — nominally typed: hiding the underlying type across module boundaries
-- [Flow Enums](../../enums/) — nominally typed: each enum is a distinct type
+- [Classes](../types/classes.md) — nominally typed: compared by class name
+- [Interfaces](../types/interfaces.md) — structurally typed: allow different classes with the same shape
+- [Objects](../types/objects.md) — structurally typed: compared by shape
+- [Opaque Type Aliases](../types/opaque-types.md) — nominally typed: hiding the underlying type across module boundaries
+- [Flow Enums](../enums/index.md) — nominally typed: each enum is a distinct type
