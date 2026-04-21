@@ -1115,11 +1115,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] buffered_line_reader.ml
         - [ ] buffered_line_reader_lwt.ml
         - [ ] buffered_line_reader_sig.ml
-    - [ ] build_mode/
-      - [ ] dev/
-          - [ ] build_mode.ml
-      - [ ] prod/
-          - [ ] build_mode.ml
+    - [x] build_mode/
+      - [x] dev/
+          - [x] build_mode.ml → `cfg(debug_assertions)`
+      - [x] prod/
+          - [x] build_mode.ml → `cfg(debug_assertions)`
     - [x] cgroup/
         - [x] cGroup.ml → `flow_server/src/cgroup.rs`
     - [ ] collections/
@@ -1128,7 +1128,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] flow_set.ml → `irrelevant` (use `BTreeSet`, `HashSet` or `FlowOrdSet`)
         - [x] iMap.ml → `irrelevant` (directly use things like `BTreeMap<i32, T>`)
         - [x] iSet.ml → `irrelevant` (directly use things like `BTreeSet<i32>`)
-        - [ ] immQueue.ml
+        - [x] immQueue.ml → `irrelevant` (directly use queue in rust)
         - [x] intKey.ml → `irrelevant` (only useful for `iMap`, but `iMap` is useless in Rust)
         - [ ] priorityQueue.ml
         - [x] sMap.ml → `irrelevant` (directly use things like `BTreeMap<String>`)
