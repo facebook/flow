@@ -8072,7 +8072,7 @@ pub mod object {
         #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub struct OperandSliceInner {
             pub reason: Reason,
-            pub prop_map: FlowOrdMap<Name, Property>,
+            pub prop_map: properties::PropertiesMap,
             pub generics: GenericSpreadId,
             pub dict: Dict,
             pub reachable_targs: Rc<[(Type, Polarity)]>,

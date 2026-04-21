@@ -533,7 +533,7 @@ pub fn error_on_unsupported_variance_annotation<'a>(
 #[derive(Clone)]
 struct ConvertEnv {
     tparams_map: FlowOrdMap<SubstName, Type>,
-    infer_tparams_map: ALocMap<(ast::types::TypeParam<ALoc, (ALoc, Type)>, Type)>,
+    infer_tparams_map: Rc<ALocMap<(ast::types::TypeParam<ALoc, (ALoc, Type)>, Type)>>,
     in_no_infer: bool,
     in_renders_arg: bool,
 }
@@ -547,7 +547,7 @@ impl ConvertEnv {
     ) -> Self {
         Self {
             tparams_map,
-            infer_tparams_map: infer_tparams_map.unwrap_or_default(),
+            infer_tparams_map: Rc::new(infer_tparams_map.unwrap_or_default()),
             in_no_infer: in_no_infer.unwrap_or(false),
             in_renders_arg: in_renders_arg.unwrap_or(false),
         }
@@ -1068,7 +1068,8 @@ fn convert_inner<'a>(
             let mut infer_bounds_map: FlowOrdMap<SubstName, Type> = FlowOrdMap::default();
             for (_infer_loc, infer) in hoisted_infer_types.iter() {
                 let subst_name = SubstName::name(infer.tparam.name.name.dupe());
-                let old_infer_tparams_map = std::mem::take(&mut env.infer_tparams_map);
+                let old_infer_tparams_map =
+                    std::mem::replace(&mut env.infer_tparams_map, Rc::new(ALocMap::new()));
                 let (tparam_tast, tparam, t) = mk_type_param_inner(
                     cx,
                     env,
@@ -1103,8 +1104,10 @@ fn convert_inner<'a>(
                 }
             }
             let infer_tparams = tparams;
-            let old_infer_tparams_map =
-                std::mem::replace(&mut env.infer_tparams_map, extends_infer_tparams_map);
+            let old_infer_tparams_map = std::mem::replace(
+                &mut env.infer_tparams_map,
+                Rc::new(extends_infer_tparams_map),
+            );
             let extends_type_ast = convert_inner(cx, env, &inner.extends_type);
             let extends_t = extends_type_ast.loc().1.dupe();
             env.infer_tparams_map = old_infer_tparams_map;
@@ -3780,7 +3783,7 @@ fn convert_object<'a>(
     #[derive(Clone)]
     struct Acc {
         dict: Option<DictType>,
-        pmap: std::collections::BTreeMap<Name, type_::Property>,
+        pmap: type_::properties::PropertiesMap,
         tail: Vec<AccElement>,
         proto: Option<Type>,
         calls: Vec<Type>,
@@ -3790,7 +3793,7 @@ fn convert_object<'a>(
         fn empty() -> Self {
             Self {
                 dict: None,
-                pmap: std::collections::BTreeMap::new(),
+                pmap: type_::properties::PropertiesMap::new(),
                 tail: Vec::new(),
                 proto: None,
                 calls: Vec::new(),
@@ -3803,7 +3806,7 @@ fn convert_object<'a>(
             } else {
                 Some(AccElement::Slice {
                     dict: self.dict.clone(),
-                    pmap: type_::properties::PropertiesMap::from_btree_map(self.pmap.clone()),
+                    pmap: self.pmap.dupe(),
                 })
             }
         }
@@ -3827,10 +3830,7 @@ fn convert_object<'a>(
             Ok(())
         }
 
-        fn add_prop(
-            &mut self,
-            f: impl FnOnce(&mut std::collections::BTreeMap<Name, type_::Property>),
-        ) {
+        fn add_prop(&mut self, f: impl FnOnce(&mut type_::properties::PropertiesMap)) {
             f(&mut self.pmap);
         }
 
@@ -3855,7 +3855,7 @@ fn convert_object<'a>(
             }
             tail.push(AccElement::Spread(t));
             self.dict = None;
-            self.pmap = std::collections::BTreeMap::new();
+            self.pmap = type_::properties::PropertiesMap::new();
             self.tail = tail;
         }
 
@@ -4646,7 +4646,7 @@ fn convert_object<'a>(
                     AccElement::Slice { dict, pmap } => object::spread::Operand::Slice(
                         object::spread::OperandSlice::new(object::spread::OperandSliceInner {
                             reason: reason.dupe(),
-                            prop_map: pmap.iter().map(|(k, v)| (k.dupe(), v.dupe())).collect(),
+                            prop_map: pmap.dupe(),
                             dict: dict.clone(),
                             generics: flow_typing_generics::spread_empty(),
                             reachable_targs: Rc::from([]),
@@ -4688,10 +4688,7 @@ fn convert_object<'a>(
                     let head_slice_val =
                         object::spread::OperandSlice::new(object::spread::OperandSliceInner {
                             reason: reason.dupe(),
-                            prop_map: head_pmap
-                                .iter()
-                                .map(|(k, v)| (k.dupe(), v.dupe()))
-                                .collect(),
+                            prop_map: head_pmap.dupe(),
                             dict: head_dict.clone(),
                             generics: flow_typing_generics::spread_empty(),
                             reachable_targs: Rc::from([]),

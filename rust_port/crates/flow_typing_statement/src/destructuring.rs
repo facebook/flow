@@ -235,7 +235,7 @@ fn object_computed_property<'a>(
     ))
 }
 
-fn object_rest_property(acc: &State, xs: Vec<FlowSmolStr>, loc: ALoc) -> State {
+fn object_rest_property(acc: &State, xs: &[FlowSmolStr], loc: ALoc) -> State {
     let default_val = &acc.default;
     let reason = mk_reason(VirtualReasonDesc::RObjectPatternRestProp, loc.dupe());
     let new_default = default_val
@@ -625,7 +625,7 @@ pub fn object_properties<'a>(
                 let loc = re.loc.dupe();
                 let pat = &re.argument;
                 let arg_loc = pat.loc().dupe();
-                let mut rest_acc = object_rest_property(acc, xs.clone(), arg_loc);
+                let mut rest_acc = object_rest_property(acc, &xs, arg_loc);
                 let typed_p = pattern(cx, f, &mut rest_acc, pat)?;
                 result.push(pattern::object::Property::RestElement(
                     pattern::RestElement {

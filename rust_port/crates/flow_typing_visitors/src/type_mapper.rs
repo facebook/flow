@@ -10,9 +10,7 @@ use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_common::polarity::Polarity;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
@@ -1532,7 +1530,7 @@ pub fn object_kit_spread_operand_slice_default<'cx, A, M: TypeMapper<'cx, A> + ?
     slice: object::spread::OperandSlice,
 ) -> object::spread::OperandSlice {
     let mut prop_map_changed = false;
-    let prop_map_prime: FlowOrdMap<Name, Property> = slice
+    let prop_map_prime: properties::PropertiesMap = slice
         .prop_map
         .iter()
         .map(|(name, prop)| {

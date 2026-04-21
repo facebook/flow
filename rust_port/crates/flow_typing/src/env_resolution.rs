@@ -646,7 +646,7 @@ fn resolve_hint<'cx>(
                     |acc, prop| match prop {
                         ObjectPropPatternHint::ObjectPropPatternHint(n, l, h) => {
                             let t = resolve_hint_node(cx, loc.dupe(), h);
-                            acc.add_prop(move |mut props_map| {
+                            acc.add_prop(move |props_map| {
                                 props_map.insert(
                                     reason::Name::new(n),
                                     type_::Property::new(type_::PropertyInner::Field(Box::new(
@@ -658,7 +658,6 @@ fn resolve_hint<'cx>(
                                         },
                                     ))),
                                 );
-                                props_map
                             })
                         }
                         ObjectPropPatternHint::ObjectSpreadPropPatternHint(h) => {
@@ -1484,7 +1483,7 @@ fn resolve_binding<'cx>(
                                     Key::Identifier(id) => {
                                         let name_loc = id.loc.dupe();
                                         let name = id.name.dupe();
-                                        acc.add_prop(move |mut props_map| {
+                                        acc.add_prop(move |props_map| {
                                             props_map.insert(
                                                 reason::Name::new(name),
                                                 type_::Property::new(
@@ -1494,12 +1493,11 @@ fn resolve_binding<'cx>(
                                                     },
                                                 ),
                                             );
-                                            props_map
                                         })
                                     }
                                     Key::StringLiteral((name_loc, lit)) => {
                                         let name = lit.value.dupe();
-                                        acc.add_prop(move |mut props_map| {
+                                        acc.add_prop(move |props_map| {
                                             props_map.insert(
                                                 reason::Name::new(name),
                                                 type_::Property::new(
@@ -1509,7 +1507,6 @@ fn resolve_binding<'cx>(
                                                     },
                                                 ),
                                             );
-                                            props_map
                                         })
                                     }
                                     _ => panic!("Object not synthesizable"),
@@ -1524,7 +1521,7 @@ fn resolve_binding<'cx>(
                                     Key::Identifier(id) => {
                                         let name_loc = id.loc.dupe();
                                         let name = id.name.dupe();
-                                        acc.add_prop(move |mut props_map| {
+                                        acc.add_prop(move |props_map| {
                                             props_map.insert(
                                                 reason::Name::new(name),
                                                 type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
@@ -1535,12 +1532,11 @@ fn resolve_binding<'cx>(
                                                         flow_common::polarity::Polarity::Neutral,
                                                 }))),
                                             );
-                                            props_map
                                         })
                                     }
                                     Key::StringLiteral((name_loc, lit)) => {
                                         let name = lit.value.dupe();
-                                        acc.add_prop(move |mut props_map| {
+                                        acc.add_prop(move |props_map| {
                                             props_map.insert(
                                                 reason::Name::new(name),
                                                 type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
@@ -1551,7 +1547,6 @@ fn resolve_binding<'cx>(
                                                         flow_common::polarity::Polarity::Neutral,
                                                 }))),
                                             );
-                                            props_map
                                         })
                                     }
                                     _ => panic!("Object not synthesizable"),

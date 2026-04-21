@@ -487,15 +487,14 @@ pub(super) fn eval_destructor<'cx>(
         ));
         // ResolveUnionT resolves in reverse order, so rev_map here so we
         // resolve in the original order.
-        let mut unresolved: Vec<Type> = members
+        let mut unresolved = members
             .into_iter()
             .rev()
-            .map(|t| flow_cache::eval::id(cx, f(t), destructor.dupe()))
-            .collect();
-        let first = unresolved.remove(0);
+            .map(|t| flow_cache::eval::id(cx, f(t), destructor.dupe()));
+        let first = unresolved.next().unwrap();
         let u = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
             reason: r,
-            unresolved: unresolved.into(),
+            unresolved: unresolved.collect(),
             resolved: Rc::from([]),
             upper: Box::new(upper),
             id: flow_common::reason::mk_id() as i32,

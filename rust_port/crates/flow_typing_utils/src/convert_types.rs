@@ -9,7 +9,6 @@ use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_common::polarity::Polarity;
-use flow_common::reason::Name;
 use flow_common::reason::string_of_reason;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_context::Context;
@@ -1111,7 +1110,7 @@ fn json_of_slice<'cx>(cx: &Context<'cx>, depth: i32, slice: &object::spread::Ope
 fn json_of_property_map_from_btreemap<'cx>(
     cx: &Context<'cx>,
     depth: i32,
-    props: &flow_data_structure_wrapper::ord_map::FlowOrdMap<Name, Property>,
+    props: &flow_typing_type::type_::properties::PropertiesMap,
 ) -> Json {
     let props_json: serde_json::Map<String, Json> = props
         .iter()

@@ -15,7 +15,6 @@ use flow_aloc::ALoc;
 use flow_common::flow_symbol::dump_symbol;
 use flow_common::polarity::Polarity;
 use flow_common::reason;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::string_of_aloc;
 use flow_lint_settings::lint_settings::LintParseError;
@@ -899,49 +898,48 @@ fn dump_use_t_<CX>(
         }
     };
 
-    let operand_slice =
-        |reason: &Reason,
-         prop_map: &flow_data_structure_wrapper::ord_map::FlowOrdMap<Name, Property>,
-         dict: &type_::object::Dict|
-         -> String {
-            use type_::property::first_loc;
-            use type_::property::read_t;
-            use type_::property::write_t;
-            let props: type_::object::Props = prop_map
-                .iter()
-                .filter_map(|(k, p)| match (read_t(p), write_t(p)) {
-                    (Some(t), _) | (_, Some(t)) => Some((
-                        k.clone(),
-                        type_::object::Prop {
-                            prop_t: t,
-                            is_own: true,
-                            is_method: false,
-                            polarity: Polarity::Neutral,
-                            key_loc: first_loc(p),
-                        },
-                    )),
-                    _ => None,
-                })
-                .collect();
-            let obj_kind = match dict {
-                None => ObjKind::Exact,
-                Some(d) => ObjKind::Indexed(d.clone()),
-            };
-            let flags = type_::Flags {
-                obj_kind,
-                react_dro: None,
-            };
-            let s = type_::object::Slice {
-                reason: reason.clone(),
-                props,
-                flags,
-                frozen: false,
-                generics: flow_typing_generics::spread_empty(),
-                interface: None,
-                reachable_targs: Rc::from([]),
-            };
-            slice(&s)
+    let operand_slice = |reason: &Reason,
+                         prop_map: &type_::properties::PropertiesMap,
+                         dict: &type_::object::Dict|
+     -> String {
+        use type_::property::first_loc;
+        use type_::property::read_t;
+        use type_::property::write_t;
+        let props: type_::object::Props = prop_map
+            .iter()
+            .filter_map(|(k, p)| match (read_t(p), write_t(p)) {
+                (Some(t), _) | (_, Some(t)) => Some((
+                    k.clone(),
+                    type_::object::Prop {
+                        prop_t: t,
+                        is_own: true,
+                        is_method: false,
+                        polarity: Polarity::Neutral,
+                        key_loc: first_loc(p),
+                    },
+                )),
+                _ => None,
+            })
+            .collect();
+        let obj_kind = match dict {
+            None => ObjKind::Exact,
+            Some(d) => ObjKind::Indexed(d.clone()),
         };
+        let flags = type_::Flags {
+            obj_kind,
+            react_dro: None,
+        };
+        let s = type_::object::Slice {
+            reason: reason.clone(),
+            props,
+            flags,
+            frozen: false,
+            generics: flow_typing_generics::spread_empty(),
+            interface: None,
+            reachable_targs: Rc::from([]),
+        };
+        slice(&s)
+    };
 
     let object_kit = |tvars: &mut BTreeSet<i32>,
                       resolve_tool: &type_::object::ResolveTool,

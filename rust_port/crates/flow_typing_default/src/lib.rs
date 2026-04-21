@@ -65,7 +65,7 @@ pub fn arr_rest<A>(i: i32, reason: Reason, default: Default<A>) -> Default<A> {
     Default::Selector(reason, Box::new(default), Selector::ArrRest(i))
 }
 
-pub fn obj_rest<A>(xs: Vec<FlowSmolStr>, reason: Reason, default: Default<A>) -> Default<A> {
+pub fn obj_rest<A>(xs: &[FlowSmolStr], reason: Reason, default: Default<A>) -> Default<A> {
     Default::Selector(reason, Box::new(default), Selector::ObjRest(xs.into()))
 }
 

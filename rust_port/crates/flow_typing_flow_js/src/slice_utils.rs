@@ -2539,9 +2539,9 @@ pub fn resolve<'cx, A>(
         // Resolve each member of an intersection.
         TypeInner::IntersectionT(intersection_reason, rep) => {
             let intersection_loc = intersection_reason.loc().dupe();
-            let mut members: Vec<Type> = rep.members_iter().duped().collect();
-            let t_first = members.remove(0);
-            let todo = members;
+            let mut members = rep.members_iter().duped();
+            let t_first = members.next().unwrap();
+            let todo: Vec<Type> = members.collect();
             let resolve_tool_new = object::ResolveTool::Resolve(object::Resolve::List0(
                 Vec1::try_from_vec(todo).unwrap(),
                 object::Join(intersection_loc, object::JoinOp::And),

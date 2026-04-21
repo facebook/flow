@@ -210,7 +210,7 @@ pub mod object_expression_acc {
 
     #[derive(Debug, Clone)]
     pub struct ObjectExpressionAcc {
-        pub(super) obj_pmap: BTreeMap<Name, type_::Property>,
+        pub(super) obj_pmap: properties::PropertiesMap,
         pub(super) computed_props: Option<DictType>,
         pub(super) tail: Vec<Element>,
         pub(super) proto: Option<Type>,
@@ -220,7 +220,7 @@ pub mod object_expression_acc {
     impl ObjectExpressionAcc {
         pub fn empty() -> Self {
             Self {
-                obj_pmap: BTreeMap::new(),
+                obj_pmap: properties::PropertiesMap::new(),
                 computed_props: None,
                 tail: vec![],
                 proto: None,
@@ -240,20 +240,15 @@ pub mod object_expression_acc {
                 None
             } else {
                 Some(Element::Slice {
-                    slice_pmap: properties::PropertiesMap::from_btree_map(self.obj_pmap.clone()),
+                    slice_pmap: self.obj_pmap.dupe(),
                     computed_props: self.computed_props.clone(),
                 })
             }
         }
 
-        pub fn add_prop(
-            self,
-            f: impl FnOnce(BTreeMap<Name, type_::Property>) -> BTreeMap<Name, type_::Property>,
-        ) -> Self {
-            Self {
-                obj_pmap: f(self.obj_pmap),
-                ..self
-            }
+        pub fn add_prop(mut self, f: impl FnOnce(&mut properties::PropertiesMap)) -> Self {
+            f(&mut self.obj_pmap);
+            self
         }
 
         pub(super) fn add_proto(self, p: Type) -> Self {
@@ -274,7 +269,7 @@ pub mod object_expression_acc {
             };
             tail.push(Element::Spread(t));
             Self {
-                obj_pmap: BTreeMap::new(),
+                obj_pmap: properties::PropertiesMap::new(),
                 tail,
                 computed_props: self.computed_props,
                 proto: self.proto,
@@ -284,9 +279,8 @@ pub mod object_expression_acc {
 
         pub(super) fn add_computed<'a>(self, cx: &Context<'a>, computed: ComputedProp) -> Self {
             match computed {
-                ComputedProp::Named { name, prop } => self.add_prop(|mut pmap| {
+                ComputedProp::Named { name, prop } => self.add_prop(|pmap| {
                     pmap.insert(name, prop);
-                    pmap
                 }),
                 ComputedProp::IgnoredInvalidNonLiteralKey => self,
                 ComputedProp::NonLiteralKey {
@@ -434,18 +428,18 @@ pub mod object_expression_acc {
         }
 
         pub(super) fn elements_rev(mut self) -> (Element, Vec<Element>) {
-            self.tail.reverse();
             match self.head_slice() {
-                Some(slice) => (slice, self.tail),
-                None => {
-                    if self.tail.is_empty() {
-                        (Self::empty_slice(), vec![])
-                    } else {
-                        let mut tail = self.tail;
-                        let x = tail.remove(0);
-                        (x, tail)
-                    }
+                Some(slice) => {
+                    self.tail.reverse();
+                    (slice, self.tail)
                 }
+                None => match self.tail.pop() {
+                    None => (Self::empty_slice(), vec![]),
+                    Some(x) => {
+                        self.tail.reverse();
+                        (x, self.tail)
+                    }
+                },
             }
         }
 
@@ -526,10 +520,7 @@ pub mod object_expression_acc {
                                         } => spread::Operand::Slice(spread::OperandSlice::new(
                                             spread::OperandSliceInner {
                                                 reason: reason.dupe(),
-                                                prop_map: slice_pmap
-                                                    .iter()
-                                                    .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                    .collect(),
+                                                prop_map: slice_pmap,
                                                 dict: computed_props,
                                                 generics: flow_typing_generics::spread_empty(),
                                                 reachable_targs: vec![].into(),
@@ -553,10 +544,7 @@ pub mod object_expression_acc {
                                         let head_slice =
                                             spread::OperandSlice::new(spread::OperandSliceInner {
                                                 reason: reason.dupe(),
-                                                prop_map: prop_map
-                                                    .iter()
-                                                    .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                    .collect(),
+                                                prop_map,
                                                 dict: computed_props,
                                                 generics: flow_typing_generics::spread_empty(),
                                                 reachable_targs: vec![].into(),
@@ -571,12 +559,7 @@ pub mod object_expression_acc {
                                                     spread::OperandSlice::new(
                                                         spread::OperandSliceInner {
                                                             reason: reason.dupe(),
-                                                            prop_map: slice_pmap
-                                                                .iter()
-                                                                .map(|(k, v)| {
-                                                                    (k.dupe(), v.dupe())
-                                                                })
-                                                                .collect(),
+                                                            prop_map: slice_pmap,
                                                             dict: computed_props,
                                                             generics:
                                                                 flow_typing_generics::spread_empty(
@@ -5095,7 +5078,7 @@ fn object_prop<'a>(
                                 as_const || frozen == FrozenKind::FrozenProp,
                             );
                             let t_clone = t.dupe();
-                            let acc = acc.add_prop(|mut pmap| {
+                            let acc = acc.add_prop(|pmap| {
                                 pmap.insert(
                                     Name::new(name.dupe()),
                                     type_::Property::new(type_::PropertyInner::Field(Box::new(
@@ -5107,7 +5090,6 @@ fn object_prop<'a>(
                                         },
                                     ))),
                                 );
-                                pmap
                             });
                             (acc, typed_key, value)
                         }
@@ -5161,7 +5143,7 @@ fn object_prop<'a>(
                     let (t, typed_func) =
                         mk_function_expression(cx, false, reason, fn_loc.dupe(), func)?;
                     let t_clone = t.dupe();
-                    let acc = acc.add_prop(|mut pmap| {
+                    let acc = acc.add_prop(|pmap| {
                         pmap.insert(
                             Name::new(name.dupe()),
                             type_::Property::new(type_::PropertyInner::Method {
@@ -5169,7 +5151,6 @@ fn object_prop<'a>(
                                 type_: t_clone,
                             }),
                         );
-                        pmap
                     });
                     (
                         acc,
@@ -5235,7 +5216,7 @@ fn object_prop<'a>(
                         mk_function_expression(cx, false, reason, vloc.dupe(), func)?;
                     let return_t = type_::extract_getter_type(&function_type);
                     let return_t_clone = return_t.dupe();
-                    let acc = acc.add_prop(|mut pmap| {
+                    let acc = acc.add_prop(|pmap| {
                         let prop_name = Name::new(name.dupe());
                         let new_prop = match pmap.get(&prop_name).map(|p| p.deref()) {
                             Some(type_::PropertyInner::Set {
@@ -5255,7 +5236,6 @@ fn object_prop<'a>(
                             }),
                         };
                         pmap.insert(prop_name, new_prop);
-                        pmap
                     });
                     (
                         acc,
@@ -5319,7 +5299,7 @@ fn object_prop<'a>(
                         mk_function_expression(cx, false, reason, vloc.dupe(), func)?;
                     let param_t = type_::extract_setter_type(&function_type);
                     let param_t_clone = param_t.dupe();
-                    let acc = acc.add_prop(|mut pmap| {
+                    let acc = acc.add_prop(|pmap| {
                         let prop_name = Name::new(name.dupe());
                         let new_prop = match pmap.get(&prop_name).map(|p| p.deref()) {
                             Some(type_::PropertyInner::Get {
@@ -5339,7 +5319,6 @@ fn object_prop<'a>(
                             }),
                         };
                         pmap.insert(prop_name, new_prop);
-                        pmap
                     });
                     (
                         acc,
@@ -5389,10 +5368,7 @@ fn prop_map_of_object<'a>(
             Ok((map, prop_asts))
         },
     )?;
-    Ok((
-        properties::PropertiesMap::from_btree_map(acc.obj_pmap),
-        prop_asts,
-    ))
+    Ok((acc.obj_pmap, prop_asts))
 }
 
 fn create_computed_prop<'a>(
@@ -12798,7 +12774,7 @@ pub fn jsx_mk_props<'a>(
                             let atype_clone = atype.dupe();
                             let id_loc_clone = id_loc.dupe();
                             let aname_clone = aname.dupe();
-                            acc.add_prop(|mut pmap| {
+                            acc.add_prop(|pmap| {
                                 pmap.insert(
                                     Name::new(aname_clone),
                                     type_::Property::new(type_::PropertyInner::Field(Box::new(
@@ -12810,7 +12786,6 @@ pub fn jsx_mk_props<'a>(
                                         },
                                     ))),
                                 );
-                                pmap
                             })
                         };
                     let typed_att = ast::jsx::OpeningAttribute::Attribute(ast::jsx::Attribute {
@@ -12867,7 +12842,7 @@ pub fn jsx_mk_props<'a>(
         _ if is_builtin_react => {
             match react_jsx_normalize_children_prop(cx, loc_children, unresolved_params.clone()) {
                 None => acc,
-                Some(children_prop) => acc.add_prop(|mut pmap| {
+                Some(children_prop) => acc.add_prop(|pmap| {
                     pmap.insert(
                         Name::new(FlowSmolStr::from("children")),
                         type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
@@ -12877,7 +12852,6 @@ pub fn jsx_mk_props<'a>(
                             polarity: Polarity::Neutral,
                         }))),
                     );
-                    pmap
                 }),
             }
         }
