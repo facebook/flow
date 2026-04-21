@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
@@ -160,7 +161,26 @@ pub enum SingletonAction {
     KeepAsConst,
 }
 
-type LiteralMapCx = BTreeSet<i32>;
+struct LiteralMapCx(RefCell<BTreeSet<i32>>);
+
+impl LiteralMapCx {
+    fn new() -> Self {
+        Self(RefCell::new(BTreeSet::new()))
+    }
+
+    fn contains(&self, root_id: &i32) -> bool {
+        self.0.borrow().contains(root_id)
+    }
+
+    fn with_added<R>(&self, root_id: i32, f: impl FnOnce() -> R) -> R {
+        let inserted = self.0.borrow_mut().insert(root_id);
+        let result = f();
+        if inserted {
+            self.0.borrow_mut().remove(&root_id);
+        }
+        result
+    }
+}
 
 // Free-function versions of singleton handlers, parameterized by SingletonAction.
 fn singleton_str_action(action: SingletonAction, t: Type, r: &Reason, value: &Name) -> Type {
@@ -252,15 +272,15 @@ fn literal_type_mapper_tvar<'cx>(
             if map_cx.contains(&root_id) {
                 id
             } else {
-                let mut map_cx = map_cx.clone();
-                map_cx.insert(root_id);
-                let t = cx.force_fully_resolved_tvar(&s);
-                let t_prime = type_fn(cx, &map_cx, t.dupe());
-                if t.ptr_eq(&t_prime) {
-                    id
-                } else {
-                    flow_typing_tvar::mk_fully_resolved_no_wrap(cx, t_prime) as u32
-                }
+                map_cx.with_added(root_id, || {
+                    let t = cx.force_fully_resolved_tvar(&s);
+                    let t_prime = type_fn(cx, map_cx, t.dupe());
+                    if t.ptr_eq(&t_prime) {
+                        id
+                    } else {
+                        flow_typing_tvar::mk_fully_resolved_no_wrap(cx, t_prime) as u32
+                    }
+                })
             }
         }
         _ => id,
@@ -491,7 +511,7 @@ pub fn convert_literal_type<'cx>(
     t: Type,
 ) -> Type {
     let mut mapper = LiteralTypeMapper { singleton_action };
-    mapper.type_(cx, &BTreeSet::new(), t)
+    mapper.type_(cx, &LiteralMapCx::new(), t)
 }
 
 fn is_literal_type<'cx>(cx: &Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -> bool {
@@ -769,7 +789,7 @@ impl ConvertLiteralTypeToConstMapper {
 
 pub fn convert_literal_type_to_const<'cx>(loc_range: ALoc, cx: &Context<'cx>, t: Type) -> Type {
     let mut mapper = ConvertLiteralTypeToConstMapper { loc_range };
-    mapper.type_(cx, &BTreeSet::new(), t)
+    mapper.type_(cx, &LiteralMapCx::new(), t)
 }
 
 fn is_generalization_candidate_inner<'cx>(
