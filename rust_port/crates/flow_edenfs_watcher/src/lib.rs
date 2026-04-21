@@ -6,60 +6,59 @@
  */
 
 // This crate is the OSS-facing facade for the EdenFS watcher used by Flow.
-// In fbcode builds on Unix targets the public API is provided by
+// In fbcode builds the public API is provided by
 // `flow_facebook_edenfs_watcher`, which re-exports the underlying
-// `rust_edenfs_watcher` types. `rust_edenfs_watcher`'s OCaml-FFI surface is
-// cfg-gated to Linux internally, so its pure-Rust `flow_api` module
-// compiles on macOS too — but the file-descriptor / `poll`-based
-// notification mechanism uses `std::os::fd` and Unix `poll`, so Windows
-// (where neither exists natively) and OSS builds (where `crates/facebook/`
-// is stripped by ShipIt) fall back to the in-file stub whose
-// `is_available()` returns `false`.
+// `rust_edenfs_watcher` types. `rust_edenfs_watcher` is cross-platform:
+// its OCaml-FFI surface is cfg-gated to Linux internally, and its
+// notification mechanism uses `filedescriptor::socketpair` + `poll` (which
+// works on Linux, macOS, and Windows via `WSAPoll`). Only OSS builds
+// (where `crates/facebook/` is stripped by ShipIt) fall back to the
+// in-file stub whose `is_available()` returns `false`.
 
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::ApplyIncomingChangesTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::AsyncTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::Changes;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::Clock;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::EdenfsWatcherError;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::Instance;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::InstanceGetAllFilesTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::InstanceGetChangesAsyncTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::InstanceGetChangesSyncTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::Settings;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::StandaloneGetChangesSinceTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::TranslationTelemetry;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::WatchSpec;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::add_hook_upon_clean_exit;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::get_changes_async;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::get_notification_fd;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::hooks_upon_clean_exit;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::init;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::is_available;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::is_instance_destroyed;
-#[cfg(all(fbcode_build, unix))]
+#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::watch_spec;
 
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 mod stub {
     use std::path::PathBuf;
     use std::sync::Mutex;
@@ -205,45 +204,45 @@ mod stub {
     }
 }
 
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::ApplyIncomingChangesTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::AsyncTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::Changes;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::Clock;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::EdenfsWatcherError;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::Instance;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::InstanceGetAllFilesTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::InstanceGetChangesAsyncTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::InstanceGetChangesSyncTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::Settings;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::StandaloneGetChangesSinceTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::TranslationTelemetry;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::WatchSpec;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::add_hook_upon_clean_exit;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::get_changes_async;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::get_notification_fd;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::hooks_upon_clean_exit;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::init;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::is_available;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::is_instance_destroyed;
-#[cfg(any(not(fbcode_build), not(unix)))]
+#[cfg(not(fbcode_build))]
 pub use stub::watch_spec;
