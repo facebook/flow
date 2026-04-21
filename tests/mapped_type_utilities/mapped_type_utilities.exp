@@ -326,41 +326,95 @@ References:
                                ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- record.js:5:2
+Error ---------------------------------------------------------------------------------------------------- record.js:5:1
 
 Cannot cast `exact` to object type because property `bar` is extra in `Record` [1] but missing in object type [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
-   record.js:5:2
-   5| (exact: {foo: number}); // ERROR, mising bar
-       ^^^^^
+   record.js:5:1
+   5| exact as {foo: number}; // ERROR, mising bar
+      ^^^^^
 
 References:
    record.js:3:22
    3| declare const exact: Exact;
                            ^^^^^ [1]
-   record.js:5:9
-   5| (exact: {foo: number}); // ERROR, mising bar
-              ^^^^^^^^^^^^^ [2]
+   record.js:5:10
+   5| exact as {foo: number}; // ERROR, mising bar
+               ^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- record.js:10:2
+Error --------------------------------------------------------------------------------------------------- record.js:10:1
 
 Cannot cast `indexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
 [incompatible-indexer]
 
-   record.js:10:2
-   10| (indexed: {foo: number}); // ERROR, missing indexer
-        ^^^^^^^
+   record.js:10:1
+   10| indexed as {foo: number}; // ERROR, missing indexer
+       ^^^^^^^
 
 References:
    record.js:8:24
     8| declare const indexed: Indexed;
                               ^^^^^^^ [1]
-   record.js:10:11
-   10| (indexed: {foo: number}); // ERROR, missing indexer
-                 ^^^^^^^^^^^^^ [2]
+   record.js:10:12
+   10| indexed as {foo: number}; // ERROR, missing indexer
+                  ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- record.js:16:1
+
+Cannot cast `numIndexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
+[incompatible-indexer]
+
+   record.js:16:1
+   16| numIndexed as {1: string}; // ERROR, missing indexer
+       ^^^^^^^^^^
+
+References:
+   record.js:14:27
+   14| declare const numIndexed: NumIndexed;
+                                 ^^^^^^^^^^ [1]
+   record.js:16:15
+   16| numIndexed as {1: string}; // ERROR, missing indexer
+                     ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- record.js:22:1
+
+Cannot cast `symIndexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
+[incompatible-indexer]
+
+   record.js:22:1
+   22| symIndexed as {foo: boolean}; // ERROR, missing indexer
+       ^^^^^^^^^^
+
+References:
+   record.js:20:27
+   20| declare const symIndexed: SymIndexed;
+                                 ^^^^^^^^^^ [1]
+   record.js:22:15
+   22| symIndexed as {foo: boolean}; // ERROR, missing indexer
+                     ^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- record.js:22:1
+
+Cannot cast `symIndexed` to object type because in the indexer property's key: string `foo` [1] is incompatible with
+symbol [2]. [incompatible-type]
+
+   record.js:22:1
+   22| symIndexed as {foo: boolean}; // ERROR, missing indexer
+       ^^^^^^^^^^
+
+References:
+   record.js:22:15
+   22| symIndexed as {foo: boolean}; // ERROR, missing indexer
+                     ^^^^^^^^^^^^^^ [1]
+   record.js:19:26
+   19| type SymIndexed = Record<symbol, boolean>;
+                                ^^^^^^ [2]
 
 
 
-Found 22 errors
+Found 25 errors
