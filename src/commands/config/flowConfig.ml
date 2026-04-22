@@ -325,7 +325,7 @@ module Opts = struct
       saved_state_direct_serialization = false;
       saved_state_parallel_decompress = false;
       saved_state_persist_export_index = false;
-      saved_state_reinit_on_lib_change = false;
+      saved_state_reinit_on_lib_change = true;
       saved_state_skip_version_check = false;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
@@ -1332,7 +1332,12 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with saved_state_persist_export_index = v })
       );
       ( "saved_state.reinit_on_lib_change",
-        boolean (fun opts v -> Ok { opts with saved_state_reinit_on_lib_change = v })
+        boolean (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error "Support for saved_state.reinit_on_lib_change=false is removed."
+        )
       );
       ( "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
         boolean (fun opts v -> Ok { opts with saved_state_skip_version_check = v })

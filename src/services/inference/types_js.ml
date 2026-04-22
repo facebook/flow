@@ -2732,7 +2732,7 @@ let recheck
     Lwt.return (Base.Option.value_exn result)
   in
   if incompatible_lib_change then
-    if did_change_mergebase && Options.saved_state_reinit_on_lib_change options then begin
+    if did_change_mergebase then begin
       (* The mergebase changed and a libdef changed. Try loading saved state first —
          if the saved state was built after the libdef change, we only need to recheck
          the delta files instead of all files. If saved state loading fails (e.g.

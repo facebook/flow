@@ -4,4 +4,3 @@ libs
 [options]
 all=true
 lazy_mode=true
-saved_state.reinit_on_lib_change=true

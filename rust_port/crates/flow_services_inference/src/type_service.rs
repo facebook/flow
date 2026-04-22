@@ -3311,7 +3311,7 @@ pub fn recheck(
 ) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
     if incompatible_lib_change {
-        if did_change_mergebase && options.saved_state_reinit_on_lib_change {
+        if did_change_mergebase {
             // The mergebase changed and a libdef changed. Try loading saved state first -
             // if the saved state was built after the libdef change, we only need to recheck
             // the delta files instead of all files. If saved state loading fails (e.g.

@@ -349,7 +349,7 @@ pub mod opts {
             saved_state_parallel_decompress: false,
             saved_state_fetcher: SavedStateFetcher::DummyFetcher,
             saved_state_persist_export_index: false,
-            saved_state_reinit_on_lib_change: false,
+            saved_state_reinit_on_lib_change: true,
             saved_state_skip_version_check: false,
             shm_hash_table_pow: 19,
             shm_heap_size: /* 25GB */ 1024 * 1024 * 25,
@@ -1963,9 +1963,15 @@ pub mod opts {
         config: &mut Opts,
     ) -> Result<(), OptError> {
         parse_boolean(
-            |opts, v| {
-                opts.saved_state_reinit_on_lib_change = v;
-                Ok(())
+            |_opts, v| {
+                if v {
+                    Ok(())
+                } else {
+                    Err(
+                        "Support for saved_state.reinit_on_lib_change=false is removed."
+                            .to_string(),
+                    )
+                }
             },
             values,
             config,
