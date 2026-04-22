@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_common_errors::error_utils;
 use flow_server_env::server_prot;
 
 use crate::command_spec;
@@ -47,40 +48,40 @@ fn spec() -> command_spec::Spec {
     .anon("file", &arg_spec::optional(arg_spec::string()))
 }
 
-fn deprecated_json_props_of_loc(
-    strip_root: Option<&str>,
-    loc: &flow_parser::loc::Loc,
-) -> serde_json::Map<String, serde_json::Value> {
-    let path = match &loc.source {
-        Some(source) => flow_common::reason::string_of_source(strip_root, source),
-        None => String::new(),
-    };
-    let mut map = serde_json::Map::new();
-    map.insert("path".to_string(), serde_json::Value::String(path));
-    map.insert("line".to_string(), serde_json::json!(loc.start.line));
-    map.insert("endline".to_string(), serde_json::json!(loc.end.line));
-    map.insert("start".to_string(), serde_json::json!(loc.start.column + 1));
-    map.insert("end".to_string(), serde_json::json!(loc.end.column));
-    map
-}
-
 fn types_to_json(
-    _file_content: Option<&String>,
+    file_content: Option<&String>,
     strip_root: Option<&str>,
     types: &[(flow_parser::loc::Loc, String)],
 ) -> serde_json::Value {
+    // let offset_table =
+    //   Base.Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+    let offset_table =
+        file_content.map(|s| flow_parser::offset_utils::OffsetTable::make(s.as_str()));
+    // let types_json =
+    //   types
+    //   |> Base.List.map ~f:(fun (loc, t) ->
+    //          let json_assoc =
+    //            ("type", JSON_String t)
+    //            :: ("reasons", JSON_Array [])
+    //            :: ("loc", json_of_loc ~strip_root ~offset_table loc)
+    //            :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
+    //          in
+    //          JSON_Object json_assoc
+    //      )
+    // in
+    // JSON_Array types_json
     serde_json::Value::Array(
         types
             .iter()
-            .map(|(loc, ty)| {
+            .map(|(loc, t)| {
                 let mut json = serde_json::Map::new();
-                json.insert("type".to_string(), serde_json::Value::String(ty.clone()));
+                json.insert("type".to_string(), serde_json::Value::String(t.clone()));
                 json.insert("reasons".to_string(), serde_json::Value::Array(vec![]));
                 json.insert(
                     "loc".to_string(),
-                    command_utils::json_of_loc_with_offset(None, strip_root, loc),
+                    flow_common::reason::json_of_loc(strip_root, false, offset_table.as_ref(), loc),
                 );
-                json.extend(deprecated_json_props_of_loc(strip_root, loc));
+                json.extend(error_utils::deprecated_json_props_of_loc(strip_root, loc));
                 serde_json::Value::Object(json)
             })
             .collect(),

@@ -3416,23 +3416,24 @@ pub mod cli_output {
                         references.sort_by(|(_, a), (_, b)| b.cmp(a));
                         // Fold the list. Creating the width and the string we will
                         // ultimately render.
-                        let (width, mut refs_styled): (usize, Vec<(tty::Style, String)>) =
+                        let (width, mut refs_styled): (usize, VecDeque<(tty::Style, String)>) =
                             references.iter().fold(
-                                (1, vec![default_style(" ")]),
-                                |(width, acc), (id, _)| {
+                                (1, VecDeque::from([default_style(" ")])),
+                                |(width, mut acc), (id, _)| {
                                     let string_id = id.to_string();
                                     let width = width + 2 + string_id.len();
-                                    let mut prefix = vec![
-                                        dim_style("["),
-                                        (tty::Style::Normal(get_tty_color(*id, colors)), string_id),
-                                        dim_style("]"),
-                                    ];
-                                    prefix.extend(acc);
-                                    (width, prefix)
+                                    acc.push_front(dim_style("]"));
+                                    acc.push_front((
+                                        tty::Style::Normal(get_tty_color(*id, colors)),
+                                        string_id,
+                                    ));
+                                    acc.push_front(dim_style("["));
+                                    (width, acc)
                                 },
                             );
                         let width = width + 1;
-                        refs_styled.push(default_style(" "));
+                        refs_styled.push_front(default_style(" "));
+                        let refs_styled: Vec<(tty::Style, String)> = refs_styled.into();
                         // Set gutter_width to the larger of the current gutter_width or the width
                         // for this line.
                         gutter_width = std::cmp::max(gutter_width, width);
@@ -3680,10 +3681,10 @@ pub mod cli_output {
             return root_code_frame.unwrap_or_default();
         }
 
-        let mut code_frames: Vec<(FileKey, Vec<(tty::Style, String)>)> =
+        let mut code_frames: VecDeque<(FileKey, Vec<(tty::Style, String)>)> =
             code_frames.into_iter().collect();
         if let Some(root_code_frame) = root_code_frame {
-            code_frames.push((root_file_key, root_code_frame));
+            code_frames.push_front((root_file_key, root_code_frame));
         }
 
         // Add a title to non-root code frames and concatenate them all together!

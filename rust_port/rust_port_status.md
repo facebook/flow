@@ -367,7 +367,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `choose_file_watcher`
         - [x] `choose_file_watcher_mergebase_with`
         - [x] `choose_file_watcher_timeout`
-        - [x] `json_of_loc_with_offset`
         - [x] `subcommand_spec`
         - [x] `type codemod_params` → `struct CodemodParams`
         - [x] `collect_codemod_flags` → `get_codemod_flags`

@@ -2693,10 +2693,7 @@ fn convert_inner<'a>(
                 None => (None, None),
             };
             let params_ast_node = ast::types::function::Params {
-                loc: {
-                    let Ok(v) = typed_ast_utils::ErrorMapper.on_type_annot(params_loc);
-                    v
-                },
+                loc: params_loc.dupe(),
                 params: param_asts.into(),
                 rest: rest_param_ast,
                 this: this_param_ast,
@@ -5266,12 +5263,12 @@ fn mk_method_func_sig<'a>(
         func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         ast::types::function::Params<ALoc, (ALoc, Type)>,
     ) {
-        let Ok(params_loc) = typed_ast_utils::ErrorMapper.on_type_annot(&params_node.loc);
+        let params_loc = params_node.loc.dupe();
         let comments = params_node.comments.dupe();
         let mut fparams = crate::func_params::empty::<FuncTypeParamsConfig>(Rc::new(
             move |params, rest, this_| {
                 Some(ast::types::function::Params {
-                    loc: params_loc.clone(),
+                    loc: params_loc.dupe(),
                     params: Arc::from(params),
                     rest,
                     this: this_,

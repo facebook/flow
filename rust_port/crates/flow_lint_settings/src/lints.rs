@@ -122,14 +122,11 @@ impl DeprecatedTypeKind {
     serde::Deserialize
 )]
 pub enum LintKind {
-    SketchyNull(SketchyNullKind),
-    SketchyNumber(SketchyNumberKind),
     UntypedTypeImport,
     UntypedImport,
     NonstrictImport,
     InternalType,
     UnclearType,
-    DeprecatedType(DeprecatedTypeKind),
     UnsafeGettersSetters,
     UnsafeObjectAssign,
     UnnecessaryOptionalChain,
@@ -150,6 +147,9 @@ pub enum LintKind {
     NestedComponent,
     NestedHook,
     LibdefOverride,
+    SketchyNull(SketchyNullKind),
+    SketchyNumber(SketchyNumberKind),
+    DeprecatedType(DeprecatedTypeKind),
 }
 
 impl LintKind {

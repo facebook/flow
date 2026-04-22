@@ -4536,10 +4536,10 @@ pub struct SpecState {
 /// so we only need a simple list to record signatures.
 #[derive(Debug, Clone)]
 pub struct SpecializedCallee {
-    pub finalized: Rc<RefCell<Vec<Type>>>,
-    pub speculative_candidates: Rc<RefCell<Vec<(Type, SpecState)>>>,
+    pub finalized: Rc<RefCell<std::collections::VecDeque<Type>>>,
+    pub speculative_candidates: Rc<RefCell<std::collections::VecDeque<(Type, SpecState)>>>,
     pub init_speculation_state: Option<SpecState>,
-    pub sig_help: Rc<RefCell<Vec<Type>>>,
+    pub sig_help: Rc<RefCell<std::collections::VecDeque<Type>>>,
 }
 
 impl PartialEq for SpecializedCallee {

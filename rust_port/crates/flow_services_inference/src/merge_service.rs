@@ -1043,7 +1043,6 @@ where
     let sig_new_or_changed = stream.sig_new_or_changed();
     let message = format!("Merge skipped {} of {} modules", skipped_count, total_files);
 
-    eprintln!("{}", message);
     log::info!("{}", message);
     append_to_server_log(options, &message);
 

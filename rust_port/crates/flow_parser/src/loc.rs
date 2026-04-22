@@ -80,8 +80,7 @@ pub struct Loc {
 impl serde::Serialize for Loc {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         if LOC_SERDE_FULL_SOURCE.get() {
-            let source_str = self.source.as_ref().map(|fk| fk.to_absolute());
-            (source_str, &self.start, &self.end).serialize(serializer)
+            (&self.source, &self.start, &self.end).serialize(serializer)
         } else {
             (self.source.is_some(), &self.start, &self.end).serialize(serializer)
         }
@@ -91,9 +90,8 @@ impl serde::Serialize for Loc {
 impl<'de> serde::Deserialize<'de> for Loc {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         if LOC_SERDE_FULL_SOURCE.get() {
-            let (source_str, start, end) =
-                <(Option<String>, Position, Position)>::deserialize(deserializer)?;
-            let source = source_str.map(|s| FileKey::source_file_of_absolute(&s));
+            let (source, start, end) =
+                <(Option<FileKey>, Position, Position)>::deserialize(deserializer)?;
             Ok(Loc { source, start, end })
         } else {
             let (has_source, start, end) = <(bool, Position, Position)>::deserialize(deserializer)?;

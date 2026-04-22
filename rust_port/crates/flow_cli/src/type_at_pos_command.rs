@@ -141,7 +141,7 @@ pub(crate) fn handle_friendly_result(
 }
 
 fn handle_response(
-    _file_contents: Option<String>,
+    file_contents: Option<String>,
     pretty: bool,
     strip_root: Option<&str>,
     response: server_prot::response::infer_type::T,
@@ -154,18 +154,29 @@ fn handle_response(
         documentation,
     } = response;
     match tys {
+        // | ServerProt.Response.InferType.JSON json ->
         server_prot::response::infer_type::Payload::Json(types) => {
             // The server pre-serializes the JSON value into a string because
             // bincode (the wire encoder) cannot encode `serde_json::Value`.
             // Parse it back here before we re-embed it into the response.
             let types: serde_json::Value =
                 serde_json::from_str(&types).expect("server-produced JSON must be valid");
+            // let offset_table =
+            //   Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+            let offset_table = file_contents
+                .as_deref()
+                .map(flow_parser::offset_utils::OffsetTable::make);
+            // let json_assoc =
+            //   ("types", json)
+            //   :: ("reasons", JSON_Array [])
+            //   :: ("loc", json_of_loc ~strip_root ~offset_table loc)
+            //   :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
             let mut json = serde_json::Map::new();
             json.insert("types".to_string(), types);
             json.insert("reasons".to_string(), serde_json::Value::Array(vec![]));
             json.insert(
                 "loc".to_string(),
-                command_utils::json_of_loc_with_offset(None, strip_root, &loc),
+                flow_common::reason::json_of_loc(strip_root, false, offset_table.as_ref(), &loc),
             );
             json.extend(error_utils::deprecated_json_props_of_loc(strip_root, &loc));
             if let Some(documentation) = documentation {

@@ -1,3 +1,2 @@
 cmd: ast --tokens --pretty
 stdin: foo.js
-skip_rust_port: true

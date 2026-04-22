@@ -191,7 +191,7 @@ fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation
                 .iter()
                 .find(|(_, spec_id_prime)| spec_id == *spec_id_prime)
             {
-                c.finalized.borrow_mut().push(l.dupe());
+                c.finalized.borrow_mut().push_front(l.dupe());
             }
         }
         _ => {}

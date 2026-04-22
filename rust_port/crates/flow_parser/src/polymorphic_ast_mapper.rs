@@ -6071,7 +6071,7 @@ fn function_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     Ok(ast::types::Function {
         tparams: tparams_,
         params: ast::types::function::Params {
-            loc: mapper.on_type_annot(params_annot)?,
+            loc: mapper.on_loc_annot(params_annot)?,
             this: this__,
             params: ps_,
             rest: rpo_,

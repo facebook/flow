@@ -7,6 +7,7 @@
 
 use std::collections::BTreeSet;
 use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -1179,38 +1180,37 @@ fn append_completion_items_of_autoimports(
 ) -> Vec<ac_completion::CompletionItem> {
     let src_dir = src_dir_of_loc(ac_loc);
     let (before, _after) = autocomplete_sigil::remove(token);
-    let auto_imports_items_rev =
-        auto_imports
-            .iter()
-            .enumerate()
-            .fold(Vec::new(), |mut acc, (i, scored)| {
-                let rank = if ac_options.imports_ranked_usage {
-                    200 + i
-                } else {
-                    200
-                };
-                let auto_import = &scored.search_result;
-                if is_reserved(auto_import.name.as_str(), &auto_import.kind)
-                    || locals.contains(auto_import.name.as_str())
-                {
-                    return acc;
-                }
-                let ranking_info = if ac_options.show_ranking_info {
-                    Some(format!("Score: {}\nUses: {}", scored.score, scored.weight))
-                } else {
-                    None
-                };
-                let item = completion_item_of_autoimport(
-                    typing,
-                    src_dir.as_deref(),
-                    edit_locs,
-                    ranking_info,
-                    auto_import,
-                    rank,
-                );
-                acc.push(item);
-                acc
-            });
+    let auto_imports_items_rev: VecDeque<ac_completion::CompletionItem> = auto_imports
+        .iter()
+        .enumerate()
+        .fold(VecDeque::new(), |mut acc, (i, scored)| {
+            let rank = if ac_options.imports_ranked_usage {
+                200 + i
+            } else {
+                200
+            };
+            let auto_import = &scored.search_result;
+            if is_reserved(auto_import.name.as_str(), &auto_import.kind)
+                || locals.contains(auto_import.name.as_str())
+            {
+                return acc;
+            }
+            let ranking_info = if ac_options.show_ranking_info {
+                Some(format!("Score: {}\nUses: {}", scored.score, scored.weight))
+            } else {
+                None
+            };
+            let item = completion_item_of_autoimport(
+                typing,
+                src_dir.as_deref(),
+                edit_locs,
+                ranking_info,
+                auto_import,
+                rank,
+            );
+            acc.push_front(item); // OCaml: item :: acc
+            acc
+        });
     if ac_options.imports_ranked_usage {
         let (mut exact_match_auto_imports_rev, other_auto_imports_rev): (Vec<_>, Vec<_>) =
             auto_imports_items_rev.into_iter().partition(|item| {
@@ -1228,7 +1228,7 @@ fn append_completion_items_of_autoimports(
         result.extend(filtered);
         result
     } else {
-        let mut merged = auto_imports_items_rev;
+        let mut merged: Vec<_> = auto_imports_items_rev.into_iter().collect();
         merged.extend(base_items_rev);
         filter_by_token_and_sort_rev(token, merged, false)
     }
@@ -1259,88 +1259,87 @@ fn autocomplete_id(
     let rank = if results.is_empty() { 0 } else { 1 };
     let identifiers = local_value_identifiers(typing, ac_loc);
     let locals = set_of_locals(|((name, _, _), _)| name.as_str(), &identifiers);
-    let (mut items_rev, errors_to_log) = identifiers.into_iter().fold(
-        (results, Vec::new()),
-        |(mut items_rev, mut errors_to_log),
-         ((name, documentation_and_tags, ac_id_type), elt_result)| {
-            match elt_result {
-                Ok(elt) => {
-                    match ac_id_type {
-                        AcIdType::AcIdTypeRecord {
-                            record_type,
-                            defaulted_props,
-                        } => {
-                            if let Some(item) = autocomplete_record(
-                                typing,
-                                edit_locs,
-                                documentation_and_tags.clone(),
-                                &name,
-                                &record_type,
-                                &defaulted_props,
-                            ) {
-                                items_rev.push(item);
+    let (mut items_rev, errors_to_log): (VecDeque<ac_completion::CompletionItem>, Vec<String>) = {
+        let init: VecDeque<_> = results.into_iter().collect();
+        identifiers.into_iter().fold(
+            (init, Vec::new()),
+            |(mut items_rev, mut errors_to_log),
+             ((name, documentation_and_tags, ac_id_type), elt_result)| {
+                match elt_result {
+                    Ok(elt) => {
+                        // OCaml: let items_rev = match ac_id_type with ...
+                        match ac_id_type {
+                            AcIdType::AcIdTypeRecord {
+                                record_type,
+                                defaulted_props,
+                            } => {
+                                if let Some(item) = autocomplete_record(
+                                    typing,
+                                    edit_locs,
+                                    documentation_and_tags.clone(),
+                                    &name,
+                                    &record_type,
+                                    &defaulted_props,
+                                ) {
+                                    items_rev.push_front(item); // OCaml: item :: items_rev
+                                }
                             }
+                            AcIdType::AcIdTypeNormal => {}
                         }
-                        AcIdType::AcIdTypeNormal => {}
+                        let result = autocomplete_create_result_elt(
+                            Some(&name),
+                            rank,
+                            false,
+                            documentation_and_tags,
+                            exact_by_default,
+                            typing.cx.ts_syntax(),
+                            "local value identifier",
+                            &name,
+                            edit_locs,
+                            &elt,
+                        );
+                        items_rev.push_front(result);
                     }
-                    let result = autocomplete_create_result_elt(
-                        Some(&name),
-                        rank,
-                        false,
-                        documentation_and_tags,
-                        exact_by_default,
-                        typing.cx.ts_syntax(),
-                        "local value identifier",
-                        &name,
-                        edit_locs,
-                        &elt,
-                    );
-                    items_rev.push(result);
+                    Err(err) => {
+                        errors_to_log.push(err.to_string());
+                    }
                 }
-                Err(err) => {
-                    errors_to_log.push(err.to_string());
-                }
-            }
-            (items_rev, errors_to_log)
-        },
-    );
+                (items_rev, errors_to_log)
+            },
+        )
+    };
     if include_this {
-        items_rev.insert(
-            0,
-            ac_completion::CompletionItem {
-                kind: Some(LspCompletionItemKind::VARIABLE),
-                name: "this".to_string(),
-                labelDetail: None,
-                description: Some("this".to_string()),
-                itemDetail: Some("this".to_string()),
-                text_edit: Some(text_edit(None, "this", edit_locs)),
-                additional_text_edits: Vec::new(),
-                sort_text: sort_text_of_rank(rank),
-                preselect: false,
-                documentation_and_tags: ac_completion::empty_documentation_and_tags(),
-                log_info: "this".to_string(),
-                insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
-            },
-        );
+        items_rev.push_front(ac_completion::CompletionItem {
+            kind: Some(LspCompletionItemKind::VARIABLE),
+            name: "this".to_string(),
+            labelDetail: None,
+            description: Some("this".to_string()),
+            itemDetail: Some("this".to_string()),
+            text_edit: Some(text_edit(None, "this", edit_locs)),
+            additional_text_edits: Vec::new(),
+            sort_text: sort_text_of_rank(rank),
+            preselect: false,
+            documentation_and_tags: ac_completion::empty_documentation_and_tags(),
+            log_info: "this".to_string(),
+            insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
+        });
     }
+    // OCaml: if include_super then { ... } :: items_rev else items_rev
     if include_super {
-        items_rev.insert(
-            0,
-            ac_completion::CompletionItem {
-                kind: Some(LspCompletionItemKind::VARIABLE),
-                name: "super".to_string(),
-                labelDetail: None,
-                description: Some("super".to_string()),
-                itemDetail: Some("super".to_string()),
-                text_edit: Some(text_edit(None, "super", edit_locs)),
-                additional_text_edits: Vec::new(),
-                sort_text: sort_text_of_rank(rank),
-                preselect: false,
-                documentation_and_tags: ac_completion::empty_documentation_and_tags(),
-                log_info: "super".to_string(),
-                insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
-            },
-        );
+        items_rev.push_front(ac_completion::CompletionItem {
+            kind: Some(LspCompletionItemKind::VARIABLE),
+            name: "super".to_string(),
+            labelDetail: None,
+            description: Some("super".to_string()),
+            itemDetail: Some("super".to_string()),
+            text_edit: Some(text_edit(None, "super", edit_locs)),
+            additional_text_edits: Vec::new(),
+            sort_text: sort_text_of_rank(rank),
+            preselect: false,
+            documentation_and_tags: ac_completion::empty_documentation_and_tags(),
+            log_info: "super".to_string(),
+            insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
+        });
     }
     if include_keywords {
         let keywords = keywords::keywords_at_loc(
@@ -1353,11 +1352,11 @@ fn autocomplete_id(
         .into_iter()
         .map(|keyword| ac_completion::of_keyword(edit_locs, keyword))
         .collect::<Vec<_>>();
-        let mut prefixed = keywords;
-        prefixed.extend(items_rev);
-        items_rev = prefixed;
+        for keyword in keywords {
+            items_rev.push_front(keyword);
+        }
     }
-    let (mut items_rev, is_incomplete, sorted) = if ac_options.imports {
+    let (items_rev, is_incomplete, sorted) = if ac_options.imports {
         let (before, _after) = autocomplete_sigil::remove(token);
         if before.is_empty() || before.len() < ac_options.imports_min_characters as usize {
             (items_rev, true, false)
@@ -1372,13 +1371,18 @@ fn autocomplete_id(
                 ac_options,
                 &auto_imports.results,
                 token,
-                items_rev,
+                items_rev.into_iter().collect(),
             );
-            (items_rev, auto_imports.is_incomplete, true)
+            (
+                items_rev.into_iter().collect(),
+                auto_imports.is_incomplete,
+                true,
+            )
         }
     } else {
         (items_rev, false, false)
     };
+    let mut items_rev: Vec<_> = items_rev.into_iter().collect();
     if !sorted {
         items_rev = filter_by_token_and_sort_rev(token, items_rev, false);
     }
@@ -1870,41 +1874,40 @@ fn autocomplete_unqualified_type(
     token: &str,
 ) -> AcResult<ac_completion::T> {
     let exact_by_default = typing.cx.exact_by_default();
-    let mut items_rev = Vec::new();
+    let mut items_rev: VecDeque<ac_completion::CompletionItem> = VecDeque::new();
     for name in BUILTIN_TYPES {
-        items_rev.push(make_builtin_type(edit_locs, name));
+        items_rev.push_front(make_builtin_type(edit_locs, name));
     }
     for name in UTILITY_TYPES {
-        items_rev.push(make_utility_type(edit_locs, name));
+        items_rev.push_front(make_utility_type(edit_locs, name));
     }
-    items_rev.extend(make_builtin_type_operators(edit_locs));
+    for op in make_builtin_type_operators(edit_locs) {
+        items_rev.push_front(op);
+    }
     for name in tparams_rev {
-        items_rev.push(make_type_param(edit_locs, name));
+        items_rev.push_front(make_type_param(edit_locs, name));
     }
     let type_identifiers = local_type_identifiers(typing);
-    let (mut items_rev, mut errors_to_log) = type_identifiers.into_iter().fold(
-        (items_rev, Vec::new()),
-        |(mut items_rev, mut errors_to_log), ((name, aloc), ty_result)| {
-            let documentation_and_tags =
-                documentation_and_tags_of_loc(typing, &(typing.loc_of_aloc)(&aloc));
-            match ty_result {
-                Ok(elt) => items_rev.push(autocomplete_create_result_elt(
-                    None,
-                    0,
-                    false,
-                    documentation_and_tags,
-                    exact_by_default,
-                    typing.cx.ts_syntax(),
-                    "unqualified type: local type identifier",
-                    &name,
-                    edit_locs,
-                    &elt,
-                )),
-                Err(err) => errors_to_log.push(err.to_string()),
-            }
-            (items_rev, errors_to_log)
-        },
-    );
+    let mut errors_to_log: Vec<String> = Vec::new();
+    for ((name, aloc), ty_result) in type_identifiers {
+        let documentation_and_tags =
+            documentation_and_tags_of_loc(typing, &(typing.loc_of_aloc)(&aloc));
+        match ty_result {
+            Ok(elt) => items_rev.push_front(autocomplete_create_result_elt(
+                None,
+                0,
+                false,
+                documentation_and_tags,
+                exact_by_default,
+                typing.cx.ts_syntax(),
+                "unqualified type: local type identifier",
+                &name,
+                edit_locs,
+                &elt,
+            )),
+            Err(err) => errors_to_log.push(err.to_string()),
+        }
+    }
     let value_identifiers = local_value_identifiers(typing, ac_loc);
     let value_locals = set_of_locals(|((name, _, _), _)| name.as_str(), &value_identifiers);
     let type_locals = set_of_locals(
@@ -1915,7 +1918,7 @@ fn autocomplete_unqualified_type(
         match ty_res {
             Err(err) => errors_to_log.push(err.to_string()),
             Ok(elt @ Elt::Decl(Decl::ClassDecl(_) | Decl::RecordDecl(_) | Decl::EnumDecl(_))) => {
-                items_rev.push(autocomplete_create_result_elt(
+                items_rev.push_front(autocomplete_create_result_elt(
                     None,
                     0,
                     false,
@@ -1929,7 +1932,7 @@ fn autocomplete_unqualified_type(
                 ));
             }
             Ok(elt @ Elt::Decl(Decl::NominalComponentDecl { .. })) => {
-                items_rev.push(autocomplete_create_result_elt(
+                items_rev.push_front(autocomplete_create_result_elt(
                     None,
                     0,
                     false,
@@ -1951,7 +1954,7 @@ fn autocomplete_unqualified_type(
                     } if matches!(renders.as_ref(), Ty::Renders(..))
                 ) =>
             {
-                items_rev.push(autocomplete_create_result_elt(
+                items_rev.push_front(autocomplete_create_result_elt(
                     None,
                     0,
                     false,
@@ -1977,7 +1980,7 @@ fn autocomplete_unqualified_type(
                 .is_empty() =>
             {
                 let insert_text = format!("{name}.");
-                items_rev.push(autocomplete_create_result_decl(
+                items_rev.push_front(autocomplete_create_result_decl(
                     Some(&insert_text),
                     0,
                     false,
@@ -1995,7 +1998,7 @@ fn autocomplete_unqualified_type(
         }
     }
     let (before, _after) = autocomplete_sigil::remove(token);
-    let (mut items_rev, is_incomplete, sorted) =
+    let (items_rev, is_incomplete, sorted) =
         if before.len() < ac_options.imports_min_characters as usize {
             (items_rev, true, false)
         } else if ac_options.imports {
@@ -2015,13 +2018,18 @@ fn autocomplete_unqualified_type(
                 ac_options,
                 &auto_imports.results,
                 token,
-                items_rev,
+                items_rev.into_iter().collect(),
             );
-            (items_rev, auto_imports.is_incomplete, true)
+            (
+                items_rev.into_iter().collect(),
+                auto_imports.is_incomplete,
+                true,
+            )
         } else {
             let _value_locals = value_locals;
             (items_rev, false, false)
         };
+    let mut items_rev: Vec<_> = items_rev.into_iter().collect();
     if !sorted {
         items_rev = filter_by_token_and_sort_rev(token, items_rev, false);
     }

@@ -400,9 +400,6 @@ fn internal_start(
         ));
     // ************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************
     crate::flow_server_monitor_logger::init_logger(log_fd);
-    if let Some(fd) = waiting_fd {
-        handle_waiting_start_command(fd);
-    }
     let StartArgs {
         flowconfig_name: _,
         server_log_file,
@@ -435,9 +432,26 @@ fn internal_start(
         file_watcher_mergebase_with: file_watcher_mergebase_with.unwrap_or_default(),
     };
     let acceptor_autostop = monitor_options.autostop;
-    // We can start up the socket acceptor even before the server starts
+    // We can start up the socket acceptor even before the server starts.
+    // Spawn the accept threads BEFORE notifying the parent that we are
+    // "Starting", and wait for each thread to confirm it has actually entered
+    // the accept loop. This ensures that as soon as `flow start` returns,
+    // clients have a live accept loop to connect to. OCaml's Lwt-based accept
+    // loop runs as soon as the scheduler yields (after the current thread
+    // calls `Lwt_unix.accept`), but Rust threads must be spawned explicitly
+    // and may not be scheduled immediately under heavy parallel load.
+    let (ready_tx_main, ready_rx) = std::sync::mpsc::sync_channel::<()>(0);
+    let ready_tx_legacy2 = ready_tx_main.clone();
+    let ready_tx_legacy1 = ready_tx_main.clone();
     std::thread::spawn(move || {
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            // The receiver only disconnects if the parent panics, in which
+            // case the fallback_error_handler will exit the process — so a
+            // send error here is safe to ignore.
+            match ready_tx_main.send(()) {
+                Ok(()) => {}
+                Err(_) => return,
+            }
             crate::socket_acceptor::run(monitor_socket_fd, acceptor_autostop);
         })) {
             Ok(()) => {}
@@ -448,6 +462,10 @@ fn internal_start(
     });
     std::thread::spawn(move || {
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            match ready_tx_legacy2.send(()) {
+                Ok(()) => {}
+                Err(_) => return,
+            }
             crate::socket_acceptor::run_legacy(legacy2_socket_fd);
         })) {
             Ok(()) => {}
@@ -461,6 +479,10 @@ fn internal_start(
     });
     std::thread::spawn(move || {
         match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            match ready_tx_legacy1.send(()) {
+                Ok(()) => {}
+                Err(_) => return,
+            }
             crate::socket_acceptor::run_legacy(legacy1_socket_fd);
         })) {
             Ok(()) => {}
@@ -472,6 +494,19 @@ fn internal_start(
             }
         }
     });
+    // Wait for all 3 accept threads to confirm they have started.
+    // sync_channel(0) is a rendezvous: each `send` blocks until the receive
+    // side runs `recv`, so by the time all 3 recvs return, all 3 threads have
+    // executed at least up to the line right before `listener.accept()`.
+    for _ in 0..3 {
+        match ready_rx.recv() {
+            Ok(()) => {}
+            Err(_) => break,
+        }
+    }
+    if let Some(fd) = waiting_fd {
+        handle_waiting_start_command(fd);
+    }
     // Don't start the server until we've set up the threads to handle the waiting channel
     match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         crate::flow_server_monitor_server::start(monitor_options);

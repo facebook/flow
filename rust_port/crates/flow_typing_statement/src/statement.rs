@@ -9108,7 +9108,11 @@ pub fn optional_chain<'a>(
             // instantiation or overload resolution) then use that type.
             let _callee_aloc = callee.loc().0.dupe();
             let t_init = callee.loc().1.dupe();
-            let t = union_of_ts(reason_of_t(&t_init).dupe(), finalized.clone(), None);
+            let t = union_of_ts(
+                reason_of_t(&t_init).dupe(),
+                finalized.iter().cloned().collect(),
+                None,
+            );
             flow_parser::ast_utils::push_toplevel_type(t, callee)
         }
     }

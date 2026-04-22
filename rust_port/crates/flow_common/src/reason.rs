@@ -1167,6 +1167,30 @@ pub fn json_of_loc_props(
     offset_table: Option<&OffsetTable>,
     loc: &Loc,
 ) -> Vec<(String, serde_json::Value)> {
+    // Rust-port-specific: the lexer (lex_env::pos_at_offset) emits Positions with
+    // BYTE columns, while OCaml's Sedlexing-based lexer emits CODEPOINT columns
+    // and OCaml's `Reason.json_of_loc` consumes those directly. The OffsetTable is
+    // codepoint-indexed (matching OCaml `Offset_utils`). To produce JSON output
+    // that matches the OCaml format (codepoint columns and Utf8 byte offsets) we
+    // must convert byte->codepoint columns whenever an offset_table is available.
+    let (start_pos, end_pos) = match offset_table {
+        Some(table) => {
+            let convert = |pos: flow_parser::loc::Position| match table
+                .convert_flow_position_to_js_position(pos)
+            {
+                Ok(p) => p,
+                Err(exn) => {
+                    if catch_offset_errors {
+                        pos
+                    } else {
+                        panic!("{}", exn.debug_to_string())
+                    }
+                }
+            };
+            (convert(loc.start), convert(loc.end))
+        }
+        None => (loc.start, loc.end),
+    };
     let offset_entry = |table: &OffsetTable,
                         pos: &flow_parser::loc::Position|
      -> Vec<(String, serde_json::Value)> {
@@ -1183,23 +1207,23 @@ pub fn json_of_loc_props(
         vec![("offset".to_string(), offset)]
     };
     let mut start: Vec<(String, serde_json::Value)> = vec![
-        ("line".to_string(), serde_json::json!(loc.start.line)),
+        ("line".to_string(), serde_json::json!(start_pos.line)),
         (
             "column".to_string(),
-            serde_json::json!(loc.start.column + 1),
+            serde_json::json!(start_pos.column + 1),
         ),
     ];
     match offset_table {
         None => {}
-        Some(table) => start.extend(offset_entry(table, &loc.start)),
+        Some(table) => start.extend(offset_entry(table, &start_pos)),
     }
     let mut end_: Vec<(String, serde_json::Value)> = vec![
-        ("line".to_string(), serde_json::json!(loc.end.line)),
-        ("column".to_string(), serde_json::json!(loc.end.column)),
+        ("line".to_string(), serde_json::json!(end_pos.line)),
+        ("column".to_string(), serde_json::json!(end_pos.column)),
     ];
     match offset_table {
         None => {}
-        Some(table) => end_.extend(offset_entry(table, &loc.end)),
+        Some(table) => end_.extend(offset_entry(table, &end_pos)),
     }
     vec![
         (

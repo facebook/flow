@@ -81,7 +81,7 @@ pub(crate) fn run(args: &arg_spec::Values) {
                     println!("  \"{}\" -> \"{}\"", strip_root(&from), strip_root(&dep_f));
                 }
             }
-            println!("}}");
+            print!("}}");
         }
         response => {
             command_utils::failwith_bad_response(&request, &response);

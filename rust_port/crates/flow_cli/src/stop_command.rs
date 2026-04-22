@@ -57,20 +57,35 @@ fn main(args: &arg_spec::Values) {
 
     let attempt_mean_kill = || match command_mean_kill::mean_kill(&flowconfig_name, &tmp_dir, &root)
     {
+        // CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
+        // if not quiet then
+        //   prerr_endlinef "Successfully killed server for `%s`" (File_path.to_string root)
         Ok(()) => {
             if !quiet {
                 eprintln!("Successfully killed server for `{}`", root.display());
             }
         }
+        // | CommandMeanKill.FailedToKill err ->
+        //   if not quiet then (
+        //     match err with
+        //     | Some err -> prerr_endline err
+        //     | None ->
+        //       ();
+        //       let msg = spf "Failed to kill server meanly for `%s`" root_s in
+        //       Exit.(exit ~msg Kill_error)
+        //   )
         Err(command_mean_kill::FailedToKill::Message(err)) => {
             if !quiet {
-                if let Some(ref err) = err {
-                    eprintln!("{}", err);
-                } else {
-                    eprintln!("Failed to kill server meanly for `{}`", root.display());
+                match err {
+                    Some(err) => eprintln!("{}", err),
+                    None => {
+                        eprintln!("Failed to kill server meanly for `{}`", root.display());
+                        flow_common_exit_status::exit(
+                            flow_common_exit_status::FlowExitStatus::KillError,
+                        );
+                    }
                 }
             }
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::KillError);
         }
     };
 

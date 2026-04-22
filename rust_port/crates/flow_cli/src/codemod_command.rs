@@ -248,10 +248,6 @@ pub(crate) fn prepare_codemod(
     if let Some(max_workers) = options_flags.max_workers {
         options.max_workers = max_workers;
     }
-    options.lint_severities = command_utils::parse_lints_flag(
-        options.lint_severities.clone(),
-        &options_flags.flowconfig_flags.raw_lint_severities,
-    );
 
     let roots = command_utils::expand_file_list(&filenames, Some(&options.file_options))
         .into_iter()

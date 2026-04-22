@@ -172,16 +172,16 @@ impl OffsetTable {
                 length: table.len(),
             });
         };
-        if let Some(&offset) = line_table.get(position.column as usize) {
-            Ok(offset)
-        } else {
-            Err(OffsetLookupFailed {
+        let column = position.column as usize;
+        let Some(&offset) = line_table.get(column) else {
+            return Err(OffsetLookupFailed {
                 kind: "column",
                 position,
-                index: position.column as usize,
+                index: column,
                 length: line_table.len(),
-            })
-        }
+            });
+        };
+        Ok(offset)
     }
 
     pub fn offset_js(&self, position: Position) -> Result<u32, OffsetLookupFailed> {

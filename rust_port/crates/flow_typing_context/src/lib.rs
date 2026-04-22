@@ -2820,9 +2820,11 @@ impl<'cx> Context<'cx> {
     pub fn new_specialized_callee(&self) -> type_::SpecializedCallee {
         type_::SpecializedCallee {
             init_speculation_state: self.speculation_id(),
-            finalized: std::rc::Rc::new(std::cell::RefCell::new(Vec::new())),
-            speculative_candidates: std::rc::Rc::new(std::cell::RefCell::new(Vec::new())),
-            sig_help: std::rc::Rc::new(std::cell::RefCell::new(Vec::new())),
+            finalized: std::rc::Rc::new(std::cell::RefCell::new(std::collections::VecDeque::new())),
+            speculative_candidates: std::rc::Rc::new(std::cell::RefCell::new(
+                std::collections::VecDeque::new(),
+            )),
+            sig_help: std::rc::Rc::new(std::cell::RefCell::new(std::collections::VecDeque::new())),
         }
     }
 }

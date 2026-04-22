@@ -199,36 +199,39 @@ fn colorize_file(
 }
 
 fn split_overlapping_ranges(
-    mut ranges: Vec<((i64, i64), CoverageKind)>,
+    ranges: Vec<((i64, i64), CoverageKind)>,
 ) -> Vec<((i64, i64), CoverageKind)> {
-    let mut accum = Vec::new();
+    let mut ranges: std::collections::VecDeque<((i64, i64), CoverageKind)> = ranges.into();
+    let mut accum: Vec<((i64, i64), CoverageKind)> = Vec::new();
     while ranges.len() > 1 {
-        let (loc1, kind1) = ranges.remove(0);
-        let (loc2, kind2) = ranges.remove(0);
+        let (loc1, kind1) = ranges.pop_front().unwrap();
+        let (loc2, kind2) = ranges.pop_front().unwrap();
         let ((loc1_start, loc1_end), (loc2_start, loc2_end)) = (loc1, loc2);
         if loc1_end < loc2_start {
             // range 1 is completely before range 2, so consume range 1
             accum.push((loc1, kind1));
-            ranges.push((loc2, kind2));
+            ranges.push_front((loc2, kind2));
         } else if loc1_start == loc2_start {
             // range 1 and 2 start at the same place, so consume range 1 and
             // create a new range for the remainder of range 2, if any
             if loc1_end != loc2_end {
                 let tail_loc = (loc1_end + 1, loc2_end);
-                ranges.push((loc1, kind1));
-                ranges.push((tail_loc, kind2));
-                ranges.sort_by(|((a_line, a_col), _), ((b_line, b_col), _)| {
-                    a_line.cmp(b_line).then(a_col.cmp(b_col))
-                });
+                ranges.push_front((tail_loc, kind2));
+                ranges.push_front((loc1, kind1));
+                ranges
+                    .make_contiguous()
+                    .sort_by(|((a_line, a_col), _), ((b_line, b_col), _)| {
+                        a_line.cmp(b_line).then(a_col.cmp(b_col))
+                    });
             } else {
-                ranges.push((loc1, kind1));
+                ranges.push_front((loc1, kind1));
             }
         } else if loc1_end == loc2_end {
             // range 1 and 2 end at the same place, so split range 1 and consume
             // the first part, which doesn't overlap
             let head_loc = (loc1_start, loc2_start - 1);
             accum.push((head_loc, kind1));
-            ranges.push((loc2, kind2));
+            ranges.push_front((loc2, kind2));
         } else if loc1_end < loc2_end {
             // TODO: Given that at this point we also have loc1.start.offset <
             // loc2.start.offset, it means that range 1 and 2 overlap but don't
@@ -250,7 +253,7 @@ fn split_overlapping_ranges(
             let tail_loc = (loc1_end + 1, loc2_end);
             accum.push((head_loc, kind1));
             accum.push((overlap_loc, CoverageKind::m_or(kind1, kind2)));
-            ranges.push((tail_loc, kind2));
+            ranges.push_front((tail_loc, kind2));
         } else {
             // range 2 is in the middle of range 1, so split range 1 and consume
             // the first part, which doesn't overlap, and then recurse on
@@ -258,11 +261,13 @@ fn split_overlapping_ranges(
             let head_loc = (loc1_start, loc2_start - 1);
             let tail_loc = (loc2_end + 1, loc1_end);
             accum.push((head_loc, kind1));
-            ranges.push((loc2, kind2));
-            ranges.insert(1, (tail_loc, kind1));
-            ranges.sort_by(|((a_line, a_col), _), ((b_line, b_col), _)| {
-                a_line.cmp(b_line).then(a_col.cmp(b_col))
-            });
+            ranges.push_front((tail_loc, kind1));
+            ranges.push_front((loc2, kind2));
+            ranges
+                .make_contiguous()
+                .sort_by(|((a_line, a_col), _), ((b_line, b_col), _)| {
+                    a_line.cmp(b_line).then(a_col.cmp(b_col))
+                });
         }
     }
     accum.extend(ranges);
@@ -295,8 +300,17 @@ fn handle_response(
             .iter()
             .map(|(loc, covered)| {
                 let offset_table = offset_table.as_ref().unwrap();
-                let start = offset_table.offset(loc.start).unwrap() as i64;
-                let end = offset_table.offset(loc.end).unwrap() as i64;
+                // Rust-port-specific: convert byte->codepoint columns since the
+                // OffsetTable is codepoint-indexed. See `flow_common::reason::json_of_loc_props`
+                // for a fuller explanation.
+                let start_pos = offset_table
+                    .convert_flow_position_to_js_position(loc.start)
+                    .unwrap();
+                let end_pos = offset_table
+                    .convert_flow_position_to_js_position(loc.end)
+                    .unwrap();
+                let start = offset_table.offset(start_pos).unwrap() as i64;
+                let end = offset_table.offset(end_pos).unwrap() as i64;
                 ((start, end), *covered)
             })
             .collect::<Vec<_>>();
@@ -326,46 +340,6 @@ fn handle_response(
     };
 
     if json {
-        fn json_loc(
-            strip_root: Option<&str>,
-            offset_table: Option<&offset_utils::OffsetTable>,
-            loc: &flow_parser::loc::Loc,
-        ) -> serde_json::Value {
-            let start_offset = offset_table.map(|offset_table| {
-                offset_table
-                    .offset(loc.start)
-                    .expect("json_loc: failed to compute start offset")
-            });
-            let end_offset = offset_table.map(|offset_table| {
-                offset_table
-                    .offset(loc.end)
-                    .expect("json_loc: failed to compute end offset")
-            });
-            let mut start = serde_json::Map::new();
-            start.insert("line".to_string(), json!(loc.start.line));
-            start.insert("column".to_string(), json!(loc.start.column + 1));
-            if let Some(offset) = start_offset {
-                start.insert("offset".to_string(), json!(offset));
-            }
-            let mut end_ = serde_json::Map::new();
-            end_.insert("line".to_string(), json!(loc.end.line));
-            end_.insert("column".to_string(), json!(loc.end.column));
-            if let Some(offset) = end_offset {
-                end_.insert("offset".to_string(), json!(offset));
-            }
-            json!({
-                "source": flow_common::reason::json_of_source(
-                    strip_root,
-                    loc.source.as_ref(),
-                ),
-                "type": flow_common::reason::json_source_type_of_source(
-                    loc.source.as_ref(),
-                ),
-                "start": start,
-                "end": end_,
-            })
-        }
-
         let (mut covered_locs, empty_locs, uncovered_locs) = types
             .iter()
             .fold((Vec::new(), Vec::new(), Vec::new()), accum_coverage_locs);
@@ -376,17 +350,17 @@ fn handle_response(
                 "covered_count": covered,
                 "covered_locs": covered_locs
                     .iter()
-                    .map(|loc| json_loc(strip_root, offset_table, loc))
+                    .map(|loc| flow_common::reason::json_of_loc(strip_root, false, offset_table, loc))
                     .collect::<Vec<_>>(),
                 "uncovered_count": total - covered,
                 "uncovered_locs": uncovered_locs
                     .iter()
-                    .map(|loc| json_loc(strip_root, offset_table, loc))
+                    .map(|loc| flow_common::reason::json_of_loc(strip_root, false, offset_table, loc))
                     .collect::<Vec<_>>(),
                 "empty_count": empty,
                 "empty_locs": empty_locs
                     .iter()
-                    .map(|loc| json_loc(strip_root, offset_table, loc))
+                    .map(|loc| flow_common::reason::json_of_loc(strip_root, false, offset_table, loc))
                     .collect::<Vec<_>>(),
             },
         });

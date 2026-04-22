@@ -462,7 +462,7 @@ pub mod types {
             serde::Deserialize
         )]
         pub struct Params<M: Dupe, T: Dupe> {
-            pub loc: T,
+            pub loc: M,
             pub this: Option<ThisParam<M, T>>,
             pub params: Arc<[Param<M, T>]>,
             pub rest: Option<RestParam<M, T>>,

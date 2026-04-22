@@ -2890,8 +2890,8 @@ pub(super) fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> st
             })
             .unwrap_or_else(|| Path::new(".").to_path_buf())
     };
-    let dir = flow_common::files::cached_canonicalize(&dir).unwrap_or(dir);
-    match search_for_root(flowconfig_name, dir.clone(), 50) {
+    let resolved = flow_common::files::cached_canonicalize(&dir).unwrap_or_else(|_| dir.clone());
+    match search_for_root(flowconfig_name, resolved, 50) {
         Some(root) => {
             flow_event_logger::set_root(Some(root.to_string_lossy().to_string()));
             root
@@ -3251,29 +3251,6 @@ pub(crate) fn choose_file_watcher_timeout(
         Some(x) => Some(f64::from(x)),
         None => Some(f64::from(DEFAULT_FILE_WATCHER_TIMEOUT)),
     }
-}
-
-pub(crate) fn json_of_loc_with_offset(
-    stdin_file: Option<&FileInput>,
-    strip_root: Option<&str>,
-    loc: &flow_parser::loc::Loc,
-) -> serde_json::Value {
-    // Reads the file from disk to compute the offset. This can lead to strange results -- if the file
-    // has changed since the location was constructed, the offset could be incorrect. If the file has
-    // changed such that the contents no longer have text at the given line/column, the offset is not
-    // included in the JSON output.
-    let path = loc.source.as_ref().map(|source| source.to_absolute());
-    let file_content = match (stdin_file, path.as_deref()) {
-        (Some(fileinput), Some(path)) if fileinput.path_of_file_input() == Some(path) => {
-            Some(fileinput.content_of_file_input_unsafe())
-        }
-        (_, Some(path)) => std::fs::read_to_string(path).ok(),
-        _ => None,
-    };
-    let offset_table = file_content
-        .as_deref()
-        .map(flow_parser::offset_utils::OffsetTable::make);
-    flow_common::reason::json_of_loc(strip_root, true, offset_table.as_ref(), loc)
 }
 
 #[derive(Clone, Debug)]

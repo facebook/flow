@@ -258,7 +258,7 @@ fn main(args: &arg_spec::Values) {
     // Record token stream into a list when the --tokens flag is passed.
     // Note that tokens stream in in order, so the list is constructed in reverse
     // order.
-    let mut tokens = VecDeque::new();
+    let mut tokens: VecDeque<serde_json::Value> = VecDeque::new();
     let offset_table =
         flow_parser::offset_utils::OffsetTable::make_with_kind(offset_kind, &content);
     let mut token_sink = |token_data: flow_parser::TokenSinkResult| {
@@ -344,7 +344,7 @@ fn main(args: &arg_spec::Values) {
         }
     };
 
-    let tokens = tokens.into_iter().collect::<Vec<_>>();
+    let tokens: Vec<serde_json::Value> = tokens.into_iter().rev().collect();
     let results = if check {
         let mut obj = serde_json::Map::new();
         obj.insert(

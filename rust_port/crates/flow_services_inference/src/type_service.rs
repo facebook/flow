@@ -675,7 +675,6 @@ mod check_files {
                 skipped_count,
                 focused_to_check.len() + merged_dependents.len()
             );
-            eprintln!("{}", message);
             log::info!("{}", message);
             append_to_server_log(&options, &message);
             let mut files = focused_to_check.dupe();

@@ -7579,10 +7579,10 @@ pub mod callee_recorder {
                 specialized_callee
                     .speculative_candidates
                     .borrow_mut()
-                    .push((l, id.dupe()));
+                    .push_front((l, id.dupe()));
             }
             _ => {
-                specialized_callee.finalized.borrow_mut().push(l);
+                specialized_callee.finalized.borrow_mut().push_front(l);
             }
         }
     }
@@ -7594,7 +7594,7 @@ pub mod callee_recorder {
     // Also we skip voided out results in case of optional chaining.
     fn add_signature_help<'cx>(cx: &Context<'cx>, l: Type, specialized_callee: &SpecializedCallee) {
         if cx.speculation_id().is_none() {
-            specialized_callee.sig_help.borrow_mut().push(l);
+            specialized_callee.sig_help.borrow_mut().push_front(l);
         }
     }
 
@@ -7653,12 +7653,12 @@ pub mod callee_recorder {
 
     pub fn type_for_sig_help(reason: Reason, specialized_callee: &SpecializedCallee) -> Type {
         let sig_help = specialized_callee.sig_help.borrow();
-        union_of_ts(reason, sig_help.clone(), None)
+        union_of_ts(reason, sig_help.iter().cloned().collect(), None)
     }
 
     pub fn type_for_tast(reason: Reason, specialized_callee: &SpecializedCallee) -> Type {
         let finalized = specialized_callee.finalized.borrow();
-        union_of_ts(reason, finalized.clone(), None)
+        union_of_ts(reason, finalized.iter().cloned().collect(), None)
     }
 
     pub fn type_for_tast_opt(
@@ -7666,9 +7666,14 @@ pub mod callee_recorder {
         specialized_callee: &SpecializedCallee,
     ) -> Option<Type> {
         let finalized = specialized_callee.finalized.borrow();
-        match finalized.as_slice() {
-            [] => None,
-            _ => Some(union_of_ts(reason, finalized.clone(), None)),
+        if finalized.is_empty() {
+            None
+        } else {
+            Some(union_of_ts(
+                reason,
+                finalized.iter().cloned().collect(),
+                None,
+            ))
         }
     }
 }
