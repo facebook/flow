@@ -1,3 +1,15 @@
+### 0.311.0
+
+New Features:
+* Added support for string and number literal properties in `declare class` and `interface`
+
+Library Definitions:
+* Change the `Record<K, T>` utility type's key bound from `K: string` to `K: PropertyKey`, allowing `number` and `symbol` keys in addition to `string`
+* Added some TS built-in types that were missing from Flow's core lib
+
+Misc:
+* When `experimental.allow_variance_keywords` is set to `true`, we support the keywords `in` / `out` / `readonly` along with `+`/`-` for variance
+
 ### 0.310.0
 
 New Features:
