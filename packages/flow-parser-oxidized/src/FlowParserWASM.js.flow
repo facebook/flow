@@ -1,0 +1,104 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ */
+
+type INTENTIONAL_ANY = $FlowFixMe;
+type JSType = 'number' | 'string' | 'array' | 'boolean';
+type CBoolean = ?(number | boolean);
+
+type WASMModuleOverrides = $ReadOnly<{
+  quit(status: number, toThrow: Error): void,
+}>;
+
+// Flow Rust WASM parser exports the same C ABI as Hermes
+export type FlowParserWASM = $ReadOnly<{
+  HEAP8: Int8Array,
+  HEAP16: Int16Array,
+  HEAP32: Int32Array,
+  HEAPU8: Uint8Array,
+  HEAPU16: Uint16Array,
+  HEAPU32: Uint32Array,
+  HEAPF32: Float32Array,
+  HEAPF64: Float64Array,
+
+  _malloc(size: number): number,
+  _free(ptr: number): void,
+
+  ccall(
+    ident: string,
+    returnType: JSType | null,
+    argTypes: $ReadOnlyArray<JSType>,
+    args: $ReadOnlyArray<
+      number | string | $ReadOnlyArray<INTENTIONAL_ANY> | boolean,
+    >,
+    opts?: $ReadOnly<{
+      async?: boolean | void,
+    }>,
+  ): INTENTIONAL_ANY,
+  cwrap: {
+    (
+      'hermesParse',
+      'number',
+      [
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+        'number',
+      ],
+    ): (
+      number,
+      number,
+      number,
+      number,
+      CBoolean,
+      CBoolean,
+      CBoolean,
+      CBoolean,
+      CBoolean,
+      CBoolean,
+      CBoolean,
+    ) => number,
+    ('hermesParseResult_free', 'void', ['number']): number => void,
+    ('hermesParseResult_getError', 'string', ['number']): number => string,
+    ('hermesParseResult_getErrorLine', 'number', ['number']): number => number,
+    (
+      'hermesParseResult_getErrorColumn',
+      'number',
+      ['number'],
+    ): number => number,
+    (
+      'hermesParseResult_getProgramBuffer',
+      'number',
+      ['number'],
+    ): number => number,
+    (
+      'hermesParseResult_getPositionBuffer',
+      'number',
+      ['number'],
+    ): number => number,
+    (
+      'hermesParseResult_getPositionBufferSize',
+      'number',
+      ['number'],
+    ): number => number,
+  },
+
+  stackAlloc(size: number): number,
+  stackSave(): number,
+  stackRestore(ptr: number): void,
+}>;
+
+declare module.exports: WASMModuleOverrides => FlowParserWASM;

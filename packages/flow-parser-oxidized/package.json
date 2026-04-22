@@ -1,0 +1,25 @@
+{
+  "name": "flow-parser-oxidized",
+  "version": "0.0.1",
+  "description": "Flow Rust parser compiled to WASM with a JS deserializer that produces ESTree-compatible ASTs",
+  "homepage": "https://flow.org",
+  "license": "MIT",
+  "author": {
+    "name": "Flow Team",
+    "email": "flow@fb.com"
+  },
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,17 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ */
+
+declare function HermesParserDecodeUTF8String(
+  ptrIn: number,
+  length: number,
+  heap: Uint8Array,
+): string;
+
+declare module.exports: typeof HermesParserDecodeUTF8String;

@@ -1,0 +1,57 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ */
+
+// flowlint unclear-type:off
+
+export type HermesPosition = {
+  /** >= 1 */
+  +line: number,
+  /** >= 0 */
+  +column: number,
+};
+export type HermesSourceLocation = {
+  start?: HermesPosition,
+  end?: HermesPosition,
+  rangeStart?: number,
+  rangeEnd?: number,
+};
+export type HermesNode = {
+  type: string,
+  [string]: any,
+};
+export type HermesToken = {
+  type:
+    | 'Boolean'
+    | 'Identifier'
+    | 'Keyword'
+    | 'Null'
+    | 'Numeric'
+    | 'BigInt'
+    | 'Punctuator'
+    | 'String'
+    | 'RegularExpression'
+    | 'Template'
+    | 'JSXText',
+  loc: HermesSourceLocation,
+  value: ?string,
+};
+export type HermesComment = {
+  type: 'CommentLine' | 'CommentBlock' | 'InterpreterDirective',
+  loc: HermesSourceLocation,
+  value: ?string,
+};
+export type HermesProgram = {
+  type: 'Program',
+  loc: HermesSourceLocation,
+  body: Array<?HermesNode>,
+  comments: Array<HermesComment>,
+  tokens?: Array<HermesToken>,
+  interpreter?: ?HermesComment,
+};

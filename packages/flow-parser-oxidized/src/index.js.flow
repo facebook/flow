@@ -1,0 +1,22 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ */
+
+import type {HermesNode} from './HermesAST';
+import type {ParserOptions} from './ParserOptions';
+
+export type {ParserOptions} from './ParserOptions';
+export * from './ParserOptions';
+
+declare function parse(code: string, opts?: ParserOptions): HermesNode;
+
+declare module.exports: {
+  parse: typeof parse,
+  ParserOptionsKeys: $ReadOnlySet<$Keys<ParserOptions>>,
+};

@@ -1,0 +1,53 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ */
+
+import type {
+  HermesSourceLocation,
+  HermesNode,
+  HermesToken,
+  HermesComment,
+} from './HermesAST';
+import type {FlowParserWASM} from './FlowParserWASM';
+import type {ParserOptions} from './ParserOptions';
+
+declare class FlowParserDeserializer {
+  programBufferIdx: number;
+  positionBufferIdx: number;
+  +positionBufferSize: number;
+  +locMap: {[number]: HermesSourceLocation};
+  +HEAPU8: FlowParserWASM['HEAPU8'];
+  +HEAPU32: FlowParserWASM['HEAPU32'];
+  +HEAPF64: FlowParserWASM['HEAPF64'];
+  +options: ParserOptions;
+  +commentTypes: $ReadOnlyArray<HermesComment['type']>;
+  +tokenTypes: $ReadOnlyArray<HermesToken['type']>;
+
+  constructor(
+    programBuffer: number,
+    positionBuffer: number,
+    positionBufferSize: number,
+    wasmParser: FlowParserWASM,
+    options: ParserOptions,
+  ): void;
+
+  next(): number;
+  deserialize(): HermesNode;
+  deserializeBoolean(): boolean;
+  deserializeNumber(): number;
+  deserializeString(): ?string;
+  deserializeNode(): ?HermesNode;
+  deserializeNodeList(): Array<?HermesNode>;
+  deserializeComments(): Array<HermesComment>;
+  deserializeTokens(): Array<HermesToken>;
+  addEmptyLoc(): HermesSourceLocation;
+  fillLocs(): void;
+}
+
+declare module.exports: typeof FlowParserDeserializer;
