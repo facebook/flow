@@ -7843,6 +7843,7 @@ fn param<'arena: 'ast, 'ast>(
             let loc_node = tbls.push_loc(loc.clone());
 
             let (scope, t) = if bind_names {
+                let outer_scope = scope;
                 let scope = scope::push_lex(scopes, scope);
                 let shared_t: Rc<RefCell<Option<Parsed<'arena, 'ast>>>> =
                     Rc::new(RefCell::new(None));
@@ -7878,7 +7879,16 @@ fn param<'arena: 'ast, 'ast>(
                     def,
                     patt,
                 );
-                let t = annot_or_hint(sort, Some(&loc_node), opts, scope, scopes, tbls, xs, annot);
+                let t = annot_or_hint(
+                    sort,
+                    Some(&loc_node),
+                    opts,
+                    outer_scope,
+                    scopes,
+                    tbls,
+                    xs,
+                    annot,
+                );
                 *shared_t.borrow_mut() = Some(t.clone());
                 (scope, t)
             } else {
@@ -7900,6 +7910,7 @@ fn param<'arena: 'ast, 'ast>(
             let loc_node = tbls.push_loc(loc.clone());
 
             let (scope, t) = if bind_names {
+                let outer_scope = scope;
                 let scope = scope::push_lex(scopes, scope);
                 let shared_t: Rc<RefCell<Option<Parsed<'arena, 'ast>>>> =
                     Rc::new(RefCell::new(None));
@@ -7935,7 +7946,16 @@ fn param<'arena: 'ast, 'ast>(
                     def,
                     patt,
                 );
-                let t = annot_or_hint(sort, Some(&loc_node), opts, scope, scopes, tbls, xs, annot);
+                let t = annot_or_hint(
+                    sort,
+                    Some(&loc_node),
+                    opts,
+                    outer_scope,
+                    scopes,
+                    tbls,
+                    xs,
+                    annot,
+                );
                 *shared_t.borrow_mut() = Some(t.clone());
                 (scope, t)
             } else {
