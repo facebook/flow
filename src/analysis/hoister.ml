@@ -323,6 +323,9 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
     method! private add_declared_const_binding entry =
       if lexical then super#add_declared_const_binding entry
 
+    method! private add_declared_class_binding entry =
+      if lexical then super#add_declared_class_binding entry
+
     method! private add_function_binding entry = if lexical then super#add_function_binding entry
 
     method! private add_component_binding entry = if lexical then super#add_component_binding entry

@@ -98,3 +98,10 @@ function class_forward_ref_test() {
   (new A: A); // ok
   declare class A {}
 }
+
+function declare_const_then_declare_class_test() {
+  declare const C: any;
+  declare class C { // error: name already bound
+    constructor(): C;
+  }
+}

@@ -274,9 +274,9 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
             ^^^
 
 References:
-   binding_rules.js:5:11
-    5| component Foo() { return <div /> }
-                 ^^^ [1]
+   binding_rules.js:13:7
+   13| class Foo {} // ERROR
+             ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:12:10
@@ -358,9 +358,9 @@ Cannot declare `Foo` [1] because the name is already bound. [name-already-bound]
                     ^^^
 
 References:
-   binding_rules.js:5:11
-    5| component Foo() { return <div /> }
-                 ^^^ [1]
+   binding_rules.js:13:7
+   13| class Foo {} // ERROR
+             ^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:18:18
@@ -435,20 +435,6 @@ Cannot declare `D` [1] because the name is already bound. [name-already-bound]
              ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- binding_rules.js:35:11
-
-Cannot declare `E` [1] because the name is already bound. [name-already-bound]
-
-   binding_rules.js:35:11
-   35| component E() { return <div /> } // ERROR
-                 ^
-
-References:
-   binding_rules.js:34:6
-   34| type E = number;
-            ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------- binding_rules.js:39:13
 
 Cannot declare `F` [1] because the name is already bound. [name-already-bound]
@@ -503,20 +489,6 @@ References:
    binding_rules.js:49:18
    49| declare function I(): void;
                         ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- binding_rules.js:53:11
-
-Cannot declare `J` [1] because the name is already bound. [name-already-bound]
-
-   binding_rules.js:53:11
-   53| component J() { return <div /> } // ERROR
-                 ^
-
-References:
-   binding_rules.js:52:14
-   52| declare type J = number;
-                    ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- binding_rules.js:56:11
@@ -3641,7 +3613,7 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 237 errors
+Found 235 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

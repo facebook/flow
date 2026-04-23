@@ -132,11 +132,13 @@ impl<Loc: Dupe> HoisterBase<Loc> {
     }
 
     fn add_declared_class_binding(&mut self, entry: &ast::Identifier<Loc, Loc>) {
-        self.bindings.add(Entry {
-            loc: entry.loc.dupe(),
-            name: entry.name.dupe(),
-            kind: Kind::DeclaredClass,
-        });
+        if self.lexical_only || self.lexical {
+            self.bindings.add(Entry {
+                loc: entry.loc.dupe(),
+                name: entry.name.dupe(),
+                kind: Kind::DeclaredClass,
+            });
+        }
     }
 
     fn add_declared_var_binding(&mut self, entry: &ast::Identifier<Loc, Loc>) {
@@ -752,5 +754,32 @@ impl<Loc> std::ops::Deref for Hoister<Loc> {
 impl<Loc> std::ops::DerefMut for Hoister<Loc> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::parse_with_alocs;
+
+    #[test]
+    fn top_level_hoister_does_not_leak_nested_declared_class_bindings() {
+        let ast = parse_with_alocs(
+            r#"
+{
+  const C = class {};
+}
+{
+  declare class C extends C {}
+}
+"#,
+        );
+        let mut hoister = Hoister::new(true, true);
+        let Ok(()) = hoister.program(&ast);
+        let bindings = hoister.into_bindings();
+        assert!(
+            !bindings.exists(|entry| entry.name.as_str() == "C"),
+            "nested block bindings should not be hoisted into the enclosing scope"
+        );
     }
 }

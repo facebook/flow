@@ -781,7 +781,7 @@ pub fn initialize_env<'cx>(
             flow_js_utils::add_output_non_speculating(cx, *msg);
             env_api::EnvInvariant::new(None, env_api::EnvInvariantFailure::NameDefGraphMismatch)
         })?;
-        for component in &components {
+        for component in components.iter() {
             crate::cycles::handle_component(cx, &name_def_graph, component);
         }
         flow_typing_utils::type_env::init_env(cx, toplevel_scope_kind);
@@ -789,7 +789,7 @@ pub fn initialize_env<'cx>(
             let env = cx.environment();
             (env.scope_kind, env.class_stack.dupe())
         };
-        for component in &components {
+        for component in components.iter() {
             crate::env_resolution::resolve_component(cx, &name_def_graph, component);
         }
         verbose::print_if_verbose_lazy(cx, None, None, None, || {

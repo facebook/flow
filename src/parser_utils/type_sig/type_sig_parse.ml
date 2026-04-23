@@ -35,6 +35,11 @@ module Option = Base.Option
  * are detected while visiting the AST, and thus are encoded directly in the
  * signature. The compaction step is responsible for collating these errors.
  *)
+type val_ref_lookup =
+  | ValueRefLookup
+  | TypeRefLookup
+  | TypeofRefLookup
+
 type 'loc parsed =
   | Annot of 'loc parsed_annot
   | Value of 'loc parsed_value
@@ -46,7 +51,7 @@ type 'loc parsed =
     }
   | AsyncVoidReturn of 'loc loc_node
   | ValRef of {
-      type_only: bool;
+      lookup: val_ref_lookup;
       ref: 'loc ref;
     }
   | Err of 'loc loc_node * 'loc loc_node errno
@@ -441,7 +446,16 @@ let polarity = function
 let id_name (_, { Ast.Identifier.name; comments = _ }) = name
 
 let val_ref ~type_only scope ref_loc name =
-  ValRef { type_only; ref = Ref { ref_loc; name; scope; resolved = None } }
+  let lookup =
+    if type_only then
+      TypeRefLookup
+    else
+      ValueRefLookup
+  in
+  ValRef { lookup; ref = Ref { ref_loc; name; scope; resolved = None } }
+
+let typeof_ref scope ref_loc name =
+  ValRef { lookup = TypeofRefLookup; ref = Ref { ref_loc; name; scope; resolved = None } }
 
 let merge_accessors a b =
   match (a, b) with
@@ -759,44 +773,24 @@ module Scope = struct
         let (binding, _legal) = f existing_binding in
         binding
     in
-    let bind_value ~in_global_scope f values types =
-      let f = bind_updater ~in_global_scope f in
-      match SMap.find_opt name values with
-      | Some _ -> SMap.update name f values
-      | None ->
-        (match SMap.find_opt name types with
-        | None -> SMap.update name f values
-        | Some _ -> values)
-    in
-    let bind_type ~in_global_scope f values types =
-      let f = bind_updater ~in_global_scope f in
-      match SMap.find_opt name types with
-      | Some _ -> SMap.update name f types
-      | None ->
-        (match SMap.find_opt name values with
-        | None -> SMap.update name f types
-        | Some _ -> types)
-    in
+    (* TypeScript-style two-namespace model: value and type bindings live in
+       independent maps. A name may appear in both without conflict. *)
+    let bind_one ~in_global_scope f map = SMap.update name (bind_updater ~in_global_scope f) map in
     if type_only then
       match scope with
-      | Global scope -> scope.types <- bind_type ~in_global_scope:true f scope.values scope.types
-      | DeclareModule scope ->
-        scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
-      | DeclareNamespace scope ->
-        scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
-      | Module scope -> scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
-      | Lexical scope -> scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
+      | Global scope -> scope.types <- bind_one ~in_global_scope:true f scope.types
+      | DeclareModule scope -> scope.types <- bind_one ~in_global_scope:false f scope.types
+      | DeclareNamespace scope -> scope.types <- bind_one ~in_global_scope:false f scope.types
+      | Module scope -> scope.types <- bind_one ~in_global_scope:false f scope.types
+      | Lexical scope -> scope.types <- bind_one ~in_global_scope:false f scope.types
       | ConditionalTypeExtends _ -> ()
     else
       match scope with
-      | Global scope -> scope.values <- bind_value ~in_global_scope:true f scope.values scope.types
-      | DeclareModule scope ->
-        scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
-      | DeclareNamespace scope ->
-        scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
-      | Module scope -> scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
-      | Lexical scope ->
-        scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
+      | Global scope -> scope.values <- bind_one ~in_global_scope:true f scope.values
+      | DeclareModule scope -> scope.values <- bind_one ~in_global_scope:false f scope.values
+      | DeclareNamespace scope -> scope.values <- bind_one ~in_global_scope:false f scope.values
+      | Module scope -> scope.values <- bind_one ~in_global_scope:false f scope.values
+      | Lexical scope -> scope.values <- bind_one ~in_global_scope:false f scope.values
       | ConditionalTypeExtends _ -> ()
 
   let rec lookup_value scope name =
@@ -813,6 +807,12 @@ module Scope = struct
       | None -> lookup_value parent name)
 
   let rec lookup_type scope name =
+    (* Look in the type namespace first; fall back to the value namespace so that
+       names that live only in values (e.g. classes, declared classes, namespaces,
+       imported modules) can still be referenced from type positions. With the
+       cross-namespace bind allowed, the type-namespace hit always wins (so an
+       interface shadows a same-named const for type lookups), while the fallback
+       preserves existing Flow behavior for value-only names used as types. *)
     let lookup_scope name values types =
       match SMap.find_opt name types with
       | Some _ as v -> v
@@ -1120,6 +1120,9 @@ module Scope = struct
 
   let bind_import scope tbls kind id_loc ~local ~remote mref =
     let mref = push_module_ref tbls mref in
+    (* Keep plain imports in the value namespace. Type lookups already fall
+       back to value bindings, and synthesizing a type-side JSImport makes JS
+       full-checks spuriously more precise. *)
     let type_only =
       let open Ast.Statement.ImportDeclaration in
       match kind with
@@ -1132,6 +1135,7 @@ module Scope = struct
 
   let bind_import_ns scope tbls kind id_loc name mref =
     let mref = push_module_ref tbls mref in
+    (* Namespace imports follow the same rule as named/default imports above. *)
     let type_only =
       let open Ast.Statement.ImportDeclaration in
       match kind with
@@ -1181,7 +1185,7 @@ module Scope = struct
     | Value (FunExpr fn) ->
       let statics = SMap.add prop_name prop fn.statics in
       Value (FunExpr { fn with statics })
-    | ValRef { type_only = false; ref = Ref { name = ref_name; scope; _ } } as vref ->
+    | ValRef { lookup = ValueRefLookup; ref = Ref { name = ref_name; scope; _ } } as vref ->
       assign_binding prop_name prop ref_name scope;
       vref
     | x -> x
@@ -1559,8 +1563,15 @@ module Scope = struct
       in
       begin
         match (is_type_only, SMap.find_opt name parent_values, SMap.find_opt name parent_types) with
-        | (_, Some _, Some _) ->
-          failwith "Invariant violation: a name cannot be in both values and types"
+        | (_, Some (LocalBinding node_v), Some (LocalBinding node_t)) ->
+          (* Cross-namespace pre-existing bindings (e.g. `class X` populates both slots
+             with the same node, then `declare namespace X` merges into it). *)
+          ignore
+            (merge_namespace_into_local_binding_node tbls node_v namespace_values namespace_types);
+          if not (node_v == node_t) then
+            ignore
+              (merge_namespace_into_local_binding_node tbls node_t namespace_values namespace_types)
+        | (_, Some _, Some _) -> ()
         | (_, None, None) ->
           let node =
             push_local_def
@@ -1614,8 +1625,25 @@ module Scope = struct
       in
       let merged_existing =
         match (is_type_only, SMap.find_opt name parent_values, SMap.find_opt name parent_types) with
-        | (_, Some _, Some _) ->
-          failwith "Invariant violation: a name cannot be in both values and types"
+        | (_, Some (LocalBinding node_v), Some (LocalBinding node_t)) ->
+          (* Cross-namespace pre-existing bindings: same node typically because
+             class/enum/declared-class install into both slots. *)
+          let merged =
+            merge_namespace_into_local_binding_node tbls node_v namespace_values namespace_types
+          in
+          let merged =
+            if not (node_v == node_t) then
+              merge_namespace_into_local_binding_node tbls node_t namespace_values namespace_types
+              || merged
+            else
+              merged
+          in
+          if merged then (
+            k name node_v;
+            true
+          ) else
+            false
+        | (_, Some _, Some _) -> false
         | (false, Some (LocalBinding node), None)
         | (true, Some (LocalBinding node), None)
         | (true, None, Some (LocalBinding node)) ->
@@ -2276,7 +2304,7 @@ and typeof =
     | T.Typeof.Target.Unqualified id ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
       let id_loc = push_loc tbls id_loc in
-      let t = val_ref ~type_only:false scope id_loc name in
+      let t = typeof_ref scope id_loc name in
       finish opts scope tbls xs typeof_loc t [name] targs chain
     | T.Typeof.Target.Import (import_loc, import_type') ->
       let import_loc = push_loc tbls import_loc in

@@ -1,12 +1,18 @@
 /* @flow
- * test errors on illegal rebinding/reassignment
+ * test errors on illegal rebinding/reassignment.
+ *
+ * After the TS-style two-namespace split, type aliases live in the type
+ * namespace and let/const/var/function live in the value namespace, so
+ * cross-namespace pairs now coexist without error. Class is in both
+ * namespaces, so it still conflicts with both type aliases and value
+ * bindings.
  *
  *       type class let const var (reassign)
- * type  x    x      x   x     x   x
+ * type  x    x      .   .     .   x
  * class x    x      x   x     x
- * let   x    x      x   x     x
- * const x    x      x   x     x   x
- * var   x    x      x   x
+ * let   .    x      x   x     x
+ * const .    x      x   x     x   x
+ * var   .    x      x   x
  */
 
 // type x *
@@ -23,17 +29,17 @@ function type_class() {
 
 function type_let() {
   type A = number;
-  let A = 0;        // error: name already bound
+  let A = 0;        // ok: cross-namespace
 }
 
 function type_const() {
   type A = number;
-  const A = 0;     // error: name already bound
+  const A = 0;     // ok: cross-namespace
 }
 
 function type_var() {
   type A = number;
-  var A = 0;        // error: name already bound
+  var A = 0;        // ok: cross-namespace
 }
 
 function type_reassign() {
@@ -72,7 +78,7 @@ function class_var() {
 
 function let_type() {
   let A = 0;
-  type A = number;  // error: name already bound
+  type A = number;  // ok: cross-namespace
 }
 
 function let_class() {
@@ -99,7 +105,7 @@ function let_var() {
 
 function const_type() {
   const A = 0;
-  type A = number;  // error: name already bound
+  type A = number;  // ok: cross-namespace
 }
 
 function const_class() {
@@ -131,7 +137,7 @@ function const_reassign() {
 
 function var_type() {
   var A = 0;
-  type A = number;  // error: name already bound
+  type A = number;  // ok: cross-namespace
 }
 
 function var_class() {

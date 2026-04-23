@@ -137,3 +137,19 @@ declare namespace fnWithDeclMerge {
 }
 '' as fnWithDeclMerge.T; // ok
 1 as fnWithDeclMerge.T; // error: number ~> string
+
+// Regression: TS-style declare-function + type-only declare-namespace.
+// Body has only type aliases / interfaces, so the namespace binds as
+// `Type {type_only_namespace=true}` and merges into the function. A type
+// read of `fnWithTypeOnlyNs.T` must resolve at the function id, not at
+// the namespace id (which has no def). Previously crashed with
+// `Failure("Missing location entry: ...")`.
+declare function fnWithTypeOnlyNs(): void;
+declare namespace fnWithTypeOnlyNs {
+  type T = string;
+  interface I { x: number }
+}
+'' as fnWithTypeOnlyNs.T; // ok
+1 as fnWithTypeOnlyNs.T; // error: number ~> string
+({ x: 1 }) as fnWithTypeOnlyNs.I; // ok
+1 as fnWithTypeOnlyNs.I; // error: number ~> I

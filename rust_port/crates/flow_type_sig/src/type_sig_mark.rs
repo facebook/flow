@@ -150,13 +150,18 @@ fn mark_parsed<'arena, 'ast>(
             errno.iter(|loc| mark_loc(marker, loc));
             mark_loc(marker, loc);
         }
-        parse::Parsed::ValRef { type_only, ref_ } => {
-            if !*type_only {
-                resolve_value_ref(opts, scopes, tbls, marker, ref_);
-            } else {
-                resolve_type_ref(opts, scopes, tbls, marker, ref_);
-            }
-        }
+        parse::Parsed::ValRef {
+            lookup: parse::ValRefLookup::ValueRefLookup,
+            ref_,
+        } => resolve_value_ref(opts, scopes, tbls, marker, ref_),
+        parse::Parsed::ValRef {
+            lookup: parse::ValRefLookup::TypeRefLookup,
+            ref_,
+        } => resolve_type_ref(opts, scopes, tbls, marker, ref_),
+        parse::Parsed::ValRef {
+            lookup: parse::ValRefLookup::TypeofRefLookup,
+            ref_,
+        } => resolve_typeof_ref(opts, scopes, tbls, marker, ref_),
         parse::Parsed::Pattern(p) => {
             marker.mark_pattern(opts, scopes, tbls, p);
         }
@@ -622,14 +627,75 @@ fn resolve_type_ref<'arena, 'ast>(
     ref_: &parse::Ref<'arena, 'ast>,
 ) {
     mark_loc(marker, &ref_.ref_loc);
+    // match P.Scope.lookup_type scope name with
     match parse::scope::lookup_type(scopes, ref_.scope, &ref_.name) {
+        // | Some (binding, _) ->
+        Some((binding, _)) => {
+            //   mark_binding ~locs_to_dirtify binding;
+            mark_binding(opts, scopes, tbls, marker, &binding);
+            //   ref.resolved <- Some binding;
+            let _ = ref_.resolved.set(Some(binding));
+            //   (* Keep alive a co-existing value-side binding for the same name (e.g. an
+            //      `import { X }` next to an `interface X`). The check phase eagerly
+            //      resolves every parsed module ref regardless of marking, so dropping the
+            //      import here would leave the dep file out of the sig dep graph and the
+            //      merge set, causing workers to fail with Parsing_heaps.Leader_not_found
+            //      when checking reaches the unmerged dep. *)
+            //   (match P.Scope.lookup_value scope name with
+            //   | Some (value_binding, _) -> mark_binding ~locs_to_dirtify value_binding
+            //   | None -> ())
+            match parse::scope::lookup_value(scopes, ref_.scope, &ref_.name) {
+                Some((value_binding, _)) => {
+                    mark_binding(opts, scopes, tbls, marker, &value_binding);
+                }
+                None => {}
+            }
+        }
+        // | None -> ref.resolved <- None
+        None => {
+            let _ = ref_.resolved.set(None);
+        }
+    }
+}
+
+fn binding_allowed_in_typeof<'arena, 'ast>(binding: &parse::BindingNode<'arena, 'ast>) -> bool {
+    match binding {
+        parse::BindingNode::LocalBinding(node) => {
+            matches!(
+                &*node.0.data(),
+                parse::LocalBinding::NamespaceBinding { .. }
+            )
+        }
+        parse::BindingNode::RemoteBinding(node) => matches!(
+            &*node.0.data(),
+            parse::RemoteBinding::ImportTypeNsBinding { .. }
+                | parse::RemoteBinding::ImportTypeofNsBinding { .. }
+        ),
+    }
+}
+
+fn resolve_typeof_ref<'arena, 'ast>(
+    opts: &TypeSigOptions,
+    scopes: &mut parse::scope::Scopes<'arena, 'ast>,
+    tbls: &mut parse::Tables<'arena, 'ast>,
+    marker: &mut Marker<'_>,
+    ref_: &parse::Ref<'arena, 'ast>,
+) {
+    mark_loc(marker, &ref_.ref_loc);
+    match parse::scope::lookup_value(scopes, ref_.scope, &ref_.name) {
         Some((binding, _)) => {
             mark_binding(opts, scopes, tbls, marker, &binding);
             let _ = ref_.resolved.set(Some(binding));
         }
-        None => {
-            let _ = ref_.resolved.set(None);
-        }
+        None => match parse::scope::lookup_type(scopes, ref_.scope, &ref_.name) {
+            Some((binding, _)) if binding_allowed_in_typeof(&binding) => {
+                mark_binding(opts, scopes, tbls, marker, &binding);
+                let _ = ref_.resolved.set(Some(binding));
+            }
+            _ => {
+                let _ = ref_.resolved.set(None);
+            }
+        },
     }
 }
 

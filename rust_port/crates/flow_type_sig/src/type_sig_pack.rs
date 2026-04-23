@@ -660,7 +660,13 @@ pub(crate) fn pack_parsed<'arena, 'ast>(
             cx.errs.push(e);
             Packed::Err(Box::new(loc))
         }
-        parse::Parsed::ValRef { type_only, ref_ } => Packed::Ref(pack_ref(*type_only, ref_)),
+        parse::Parsed::ValRef { lookup, ref_ } => {
+            let type_ref = match lookup {
+                parse::ValRefLookup::ValueRefLookup | parse::ValRefLookup::TypeofRefLookup => false,
+                parse::ValRefLookup::TypeRefLookup => true,
+            };
+            Packed::Ref(pack_ref(type_ref, ref_))
+        }
         parse::Parsed::Pattern(p) => Packed::Pattern(p.0.index_exn()),
         parse::Parsed::Eval(loc, t, op) => Packed::Eval(Box::new(PackedEval {
             loc: pack_loc(loc),

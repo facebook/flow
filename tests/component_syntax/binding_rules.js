@@ -32,7 +32,7 @@ const D = 3;
 component D() { return <div /> } // ERROR
 
 type E = number;
-component E() { return <div /> } // ERROR
+component E() { return <div /> } // ok: cross-namespace (type vs component)
 
 function paramsStrict(F: number) {
   'use strict';
@@ -50,7 +50,7 @@ declare function I(): void;
 component I() { return <div /> } // ERROR
 
 declare type J = number;
-component J() { return <div /> } // ERROR
+component J() { return <div /> } // ok: cross-namespace (declare type vs component)
 
 declare let K: number;
 component K() { return <div /> } // ERROR

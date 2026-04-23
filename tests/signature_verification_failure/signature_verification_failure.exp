@@ -330,20 +330,6 @@ References:
                      ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- tparam.js:13:32
-
-Cannot use type `X` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
-
-   tparam.js:13:32
-   13| export function f<X>(): typeof X { return x; }
-                                      ^
-
-References:
-   tparam.js:13:19
-   13| export function f<X>(): typeof X { return x; }
-                         ^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:22
 
 `typeof` can only be used to get the type of variables. [ParseError]
@@ -362,4 +348,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 37 errors
+Found 36 errors

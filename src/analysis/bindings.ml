@@ -101,3 +101,46 @@ let allow_redeclaration = function
   | Function ->
     true
   | _ -> false
+
+type namespace =
+  | NValue
+  | NType
+[@@deriving show]
+
+let namespaces_of_kind = function
+  | Type _
+  | Interface _ ->
+    [NType]
+  | Class
+  | DeclaredClass
+  | Enum
+  | DeclaredNamespace ->
+    [NValue; NType]
+  | _ -> [NValue]
+
+let same_namespace k1 k2 =
+  let ns1 = namespaces_of_kind k1 in
+  let ns2 = namespaces_of_kind k2 in
+  List.exists (fun n -> List.mem n ns2) ns1
+
+(* Bindings.t is stored newest-first (entries are added with List.cons).
+   split_by_namespace preserves that ordering within each output list. *)
+let split_by_namespace t =
+  List.fold_left
+    (fun (vs, ts) ((_, kind) as entry) ->
+      let nss = namespaces_of_kind kind in
+      let vs =
+        if List.mem NValue nss then
+          entry :: vs
+        else
+          vs
+      in
+      let ts =
+        if List.mem NType nss then
+          entry :: ts
+        else
+          ts
+      in
+      (vs, ts))
+    ([], [])
+    (List.rev t)

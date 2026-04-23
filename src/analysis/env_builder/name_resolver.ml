@@ -272,21 +272,28 @@ end
 module FullEnv : sig
   type t
 
-  (** Initialize the environment with globals *)
+  (** Initialize the environment with globals (value namespace). *)
   val init : env_val SMap.t -> t
 
   val fold_current_function_scope_values : init:'a -> f:('a -> env_val -> 'a) -> t -> 'a
 
+  (** Read a name in the value namespace. *)
   val env_read_opt :
     should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> env_val option
-
-  val env_read : should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> env_val
 
   val env_read_entry_from_below :
     should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> PartialEnvSnapshot.entry
 
-  (** Push new bindings that might shadow bindings in the current function scope. *)
-  val push_new_bindings : env_val SMap.t -> t -> t
+  (** Read a name in the type namespace. *)
+  val type_env_read_opt :
+    should_havoc_val_to_initialized:(env_val -> bool) -> string -> t -> env_val option
+
+  (** Read a name from the current scope's type namespace only. *)
+  val type_env_read_current_scope_opt : string -> t -> env_val option
+
+  (** Push new bindings that might shadow bindings in the current function scope.
+      Value and type bindings are pushed independently. *)
+  val push_new_bindings : value:env_val SMap.t -> type_:env_val SMap.t -> t -> t
 
   val push_new_function_scope : t -> t
 
@@ -314,15 +321,29 @@ module FullEnv : sig
     t ->
     unit
 end = struct
+  (* Two parallel namespaces — value and type — mirroring type_sig's Scope.
+     The value namespace carries SSA flow (val_ref, refinements, etc). The type
+     namespace records type bindings (interface, type alias) so name_def can
+     find their declaration locs and so reads at type-positions resolve to the
+     interface rather than the same-named const. *)
   type function_scope = {
-    local_stacked_env: env_val Nel.t SMap.t;
-    captured: env_val SMap.t ref;
+    value_local_stacked_env: env_val Nel.t SMap.t;
+    type_local_stacked_env: env_val Nel.t SMap.t;
+    value_captured: env_val SMap.t ref;
+    type_captured: env_val SMap.t ref;
   }
 
   type t = function_scope Nel.t
 
   let init globals =
-    ({ local_stacked_env = SMap.map Nel.one globals; captured = ref SMap.empty }, [])
+    ( {
+        value_local_stacked_env = SMap.map Nel.one globals;
+        type_local_stacked_env = SMap.empty;
+        value_captured = ref SMap.empty;
+        type_captured = ref SMap.empty;
+      },
+      []
+    )
 
   let copy_env_val_from_env_below ~should_havoc_val_to_initialized env_val =
     let {
@@ -357,58 +378,68 @@ end = struct
         kind_at_loc;
       }
 
-  let function_scope_read x ({ local_stacked_env; captured } : function_scope) =
-    match SMap.find_opt x local_stacked_env with
+  let function_scope_read_value x (scope : function_scope) =
+    match SMap.find_opt x scope.value_local_stacked_env with
     | Some (v, _) -> Some v
-    | None -> SMap.find_opt x !captured
+    | None -> SMap.find_opt x !(scope.value_captured)
 
-  let map_function_scope_into_partial_env_entries
-      ~f ({ local_stacked_env; captured } : function_scope) : PartialEnvSnapshot.t =
-    let acc = SMap.mapi (fun x (v, _) -> f x v) local_stacked_env in
+  let function_scope_read_type x (scope : function_scope) =
+    match SMap.find_opt x scope.type_local_stacked_env with
+    | Some (v, _) -> Some v
+    | None -> SMap.find_opt x !(scope.type_captured)
+
+  type type_lookup_namespace =
+    | TypeNamespace
+    | ValueNamespace
+
+  let function_scope_read_type_or_value x scope =
+    match function_scope_read_type x scope with
+    | Some v -> Some (v, TypeNamespace)
+    | None -> Base.Option.map ~f:(fun v -> (v, ValueNamespace)) (function_scope_read_value x scope)
+
+  let map_function_scope_value_into_partial_env_entries
+      ~f ({ value_local_stacked_env; value_captured; _ } : function_scope) : PartialEnvSnapshot.t =
+    let acc = SMap.mapi (fun x (v, _) -> f x v) value_local_stacked_env in
     SMap.fold
       (fun x v ->
         SMap.adjust x (function
             | None -> f x v
             | Some existing -> existing
             ))
-      !captured
+      !value_captured
       acc
 
-  let iter_function_scope ~f ({ local_stacked_env; captured } : function_scope) =
-    SMap.iter (fun x (v, _) -> f x v) local_stacked_env;
+  let iter_function_scope_value ~f ({ value_local_stacked_env; value_captured; _ } : function_scope)
+      =
+    SMap.iter (fun x (v, _) -> f x v) value_local_stacked_env;
     SMap.iter
       (fun x v ->
-        if SMap.mem x local_stacked_env then
+        if SMap.mem x value_local_stacked_env then
           ()
         else
           f x v)
-      !captured
+      !value_captured
 
   let fold_current_function_scope_values ~init ~f (env : t) =
-    let ({ local_stacked_env; captured }, _) = env in
-    let acc = SMap.fold (fun _ elts acc -> Nel.fold_left f acc elts) local_stacked_env init in
-    SMap.fold (fun _ v acc -> f acc v) !captured acc
+    let ({ value_local_stacked_env; value_captured; _ }, _) = env in
+    let acc = SMap.fold (fun _ elts acc -> Nel.fold_left f acc elts) value_local_stacked_env init in
+    SMap.fold (fun _ v acc -> f acc v) !value_captured acc
 
   let env_read_opt ~should_havoc_val_to_initialized x (env : t) =
     let (head_scope, tail_scopes) = env in
-    match function_scope_read x head_scope with
+    match function_scope_read_value x head_scope with
     | Some v -> Some v
     | None ->
-      (match Base.List.find_map tail_scopes ~f:(function_scope_read x) with
+      (match Base.List.find_map tail_scopes ~f:(function_scope_read_value x) with
       | None -> None
       | Some env_val ->
         let copy = copy_env_val_from_env_below ~should_havoc_val_to_initialized env_val in
-        head_scope.captured := SMap.add x copy !(head_scope.captured);
+        head_scope.value_captured := SMap.add x copy !(head_scope.value_captured);
         Some copy)
-
-  let env_read ~should_havoc_val_to_initialized x env =
-    match env_read_opt ~should_havoc_val_to_initialized x env with
-    | Some v -> v
-    | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x))
 
   let env_read_from_below ~should_havoc_val_to_initialized x (env : t) =
     let (_, tail_scopes) = env in
-    match Base.List.find_map tail_scopes ~f:(function_scope_read x) with
+    match Base.List.find_map tail_scopes ~f:(function_scope_read_value x) with
     | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x))
     | Some v -> copy_env_val_from_env_below ~should_havoc_val_to_initialized v
 
@@ -416,34 +447,64 @@ end = struct
     env_read_from_below ~should_havoc_val_to_initialized x env
     |> PartialEnvSnapshot.entry_of_env_val
 
-  let push_new_bindings bindings (env : t) : t =
+  let type_env_read_opt ~should_havoc_val_to_initialized x (env : t) =
+    let (head_scope, tail_scopes) = env in
+    match function_scope_read_type_or_value x head_scope with
+    | Some (v, _) -> Some v
+    | None ->
+      (match Base.List.find_map tail_scopes ~f:(function_scope_read_type_or_value x) with
+      | None -> None
+      | Some (env_val, namespace) ->
+        let copy = copy_env_val_from_env_below ~should_havoc_val_to_initialized env_val in
+        begin
+          match namespace with
+          | TypeNamespace -> head_scope.type_captured := SMap.add x copy !(head_scope.type_captured)
+          | ValueNamespace ->
+            head_scope.value_captured := SMap.add x copy !(head_scope.value_captured)
+        end;
+        Some copy)
+
+  let type_env_read_current_scope_opt x (env : t) =
+    let (head_scope, _) = env in
+    function_scope_read_type x head_scope
+
+  let push_into_stacked map bindings =
+    SMap.fold
+      (fun x v ->
+        SMap.adjust x (function
+            | None -> Nel.one v
+            | Some y -> Nel.cons v y
+            ))
+      bindings
+      map
+
+  let push_new_bindings ~value ~type_ (env : t) : t =
     let (old_scope, tail_scopes) = env in
-    let new_stacked_env =
-      SMap.fold
-        (fun x v ->
-          SMap.adjust x (function
-              | None -> Nel.one v
-              | Some y -> Nel.cons v y
-              ))
-        bindings
-        old_scope.local_stacked_env
-    in
-    ({ old_scope with local_stacked_env = new_stacked_env }, tail_scopes)
+    let value_local_stacked_env = push_into_stacked old_scope.value_local_stacked_env value in
+    let type_local_stacked_env = push_into_stacked old_scope.type_local_stacked_env type_ in
+    ({ old_scope with value_local_stacked_env; type_local_stacked_env }, tail_scopes)
 
   let push_new_function_scope (env : t) : t =
-    Nel.cons { local_stacked_env = SMap.empty; captured = ref SMap.empty } env
+    Nel.cons
+      {
+        value_local_stacked_env = SMap.empty;
+        type_local_stacked_env = SMap.empty;
+        value_captured = ref SMap.empty;
+        type_captured = ref SMap.empty;
+      }
+      env
 
   let to_partial_env_snapshot ~f env =
     let (hd_scope, _) = env in
-    map_function_scope_into_partial_env_entries ~f hd_scope
+    map_function_scope_value_into_partial_env_entries ~f hd_scope
 
   let update_env ~f (env : t) =
     let (hd_scope, _) = env in
-    iter_function_scope ~f hd_scope
+    iter_function_scope_value ~f hd_scope
 
   let reset_to_unreachable_env ~should_havoc_val_to_initialized:_ (env : t) =
     let (hd_scope, _) = env in
-    iter_function_scope hd_scope ~f:(fun _ { val_ref; heap_refinements; _ } ->
+    iter_function_scope_value hd_scope ~f:(fun _ { val_ref; heap_refinements; _ } ->
         val_ref := Val.empty ();
         heap_refinements := HeapRefinementMap.map (fun _ -> Ok (Val.empty ())) !heap_refinements
     )
@@ -451,7 +512,7 @@ end = struct
   let update_env_with_partial_env_snapshot
       ~should_havoc_val_to_initialized ~f (partial_env : PartialEnvSnapshot.t) (env : t) =
     let (hd_scope, _) = env in
-    iter_function_scope hd_scope ~f:(fun x env_val ->
+    iter_function_scope_value hd_scope ~f:(fun x env_val ->
         let env_entry =
           PartialEnvSnapshot.read_with_fallback x partial_env ~fallback:(fun x ->
               env_read_entry_from_below ~should_havoc_val_to_initialized x env
@@ -467,7 +528,7 @@ end = struct
       (env2 : PartialEnvSnapshot.t)
       (env : t) =
     let (hd_scope, _) = env in
-    iter_function_scope hd_scope ~f:(fun x env_val ->
+    iter_function_scope_value hd_scope ~f:(fun x env_val ->
         let v1 =
           PartialEnvSnapshot.read_with_fallback x env1 ~fallback:(fun x ->
               env_read_entry_from_below ~should_havoc_val_to_initialized x env
@@ -778,6 +839,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
+      | ( (Bindings.Type _ | Bindings.Interface _),
+          ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
+          | ComponentBinding )
+        )
+        when not (Val.is_undeclared v) ->
+        (* TypeScript-style cross-namespace coexistence: a type/interface binding
+           can coexist with a value binding under the same name. *)
+        None
       | ( Bindings.(
             ( Const | Let | Class | Record | Enum | Function | Component | Import | TsImport
             | Type _ | Interface _ )),
@@ -1140,17 +1209,90 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             prepass_values
             loc
 
+      (* Value-namespace read with type-namespace fallback. Mirrors the legacy
+         single-map behavior: a name like an interface used in value position
+         (e.g. `new I()`, where I is an interface) resolves to the type
+         binding so downstream type checking can flag it as a "type used as
+         value" error rather than crashing on a missing env entry. *)
       method env_read x =
-        FullEnv.env_read
-          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
-          x
-          env_state.env
+        let value_entry =
+          FullEnv.env_read_opt
+            ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+            x
+            env_state.env
+        in
+        match value_entry with
+        | Some ({ def_loc = None; _ } as v)
+          when Base.Option.equal String.equal env_state.jsx_base_name (Some x) ->
+          (match
+             FullEnv.type_env_read_opt
+               ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+               x
+               env_state.env
+           with
+          | Some ({ def_loc = Some _; _ } as type_v) -> type_v
+          | _ -> v)
+        | Some v -> v
+        | None ->
+          (match
+             FullEnv.type_env_read_opt
+               ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+               x
+               env_state.env
+           with
+          | Some v -> v
+          | None -> raise Env_api.(Env_invariant (None, MissingEnvEntry x)))
 
       method env_read_opt x =
-        FullEnv.env_read_opt
-          ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
-          x
-          env_state.env
+        let value_entry =
+          FullEnv.env_read_opt
+            ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+            x
+            env_state.env
+        in
+        match value_entry with
+        | Some ({ def_loc = None; _ } as v)
+          when Base.Option.equal String.equal env_state.jsx_base_name (Some x) ->
+          (match
+             FullEnv.type_env_read_opt
+               ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+               x
+               env_state.env
+           with
+          | Some ({ def_loc = Some _; _ } as type_v) -> Some type_v
+          | _ -> Some v)
+        | Some _ as v -> v
+        | None ->
+          FullEnv.type_env_read_opt
+            ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+            x
+            env_state.env
+
+      (* Read a name in the type namespace. Used by visitor entry points for
+         type-position references (interface decls, type alias decls, generic
+         identifier types). Falls back to the value namespace if no type
+         binding exists, mirroring type_sig's lookup_type behavior — needed
+         for class names, declared classes, and other NValueAndType bindings
+         to be reachable as types. *)
+      method type_env_read x =
+        match
+          FullEnv.type_env_read_opt
+            ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+            x
+            env_state.env
+        with
+        | Some v -> v
+        | None -> this#env_read x
+
+      method type_env_read_opt x =
+        match
+          FullEnv.type_env_read_opt
+            ~should_havoc_val_to_initialized:this#should_havoc_val_to_initialized
+            x
+            env_state.env
+        with
+        | Some _ as v -> v
+        | None -> this#env_read_opt x
 
       method env_read_into_snapshot_from_below x =
         FullEnv.env_read_entry_from_below
@@ -1781,12 +1923,122 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           m
         |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
 
+      (* Build the type-namespace env. Type bindings (Type/Interface) and the
+         "type side" of NValueAndType bindings (Class/Enum/DeclaredClass/
+         DeclaredNamespace) all produce a uniform "type-like" env_val. The
+         val_ref/havoc fields are not used for SSA flow on the type side
+         (types don't change), but they are populated for consistency.
+
+         Critically, EVERY declaration loc that contributes to a name's
+         declaration-merged type gets an AssigningWrite — including value-side
+         decl locs (e.g. for `class A {}; declare namespace A { type T = ... }`,
+         both class_loc and ns_loc need type-side AssigningWrites so name_def
+         and the type checker can resolve qualified type references). [full]
+         carries the un-split bindings so we can recover those secondary
+         decl locs. *)
+      method private mk_type_env ~full m =
+        SMap.mapi
+          (fun name (kind, (((loc, _) as first_entry), rest_entries)) ->
+            let default_type_entries = first_entry :: rest_entries in
+            let kind_has_type_namespace kind =
+              List.mem Bindings.NType (Bindings.namespaces_of_kind kind)
+            in
+            let type_canonical_priority = function
+              | Bindings.Class
+              | Bindings.DeclaredClass
+              | Bindings.Enum ->
+                0
+              | Bindings.DeclaredNamespace -> 1
+              | Bindings.Type _
+              | Bindings.Interface _ ->
+                2
+              | _ -> 3
+            in
+            let choose_type_canonical ((_, best_kind) as best) ((_, kind) as entry) =
+              if type_canonical_priority kind < type_canonical_priority best_kind then
+                entry
+              else
+                best
+            in
+            (* Recover the declarations that participate in the merged type side.
+               Value-only declarations such as `const A = 1` are filtered out so
+               type reads resolve to the type binding, while declarations that
+               carry their own type side (class/enum/namespace) remain available
+               for merged lookups like `M.T`. *)
+            let type_entries =
+              match SMap.find_opt name full with
+              | None -> default_type_entries
+              | Some (_, (full_first, full_rest)) ->
+                Base.List.filter
+                  ~f:(fun (_, kind) -> kind_has_type_namespace kind)
+                  (full_first :: full_rest)
+            in
+            let type_entries =
+              match type_entries with
+              | [] -> default_type_entries
+              | _ -> type_entries
+            in
+            let (canonical_loc, canonical_kind) =
+              match type_entries with
+              | first_entry :: rest_entries ->
+                List.fold_left choose_type_canonical first_entry rest_entries
+              | [] -> (loc, kind)
+            in
+            (* When the only type-side declaration is a type-only `declare
+               namespace` that gets merged into a preceding function
+               declaration (TS-style `declare function F(...); declare
+               namespace F { type T = ... }`), no separate def is emitted
+               at the namespace id. Resolution instead happens at the
+               function id via `wrap_function_with_namespace_types`.
+               Redirect the type-side canonical loc to the function id so
+               reads of `F` in type position find the resolved merged
+               type. A value-bodied `declare namespace` binds as
+               `DeclaredConst` (see hoister.ml) and never enters this
+               type-side map. *)
+            let (canonical_loc, canonical_kind) =
+              match (canonical_kind, SMap.find_opt name full) with
+              | ( Bindings.Type { type_only_namespace = true; _ },
+                  Some
+                    ( (Bindings.Function | Bindings.DeclaredFunction),
+                      ((full_first_loc, full_first_kind), _)
+                    )
+                ) ->
+                (full_first_loc, full_first_kind)
+              | _ -> (canonical_loc, canonical_kind)
+            in
+            let type_kind_at_loc =
+              List.fold_left (fun acc (l, k) -> ALocMap.add l k acc) ALocMap.empty type_entries
+            in
+            let reason = mk_reason (RType (OrdinaryName name)) canonical_loc in
+            let write_entries =
+              ALocMap.fold
+                (fun decl_loc _ acc ->
+                  let decl_reason = mk_reason (RType (OrdinaryName name)) decl_loc in
+                  EnvMap.add_ordinary decl_loc (Env_api.AssigningWrite decl_reason) acc)
+                type_kind_at_loc
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries };
+            {
+              val_ref = ref (Val.one reason);
+              havoc = Val.one reason;
+              writes_by_closure_provider_val = None;
+              def_loc = Some canonical_loc;
+              heap_refinements = ref HeapRefinementMap.empty;
+              kind = canonical_kind;
+              kind_at_loc = type_kind_at_loc;
+            })
+          m
+        |> SMap.filter (fun name _ -> not @@ this#is_excluded_ordinary_name name)
+
       method private push_env ~this_super_binding_env bindings =
         let old_env = env_state.env in
-        let bindings = Bindings.to_map bindings in
-        let env =
-          FullEnv.push_new_bindings (this#mk_env ~this_super_binding_env bindings) old_env
+        let (value_bindings, type_bindings) = Bindings.split_by_namespace bindings in
+        let value_env = this#mk_env ~this_super_binding_env (Bindings.to_map value_bindings) in
+        let type_env =
+          this#mk_type_env ~full:(Bindings.to_map bindings) (Bindings.to_map type_bindings)
         in
+        let env = FullEnv.push_new_bindings ~value:value_env ~type_:type_env old_env in
         env_state <- { env_state with env };
         old_env
 
@@ -1948,7 +2200,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! binding_type_identifier ident =
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
-        let { kind; def_loc; kind_at_loc; _ } = this#env_read name in
+        let { kind; def_loc; kind_at_loc; _ } = this#type_env_read name in
+        let current_kind = ALocMap.find_opt loc kind_at_loc in
         let error =
           let reserved_keyword_error =
             let open Flow_intermediate_error_types in
@@ -1996,6 +2249,40 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       L.LMap.add def_loc (loc :: existing) env_state.interface_merge_conflicts;
                     write_entries;
                   };
+                None
+              | Bindings.DeclaredNamespace
+                when (not (ALoc.equal loc def_loc))
+                     &&
+                     match ALocMap.find_opt loc kind_at_loc with
+                     | Some (Bindings.Interface _) -> true
+                     | _ -> false ->
+                (* TypeScript-style declaration merging: an interface declaration
+                   with the same name as a declared namespace is allowed and merges
+                   into the namespace's type side. Add an AssigningWrite for this
+                   loc so name_def resolves the interface declaration. *)
+                let reason = mk_reason (RType (OrdinaryName name)) loc in
+                let write_entries =
+                  EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
+                in
+                env_state <- { env_state with write_entries };
+                None
+              | Bindings.Class
+              | Bindings.DeclaredClass
+                when (not (ALoc.equal loc def_loc))
+                     &&
+                     match current_kind with
+                     | Some (Bindings.Interface _) -> true
+                     | _ -> false ->
+                (* TS-style declaration merging: interfaces may coexist with
+                   classes/declare classes while the class remains the canonical
+                   type binding. *)
+                None
+              | _
+                when (not (ALoc.equal loc def_loc))
+                     &&
+                     match current_kind with
+                     | Some current_kind -> not (Bindings.same_namespace kind current_kind)
+                     | None -> false ->
                 None
               | Bindings.Type _
               | Bindings.Interface _
@@ -2339,6 +2626,46 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         env_state <- { env_state with values }
 
+      (* Type-position read: prefer the type namespace's binding, falling back
+         to the value namespace via [type_env_read_opt]. This is the analogue of
+         [any_identifier] for type-position references (interface decls, type
+         aliases, generic type ids, etc). When the name doesn't exist in either
+         namespace, skip recording — the check phase will surface a missing
+         binding error if appropriate. *)
+      method any_type_identifier loc name =
+        match this#type_env_read_opt name with
+        | None -> ()
+        | Some { val_ref; havoc; def_loc; kind; _ } ->
+          let v =
+            if env_state.visiting_hoisted_type then
+              havoc
+            else
+              match (kind, def_loc) with
+              | (Bindings.Enum, Some def_loc)
+                when ALoc.quick_compare loc def_loc < 0
+                     && Base.Option.is_some
+                          (FullEnv.type_env_read_current_scope_opt name env_state.env) ->
+                (* Type positions can resolve a later enum declaration, but the
+                   env-builder's read snapshot historically treats a same-scope
+                   forward enum reference as undeclared until the declaration
+                   itself. Captured enums from outer scopes should remain
+                   resolved. *)
+                Val.undeclared name def_loc
+              | _ -> !val_ref
+          in
+          let values =
+            L.LMap.add
+              loc
+              {
+                def_loc;
+                value = v;
+                val_binding_kind = Val.SourceLevelBinding kind;
+                name = Some name;
+              }
+              env_state.values
+          in
+          env_state <- { env_state with values }
+
       method private with_current_pattern_bindings pattern ~f =
         let current_bindings =
           SMap.fold
@@ -2385,7 +2712,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method private error_on_reference_to_currently_declared_id id =
         let (loc, { Ast.Identifier.name; _ }) = id in
-        let { val_ref; def_loc; _ } = this#env_read name in
+        (* This method is invoked for both value- and type-position identifiers
+           (and also typeof identifiers). The check is "is this id referring to
+           a name that's currently being declared?", which doesn't depend on
+           the namespace. Use [type_env_read] which falls back to value, so we
+           handle both type-only and value bindings. *)
+        let { val_ref; def_loc; _ } = this#type_env_read name in
         Base.Option.iter def_loc ~f:(fun def_loc ->
             match L.LMap.find_opt def_loc env_state.current_bindings with
             | None -> ()
@@ -2401,7 +2733,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method private error_on_reference_to_currently_declared_id_in_default id =
         let (loc, { Ast.Identifier.name; _ }) = id in
-        let { val_ref = _; def_loc; _ } = this#env_read name in
+        let { val_ref = _; def_loc; _ } = this#type_env_read name in
         Base.Option.iter def_loc ~f:(fun def_loc ->
             match L.LMap.find_opt def_loc env_state.current_bindings with
             | None -> ()
@@ -2416,6 +2748,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! type_identifier_reference id =
         this#error_on_reference_to_currently_declared_id id;
         super#type_identifier_reference id
+
+      (* type_identifier is the funnel through which type-position identifier
+         references reach the visitor (super#type_identifier_reference ->
+         super#type_identifier -> this#identifier in Flow_ast_mapper). We
+         override it here to record the read against the type namespace
+         instead of the value namespace, so a name like `A` used at `let x: A`
+         resolves to the interface (when `const A = 1; interface A {}`) rather
+         than the const. *)
+      method! type_identifier id =
+        let (loc, { Flow_ast.Identifier.name; _ }) = id in
+        this#any_type_identifier loc name;
+        id
 
       method! typeof_identifier id =
         this#error_on_reference_to_currently_declared_id id;
@@ -4943,9 +5287,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | _ -> ()
 
       method! class_identifier ((name_loc, { Ast.Identifier.name; comments = _ }) as id) =
-        (* Called by `declare class` *)
+        (* Called by `declare class`. Use ClassBinding (matching `class_identifier_opt`)
+           so that on a same-namespace conflict (e.g. `declare const C; declare class C`)
+           the type-side AssigningWrite at this loc — installed by `mk_type_env` — is
+           preserved by `error_assignment` rather than overwritten with NonAssigningWrite.
+           Otherwise the class's type binding disappears from the name_def graph and any
+           later type-position read of `C` (such as a constructor return type) crashes
+           with `MissingEnvWrite`. *)
         this#check_class_name name_loc name;
-        super#class_identifier id
+        this#bind_pattern_identifier_customized ~kind:ClassBinding name_loc name;
+        ignore @@ super#identifier id;
+        id
 
       method private class_identifier_opt ~class_loc:loc id =
         let (class_write_loc, class_self_reason) =

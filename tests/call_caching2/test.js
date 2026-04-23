@@ -1,3 +1,3 @@
-function Foo(items: ?Iterable<number>) {
-  Iterable(items || []).size;
+function Foo(items: ?MyIterable<number>) {
+  MyIterable(items || []).size;
 }

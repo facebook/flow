@@ -10063,7 +10063,7 @@ export enum X {
         result,
         r#"[
   (2, 13) to (2, 14) => {
-    (undeclared)
+    (4, 12) to (4, 13): (`X`)
   };
   (3, 8) to (3, 9) => {
     (undeclared)

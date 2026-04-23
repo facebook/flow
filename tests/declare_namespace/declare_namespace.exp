@@ -70,31 +70,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- binding_test.js:8:1
 
-Cannot use type-only namespace `const_like` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
-[type-as-value]
+Cannot use variable `const_like` [1] because the declaration either comes later or was skipped.
+[reference-before-declaration]
 
    binding_test.js:8:1
-   8| const_like = 1; // error
+   8| const_like = 1; // error: reference-before-declaration of the const below
       ^^^^^^^^^^
 
 References:
-   binding_test.js:6:19
-   6| declare namespace const_like {}
-                        ^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- binding_test.js:9:7
-
-Cannot declare `const_like` [1] because the name is already bound. [name-already-bound]
-
    binding_test.js:9:7
-   9| const const_like = 1; // error
-            ^^^^^^^^^^
-
-References:
-   binding_test.js:6:19
-   6| declare namespace const_like {}
-                        ^^^^^^^^^^ [1]
+   9| const const_like = 1; // ok: empty-body namespace is type-only, const is in the value namespace
+            ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ declare_global_binding.js:1:9
@@ -1113,17 +1099,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:67:3
 
-Cannot use type-only namespace `type_only` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
-[type-as-value]
+Cannot resolve name `type_only`. [cannot-resolve-name]
 
-   typing_test.js:67:3
    67|   type_only; // error: type-as-value
          ^^^^^^^^^
-
-References:
-   typing_test.js:64:21
-   64|   declare namespace type_only {
-                           ^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:69:3
@@ -1232,7 +1211,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- typing_test.js:123:13
 
-Cannot declare `Inner` [1] because the name is already bound. [name-already-bound]
+Cannot declare the name in the namespace because the name `Inner` [1] is already bound. [signature-verification-failure]
 
    typing_test.js:123:13
    123|   interface Inner { z: boolean } // error: name-already-bound
@@ -1289,6 +1268,21 @@ References:
              ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- typing_test.js:135:13
+
+Cannot declare the name in the namespace because the name `Router` [1] is already bound.
+[signature-verification-failure]
+
+   typing_test.js:135:13
+   135|   interface Router { route: string } // no error (DeclaredFunction allows this)
+                    ^^^^^^
+
+References:
+   typing_test.js:134:20
+   134|   declare function Router(): void;
+                           ^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- typing_test.js:139:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -1303,8 +1297,38 @@ References:
              ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- typing_test.js:153:1
 
-Found 91 errors
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   typing_test.js:153:1
+   153| 1 as fnWithTypeOnlyNs.T; // error: number ~> string
+        ^ [1]
+
+References:
+   typing_test.js:153:6
+   153| 1 as fnWithTypeOnlyNs.T; // error: number ~> string
+             ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typing_test.js:155:1
+
+Cannot cast `1` to `I` because number literal `1` [1], a primitive, cannot be used as a subtype of `I` [2]. You can wrap
+it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
+
+   typing_test.js:155:1
+   155| 1 as fnWithTypeOnlyNs.I; // error: number ~> I
+        ^ [1]
+
+References:
+   typing_test.js:155:6
+   155| 1 as fnWithTypeOnlyNs.I; // error: number ~> I
+             ^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

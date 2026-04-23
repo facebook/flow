@@ -144,4 +144,48 @@ impl Kind {
             _ => false,
         }
     }
+
+    /// The namespaces a binding kind populates.
+    pub fn namespaces(&self) -> &'static [Namespace] {
+        match self {
+            Self::Type { .. } | Self::Interface { .. } => &[Namespace::Type],
+            Self::Class | Self::DeclaredClass | Self::Enum | Self::DeclaredNamespace => {
+                &[Namespace::Value, Namespace::Type]
+            }
+            _ => &[Namespace::Value],
+        }
+    }
+
+    pub fn same_namespace(&self, other: &Kind) -> bool {
+        let ns1 = self.namespaces();
+        let ns2 = other.namespaces();
+        ns1.iter().any(|n| ns2.contains(n))
+    }
+}
+
+/// TypeScript-style value/type namespace partition.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Namespace {
+    Value,
+    Type,
+}
+
+impl<Loc: Dupe> Bindings<Loc> {
+    /// Splits a `Bindings` into `(value_bindings, type_bindings)` preserving
+    /// the original newest-first order within each output. A binding in both
+    /// namespaces appears in both halves.
+    pub fn split_by_namespace(&self) -> (Bindings<Loc>, Bindings<Loc>) {
+        let mut values: Vec<Entry<Loc>> = Vec::new();
+        let mut types: Vec<Entry<Loc>> = Vec::new();
+        for entry in self.0.iter() {
+            let nss = entry.kind.namespaces();
+            if nss.contains(&Namespace::Value) {
+                values.push(entry.clone());
+            }
+            if nss.contains(&Namespace::Type) {
+                types.push(entry.clone());
+            }
+        }
+        (Bindings(values), Bindings(types))
+    }
 }

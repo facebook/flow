@@ -331,6 +331,18 @@ struct
           this#add ~why:loc (Env_api.OrdinaryNameLoc, loc);
           id
 
+        (* The default mapper visits a `declare namespace X { ... }`'s id with
+           pattern_identifier, which would add the id as a use-site dep. The
+           namespace's id is a definition site, not a use, and a merged
+           namespace id (when paired with a class/function/interface) has no
+           emitted def, so adding it as a dep produces a NameDefOrderingFailure
+           that aborts type-env initialization. Skip the id and only walk the
+           body. *)
+        method! declare_namespace _loc namespace =
+          let { Ast.Statement.DeclareNamespace.body = (body_loc, body_block); _ } = namespace in
+          ignore @@ this#block body_loc body_block;
+          namespace
+
         method! this_expression loc this_ =
           let writes = this#find_writes ~for_type:false loc in
           Base.List.iter ~f:(this#add ~why:loc) writes;

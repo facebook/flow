@@ -1,0 +1,44 @@
+Error ------------------------------------------------------------------------------- same_namespace_still_errors.js:4:5
+
+Cannot declare `X1` [1] because var redeclaration is not supported. [name-already-bound]
+
+   same_namespace_still_errors.js:4:5
+   4| var X1 = 'value reassign'; // var redeclaration is JS-legal in same scope
+          ^^
+
+References:
+   same_namespace_still_errors.js:3:5
+   3| var X1: string;
+          ^^ [1]
+
+
+Error ------------------------------------------------------------------------------- same_namespace_still_errors.js:7:5
+
+Cannot declare `Y1` [1] because the name is already bound. [name-already-bound]
+
+   same_namespace_still_errors.js:7:5
+   7| let Y1 = 'second'; // ERROR: let cannot be redeclared
+          ^^
+
+References:
+   same_namespace_still_errors.js:6:5
+   6| let Y1: string;
+          ^^ [1]
+
+
+Error ------------------------------------------------------------------------------ same_namespace_still_errors.js:10:6
+
+Cannot declare `I1` [1] because the name is already bound. [name-already-bound]
+
+   same_namespace_still_errors.js:10:6
+   10| type I1 = number; // ERROR: name already bound in type namespace
+            ^^
+
+References:
+   same_namespace_still_errors.js:9:11
+    9| interface I1 {}
+                 ^^ [1]
+
+
+
+Found 3 errors

@@ -54,8 +54,10 @@ let rec mark_parsed ~locs_to_dirtify ~visit_loc = function
     Signature_error.iter (mark_loc ~visit_loc) err;
     mark_loc ~visit_loc loc
   | P.Err (loc, _) -> mark_loc ~visit_loc loc
-  | P.ValRef { type_only = false; ref } -> resolve_value_ref ~locs_to_dirtify ~visit_loc ref
-  | P.ValRef { type_only = true; ref } -> resolve_type_ref ~locs_to_dirtify ~visit_loc ref
+  | P.ValRef { lookup = P.ValueRefLookup; ref } -> resolve_value_ref ~locs_to_dirtify ~visit_loc ref
+  | P.ValRef { lookup = P.TypeRefLookup; ref } -> resolve_type_ref ~locs_to_dirtify ~visit_loc ref
+  | P.ValRef { lookup = P.TypeofRefLookup; ref } ->
+    resolve_typeof_ref ~locs_to_dirtify ~visit_loc ref
   | P.Pattern p ->
     Patterns.mark p (mark_and_report_should_be_dirtified ~locs_to_dirtify mark_pattern)
   | P.Eval (loc, t, op) ->
@@ -251,8 +253,43 @@ and resolve_type_ref
   match P.Scope.lookup_type scope name with
   | Some (binding, _) ->
     mark_binding ~locs_to_dirtify binding;
-    ref.resolved <- Some binding
+    ref.resolved <- Some binding;
+    (* Keep alive a co-existing value-side binding for the same name (e.g. an
+       `import { X }` next to an `interface X`). The check phase eagerly
+       resolves every parsed module ref regardless of marking, so dropping the
+       import here would leave the dep file out of the sig dep graph and the
+       merge set, causing workers to fail with Parsing_heaps.Leader_not_found
+       when checking reaches the unmerged dep. *)
+    (match P.Scope.lookup_value scope name with
+    | Some (value_binding, _) -> mark_binding ~locs_to_dirtify value_binding
+    | None -> ())
   | None -> ref.resolved <- None
+
+and binding_allowed_in_typeof = function
+  | P.LocalBinding node ->
+    (match Local_defs.value node with
+    | P.NamespaceBinding _ -> true
+    | _ -> false)
+  | P.RemoteBinding node ->
+    (match Remote_refs.value node with
+    | P.ImportTypeNsBinding _
+    | P.ImportTypeofNsBinding _ ->
+      true
+    | _ -> false)
+
+and resolve_typeof_ref
+    ~locs_to_dirtify ~visit_loc (P.Ref ({ ref_loc; name; scope; resolved = _ } as ref)) =
+  mark_loc ~visit_loc ref_loc;
+  match P.Scope.lookup_value scope name with
+  | Some (binding, _) ->
+    mark_binding ~locs_to_dirtify binding;
+    ref.resolved <- Some binding
+  | None ->
+    (match P.Scope.lookup_type scope name with
+    | Some (binding, _) when binding_allowed_in_typeof binding ->
+      mark_binding ~locs_to_dirtify binding;
+      ref.resolved <- Some binding
+    | _ -> ref.resolved <- None)
 
 let mark_export ~locs_to_dirtify = function
   | P.ExportRef ref -> resolve_value_ref ~locs_to_dirtify ~visit_loc:ignore ref

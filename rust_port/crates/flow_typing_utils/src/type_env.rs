@@ -931,8 +931,7 @@ fn possibly_refined_write_state_of_state<'cx>(
         use flow_typing_type::type_::any_t;
 
         let find_write_exn = |kind: DefLocType, reason: &Reason| -> Type {
-            let wloc = reason.loc().dupe();
-            checked_find_loc_env_write(cx, kind, wloc)
+            checked_find_loc_env_write(cx, kind, reason.loc().dupe())
         };
 
         let compute_state = || {
@@ -1381,19 +1380,16 @@ fn read_entry<'cx>(
                     Ok(t)
                 }
             }
-            _ => {
-                let t = type_of_state(
-                    lookup_mode,
-                    val_kind,
-                    cx,
-                    loc,
-                    reason,
-                    &write_locs,
-                    id,
-                    None,
-                );
-                Ok(t)
-            }
+            _ => Ok(type_of_state(
+                lookup_mode,
+                val_kind,
+                cx,
+                loc,
+                reason,
+                &write_locs,
+                id,
+                None,
+            )),
         },
     }
 }

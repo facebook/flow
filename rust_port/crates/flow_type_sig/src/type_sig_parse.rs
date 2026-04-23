@@ -97,6 +97,13 @@ mod tparam_stack {
 // The Err constructor encodes some failure in the parsing phase. These failures
 // are detected while visiting the AST, and thus are encoded directly in the
 // signature. The compaction step is responsible for collating these errors.
+#[derive(Clone, Copy)]
+pub(super) enum ValRefLookup {
+    ValueRefLookup,
+    TypeRefLookup,
+    TypeofRefLookup,
+}
+
 #[derive(Clone)]
 pub(super) enum Parsed<'arena, 'ast> {
     Annot(Box<ParsedAnnot<'arena, 'ast>>),
@@ -109,7 +116,7 @@ pub(super) enum Parsed<'arena, 'ast> {
     },
     AsyncVoidReturn(LocNode<'arena>),
     ValRef {
-        type_only: bool,
+        lookup: ValRefLookup,
         ref_: Ref<'arena, 'ast>,
     },
     Err(LocNode<'arena>, Errno<LocNode<'arena>>),
@@ -657,8 +664,29 @@ fn val_ref<'arena, 'ast>(
     ref_loc: LocNode<'arena>,
     name: FlowSmolStr,
 ) -> Parsed<'arena, 'ast> {
+    let lookup = if type_only {
+        ValRefLookup::TypeRefLookup
+    } else {
+        ValRefLookup::ValueRefLookup
+    };
     Parsed::ValRef {
-        type_only,
+        lookup,
+        ref_: Ref {
+            ref_loc,
+            name,
+            scope,
+            resolved: OnceCell::new(),
+        },
+    }
+}
+
+fn typeof_ref<'arena, 'ast>(
+    scope: ScopeId,
+    ref_loc: LocNode<'arena>,
+    name: FlowSmolStr,
+) -> Parsed<'arena, 'ast> {
+    Parsed::ValRef {
+        lookup: ValRefLookup::TypeofRefLookup,
         ref_: Ref {
             ref_loc,
             name,
@@ -1118,6 +1146,9 @@ pub(super) mod scope {
             Skip,
         }
 
+        // TypeScript-style two-namespace model: only check the matching map
+        // for an existing binding. Cross-namespace coexistence (e.g.
+        // `const A = 1; interface A {}`) is permitted.
         fn scope_check_bind<'arena, 'ast>(
             scope: &Scope<'arena, 'ast>,
             name: &FlowSmolStr,
@@ -1129,20 +1160,14 @@ pub(super) mod scope {
                 | Scope::DeclareNamespace { values, types, .. }
                 | Scope::Module { values, types, .. }
                 | Scope::Lexical { values, types, .. } => {
-                    let (first_map, second_map) = if type_only {
-                        (types, values)
-                    } else {
-                        (values, types)
-                    };
-                    if let Some(existing) = first_map.get(name) {
+                    let map = if type_only { types } else { values };
+                    if let Some(existing) = map.get(name) {
                         CheckBindResult::SameKindExisting {
                             existing: existing.dupe(),
                             in_global_scope: matches!(scope, Scope::Global { .. }),
                         }
-                    } else if !second_map.contains_key(name) {
-                        CheckBindResult::Missing
                     } else {
-                        CheckBindResult::Skip
+                        CheckBindResult::Missing
                     }
                 }
                 Scope::ConditionalTypeExtends(_) => CheckBindResult::Skip,
@@ -2015,6 +2040,9 @@ pub(super) mod scope {
         remote: FlowSmolStr,
         mref: ModuleRefNode<'arena>,
     ) {
+        // Keep plain imports in the value namespace. Type lookups already fall
+        // back to value bindings, and synthesizing a type-side JSImport makes
+        // JS full-checks spuriously more precise.
         let type_only = match kind {
             ast::statement::ImportKind::ImportValue => false,
             ast::statement::ImportKind::ImportType | ast::statement::ImportKind::ImportTypeof => {
@@ -2041,6 +2069,8 @@ pub(super) mod scope {
         name: FlowSmolStr,
         mref: ModuleRefNode<'arena>,
     ) {
+        // Namespace imports follow the same rule as named/default imports
+        // above.
         let type_only = match kind {
             ast::statement::ImportKind::ImportValue => false,
             ast::statement::ImportKind::ImportType | ast::statement::ImportKind::ImportTypeof => {
@@ -2438,7 +2468,7 @@ pub(super) mod scope {
                                 }
                             }
                             Parsed::ValRef {
-                                type_only: false,
+                                lookup: ValRefLookup::ValueRefLookup,
                                 ref_:
                                     Ref {
                                         ref_loc: _,
@@ -4259,7 +4289,7 @@ fn typeof_<'arena, 'ast>(
             ast::types::typeof_::Target::Unqualified(id) => {
                 let id_loc = tbls.push_loc(id.loc.dupe());
                 let name = id.name.dupe();
-                let t = val_ref(false, scope, id_loc, name.clone());
+                let t = typeof_ref(scope, id_loc, name.clone());
                 return finish(
                     opts,
                     scope,

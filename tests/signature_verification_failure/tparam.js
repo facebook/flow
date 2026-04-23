@@ -10,4 +10,4 @@ class X {
 };
 const x = X;
 
-export function f<X>(): typeof X { return x; }
+export function f<X>(): typeof X { return x; } // no longer errors, X resolves to class in typeof X

@@ -563,18 +563,46 @@ References:
                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ duplicate.js:10:7
+Error ----------------------------------------------------------------------------------------------- declared.js:104:17
+
+Cannot declare `C` [1] because the name is already bound. [name-already-bound]
+
+   declared.js:104:17
+   104|   declare class C { // error: name already bound
+                        ^
+
+References:
+   declared.js:103:17
+   103|   declare const C: any;
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- duplicate.js:3:6
 
 Cannot declare `Bar1` [1] because the name is already bound. [name-already-bound]
 
-   duplicate.js:10:7
-   10| class Bar1 { // error - duplicate name
-             ^^^^
-
-References:
    duplicate.js:3:6
     3| type Bar1 = {};
-            ^^^^ [1]
+            ^^^^
+
+References:
+   duplicate.js:10:7
+   10| class Bar1 { // error - duplicate name
+             ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ duplicate.js:4:22
+
+Cannot declare `Bar2` [1] because the name is already bound. [name-already-bound]
+
+   duplicate.js:4:22
+    4| import type {Node as Bar2} from 'react';
+                            ^^^^
+
+References:
+   duplicate.js:17:7
+   17| class Bar2 { // error - duplicate name
+             ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- duplicate.js:13:10
@@ -589,20 +617,6 @@ References:
    duplicate.js:10:7
    10| class Bar1 { // error - duplicate name
              ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ duplicate.js:17:7
-
-Cannot declare `Bar2` [1] because the name is already bound. [name-already-bound]
-
-   duplicate.js:17:7
-   17| class Bar2 { // error - duplicate name
-             ^^^^
-
-References:
-   duplicate.js:4:22
-    4| import type {Node as Bar2} from 'react';
-                            ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ duplicate.js:21:7
@@ -731,34 +745,18 @@ References:
                   ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- imports.js:10:7
-
-Cannot declare `Node` [1] because the name is already bound. [name-already-bound]
-
-   imports.js:10:7
-   10| const Node = 3; // error
-             ^^^^
-
-References:
-   imports.js:9:14
-    9| import type {Node} from 'react';
-                    ^^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------------- imports.js:11:1
 
-Cannot use type `Node` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also be
-used as a value, try importing it using `import Node` instead of `import type Node` and `import {Node}` instead of
-`import type {Node}`. [type-as-value]
+Cannot reassign constant `Node` [1]. [reassign-const]
 
    imports.js:11:1
-   11| Node = 4; // error
+   11| Node = 4; // error: reassign-const
        ^^^^
 
 References:
-   imports.js:9:14
-    9| import type {Node} from 'react';
-                    ^^^^ [1]
+   imports.js:10:7
+   10| const Node = 3; // ok: type-only import is in the type namespace, const is in the value namespace
+             ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- imports.js:12:6
@@ -766,7 +764,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `Node` [1] because the name is already bound. [name-already-bound]
 
    imports.js:12:6
-   12| type Node = number; // error
+   12| type Node = number; // error: same namespace as `import type`
             ^^^^
 
 References:
@@ -799,493 +797,395 @@ Cannot resolve name `Foo`. [cannot-resolve-name]
               ^^^
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:16:8
+Error ------------------------------------------------------------------------------------------------ rebinding.js:22:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:16:8
-   16|   type A = number;  // error: name already bound
+   rebinding.js:22:8
+   22|   type A = number;  // error: name already bound
               ^
 
 References:
-   rebinding.js:15:8
-   15|   type A = number;
+   rebinding.js:21:8
+   21|   type A = number;
               ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:21:9
+Error ------------------------------------------------------------------------------------------------ rebinding.js:26:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:21:9
-   21|   class A {}        // error: name already bound
-               ^
+   rebinding.js:26:8
+   26|   type A = number;
+              ^
 
 References:
-   rebinding.js:20:8
-   20|   type A = number;
-              ^ [1]
+   rebinding.js:27:9
+   27|   class A {}        // error: name already bound
+               ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:26:7
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:26:7
-   26|   let A = 0;        // error: name already bound
-             ^
-
-References:
-   rebinding.js:25:8
-   25|   type A = number;
-              ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:31:9
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:31:9
-   31|   const A = 0;     // error: name already bound
-               ^
-
-References:
-   rebinding.js:30:8
-   30|   type A = number;
-              ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:36:7
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:36:7
-   36|   var A = 0;        // error: name already bound
-             ^
-
-References:
-   rebinding.js:35:8
-   35|   type A = number;
-              ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:41:3
+Error ------------------------------------------------------------------------------------------------ rebinding.js:47:3
 
 Cannot use type `A` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
 
-   rebinding.js:41:3
-   41|   A = 42;           // error: type alias ref'd from value pos
+   rebinding.js:47:3
+   47|   A = 42;           // error: type alias ref'd from value pos
          ^
 
 References:
-   rebinding.js:40:8
-   40|   type A = number;
+   rebinding.js:46:8
+   46|   type A = number;
               ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:48:8
+Error ------------------------------------------------------------------------------------------------ rebinding.js:54:8
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:48:8
-   48|   type A = number;  // error: name already bound
+   rebinding.js:54:8
+   54|   type A = number;  // error: name already bound
               ^
 
 References:
-   rebinding.js:47:9
-   47|   class A {}
-               ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:53:9
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
    rebinding.js:53:9
-   53|   class A {}        // error: name already bound
+   53|   class A {}
+               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rebinding.js:59:9
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:59:9
+   59|   class A {}        // error: name already bound
                ^
 
 References:
-   rebinding.js:52:9
-   52|   class A {}
+   rebinding.js:58:9
+   58|   class A {}
                ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:58:7
+Error ------------------------------------------------------------------------------------------------ rebinding.js:64:7
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:58:7
-   58|   let A = 0;        // error: name already bound
+   rebinding.js:64:7
+   64|   let A = 0;        // error: name already bound
              ^
 
 References:
-   rebinding.js:57:9
-   57|   class A {}
-               ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:63:9
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
    rebinding.js:63:9
-   63|   const A = 0;     // error: name already bound
+   63|   class A {}
+               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rebinding.js:69:9
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:69:9
+   69|   const A = 0;     // error: name already bound
                ^
 
 References:
-   rebinding.js:62:9
-   62|   class A {}
+   rebinding.js:68:9
+   68|   class A {}
                ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:68:7
+Error ------------------------------------------------------------------------------------------------ rebinding.js:74:7
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:68:7
-   68|   var A = 0;        // error: name already bound
-             ^
-
-References:
-   rebinding.js:67:9
-   67|   class A {}
-               ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:75:8
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:75:8
-   75|   type A = number;  // error: name already bound
-              ^
-
-References:
    rebinding.js:74:7
-   74|   let A = 0;
-             ^ [1]
+   74|   var A = 0;        // error: name already bound
+             ^
+
+References:
+   rebinding.js:73:9
+   73|   class A {}
+               ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:80:9
+Error ------------------------------------------------------------------------------------------------ rebinding.js:86:9
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:80:9
-   80|   class A {}        // error: name already bound
+   rebinding.js:86:9
+   86|   class A {}        // error: name already bound
                ^
 
 References:
-   rebinding.js:79:7
-   79|   let A = 0;
-             ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:85:7
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
    rebinding.js:85:7
-   85|   let A = 0;        // error: name already bound
+   85|   let A = 0;
+             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rebinding.js:91:7
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:91:7
+   91|   let A = 0;        // error: name already bound
              ^
 
 References:
-   rebinding.js:84:7
-   84|   let A = 0;
+   rebinding.js:90:7
+   90|   let A = 0;
              ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ rebinding.js:90:9
+Error ------------------------------------------------------------------------------------------------ rebinding.js:96:9
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:90:9
-   90|   const A = 0;     // error: name already bound
+   rebinding.js:96:9
+   96|   const A = 0;     // error: name already bound
                ^
 
 References:
-   rebinding.js:89:7
-   89|   let A = 0;
-             ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ rebinding.js:95:7
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
    rebinding.js:95:7
-   95|   var A = 0;        // error: name already bound
-             ^
-
-References:
-   rebinding.js:94:7
-   94|   let A = 0;
+   95|   let A = 0;
              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:102:8
+Error ----------------------------------------------------------------------------------------------- rebinding.js:101:7
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:102:8
-   102|   type A = number;  // error: name already bound
-               ^
-
-References:
-   rebinding.js:101:9
-   101|   const A = 0;
-                ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- rebinding.js:107:9
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:107:9
-   107|   class A {}        // error: name already bound
-                ^
-
-References:
-   rebinding.js:106:9
-   106|   const A = 0;
-                ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- rebinding.js:112:7
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:112:7
-   112|   let A = 0;        // error: name already bound
+   rebinding.js:101:7
+   101|   var A = 0;        // error: name already bound
               ^
 
 References:
-   rebinding.js:111:9
-   111|   const A = 0;
-                ^ [1]
+   rebinding.js:100:7
+   100|   let A = 0;
+              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:117:9
+Error ----------------------------------------------------------------------------------------------- rebinding.js:113:9
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
+   rebinding.js:113:9
+   113|   class A {}        // error: name already bound
+                ^
+
+References:
+   rebinding.js:112:9
+   112|   const A = 0;
+                ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rebinding.js:118:7
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:118:7
+   118|   let A = 0;        // error: name already bound
+              ^
+
+References:
    rebinding.js:117:9
-   117|   const A = 0;     // error: name already bound
-                ^
-
-References:
-   rebinding.js:116:9
-   116|   const A = 0;
+   117|   const A = 0;
                 ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:122:7
+Error ----------------------------------------------------------------------------------------------- rebinding.js:123:9
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:122:7
-   122|   var A = 0;        // error: name already bound
-              ^
+   rebinding.js:123:9
+   123|   const A = 0;     // error: name already bound
+                ^
 
 References:
-   rebinding.js:121:9
-   121|   const A = 0;
+   rebinding.js:122:9
+   122|   const A = 0;
                 ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:127:3
+Error ----------------------------------------------------------------------------------------------- rebinding.js:128:7
+
+Cannot declare `A` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:128:7
+   128|   var A = 0;        // error: name already bound
+              ^
+
+References:
+   rebinding.js:127:9
+   127|   const A = 0;
+                ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rebinding.js:133:3
 
 Cannot reassign constant `A` [1]. [reassign-const]
 
-   rebinding.js:127:3
-   127|   A = 42;           // error: cannot be reassigned
+   rebinding.js:133:3
+   133|   A = 42;           // error: cannot be reassigned
           ^
 
 References:
-   rebinding.js:126:9
-   126|   const A = 0;
+   rebinding.js:132:9
+   132|   const A = 0;
                 ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:134:8
+Error ----------------------------------------------------------------------------------------------- rebinding.js:145:9
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:134:8
-   134|   type A = number;  // error: name already bound
-               ^
-
-References:
-   rebinding.js:133:7
-   133|   var A = 0;
-              ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- rebinding.js:139:9
-
-Cannot declare `A` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:139:9
-   139|   class A {}        // error: name already bound
+   rebinding.js:145:9
+   145|   class A {}        // error: name already bound
                 ^
 
 References:
-   rebinding.js:138:7
-   138|   var A = 0;
+   rebinding.js:144:7
+   144|   var A = 0;
               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:144:7
+Error ----------------------------------------------------------------------------------------------- rebinding.js:150:7
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:144:7
-   144|   let A = 0;        // error: name already bound
+   rebinding.js:150:7
+   150|   let A = 0;        // error: name already bound
               ^
 
 References:
-   rebinding.js:143:7
-   143|   var A = 0;
+   rebinding.js:149:7
+   149|   var A = 0;
               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:149:9
+Error ----------------------------------------------------------------------------------------------- rebinding.js:155:9
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:149:9
-   149|   const A = 0;      // error: name already bound
+   rebinding.js:155:9
+   155|   const A = 0;      // error: name already bound
                 ^
 
 References:
-   rebinding.js:148:7
-   148|   var A = 0;
+   rebinding.js:154:7
+   154|   var A = 0;
               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:154:7
+Error ----------------------------------------------------------------------------------------------- rebinding.js:160:7
 
 Cannot declare `A` [1] because var redeclaration is not supported. [name-already-bound]
 
-   rebinding.js:154:7
-   154|   var A = 0;       // error: banned redeclaration
+   rebinding.js:160:7
+   160|   var A = 0;       // error: banned redeclaration
               ^
 
 References:
-   rebinding.js:153:7
-   153|   var A = 0;
+   rebinding.js:159:7
+   159|   var A = 0;
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:161:12
+Error ---------------------------------------------------------------------------------------------- rebinding.js:167:12
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:161:12
-   161|   function a() {}; // error: name already bound
+   rebinding.js:167:12
+   167|   function a() {}; // error: name already bound
                    ^
 
 References:
-   rebinding.js:160:12
-   160|   function a() {};
+   rebinding.js:166:12
+   166|   function a() {};
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:167:14
+Error ---------------------------------------------------------------------------------------------- rebinding.js:173:14
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:167:14
-   167|     function a() {}; // error: name already bound
+   rebinding.js:173:14
+   173|     function a() {}; // error: name already bound
                      ^
 
 References:
-   rebinding.js:166:14
-   166|     function a() {};
+   rebinding.js:172:14
+   172|     function a() {};
                      ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:173:7
+Error ----------------------------------------------------------------------------------------------- rebinding.js:179:7
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:173:7
-   173|   var a = 42; // error
+   rebinding.js:179:7
+   179|   var a = 42; // error
               ^
 
 References:
-   rebinding.js:172:12
-   172|   function a() {};
+   rebinding.js:178:12
+   178|   function a() {};
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:178:12
+Error ---------------------------------------------------------------------------------------------- rebinding.js:184:12
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:178:12
-   178|   function a() {}; // error: name already bound
+   rebinding.js:184:12
+   184|   function a() {}; // error: name already bound
                    ^
 
 References:
-   rebinding.js:177:7
-   177|   var a = 42;
+   rebinding.js:183:7
+   183|   var a = 42;
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:187:11
+Error ---------------------------------------------------------------------------------------------- rebinding.js:193:11
 
 Cannot declare `x` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:187:11
-   187|       var x = 0; // error: name already bound
+   rebinding.js:193:11
+   193|       var x = 0; // error: name already bound
                   ^
 
 References:
-   rebinding.js:185:9
-   185|     let x = 0;
+   rebinding.js:191:9
+   191|     let x = 0;
                 ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:196:12
+Error ---------------------------------------------------------------------------------------------- rebinding.js:209:42
 
 Cannot declare `x` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:196:12
-   196|       type x = string; // error: name already bound
-                   ^
-
-References:
-   rebinding.js:194:9
-   194|     let x = 0;
-                ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- rebinding.js:203:42
-
-Cannot declare `x` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:203:42
-   203| function fn_params_name_clash(x: number, x: number /* error: x already bound */) {}
+   rebinding.js:209:42
+   209| function fn_params_name_clash(x: number, x: number /* error: x already bound */) {}
                                                  ^
 
 References:
-   rebinding.js:203:31
-   203| function fn_params_name_clash(x: number, x: number /* error: x already bound */) {}
+   rebinding.js:209:31
+   209| function fn_params_name_clash(x: number, x: number /* error: x already bound */) {}
                                       ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- rebinding.js:205:7
+Error ----------------------------------------------------------------------------------------------- rebinding.js:211:7
 
 Cannot declare `x` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:205:7
-   205|   let x = 0; // error: x already bound
+   rebinding.js:211:7
+   211|   let x = 0; // error: x already bound
               ^
 
 References:
-   rebinding.js:204:37
-   204| function fn_params_clash_fn_binding(x: number, y: number) {
+   rebinding.js:210:37
+   210| function fn_params_clash_fn_binding(x: number, y: number) {
                                             ^ [1]
 
 
@@ -2326,4 +2226,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 175 errors
+Found 168 errors
