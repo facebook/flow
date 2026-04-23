@@ -257,7 +257,7 @@ function InstagramPage() {
 
 ## Subtyping Behavior
 
-All render types are subtypes of `React.Node`, and only `renders Foo` is subtype of `React.MixedElement`.
+All render types are subtypes of both `React.Node` and `React.MixedElement`.
 
 ```js flow-check
 import * as React from 'react';
@@ -275,8 +275,8 @@ rendersMaybeHeader as React.Node;
 rendersHeaderList as React.Node;
 
 rendersHeader as React.MixedElement;
-rendersMaybeHeader as React.MixedElement; // ERROR!
-rendersHeaderList as React.MixedElement; // ERROR!
+rendersMaybeHeader as React.MixedElement;
+rendersHeaderList as React.MixedElement;
 ```
 
 `renders Foo` is a subtype of `renders? Foo`, and `renders? Foo` is a subtype of `renders* Foo`.
