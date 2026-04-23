@@ -239,6 +239,14 @@ module Node = struct
     let f ext = path_if_exists ~reader ~file_options ~phantom_acc (path ^ ext) in
     List.find_map f file_exts
 
+  let try_dts_counterpart ~reader ~file_options ~phantom_acc ~ts_lib_support path =
+    if ts_lib_support then
+      match Files.js_to_dts path with
+      | Some dts_path -> path_if_exists ~reader ~file_options ~phantom_acc dts_path
+      | None -> None
+    else
+      None
+
   let parse_package ~reader package_filename =
     let package_filename = resolve_symlinks package_filename in
     let file_key = File_key.json_file_of_absolute package_filename in
@@ -267,13 +275,15 @@ module Node = struct
     | None -> None
     | Some file ->
       let path = Files.normalize_path package_dir file in
+      let ts_lib_support = Options.typescript_library_definition_support options in
       lazy_seq
         [
+          lazy (try_dts_counterpart ~reader ~file_options ~phantom_acc ~ts_lib_support path);
           lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
           lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
         ]
 
-  let parse_main ~reader ~file_options phantom_acc package_filename file_exts =
+  let parse_main ~reader ~file_options ~ts_lib_support phantom_acc package_filename file_exts =
     let package = parse_package ~reader package_filename in
     match Package_json.main package with
     | None -> None
@@ -283,6 +293,7 @@ module Node = struct
       let path_w_index = Filename.concat path "index" in
       lazy_seq
         [
+          lazy (try_dts_counterpart ~reader ~file_options ~phantom_acc ~ts_lib_support path);
           lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
           lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
           lazy
@@ -317,37 +328,19 @@ module Node = struct
     lazy_seq
       [
         lazy (parse_exports ~reader ~options phantom_acc package_dir subpath file_exts);
-        (* When typescript_library_definition_support is enabled and the package
-           has no "exports" field, try the "types"/"typings" field before "main".
-           In TypeScript's resolution algorithm, when "exports" exists it takes
-           full precedence (the "types" condition in exports handles that case
-           instead). The "types"/"typings" field only applies to root imports,
-           not subpath imports.
-           When trying extensions for the "types" field, .d.ts is prioritized
-           over source extensions (.js, .jsx, etc.) so that an extensionless
-           target like "types": "./index" resolves to index.d.ts before index.js,
-           matching TypeScript's declaration-first semantics. *)
         lazy
           ( if
             ts_lib_support
             && Option.is_none (Package_json.exports (Lazy.force package))
             && (subpath = None || subpath = Some ".")
           then
-            let is_decl_ext = Files.is_dts_ext in
-            let decl_first_file_exts =
-              let decl_exts = List.filter is_decl_ext file_exts in
-              if decl_exts <> [] then
-                decl_exts @ List.filter (fun ext -> not (is_decl_ext ext)) file_exts
-              else
-                file_exts
-            in
             resolve_types_field
               ~reader
               ~file_options
               phantom_acc
               package_dir
               (Lazy.force package)
-              decl_first_file_exts
+              file_exts
           else
             None
           );
@@ -355,6 +348,7 @@ module Node = struct
           (parse_main
              ~reader
              ~file_options
+             ~ts_lib_support
              phantom_acc
              (Filename.concat full_package_path "package.json")
              file_exts
@@ -419,6 +413,7 @@ module Node = struct
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
     let file_exts = Files.module_file_exts file_options in
+    let ts_lib_support = Options.typescript_library_definition_support options in
     match
       ordered_allowed_implicit_platform_specific_import
         ~file_options
@@ -429,6 +424,7 @@ module Node = struct
     | None ->
       lazy_seq
         [
+          lazy (try_dts_counterpart ~reader ~file_options ~phantom_acc ~ts_lib_support full_path);
           (* Try <path> import directly. Needed for `import './foo.js'`  *)
           lazy (path_if_exists ~reader ~file_options ~phantom_acc full_path);
           (* Try <path>.js import. Needed for `import './foo'`  *)
@@ -438,6 +434,7 @@ module Node = struct
     | Some ordered_platforms ->
       lazy_seq
         ([
+           lazy (try_dts_counterpart ~reader ~file_options ~phantom_acc ~ts_lib_support full_path);
            (* Try <path> import directly. Needed for `import './foo.js'`  *)
            lazy (path_if_exists ~reader ~file_options ~phantom_acc full_path);
          ]

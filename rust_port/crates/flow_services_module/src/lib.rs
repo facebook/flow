@@ -404,6 +404,23 @@ mod node {
         }
     }
 
+    fn try_dts_counterpart(
+        shared_mem: &SharedMem,
+        file_options: &FileOptions,
+        phantom_acc: Option<&mut PhantomAcc>,
+        ts_lib_support: bool,
+        path: &str,
+    ) -> Option<Dependency> {
+        if ts_lib_support {
+            match files::js_to_dts(path) {
+                Some(dts_path) => path_if_exists(shared_mem, file_options, phantom_acc, &dts_path),
+                None => None,
+            }
+        } else {
+            None
+        }
+    }
+
     fn path_if_exists_with_file_exts(
         shared_mem: &SharedMem,
         file_options: &FileOptions,
@@ -463,17 +480,24 @@ mod node {
 
         source_path.and_then(|file| {
             let path = files::normalize_path(package_dir, file.as_str());
-            path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path).or_else(
-                || {
-                    path_if_exists_with_file_exts(
-                        shared_mem,
-                        file_options,
-                        phantom_acc,
-                        &path,
-                        file_exts,
-                    )
-                },
+            let ts_lib_support = options.typescript_library_definition_support;
+            try_dts_counterpart(
+                shared_mem,
+                file_options,
+                phantom_acc.as_deref_mut(),
+                ts_lib_support,
+                &path,
             )
+            .or_else(|| path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path))
+            .or_else(|| {
+                path_if_exists_with_file_exts(
+                    shared_mem,
+                    file_options,
+                    phantom_acc,
+                    &path,
+                    file_exts,
+                )
+            })
         })
     }
 
@@ -481,6 +505,7 @@ mod node {
         options: &Options,
         shared_mem: &SharedMem,
         file_options: &FileOptions,
+        ts_lib_support: bool,
         mut phantom_acc: Option<&mut PhantomAcc>,
         package_filename: &str,
         file_exts: &[FlowSmolStr],
@@ -492,41 +517,35 @@ mod node {
             let path_w_index = Path::new(&path).join("index");
             let path_w_index_str = path_w_index.to_str()?;
 
-            path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path)
-                .or_else(|| {
-                    path_if_exists_with_file_exts(
-                        shared_mem,
-                        file_options,
-                        phantom_acc.as_deref_mut(),
-                        &path,
-                        file_exts,
-                    )
-                })
-                .or_else(|| {
-                    path_if_exists_with_file_exts(
-                        shared_mem,
-                        file_options,
-                        phantom_acc,
-                        path_w_index_str,
-                        file_exts,
-                    )
-                })
+            try_dts_counterpart(
+                shared_mem,
+                file_options,
+                phantom_acc.as_deref_mut(),
+                ts_lib_support,
+                &path,
+            )
+            .or_else(|| path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path))
+            .or_else(|| {
+                path_if_exists_with_file_exts(
+                    shared_mem,
+                    file_options,
+                    phantom_acc.as_deref_mut(),
+                    &path,
+                    file_exts,
+                )
+            })
+            .or_else(|| {
+                path_if_exists_with_file_exts(
+                    shared_mem,
+                    file_options,
+                    phantom_acc,
+                    path_w_index_str,
+                    file_exts,
+                )
+            })
         })
     }
 
-    // let resolve_types_field ~reader ~file_options phantom_acc package_dir package file_exts =
-    //   match Package_json.types package with
-    //   | None -> None
-    //   | Some file ->
-    //     let path = Files.normalize_path package_dir file in
-    //     let path_w_index = Filename.concat path "index" in
-    //     lazy_seq
-    //       [
-    //         lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
-    //         lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
-    //         lazy
-    //           (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path_w_index file_exts);
-    //       ]
     fn resolve_types_field(
         shared_mem: &SharedMem,
         file_options: &FileOptions,
@@ -562,10 +581,6 @@ mod node {
         })
     }
 
-    // let resolve_package ~options ~reader ~phantom_acc ~subpath package_dir =
-    //   let file_options = Options.file_options options in
-    //   let file_exts = Files.module_file_exts file_options in
-    //   ...
     pub(super) fn resolve_package(
         options: &Options,
         shared_mem: &SharedMem,
@@ -579,11 +594,8 @@ mod node {
             .map(|s| files::normalize_path(package_dir, s))
             .unwrap_or_else(|| package_dir.to_string());
 
-        // let ts_lib_support = Options.typescript_library_definition_support options in
         let ts_lib_support = options.typescript_library_definition_support;
-        // let package_json_path = Filename.concat package_dir "package.json" in
         let package_json_path = Path::new(package_dir).join("package.json");
-        // let package = lazy (parse_package ~reader package_json_path) in
         let package = std::cell::OnceCell::new();
         let get_package = || -> Arc<PackageJson> {
             package
@@ -601,47 +613,18 @@ mod node {
             subpath,
             file_exts,
         )
-        // When typescript_library_definition_support is enabled and the package
-        // has no "exports" field, try the "types"/"typings" field before "main".
-        // In TypeScript's resolution algorithm, when "exports" exists it takes
-        // full precedence (the "types" condition in exports handles that case
-        // instead). The "types"/"typings" field only applies to root imports,
-        // not subpath imports.
-        // When trying extensions for the "types" field, .d.ts is prioritized
-        // over source extensions (.js, .jsx, etc.) so that an extensionless
-        // target like "types": "./index" resolves to index.d.ts before index.js,
-        // matching TypeScript's declaration-first semantics.
         .or_else(|| {
             if ts_lib_support
                 && get_package().exports().is_none()
                 && (subpath.is_none() || subpath == Some("."))
             {
-                let decl_first_file_exts: Vec<FlowSmolStr> = {
-                    let decl_exts: Vec<_> = file_exts
-                        .iter()
-                        .filter(|ext| files::is_dts_ext(ext))
-                        .cloned()
-                        .collect();
-                    if !decl_exts.is_empty() {
-                        let mut exts = decl_exts;
-                        exts.extend(
-                            file_exts
-                                .iter()
-                                .filter(|ext| !files::is_dts_ext(ext))
-                                .cloned(),
-                        );
-                        exts
-                    } else {
-                        file_exts.to_vec()
-                    }
-                };
                 resolve_types_field(
                     shared_mem,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     package_dir,
                     &get_package(),
-                    &decl_first_file_exts,
+                    file_exts,
                 )
             } else {
                 None
@@ -653,6 +636,7 @@ mod node {
                 options,
                 shared_mem,
                 file_options,
+                ts_lib_support,
                 phantom_acc.as_deref_mut(),
                 package_json.to_str().unwrap(),
                 file_exts,
@@ -732,6 +716,7 @@ mod node {
             .unwrap_or_else(|| package_path.clone());
 
         let file_exts = &file_options.module_file_exts;
+        let ts_lib_support = options.typescript_library_definition_support;
 
         match ordered_allowed_implicit_platform_specific_import(
             file_options,
@@ -739,12 +724,21 @@ mod node {
             importing_file.as_str(),
             None,
         ) {
-            None => path_if_exists(
+            None => try_dts_counterpart(
                 shared_mem,
                 file_options,
                 phantom_acc.as_deref_mut(),
+                ts_lib_support,
                 &full_path,
             )
+            .or_else(|| {
+                path_if_exists(
+                    shared_mem,
+                    file_options,
+                    phantom_acc.as_deref_mut(),
+                    &full_path,
+                )
+            })
             .or_else(|| {
                 path_if_exists_with_file_exts(
                     shared_mem,
@@ -763,12 +757,21 @@ mod node {
                     &package_path,
                 )
             }),
-            Some(ordered_platforms) => path_if_exists(
+            Some(ordered_platforms) => try_dts_counterpart(
                 shared_mem,
                 file_options,
                 phantom_acc.as_deref_mut(),
+                ts_lib_support,
                 &full_path,
             )
+            .or_else(|| {
+                path_if_exists(
+                    shared_mem,
+                    file_options,
+                    phantom_acc.as_deref_mut(),
+                    &full_path,
+                )
+            })
             .or_else(|| {
                 for platform in &ordered_platforms {
                     let platform_path = format!("{}.{}", full_path, platform);

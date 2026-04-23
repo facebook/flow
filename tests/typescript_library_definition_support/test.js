@@ -11,6 +11,9 @@ import { val } from 'pkg-with-types-extensionless';
 import { nested } from 'pkg-with-nested-export-types';
 import { mtsVal } from 'pkg-with-nested-export-types-mts';
 import { ctsVal } from 'pkg-with-nested-export-types-cts';
+import { exportNoTypesCond } from 'pkg-exports-no-types-cond';
+import { mainDts } from 'pkg-main-dts-counterpart';
+import { exportMjsDts } from 'pkg-exports-mjs-dts';
 
 // Extensionless and directory imports resolve
 greet("world") as string; // OK
@@ -61,3 +64,15 @@ mtsVal as string; // ERROR — number not string (types.d.mts says number)
 // package.json "exports" with "types" nested inside "import", .d.cts extension
 ctsVal as number;
 ctsVal as string; // ERROR — number not string (types.d.cts says number)
+
+// package.json "exports" without "types" condition: .d.ts counterpart of .js resolves
+exportNoTypesCond as number;
+exportNoTypesCond as string; // ERROR — number not string (index.d.ts says number)
+
+// package.json "main" pointing to .js: .d.ts counterpart resolves
+mainDts as number;
+mainDts as string; // ERROR — number not string (index.d.ts says number)
+
+// package.json "exports" pointing to .mjs: .d.mts counterpart resolves
+exportMjsDts as number;
+exportMjsDts as string; // ERROR — number not string (index.d.mts says number)

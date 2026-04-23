@@ -750,13 +750,13 @@ let file_options =
     let module_file_exts =
       let exts = FlowConfig.module_file_exts flowconfig in
       if FlowConfig.typescript_library_definition_support flowconfig then
-        let add ext acc =
+        let prepend ext acc =
           if Base.List.mem acc ext ~equal:String.equal then
             acc
           else
-            acc @ [ext]
+            ext :: acc
         in
-        exts |> add ".d.ts" |> add ".d.mts" |> add ".d.cts"
+        exts |> prepend ".d.cts" |> prepend ".d.mts" |> prepend ".d.ts"
       else
         exts
     in

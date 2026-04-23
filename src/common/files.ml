@@ -144,47 +144,26 @@ let dmts_ext = ".d.mts"
 
 let dcts_ext = ".d.cts"
 
-let is_dts_ext ext = ext = dts_ext || ext = dmts_ext || ext = dcts_ext
-
 let has_dts_ext file =
   File_key.check_suffix file dts_ext
   || File_key.check_suffix file dmts_ext
   || File_key.check_suffix file dcts_ext
 
-let chop_dts_ext file =
-  if File_key.check_suffix file dts_ext then
-    File_key.chop_suffix file dts_ext
-  else if File_key.check_suffix file dmts_ext then
-    File_key.chop_suffix file dmts_ext
-  else if File_key.check_suffix file dcts_ext then
-    File_key.chop_suffix file dcts_ext
+let js_to_dts path =
+  if Filename.check_suffix path ".js" then
+    Some (Filename.chop_suffix path ".js" ^ dts_ext)
+  else if Filename.check_suffix path ".mjs" then
+    Some (Filename.chop_suffix path ".mjs" ^ dmts_ext)
+  else if Filename.check_suffix path ".cjs" then
+    Some (Filename.chop_suffix path ".cjs" ^ dcts_ext)
   else
-    file
+    None
 
-(* Maps a .d.ts / .d.mts / .d.cts file to its implementation counterpart
-   (.js / .mjs / .cjs). *)
-let dts_to_impl file =
-  (* Assumption: callers are guarded by has_dts_ext *)
-  assert (has_dts_ext file);
-  if File_key.check_suffix file dmts_ext then
-    File_key.with_suffix (File_key.chop_suffix file dmts_ext) ".mjs"
-  else if File_key.check_suffix file dcts_ext then
-    File_key.with_suffix (File_key.chop_suffix file dcts_ext) ".cjs"
-  else
-    File_key.with_suffix (chop_dts_ext file) ".js"
-
-(* Every <file>.js can be imported by its path, so it effectively exports a
-   module by the name <file>.js. Every <file>.js.flow shadows the corresponding
-   <file>.js, so it effectively exports a module by the name <file>.js.
-   Similarly, every <file>.d.ts shadows the corresponding <file>.js,
-   <file>.d.mts shadows <file>.mjs, and <file>.d.cts shadows <file>.cjs. *)
-let has_declaration_ext file = has_flow_ext file || has_dts_ext file
+let has_declaration_ext file = has_flow_ext file
 
 let chop_declaration_ext file =
   if has_flow_ext file then
     chop_flow_ext file
-  else if has_dts_ext file then
-    dts_to_impl file
   else
     file
 

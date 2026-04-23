@@ -1,9 +1,9 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:17:7
+Error ----------------------------------------------------------------------------------------------------- test.js:20:7
 
 Cannot call `greet` with `42` bound to `name` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:17:7
-   17| greet(42) as string; // ERROR — number not string
+   test.js:20:7
+   20| greet(42) as string; // ERROR — number not string
              ^^ [1]
 
 References:
@@ -12,12 +12,12 @@ References:
                                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:9
+Error ----------------------------------------------------------------------------------------------------- test.js:26:9
 
 Cannot call `compute` with `"x"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:23:9
-   23| compute("x") as number; // ERROR — string not number
+   test.js:26:9
+   26| compute("x") as number; // ERROR — string not number
                ^^^ [1]
 
 References:
@@ -26,158 +26,209 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:27:1
+Error ----------------------------------------------------------------------------------------------------- test.js:30:1
 
 Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:27:1
-   27| value as string; // ERROR — number not string (d.ts says number)
+   test.js:30:1
+   30| value as string; // ERROR — number not string (d.ts says number)
        ^^^^^
 
 References:
    node_modules/my-lib-shadow/index.d.ts:1:29
     1| export declare const value: number;
                                    ^^^^^^ [1]
-   test.js:27:10
-   27| value as string; // ERROR — number not string (d.ts says number)
+   test.js:30:10
+   30| value as string; // ERROR — number not string (d.ts says number)
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+Error ----------------------------------------------------------------------------------------------------- test.js:38:1
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:35:1
-   35| foo as string; // ERROR — number not string (types.d.ts says number)
+   test.js:38:1
+   38| foo as string; // ERROR — number not string (types.d.ts says number)
        ^^^
 
 References:
    node_modules/pkg-with-types/types.d.ts:1:27
     1| export declare const foo: number;
                                  ^^^^^^ [1]
-   test.js:35:8
-   35| foo as string; // ERROR — number not string (types.d.ts says number)
+   test.js:38:8
+   38| foo as string; // ERROR — number not string (types.d.ts says number)
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:39:1
+Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
 Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:39:1
-   39| bar as string; // ERROR — number not string (types.d.ts says number)
+   test.js:42:1
+   42| bar as string; // ERROR — number not string (types.d.ts says number)
        ^^^
 
 References:
    node_modules/pkg-with-typings/types.d.ts:1:27
     1| export declare const bar: number;
                                  ^^^^^^ [1]
-   test.js:39:8
-   39| bar as string; // ERROR — number not string (types.d.ts says number)
+   test.js:42:8
+   42| bar as string; // ERROR — number not string (types.d.ts says number)
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:43:1
+Error ----------------------------------------------------------------------------------------------------- test.js:46:1
 
 Cannot cast `baz` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:43:1
-   43| baz as string; // ERROR — number not string (types.d.ts says number)
+   test.js:46:1
+   46| baz as string; // ERROR — number not string (types.d.ts says number)
        ^^^
 
 References:
    node_modules/pkg-with-exports-types/types.d.ts:1:27
     1| export declare const baz: number;
                                  ^^^^^^ [1]
-   test.js:43:8
-   43| baz as string; // ERROR — number not string (types.d.ts says number)
+   test.js:46:8
+   46| baz as string; // ERROR — number not string (types.d.ts says number)
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:47:1
+Error ----------------------------------------------------------------------------------------------------- test.js:50:1
 
 Cannot cast `qux` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:47:1
-   47| qux as string; // ERROR — number not string (exports types.d.ts says number)
+   test.js:50:1
+   50| qux as string; // ERROR — number not string (exports types.d.ts says number)
        ^^^
 
 References:
    node_modules/pkg-with-exports-and-types/types.d.ts:1:27
     1| export declare const qux: number;
                                  ^^^^^^ [1]
-   test.js:47:8
-   47| qux as string; // ERROR — number not string (exports types.d.ts says number)
+   test.js:50:8
+   50| qux as string; // ERROR — number not string (exports types.d.ts says number)
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:51:1
+Error ----------------------------------------------------------------------------------------------------- test.js:54:1
 
 Cannot cast `val` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:51:1
-   51| val as string; // ERROR — number not string (index.d.ts says number)
+   test.js:54:1
+   54| val as string; // ERROR — number not string (index.d.ts says number)
        ^^^
 
 References:
    node_modules/pkg-with-types-extensionless/index.d.ts:1:27
     1| export declare const val: number;
                                  ^^^^^^ [1]
-   test.js:51:8
-   51| val as string; // ERROR — number not string (index.d.ts says number)
+   test.js:54:8
+   54| val as string; // ERROR — number not string (index.d.ts says number)
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:55:1
+Error ----------------------------------------------------------------------------------------------------- test.js:58:1
 
 Cannot cast `nested` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:55:1
-   55| nested as string; // ERROR — number not string (types.d.ts says number)
+   test.js:58:1
+   58| nested as string; // ERROR — number not string (types.d.ts says number)
        ^^^^^^
 
 References:
    node_modules/pkg-with-nested-export-types/types.d.ts:1:30
     1| export declare const nested: number;
                                     ^^^^^^ [1]
-   test.js:55:11
-   55| nested as string; // ERROR — number not string (types.d.ts says number)
+   test.js:58:11
+   58| nested as string; // ERROR — number not string (types.d.ts says number)
                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:59:1
+Error ----------------------------------------------------------------------------------------------------- test.js:62:1
 
 Cannot cast `mtsVal` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:59:1
-   59| mtsVal as string; // ERROR — number not string (types.d.mts says number)
+   test.js:62:1
+   62| mtsVal as string; // ERROR — number not string (types.d.mts says number)
        ^^^^^^
 
 References:
    node_modules/pkg-with-nested-export-types-mts/types.d.mts:1:30
     1| export declare const mtsVal: number;
                                     ^^^^^^ [1]
-   test.js:59:11
-   59| mtsVal as string; // ERROR — number not string (types.d.mts says number)
+   test.js:62:11
+   62| mtsVal as string; // ERROR — number not string (types.d.mts says number)
                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:63:1
+Error ----------------------------------------------------------------------------------------------------- test.js:66:1
 
 Cannot cast `ctsVal` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:63:1
-   63| ctsVal as string; // ERROR — number not string (types.d.cts says number)
+   test.js:66:1
+   66| ctsVal as string; // ERROR — number not string (types.d.cts says number)
        ^^^^^^
 
 References:
    node_modules/pkg-with-nested-export-types-cts/types.d.cts:1:30
     1| export declare const ctsVal: number;
                                     ^^^^^^ [1]
-   test.js:63:11
-   63| ctsVal as string; // ERROR — number not string (types.d.cts says number)
+   test.js:66:11
+   66| ctsVal as string; // ERROR — number not string (types.d.cts says number)
                  ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:70:1
 
-Found 11 errors
+Cannot cast `exportNoTypesCond` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:70:1
+   70| exportNoTypesCond as string; // ERROR — number not string (index.d.ts says number)
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   node_modules/pkg-exports-no-types-cond/index.d.ts:1:41
+    1| export declare const exportNoTypesCond: number;
+                                               ^^^^^^ [1]
+   test.js:70:22
+   70| exportNoTypesCond as string; // ERROR — number not string (index.d.ts says number)
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:74:1
+
+Cannot cast `mainDts` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:74:1
+   74| mainDts as string; // ERROR — number not string (index.d.ts says number)
+       ^^^^^^^
+
+References:
+   node_modules/pkg-main-dts-counterpart/lib/index.d.ts:1:31
+    1| export declare const mainDts: number;
+                                     ^^^^^^ [1]
+   test.js:74:12
+   74| mainDts as string; // ERROR — number not string (index.d.ts says number)
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:78:1
+
+Cannot cast `exportMjsDts` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:78:1
+   78| exportMjsDts as string; // ERROR — number not string (index.d.mts says number)
+       ^^^^^^^^^^^^
+
+References:
+   node_modules/pkg-exports-mjs-dts/index.d.mts:1:36
+    1| export declare const exportMjsDts: number;
+                                          ^^^^^^ [1]
+   test.js:78:17
+   78| exportMjsDts as string; // ERROR — number not string (index.d.mts says number)
+                       ^^^^^^ [2]
+
+
+
+Found 14 errors

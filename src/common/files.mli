@@ -76,13 +76,9 @@ val dmts_ext : string
 
 val dcts_ext : string
 
-val is_dts_ext : string -> bool
-
 val has_dts_ext : File_key.t -> bool
 
-val chop_dts_ext : File_key.t -> File_key.t
-
-val dts_to_impl : File_key.t -> File_key.t
+val js_to_dts : string -> string option
 
 val has_declaration_ext : File_key.t -> bool
 
