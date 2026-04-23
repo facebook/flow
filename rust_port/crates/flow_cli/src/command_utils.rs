@@ -2060,6 +2060,7 @@ pub(super) fn make_options(
                 enable_const_params,
                 enums,
                 estimate_recheck_time,
+                saved_state_restart_on_reinit,
                 exact_by_default,
                 facebook_fbs,
                 facebook_fbt,
@@ -2242,6 +2243,14 @@ pub(super) fn make_options(
     let estimate_recheck_time = estimate_recheck_time_override
         .or(estimate_recheck_time)
         .unwrap_or(true);
+    let saved_state_restart_on_reinit = match std::env::var("FLOW_SAVED_STATE_RESTART_ON_REINIT")
+        .ok()
+        .as_deref()
+    {
+        Some("1" | "true") => true,
+        Some("0" | "false") => false,
+        _ => saved_state_restart_on_reinit,
+    };
     let exact_by_default = exact_by_default.unwrap_or(true);
     let lazy_mode = matches!(
         lazy_mode_override.unwrap_or(lazy_mode.unwrap_or(LazyMode::NonLazy)),
@@ -2699,6 +2708,7 @@ pub(super) fn make_options(
         enabled_rollouts,
         enums,
         estimate_recheck_time,
+        saved_state_restart_on_reinit,
         exact_by_default,
         facebook_fbs: facebook_fbs.map(FlowSmolStr::new),
         facebook_fbt: facebook_fbt.map(FlowSmolStr::new),

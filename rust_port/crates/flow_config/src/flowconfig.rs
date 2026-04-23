@@ -89,6 +89,7 @@ pub mod opts {
         pub enable_const_params: Option<bool>,
         pub enums: bool,
         pub estimate_recheck_time: Option<bool>,
+        pub saved_state_restart_on_reinit: bool,
         pub exact_by_default: Option<bool>,
         pub facebook_fbs: Option<String>,
         pub facebook_fbt: Option<String>,
@@ -251,6 +252,7 @@ pub mod opts {
             enable_const_params: None,
             enums: false,
             estimate_recheck_time: None,
+            saved_state_restart_on_reinit: false,
             exact_by_default: None,
             facebook_fbs: None,
             facebook_fbt: None,
@@ -1204,6 +1206,20 @@ pub mod opts {
         parse_boolean(
             |opts, v| {
                 opts.estimate_recheck_time = Some(v);
+                Ok(())
+            },
+            values,
+            config,
+        )
+    }
+
+    fn saved_state_restart_on_reinit_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_boolean(
+            |opts, v| {
+                opts.saved_state_restart_on_reinit = v;
                 Ok(())
             },
             values,
@@ -2175,6 +2191,9 @@ pub mod opts {
                     config,
                 )),
                 "estimate_recheck_time" => Some(estimate_recheck_time_parser(values, config)),
+                "saved_state_restart_on_reinit" => {
+                    Some(saved_state_restart_on_reinit_parser(values, config))
+                }
                 "exact_by_default" => Some(parse_boolean(
                     |opts, v| {
                         opts.exact_by_default = Some(v);

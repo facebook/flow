@@ -3365,9 +3365,10 @@ pub fn recheck(
             )
         }
     } else if missed_changes && did_change_mergebase {
-        // Reinitialize the server. This should be just like starting up a new server,
-        // except that the existing server stays running and can answer requests
-        // using committed data until the re-init is complete.
+        if did_change_mergebase && options.saved_state_restart_on_reinit {
+            log::info!("Reinit (missed_changes): exiting for a clean restart");
+            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
+        }
         Ok(reinit(
             pool,
             shared_mem,
@@ -3396,18 +3397,24 @@ pub fn recheck(
             env,
         ) {
             Ok(result) => Ok(result),
-            Err(RecheckError::TooSlow) => Ok(reinit(
-                pool,
-                shared_mem,
-                options,
-                false,
-                "recheck_too_slow",
-                updates,
-                files_to_force_for_reinit,
-                will_be_checked_files,
-                env_for_reinit,
-            )
-            .unwrap()),
+            Err(RecheckError::TooSlow) => {
+                if did_change_mergebase && options.saved_state_restart_on_reinit {
+                    log::info!("Reinit (recheck_too_slow): exiting for a clean restart");
+                    flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
+                }
+                Ok(reinit(
+                    pool,
+                    shared_mem,
+                    options,
+                    false,
+                    "recheck_too_slow",
+                    updates,
+                    files_to_force_for_reinit,
+                    will_be_checked_files,
+                    env_for_reinit,
+                )
+                .unwrap())
+            }
             Err(RecheckError::Canceled(changed_files)) => {
                 Err(RecheckError::Canceled(changed_files))
             }

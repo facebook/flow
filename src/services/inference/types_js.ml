@@ -2716,6 +2716,10 @@ let recheck
     env =
   let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
   let reinit_no_fallback ~reason =
+    if did_change_mergebase && Options.saved_state_restart_on_reinit options then begin
+      Hh_logger.info "Reinit (%s): exiting for a clean restart" reason;
+      Exit.exit Exit.Restart
+    end;
     let%lwt result =
       reinit
         ~allow_fallback:false
@@ -2771,9 +2775,6 @@ let recheck
         ~will_be_checked_files
         env
   else if missed_changes && did_change_mergebase then
-    (* Reinitialize the server. This should be just like starting up a new server,
-       except that the existing server stays running and can answer requests
-       using committed data until the re-init is complete. *)
     reinit_no_fallback ~reason:"missed_changes"
   else
     try%lwt

@@ -1536,6 +1536,11 @@ let make_options
         options_flags.estimate_recheck_time
         (FlowConfig.estimate_recheck_time flowconfig)
       |> Base.Option.value ~default:true;
+    opt_saved_state_restart_on_reinit =
+      (match Sys.getenv_opt "FLOW_SAVED_STATE_RESTART_ON_REINIT" with
+      | Some ("1" | "true") -> true
+      | Some ("0" | "false") -> false
+      | _ -> FlowConfig.saved_state_restart_on_reinit flowconfig);
     opt_exact_by_default = Base.Option.value ~default:true (FlowConfig.exact_by_default flowconfig);
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;

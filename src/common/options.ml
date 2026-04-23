@@ -132,6 +132,7 @@ type t = {
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
   opt_estimate_recheck_time: bool;
+  opt_saved_state_restart_on_reinit: bool;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
@@ -280,6 +281,8 @@ let enabled_rollouts opts = opts.opt_enabled_rollouts
 let enums opts = opts.opt_enums
 
 let estimate_recheck_time opts = opts.opt_estimate_recheck_time
+
+let saved_state_restart_on_reinit opts = opts.opt_saved_state_restart_on_reinit
 
 let exact_by_default opts = opts.opt_exact_by_default
 

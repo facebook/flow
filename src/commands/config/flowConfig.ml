@@ -68,6 +68,7 @@ module Opts = struct
     enable_custom_error: bool;
     enums: bool;
     estimate_recheck_time: bool option;
+    saved_state_restart_on_reinit: bool;
     exact_by_default: bool option;
     facebook_fbs: string option;
     facebook_fbt: string option;
@@ -236,6 +237,7 @@ module Opts = struct
       enable_custom_error = false;
       enums = false;
       estimate_recheck_time = None;
+      saved_state_restart_on_reinit = false;
       exact_by_default = None;
       facebook_fbs = None;
       facebook_fbt = None;
@@ -703,6 +705,9 @@ module Opts = struct
   let estimate_recheck_time_parser =
     boolean (fun opts v -> Ok { opts with estimate_recheck_time = Some v })
 
+  let saved_state_restart_on_reinit_parser =
+    boolean (fun opts v -> Ok { opts with saved_state_restart_on_reinit = v })
+
   let facebook_module_interop_parser =
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
@@ -1095,6 +1100,7 @@ module Opts = struct
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
+      ("saved_state_restart_on_reinit", saved_state_restart_on_reinit_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
       ( "experimental.abstract_classes",
         boolean (fun opts v -> Ok { opts with abstract_classes = v })
@@ -2029,6 +2035,8 @@ let enable_custom_error c = c.options.Opts.enable_custom_error
 let enums c = c.options.Opts.enums
 
 let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
+
+let saved_state_restart_on_reinit c = c.options.Opts.saved_state_restart_on_reinit
 
 let exact_by_default c = c.options.Opts.exact_by_default
 
