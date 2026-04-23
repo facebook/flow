@@ -200,5 +200,8 @@ add a colon `:` with the `Type` and wrap the expression with parentheses `(` `)`
 
 ## See Also {#toc-see-also}
 
-- [Any](./any.md) — casting through `any` for unsafe type conversions
+- [Refinements](../lang/refinements.md) — prefer narrowing types via conditional checks over casting
+- [Type Guards](./type-guards.md) — custom refinement functions as a safe alternative to casting
+- [Any](./any.md) — casting through `any` for unsafe type conversions (last resort)
 - [Subtypes](../lang/subtypes.md) — understanding which casts are allowed based on subtyping rules
+- [Const Expressions](./const-expression.md) — `as const` for narrowing to literal and read-only types

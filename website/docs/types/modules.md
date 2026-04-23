@@ -58,3 +58,5 @@ that it does not add a runtime dependency on the other module.
 
 - [Declaration Files](../declarations/index.md) — `.flow` files that declare types for untyped modules
 - [Library Definitions](../libdefs/index.md) — declaring types for third-party packages
+- [Typeof Types](./typeof.md) — `import typeof` for extracting the type of an imported value
+- [Type Aliases](./aliases.md) — defining named types that can be exported and imported

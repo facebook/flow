@@ -287,3 +287,4 @@ You can ban its use in your code with the [unclear-type lint](../linting/rule-re
 - [Generics](./generics.md) — parameterized types used with functions for type-safe reusable code
 - [Type Guards](./type-guards.md) — special return types that refine parameter types
 - [Intersections](./intersections.md) — defining overloaded function types
+- [Subtypes](../lang/subtypes.md) — how function subtyping works (contravariant parameters, covariant returns)

@@ -5,7 +5,7 @@ description: "How to write Flow type annotations inside comments, so your code r
 ---
 
 Flow supports a comment-based syntax, which makes it possible to use Flow
-without having to compile your files.
+without having to compile your files. All [Flow type annotations](./index.md) can be embedded inside comments.
 
 ```js flow-check
 /*::
@@ -114,3 +114,9 @@ function method(param /*:: : string */) /*:: : number */ {
 > **Special thanks to**: [Jarno Rantanen](https://github.com/jareware) for
 > building [flotate](https://github.com/jareware/flotate) and supporting us
 > merging his syntax upstream into Flow.
+
+## See Also {#toc-see-also}
+
+- [Type Annotations](./index.md) — the standard (non-comment) syntax for Flow type annotations
+- [Type Aliases](./aliases.md) — defining named types (usable inside `/*:: */` comment blocks)
+- [Functions](./functions.md) — function parameter and return type syntax (used with `/*: */` shorthand)

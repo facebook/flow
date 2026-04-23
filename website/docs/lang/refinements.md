@@ -314,3 +314,4 @@ function func(value: {prop?: string}) {
 - [Unions](../types/unions.md) — refinements are most commonly used to narrow union types
 - [Maybe Types](../types/maybe.md) — refining nullable values with `!= null` checks
 - [Variables](./variables.md) — how variable declarations interact with refinement
+- [Match Expressions](../match/index.md) — pattern matching with its own narrowing and exhaustiveness checking

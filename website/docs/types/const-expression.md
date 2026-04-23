@@ -184,3 +184,11 @@ To use the `as const` syntax, you need to upgrade your infrastructure:
 - Prettier: 3.5+
 - Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../tools/babel.md) for more details.
 - ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../tools/eslint.md) for more details.
+
+## See Also {#toc-see-also}
+
+- [Literal Types](./literals.md) — the literal types that `as const` infers for primitive values
+- [Tuples](./tuples.md) — `as const` on arrays produces read-only tuple types
+- [Type Casting](./casting.md) — the `as` keyword for general type assertions (distinct from `as const`)
+- [Generics](./generics.md) — `const` type parameters for enforcing const-expression inference on function arguments
+- [Variance](../lang/variance.md) — `as const` produces read-only (covariant) properties

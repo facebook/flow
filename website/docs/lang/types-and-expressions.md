@@ -105,3 +105,5 @@ are the most complicated to find, leaving that part up to the developer.
 
 - [Subtypes](./subtypes.md) — understanding how types relate to each other
 - [Annotation Requirement](./annotation-requirement.md) — when Flow can infer types and when you must annotate
+- [Refinements](./refinements.md) — how Flow narrows types through conditional checks
+- [Type Hierarchy](./type-hierarchy.md) — a visual overview of how all types relate

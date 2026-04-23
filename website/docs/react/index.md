@@ -37,3 +37,15 @@ that Flow knows to auto-import `jsx`:
 [options]
 react.runtime=automatic
 ```
+
+## See Also {#toc-see-also}
+
+- [Component Syntax](./component-syntax.md) — Flow's dedicated syntax for declaring React components
+- [Hook Syntax](./hook-syntax.md) — Flow's dedicated syntax for declaring custom hooks
+- [Component Types](./component-types.md) — typing component references and higher-order patterns
+- [Render Types](./render-types.md) — controlling what a component is allowed to render
+- [Event Handling](./events.md) — typing event handlers and synthetic events
+- [Refs](./refs.md) — typing `useRef`, `createRef`, and callback refs
+- [React Types](./types.md) — `React.Node`, `React.Element`, `React.MixedElement`, and other built-in types
+- [Function and Class Components](./function-and-class-components.md) — typing components without component syntax
+- [Higher-Order Components](./hoc.md) — typing HOC patterns

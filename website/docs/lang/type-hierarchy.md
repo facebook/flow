@@ -132,3 +132,4 @@ How can `any` be at both the top and the bottom? Because [it is unsafe](../types
 - [Any](../types/any.md) — the unsafe type that is both top and bottom
 - [Unknown](../types/unknown.md) — the safe top type (supertype of all types)
 - [Empty](../types/empty.md) — the bottom type (subtype of all types)
+- [Variance](./variance.md) — how covariance and contravariance affect subtype relationships

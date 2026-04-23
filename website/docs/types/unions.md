@@ -334,3 +334,4 @@ prettyPrint("currency", true); // ERROR - wrong type arg
 - [Maybe Types](./maybe.md) — shorthand for `T | null | void`
 - [Literal Types](./literals.md) — using specific values as types, commonly combined with unions
 - [Flow Enums](../enums/index.md) — a structured alternative to unions of literal types
+- [Match Expressions](../match/index.md) — pattern matching for exhaustively handling union members

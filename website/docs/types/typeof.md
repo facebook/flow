@@ -92,7 +92,7 @@ When you use `typeof`, you're inserting another type with all of its behaviors.
 This can make `typeof` seem inconsistent where it is not.
 
 For example, if you use `typeof` with a class you need to remember that classes
-are *nominally* typed instead of *structurally* typed. So that two classes with
+are [*nominally* typed instead of *structurally* typed](../lang/nominal-structural.md). So that two classes with
 the same exact shape are not considered equivalent.
 
 ```js flow-check
@@ -124,3 +124,4 @@ Flow's `typeof` is a type-level operator that gives you the full Flow type of a 
 
 - [Classes](./classes.md) — `typeof` is commonly used with classes to refer to the class value (not instance) type
 - [Modules](./modules.md) — `typeof` imports for getting the type of an imported value
+- [Nominal & Structural Typing](../lang/nominal-structural.md) — `typeof` with classes preserves nominal typing behavior

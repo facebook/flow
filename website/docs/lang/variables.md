@@ -232,3 +232,5 @@ option to true.
 
 - [Annotation Requirement](./annotation-requirement.md) — when Flow requires explicit type annotations
 - [Refinements](./refinements.md) — how variable types are narrowed by conditional checks
+- [Const Expressions](../types/const-expression.md) — using `as const` to infer narrower types for variable initializers
+- [Type Casting](../types/casting.md) — using `as` to widen or assert variable types

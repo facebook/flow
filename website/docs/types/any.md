@@ -105,3 +105,5 @@ Now your code will not leak `any`.
 - [Unknown](./unknown.md) — the safe supertype of all types, requiring refinement before use
 - [Empty](./empty.md) — the bottom type, the subtype of all types
 - [Type Hierarchy](../lang/type-hierarchy.md) — how `any`, `unknown`, and `empty` relate in the type system
+- [Coverage](../cli/coverage.md) — identifying code typed as `any`
+- [Lint Rule Reference](../linting/rule-reference.md#toc-unclear-type) — the `unclear-type` lint to ban `any` usage

@@ -155,3 +155,5 @@ declare opaque type PositiveNumber: number;
 
 - [Type Aliases](./aliases.md) — regular (transparent) type aliases
 - [Nominal & Structural Typing](../lang/nominal-structural.md) — opaque types are nominally typed, unlike regular type aliases
+- [Generics](./generics.md) — opaque type aliases can be parameterized with generics
+- [Library Definitions](../libdefs/index.md) — declaring opaque types in library definition files

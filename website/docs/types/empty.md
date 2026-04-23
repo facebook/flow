@@ -60,3 +60,5 @@ You can use the [coverage](../cli/coverage.md) command to identify code typed as
 - [Unknown](./unknown.md) — the supertype of all types (the opposite of `empty`)
 - [Any](./any.md) — an unsafe escape hatch that is both the top and bottom type
 - [Type Hierarchy](../lang/type-hierarchy.md) — how `empty`, `unknown`, and `any` relate in the full type hierarchy
+- [Unions](./unions.md) — casting to `empty` in a `default` branch asserts exhaustiveness over union members
+- [Match Expressions](../match/index.md) — pattern matching with built-in exhaustiveness checking

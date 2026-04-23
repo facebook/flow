@@ -276,3 +276,11 @@ You can do that by annotating the exported constant:
 const array = ['a', 'b']
 export const genericArray: Array<string> = array.map(a => a)
 ```
+
+## See Also {#toc-see-also}
+
+- [Refinements](./lang/refinements.md) — how type narrowing works and when it's invalidated
+- [Type Guards](./types/type-guards.md) — custom refinement functions for cases where `typeof` isn't enough
+- [Variance](./lang/variance.md) — why containers of subtypes aren't always compatible
+- [Generics](./types/generics.md) — understanding generic return types and annotation requirements
+- [Annotation Requirement](./lang/annotation-requirement.md) — when and why Flow requires explicit annotations

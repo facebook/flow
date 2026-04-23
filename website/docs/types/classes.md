@@ -401,3 +401,4 @@ to refer to the type of the class in an annotation.
 - [Nominal & Structural Typing](../lang/nominal-structural.md) — why classes are compared by name, not shape
 - [Generics](./generics.md) — parameterized types, used with classes, functions, and type aliases
 - [Variance](../lang/variance.md) — controlling read-only and write-only properties
+- [Utility Types](./utilities.md) — `Class<T>` for referring to the class type itself (not instances)

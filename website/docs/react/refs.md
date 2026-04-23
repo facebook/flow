@@ -53,3 +53,8 @@ DOM elements will not exist until the first render of `MyComponent` and so a `nu
 must be used.
 
 Again, note that the ref value is wrapped in an object with a `current` property.
+
+## See Also {#toc-see-also}
+
+- [React Types](./types.md) — `React.RefObject` and other built-in React types
+- [Function and Class Components](./function-and-class-components.md) — `createRef` usage in class components
