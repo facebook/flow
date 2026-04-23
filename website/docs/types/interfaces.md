@@ -4,11 +4,13 @@ slug: /types/interfaces
 description: "How to use interfaces in Flow for structural typing of classes and objects, including implementing and extending interfaces."
 ---
 
-[Classes](./classes.md) in Flow are [nominally typed](../lang/nominal-structural.md). This means that when you have two separate
-classes you cannot use one in place of the other even when they have the same
-exact properties and methods:
+Interfaces declare the structure a [class](./classes.md) or object must satisfy without requiring a specific class identity. Because classes in Flow are [nominally typed](../lang/nominal-structural.md), two classes with identical members are not interchangeable — interfaces provide structural typing to bridge that gap.
 
 ```js flow-check
+interface Serializable {
+  serialize(): string;
+}
+
 class Foo {
   serialize(): string { return '[Foo]'; }
 }
@@ -18,67 +20,16 @@ class Bar {
 }
 
 const foo: Foo = new Bar(); // Error!
+
+const foo2: Serializable = new Foo(); // Works!
+const bar2: Serializable = new Bar(); // Works!
 ```
 
-Instead, you can use `interface` in order to declare the structure of the class
-that you are expecting.
+## When to use this {#toc-when-to-use}
 
-```js flow-check
-interface Serializable {
-  serialize(): string;
-}
+Use interfaces over [object types](./objects.md) when you need to accept both class instances and plain objects with the same shape. Use interfaces over [classes](./classes.md) when you want structural compatibility — any value with matching properties is assignable, regardless of which class it was constructed from.
 
-class Foo {
-  serialize(): string { return '[Foo]'; }
-}
-
-class Bar {
-  serialize(): string { return '[Bar]'; }
-}
-
-const foo: Serializable = new Foo(); // Works!
-const bar: Serializable = new Bar(); // Works!
-```
-
-You can also declare an anonymous interface:
-
-```js flow-check
-class Foo {
-  a: number;
-}
-
-function getNumber(o: interface {a: number}): number {
-  return o.a;
-}
-
-getNumber(new Foo()); // Works!
-```
-
-You can also use `implements` to tell Flow that you want the class to match an
-interface. This prevents you from making incompatible changes when editing the
-class.
-
-```js flow-check
-interface Serializable {
-  serialize(): string;
-}
-
-class Foo implements Serializable {
-  serialize(): string { return '[Foo]'; } // Works!
-}
-
-class Bar implements Serializable {
-  serialize(): number { return 42; } // Error!
-}
-```
-
-You can also use `implements` with multiple interfaces.
-
-```js
-class Foo implements Bar, Baz {
-  // ...
-}
-```
+## Interfaces for instances and objects {#toc-interfaces-for-instances-and-objects}
 
 Interfaces can describe both instances and objects, unlike object types which can only describe objects:
 
@@ -104,6 +55,34 @@ acceptsObj(foo); // Error!
 
 Unlike objects, interfaces cannot be [exact](./objects.md#exact-and-inexact-object-types), as they can always have other, unknown properties.
 
+## Implementing interfaces {#toc-implementing-interfaces}
+
+You can use `implements` to tell Flow that you want the class to match an
+interface. This prevents you from making incompatible changes when editing the
+class.
+
+```js flow-check
+interface Serializable {
+  serialize(): string;
+}
+
+class Foo implements Serializable {
+  serialize(): string { return '[Foo]'; } // Works!
+}
+
+class Bar implements Serializable {
+  serialize(): number { return 42; } // Error!
+}
+```
+
+You can also use `implements` with multiple interfaces.
+
+```js
+class Foo implements Bar, Baz {
+  // ...
+}
+```
+
 ## Interface Syntax {#toc-interface-syntax}
 
 Interfaces are created using the keyword `interface` followed by its name and
@@ -116,6 +95,22 @@ interface MyInterface {
 ```
 
 The syntax of the block matches the syntax of object types.
+
+### Anonymous interfaces {#toc-anonymous-interfaces}
+
+You can also declare an anonymous interface inline:
+
+```js flow-check
+class Foo {
+  a: number;
+}
+
+function getNumber(o: interface {a: number}): number {
+  return o.a;
+}
+
+getNumber(new Foo()); // Works!
+```
 
 ### Interface Methods {#toc-interface-methods}
 

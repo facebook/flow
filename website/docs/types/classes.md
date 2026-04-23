@@ -59,6 +59,10 @@ const bar: WithXNum = new B(); // Works!
 const n: number = foo.x; // Works!
 ```
 
+## When to use this {#toc-when-to-use}
+
+Use classes when you need methods, inheritance, or [nominal typing](../lang/nominal-structural.md) — two classes with the same shape are distinct types. When you only need to describe data shape, use [object types](./objects.md). When you need structural compatibility across classes, use [interfaces](./interfaces.md).
+
 ## Class Syntax {#toc-class-syntax}
 
 Classes in Flow are just like normal JavaScript classes, but with added types.

@@ -2742,12 +2742,6 @@ No errors!
 === types/aliases.md block 4 ===
 No errors!
 
-=== types/aliases.md block 5 ===
-No errors!
-
-=== types/aliases.md block 6 ===
-No errors!
-
 === types/any.md block 1 ===
 No errors!
 
@@ -2764,6 +2758,9 @@ No errors!
 No errors!
 
 === types/any.md block 6 ===
+No errors!
+
+=== types/any.md block 7 ===
 No errors!
 
 === types/arrays.md block 1 ===
@@ -2922,6 +2919,9 @@ Found 1 error
 No errors!
 
 === types/casting.md block 2 ===
+No errors!
+
+=== types/casting.md block 3 ===
 Error ------------------------------------------------------------------------------------------------------------ -:2:1
 
 Cannot compare number literal `1` [1] to boolean [2], because number literal `1` [1] is not a subtype of boolean [2] and
@@ -2959,10 +2959,10 @@ References:
 
 Found 2 errors
 
-=== types/casting.md block 3 ===
+=== types/casting.md block 4 ===
 No errors!
 
-=== types/casting.md block 4 ===
+=== types/casting.md block 5 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:1
 
 Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -2983,7 +2983,7 @@ References:
 
 Found 1 error
 
-=== types/casting.md block 5 ===
+=== types/casting.md block 6 ===
 Error ------------------------------------------------------------------------------------------------------------ -:9:1
 
 Cannot cast `newValue` to number literal `42` because number [1] is incompatible with number literal `42` [2].
@@ -3005,7 +3005,7 @@ References:
 
 Found 1 error
 
-=== types/casting.md block 6 ===
+=== types/casting.md block 7 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:18
 
 Cannot cast `fooObj` to object type because property `bar` is missing in object literal [1] but exists in object
@@ -3027,7 +3027,7 @@ References:
 
 Found 1 error
 
-=== types/casting.md block 7 ===
+=== types/casting.md block 8 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -3065,10 +3065,10 @@ References:
 
 Found 2 errors
 
-=== types/casting.md block 8 ===
+=== types/casting.md block 9 ===
 No errors!
 
-=== types/casting.md block 9 ===
+=== types/casting.md block 10 ===
 No errors!
 
 === types/classes.md block 1 ===
@@ -3449,6 +3449,9 @@ No errors!
 No errors!
 
 === types/conditional.md block 7 ===
+No errors!
+
+=== types/conditional.md block 8 ===
 Error ----------------------------------------------------------------------------------------------------------- -:6:17
 
 Cannot instantiate `ReturnType` because in type argument `T`: string [1] is incompatible with function type [2].
@@ -3467,10 +3470,10 @@ References:
 
 Found 1 error
 
-=== types/conditional.md block 8 ===
+=== types/conditional.md block 9 ===
 No errors!
 
-=== types/conditional.md block 9 ===
+=== types/conditional.md block 10 ===
 No errors!
 
 === types/const-expression.md block 1 ===
@@ -3486,6 +3489,9 @@ No errors!
 No errors!
 
 === types/const-expression.md block 5 ===
+No errors!
+
+=== types/const-expression.md block 6 ===
 Error ----------------------------------------------------------------------------------------------------------- -:9:20
 
 Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]:
@@ -3615,13 +3621,13 @@ References:
 
 Found 6 errors
 
-=== types/const-expression.md block 6 ===
-No errors!
-
 === types/const-expression.md block 7 ===
 No errors!
 
 === types/const-expression.md block 8 ===
+No errors!
+
+=== types/const-expression.md block 9 ===
 No errors!
 
 === types/empty.md block 1 ===
@@ -3693,9 +3699,6 @@ No errors!
 No errors!
 
 === types/functions.md block 11 ===
-No errors!
-
-=== types/functions.md block 12 ===
 Error ----------------------------------------------------------------------------------------------------------- -:10:6
 
 Cannot call `func` with `null` bound to `optionalValue` because null [1] is incompatible with string [2].
@@ -3714,13 +3717,13 @@ References:
 
 Found 1 error
 
+=== types/functions.md block 12 ===
+No errors!
+
 === types/functions.md block 13 ===
 No errors!
 
 === types/functions.md block 14 ===
-No errors!
-
-=== types/functions.md block 15 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:21
 
 Cannot assign `func.call(...)` to `str` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -3741,10 +3744,10 @@ References:
 
 Found 1 error
 
-=== types/functions.md block 16 ===
+=== types/functions.md block 15 ===
 No errors!
 
-=== types/functions.md block 17 ===
+=== types/functions.md block 16 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:18
 
 Cannot expect boolean as the return type of function because boolean [1] is incompatible with implicitly-returned
@@ -3756,6 +3759,9 @@ undefined. [incompatible-type]
 
 
 Found 1 error
+
+=== types/functions.md block 17 ===
+No errors!
 
 === types/functions.md block 18 ===
 No errors!
@@ -3770,9 +3776,6 @@ No errors!
 No errors!
 
 === types/functions.md block 22 ===
-No errors!
-
-=== types/functions.md block 23 ===
 No errors!
 
 === types/generics.md block 1 ===
@@ -3812,9 +3815,6 @@ No errors!
 No errors!
 
 === types/generics.md block 13 ===
-No errors!
-
-=== types/generics.md block 14 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
 
 Cannot return `"foo"` because string [1] is incompatible with `T` [2]. [incompatible-type]
@@ -3877,7 +3877,7 @@ References:
 
 Found 4 errors
 
-=== types/generics.md block 15 ===
+=== types/generics.md block 14 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:16
 
 Cannot assign `identity(...)` to `three` because number literal `42` [1] is incompatible with number literal `3` [2].
@@ -3899,7 +3899,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 16 ===
+=== types/generics.md block 15 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:19
 
 Cannot get `obj.foo` because property `foo` is missing in `unknown` [1]. [incompatible-use]
@@ -3917,10 +3917,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 17 ===
+=== types/generics.md block 16 ===
 No errors!
 
-=== types/generics.md block 18 ===
+=== types/generics.md block 17 ===
 Error ------------------------------------------------------------------------------------------------------------ -:8:8
 
 Cannot call `logFoo` because in type argument `T`: property `foo` is missing in object literal [1] but exists in object
@@ -3939,7 +3939,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 19 ===
+=== types/generics.md block 18 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:31
 
 Cannot call `identity` because in type argument `T`: string [1] is incompatible with number [2]. [incompatible-type]
@@ -3957,10 +3957,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 20 ===
+=== types/generics.md block 19 ===
 No errors!
 
-=== types/generics.md block 21 ===
+=== types/generics.md block 20 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:18
 
 Cannot assign `identity(...)` to `bar` because string [1] is incompatible with string literal `bar` [2].
@@ -3982,10 +3982,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 22 ===
+=== types/generics.md block 21 ===
 No errors!
 
-=== types/generics.md block 23 ===
+=== types/generics.md block 22 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:21
 
 Cannot assign `val` to `bar` because string [1] is incompatible with string literal `bar` [2]. [incompatible-type]
@@ -4006,10 +4006,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 24 ===
+=== types/generics.md block 23 ===
 No errors!
 
-=== types/generics.md block 25 ===
+=== types/generics.md block 24 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:12
 
 Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
@@ -4027,7 +4027,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 26 ===
+=== types/generics.md block 25 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:12
 
 Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
@@ -4045,7 +4045,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 27 ===
+=== types/generics.md block 26 ===
 Error ---------------------------------------------------------------------------------------------------------- -:11:19
 
 Cannot use `HasProp` [1] without 1 type argument. [missing-type-arg]
@@ -4063,13 +4063,13 @@ References:
 
 Found 1 error
 
+=== types/generics.md block 27 ===
+No errors!
+
 === types/generics.md block 28 ===
 No errors!
 
 === types/generics.md block 29 ===
-No errors!
-
-=== types/generics.md block 30 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `x` to `GenericBoxError` because in type argument `T` [1]: string [2] is incompatible with number [3].
@@ -4094,7 +4094,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 31 ===
+=== types/generics.md block 30 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:34
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -4175,6 +4175,9 @@ No errors!
 No errors!
 
 === types/indexed-access.md block 3 ===
+No errors!
+
+=== types/indexed-access.md block 4 ===
 Error ----------------------------------------------------------------------------------------------------------- -:6:19
 
 Cannot access number literal `2` on `Pair` because `Pair` [1] only has 2 elements, so index 2 is out of bounds.
@@ -4193,10 +4196,10 @@ References:
 
 Found 1 error
 
-=== types/indexed-access.md block 4 ===
+=== types/indexed-access.md block 5 ===
 No errors!
 
-=== types/indexed-access.md block 5 ===
+=== types/indexed-access.md block 6 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:19
 
 Cannot assign `getProp(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -4245,24 +4248,24 @@ References:
 
 Found 3 errors
 
-=== types/indexed-access.md block 6 ===
-No errors!
-
 === types/indexed-access.md block 7 ===
 No errors!
 
+=== types/indexed-access.md block 8 ===
+No errors!
+
 === types/interfaces.md block 1 ===
-Error ---------------------------------------------------------------------------------------------------------- -:10:18
+Error ---------------------------------------------------------------------------------------------------------- -:14:18
 
 Cannot assign `new Bar()` to `foo` because `Bar` [1] is incompatible with `Foo` [2]. [incompatible-type]
 
-   -:10:18
-   10| const foo: Foo = new Bar(); // Error!
+   -:14:18
+   14| const foo: Foo = new Bar(); // Error!
                         ^^^^^^^^^ [1]
 
 References:
-   -:10:12
-   10| const foo: Foo = new Bar(); // Error!
+   -:14:12
+   14| const foo: Foo = new Bar(); // Error!
                   ^^^ [2]
 
 
@@ -4270,34 +4273,6 @@ References:
 Found 1 error
 
 === types/interfaces.md block 2 ===
-No errors!
-
-=== types/interfaces.md block 3 ===
-No errors!
-
-=== types/interfaces.md block 4 ===
-Error ---------------------------------------------------------------------------------------------------------- -:11:16
-
-Cannot implement `Serializable` [1] with `Bar` because in property `serialize` > the return value: number [2] is
-incompatible with string [3]. [incompatible-type]
-
-   -:11:16
-   11|   serialize(): number { return 42; } // Error!
-                      ^^^^^^ [2]
-
-References:
-   -:10:22
-   10| class Bar implements Serializable {
-                            ^^^^^^^^^^^^ [1]
-   -:3:16
-    3|   serialize(): string;
-                      ^^^^^^ [3]
-
-
-
-Found 1 error
-
-=== types/interfaces.md block 5 ===
 Error ---------------------------------------------------------------------------------------------------------- -:18:12
 
 Cannot call `acceptsObj` with `foo` bound to `x` because `Foo` [1] is not a subtype of object type [2]. Class instances
@@ -4319,13 +4294,38 @@ References:
 
 Found 1 error
 
+=== types/interfaces.md block 3 ===
+Error ---------------------------------------------------------------------------------------------------------- -:11:16
+
+Cannot implement `Serializable` [1] with `Bar` because in property `serialize` > the return value: number [2] is
+incompatible with string [3]. [incompatible-type]
+
+   -:11:16
+   11|   serialize(): number { return 42; } // Error!
+                      ^^^^^^ [2]
+
+References:
+   -:10:22
+   10| class Bar implements Serializable {
+                            ^^^^^^^^^^^^ [1]
+   -:3:16
+    3|   serialize(): string;
+                      ^^^^^^ [3]
+
+
+
+Found 1 error
+
+=== types/interfaces.md block 4 ===
+No errors!
+
+=== types/interfaces.md block 5 ===
+No errors!
+
 === types/interfaces.md block 6 ===
 No errors!
 
 === types/interfaces.md block 7 ===
-No errors!
-
-=== types/interfaces.md block 8 ===
 Error ---------------------------------------------------------------------------------------------------------- -:11:22
 
 Cannot assign `a.method(...)` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -4346,6 +4346,9 @@ References:
 
 Found 1 error
 
+=== types/interfaces.md block 8 ===
+No errors!
+
 === types/interfaces.md block 9 ===
 No errors!
 
@@ -4365,9 +4368,6 @@ No errors!
 No errors!
 
 === types/interfaces.md block 15 ===
-No errors!
-
-=== types/interfaces.md block 16 ===
 Error ---------------------------------------------------------------------------------------------------------- -:12:27
 
 Cannot assign `x` to `value1` because in property `property`: `number` [1] is not exactly the same as
@@ -4403,7 +4403,7 @@ References:
 
 Found 1 error
 
-=== types/interfaces.md block 17 ===
+=== types/interfaces.md block 16 ===
 Error ----------------------------------------------------------------------------------------------------------- -:16:9
 
 Cannot assign `3.14` to `value.readOnly` because property `readOnly` is not writable. [cannot-write]
@@ -4415,10 +4415,10 @@ Cannot assign `3.14` to `value.readOnly` because property `readOnly` is not writ
 
 Found 1 error
 
-=== types/interfaces.md block 18 ===
+=== types/interfaces.md block 17 ===
 No errors!
 
-=== types/interfaces.md block 19 ===
+=== types/interfaces.md block 18 ===
 Error ---------------------------------------------------------------------------------------------------------- -:11:42
 
 Cannot assign object literal to `value1` because in property `property`: string [1] is incompatible with number [2].
@@ -4440,7 +4440,7 @@ References:
 
 Found 1 error
 
-=== types/interfaces.md block 20 ===
+=== types/interfaces.md block 19 ===
 Error ----------------------------------------------------------------------------------------------------------- -:15:9
 
 Cannot get `value.writeOnly` because property `writeOnly` is not readable. [cannot-read]
@@ -4658,13 +4658,13 @@ References:
 Found 6 errors
 
 === types/literals.md block 1 ===
-Error ----------------------------------------------------------------------------------------------------------- -:6:12
+Error ----------------------------------------------------------------------------------------------------------- -:5:12
 
 Cannot call `acceptsTwo` with `3` bound to `value` because number literal `3` [1] is incompatible with number literal
 `2` [2]. [incompatible-type]
 
-   -:6:12
-   6| acceptsTwo(3);   // Error!
+   -:5:12
+   5| acceptsTwo(3);   // Error!
                  ^ [1]
 
 References:
@@ -4673,23 +4673,8 @@ References:
                                  ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------------- -:7:12
 
-Cannot call `acceptsTwo` with `"2"` bound to `value` because string [1] is incompatible with number literal `2` [2].
-[incompatible-type]
-
-   -:7:12
-   7| acceptsTwo("2"); // Error!
-                 ^^^ [1]
-
-References:
-   -:2:28
-   2| function acceptsTwo(value: 2) { /* ... */ }
-                                 ^ [2]
-
-
-
-Found 2 errors
+Found 1 error
 
 === types/literals.md block 2 ===
 Error ---------------------------------------------------------------------------------------------------------- -:13:10
@@ -4714,6 +4699,9 @@ Found 1 error
 No errors!
 
 === types/mapped-types.md block 2 ===
+No errors!
+
+=== types/mapped-types.md block 3 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:28
 
 Cannot instantiate mapped type [1] because boolean [2] is incompatible with `string | number | symbol`, so it cannot be
@@ -4731,9 +4719,6 @@ References:
 
 
 Found 1 error
-
-=== types/mapped-types.md block 3 ===
-No errors!
 
 === types/mapped-types.md block 4 ===
 No errors!
@@ -4760,6 +4745,9 @@ No errors!
 No errors!
 
 === types/mapped-types.md block 12 ===
+No errors!
+
+=== types/mapped-types.md block 13 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:1
 
 Cannot cast empty string to indexed access because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -4799,7 +4787,7 @@ Cannot assign `true` to `mapped[0]` because tuple element at index `0` [1] label
 
 Found 3 errors
 
-=== types/mapped-types.md block 13 ===
+=== types/mapped-types.md block 14 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:21
 
 Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
@@ -5428,9 +5416,6 @@ No errors!
 No errors!
 
 === types/opaque-types.md block 4 ===
-No errors!
-
-=== types/opaque-types.md block 5 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `0` to `NumberAlias` because number [1] is incompatible with `NumberAlias` [2]. [incompatible-type]
@@ -5465,10 +5450,10 @@ References:
 
 Found 2 errors
 
-=== types/opaque-types.md block 6 ===
+=== types/opaque-types.md block 5 ===
 No errors!
 
-=== types/opaque-types.md block 7 ===
+=== types/opaque-types.md block 6 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:12
 
 Cannot return `x` because string [1] is incompatible with `ID` [2]. [incompatible-type]
@@ -5489,7 +5474,7 @@ References:
 
 Found 1 error
 
-=== types/opaque-types.md block 8 ===
+=== types/opaque-types.md block 7 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:27
 
 number [1] is incompatible with string [2]. [incompatible-type]
@@ -5507,10 +5492,10 @@ References:
 
 Found 1 error
 
-=== types/opaque-types.md block 9 ===
+=== types/opaque-types.md block 8 ===
 No errors!
 
-=== types/opaque-types.md block 10 ===
+=== types/opaque-types.md block 9 ===
 No errors!
 
 === types/primitives.md block 1 ===
@@ -5850,6 +5835,9 @@ No errors!
 No errors!
 
 === types/tuples.md block 4 ===
+No errors!
+
+=== types/tuples.md block 5 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:14
 
 Cannot get `tuple[3]` because tuple type [1] only has 3 elements, so index 3 is out of bounds. [invalid-tuple-index]
@@ -5867,10 +5855,10 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 5 ===
+=== types/tuples.md block 6 ===
 No errors!
 
-=== types/tuples.md block 6 ===
+=== types/tuples.md block 7 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:12
 
 Cannot assign `"bar"` to `tuple[0]` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -5916,7 +5904,7 @@ References:
 
 Found 3 errors
 
-=== types/tuples.md block 7 ===
+=== types/tuples.md block 8 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:41
 
 Cannot assign `tuple1` to `tuple2` because tuple type [1] has 2 elements but tuple type [2] has 3 elements.
@@ -5938,7 +5926,7 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 8 ===
+=== types/tuples.md block 9 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:35
 
 Cannot assign `tuple1` to `tuple2` because tuple type [1] has 3 elements but tuple type [2] has 2 elements.
@@ -5960,7 +5948,7 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 9 ===
+=== types/tuples.md block 10 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:33
 
 Cannot assign `array` to `tuple` because array type [1] has an unknown number of elements, so is incompatible with tuple
@@ -5982,7 +5970,7 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 10 ===
+=== types/tuples.md block 11 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:30
 
 Cannot assign `tuple` to `array` because tuple type [1] is incompatible with array type [2]. [incompatible-type]
@@ -6003,10 +5991,10 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 11 ===
+=== types/tuples.md block 12 ===
 No errors!
 
-=== types/tuples.md block 12 ===
+=== types/tuples.md block 13 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:7
 
 Cannot call `tuple.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
@@ -6024,9 +6012,6 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 13 ===
-No errors!
-
 === types/tuples.md block 14 ===
 No errors!
 
@@ -6034,6 +6019,9 @@ No errors!
 No errors!
 
 === types/tuples.md block 16 ===
+No errors!
+
+=== types/tuples.md block 17 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:3
 
 Cannot assign `1` to `readOnlyTuple[1]` because tuple element at index `1` [1] labeled `bar` is not writable.
@@ -6060,13 +6048,13 @@ References:
 
 Found 2 errors
 
-=== types/tuples.md block 17 ===
-No errors!
-
 === types/tuples.md block 18 ===
 No errors!
 
 === types/tuples.md block 19 ===
+No errors!
+
+=== types/tuples.md block 20 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:8
 
 Cannot assign `undefined` to `x[0]` because you cannot assign undefined [1] to optional tuple element [2] (to do so, add
@@ -6100,7 +6088,7 @@ References:
 
 Found 2 errors
 
-=== types/tuples.md block 20 ===
+=== types/tuples.md block 21 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:1
 
 Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
@@ -6119,10 +6107,10 @@ References:
 
 Found 1 error
 
-=== types/tuples.md block 21 ===
+=== types/tuples.md block 22 ===
 No errors!
 
-=== types/tuples.md block 22 ===
+=== types/tuples.md block 23 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
 Cannot cast `b` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
@@ -6162,10 +6150,10 @@ References:
 
 Found 2 errors
 
-=== types/tuples.md block 23 ===
+=== types/tuples.md block 24 ===
 No errors!
 
-=== types/tuples.md block 24 ===
+=== types/tuples.md block 25 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
 Cannot cast `y` to tuple type because array literal [1] has 2 or more elements (inexact tuple) but tuple type [2] has 2
@@ -6195,7 +6183,7 @@ Cannot have element after spread of inexact tuple. [element-after-inexact-tuple-
 
 Found 2 errors
 
-=== types/tuples.md block 25 ===
+=== types/tuples.md block 26 ===
 Error ----------------------------------------------------------------------------------------------------------- -:14:1
 
 Cannot call `mapTupleArray` because in type argument `T`: array type [1] has an unknown number of elements, so is
@@ -6669,9 +6657,6 @@ Found 1 error
 No errors!
 
 === types/typeof.md block 2 ===
-No errors!
-
-=== types/typeof.md block 3 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:25
 
 Cannot assign `'world'` to `num3` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -6717,7 +6702,7 @@ References:
 
 Found 3 errors
 
-=== types/typeof.md block 4 ===
+=== types/typeof.md block 3 ===
 Error ----------------------------------------------------------------------------------------------------------- -:9:17
 
 `typeof` can only be used to get the type of variables. [ParseError]
@@ -6729,10 +6714,10 @@ Error --------------------------------------------------------------------------
 
 Found 1 error
 
-=== types/typeof.md block 5 ===
+=== types/typeof.md block 4 ===
 No errors!
 
-=== types/typeof.md block 6 ===
+=== types/typeof.md block 5 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:25
 
 Cannot assign `3.14` to `num2` because number literal `3.14` [1] is incompatible with number literal `42` [2].
@@ -6781,7 +6766,7 @@ References:
 
 Found 3 errors
 
-=== types/typeof.md block 7 ===
+=== types/typeof.md block 6 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:29
 
 Cannot assign `YourClass` to `test1` because `YourClass` [1] is incompatible with `MyClass` [2]. [incompatible-type]
@@ -6803,54 +6788,27 @@ References:
 Found 1 error
 
 === types/unions.md block 1 ===
-Error ---------------------------------------------------------------------------------------------------------- -:10:20
+Error ------------------------------------------------------------------------------------------------------------ -:8:6
 
-Cannot call `toStringPrimitives` with object literal bound to `value` because: [incompatible-type]
- - Either object literal [1] is incompatible with number [2].
- - Or object literal [1] is incompatible with boolean [3].
- - Or object literal [1] is incompatible with string [4].
+Cannot call `size` with `true` bound to `value` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
 
-   -:10:20
-   10| toStringPrimitives({prop: 'val'}); // Error!
-                          ^^^^^^^^^^^^^ [1]
-
-References:
-   -:2:36
-    2| function toStringPrimitives(value: number | boolean | string): string {
-                                          ^^^^^^ [2]
-   -:2:45
-    2| function toStringPrimitives(value: number | boolean | string): string {
-                                                   ^^^^^^^ [3]
-   -:2:55
-    2| function toStringPrimitives(value: number | boolean | string): string {
-                                                             ^^^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------------------- -:11:20
-
-Cannot call `toStringPrimitives` with array literal bound to `value` because: [incompatible-type]
- - Either array literal [1] is incompatible with number [2].
- - Or array literal [1] is incompatible with boolean [3].
- - Or array literal [1] is incompatible with string [4].
-
-   -:11:20
-   11| toStringPrimitives([1, 2, 3, 4, 5]); // Error!
-                          ^^^^^^^^^^^^^^^ [1]
+   -:8:6
+   8| size(true);    // Error!
+           ^^^^ [1]
 
 References:
-   -:2:36
-    2| function toStringPrimitives(value: number | boolean | string): string {
-                                          ^^^^^^ [2]
-   -:2:45
-    2| function toStringPrimitives(value: number | boolean | string): string {
-                                                   ^^^^^^^ [3]
-   -:2:55
-    2| function toStringPrimitives(value: number | boolean | string): string {
-                                                             ^^^^^^ [4]
+   -:2:22
+   2| function size(value: number | string): number {
+                           ^^^^^^ [2]
+   -:2:31
+   2| function size(value: number | string): number {
+                                    ^^^^^^ [3]
 
 
 
-Found 2 errors
+Found 1 error
 
 === types/unions.md block 2 ===
 No errors!

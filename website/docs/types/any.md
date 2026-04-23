@@ -4,11 +4,18 @@ slug: /types/any
 description: "How the any type works in Flow, why it is unsafe, and how to avoid it."
 ---
 
-> **Warning:** Do not mistake `any` with [`unknown`](./unknown.md). It's also not the same as [`empty`](./empty.md).
+`any` opts out of type checking entirely. **It is unsafe and should be avoided.** Do not confuse it with [`unknown`](./unknown.md) (safe) or [`empty`](./empty.md) (the bottom type).
 
-If you want a way to opt-out of using the type checker, `any` is the way to do
-it. **Using `any` is completely unsafe, and should be avoided whenever
-possible.**
+```js flow-check
+let x: any = 42;
+x.foo.bar; // No error — type checking is disabled
+```
+
+## When to use this {#toc-when-to-use}
+
+Almost never. Prefer [`unknown`](./unknown.md) for values of arbitrary type — it accepts any value while remaining type-safe by requiring refinement before use. Reserve `any` for incremental migration of untyped code or the rare case where correct code cannot be expressed in Flow's type system. You can enforce this with the [`unclear-type`](../linting/rule-reference.md#toc-unclear-type) lint rule.
+
+## How `any` bypasses type checking {#toc-how-any-bypasses-type-checking}
 
 For example, the following code will not report any errors:
 

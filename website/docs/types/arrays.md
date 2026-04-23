@@ -6,15 +6,15 @@ description: "How to type arrays in Flow, including Array<T> syntax, read-only a
 
 import {SinceVersion} from '../../components/VersionTags';
 
-Array types represent lists of **unknown length**, where all items have the **same type**.
-This is in contrast to [tuple types](./tuples.md), which have a fixed length and where each element can have a different type.
-
-JavaScript array literal values can be used to create both tuple and array types:
+Array types represent variable-length lists where all items have the same type.
 
 ```js flow-check
-const arr: Array<number> = [1, 2, 3]; // As an array type
-const tup: [number, number, number] = [1, 2, 3]; // As a tuple type
+const arr: Array<number> = [1, 2, 3];
 ```
+
+## When to use this {#toc-when-to-use}
+
+Use arrays when you have a variable-length list of values that all share the same type. When the list has a fixed number of elements where each position has a specific type, use [tuples](./tuples.md) instead.
 
 ## `Array` Type {#toc-array-type}
 

@@ -4,41 +4,16 @@ slug: /types/aliases
 description: "How to create reusable type aliases in Flow to name complex types and use them throughout your code."
 ---
 
-When you have complicated types that you want to reuse in multiple places, you
-can alias them in Flow using a **type alias**.
+Type aliases give a reusable name to any type. They are fully transparent — interchangeable with the type they refer to.
 
 ```js flow-check
-type MyObject = {
-  foo: number,
-  bar: boolean,
-  baz: string,
-};
+type ID = number;
+const userId: ID = 42;
 ```
 
-These type aliases can be used anywhere a type can be used.
+## When to use this {#toc-when-to-use}
 
-```js flow-check
-type MyObject = {
-  // ...
-};
-
-const val: MyObject = { /* ... */ };
-function method(val: MyObject) { /* ... */ }
-class Foo { constructor(val: MyObject) { /* ... */ } }
-```
-
-Type aliases are just that: aliases. They don't create a _different_ type, just another name for one.
-This means that a type alias is completely interchangeable with the type it is equal to.
-
-```js flow-check
-type MyNumber = number;
-declare const x: MyNumber;
-declare function foo(x: number): void;
-foo(x); // ok, because MyNumber = number
-```
-
-[Opaque type aliases](./opaque-types.md) offer an alternative for when you don't want to treat the
-types as the same.
+Use type aliases to give descriptive names to complex or frequently used types. Since aliases are transparent, any code that accepts the underlying type also accepts the alias and vice versa. When you need to hide the underlying type from consumers of a module, use [opaque type aliases](./opaque-types.md) instead. [Interfaces](./interfaces.md), [classes](./classes.md), and [enums](../enums/index.md) also introduce named types with additional capabilities beyond simple naming.
 
 ## Type Alias Syntax {#toc-type-alias-syntax}
 

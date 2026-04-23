@@ -4,25 +4,15 @@ slug: /types/opaque-types
 description: "How to use opaque type aliases in Flow to hide the underlying type representation outside of the defining module."
 ---
 
-Opaque type aliases are type aliases that do not allow access to their
-underlying type outside of the file in which they are defined.
+Opaque type aliases are type aliases that hide their underlying type outside of the file in which they are defined.
 
 ```js flow-check
 opaque type ID = string;
 ```
 
-Opaque type aliases, like regular type aliases, may be used anywhere a type can
-be used.
+## When to use this {#toc-when-to-use}
 
-
-```js flow-check
-opaque type ID = string;
-
-function identity(x: ID): ID {
-  return x;
-}
-export type {ID};
-```
+Use opaque types over regular [type aliases](./aliases.md) when you need to enforce abstraction boundaries across module boundaries — for example, preventing callers from treating an `ID` as a plain `string`. Use the optional [supertype constraint](#toc-subtyping-constraints) when consumers need partial access (e.g. reading an `ID` as a `string` but not creating one from a `string`).
 
 ## Opaque Type Alias Syntax {#toc-opaque-type-alias-syntax}
 

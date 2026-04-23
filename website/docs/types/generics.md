@@ -4,29 +4,7 @@ slug: /types/generics
 description: "How to use generic (polymorphic) types in Flow to write reusable, type-safe functions, classes, and type aliases."
 ---
 
-Generics (sometimes referred to as polymorphic types) are a way of abstracting
-a type away.
-
-Imagine writing the following `identity` function which returns whatever value
-was passed.
-
-```js
-function identity(value) {
-  return value;
-}
-```
-
-We would have a lot of trouble trying to write specific types for this function
-since it could be anything.
-
-```js flow-check
-function identity(value: string): string {
-  return value;
-}
-```
-
-Instead we can create a generic (or polymorphic type) in our function and use
-it in place of other types.
+Generics (or polymorphic types) let you write functions, classes, and type aliases that work with any type while preserving type relationships.
 
 ```js flow-check
 function identity<T>(value: T): T {
@@ -34,14 +12,15 @@ function identity<T>(value: T): T {
 }
 ```
 
-Generics can be used within functions, function types, classes, type aliases,
-and interfaces.
+## When to use this {#toc-when-to-use}
+
+Use generics when a function, class, or type alias needs to work across multiple types while preserving the relationship between inputs and outputs. If the type doesn't matter and you don't need to track it, use [`unknown`](./unknown.md) instead. If there are a fixed number of specific types, a [union](./unions.md) may be clearer.
 
 > **Warning:** Flow does not infer generic types. If you want something to have a
 generic type, **annotate it**. Otherwise, Flow may infer a type that is less
 polymorphic than you expect.
 
-### Syntax of generics {#toc-syntax-of-generics}
+## Syntax of generics {#toc-syntax-of-generics}
 
 There are a number of different places where generic types appear in syntax.
 

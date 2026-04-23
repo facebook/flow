@@ -4,8 +4,15 @@ slug: /types/tuples
 description: "How to type tuples in Flow, including labeled elements, optional elements, variance, and spread syntax."
 ---
 
-Tuple types represent a **fixed length** list, where the elements can have **different types**.
-This is in contrast to [array types](./arrays.md), which have an unknown length and all elements have the same type.
+Tuple types represent a fixed length list, where the elements can have different types.
+
+```js flow-check
+const pair: [string, number] = ["age", 42];
+```
+
+## When to use this {#toc-when-to-use}
+
+Use tuples over [arrays](./arrays.md) when the list has a fixed number of elements where each position has a specific meaning and potentially a different type. Use arrays when the length is variable and all elements share the same type.
 
 ## Tuple Basics
 

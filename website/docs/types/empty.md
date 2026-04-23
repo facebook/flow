@@ -4,12 +4,7 @@ slug: /types/empty
 description: "How the empty (bottom) type works in Flow, representing a type with no values that is a subtype of all other types."
 ---
 
-The `empty` type has no values. It is the [subtype of all other types](../lang/type-hierarchy.md) (i.e. the [bottom type](https://en.wikipedia.org/wiki/Bottom_type)).
-In this way it is the opposite of [`unknown`](./unknown.md), which is the supertype of all types.
-
-It is not common to annotate your code using `empty`. However, there are a couple of situations that it might be useful:
-
-If you have a function that always throws, you can annotate the return as `empty`, as the function never returns:
+The `empty` type has no values. It is the [subtype of all other types](../lang/type-hierarchy.md) (the [bottom type](https://en.wikipedia.org/wiki/Bottom_type)), the opposite of [`unknown`](./unknown.md).
 
 ```js flow-check
 function throwIt(msg: string): empty {
@@ -17,7 +12,9 @@ function throwIt(msg: string): empty {
 }
 ```
 
-You can use a cast to `empty` to assert that you have refined away all members of a union:
+## When to use this {#toc-when-to-use}
+
+Use `empty` as the return type of functions that never return (they always throw). You can also cast to `empty` to assert exhaustiveness — if you've refined away all members of a union, the remaining value should be `empty`:
 
 ```js flow-check
 function f(x: 'a' | 'b'): number {

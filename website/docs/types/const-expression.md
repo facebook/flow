@@ -6,9 +6,17 @@ description: "How to use as const to create const-expressions that infer literal
 
 import {SinceVersion} from '../../components/VersionTags';
 
-Sometimes it is useful to specify that a literal expression is expected to be immutable.
-In such cases, you can annotate the expression with the `as const` modifier. We
-refer to these expressions as const-expressions.
+The `as const` modifier tells Flow to infer the narrowest possible type for a literal expression — [literal types](./literals.md) for primitives and read-only types for containers.
+
+```js flow-check
+const x = 42 as const;           // type is 42, not number
+const a = [1, 2] as const;       // type is Readonly<[1, 2]>, not Array<number>
+const o = {x: 1} as const;       // type is Readonly<{x: 1}>, not {x: number}
+```
+
+## When to use this {#toc-when-to-use}
+
+Use `as const` when you need Flow to preserve exact literal values and read-only structure — for example, keeping specific string values in a configuration object or ensuring an array is treated as a fixed-length [tuple](./tuples.md). If you only need an array or object literal to be read-only without narrowing to literal types, use the [`Readonly`](./utilities.md#toc-readonly) utility type instead.
 
 ## Typing for Const Expressions {#toc-const-expression-typing}
 
@@ -155,7 +163,7 @@ declare function foo<X>(x: X): X;
 const x1 = foo({ f: 42 } as const);
 const x2 = foo([42, "hello"] as const);
 ```
-The variables `x1` and `x2` will have the type `{+f: 42}` and `Readonly<[42, "hello"]>`,
+The variables `x1` and `x2` will have the types `{+f: 42}` and `Readonly<[42, "hello"]>`,
 respectively.
 
 To avoid repeating and potentially forgetting to pass `as const`, you can use the

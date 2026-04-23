@@ -4,7 +4,16 @@ slug: /types/indexed-access
 description: "How to use indexed access types to extract a property type from an object, array, or tuple type."
 ---
 
-Flow’s Indexed Access Types allow you to get the type of a property from an [object](./objects.md), [array](./arrays.md), or [tuple](./tuples.md) type.
+Indexed access types extract the type of a property from an [object](./objects.md), [array](./arrays.md), or [tuple](./tuples.md) type.
+
+```js flow-check
+type Person = {name: string, age: number};
+type Age = Person['age']; // number
+```
+
+## When to use this {#toc-when-to-use}
+
+Use indexed access types to derive a property's type from an existing type rather than duplicating it. This keeps types in sync — if the source type changes, the extracted type updates automatically. For transformations across all keys, use [mapped types](./mapped-types.md) instead.
 
 ## Usage {#toc-indexed-access-type-usage}
 
@@ -119,7 +128,7 @@ type TaskData = TasksContent?.['tasks']?.[number]?.['items']?.['metadata'];
 There is one small difference between optional chaining and Optional Indexed Access Types.
 If the object type you access is not nullable, the resulting type in optional chaining will not include `void`.
 With Optional Indexed Access Types, for implementation reasons, the resulting type will always include `void`.
-However, if your object type is not nullable then you don’t need to use an Optional Indexed Access Type, but should just use a regular Indexed Access Type.
+However, if your object type is not nullable then you don't need to use an Optional Indexed Access Type, but should just use a regular Indexed Access Type.
 
 
 ## Adoption {#toc-adoption}

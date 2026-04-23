@@ -6,11 +6,20 @@ description: "How to use mapped types in Flow to transform object types or tuple
 
 import {SinceVersion} from '../../components/VersionTags';
 
-Flow's mapped types allow you to transform object types. They are useful for modeling complex runtime operations over objects.
+Mapped types transform object types by iterating over their keys and producing new property types.
+
+```js flow-check
+type O = {foo: number, bar: string};
+type ReadOnly = {+[key in keyof O]: O[key]};
+```
+
+## When to use this {#toc-when-to-use}
+
+Use mapped types when you need to systematically transform every property of an existing object type — for example, making all properties optional, read-only, or wrapping their values. If you only need to change a few specific properties, [object type spread](./objects.md#object-type-spread) is simpler.
 
 ## Basic Usage {#toc-basic-usage}
 
-Mapped Types have syntax similar to indexed object types but use the `in` keyword:
+Mapped types have syntax similar to indexed object types but use the `in` keyword:
 ```js flow-check
 type O = {foo: number, bar: string};
 

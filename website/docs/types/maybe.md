@@ -4,10 +4,7 @@ slug: /types/maybe
 description: "How to use maybe types (?T) in Flow to represent values that can be null or undefined."
 ---
 
-You can prefix a type with `?` to make it a [union](./unions.md) with `null` and `void`:
-`?T` is equivalent to the union `T | null | void`.
-
-For example, `?number` is equivalent to `number | null | void`, and allows for numbers, `null`, and `undefined` as values. It's "maybe" a number.
+`?T` is shorthand for the [union](./unions.md) `T | null | void`. It accepts the value, `null`, or `undefined`.
 
 ```js flow-check
 function acceptsMaybeNumber(value: ?number) {
@@ -21,7 +18,11 @@ acceptsMaybeNumber(null);      // Works!
 acceptsMaybeNumber("42");      // Error!
 ```
 
-### Maybe types as function parameters
+## When to use this {#toc-when-to-use}
+
+Prefer `?T` for values that may be absent entirely (optional config, uninitialized state). Use `T | null` instead when you want to accept `null` but still require the caller to explicitly pass an argument. For optional object properties, use the `key?: T` syntax rather than `key: ?T` — see [optional properties](./objects.md#toc-optional-object-type-properties).
+
+## Maybe types as function parameters {#toc-maybe-types-as-function-parameters}
 
 Because `?T` includes `void`, using it as a function parameter type makes the argument implicitly optional — callers can omit it entirely. If you want to require callers to always pass an argument while still accepting `null`, use `T | null` instead:
 
@@ -48,7 +49,6 @@ acceptsMaybeProp({});                 // Error!
 
 If you want to allow missing properties, use the [optional property](./objects.md#toc-optional-object-type-properties) syntax, where the `?` is placed _before_ the colon.
 It is also possible to combine both syntaxes for an optional maybe type, for example `{value?: ?number}`.
-
 
 ## Refining maybe types {#toc-refining-maybe-types}
 

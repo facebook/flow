@@ -4,29 +4,16 @@ slug: /types/literals
 description: "How to use literal types in Flow to restrict values to specific strings, numbers, booleans, or bigints."
 ---
 
-Flow has [primitive types](./primitives.md) for
-literal values, but can also use literal values as types.
-
-For example, instead of accepting `number` type, we could accept only the
-literal value `2`.
+Literal types restrict a value to a specific [primitive](./primitives.md) — a particular string, number, boolean, or bigint.
 
 ```js flow-check
 function acceptsTwo(value: 2) { /* ... */ }
 
 acceptsTwo(2);   // Works!
-
 acceptsTwo(3);   // Error!
-acceptsTwo("2"); // Error!
 ```
 
-You can use primitive values for these types:
-
-- Booleans: like `true` or `false`
-- Numbers: like `42` or `3.14`
-- Strings: like `"foo"` or `"bar"`
-- BigInts: like `42n`
-
-Using these with [union types](./unions.md) is powerful:
+Literal types support booleans (`true`, `false`), numbers (`42`, `3.14`), strings (`"foo"`), and bigints (`42n`). They are commonly combined with [union types](./unions.md):
 
 ```js flow-check
 function getColor(name: "success" | "warning" | "danger") {
@@ -43,7 +30,9 @@ getColor("danger");  // Works!
 getColor("error");   // Error!
 ```
 
-Consider using [Flow Enums](../enums/index.md) instead of unions of literal types, if they fit your use-case.
+## When to use this {#toc-when-to-use}
+
+Use literal types when you need to restrict a value to specific constants rather than a broad type like `string` or `number`. They are especially useful in [unions](./unions.md) to define a fixed set of allowed values (e.g. `"success" | "error"`). For a more structured alternative to unions of literals, consider [Flow Enums](../enums/index.md).
 
 ## See Also {#toc-see-also}
 

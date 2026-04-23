@@ -4,7 +4,7 @@ slug: /types/functions
 description: "How to type functions in Flow, including parameters, return types, rest parameters, generics, and callable objects."
 ---
 
-Functions have two places where types are applied: parameters (input) and the return value (output).
+Functions can be typed at their parameters (input) and return value (output).
 
 ```js flow-check
 function concat(a: string, b: string): string {
@@ -15,20 +15,10 @@ concat("foo", "bar"); // Works!
 concat(true, false);  // Error!
 ```
 
-Using inference, return types are often optional:
+Return types can often be omitted thanks to inference, and parameter types can be inferred from context:
 
 ```js flow-check
-function concat(a: string, b: string) {
-  return a + b;
-}
-
-const s: string = concat("foo", "bar"); // Works!
-```
-
-If defined where we can get the type from the context of the expression, type annotations can be optional:
-
-```js flow-check
-[1, 2, 3].map(x => x * x); // From the context, we know parameter `x` has type `number`
+[1, 2, 3].map(x => x * x);
 ```
 
 ## Syntax of functions

@@ -4,9 +4,7 @@ slug: /types/intersections
 description: "How to use intersection types in Flow to combine multiple types."
 ---
 
-Sometimes it is useful to create a type which is ***all of*** a set of other
-types. For example, you might want to write a function which accepts a value that
-implements two different [interfaces](./interfaces.md):
+An **intersection type** represents a value that is ***all of*** a set of types at once.
 
 ```js flow-check
 interface Serializable {
@@ -31,6 +29,10 @@ func({
 func({length: 3}); // Error! Doesn't implement both interfaces
 ```
 
+
+## When to use this {#toc-when-to-use}
+
+Use intersections to declare [overloaded functions](#toc-intersection-of-function-types) with multiple call signatures or to require that a value implements multiple [interfaces](./interfaces.md). To combine exact object types, use [object type spread](./objects.md#object-type-spread) instead — intersecting exact objects creates an [impossible type](#toc-impossible-intersection-types).
 
 ## Intersection type syntax {#toc-intersection-type-syntax}
 

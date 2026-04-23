@@ -6,9 +6,13 @@ description: "How the unknown type works in Flow as the safe supertype of all ty
 
 import {SinceVersion} from '../../components/VersionTags';
 
-`unknown` (replacing [`mixed`](./mixed.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../lang/type-hierarchy.md). All values are `unknown`.
-However, this means that very few operations are permitted on it, without refining to some more specific type.
-That's because the valid operations on `unknown` must be valid for all types.
+`unknown` (replacing [`mixed`](./mixed.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../lang/type-hierarchy.md). All values are `unknown`, but you must [refine](../lang/refinements.md) an `unknown` value before performing any operations on it.
+
+## When to use this {#toc-when-to-use}
+
+Use `unknown` instead of [`any`](./any.md) when you need to accept arbitrary values — `unknown` forces you to [refine](../lang/refinements.md) before use, so it is type-safe to use. If you know the set of possible types upfront, prefer a [union](./unions.md) for better specificity.
+
+## Overview {#toc-overview}
 
 In general, programs have several different categories of types:
 
@@ -118,6 +122,5 @@ only be a `string` inside of the `if` statement. This is known as a
 
 ## See Also {#toc-see-also}
 
-- [Mixed](./mixed.md) — the predecessor to `unknown`, with the same behavior
 - [Refinements](../lang/refinements.md) — how to narrow `unknown` values to specific types before use
 - [Type Hierarchy](../lang/type-hierarchy.md) — how `unknown`, `any`, and `empty` relate in the full type hierarchy

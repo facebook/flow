@@ -4,23 +4,16 @@ slug: /types/typeof
 description: "How to use typeof types in Flow to extract the type of a value at the type level."
 ---
 
-JavaScript has a `typeof` operator which returns a string describing a value.
+Flow's `typeof` type operator extracts the Flow type of a value, so you can use it as a type annotation.
 
 ```js flow-check
-typeof 1 === 'number'
-typeof true === 'boolean'
-typeof 'three' === 'string'
+let size = 42;
+let other: typeof size = 100; // type is number
 ```
 
-However it is limited in that this string only describes so much about the type.
+## When to use this {#toc-when-to-use}
 
-```js flow-check
-typeof {foo: true} === 'object'
-typeof null === 'object'
-typeof [true, false] === 'object'
-```
-
-In Flow, there is a similar `typeof` type operator, but it's much more powerful.
+Use `typeof` to derive a type from an existing value rather than writing it manually. This is useful when a module exports a value but not its type, or when you want to keep annotations in sync with a variable's inferred type. If the type is already available as a named export, prefer importing it directly.
 
 ## `typeof` type syntax {#toc-typeof-type-syntax}
 
@@ -114,6 +107,18 @@ class YourClass {
 let test1: typeof MyClass = YourClass; // Error!
 let test2: typeof MyClass = MyClass;   // Works!
 ```
+
+## Differences from runtime `typeof` {#toc-differences-from-runtime-typeof}
+
+JavaScript's runtime `typeof` operator returns a string like `"number"` or `"object"`, but it can't distinguish many types — for example, objects, arrays, and `null` all produce `"object"`:
+
+```js
+typeof {foo: true} === 'object'
+typeof [true, false] === 'object'
+typeof null === 'object'
+```
+
+Flow's `typeof` is a type-level operator that gives you the full Flow type of a value, preserving its exact structure. It is not used at runtime — it only exists in type annotations.
 
 ## See Also {#toc-see-also}
 

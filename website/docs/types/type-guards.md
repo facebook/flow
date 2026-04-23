@@ -4,19 +4,22 @@ slug: /types/type-guards
 description: "How to write type guard functions in Flow to create custom type predicates for use in refinements."
 ---
 
-Flow lets you define functions whose return expression encodes some type predicate over a parameter `param`. This predicate is annotated in place of a return type annotation as `param is PredicateType`. It declares that if the function returns `true` then `param` is of type `PredicateType`.
+Type guards are functions whose return type is annotated with `param is PredicateType`, narrowing the parameter's type when they return `true`.
 
-The syntax for a function like this is:
 ```js
 function predicate(param: InputType): param is PredicateType {
   return <some_expression>;
 }
 ```
-The type of this function can also be written in terms of a type guard annotation:
+
+The type of this function can also be written as a type annotation:
 ```js
 type PredicateFunc = (param: InputType) => param is PredicateType;
 ```
 
+## When to use this {#toc-when-to-use}
+
+Use type guards when built-in [refinements](../lang/refinements.md) (`typeof`, `instanceof`, equality checks) aren't sufficient to narrow a type. They let you encapsulate custom narrowing logic in a reusable function — for example, filtering arrays to a specific subtype with `.filter()`, or checking domain-specific invariants that Flow can't infer on its own. Use [one-sided type guards](#toc-one-sided-type-guards) (`implies`) when the predicate is only meaningful in the true case.
 
 ## Basic Usage {#toc-basic-usage}
 

@@ -4,9 +4,15 @@ slug: /types/casting
 description: "How to use type cast expressions in Flow to assert types using the as keyword."
 ---
 
-Sometimes it is useful to assert a type without using something like a function
-or a variable to do so. For this Flow supports an inline type cast expression
-syntax which can be used in a number of different ways.
+Type cast expressions let you assert a value's type inline using the `as` keyword.
+
+```js flow-check
+const x = 42 as number;
+```
+
+## When to use this {#toc-when-to-use}
+
+Use casts to widen a value to a less specific type or to verify that a value matches an expected type at a specific point in your code. For narrowing a value to a more specific type, prefer [refinements](../lang/refinements.md) or [type guards](./type-guards.md) — casting through [`any`](./any.md) is unsafe and should be a last resort.
 
 ## Type Cast Expression Syntax {#toc-type-cast-expression-syntax}
 

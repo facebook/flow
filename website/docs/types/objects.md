@@ -4,30 +4,20 @@ slug: /types/objects
 description: "How to type objects in Flow: exact vs inexact types, optional and read-only properties, indexers, object spread, and more."
 ---
 
-Objects can be used in many different ways in JavaScript.
-There are a number of ways to type them in order to support the different use cases.
-
-- Exact object types: An object which has exactly a set of properties, e.g. `{a: number}`. We recommend using exact object types rather than inexact ones, as they are more precise and interact better with other type system features, like [spreads](#object-type-spread).
-- [Inexact object types](#exact-and-inexact-object-types): An object with at least a set of properties, but potentially other, unknown ones, e.g. `{a: number, ...}`.
-- [Objects with indexers](#toc-objects-as-maps): An object that can used as a map from a key type to a value type, e.g. `{[string]: boolean}`.
-- [Interfaces](./interfaces.md): Interfaces are separate from object types. Only they can describe instances of classes. E.g. `interfaces {a: number}`.
-
-Object types try to match the syntax for objects in JavaScript as much as
-possible. Using curly braces `{}` and name-value pairs using a colon `:` split
-by commas `,`.
+Object types describe the shape of JavaScript objects.
 
 ```js flow-check
-const obj1: {foo: boolean} = {foo: true};
-const obj2: {
-  foo: number,
-  bar: boolean,
-  baz: string,
-} = {
-  foo: 1,
-  bar: true,
-  baz: 'three',
-};
+const obj: {foo: number, bar: boolean} = {foo: 1, bar: true};
 ```
+
+Flow supports several variants:
+- **[Exact object types](#exact-and-inexact-object-types)** (default): exactly a set of properties, e.g. `{a: number}`.
+- **[Inexact object types](#exact-and-inexact-object-types)**: at least a set of properties, e.g. `{a: number, ...}`.
+- **[Indexed object types](#toc-objects-as-maps)**: used as a map, e.g. `{[string]: boolean}`.
+
+## When to use this {#toc-when-to-use}
+
+Use object types for plain data and simple structures. When you need methods, inheritance, or nominal typing, use [classes](./classes.md). When you need to accept both class instances and plain objects with the same shape, use [interfaces](./interfaces.md).
 
 ## Optional object type properties {#toc-optional-object-type-properties}
 

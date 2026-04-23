@@ -6,22 +6,21 @@ description: "How to use union types in Flow to represent values that can be one
 
 import {SinceVersion} from '../../components/VersionTags';
 
-Sometimes it's useful to create a type which is ***one of*** a set of other
-types. For example, you might want to write a function which accepts a set of
-primitive value types. For this Flow supports **union types**.
+A **union type** represents a value that is ***one of*** a set of types.
 
 ```js flow-check
-function toStringPrimitives(value: number | boolean | string): string {
-  return String(value);
+function size(value: number | string): number {
+  return typeof value === 'number' ? value : value.length;
 }
 
-toStringPrimitives(1);       // Works!
-toStringPrimitives(true);    // Works!
-toStringPrimitives('three'); // Works!
-
-toStringPrimitives({prop: 'val'}); // Error!
-toStringPrimitives([1, 2, 3, 4, 5]); // Error!
+size(1);       // Works!
+size('three'); // Works!
+size(true);    // Error!
 ```
+
+## When to use this {#toc-when-to-use}
+
+Use unions when a value can be one of several types, such as a function that handles different kinds of events or responses. For unions of string or number literals (e.g. `'success' | 'error'`), consider using [Flow Enums](../enums/index.md) instead, which provide exhaustiveness checking and a more structured API. If you need a nullable type, use the [maybe type](./maybe.md) shorthand `?T` rather than writing `T | null | void`. For values that must satisfy multiple types at once rather than one of them, use [intersections](./intersections.md) instead.
 
 ## Union type syntax {#toc-union-type-syntax}
 

@@ -4,10 +4,15 @@ slug: /types/modules
 description: "How to import and export Flow types between modules, including type-only imports and CommonJS support."
 ---
 
+Flow lets you share types between files using `import type` and `export type` syntax.
+
+```js
+import type {MyType} from './types';
+```
+
 ## Importing and exporting types {#toc-importing-and-exporting-types}
 
-It is often useful to share types between modules (files).
-In Flow, you can export type aliases, interfaces, and classes from one file and import them in another.
+You can export [type aliases](./aliases.md), [interfaces](./interfaces.md), and [classes](./classes.md) from one file and import them in another.
 
 **`exports.js`**
 

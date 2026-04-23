@@ -6,9 +6,13 @@ description: "How the mixed type works in Flow as the supertype of all types, no
 
 import {SinceVersion} from '../../components/VersionTags';
 
-`mixed` (replaced by [`unknown`](./unknown.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../lang/type-hierarchy.md). All values are `mixed`.
-However, this means that very few operations are permitted on it, without refining to some more specific type.
-That's because the valid operations on `mixed` must be valid for all types.
+`mixed` (replaced by [`unknown`](./unknown.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../lang/type-hierarchy.md). All values are `mixed`, but you must [refine](../lang/refinements.md) a `mixed` value before performing any operations on it.
+
+## When to use this {#toc-when-to-use}
+
+In new code, use [`unknown`](./unknown.md) instead — it has the same behavior. Existing `mixed` annotations continue to work but `unknown` is the preferred spelling since Flow v0.290.
+
+## Overview {#toc-overview}
 
 In general, programs have several different categories of types:
 

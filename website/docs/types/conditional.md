@@ -4,11 +4,20 @@ slug: /types/conditional
 description: "How to use conditional types in Flow to choose between two output types based on a type-level condition."
 ---
 
-Flow's conditional type allows you to conditionally choose between two different output types by inspecting an input type. It is useful to extract parts of a type, or to describe a complex overload.
+Conditional types choose between two output types based on a type-level check: `CheckType extends ExtendsType ? TrueType : FalseType`.
+
+```js flow-check
+type IsString<T> = T extends string ? 'yes' : 'no';
+
+type A = IsString<string>; // 'yes'
+type B = IsString<number>; // 'no'
+```
+
+## When to use this {#toc-when-to-use}
+
+Use conditional types when a type needs to depend on another type — for example, extracting parts of a generic type or expressing return types that vary with input. For simple cases where you know the concrete types upfront, a plain [union](./unions.md) is usually clearer. For functions with multiple signatures, consider [overloads](./intersections.md#toc-intersection-of-function-types) instead.
 
 ## Basic Usage {#toc-basic-usage}
-
-It has a syntax that is similar to conditional expressions: `CheckType extends ExtendsType ? TrueType : FalseType`.
 
 If `CheckType` is a subtype of `ExtendsType`, the conditional type will be evaluated to `TrueType`. Otherwise, it will be evaluated to `FalseType`.
 
