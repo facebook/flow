@@ -8178,7 +8178,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     }
                     _ if loc != *def_loc_val
                         && match current_kind {
-                            Some(current_kind) => !kind.same_namespace(&current_kind),
+                            Some(current_kind) => kind.can_coexist(&current_kind),
                             None => false,
                         } =>
                     {

@@ -2281,7 +2281,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 when (not (ALoc.equal loc def_loc))
                      &&
                      match current_kind with
-                     | Some current_kind -> not (Bindings.same_namespace kind current_kind)
+                     | Some current_kind -> Bindings.can_coexist kind current_kind
                      | None -> false ->
                 None
               | Bindings.Type _

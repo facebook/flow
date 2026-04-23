@@ -1,3 +1,102 @@
+Error ---------------------------------------------------------------------------- lib/cross_namespace_b_classes.js:4:15
+
+This name declaration overrides an existing binding `Foo` [1]. Overriding in library definitions can lead to surprising
+behaviors. [libdef-override]
+
+   lib/cross_namespace_b_classes.js:4:15
+   4| declare class Foo {} // ERROR
+                    ^^^
+
+References:
+   lib/cross_namespace_a_types.js:3:6
+   3| type Foo = number;
+           ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- cross_namespace_conflict.js:7:6
+
+Cannot declare `C1` [1] because the name is already bound. [name-already-bound]
+
+   cross_namespace_conflict.js:7:6
+   7| type C1 = number; // ERROR
+           ^^
+
+References:
+   cross_namespace_conflict.js:6:7
+   6| class C1 {}
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- cross_namespace_conflict.js:9:6
+
+Cannot declare `C2` [1] because the name is already bound. [name-already-bound]
+
+   cross_namespace_conflict.js:9:6
+    9| type C2 = number; // ERROR
+            ^^
+
+References:
+   cross_namespace_conflict.js:10:7
+   10| class C2 {}
+             ^^ [1]
+
+
+Error --------------------------------------------------------------------------------- cross_namespace_conflict.js:13:6
+
+Cannot declare `D1` [1] because the name is already bound. [name-already-bound]
+
+   cross_namespace_conflict.js:13:6
+   13| type D1 = number; // ERROR
+            ^^
+
+References:
+   cross_namespace_conflict.js:12:15
+   12| declare class D1 {}
+                     ^^ [1]
+
+
+Error --------------------------------------------------------------------------------- cross_namespace_conflict.js:15:6
+
+Cannot declare `D2` [1] because the name is already bound. [name-already-bound]
+
+   cross_namespace_conflict.js:15:6
+   15| type D2 = number; // ERROR
+            ^^
+
+References:
+   cross_namespace_conflict.js:16:15
+   16| declare class D2 {}
+                     ^^ [1]
+
+
+Error --------------------------------------------------------------------------------- cross_namespace_conflict.js:19:6
+
+Cannot declare `E1` [1] because the name is already bound. [name-already-bound]
+
+   cross_namespace_conflict.js:19:6
+   19| type E1 = number; // ERROR
+            ^^
+
+References:
+   cross_namespace_conflict.js:18:6
+   18| enum E1 { X = 'x' }
+            ^^ [1]
+
+
+Error -------------------------------------------------------------------------------- cross_namespace_conflict.js:22:11
+
+Cannot declare `E2` [1] because the name is already bound. [name-already-bound]
+
+   cross_namespace_conflict.js:22:11
+   22| interface E2 {} // ERROR (enum + interface remains an error)
+                 ^^
+
+References:
+   cross_namespace_conflict.js:21:6
+   21| enum E2 { X = 'x' }
+            ^^ [1]
+
+
 Error ------------------------------------------------------------------------------- same_namespace_still_errors.js:4:5
 
 Cannot declare `X1` [1] because var redeclaration is not supported. [name-already-bound]
@@ -41,4 +140,4 @@ References:
 
 
 
-Found 3 errors
+Found 10 errors

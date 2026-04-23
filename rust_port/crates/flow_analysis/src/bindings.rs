@@ -161,6 +161,26 @@ impl Kind {
         let ns2 = other.namespaces();
         ns1.iter().any(|n| ns2.contains(n))
     }
+
+    /// Whether two binding kinds for the same name can coexist. Looser than
+    /// `!same_namespace`: kinds can coexist when their namespaces are disjoint,
+    /// and additionally as a TypeScript-style declaration-merging carve-out
+    /// for `Class | DeclaredClass | DeclaredNamespace` paired with `Interface`.
+    pub fn can_coexist(&self, other: &Kind) -> bool {
+        if !self.same_namespace(other) {
+            return true;
+        }
+        matches!(
+            (self, other),
+            (
+                Self::Class | Self::DeclaredClass | Self::DeclaredNamespace,
+                Self::Interface { .. },
+            ) | (
+                Self::Interface { .. },
+                Self::Class | Self::DeclaredClass | Self::DeclaredNamespace,
+            )
+        )
+    }
 }
 
 /// TypeScript-style value/type namespace partition.

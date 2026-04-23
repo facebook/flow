@@ -1101,6 +1101,91 @@ pub(super) mod scope {
         }
     }
 
+    // Cross-namespace name conflict detection. With the TypeScript-style
+    // value/type namespace split, `bind` only consults its own namespace map.
+    // For most kinds (e.g. `const A = 1; interface A {}`) cross-namespace
+    // coexistence is intentional. But a `class`/`declare class`/`enum` plus a
+    // `type` alias of the same name is not legitimate coexistence — both
+    // occupy the type namespace via lookup, and TypeScript itself rejects this
+    // pair. The only carve-outs are class/declare-class/namespace + interface
+    // (declaration merging support, deferred).
+    #[derive(Clone, Copy)]
+    pub(super) enum IncomingBindingKind {
+        Type,
+        Interface,
+        Class,
+        DeclareClass,
+        Enum,
+    }
+
+    fn is_cross_namespace_conflict<'arena, 'ast>(
+        opts: &TypeSigOptions,
+        scopes: &mut Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        existing: &LocalBinding<'arena, 'ast>,
+        incoming: IncomingBindingKind,
+    ) -> bool {
+        match (incoming, existing) {
+            // Type-side incoming, value-side existing.
+            (
+                IncomingBindingKind::Type,
+                LocalBinding::ClassBinding { .. }
+                | LocalBinding::DeclareClassBinding { .. }
+                | LocalBinding::EnumBinding { .. }
+                | LocalBinding::NamespaceBinding { .. },
+            ) => true,
+            (IncomingBindingKind::Interface, LocalBinding::EnumBinding { .. }) => true,
+            // Value-side incoming, type-side existing. Force the existing def
+            // lazy to discriminate Interface (allowed for decl-merging) from
+            // TypeAlias/OpaqueType (rejected). Mirrors the OCaml
+            // `Lazy.force def` in is_cross_namespace_conflict.
+            (
+                IncomingBindingKind::Class | IncomingBindingKind::DeclareClass,
+                LocalBinding::TypeBinding { def, .. },
+            ) => {
+                let parsed_def = def.get_forced(opts, scopes, tbls);
+                !matches!(parsed_def, Def::Interface(_))
+            }
+            (IncomingBindingKind::Enum, LocalBinding::TypeBinding { .. }) => true,
+            _ => false,
+        }
+    }
+
+    pub(super) fn report_cross_namespace_conflict<'arena, 'ast>(
+        opts: &TypeSigOptions,
+        id: ScopeId,
+        scopes: &mut Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        name: &FlowSmolStr,
+        id_loc: LocNode<'arena>,
+        type_only: bool,
+        incoming: IncomingBindingKind,
+    ) {
+        let existing = match scopes.get(id) {
+            Scope::Global { values, types, .. } => {
+                let map = if type_only { values } else { types };
+                match map.get(name) {
+                    Some(BindingNode::LocalBinding(node)) => node.dupe(),
+                    _ => return,
+                }
+            }
+            _ => return,
+        };
+        let conflict = {
+            let data = existing.0.data();
+            is_cross_namespace_conflict(opts, scopes, tbls, &data, incoming)
+        };
+        if conflict {
+            let override_binding_loc = loc_of_binding(&BindingNode::LocalBinding(existing.dupe()));
+            tbls.additional_errors
+                .push(signature_error::BindingValidation::NameOverride {
+                    name: name.clone(),
+                    override_binding_loc,
+                    existing_binding_loc: id_loc,
+                });
+        }
+    }
+
     pub(super) fn bind<'arena, 'ast, F>(
         type_only: bool,
         id: ScopeId,
@@ -1148,7 +1233,9 @@ pub(super) mod scope {
 
         // TypeScript-style two-namespace model: only check the matching map
         // for an existing binding. Cross-namespace coexistence (e.g.
-        // `const A = 1; interface A {}`) is permitted.
+        // `const A = 1; interface A {}`) is permitted by `bind` itself; the
+        // class/enum-vs-type-alias rejection is handled by callers via
+        // `report_cross_namespace_conflict` invoked before `bind` runs.
         fn scope_check_bind<'arena, 'ast>(
             scope: &Scope<'arena, 'ast>,
             name: &FlowSmolStr,
@@ -1390,6 +1477,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn bind_type<'arena, 'ast>(
+        opts: &TypeSigOptions,
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -1398,6 +1486,16 @@ pub(super) mod scope {
         def: Lazy<'arena, 'ast, ParsedDef<'arena, 'ast>>,
         k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
     ) {
+        report_cross_namespace_conflict(
+            opts,
+            id,
+            scopes,
+            tbls,
+            &name,
+            id_loc.dupe(),
+            true,
+            IncomingBindingKind::Type,
+        );
         bind_local(
             true,
             id,
@@ -1489,6 +1587,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn bind_interface<'arena: 'ast, 'ast>(
+        opts: &TypeSigOptions,
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -1497,6 +1596,16 @@ pub(super) mod scope {
         new_def: Lazy<'arena, 'ast, ParsedDef<'arena, 'ast>>,
         k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
     ) {
+        report_cross_namespace_conflict(
+            opts,
+            id,
+            scopes,
+            tbls,
+            &name,
+            id_loc.dupe(),
+            true,
+            IncomingBindingKind::Interface,
+        );
         bind(
             true,
             id,
@@ -1610,6 +1719,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn bind_class<'arena, 'ast>(
+        opts: &TypeSigOptions,
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -1618,6 +1728,16 @@ pub(super) mod scope {
         def: Lazy<'arena, 'ast, ClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
     ) {
+        report_cross_namespace_conflict(
+            opts,
+            id,
+            scopes,
+            tbls,
+            &name,
+            id_loc.dupe(),
+            false,
+            IncomingBindingKind::Class,
+        );
         bind_local(
             false,
             id,
@@ -1636,6 +1756,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn bind_declare_class<'arena, 'ast>(
+        opts: &TypeSigOptions,
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -1644,6 +1765,16 @@ pub(super) mod scope {
         def: Lazy<'arena, 'ast, DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
     ) {
+        report_cross_namespace_conflict(
+            opts,
+            id,
+            scopes,
+            tbls,
+            &name,
+            id_loc.dupe(),
+            false,
+            IncomingBindingKind::DeclareClass,
+        );
         let is_global_scope = matches!(scopes.get(id), Scope::Global { .. });
         bind(
             false,
@@ -1716,6 +1847,7 @@ pub(super) mod scope {
     }
 
     pub(super) fn bind_enum<'arena, 'ast>(
+        opts: &TypeSigOptions,
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -1734,6 +1866,16 @@ pub(super) mod scope {
         >,
         k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
     ) {
+        report_cross_namespace_conflict(
+            opts,
+            id,
+            scopes,
+            tbls,
+            &name,
+            id_loc.dupe(),
+            false,
+            IncomingBindingKind::Enum,
+        );
         bind_local(
             false,
             id,
@@ -6915,6 +7057,7 @@ fn expression<'arena: 'ast, 'ast>(
                     })
                 }));
                 scope::bind_class(
+                    opts,
                     child_scope,
                     scopes,
                     tbls,
@@ -9009,10 +9152,11 @@ fn type_alias_decl<'arena: 'ast, 'ast>(
         })
     }));
 
-    scope::bind_type(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+    scope::bind_type(opts, scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
 fn opaque_type_decl<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
@@ -9058,7 +9202,7 @@ fn opaque_type_decl<'arena: 'ast, 'ast>(
         })
     }));
 
-    scope::bind_type(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+    scope::bind_type(opts, scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
 fn const_var_init_decl<'arena: 'ast, 'ast>(
@@ -9505,6 +9649,7 @@ fn record_decl<'arena: 'ast, 'ast>(
 }
 
 fn class_decl<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
@@ -9520,7 +9665,7 @@ fn class_decl<'arena: 'ast, 'ast>(
             class_def(opts, scope, scopes, tbls, decl)
         })
     }));
-    scope::bind_class(scope, scopes, tbls, id_loc_node, name, def, k);
+    scope::bind_class(opts, scope, scopes, tbls, id_loc_node, name, def, k);
 }
 
 fn function_decl<'arena: 'ast, 'ast>(
@@ -9820,6 +9965,7 @@ fn declare_function_decl<'arena: 'ast, 'ast>(
 }
 
 fn declare_class_decl<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
@@ -9837,7 +9983,7 @@ fn declare_class_decl<'arena: 'ast, 'ast>(
         })
     }));
 
-    scope::bind_declare_class(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+    scope::bind_declare_class(opts, scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
 fn namespace_decl<'arena, 'ast, F>(
@@ -9934,6 +10080,7 @@ fn import_decl<'arena, 'ast>(
 }
 
 fn interface_decl<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
@@ -9962,7 +10109,7 @@ fn interface_decl<'arena: 'ast, 'ast>(
         })
     }));
 
-    scope::bind_interface(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+    scope::bind_interface(opts, scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
 fn enum_decl<'arena: 'ast, 'ast>(
@@ -10024,7 +10171,7 @@ fn enum_decl<'arena: 'ast, 'ast>(
     } else {
         None
     };
-    scope::bind_enum(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+    scope::bind_enum(opts, scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
 fn export_named_decl<'arena: 'ast, 'ast>(
@@ -10046,7 +10193,7 @@ fn export_named_decl<'arena: 'ast, 'ast>(
             function_decl(scope, scopes, tbls, inner, &export_binding_fn)
         }
         StatementInner::ClassDeclaration { inner, .. } => {
-            class_decl(scope, scopes, tbls, inner, &export_binding_fn)
+            class_decl(opts, scope, scopes, tbls, inner, &export_binding_fn)
         }
         StatementInner::RecordDeclaration { inner, .. } => {
             record_decl(opts, scope, scopes, tbls, inner, &export_binding_fn)
@@ -10061,10 +10208,10 @@ fn export_named_decl<'arena: 'ast, 'ast>(
             &export_binding_fn,
         ),
         StatementInner::OpaqueType { inner, .. } => {
-            opaque_type_decl(scope, scopes, tbls, inner, &export_binding_fn)
+            opaque_type_decl(opts, scope, scopes, tbls, inner, &export_binding_fn)
         }
         StatementInner::InterfaceDeclaration { inner, .. } => {
-            interface_decl(scope, scopes, tbls, inner, &export_binding_fn)
+            interface_decl(opts, scope, scopes, tbls, inner, &export_binding_fn)
         }
         StatementInner::VariableDeclaration { inner, .. } => {
             variable_decls(opts, scope, scopes, tbls, inner, &export_binding_fn)
@@ -10142,7 +10289,7 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
             loc: _,
             declaration: c,
         } => {
-            declare_class_decl(scope, scopes, tbls, c, &export_maybe_default_binding);
+            declare_class_decl(opts, scope, scopes, tbls, c, &export_maybe_default_binding);
         }
         D::Component {
             loc,
@@ -10203,7 +10350,7 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
             loc: _,
             declaration: t,
         } => {
-            opaque_type_decl(scope, scopes, tbls, t, &|scopes, name, binding| {
+            opaque_type_decl(opts, scope, scopes, tbls, t, &|scopes, name, binding| {
                 scope::export_binding(scopes, scope, ExportKind::ExportType, name.clone(), binding);
             });
         }
@@ -10211,7 +10358,7 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
             loc: _,
             declaration: i,
         } => {
-            interface_decl(scope, scopes, tbls, i, &|scopes, name, binding| {
+            interface_decl(opts, scope, scopes, tbls, i, &|scopes, name, binding| {
                 scope::export_binding(scopes, scope, ExportKind::ExportType, name.clone(), binding);
             });
         }
@@ -10278,7 +10425,7 @@ fn export_default_decl<'arena: 'ast, 'ast>(
                 let loc_node = tbls.push_loc(loc.dupe());
                 match &decl.id {
                     Some(_) => {
-                        class_decl(scope, scopes, tbls, decl, &|scopes, name, binding| {
+                        class_decl(opts, scope, scopes, tbls, decl, &|scopes, name, binding| {
                             scope::export_default_binding(
                                 scopes,
                                 scope,
@@ -10687,19 +10834,19 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             loc: _,
             inner: decl,
         } => {
-            opaque_type_decl(scope, scopes, tbls, decl, &|_, _, _| {});
+            opaque_type_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
         }
         S::DeclareOpaqueType {
             loc: _,
             inner: decl,
         } => {
-            opaque_type_decl(scope, scopes, tbls, decl, &|_, _, _| {});
+            opaque_type_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
         }
         S::ClassDeclaration {
             loc: _,
             inner: decl,
         } => {
-            class_decl(scope, scopes, tbls, decl, &|_, _, _| {});
+            class_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
         }
         S::RecordDeclaration {
             loc: _,
@@ -10711,7 +10858,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             loc: _,
             inner: decl,
         } => {
-            declare_class_decl(scope, scopes, tbls, decl, &|_, _, _| {});
+            declare_class_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
         }
         S::DeclareComponent { loc, inner: decl } => {
             declare_component_decl(scope, scopes, tbls, loc, decl, &|_, _, _| {});
@@ -10720,13 +10867,13 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             loc: _,
             inner: decl,
         } => {
-            interface_decl(scope, scopes, tbls, decl, &|_, _, _| {});
+            interface_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
         }
         S::DeclareInterface {
             loc: _,
             inner: decl,
         } => {
-            interface_decl(scope, scopes, tbls, decl, &|_, _, _| {});
+            interface_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
         }
         S::FunctionDeclaration {
             loc: _,

@@ -79,6 +79,13 @@ val namespaces_of_kind : kind -> namespace list
 
 val same_namespace : kind -> kind -> bool
 
+(** Whether two binding kinds for the same name can coexist. Looser than
+    [not (same_namespace ...)]: two kinds can coexist when their namespaces
+    are disjoint, and additionally as a TypeScript-style declaration-merging
+    carve-out for [Class | DeclaredClass | DeclaredNamespace] paired with
+    [Interface]. Used to gate cross-namespace duplicate-binding errors. *)
+val can_coexist : kind -> kind -> bool
+
 (** Splits a [Bindings.t] into [(value_bindings, type_bindings)] preserving
     declaration order within each namespace. A binding in both namespaces
     (e.g. [Class]) appears in both halves. *)

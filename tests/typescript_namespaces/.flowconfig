@@ -1,3 +1,6 @@
+[libs]
+lib
+
 [options]
 all=true
 enums=true

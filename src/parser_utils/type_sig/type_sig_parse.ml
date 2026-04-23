@@ -744,6 +744,58 @@ module Scope = struct
     | ID.ImportTypeof -> ImportTypeofNsBinding { id_loc; name; mref }
     | ID.ImportType -> ImportTypeNsBinding { id_loc; name; mref }
 
+  (* Cross-namespace name conflict detection. With the TypeScript-style
+     value/type namespace split, `bind` only consults its own namespace map.
+     For most kinds (e.g. `const A = 1; interface A {}`) cross-namespace
+     coexistence is intentional. But a `class`/`declare class`/`enum` plus a
+     `type` alias of the same name is not legitimate coexistence — both
+     occupy the type namespace via lookup, and TypeScript itself rejects this
+     pair. The only carve-outs are class/declare-class/namespace + interface
+     (declaration merging support, deferred). *)
+  type incoming_binding_kind =
+    | IbkType
+    | IbkInterface
+    | IbkClass
+    | IbkDeclareClass
+    | IbkEnum
+
+  let is_cross_namespace_conflict ~(existing : _ local_binding) ~incoming =
+    match (incoming, existing) with
+    (* Type-side incoming, value-side existing. *)
+    | (IbkType, ClassBinding _)
+    | (IbkType, DeclareClassBinding _)
+    | (IbkType, EnumBinding _)
+    | (IbkType, NamespaceBinding _) ->
+      true
+    | (IbkInterface, EnumBinding _) -> true
+    (* Value-side incoming, type-side existing. *)
+    | ((IbkClass | IbkDeclareClass), TypeBinding { def; _ }) ->
+      (match Lazy.force def with
+      | Interface _ -> false
+      | _ -> true)
+    | (IbkEnum, TypeBinding _) -> true
+    | _ -> false
+
+  let report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only ~incoming =
+    match scope with
+    | Global { values; types; _ } ->
+      let other_map =
+        if type_only then
+          values
+        else
+          types
+      in
+      (match SMap.find_opt name other_map with
+      | Some (LocalBinding node as existing) ->
+        if is_cross_namespace_conflict ~existing:(Local_defs.value node) ~incoming then
+          let override_binding_loc = loc_of_binding existing in
+          tbls.additional_errors <-
+            Signature_error.NameOverride
+              { name; override_binding_loc; existing_binding_loc = id_loc }
+            :: tbls.additional_errors
+      | _ -> ())
+    | _ -> ()
+
   let bind ~type_only scope tbls name id_loc f =
     let bind_updater ~in_global_scope f existing_binding =
       (* For now, we allow $JSXIntrinsics, since we intentionally kept only a minimal version in
@@ -880,6 +932,7 @@ module Scope = struct
         )
 
   let bind_type scope tbls id_loc name def =
+    report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only:true ~incoming:IbkType;
     bind_local ~type_only:true scope tbls name id_loc (TypeBinding { id_loc; def })
 
   let tparams_arity = function
@@ -924,6 +977,7 @@ module Scope = struct
       }
 
   let bind_interface scope tbls id_loc name new_def k =
+    report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only:true ~incoming:IbkInterface;
     bind ~type_only:true scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | Some (LocalBinding existing_node) ->
@@ -981,6 +1035,7 @@ module Scope = struct
     )
 
   let bind_class scope tbls id_loc name def =
+    report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only:false ~incoming:IbkClass;
     bind_local
       ~type_only:false
       scope
@@ -990,6 +1045,13 @@ module Scope = struct
       (ClassBinding { id_loc; name; def; namespace_types = SMap.empty })
 
   let bind_declare_class scope tbls id_loc name def k =
+    report_cross_namespace_conflict
+      scope
+      tbls
+      ~name
+      ~id_loc
+      ~type_only:false
+      ~incoming:IbkDeclareClass;
     bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | None ->
@@ -1032,6 +1094,7 @@ module Scope = struct
       (RecordBinding { id_loc; name; def; defaulted_props })
 
   let bind_enum scope tbls id_loc name def =
+    report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only:false ~incoming:IbkEnum;
     bind_local ~type_only:false scope tbls name id_loc (EnumBinding { id_loc; name; def })
 
   (* Function declarations preceded by declared functions are taken to have the

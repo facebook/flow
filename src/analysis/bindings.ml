@@ -123,6 +123,16 @@ let same_namespace k1 k2 =
   let ns2 = namespaces_of_kind k2 in
   List.exists (fun n -> List.mem n ns2) ns1
 
+let can_coexist k1 k2 =
+  if not (same_namespace k1 k2) then
+    true
+  else
+    match (k1, k2) with
+    | ((Class | DeclaredClass | DeclaredNamespace), Interface _)
+    | (Interface _, (Class | DeclaredClass | DeclaredNamespace)) ->
+      true
+    | _ -> false
+
 (* Bindings.t is stored newest-first (entries are added with List.cons).
    split_by_namespace preserves that ordering within each output list. *)
 let split_by_namespace t =
