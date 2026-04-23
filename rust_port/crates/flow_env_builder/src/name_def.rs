@@ -894,25 +894,21 @@ fn obj_properties_synthesizable(
     use ast::expression::ExpressionInner;
     use ast::expression::object::Property;
 
-    fn handle_fun(
-        this_write_locs: EnvSet<ALoc>,
-        mut acc: Vec<ObjectMissingAnnot>,
-        synth: FunctionSynthKind,
-    ) -> Result<(Vec<ObjectMissingAnnot>, EnvSet<ALoc>), ()> {
+    fn handle_fun(acc: &mut Vec<ObjectMissingAnnot>, synth: FunctionSynthKind) -> Result<(), ()> {
         match synth {
-            FunctionSynthKind::FunctionSynthesizable => Ok((acc, this_write_locs)),
+            FunctionSynthKind::FunctionSynthesizable => Ok(()),
             FunctionSynthKind::MissingReturn(loc) => {
                 acc.push(ObjectMissingAnnot::FuncMissingAnnot(loc));
-                Ok((acc, this_write_locs))
+                Ok(())
             }
         }
     }
 
     fn synthesizable_expression(
-        mut acc: Vec<ObjectMissingAnnot>,
-        mut this_write_locs: EnvSet<ALoc>,
+        acc: &mut Vec<ObjectMissingAnnot>,
+        this_write_locs: &mut EnvSet<ALoc>,
         expr: &ast::expression::Expression<ALoc, ALoc>,
-    ) -> Result<(Vec<ObjectMissingAnnot>, EnvSet<ALoc>), ()> {
+    ) -> Result<(), ()> {
         let elem_loc = expr.loc().dupe();
         match expr.deref() {
             ExpressionInner::StringLiteral { .. }
@@ -924,7 +920,7 @@ fn obj_properties_synthesizable(
             | ExpressionInner::ModuleRefLiteral { .. }
             | ExpressionInner::Identifier { .. }
             | ExpressionInner::TypeCast { .. }
-            | ExpressionInner::AsExpression { .. } => Ok((acc, this_write_locs)),
+            | ExpressionInner::AsExpression { .. } => Ok(()),
             ExpressionInner::Member { inner, .. } => {
                 let is_simple_member = matches!(
                     (inner.object.deref(), &inner.property),
@@ -936,18 +932,16 @@ fn obj_properties_synthesizable(
                     )
                 );
                 if is_simple_member {
-                    Ok((acc, this_write_locs))
+                    Ok(())
                 } else {
                     acc.push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
-                    Ok((acc, this_write_locs))
+                    Ok(())
                 }
             }
             ExpressionInner::ArrowFunction { inner, .. }
-            | ExpressionInner::Function { inner, .. } => handle_fun(
-                this_write_locs,
-                acc,
-                func_is_synthesizable_from_annotation(inner),
-            ),
+            | ExpressionInner::Function { inner, .. } => {
+                handle_fun(acc, func_is_synthesizable_from_annotation(inner))
+            }
             ExpressionInner::Object { inner, .. } => {
                 match obj_properties_synthesizable(obj_this_write_locs(inner), inner) {
                     ObjectSynthKind::ObjectSynthesizable {
@@ -956,67 +950,47 @@ fn obj_properties_synthesizable(
                         for key in new_this_write_locs.iter() {
                             this_write_locs.insert(key.dupe());
                         }
-                        Ok((acc, this_write_locs))
+                        Ok(())
                     }
                     ObjectSynthKind::MissingMemberAnnots { locs } => {
                         for loc in locs.iter() {
                             acc.push(loc.clone());
                         }
-                        Ok((acc, this_write_locs))
+                        Ok(())
                     }
                     ObjectSynthKind::Unsynthesizable => {
                         acc.push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
-                        Ok((acc, this_write_locs))
+                        Ok(())
                     }
                 }
             }
             ExpressionInner::Array { inner, .. } => {
                 use ast::expression::ArrayElement;
-                let original_acc = acc.clone();
-                let original_this_write_locs = this_write_locs.clone();
+                let acc_savepoint = acc.len();
+                let original_this_write_locs = this_write_locs.dupe();
 
                 for elem in inner.elements.iter() {
-                    match elem {
+                    let recursion_result = match elem {
                         ArrayElement::Expression(exp) => {
-                            match synthesizable_expression(acc, this_write_locs, exp) {
-                                Ok((new_acc, new_locs)) => {
-                                    acc = new_acc;
-                                    this_write_locs = new_locs;
-                                }
-                                Err(()) => {
-                                    let mut result_acc = original_acc;
-                                    result_acc
-                                        .push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
-                                    return Ok((result_acc, original_this_write_locs));
-                                }
-                            }
+                            synthesizable_expression(acc, this_write_locs, exp)
                         }
                         ArrayElement::Spread(spread) => {
-                            match synthesizable_expression(acc, this_write_locs, &spread.argument) {
-                                Ok((new_acc, new_locs)) => {
-                                    acc = new_acc;
-                                    this_write_locs = new_locs;
-                                }
-                                Err(()) => {
-                                    let mut result_acc = original_acc;
-                                    result_acc
-                                        .push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
-                                    return Ok((result_acc, original_this_write_locs));
-                                }
-                            }
+                            synthesizable_expression(acc, this_write_locs, &spread.argument)
                         }
-                        ArrayElement::Hole(_) => {
-                            let mut result_acc = original_acc;
-                            result_acc.push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
-                            return Ok((result_acc, original_this_write_locs));
-                        }
+                        ArrayElement::Hole(_) => Err(()),
+                    };
+                    if recursion_result.is_err() {
+                        acc.truncate(acc_savepoint);
+                        *this_write_locs = original_this_write_locs;
+                        acc.push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
+                        return Ok(());
                     }
                 }
-                Ok((acc, this_write_locs))
+                Ok(())
             }
             _ => {
                 acc.push(ObjectMissingAnnot::OtherMissingAnnot(elem_loc));
-                Ok((acc, this_write_locs))
+                Ok(())
             }
         }
     }
@@ -1047,14 +1021,10 @@ fn obj_properties_synthesizable(
                         }
                     }
                     if let object::Key::Identifier(_) = key {
-                        match synthesizable_expression(acc, current_this_write_locs, value) {
-                            Ok((new_acc, new_locs)) => {
-                                acc = new_acc;
-                                current_this_write_locs = new_locs;
-                            }
-                            Err(_) => {
-                                return ObjectSynthKind::Unsynthesizable;
-                            }
+                        if synthesizable_expression(&mut acc, &mut current_this_write_locs, value)
+                            .is_err()
+                        {
+                            return ObjectSynthKind::Unsynthesizable;
                         }
                     } else {
                         return ObjectSynthKind::Unsynthesizable;
@@ -1066,18 +1036,10 @@ fn obj_properties_synthesizable(
                     ..
                 } => {
                     let (_, fn_inner) = value;
-                    match handle_fun(
-                        current_this_write_locs,
-                        acc,
-                        func_is_synthesizable_from_annotation(fn_inner),
-                    ) {
-                        Ok((new_acc, new_locs)) => {
-                            acc = new_acc;
-                            current_this_write_locs = new_locs;
-                        }
-                        Err(()) => {
-                            return ObjectSynthKind::Unsynthesizable;
-                        }
+                    if handle_fun(&mut acc, func_is_synthesizable_from_annotation(fn_inner))
+                        .is_err()
+                    {
+                        return ObjectSynthKind::Unsynthesizable;
                     }
                 }
                 _ => {
