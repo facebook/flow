@@ -109,6 +109,7 @@ for root, dirs, files in os.walk(DOCS_DIR):
 doc_files.sort()
 
 output_lines = []
+validation_failures = []
 block_count = 0
 
 for filepath in doc_files:
@@ -165,6 +166,41 @@ for filepath in doc_files:
         output_lines.append(result)
         output_lines.append("")
 
+        # Validate error annotations match actual errors
+        source_lines = ('// @flow\n' + code).splitlines()
+        error_lines = set()
+        for err_match in re.finditer(
+            r'^Error\s+-+\s+-:(\d+):\d+', result, re.MULTILINE
+        ):
+            error_lines.add(int(err_match.group(1)))
+
+        HAS_ERROR_ANNOTATION = r'(?://|/\*).*\berror\b'
+        IS_EXCLUDED = r'(?:\bno\b.*\berror\b|flowlint)'
+
+        # Check 1: each error location should have a // error annotation
+        for line_no in error_lines:
+            if 0 < line_no <= len(source_lines):
+                src_line = source_lines[line_no - 1]
+                if not re.search(HAS_ERROR_ANNOTATION, src_line, re.IGNORECASE):
+                    validation_failures.append(
+                        f"{rel_path} block {i+1} line {line_no}: "
+                        f"missing // error: {src_line.strip()}"
+                    )
+
+        # Check 2: each // error annotation should have a corresponding error
+        for line_no, src_line in enumerate(source_lines, 1):
+            if not re.search(HAS_ERROR_ANNOTATION, src_line, re.IGNORECASE):
+                continue
+            if re.search(IS_EXCLUDED, src_line, re.IGNORECASE):
+                continue
+            if src_line.lstrip().startswith(('//', '/*')):
+                continue
+            if line_no not in error_lines:
+                validation_failures.append(
+                    f"{rel_path} block {i+1} line {line_no}: "
+                    f"has // error but no error reported: {src_line.strip()}"
+                )
+
 # Stop the Flow server
 subprocess.run([FLOW_BIN, 'stop', WORK_DIR], capture_output=True)
 
@@ -172,8 +208,25 @@ subprocess.run([FLOW_BIN, 'stop', WORK_DIR], capture_output=True)
 with open(OUT_FILE, 'w') as f:
     f.write('\n'.join(output_lines) + '\n')
 
+# Write validation failures
+validation_file = os.path.join(WORK_DIR, 'validation_failures.txt')
+with open(validation_file, 'w') as f:
+    for failure in validation_failures:
+        f.write(failure + '\n')
+
 print(f"Checked {block_count} flow-check blocks from {len(doc_files)} files", file=sys.stderr)
 PYTHON_SCRIPT
+
+# --- Validate error annotations ---
+VALIDATION_FILE="$WORK_DIR/validation_failures.txt"
+if [[ -s "$VALIDATION_FILE" ]]; then
+  echo "Error annotation validation failures:" >&2
+  cat "$VALIDATION_FILE" >&2
+  echo "" >&2
+  echo "Each line that Flow reports an error on should have a '// error' comment," >&2
+  echo "and each '// error' comment should correspond to an actual error." >&2
+  exit 1
+fi
 
 # --- Compare or record ---
 if [[ "$record" -eq 1 ]]; then
