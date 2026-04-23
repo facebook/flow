@@ -1500,35 +1500,39 @@ fn collect_declared_namespace_members(
     let mut values = BTreeMap::new();
     let mut types = BTreeMap::new();
 
-    for stmt in statements {
-        match stmt.deref() {
+    fn collect_one(
+        stmt: &ast::statement::StatementInner<ALoc, ALoc>,
+        values: &mut StaticsMap,
+        types: &mut NamespaceTypesMap,
+    ) {
+        match stmt {
             StatementInner::DeclareNamespace { inner, .. } => {
                 if let ast::statement::declare_namespace::Id::Local(id) = &inner.id {
-                    add_namespace_member(&mut values, &id.name, &id.loc);
+                    add_namespace_member(values, &id.name, &id.loc);
                 }
             }
             StatementInner::DeclareTypeAlias { inner, .. }
             | StatementInner::TypeAlias { inner, .. } => {
-                add_namespace_member(&mut types, &inner.id.name, &inner.id.loc);
+                add_namespace_member(types, &inner.id.name, &inner.id.loc);
             }
             StatementInner::DeclareOpaqueType { inner, .. }
             | StatementInner::OpaqueType { inner, .. } => {
-                add_namespace_member(&mut types, &inner.id.name, &inner.id.loc);
+                add_namespace_member(types, &inner.id.name, &inner.id.loc);
             }
             StatementInner::DeclareInterface { inner, .. }
             | StatementInner::InterfaceDeclaration { inner, .. } => {
-                add_namespace_member(&mut types, &inner.id.name, &inner.id.loc);
+                add_namespace_member(types, &inner.id.name, &inner.id.loc);
             }
             StatementInner::DeclareVariable { inner, .. } => {
                 for decl in inner.declarations.iter() {
                     if let Pattern::Identifier { inner: pat_id, .. } = &decl.id {
-                        add_namespace_member(&mut values, &pat_id.name.name, &pat_id.name.loc);
+                        add_namespace_member(values, &pat_id.name.name, &pat_id.name.loc);
                     }
                 }
             }
             StatementInner::DeclareFunction { inner, .. } => {
                 if let Some(id) = &inner.id {
-                    add_namespace_member(&mut values, &id.name, &id.loc);
+                    add_namespace_member(values, &id.name, &id.loc);
                 }
             }
             StatementInner::DeclareClass { inner, .. } => {
@@ -1536,7 +1540,7 @@ fn collect_declared_namespace_members(
                 // prevents a declaration-merged interface from supplying its location,
                 // which may lack an env entry. insert overwrites any earlier
                 // interface entry so the class location always wins.
-                add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+                add_namespace_member(values, &inner.id.name, &inner.id.loc);
                 types.insert(
                     inner.id.name.dupe(),
                     EnvKey::new(DefLocType::OrdinaryNameLoc, inner.id.loc.dupe()),
@@ -1545,7 +1549,7 @@ fn collect_declared_namespace_members(
             StatementInner::ClassDeclaration { inner, .. } => {
                 if let Some(id) = &inner.id {
                     // Classes introduce both value and type bindings.
-                    add_namespace_member(&mut values, &id.name, &id.loc);
+                    add_namespace_member(values, &id.name, &id.loc);
                     types.insert(
                         id.name.dupe(),
                         EnvKey::new(DefLocType::OrdinaryNameLoc, id.loc.dupe()),
@@ -1553,14 +1557,26 @@ fn collect_declared_namespace_members(
                 }
             }
             StatementInner::DeclareComponent { inner, .. } => {
-                add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+                add_namespace_member(values, &inner.id.name, &inner.id.loc);
             }
             StatementInner::DeclareEnum { inner, .. }
             | StatementInner::EnumDeclaration { inner, .. } => {
-                add_namespace_member(&mut values, &inner.id.name, &inner.id.loc);
+                add_namespace_member(values, &inner.id.name, &inner.id.loc);
+            }
+            // `export interface I {}`, `export type T = ...`, `export declare const x: ...`
+            // inside a `declare namespace` body should be treated the same as the
+            // unwrapped form for merging purposes. Common in .d.ts files.
+            StatementInner::ExportNamedDeclaration { inner, .. } => {
+                if let Some(decl) = &inner.declaration {
+                    collect_one(decl.deref(), values, types);
+                }
             }
             _ => {}
         }
+    }
+
+    for stmt in statements {
+        collect_one(stmt.deref(), &mut values, &mut types);
     }
 
     (values, types)
@@ -4538,6 +4554,50 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             })
             .collect();
 
+        // Pre-scan for class/function/declare-class/declare-function names. The
+        // namespace arm uses this to decide whether to merge a namespace into a
+        // sibling function/class regardless of source order. Without this set,
+        // a `declare namespace X { ... }` that appears BEFORE its sibling
+        // `declare class X { ... }` would be visited normally and its members
+        // would never reach the class's namespace_types
+        fn name_of_decl(stmt: &StatementInner<ALoc, ALoc>) -> Option<FlowSmolStr> {
+            match stmt {
+                StatementInner::ClassDeclaration { inner, .. } => {
+                    inner.id.as_ref().map(|id| id.name.dupe())
+                }
+                StatementInner::FunctionDeclaration { inner, .. } => {
+                    inner.id.as_ref().map(|id| id.name.dupe())
+                }
+                StatementInner::DeclareClass { inner, .. } => Some(inner.id.name.dupe()),
+                StatementInner::DeclareFunction { inner, .. } => {
+                    inner.id.as_ref().map(|id| id.name.dupe())
+                }
+                StatementInner::ExportNamedDeclaration { inner, .. }
+                    if matches!(inner.export_kind, ast::statement::ExportKind::ExportValue) =>
+                {
+                    inner
+                        .declaration
+                        .as_ref()
+                        .and_then(|d| name_of_decl(d.deref()))
+                }
+                StatementInner::ExportDefaultDeclaration { inner, .. } => {
+                    if let ast::statement::export_default_declaration::Declaration::Declaration(
+                        decl,
+                    ) = &inner.declaration
+                    {
+                        name_of_decl(decl.deref())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
+        }
+        let function_or_class_names: BTreeSet<FlowSmolStr> = stmts
+            .iter()
+            .filter_map(|stmt| name_of_decl(stmt.deref()))
+            .collect();
+
         enum DeferredVisit {
             FunctionDecl {
                 loc: ALoc,
@@ -4984,35 +5044,57 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
                 StatementInner::DeclareNamespace { inner, .. } => {
                     if let ast::statement::declare_namespace::Id::Local(id) = &inner.id {
-                        let should_merge = state
+                        // Decide whether to merge this namespace into a sibling function/class:
+                        //
+                        // - Type-only namespace + sibling function/class (any order): merge.
+                        //   The namespace contributes only types; folding them into the
+                        //   sibling via `wrap_with_namespace_types` is the whole point of
+                        //   TS-style declaration merging.
+                        // - Value-bodied namespace + sibling function/class, with the
+                        //   function/class appearing FIRST: merge (preserves existing behavior).
+                        // - Value-bodied namespace + sibling function/class, with the
+                        //   namespace appearing FIRST: do NOT merge. The namespace binds as
+                        //   `DeclaredConst` on the value side and gets its own
+                        //   `DeclaredNamespace` def. Forcing a merge here would drop that
+                        //   def and leave the namespace's value-side AssigningWrite
+                        //   unresolved, crashing with `MissingEnvWrite`.
+                        let is_type_only_ns =
+                            flow_parser::ast_utils::is_type_only_declaration_statement(stmt);
+                        let has_sibling = function_or_class_names.contains(&id.name);
+                        let function_first = state
                             .get(&id.name)
                             .and_then(|function_state| function_state.merge_candidate_loc.as_ref())
                             .is_some_and(|function_loc| function_loc < &id.loc);
+                        let should_merge = has_sibling && (is_type_only_ns || function_first);
                         if should_merge {
                             let (namespace_values, namespace_types) =
                                 collect_declared_namespace_members(&inner.body.1.body);
-                            if let Some(function_state) = state.get_mut(&id.name) {
-                                for (member_name, env_key) in namespace_values {
-                                    function_state
-                                        .statics
-                                        .entry(member_name)
-                                        .or_insert(Some(env_key));
-                                }
-                                for (member_name, env_key) in namespace_types {
-                                    // Declaration-merged interfaces (e.g. `interface Foo`
-                                    // after `class Foo` or `function Foo`) are marked as
-                                    // NonAssigningWrite and have no env entry, which causes
-                                    // a crash in resolve_namespace_types. Only add namespace
-                                    // type entries that have an assigning write.
-                                    if let std::collections::btree_map::Entry::Vacant(entry) =
-                                        function_state.namespace_types.entry(member_name)
-                                    {
-                                        if crate::env_api::has_assigning_write(
-                                            env_key.dupe(),
-                                            &self.env_info.env_entries,
-                                        ) {
-                                            entry.insert(env_key);
-                                        }
+                            // Initialize a fresh function_state if the namespace appears
+                            // before its sibling function/class — the sibling's arm will
+                            // add its deferred_visit (and set merge_candidate_loc) later.
+                            let function_state = state
+                                .entry(id.name.dupe())
+                                .or_insert_with(FunctionState::new);
+                            for (member_name, env_key) in namespace_values {
+                                function_state
+                                    .statics
+                                    .entry(member_name)
+                                    .or_insert(Some(env_key));
+                            }
+                            for (member_name, env_key) in namespace_types {
+                                // Declaration-merged interfaces (e.g. `interface Foo`
+                                // after `class Foo` or `function Foo`) are marked as
+                                // NonAssigningWrite and have no env entry, which causes
+                                // a crash in resolve_namespace_types. Only add namespace
+                                // type entries that have an assigning write.
+                                if let std::collections::btree_map::Entry::Vacant(entry) =
+                                    function_state.namespace_types.entry(member_name)
+                                {
+                                    if crate::env_api::has_assigning_write(
+                                        env_key.dupe(),
+                                        &self.env_info.env_entries,
+                                    ) {
+                                        entry.insert(env_key);
                                     }
                                 }
                             }

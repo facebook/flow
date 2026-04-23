@@ -2725,38 +2725,33 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 }
                 None => (loc.dupe(), *kind),
             };
-            // (* When the only type-side declaration is a type-only `declare
-            //    namespace` that gets merged into a preceding function
-            //    declaration (TS-style `declare function F(...); declare
-            //    namespace F { type T = ... }`), no separate def is emitted
-            //    at the namespace id. Resolution instead happens at the
-            //    function id via `wrap_function_with_namespace_types`.
-            //    Redirect the type-side canonical loc to the function id so
-            //    reads of `F` in type position find the resolved merged
-            //    type. A value-bodied `declare namespace` binds as
-            //    `DeclaredConst` (see hoister.ml) and never enters this
-            //    type-side map. *)
-            // let (canonical_loc, canonical_kind) =
-            //   match (canonical_kind, SMap.find_opt name full) with
-            //   | ( Bindings.Type { type_only_namespace = true; _ },
-            //       Some
-            //         ( (Bindings.Function | Bindings.DeclaredFunction),
-            //           ((full_first_loc, full_first_kind), _)
-            //         )
-            //     ) ->
-            //     (full_first_loc, full_first_kind)
-            //   | _ -> (canonical_loc, canonical_kind)
-            // in
+            // When the only type-side declaration is a type-only `declare
+            // namespace` that gets merged into a sibling function declaration
+            // (TS-style `declare function F(...); declare namespace F { type T = ... }`,
+            // or the same in reverse order), no separate def is emitted at the
+            // namespace id. Resolution instead happens at the function id via
+            // `wrap_function_with_namespace_types`. Redirect the type-side
+            // canonical loc to the function id so reads of `F` in type position
+            // find the resolved merged type. The lookup walks the full entries
+            // list rather than only checking `full`'s canonical kind so that
+            // namespace-before-function order is handled too. A value-bodied
+            // `declare namespace` binds as `DeclaredConst` (see hoister.ml) and
+            // never enters this type-side map.
             let (canonical_loc, canonical_kind) = match (canonical_kind, full.get(name)) {
                 (
                     BindingsKind::Type {
                         type_only_namespace: true,
                         ..
                     },
-                    Some((BindingsKind::Function | BindingsKind::DeclaredFunction, full_entries)),
+                    Some((_, full_entries)),
                 ) => {
-                    let (full_first_loc, full_first_kind) = full_entries.first();
-                    (full_first_loc.dupe(), *full_first_kind)
+                    let fn_entry = full_entries.iter().find(|(_, k)| {
+                        matches!(k, BindingsKind::Function | BindingsKind::DeclaredFunction)
+                    });
+                    match fn_entry {
+                        Some((fn_loc, fn_kind)) => (fn_loc.dupe(), *fn_kind),
+                        None => (canonical_loc, canonical_kind),
+                    }
                 }
                 _ => (canonical_loc, canonical_kind),
             };
@@ -2764,7 +2759,24 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 type_entries.iter().map(|(l, k)| (l.dupe(), *k)).collect();
             let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
             let reason = VirtualReason::new(desc, canonical_loc.dupe());
-            for decl_loc in type_kind_at_loc.keys() {
+            // Add an AssigningWrite at every type-side decl loc so name_def's
+            // resolution finds a tvar to populate. Skip the id loc of a
+            // `type_only_namespace` that is being merged into a sibling
+            // function/class — the namespace itself has no separate def in
+            // name_def (the type members are folded into the sibling via
+            // `wrap_with_namespace_types`), so a write at that id would
+            // create an unresolvable lazy tvar.
+            for (decl_loc, decl_kind) in type_kind_at_loc.iter() {
+                let is_merged_type_only_namespace = matches!(
+                    decl_kind,
+                    BindingsKind::Type {
+                        type_only_namespace: true,
+                        ..
+                    }
+                ) && decl_loc != &canonical_loc;
+                if is_merged_type_only_namespace {
+                    continue;
+                }
                 let decl_desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
                 let decl_reason = VirtualReason::new(decl_desc, decl_loc.dupe());
                 self.env_state.write_entries.insert(
@@ -8169,11 +8181,20 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     }
                     BindingsKind::Class | BindingsKind::DeclaredClass
                         if loc != *def_loc_val
-                            && matches!(current_kind, Some(BindingsKind::Interface { .. })) =>
+                            && matches!(
+                                current_kind,
+                                Some(BindingsKind::Interface { .. })
+                                    | Some(BindingsKind::Type {
+                                        type_only_namespace: true,
+                                        ..
+                                    })
+                            ) =>
                     {
-                        // TS-style declaration merging: interfaces may coexist
-                        // with classes/declare classes while the class remains
-                        // the canonical type binding.
+                        // TS-style declaration merging: interfaces and type-only
+                        // `declare namespace`s may coexist with classes/declare
+                        // classes while the class remains the canonical type binding.
+                        // The namespace's type members are folded into the class via
+                        // name_def's `namespace_types` plumbing and `wrap_with_namespace_types`.
                         None
                     }
                     _ if loc != *def_loc_val

@@ -1030,6 +1030,38 @@ end = struct
         | None -> ());
         super#declare_function stmt_loc stmt
 
+      method! declare_namespace stmt_loc decl =
+        (* The Flow_ast_mapper default routes the namespace id through
+           pattern_identifier with kind=Const, which our pattern_identifier
+           override registers as a `Bindings.Const` provider. For type-only
+           namespaces (e.g. `declare namespace f { type T = ... }`) the
+           namespace contributes no value-side binding — its types are folded
+           into a sibling function/class via `wrap_with_namespace_types`. If
+           we let the default fire, the namespace's id loc ends up in the
+           sibling function's provider list, which makes mk_env emit an
+           AssigningWrite at the namespace id with no corresponding def in
+           name_def, producing a `ReadOfUnreachedTvar` InternalError when the
+           sibling is read. Skip the id for type-only bodies; value-bodied
+           namespaces fall through to the default, which still tracks the
+           Const-style binding correctly. *)
+        let open Ast.Statement.DeclareNamespace in
+        let { id; body; _ } = decl in
+        if
+          Flow_ast_utils.is_type_only_declaration_statement
+            (stmt_loc, Ast.Statement.DeclareNamespace decl)
+        then (
+          let (block_loc, body_block) = body in
+          ignore (this#block block_loc body_block);
+          decl
+        ) else (
+          (match id with
+          | Global _ -> ()
+          | Local p_id -> ignore (this#pattern_identifier ~kind:Flow_ast.Variable.Const p_id));
+          let (block_loc, body_block) = body in
+          ignore (this#block block_loc body_block);
+          decl
+        )
+
       method! for_in_left_declaration left =
         let (_, decl) = left in
         let { Flow_ast.Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in

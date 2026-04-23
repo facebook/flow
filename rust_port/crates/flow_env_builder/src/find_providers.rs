@@ -1522,6 +1522,40 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for FindDeclarations<L> {
         ast_visitor::declare_function_default(self, loc, stmt)
     }
 
+    fn declare_namespace(
+        &mut self,
+        loc: &L,
+        decl: &ast::statement::DeclareNamespace<L, L>,
+    ) -> Result<(), !> {
+        // The default visitor routes the namespace id through pattern_identifier
+        // with kind=Const, which our pattern_identifier override registers as a
+        // `BindingKind::Const` provider. For type-only namespaces (e.g.
+        // `declare namespace f { type T = ... }`) the namespace contributes no
+        // value-side binding — its types are folded into a sibling function/class
+        // via `wrap_with_namespace_types`. If we let the default fire, the
+        // namespace's id loc ends up in the sibling function's provider list,
+        // which makes mk_env emit an AssigningWrite at the namespace id with no
+        // corresponding def in name_def, producing a `ReadOfUnreachedTvar`
+        // InternalError when the sibling is read. Skip the id for type-only
+        // bodies; value-bodied namespaces fall through to the default, which
+        // still tracks the Const-style binding correctly.
+        let stmt =
+            ast::statement::Statement::new(ast::statement::StatementInner::DeclareNamespace {
+                loc: loc.dupe(),
+                inner: std::sync::Arc::new(decl.clone()),
+            });
+        if flow_parser::ast_utils::is_type_only_declaration_statement(&stmt) {
+            let Ok(()) = self.block(&decl.body.0, &decl.body.1);
+            Ok(())
+        } else {
+            if let ast::statement::declare_namespace::Id::Local(id) = &decl.id {
+                let Ok(_) = self.pattern_identifier(Some(ast::VariableKind::Const), id);
+            }
+            let Ok(()) = self.block(&decl.body.0, &decl.body.1);
+            Ok(())
+        }
+    }
+
     fn declare_variable(
         &mut self,
         _loc: &L,

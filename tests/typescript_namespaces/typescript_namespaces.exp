@@ -13,6 +13,20 @@ References:
            ^^^ [1]
 
 
+Error -------------------------------------------------------------------------------- class_then_namespace_local.js:8:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   class_then_namespace_local.js:8:1
+   8| 1 as L.T; // err: number ~> string
+      ^ [1]
+
+References:
+   class_then_namespace_local.js:8:6
+   8| 1 as L.T; // err: number ~> string
+           ^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- cross_namespace_conflict.js:7:6
 
 Cannot declare `C1` [1] because the name is already bound. [name-already-bound]
@@ -97,6 +111,34 @@ References:
             ^^ [1]
 
 
+Error -------------------------------------------------------------------------------------- namespace_then_class.js:8:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   namespace_then_class.js:8:1
+   8| 1 as M.T; // err: number ~> string
+      ^ [1]
+
+References:
+   namespace_then_class.js:8:6
+   8| 1 as M.T; // err: number ~> string
+           ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- namespace_then_function.js:8:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   namespace_then_function.js:8:1
+   8| 1 as fn.T; // err: number ~> string
+      ^ [1]
+
+References:
+   namespace_then_function.js:8:6
+   8| 1 as fn.T; // err: number ~> string
+           ^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------- same_namespace_still_errors.js:4:5
 
 Cannot declare `X1` [1] because var redeclaration is not supported. [name-already-bound]
@@ -140,4 +182,4 @@ References:
 
 
 
-Found 10 errors
+Found 13 errors

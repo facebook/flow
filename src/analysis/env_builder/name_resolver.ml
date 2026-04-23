@@ -1985,36 +1985,60 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               | [] -> (loc, kind)
             in
             (* When the only type-side declaration is a type-only `declare
-               namespace` that gets merged into a preceding function
-               declaration (TS-style `declare function F(...); declare
-               namespace F { type T = ... }`), no separate def is emitted
-               at the namespace id. Resolution instead happens at the
-               function id via `wrap_function_with_namespace_types`.
-               Redirect the type-side canonical loc to the function id so
-               reads of `F` in type position find the resolved merged
-               type. A value-bodied `declare namespace` binds as
-               `DeclaredConst` (see hoister.ml) and never enters this
-               type-side map. *)
+               namespace` that gets merged into a sibling function declaration
+               (TS-style `declare function F(...); declare namespace F { type T = ... }`,
+               or the same in reverse order), no separate def is emitted at the
+               namespace id. Resolution instead happens at the function id via
+               `wrap_function_with_namespace_types`. Redirect the type-side
+               canonical loc to the function id so reads of `F` in type position
+               find the resolved merged type. The lookup walks the full entries
+               list rather than only checking `full`'s canonical kind so that
+               namespace-before-function order is handled too. A value-bodied
+               `declare namespace` binds as `DeclaredConst` (see hoister.ml) and
+               never enters this type-side map. *)
             let (canonical_loc, canonical_kind) =
               match (canonical_kind, SMap.find_opt name full) with
-              | ( Bindings.Type { type_only_namespace = true; _ },
-                  Some
-                    ( (Bindings.Function | Bindings.DeclaredFunction),
-                      ((full_first_loc, full_first_kind), _)
-                    )
-                ) ->
-                (full_first_loc, full_first_kind)
+              | (Bindings.Type { type_only_namespace = true; _ }, Some (_, (full_first, full_rest)))
+                ->
+                let fn_entry =
+                  Base.List.find (full_first :: full_rest) ~f:(fun (_, k) ->
+                      match k with
+                      | Bindings.Function
+                      | Bindings.DeclaredFunction ->
+                        true
+                      | _ -> false
+                  )
+                in
+                (match fn_entry with
+                | Some (fn_loc, fn_kind) -> (fn_loc, fn_kind)
+                | None -> (canonical_loc, canonical_kind))
               | _ -> (canonical_loc, canonical_kind)
             in
             let type_kind_at_loc =
               List.fold_left (fun acc (l, k) -> ALocMap.add l k acc) ALocMap.empty type_entries
             in
             let reason = mk_reason (RType (OrdinaryName name)) canonical_loc in
+            (* Add an AssigningWrite at every type-side decl loc so name_def's
+               resolution finds a tvar to populate. Skip the id loc of a
+               `type_only_namespace` that is being merged into a sibling
+               function/class — the namespace itself has no separate def in
+               name_def (the type members are folded into the sibling via
+               `wrap_with_namespace_types`), so a write at that id would
+               create an unresolvable lazy tvar. *)
             let write_entries =
               ALocMap.fold
-                (fun decl_loc _ acc ->
-                  let decl_reason = mk_reason (RType (OrdinaryName name)) decl_loc in
-                  EnvMap.add_ordinary decl_loc (Env_api.AssigningWrite decl_reason) acc)
+                (fun decl_loc decl_kind acc ->
+                  let is_merged_type_only_namespace =
+                    match decl_kind with
+                    | Bindings.Type { type_only_namespace = true; _ } ->
+                      not (ALoc.equal decl_loc canonical_loc)
+                    | _ -> false
+                  in
+                  if is_merged_type_only_namespace then
+                    acc
+                  else
+                    let decl_reason = mk_reason (RType (OrdinaryName name)) decl_loc in
+                    EnvMap.add_ordinary decl_loc (Env_api.AssigningWrite decl_reason) acc)
                 type_kind_at_loc
                 env_state.write_entries
             in
@@ -2272,10 +2296,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                      &&
                      match current_kind with
                      | Some (Bindings.Interface _) -> true
+                     | Some (Bindings.Type { type_only_namespace = true; _ }) -> true
                      | _ -> false ->
-                (* TS-style declaration merging: interfaces may coexist with
-                   classes/declare classes while the class remains the canonical
-                   type binding. *)
+                (* TS-style declaration merging: interfaces and type-only
+                   `declare namespace`s may coexist with classes/declare classes
+                   while the class remains the canonical type binding. The
+                   namespace's type members are folded into the class via
+                   name_def's `namespace_types` plumbing and `wrap_with_namespace_types`. *)
                 None
               | _
                 when (not (ALoc.equal loc def_loc))

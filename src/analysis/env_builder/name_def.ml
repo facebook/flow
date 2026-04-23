@@ -862,63 +862,73 @@ let add_namespace_member map name loc =
     map
 
 let collect_declared_namespace_members statements =
+  let rec collect (values, types) stmt =
+    match stmt with
+    | Ast.Statement.DeclareNamespace
+        {
+          Ast.Statement.DeclareNamespace.id =
+            Ast.Statement.DeclareNamespace.Local (loc, { Ast.Identifier.name; _ });
+          _;
+        } ->
+      (add_namespace_member values name loc, types)
+    | Ast.Statement.DeclareTypeAlias
+        { Ast.Statement.TypeAlias.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.DeclareOpaqueType
+        { Ast.Statement.OpaqueType.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.OpaqueType
+        { Ast.Statement.OpaqueType.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.DeclareInterface
+        { Ast.Statement.Interface.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.InterfaceDeclaration
+        { Ast.Statement.Interface.id = (loc, { Ast.Identifier.name; _ }); _ } ->
+      (values, add_namespace_member types name loc)
+    | Ast.Statement.DeclareVariable { Ast.Statement.DeclareVariable.declarations; _ } ->
+      let values =
+        Base.List.fold declarations ~init:values ~f:(fun values (_, declarator) ->
+            match declarator.Ast.Statement.VariableDeclaration.Declarator.id with
+            | ( _,
+                Ast.Pattern.Identifier
+                  { Ast.Pattern.Identifier.name = (loc, { Ast.Identifier.name; _ }); _ }
+              ) ->
+              add_namespace_member values name loc
+            | _ -> values
+        )
+      in
+      (values, types)
+    | Ast.Statement.DeclareFunction
+        { Ast.Statement.DeclareFunction.id = Some (loc, { Ast.Identifier.name; _ }); _ } ->
+      (add_namespace_member values name loc, types)
+    | Ast.Statement.DeclareClass
+        { Ast.Statement.DeclareClass.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.ClassDeclaration { Ast.Class.id = Some (loc, { Ast.Identifier.name; _ }); _ } ->
+      (* Classes introduce both value and type bindings. Adding to types
+         prevents a declaration-merged interface from supplying its location,
+         which may lack an env entry. SMap.add overwrites any earlier
+         interface entry so the class location always wins. *)
+      (add_namespace_member values name loc, SMap.add name (Env_api.OrdinaryNameLoc, loc) types)
+    | Ast.Statement.DeclareComponent
+        { Ast.Statement.DeclareComponent.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.DeclareEnum
+        { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ }
+    | Ast.Statement.EnumDeclaration
+        { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
+      (add_namespace_member values name loc, types)
+    (* `export interface I {}`, `export type T = ...`, `export declare const x: ...`
+       inside a `declare namespace` body should be treated the same as the
+       unwrapped form for merging purposes. Common in .d.ts files. *)
+    | Ast.Statement.ExportNamedDeclaration
+        {
+          Ast.Statement.ExportNamedDeclaration.declaration = Some (_, inner);
+          Ast.Statement.ExportNamedDeclaration.export_kind = _;
+          _;
+        } ->
+      collect (values, types) inner
+    | _ -> (values, types)
+  in
   Base.List.fold
     ~init:(SMap.empty, SMap.empty)
-    ~f:(fun (values, types) (_, stmt) ->
-      match stmt with
-      | Ast.Statement.DeclareNamespace
-          {
-            Ast.Statement.DeclareNamespace.id =
-              Ast.Statement.DeclareNamespace.Local (loc, { Ast.Identifier.name; _ });
-            _;
-          } ->
-        (add_namespace_member values name loc, types)
-      | Ast.Statement.DeclareTypeAlias
-          { Ast.Statement.TypeAlias.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.TypeAlias
-          { Ast.Statement.TypeAlias.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.DeclareOpaqueType
-          { Ast.Statement.OpaqueType.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.OpaqueType
-          { Ast.Statement.OpaqueType.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.DeclareInterface
-          { Ast.Statement.Interface.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.InterfaceDeclaration
-          { Ast.Statement.Interface.id = (loc, { Ast.Identifier.name; _ }); _ } ->
-        (values, add_namespace_member types name loc)
-      | Ast.Statement.DeclareVariable { Ast.Statement.DeclareVariable.declarations; _ } ->
-        let values =
-          Base.List.fold declarations ~init:values ~f:(fun values (_, declarator) ->
-              match declarator.Ast.Statement.VariableDeclaration.Declarator.id with
-              | ( _,
-                  Ast.Pattern.Identifier
-                    { Ast.Pattern.Identifier.name = (loc, { Ast.Identifier.name; _ }); _ }
-                ) ->
-                add_namespace_member values name loc
-              | _ -> values
-          )
-        in
-        (values, types)
-      | Ast.Statement.DeclareFunction
-          { Ast.Statement.DeclareFunction.id = Some (loc, { Ast.Identifier.name; _ }); _ } ->
-        (add_namespace_member values name loc, types)
-      | Ast.Statement.DeclareClass
-          { Ast.Statement.DeclareClass.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.ClassDeclaration { Ast.Class.id = Some (loc, { Ast.Identifier.name; _ }); _ }
-        ->
-        (* Classes introduce both value and type bindings. Adding to types
-           prevents a declaration-merged interface from supplying its location,
-           which may lack an env entry. SMap.add overwrites any earlier
-           interface entry so the class location always wins. *)
-        (add_namespace_member values name loc, SMap.add name (Env_api.OrdinaryNameLoc, loc) types)
-      | Ast.Statement.DeclareComponent
-          { Ast.Statement.DeclareComponent.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.DeclareEnum
-          { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ }
-      | Ast.Statement.EnumDeclaration
-          { Ast.Statement.EnumDeclaration.id = (loc, { Ast.Identifier.name; _ }); _ } ->
-        (add_namespace_member values name loc, types)
-      | _ -> (values, types))
+    ~f:(fun acc (_, stmt) -> collect acc stmt)
     statements
 
 let def_of_component ~tparams_map ~component_loc component =
@@ -1054,6 +1064,47 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                 } ->
               SSet.add name acc
             | _ -> acc)
+          SSet.empty
+          stmts
+      in
+      (* Pre-scan for class/function/declare-class/declare-function names. The
+         namespace arm uses this to decide whether to merge a namespace into a
+         sibling function/class regardless of source order. Without this set,
+         a `declare namespace X { ... }` that appears BEFORE its sibling
+         `declare class X { ... }` would be visited normally and its members
+         would never reach the class's namespace_types *)
+      let function_or_class_names =
+        let rec name_of_decl = function
+          | Ast.Statement.ClassDeclaration
+              { Ast.Class.id = Some (_, { Ast.Identifier.name; _ }); _ }
+          | Ast.Statement.FunctionDeclaration
+              { Ast.Function.id = Some (_, { Ast.Identifier.name; _ }); _ }
+          | Ast.Statement.DeclareClass
+              { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }
+          | Ast.Statement.DeclareFunction
+              { Ast.Statement.DeclareFunction.id = Some (_, { Ast.Identifier.name; _ }); _ } ->
+            Some name
+          | Ast.Statement.ExportNamedDeclaration
+              {
+                Ast.Statement.ExportNamedDeclaration.declaration = Some (_, inner);
+                Ast.Statement.ExportNamedDeclaration.export_kind = Ast.Statement.ExportValue;
+                _;
+              } ->
+            name_of_decl inner
+          | Ast.Statement.ExportDefaultDeclaration
+              {
+                Ast.Statement.ExportDefaultDeclaration.declaration =
+                  Ast.Statement.ExportDefaultDeclaration.Declaration (_, inner);
+                _;
+              } ->
+            name_of_decl inner
+          | _ -> None
+        in
+        List.fold_left
+          (fun acc (_, stmt) ->
+            match name_of_decl stmt with
+            | Some name -> SSet.add name acc
+            | None -> acc)
           SSet.empty
           stmts
       in
@@ -1410,7 +1461,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             )
           in
           loop state xs
-        | ( ( _,
+        | ( ( ns_loc,
               Ast.Statement.DeclareNamespace
                 ( {
                     Ast.Statement.DeclareNamespace.id =
@@ -1422,7 +1473,28 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ) as stmt
           )
           :: xs ->
-          let should_merge =
+          (* Decide whether to merge this namespace into a sibling function/class:
+
+             - Type-only namespace + sibling function/class (any order): merge.
+               The namespace contributes only types; folding them into the
+               sibling via `wrap_with_namespace_types` is the whole point of
+               TS-style declaration merging.
+             - Value-bodied namespace + sibling function/class, with the
+               function/class appearing FIRST: merge (preserves existing
+               behavior — typing_test.js's `merged_runtime_fn` shape).
+             - Value-bodied namespace + sibling function/class, with the
+               namespace appearing FIRST: do NOT merge. The namespace binds as
+               `DeclaredConst` on the value side and gets its own
+               `DeclaredNamespace` def from `super#declare_namespace`. Forcing
+               a merge here would drop that def and leave the namespace's
+               value-side AssigningWrite unresolved, crashing with
+               `MissingEnvWrite`. *)
+          let is_type_only_ns =
+            Flow_ast_utils.is_type_only_declaration_statement
+              (ns_loc, Ast.Statement.DeclareNamespace ns)
+          in
+          let has_sibling = SSet.mem name function_or_class_names in
+          let function_first =
             Base.Option.value_map
               ~default:false
               ~f:(fun function_state ->
@@ -1432,48 +1504,56 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                   function_state.merge_candidate_loc)
               (SMap.find_opt name state)
           in
+          let should_merge = has_sibling && (is_type_only_ns || function_first) in
           if should_merge then (
             let (_, { Ast.Statement.Block.body = statements; comments = _ }) = body in
             let (namespace_values, namespace_types) =
               collect_declared_namespace_members statements
             in
+            let merge_into_function_state function_state =
+              let statics =
+                SMap.fold
+                  (fun member_name env_key ->
+                    SMap.update member_name (function
+                        | Some existing -> Some existing
+                        | None -> Some (Some env_key)
+                        ))
+                  namespace_values
+                  function_state.statics
+              in
+              let namespace_types =
+                SMap.fold
+                  (fun member_name env_key ->
+                    SMap.update member_name (function
+                        | Some existing -> Some existing
+                        | None ->
+                          (* Declaration-merged interfaces (e.g. `interface Foo`
+                             after `class Foo` or `function Foo`) are marked as
+                             NonAssigningWrite and have no env entry, which causes
+                             a crash in resolve_namespace_types. Only add namespace
+                             type entries that have an assigning write. *)
+                          if Env_api.has_assigning_write env_key env_info.Env_api.env_entries then
+                            Some env_key
+                          else
+                            None
+                        ))
+                  namespace_types
+                  function_state.namespace_types
+              in
+              { function_state with statics; namespace_types }
+            in
             let state =
               SMap.update
                 name
                 (function
-                  | None -> None
-                  | Some function_state ->
-                    let statics =
-                      SMap.fold
-                        (fun member_name env_key ->
-                          SMap.update member_name (function
-                              | Some existing -> Some existing
-                              | None -> Some (Some env_key)
-                              ))
-                        namespace_values
-                        function_state.statics
-                    in
-                    let namespace_types =
-                      SMap.fold
-                        (fun member_name env_key ->
-                          SMap.update member_name (function
-                              | Some existing -> Some existing
-                              | None ->
-                                (* Declaration-merged interfaces (e.g. `interface Foo`
-                                   after `class Foo` or `function Foo`) are marked as
-                                   NonAssigningWrite and have no env entry, which causes
-                                   a crash in resolve_namespace_types. Only add namespace
-                                   type entries that have an assigning write. *)
-                                if Env_api.has_assigning_write env_key env_info.Env_api.env_entries
-                                then
-                                  Some env_key
-                                else
-                                  None
-                              ))
-                        namespace_types
-                        function_state.namespace_types
-                    in
-                    Some { function_state with statics; namespace_types })
+                  | None ->
+                    (* Namespace seen before its sibling function/class.
+                       Initialize a fresh function_state with the namespace
+                       members; the function/class arm will add its
+                       deferred_visit (and set merge_candidate_loc) when it
+                       fires later. *)
+                    Some (merge_into_function_state empty_function_state)
+                  | Some function_state -> Some (merge_into_function_state function_state))
                 state
             in
             this#visit_merged_declare_namespace_body ns;
