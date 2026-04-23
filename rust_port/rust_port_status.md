@@ -14,710 +14,710 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
 
 - [x] analysis/
   - [x] __tests__/
-      - [x] analysis_tests.ml → irrelevant since it's just a collector of the other tests
-      - [x] scope_builder_test.ml → `flow_analysis/src/scope_builder_tests.rs`
-      - [x] ssa_builder_test.ml → `flow_analysis/src/ssa_builder_tests.rs`
-      - [x] test_utils.ml → `flow_analysis/src/test_utils.rs`
+    - [x] analysis_tests.ml → irrelevant since it's just a collector of the other tests
+    - [x] scope_builder_test.ml → `flow_analysis/src/scope_builder_tests.rs`
+    - [x] ssa_builder_test.ml → `flow_analysis/src/ssa_builder_tests.rs`
+    - [x] test_utils.ml → `flow_analysis/src/test_utils.rs`
   - [x] env_builder/
     - [x] __tests__/
-        - [x] env_builder_refinement_test.ml → `flow_env_builder_resolver/src/env_builder_refinement_test.rs`
-        - [x] env_builder_tests.ml → irrelevant (OUnit runner for find_provider_test)
-        - [x] find_provider_test.ml → `flow_env_builder/src/find_provider_test.rs`
-        - [x] name_def_test.ml → `flow_env_builder_resolver/src/name_def_test.rs`
-      - [x] dependency_sigs.ml → `flow_env_builder_resolver/src/dependency_sigs.rs`
-          - [x] `Context` trait
-          - [x] `Flow` trait
-      - [x] env_api.ml → `flow_env_builder/src/env_api.rs`
-      - [x] eq_test.ml → `flow_env_builder/src/eq_test.rs`
-      - [x] find_providers.ml → `flow_env_builder/src/find_providers.rs`
-      - [x] invalidation_api.ml → `flow_env_builder/src/invalidation_api.rs`
-      - [x] name_def.ml → `flow_env_builder/src/name_def.rs`
-      - [x] name_def_ordering.ml → `flow_env_builder_resolver/src/name_def_ordering.rs`
-      - [x] name_def_types.ml → `flow_env_builder/src/name_def_types.rs`
-      - [x] name_resolver.ml → `flow_env_builder_resolver/src/name_resolver.rs`
-      - [x] nonvoid_return.ml → `flow_env_builder/src/nonvoid_return.rs`
-      - [x] pattern_helper.ml → `flow_env_builder/src/pattern_helper.rs`
-      - [x] provider_api.ml → `flow_env_builder/src/provider_api.rs`
-      - [x] refinement_key.ml → `flow_env_builder/src/refinement_key.rs`
-      - [x] selector.ml → `flow_env_builder/src/selector.rs`
-      - [x] ssa_val.ml → `flow_env_builder/src/ssa_val.rs`
-    - [x] bindings.ml → `flow_analysis/src/bindings.rs`
-        - [x] `add`
-        - [x] `allow_forward_ref`
-        - [x] `allow_redeclaration`
-        - [x] `empty`
-        - [x] `exists`
-        - [x] `push`
-        - [x] `singleton`
-        - [x] `to_assoc`
-        - [x] `to_map`
-    - [x] hoister.ml → `flow_analysis/src/hoister.rs`
-    - [x] property_assignment.ml → `flow_analysis/src/property_assignment.rs`
-    - [x] scope_api.ml → `flow_analysis/src/scope_api.rs`
-    - [x] scope_api_sig.ml → unnecessary in rust
-    - [x] scope_builder.ml → `flow_analysis/src/scope_builder.rs`
-    - [x] scope_builder_sig.ml → unnecessary in rust
-    - [x] ssa_api.ml → `flow_analysis/src/ssa_api.rs`
-        - [x] `Values` type
-        - [x] `WriteLoc` type
-        - [x] `write_locs_of_read_loc`
-        - [x] `print_values`
-    - [x] ssa_builder.ml → `flow_analysis/src/ssa_builder.rs`
-        - [x] `program`
-        - [x] `program_with_scope`
-        - [x] `program_with_scope_and_jsx_pragma`
-        - [x] `AbruptCompletion` type
-        - [x] `SsaBuilder` struct with full AstVisitor implementation
+      - [x] env_builder_refinement_test.ml → `flow_env_builder_resolver/src/env_builder_refinement_test.rs`
+      - [x] env_builder_tests.ml → irrelevant (OUnit runner for find_provider_test)
+      - [x] find_provider_test.ml → `flow_env_builder/src/find_provider_test.rs`
+      - [x] name_def_test.ml → `flow_env_builder_resolver/src/name_def_test.rs`
+    - [x] dependency_sigs.ml → `flow_env_builder_resolver/src/dependency_sigs.rs`
+      - [x] `Context` trait
+      - [x] `Flow` trait
+    - [x] env_api.ml → `flow_env_builder/src/env_api.rs`
+    - [x] eq_test.ml → `flow_env_builder/src/eq_test.rs`
+    - [x] find_providers.ml → `flow_env_builder/src/find_providers.rs`
+    - [x] invalidation_api.ml → `flow_env_builder/src/invalidation_api.rs`
+    - [x] name_def.ml → `flow_env_builder/src/name_def.rs`
+    - [x] name_def_ordering.ml → `flow_env_builder_resolver/src/name_def_ordering.rs`
+    - [x] name_def_types.ml → `flow_env_builder/src/name_def_types.rs`
+    - [x] name_resolver.ml → `flow_env_builder_resolver/src/name_resolver.rs`
+    - [x] nonvoid_return.ml → `flow_env_builder/src/nonvoid_return.rs`
+    - [x] pattern_helper.ml → `flow_env_builder/src/pattern_helper.rs`
+    - [x] provider_api.ml → `flow_env_builder/src/provider_api.rs`
+    - [x] refinement_key.ml → `flow_env_builder/src/refinement_key.rs`
+    - [x] selector.ml → `flow_env_builder/src/selector.rs`
+    - [x] ssa_val.ml → `flow_env_builder/src/ssa_val.rs`
+  - [x] bindings.ml → `flow_analysis/src/bindings.rs`
+    - [x] `add`
+    - [x] `allow_forward_ref`
+    - [x] `allow_redeclaration`
+    - [x] `empty`
+    - [x] `exists`
+    - [x] `push`
+    - [x] `singleton`
+    - [x] `to_assoc`
+    - [x] `to_map`
+  - [x] hoister.ml → `flow_analysis/src/hoister.rs`
+  - [x] property_assignment.ml → `flow_analysis/src/property_assignment.rs`
+  - [x] scope_api.ml → `flow_analysis/src/scope_api.rs`
+  - [x] scope_api_sig.ml → unnecessary in rust
+  - [x] scope_builder.ml → `flow_analysis/src/scope_builder.rs`
+  - [x] scope_builder_sig.ml → unnecessary in rust
+  - [x] ssa_api.ml → `flow_analysis/src/ssa_api.rs`
+    - [x] `Values` type
+    - [x] `WriteLoc` type
+    - [x] `write_locs_of_read_loc`
+    - [x] `print_values`
+  - [x] ssa_builder.ml → `flow_analysis/src/ssa_builder.rs`
+    - [x] `program`
+    - [x] `program_with_scope`
+    - [x] `program_with_scope_and_jsx_pragma`
+    - [x] `AbruptCompletion` type
+    - [x] `SsaBuilder` struct with full AstVisitor implementation
 - [ ] codemods/
   - [ ] utils/
-      - [x] codemod_annotator.ml → `flow_codemods/src/utils/codemod_annotator.rs`
-          - [x] `Queries` module → `queries`
-          - [x] `ty_or_type_ast` type → `TyOrTypeAst`
-          - [x] `NSpecSet` type → `NSpecSet`
-          - [x] `HardCodedImportMap` module → `HardCodedImportMap`
-          - [x] `validate_ty`
-          - [x] `get_ty`
-          - [x] `get_validated_ty`
-          - [x] `Make` functor → `Make` / `Mapper`
-      - [x] codemod_ast_mapper.ml → `flow_codemods/src/utils/codemod_ast_mapper.rs`
-          - [x] `name` type → `Name`
-          - [x] `mapper` class → `CodemodAstMapper`
-          - [x] `log`
-      - [x] codemod_ast_reducer.ml → `flow_codemods/src/utils/codemod_ast_reducer.rs`
-          - [x] `name` type → `Name`
-          - [x] `reducer` class → `CodemodAstReducer`
-          - [x] `log`
-      - [x] codemod_context.ml → `flow_codemods/src/utils/codemod_context.rs`
-          - [x] `Typed.t` → `typed::TypedCodemodContext`
-          - [x] `Typed.error` → `typed::Error`
-          - [x] `Typed.file`
-          - [x] `Typed.ty_at_loc`
-          - [x] `Typed.file_sig`
-          - [x] `Typed.metadata`
-          - [x] `Typed.context`
-          - [x] `Typed.typed_ast`
-          - [x] `Typed.lint_severities`
-          - [x] `Typed.flowfixme_ast`
-          - [x] `Untyped.t` → `untyped::UntypedCodemodContext`
-          - [x] `Untyped.file`
-          - [x] `UntypedFlowInit.t` → `untyped_flow_init::UntypedFlowInitCodemodContext`
-          - [x] `UntypedFlowInit.file`
-      - [x] codemod_printer.ml → `flow_codemods/src/utils/codemod_printer.rs`
-          - [x] `print_results`
-          - [x] `print_ast_file_dry`
-          - [x] `print_ast_file_real`
-          - [x] `print_asts`
-      - [x] codemod_report.ml → `flow_codemods/src/utils/codemod_report.rs`
-          - [x] `reporter_options` type → `ReporterOptions`
-          - [x] `reporter` type → `Reporter`
-          - [x] `t` type → `CodemodReport`
-          - [x] `unit_reporter`
-          - [x] `S` module type → `CodemodReportS`
-      - [ ] codemod_runner.ml → `flow_codemods/src/utils/codemod_runner.rs`
-          - [x] `log_input_files`
-          - [x] `get_target_filename_set`
-          - [x] `extract_flowlibs_or_exit`
-          - [x] `unit_result` type → `UnitResult`
-          - [x] `result_list` type → `ResultList`
-          - [x] `abstract_visitor` type → `AbstractVisitor`
-          - [x] `SIMPLE_TYPED_RUNNER_CONFIG` → `SimpleTypedRunnerConfig`
-          - [x] `UNTYPED_RUNNER_CONFIG` → `UntypedRunnerConfig`
-          - [x] `UNTYPED_FLOW_INIT_RUNNER_CONFIG` → `UntypedFlowInitRunnerConfig`
-          - [x] `STEP_RUNNER` → `StepRunner`
-          - [x] `RUNNABLE` → `Runnable`
-          - [x] `merge_targets`
-          - [x] `merge_job`
-          - [x] `post_check`
-          - [x] `mk_check`
-          - [x] `mk_next_for_check`
-          - [x] `TYPED_RUNNER_WITH_PREPASS_CONFIG` → `TypedRunnerWithPrepassConfig`
-          - [x] `TYPED_RUNNER_CONFIG` → `TypedRunnerConfig`
-          - [ ] `SimpleTypedRunner`
-          - [ ] `SimpleTypedTwoPassRunner`
-          - [ ] `TypedRunnerWithPrepass`
-          - [ ] `TypedRunner`
-          - [x] `untyped_runner_job`
-          - [x] `untyped_digest`
-          - [ ] `UntypedRunner`
-          - [ ] `UntypedFlowInitRunner`
-          - [ ] `RepeatRunner`
-          - [ ] `MakeSimpleTypedRunner`
-          - [ ] `MakeSimpleTypedTwoPassRunner`
-          - [ ] `MakeTypedRunnerWithPrepass`
-          - [ ] `MakeUntypedFlowInitRunner`
-          - [ ] `MakeUntypedRunner`
-      - [ ] codemod_utils.ml → `flow_codemods/src/utils/codemod_utils.rs`
-          - [x] `abstract_codemod_runner` type → `AbstractCodemodRunner`
-          - [x] `codemod_runner` type → `CodemodRunner`
-          - [x] `job_config` type → `JobConfig`
-          - [x] `save_ast_diff`
-          - [x] `make_visitor`
-          - [x] `initialize_logs`
-          - [ ] `MakeMain.main` → `MakeMain::main`
-    - [ ] annotate_exports.ml → `flow_codemods/src/annotate_exports.rs`
-        - [x] `SignatureVerification` module → `signature_verification`
-        - [x] `SignatureVerificationErrorStats` module/type → `signature_verification_error_stats::SignatureVerificationErrorStats`
-        - [ ] `Codemod_exports_annotator`
-        - [ ] `Acc`
-        - [ ] `mapper`
-    - [ ] annotate_literal_declarations.ml → `flow_codemods/src/annotate_literal_declarations.rs`
-        - [x] `Stats` module/type → `stats::Stats`
-        - [ ] `Codemod_exports_annotator`
-        - [ ] `Acc`
-        - [ ] `mapper`
-    - [ ] annotate_optional_properties.ml → `flow_codemods/src/annotate_optional_properties.rs`
-        - [x] `prop_data` type → `PropData`
-        - [x] `PropDataSet`
-        - [x] `prop_accesses`
-        - [x] `data_of_prop_missing_error`
-        - [x] `ErrorStats` module/type → `error_stats::ErrorStats`
-        - [ ] `Codemod_lti_annotator`
-        - [ ] `Acc`
-        - [ ] `mapper`
-    - [ ] remove_react_import.ml → `flow_codemods/src/remove_react_import.rs`
-        - [x] `RemoveReactImportStats` module/type → `remove_react_import_stats::RemoveReactImportStats`
-        - [x] `Acc`
-        - [x] `react_import_def_loc_opt_of_stmt`
-        - [ ] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
-        - [ ] `mapper`
+    - [x] codemod_annotator.ml → `flow_codemods/src/utils/codemod_annotator.rs`
+      - [x] `Queries` module → `queries`
+      - [x] `ty_or_type_ast` type → `TyOrTypeAst`
+      - [x] `NSpecSet` type → `NSpecSet`
+      - [x] `HardCodedImportMap` module → `HardCodedImportMap`
+      - [x] `validate_ty`
+      - [x] `get_ty`
+      - [x] `get_validated_ty`
+      - [x] `Make` functor → `Make` / `Mapper`
+    - [x] codemod_ast_mapper.ml → `flow_codemods/src/utils/codemod_ast_mapper.rs`
+      - [x] `name` type → `Name`
+      - [x] `mapper` class → `CodemodAstMapper`
+      - [x] `log`
+    - [x] codemod_ast_reducer.ml → `flow_codemods/src/utils/codemod_ast_reducer.rs`
+      - [x] `name` type → `Name`
+      - [x] `reducer` class → `CodemodAstReducer`
+      - [x] `log`
+    - [x] codemod_context.ml → `flow_codemods/src/utils/codemod_context.rs`
+      - [x] `Typed.t` → `typed::TypedCodemodContext`
+      - [x] `Typed.error` → `typed::Error`
+      - [x] `Typed.file`
+      - [x] `Typed.ty_at_loc`
+      - [x] `Typed.file_sig`
+      - [x] `Typed.metadata`
+      - [x] `Typed.context`
+      - [x] `Typed.typed_ast`
+      - [x] `Typed.lint_severities`
+      - [x] `Typed.flowfixme_ast`
+      - [x] `Untyped.t` → `untyped::UntypedCodemodContext`
+      - [x] `Untyped.file`
+      - [x] `UntypedFlowInit.t` → `untyped_flow_init::UntypedFlowInitCodemodContext`
+      - [x] `UntypedFlowInit.file`
+    - [x] codemod_printer.ml → `flow_codemods/src/utils/codemod_printer.rs`
+      - [x] `print_results`
+      - [x] `print_ast_file_dry`
+      - [x] `print_ast_file_real`
+      - [x] `print_asts`
+    - [x] codemod_report.ml → `flow_codemods/src/utils/codemod_report.rs`
+      - [x] `reporter_options` type → `ReporterOptions`
+      - [x] `reporter` type → `Reporter`
+      - [x] `t` type → `CodemodReport`
+      - [x] `unit_reporter`
+      - [x] `S` module type → `CodemodReportS`
+    - [ ] codemod_runner.ml → `flow_codemods/src/utils/codemod_runner.rs`
+      - [x] `log_input_files`
+      - [x] `get_target_filename_set`
+      - [x] `extract_flowlibs_or_exit`
+      - [x] `unit_result` type → `UnitResult`
+      - [x] `result_list` type → `ResultList`
+      - [x] `abstract_visitor` type → `AbstractVisitor`
+      - [x] `SIMPLE_TYPED_RUNNER_CONFIG` → `SimpleTypedRunnerConfig`
+      - [x] `UNTYPED_RUNNER_CONFIG` → `UntypedRunnerConfig`
+      - [x] `UNTYPED_FLOW_INIT_RUNNER_CONFIG` → `UntypedFlowInitRunnerConfig`
+      - [x] `STEP_RUNNER` → `StepRunner`
+      - [x] `RUNNABLE` → `Runnable`
+      - [x] `merge_targets`
+      - [x] `merge_job`
+      - [x] `post_check`
+      - [x] `mk_check`
+      - [x] `mk_next_for_check`
+      - [x] `TYPED_RUNNER_WITH_PREPASS_CONFIG` → `TypedRunnerWithPrepassConfig`
+      - [x] `TYPED_RUNNER_CONFIG` → `TypedRunnerConfig`
+      - [ ] `SimpleTypedRunner`
+      - [ ] `SimpleTypedTwoPassRunner`
+      - [ ] `TypedRunnerWithPrepass`
+      - [ ] `TypedRunner`
+      - [x] `untyped_runner_job`
+      - [x] `untyped_digest`
+      - [ ] `UntypedRunner`
+      - [ ] `UntypedFlowInitRunner`
+      - [ ] `RepeatRunner`
+      - [ ] `MakeSimpleTypedRunner`
+      - [ ] `MakeSimpleTypedTwoPassRunner`
+      - [ ] `MakeTypedRunnerWithPrepass`
+      - [ ] `MakeUntypedFlowInitRunner`
+      - [ ] `MakeUntypedRunner`
+    - [ ] codemod_utils.ml → `flow_codemods/src/utils/codemod_utils.rs`
+      - [x] `abstract_codemod_runner` type → `AbstractCodemodRunner`
+      - [x] `codemod_runner` type → `CodemodRunner`
+      - [x] `job_config` type → `JobConfig`
+      - [x] `save_ast_diff`
+      - [x] `make_visitor`
+      - [x] `initialize_logs`
+      - [ ] `MakeMain.main` → `MakeMain::main`
+  - [ ] annotate_exports.ml → `flow_codemods/src/annotate_exports.rs`
+    - [x] `SignatureVerification` module → `signature_verification`
+    - [x] `SignatureVerificationErrorStats` module/type → `signature_verification_error_stats::SignatureVerificationErrorStats`
+    - [ ] `Codemod_exports_annotator`
+    - [ ] `Acc`
+    - [ ] `mapper`
+  - [ ] annotate_literal_declarations.ml → `flow_codemods/src/annotate_literal_declarations.rs`
+    - [x] `Stats` module/type → `stats::Stats`
+    - [ ] `Codemod_exports_annotator`
+    - [ ] `Acc`
+    - [ ] `mapper`
+  - [ ] annotate_optional_properties.ml → `flow_codemods/src/annotate_optional_properties.rs`
+    - [x] `prop_data` type → `PropData`
+    - [x] `PropDataSet`
+    - [x] `prop_accesses`
+    - [x] `data_of_prop_missing_error`
+    - [x] `ErrorStats` module/type → `error_stats::ErrorStats`
+    - [ ] `Codemod_lti_annotator`
+    - [ ] `Acc`
+    - [ ] `mapper`
+  - [ ] remove_react_import.ml → `flow_codemods/src/remove_react_import.rs`
+    - [x] `RemoveReactImportStats` module/type → `remove_react_import_stats::RemoveReactImportStats`
+    - [x] `Acc`
+    - [x] `react_import_def_loc_opt_of_stmt`
+    - [ ] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
+    - [ ] `mapper`
 - [ ] commands/
   - [x] config/
-      - [x] flowConfig.ml → `flow_config/src/flowconfig.rs`
-          - [x] `file_watcher` type → `FileWatcher`
-          - [x] `lazy_mode` type → `LazyMode`
-          - [x] `config` type → `FlowConfig` (pub fields)
-          - [x] `warning` type → `Warning`
-          - [x] `error` type → `Error`
-          - [x] `config_result` type — Rust uses `Result<(FlowConfig, Vec<Warning>, String), Error>` directly
-          - [x] `get` → `get`
-          - [x] `get_hash` — not needed separately; `get` returns the hash as the third tuple element
-          - [x] `get_with_hash` — same as `get` in Rust (always returns config + warnings + hash)
-          - [x] `get_with_ignored_version` → `get_with_ignored_version`
-          - [x] `empty_config`
-          - [x] `init`
-          - [x] `write`
-          - Getter functions below are intentionally omitted: in OCaml, `config` is an abstract type
-            requiring accessor functions. In Rust, `FlowConfig` and `Opts` have public fields, so
-            callers access `config.ignores`, `config.options.all`, etc. directly. No getters needed.
-          - [x] `ignores` — `config.ignores`
-          - [x] `untyped` — `config.untyped`
-          - [x] `declarations` — `config.declarations`
-          - [x] `includes` — `config.includes`
-          - [x] `libs` — `config.libs`
-          - [x] `enabled_rollouts` — `config.rollouts` (callers map `.enabled_group` directly)
-          - [x] `lint_severities` — `config.lint_severities`
-          - [x] `strict_mode` — `config.strict_mode`
-          - [x] `required_version` — `config.version`
-          - [x] All `config.options.*` getters — direct field access on `config.options`
+    - [x] flowConfig.ml → `flow_config/src/flowconfig.rs`
+      - [x] `file_watcher` type → `FileWatcher`
+      - [x] `lazy_mode` type → `LazyMode`
+      - [x] `config` type → `FlowConfig` (pub fields)
+      - [x] `warning` type → `Warning`
+      - [x] `error` type → `Error`
+      - [x] `config_result` type — Rust uses `Result<(FlowConfig, Vec<Warning>, String), Error>` directly
+      - [x] `get` → `get`
+      - [x] `get_hash` — not needed separately; `get` returns the hash as the third tuple element
+      - [x] `get_with_hash` — same as `get` in Rust (always returns config + warnings + hash)
+      - [x] `get_with_ignored_version` → `get_with_ignored_version`
+      - [x] `empty_config`
+      - [x] `init`
+      - [x] `write`
+      - Getter functions below are intentionally omitted: in OCaml, `config` is an abstract type
+        requiring accessor functions. In Rust, `FlowConfig` and `Opts` have public fields, so
+        callers access `config.ignores`, `config.options.all`, etc. directly. No getters needed.
+      - [x] `ignores` — `config.ignores`
+      - [x] `untyped` — `config.untyped`
+      - [x] `declarations` — `config.declarations`
+      - [x] `includes` — `config.includes`
+      - [x] `libs` — `config.libs`
+      - [x] `enabled_rollouts` — `config.rollouts` (callers map `.enabled_group` directly)
+      - [x] `lint_severities` — `config.lint_severities`
+      - [x] `strict_mode` — `config.strict_mode`
+      - [x] `required_version` — `config.version`
+      - [x] All `config.options.*` getters — direct field access on `config.options`
   - [ ] extra/
     - [ ] facebook/
-        - [ ] extra_commands.ml — internal body unported; OSS stub +
-              `cfg(fbcode_build)` gate live in
-              `flow_cli/src/extra_commands.rs`
+      - [ ] extra_commands.ml — internal body unported; OSS stub +
+            `cfg(fbcode_build)` gate live in
+            `flow_cli/src/extra_commands.rs`
   - [ ] glean/
-      - [x] gleanCommand.ml → `flow_cli/src/glean_command.rs`
-      - [ ] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
-          - [x] `module DocumentationFullspanMap` → `mod documentation_fullspan_map`
-              - [x] `doc_span` type → `DocSpan`
-              - [x] `combine`
-              - [x] `create`
-          - [x] `class member_searcher` → `struct MemberSearcher`
-          - [x] `class type_reference_searcher` → `struct TypeReferenceSearcher`
-          - [x] `remove_dot_flow_suffix`
-          - [x] `module_of_module_ref`
-          - [x] `loc_of_index`
-          - [x] `loc_of_def`
-          - [x] `source_of_type_exports`
-          - [x] `export_of_export_name`
-          - [x] `type_import_declarations`
-          - [x] `type_declaration_references`
-          - [x] `extract_member_def`
-          - [x] `member_declaration_references`
-          - [x] `import_declarations`
-          - [x] `loc_of_obj_value_prop`
-          - [x] `loc_of_obj_annot_prop`
-          - [x] `source_of_exports`
-          - [x] `local_declaration_references`
-          - [x] `class declaration_info_collector`
-          - [x] `module_documentations`
-          - [x] `declaration_infos`
-          - [x] `file_of_string_modules`
-          - [x] `file_liness`
-          - [x] `all_schema_version`
-          - [x] `flow_schema_version`
-          - [x] `create_typed_runner_config` → `impl SimpleTypedRunnerConfig for GleanRunnerConfig`
-              - [x] `check_options`
-              - [x] `expand_roots`
-              - [x] `reporter`
-              - [x] `visit`
-          - [x] `make`
-      - [x] gleanSchema.ml → `flow_cli/src/glean_schema.rs`
-      - [x] offset_cache.ml → `flow_cli/src/offset_cache.rs`
-    - [x] applyCodeActionCommand.ml → `flow_cli/src/apply_code_action_command.rs`
-    - [x] astCommand.ml → `flow_cli/src/ast_command.rs`
-    - [x] autocompleteCommand.ml → `flow_cli/src/autocomplete_command.rs`
-    - [x] autofixCommand.ml → `flow_cli/src/autofix_command.rs`
-    - [x] batchCoverageCommand.ml → `flow_cli/src/batch_coverage_command.rs`
-    - [x] foregroundCheckCommands.ml → `flow_cli/src/foreground_check_commands.rs`
-    - [x] checkContentsCommand.ml → `flow_cli/src/check_contents_command.rs`
-    - [x] codemodCommand.ml → `flow_cli/src/codemod_command.rs`
-    - [x] commandConnect.ml → `flow_cli/src/command_connect.rs`
-    - [x] commandConnectSimple.ml → `flow_cli/src/command_connect_simple.rs`
-    - [x] commandInfo.ml → `unnecessary interface`
-    - [x] commandMeanKill.ml → `flow_cli/src/command_mean_kill.rs`
-    - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
-    - [x] commandUtils.ml → `flow_cli/src/command_utils.rs`
-        - [x] `run_command`
-        - [x] `expand_file_list`
-        - [x] `get_filenames_from_input`
-        - [x] `print_version`
-        - [x] `expand_path`
-        - [x] `collect_error_flags`
-        - [x] `warning_flags` → `add_warning_flags`
-        - [x] `profile_flag` → `add_profile_flag`
-        - [x] `error_flags` → `add_error_flags`
-        - [x] `collect_json_flags` — inlined in `get_json_flags`
-        - [x] `json_flags` → `add_json_flags`
-        - [x] `temp_dir_flag` → `add_temp_dir_flag`
-        - [x] `collect_lazy_flags` — inlined in `get_connect_flags`
-        - [x] `lazy_flags` → `add_lazy_flags`
-        - [x] `input_file_flag` → `add_input_file_flag`
-        - [x] `verbose_focus_flag` → `add_verbose_focus_flag`
-        - [x] `type shared_mem_params` → `struct SharedMemParams`
-        - [x] `collect_shm_flags` → `get_shm_flags`
-        - [x] `shm_flags` → `add_shm_flags`
-        - [x] `shm_config`
-        - [x] `from_flag` → `add_from_flag`
-        - [x] `from_flag` (collector logic) → `apply_from_flag` + `default_from_flag`
-        - [x] `strip_root_flag` → `add_strip_root_flag`
-        - [x] `wait_for_recheck_flag` → `add_wait_for_recheck_flag`
-        - [x] `vpn_less_flag` → `add_vpn_less_flag`
-        - [x] `path_flag` → `add_path_flag`
-        - [x] `autostop_flag` → `add_autostop_flag`
-        - [x] `verbose_flags` → `add_verbose_flags` + `verbose_flags`
-        - [x] `slow_to_check_logging_flags` → `add_slow_to_check_logging_flags`
-        - [x] `quiet_flag` → `add_quiet_flag`
-        - [x] `type on_mismatch_behavior` → `enum OnMismatchBehavior`
-        - [x] `on_mismatch_flag` → `add_on_mismatch_flag`
-        - [x] `root_flag` → `add_root_flag`
-        - [x] `ignore_version_flag` → `add_ignore_version_flag`
-        - [x] `log_file_flags` → `add_log_file_flags` + `get_log_file_flags`
-        - [x] `type offset_style` → `enum OffsetStyle`
-        - [x] `offset_style_flag` → `add_offset_style_flag` + `get_offset_style`
-        - [x] `offset_kind_of_offset_style`
-        - [x] `flowconfig_multi_error`
-        - [x] `flowconfig_multi_warn`
-        - [x] `read_config_or_exit`
-        - [x] `read_config_and_hash_or_exit`
-        - [x] `check_version`
-        - [x] `assert_version`
-        - [x] `type flowconfig_params` → `struct FlowconfigFlags`
-        - [x] `list_of_string_arg`
-        - [x] `collect_flowconfig_flags` — inlined in `get_options_flags`
-        - [x] `remove_exclusion`
-        - [x] `file_options` — inlined in `make_options`
-        - [x] `file_options_of_flowconfig`
-        - [x] `ignore_flag` → `add_ignore_flag`
-        - [x] `untyped_flag` → `add_untyped_flag`
-        - [x] `declaration_flag` → `add_declaration_flag`
-        - [x] `include_flag` → `add_include_flag`
-        - [x] `lib_flag` → `add_lib_flag`
-        - [x] `lints_flag` → `add_lints_flag`
-        - [x] `no_restart_flag` → `add_no_restart_flag`
-        - [x] `flowconfig_flags` → `add_flowconfig_flags`
-        - [x] `type connect_params` → `struct ConnectParams`
-        - [x] `collect_connect_flags` → `get_connect_flags`
-        - [x] `collect_connect_flags_without_lazy` — inlined in `add_connect_flags_no_lazy`
-        - [x] `connect_flags_with_lazy_collector` → `add_connect_flags_with_lazy_collector`
-        - [x] `connect_flags_no_lazy` → `add_connect_flags_no_lazy`
-        - [x] `connect_flags` → `add_connect_flags`
-        - [x] `connect_and_json_flags` → `add_connect_and_json_flags` + `get_connect_and_json_flags`
-        - [x] `server_log_file`
-        - [x] `monitor_log_file`
-        - [x] `module Options_flags` / `type t` → `struct OptionsFlags`
-        - [x] `module Saved_state_flags` / `type t` → `struct SavedStateFlags`
-        - [x] `module Base_flags` / `type t` → `struct BaseFlags`
-        - [x] `parse_lints_flag`
-        - [x] `options_flags` (incl. `collect_options_flags`) → `add_options_flags` + `get_options_flags`
-        - [x] `saved_state_flags` (incl. `collect_saved_state_flags`) → `add_saved_state_flags` + `get_saved_state_flags`
-        - [x] `flowconfig_name_flag` → `add_flowconfig_name_flag`
-        - [x] `base_flags` → `add_base_flags` + `get_base_flags`
-        - [x] `default_file_watcher_timeout` → `DEFAULT_FILE_WATCHER_TIMEOUT`
-        - [x] `default_file_watcher_mergebase_with` → `DEFAULT_FILE_WATCHER_MERGEBASE_WITH`
-        - [x] `file_watcher_flag` → `file_watcher_flag` + `file_watcher_arg` + `add_file_watcher_flags`
-        - [x] `options_and_json_flags` → `add_options_and_json_flags`
-        - [x] `json_version_flag` → `add_json_version_flag` + `get_json_version`
-        - [x] `no_cgroup_flag` (incl. `get_systemd_binary`, `can_run_systemd`, `exec_in_cgroup_if_systemd_available`, `collect_no_cgroup_flag`) → `add_no_cgroup_flag` + `maybe_run_in_cgroup` + `exec_in_cgroup_if_systemd_available`
-        - [x] `get_temp_dir`
-        - [x] `make_options`
-        - [x] `make_env`
-        - [x] `search_for_root`
-        - [x] `guess_root`
-        - [x] `find_a_root`
-        - [x] `get_the_root`
-        - [x] `convert_input_pos`
-        - [x] `get_path_of_file`
-        - [x] `get_file_from_filename_or_stdin`
-        - [x] `parse_location_with_optional_filename`
-        - [x] `exe_name`
-        - [x] `connect_and_make_request` (recursive inner) → `connect_and_make_request_inner`
-        - [x] `connect_and_make_request` (outer with timeout)
-        - [x] `failwith_bad_response`
-        - [x] `get_check_or_status_exit_code`
-        - [x] `choose_file_watcher`
-        - [x] `choose_file_watcher_mergebase_with`
-        - [x] `choose_file_watcher_timeout`
-        - [x] `subcommand_spec`
-        - [x] `type codemod_params` → `struct CodemodParams`
-        - [x] `collect_codemod_flags` → `get_codemod_flags`
-        - [x] `codemod_flags` → `add_codemod_flags`
-    - [x] configCommand.ml → `flow_cli/src/config_command.rs`
-    - [x] coverageCommand.ml → `flow_cli/src/coverage_command.rs`
-    - [x] cycleCommand.ml → `flow_cli/src/cycle_command.rs`
-    - [x] dumpImplDepsCommand.ml → `flow_cli/src/dump_impl_deps_command.rs`
-    - [x] dumpTypesCommand.ml → `flow_cli/src/dump_types_command.rs`
-    - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
-    - [x] findModuleCommand.ml → `flow_cli/src/find_module_command.rs`
-    - [x] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs`
-    - [x] getDefCommand.ml → `flow_cli/src/get_def_command.rs`
-    - [x] graphCommand.ml → `flow_cli/src/graph_command.rs`
-    - [x] initCommand.ml → `flow_cli/src/init_command.rs`
-    - [x] inlayHintCommand.ml → `flow_cli/src/inlay_hint_command.rs`
-    - [x] llmContextCommand.ml → `flow_cli/src/llm_context_command.rs`
-    - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
-    - [x] lspCommand.ml → `flow_cli/src/lsp_command.rs`
-    - [x] saveStateCommand.ml → `flow_cli/src/save_state_command.rs`
-    - [x] serverCommand.ml → `flow_cli/src/server_command.rs`
-    - [x] shellCompleteCommand.ml → `flow_cli/src/shell_complete_command.rs`
-    - [x] startCommand.ml → `flow_cli/src/start_command.rs`
-    - [x] statusCommands.ml → `flow_cli/src/status_command.rs`
-    - [x] stopCommand.ml → `flow_cli/src/stop_command.rs`
-    - [x] typeAtPosCommand.ml → `flow_cli/src/type_at_pos_command.rs`
-    - [x] typeOfNameCommand.ml → `flow_cli/src/type_of_name_command.rs`
-    - [x] versionCommand.ml → `flow_cli/src/version_command.rs`
+    - [x] gleanCommand.ml → `flow_cli/src/glean_command.rs`
+    - [ ] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
+      - [x] `module DocumentationFullspanMap` → `mod documentation_fullspan_map`
+        - [x] `doc_span` type → `DocSpan`
+        - [x] `combine`
+        - [x] `create`
+      - [x] `class member_searcher` → `struct MemberSearcher`
+      - [x] `class type_reference_searcher` → `struct TypeReferenceSearcher`
+      - [x] `remove_dot_flow_suffix`
+      - [x] `module_of_module_ref`
+      - [x] `loc_of_index`
+      - [x] `loc_of_def`
+      - [x] `source_of_type_exports`
+      - [x] `export_of_export_name`
+      - [x] `type_import_declarations`
+      - [x] `type_declaration_references`
+      - [x] `extract_member_def`
+      - [x] `member_declaration_references`
+      - [x] `import_declarations`
+      - [x] `loc_of_obj_value_prop`
+      - [x] `loc_of_obj_annot_prop`
+      - [x] `source_of_exports`
+      - [x] `local_declaration_references`
+      - [x] `class declaration_info_collector`
+      - [x] `module_documentations`
+      - [x] `declaration_infos`
+      - [x] `file_of_string_modules`
+      - [x] `file_liness`
+      - [x] `all_schema_version`
+      - [x] `flow_schema_version`
+      - [x] `create_typed_runner_config` → `impl SimpleTypedRunnerConfig for GleanRunnerConfig`
+        - [x] `check_options`
+        - [x] `expand_roots`
+        - [x] `reporter`
+        - [x] `visit`
+      - [x] `make`
+    - [x] gleanSchema.ml → `flow_cli/src/glean_schema.rs`
+    - [x] offset_cache.ml → `flow_cli/src/offset_cache.rs`
+  - [x] applyCodeActionCommand.ml → `flow_cli/src/apply_code_action_command.rs`
+  - [x] astCommand.ml → `flow_cli/src/ast_command.rs`
+  - [x] autocompleteCommand.ml → `flow_cli/src/autocomplete_command.rs`
+  - [x] autofixCommand.ml → `flow_cli/src/autofix_command.rs`
+  - [x] batchCoverageCommand.ml → `flow_cli/src/batch_coverage_command.rs`
+  - [x] foregroundCheckCommands.ml → `flow_cli/src/foreground_check_commands.rs`
+  - [x] checkContentsCommand.ml → `flow_cli/src/check_contents_command.rs`
+  - [x] codemodCommand.ml → `flow_cli/src/codemod_command.rs`
+  - [x] commandConnect.ml → `flow_cli/src/command_connect.rs`
+  - [x] commandConnectSimple.ml → `flow_cli/src/command_connect_simple.rs`
+  - [x] commandInfo.ml → `unnecessary interface`
+  - [x] commandMeanKill.ml → `flow_cli/src/command_mean_kill.rs`
+  - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
+  - [x] commandUtils.ml → `flow_cli/src/command_utils.rs`
+    - [x] `run_command`
+    - [x] `expand_file_list`
+    - [x] `get_filenames_from_input`
+    - [x] `print_version`
+    - [x] `expand_path`
+    - [x] `collect_error_flags`
+    - [x] `warning_flags` → `add_warning_flags`
+    - [x] `profile_flag` → `add_profile_flag`
+    - [x] `error_flags` → `add_error_flags`
+    - [x] `collect_json_flags` — inlined in `get_json_flags`
+    - [x] `json_flags` → `add_json_flags`
+    - [x] `temp_dir_flag` → `add_temp_dir_flag`
+    - [x] `collect_lazy_flags` — inlined in `get_connect_flags`
+    - [x] `lazy_flags` → `add_lazy_flags`
+    - [x] `input_file_flag` → `add_input_file_flag`
+    - [x] `verbose_focus_flag` → `add_verbose_focus_flag`
+    - [x] `type shared_mem_params` → `struct SharedMemParams`
+    - [x] `collect_shm_flags` → `get_shm_flags`
+    - [x] `shm_flags` → `add_shm_flags`
+    - [x] `shm_config`
+    - [x] `from_flag` → `add_from_flag`
+    - [x] `from_flag` (collector logic) → `apply_from_flag` + `default_from_flag`
+    - [x] `strip_root_flag` → `add_strip_root_flag`
+    - [x] `wait_for_recheck_flag` → `add_wait_for_recheck_flag`
+    - [x] `vpn_less_flag` → `add_vpn_less_flag`
+    - [x] `path_flag` → `add_path_flag`
+    - [x] `autostop_flag` → `add_autostop_flag`
+    - [x] `verbose_flags` → `add_verbose_flags` + `verbose_flags`
+    - [x] `slow_to_check_logging_flags` → `add_slow_to_check_logging_flags`
+    - [x] `quiet_flag` → `add_quiet_flag`
+    - [x] `type on_mismatch_behavior` → `enum OnMismatchBehavior`
+    - [x] `on_mismatch_flag` → `add_on_mismatch_flag`
+    - [x] `root_flag` → `add_root_flag`
+    - [x] `ignore_version_flag` → `add_ignore_version_flag`
+    - [x] `log_file_flags` → `add_log_file_flags` + `get_log_file_flags`
+    - [x] `type offset_style` → `enum OffsetStyle`
+    - [x] `offset_style_flag` → `add_offset_style_flag` + `get_offset_style`
+    - [x] `offset_kind_of_offset_style`
+    - [x] `flowconfig_multi_error`
+    - [x] `flowconfig_multi_warn`
+    - [x] `read_config_or_exit`
+    - [x] `read_config_and_hash_or_exit`
+    - [x] `check_version`
+    - [x] `assert_version`
+    - [x] `type flowconfig_params` → `struct FlowconfigFlags`
+    - [x] `list_of_string_arg`
+    - [x] `collect_flowconfig_flags` — inlined in `get_options_flags`
+    - [x] `remove_exclusion`
+    - [x] `file_options` — inlined in `make_options`
+    - [x] `file_options_of_flowconfig`
+    - [x] `ignore_flag` → `add_ignore_flag`
+    - [x] `untyped_flag` → `add_untyped_flag`
+    - [x] `declaration_flag` → `add_declaration_flag`
+    - [x] `include_flag` → `add_include_flag`
+    - [x] `lib_flag` → `add_lib_flag`
+    - [x] `lints_flag` → `add_lints_flag`
+    - [x] `no_restart_flag` → `add_no_restart_flag`
+    - [x] `flowconfig_flags` → `add_flowconfig_flags`
+    - [x] `type connect_params` → `struct ConnectParams`
+    - [x] `collect_connect_flags` → `get_connect_flags`
+    - [x] `collect_connect_flags_without_lazy` — inlined in `add_connect_flags_no_lazy`
+    - [x] `connect_flags_with_lazy_collector` → `add_connect_flags_with_lazy_collector`
+    - [x] `connect_flags_no_lazy` → `add_connect_flags_no_lazy`
+    - [x] `connect_flags` → `add_connect_flags`
+    - [x] `connect_and_json_flags` → `add_connect_and_json_flags` + `get_connect_and_json_flags`
+    - [x] `server_log_file`
+    - [x] `monitor_log_file`
+    - [x] `module Options_flags` / `type t` → `struct OptionsFlags`
+    - [x] `module Saved_state_flags` / `type t` → `struct SavedStateFlags`
+    - [x] `module Base_flags` / `type t` → `struct BaseFlags`
+    - [x] `parse_lints_flag`
+    - [x] `options_flags` (incl. `collect_options_flags`) → `add_options_flags` + `get_options_flags`
+    - [x] `saved_state_flags` (incl. `collect_saved_state_flags`) → `add_saved_state_flags` + `get_saved_state_flags`
+    - [x] `flowconfig_name_flag` → `add_flowconfig_name_flag`
+    - [x] `base_flags` → `add_base_flags` + `get_base_flags`
+    - [x] `default_file_watcher_timeout` → `DEFAULT_FILE_WATCHER_TIMEOUT`
+    - [x] `default_file_watcher_mergebase_with` → `DEFAULT_FILE_WATCHER_MERGEBASE_WITH`
+    - [x] `file_watcher_flag` → `file_watcher_flag` + `file_watcher_arg` + `add_file_watcher_flags`
+    - [x] `options_and_json_flags` → `add_options_and_json_flags`
+    - [x] `json_version_flag` → `add_json_version_flag` + `get_json_version`
+    - [x] `no_cgroup_flag` (incl. `get_systemd_binary`, `can_run_systemd`, `exec_in_cgroup_if_systemd_available`, `collect_no_cgroup_flag`) → `add_no_cgroup_flag` + `maybe_run_in_cgroup` + `exec_in_cgroup_if_systemd_available`
+    - [x] `get_temp_dir`
+    - [x] `make_options`
+    - [x] `make_env`
+    - [x] `search_for_root`
+    - [x] `guess_root`
+    - [x] `find_a_root`
+    - [x] `get_the_root`
+    - [x] `convert_input_pos`
+    - [x] `get_path_of_file`
+    - [x] `get_file_from_filename_or_stdin`
+    - [x] `parse_location_with_optional_filename`
+    - [x] `exe_name`
+    - [x] `connect_and_make_request` (recursive inner) → `connect_and_make_request_inner`
+    - [x] `connect_and_make_request` (outer with timeout)
+    - [x] `failwith_bad_response`
+    - [x] `get_check_or_status_exit_code`
+    - [x] `choose_file_watcher`
+    - [x] `choose_file_watcher_mergebase_with`
+    - [x] `choose_file_watcher_timeout`
+    - [x] `subcommand_spec`
+    - [x] `type codemod_params` → `struct CodemodParams`
+    - [x] `collect_codemod_flags` → `get_codemod_flags`
+    - [x] `codemod_flags` → `add_codemod_flags`
+  - [x] configCommand.ml → `flow_cli/src/config_command.rs`
+  - [x] coverageCommand.ml → `flow_cli/src/coverage_command.rs`
+  - [x] cycleCommand.ml → `flow_cli/src/cycle_command.rs`
+  - [x] dumpImplDepsCommand.ml → `flow_cli/src/dump_impl_deps_command.rs`
+  - [x] dumpTypesCommand.ml → `flow_cli/src/dump_types_command.rs`
+  - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
+  - [x] findModuleCommand.ml → `flow_cli/src/find_module_command.rs`
+  - [x] forceRecheckCommand.ml → `flow_cli/src/force_recheck_command.rs`
+  - [x] getDefCommand.ml → `flow_cli/src/get_def_command.rs`
+  - [x] graphCommand.ml → `flow_cli/src/graph_command.rs`
+  - [x] initCommand.ml → `flow_cli/src/init_command.rs`
+  - [x] inlayHintCommand.ml → `flow_cli/src/inlay_hint_command.rs`
+  - [x] llmContextCommand.ml → `flow_cli/src/llm_context_command.rs`
+  - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
+  - [x] lspCommand.ml → `flow_cli/src/lsp_command.rs`
+  - [x] saveStateCommand.ml → `flow_cli/src/save_state_command.rs`
+  - [x] serverCommand.ml → `flow_cli/src/server_command.rs`
+  - [x] shellCompleteCommand.ml → `flow_cli/src/shell_complete_command.rs`
+  - [x] startCommand.ml → `flow_cli/src/start_command.rs`
+  - [x] statusCommands.ml → `flow_cli/src/status_command.rs`
+  - [x] stopCommand.ml → `flow_cli/src/stop_command.rs`
+  - [x] typeAtPosCommand.ml → `flow_cli/src/type_at_pos_command.rs`
+  - [x] typeOfNameCommand.ml → `flow_cli/src/type_of_name_command.rs`
+  - [x] versionCommand.ml → `flow_cli/src/version_command.rs`
 - [ ] common/
   - [ ] audit/
-      - [ ] expensive.ml
+    - [ ] expensive.ml
   - [x] bitset/
-      - [x] bitset.ml → `flow_common/src/bitset.rs`
-          - [x] `all_one`
-          - [x] `all_zero`
-          - [x] `from_int_unchecked`
-          - [x] `is_subset`
-          - [x] `mem`
-          - [x] `no_overlap`
-          - [x] `set`
-          - [x] `to_int`
-          - [x] `unset`
-          - [x] `compare` → `#[derive(Ord)]`
-          - [x] `equal` → `#[derive(Eq)]`
-          - [x] `max_size` → `const MAX_SIZE`
-          - [x] `to_string` → `impl Display`
+    - [x] bitset.ml → `flow_common/src/bitset.rs`
+      - [x] `all_one`
+      - [x] `all_zero`
+      - [x] `from_int_unchecked`
+      - [x] `is_subset`
+      - [x] `mem`
+      - [x] `no_overlap`
+      - [x] `set`
+      - [x] `to_int`
+      - [x] `unset`
+      - [x] `compare` → `#[derive(Ord)]`
+      - [x] `equal` → `#[derive(Eq)]`
+      - [x] `max_size` → `const MAX_SIZE`
+      - [x] `to_string` → `impl Display`
   - [x] build_id/
-      - [x] flow_build_id.ml → `flow_common_build_id/src/lib.rs`
-          - [x] `get_build_id`
+    - [x] flow_build_id.ml → `flow_common_build_id/src/lib.rs`
+      - [x] `get_build_id`
   - [x] cycle_hash/
     - [x] __tests__/
-        - [x] cycle_hash_test.ml
-      - [x] cycle_hash.ml → `flow_common_cycle_hash/src/lib.rs`
-          - [x] `create_cx`
-          - [x] `create_node`
-          - [x] `collect_scc`
-          - [x] `calc_cycle_hash`
-          - [x] `strongconnect`
-          - [x] `root`
-          - [x] `read_hash`
+      - [x] cycle_hash_test.ml
+    - [x] cycle_hash.ml → `flow_common_cycle_hash/src/lib.rs`
+      - [x] `create_cx`
+      - [x] `create_node`
+      - [x] `collect_scc`
+      - [x] `calc_cycle_hash`
+      - [x] `strongconnect`
+      - [x] `root`
+      - [x] `read_hash`
   - [ ] dirent/
-      - [ ] dirent.ml
+    - [ ] dirent.ml
   - [x] errors/
-      - [x] error_codes.ml → `flow_common_errors/src/error_codes.rs`
-      - [x] flow_errors_utils.ml → `flow_common_errors/src/error_utils.rs`
-          - [x] `capitalize`
-          - [x] `code`
-          - [x] `code_of_printable_error`
-          - [x] `conjunction_concat`
-          - [x] `deprecated_json_props_of_loc`
-          - [x] `desc`
-          - [x] `desc_of_reason_desc`
-          - [x] `format_errors`
-          - [x] `format_single_styled_error_for_vscode`
-          - [x] `full_status_json_of_errors`
-          - [x] `hardcoded_string_desc_ref`
-          - [x] `json_of_errors_with_context`
-          - [x] `kind_of_printable_error`
-          - [x] `loc_of_printable_error`
-          - [x] `lsp_of_error`
-          - [x] `message_of_string`
-          - [x] `mk_error`
-          - [x] `mk_speculation_error`
-          - [x] `no_desc_ref`
-          - [x] `no_desc_ref_map`
-          - [x] `patch_misplaced_error`
-          - [x] `patch_unsuppressable_error`
-          - [x] `print_errors`
-          - [x] `ref`
-          - [x] `ref_map`
-          - [x] `string_of_kind`
-          - [x] `string_of_loc`
-          - [x] `text`
+    - [x] error_codes.ml → `flow_common_errors/src/error_codes.rs`
+    - [x] flow_errors_utils.ml → `flow_common_errors/src/error_utils.rs`
+      - [x] `capitalize`
+      - [x] `code`
+      - [x] `code_of_printable_error`
+      - [x] `conjunction_concat`
+      - [x] `deprecated_json_props_of_loc`
+      - [x] `desc`
+      - [x] `desc_of_reason_desc`
+      - [x] `format_errors`
+      - [x] `format_single_styled_error_for_vscode`
+      - [x] `full_status_json_of_errors`
+      - [x] `hardcoded_string_desc_ref`
+      - [x] `json_of_errors_with_context`
+      - [x] `kind_of_printable_error`
+      - [x] `loc_of_printable_error`
+      - [x] `lsp_of_error`
+      - [x] `message_of_string`
+      - [x] `mk_error`
+      - [x] `mk_speculation_error`
+      - [x] `no_desc_ref`
+      - [x] `no_desc_ref_map`
+      - [x] `patch_misplaced_error`
+      - [x] `patch_unsuppressable_error`
+      - [x] `print_errors`
+      - [x] `ref`
+      - [x] `ref_map`
+      - [x] `string_of_kind`
+      - [x] `string_of_loc`
+      - [x] `text`
   - [x] exit/
-      - [x] exit.ml → `flow_common_exit/src/lib.rs`
-          - [x] `set_json_mode`
-          - [x] `unset_json_mode`
-          - [x] `exit`
+    - [x] exit.ml → `flow_common_exit/src/lib.rs`
+      - [x] `set_json_mode`
+      - [x] `unset_json_mode`
+      - [x] `exit`
   - [x] exit_status/
-      - [x] flowExitStatus.ml → `flow_common_exit_status/src/lib.rs`
-          - [x] `json_props_of_t`
+    - [x] flowExitStatus.ml → `flow_common_exit_status/src/lib.rs`
+      - [x] `json_props_of_t`
   - [x] fuzzy_score/
     - [ ] __tests__/
-        - [ ] fuzzy_score_test.ml
-      - [x] fuzzy_score.ml → `flow_services_export/src/fuzzy_path/score_match.rs`
+      - [ ] fuzzy_score_test.ml
+    - [x] fuzzy_score.ml → `flow_services_export/src/fuzzy_path/score_match.rs`
   - [x] leb128/
     - [x] __tests__/
-        - [x] leb128_tests.ml → `flow_common_leb128/src/unsigned.rs`
-      - [x] leb128.ml → `flow_common_leb128/src/unsigned.rs`
-          - [x] `read` → `unsigned::read()`
-          - [x] `write` → `unsigned::write()`
+      - [x] leb128_tests.ml → `flow_common_leb128/src/unsigned.rs`
+    - [x] leb128.ml → `flow_common_leb128/src/unsigned.rs`
+      - [x] `read` → `unsigned::read()`
+      - [x] `write` → `unsigned::write()`
   - [x] lints/
-      - [x] exactCover.ml → `flow_lint_settings/src/lint_severity_cover.rs`
-          - [x] `new_builder` → `Builder::new()`
-          - [x] `update_range` → `Builder::update_range()`
-          - [x] `update_settings` → `Builder::update_settings()`
-          - [x] `update_settings_and_running` → `Builder::update_settings_and_running()`
-          - [x] `bake` → `Builder::bake()`
-          - [x] `find` → `LintSeverityCover::find()`
-          - [x] `find_opt` → `LintSeverityCover::find_opt()`
-          - [x] `get_severity` → `LintSeverityCover::get_severity()`
-          - [x] `is_explicit` → `LintSeverityCover::is_explicit()`
-          - [x] `to_string` → `LintSeverityCover::to_debug_string()`
-      - [x] lintSettings.ml → `flow_lint_settings/src/lint_settings.rs`
-          - [x] `of_default` → `LintSettings::of_default()`
-          - [x] `set_value` → `LintSettings::set_value()`
-          - [x] `set_all` → `LintSettings::set_all()`
-          - [x] `get_default` → `LintSettings::get_default()`
-          - [x] `get_value` → `LintSettings::get_value()`
-          - [x] `is_explicit` → `LintSettings::is_explicit()`
-          - [x] `get_loc` → `LintSettings::get_loc()`
-          - [x] `iter` → `LintSettings::iter()`
-          - [x] `fold` → `LintSettings::fold()`
-          - [x] `map` → `LintSettings::replace_with_mapped()`
-          - [x] `empty_severities` → `LintSettings::empty_severities()`
-          - [x] `default_severities` → `LintSettings::default_severities()`
-          - [x] `is_enabled` → `LintSettings::is_enabled()`
-          - [x] `of_lines` → `LintSettings::of_lines()`
-          - [x] `to_string` → `LintSettings::to_debug_string()`
-      - [x] lints.ml → `flow_lint_settings/src/lints.rs` (2/2 functions, 100% complete)
-          - [x] `string_of_kind` → `LintKind::as_str()`
-          - [x] `kinds_of_string` → `LintKind::parse_from_str()`
-      - [x] severity.ml → `flow_lint_settings/src/severity.rs` (6/6 functions, 100% complete)
-          - [x] `string_of_severity` → `Severity::as_str()`
-          - [x] `output_string_of_severity` → `Severity::as_output_str()`
-          - [x] `severity_of_string` → `Severity::severity_of_str()`
-          - [x] `severity_cmp` → `Ord` trait derive (automatic via PartialOrd/Ord)
-          - [x] `severity_min` → `Severity::min_of()`
-          - [x] `severity_max` → `Severity::max_of()`
-      - [x] strictModeSettings.ml → `flow_lint_settings/src/strict_mode_settings.rs`
-          - [x] `empty`
-          - [x] `fold`
-          - [x] `iter`
-          - [x] `of_lines`
+    - [x] exactCover.ml → `flow_lint_settings/src/lint_severity_cover.rs`
+      - [x] `new_builder` → `Builder::new()`
+      - [x] `update_range` → `Builder::update_range()`
+      - [x] `update_settings` → `Builder::update_settings()`
+      - [x] `update_settings_and_running` → `Builder::update_settings_and_running()`
+      - [x] `bake` → `Builder::bake()`
+      - [x] `find` → `LintSeverityCover::find()`
+      - [x] `find_opt` → `LintSeverityCover::find_opt()`
+      - [x] `get_severity` → `LintSeverityCover::get_severity()`
+      - [x] `is_explicit` → `LintSeverityCover::is_explicit()`
+      - [x] `to_string` → `LintSeverityCover::to_debug_string()`
+    - [x] lintSettings.ml → `flow_lint_settings/src/lint_settings.rs`
+      - [x] `of_default` → `LintSettings::of_default()`
+      - [x] `set_value` → `LintSettings::set_value()`
+      - [x] `set_all` → `LintSettings::set_all()`
+      - [x] `get_default` → `LintSettings::get_default()`
+      - [x] `get_value` → `LintSettings::get_value()`
+      - [x] `is_explicit` → `LintSettings::is_explicit()`
+      - [x] `get_loc` → `LintSettings::get_loc()`
+      - [x] `iter` → `LintSettings::iter()`
+      - [x] `fold` → `LintSettings::fold()`
+      - [x] `map` → `LintSettings::replace_with_mapped()`
+      - [x] `empty_severities` → `LintSettings::empty_severities()`
+      - [x] `default_severities` → `LintSettings::default_severities()`
+      - [x] `is_enabled` → `LintSettings::is_enabled()`
+      - [x] `of_lines` → `LintSettings::of_lines()`
+      - [x] `to_string` → `LintSettings::to_debug_string()`
+    - [x] lints.ml → `flow_lint_settings/src/lints.rs` (2/2 functions, 100% complete)
+      - [x] `string_of_kind` → `LintKind::as_str()`
+      - [x] `kinds_of_string` → `LintKind::parse_from_str()`
+    - [x] severity.ml → `flow_lint_settings/src/severity.rs` (6/6 functions, 100% complete)
+      - [x] `string_of_severity` → `Severity::as_str()`
+      - [x] `output_string_of_severity` → `Severity::as_output_str()`
+      - [x] `severity_of_string` → `Severity::severity_of_str()`
+      - [x] `severity_cmp` → `Ord` trait derive (automatic via PartialOrd/Ord)
+      - [x] `severity_min` → `Severity::min_of()`
+      - [x] `severity_max` → `Severity::max_of()`
+    - [x] strictModeSettings.ml → `flow_lint_settings/src/strict_mode_settings.rs`
+      - [x] `empty`
+      - [x] `fold`
+      - [x] `iter`
+      - [x] `of_lines`
   - [ ] logging_utils/
-      - [ ] loggingUtils.ml → `flow_logging_utils/src/lib.rs`
-          - [x] `hh_logger_level_of_env`
-          - [x] `set_hh_logger_min_level`
-          - [x] `init_loggers`
-          - [x] `set_server_options`
-          - [x] `dump_server_options`
-          - [ ] `disable_logging` (only disables `flow_event_logger`; `EventLogger` and `FlowInteractionLogger` calls are not ported)
+    - [ ] loggingUtils.ml → `flow_logging_utils/src/lib.rs`
+      - [x] `hh_logger_level_of_env`
+      - [x] `set_hh_logger_min_level`
+      - [x] `init_loggers`
+      - [x] `set_server_options`
+      - [x] `dump_server_options`
+      - [ ] `disable_logging` (only disables `flow_event_logger`; `EventLogger` and `FlowInteractionLogger` calls are not ported)
   - [ ] lwt/
     - [ ] __tests__/
-        - [ ] lwtTimeout_test.ml
-        - [ ] lwtUtils_test.ml
-        - [ ] lwt_test_utils.ml
-        - [ ] lwt_tests.ml
-      - [ ] lwtInit.ml
-      - [ ] lwtLoop.ml
-      - [ ] lwtSysUtils.ml
-      - [ ] lwtTimeout.ml
-      - [ ] lwtUtils.ml
+      - [ ] lwtTimeout_test.ml
+      - [ ] lwtUtils_test.ml
+      - [ ] lwt_test_utils.ml
+      - [ ] lwt_tests.ml
+    - [ ] lwtInit.ml
+    - [ ] lwtLoop.ml
+    - [ ] lwtSysUtils.ml
+    - [ ] lwtTimeout.ml
+    - [ ] lwtUtils.ml
   - [x] lz4/
-      - [x] lz4.ml → `lz4_flex` crate
+    - [x] lz4.ml → `lz4_flex` crate
   - [x] modulename/
-      - [x] haste_module_info.ml → `flow_common_modulename/src/haste_module_info.rs`
-          - [x] `mk`
-          - [x] `module_name`
-          - [x] `namespace_bitset`
-          - [x] `compare` → `impl Ord`
-          - [x] `equal` → `#[derive(Eq)]`
-          - [x] `to_string` → `impl Display`
-      - [x] modulename.ml → `flow_common_modulename/src/modulename.rs`
-          - [x] `Modulename` enum (Haste/Filename variants)
-          - [x] `ModulenameSet` type alias
-          - [x] `ModulenameMap` type alias
+    - [x] haste_module_info.ml → `flow_common_modulename/src/haste_module_info.rs`
+      - [x] `mk`
+      - [x] `module_name`
+      - [x] `namespace_bitset`
+      - [x] `compare` → `impl Ord`
+      - [x] `equal` → `#[derive(Eq)]`
+      - [x] `to_string` → `impl Display`
+    - [x] modulename.ml → `flow_common_modulename/src/modulename.rs`
+      - [x] `Modulename` enum (Haste/Filename variants)
+      - [x] `ModulenameSet` type alias
+      - [x] `ModulenameMap` type alias
   - [x] monad/
-      - [x] stateResult.ml → `unnecessary monad in rust`
+    - [x] stateResult.ml → `unnecessary monad in rust`
   - [x] packed_locs/
     - [x] __tests__/
-        - [x] packed_locs_tests.ml → `flow_packed_locs/src/packed_locs.rs` (inline tests)
-      - [x] packed_locs.ml → `flow_packed_locs/src/packed_locs.rs`
-          - [x] `compare_locs`
-          - [x] `pack`
-          - [x] `unpack`
+      - [x] packed_locs_tests.ml → `flow_packed_locs/src/packed_locs.rs` (inline tests)
+    - [x] packed_locs.ml → `flow_packed_locs/src/packed_locs.rs`
+      - [x] `compare_locs`
+      - [x] `pack`
+      - [x] `unpack`
   - [ ] profiling/
-      - [ ] memory_utils.ml
-      - [ ] profiling_js.ml
+    - [ ] memory_utils.ml
+    - [ ] profiling_js.ml
   - [x] semver/
     - [x] __tests__/
-        - [x] semver_parser_test.ml → `flow_common_semver/src/semver_parser.rs` (inline tests)
-        - [x] semver_range_test.ml → `flow_common_semver/src/semver_range.rs` (inline tests)
-        - [x] semver_tests.ml → `flow_common_semver/src/semver.rs` (inline tests; OUnit aggregator dropped)
-        - [x] semver_version_test.ml → `flow_common_semver/src/semver_version.rs` (inline tests)
+      - [x] semver_parser_test.ml → `flow_common_semver/src/semver_parser.rs` (inline tests)
+      - [x] semver_range_test.ml → `flow_common_semver/src/semver_range.rs` (inline tests)
+      - [x] semver_tests.ml → `flow_common_semver/src/semver.rs` (inline tests; OUnit aggregator dropped)
+      - [x] semver_version_test.ml → `flow_common_semver/src/semver_version.rs` (inline tests)
     - [ ] cli/
-        - [ ] main.ml
-      - [x] semver.ml → `flow_common_semver/src/semver.rs`
-      - [x] semver_comparator.ml → `flow_common_semver/src/semver_comparator.rs`
-      - [x] semver_lexer.mll → `flow_common_semver/src/semver_lexer.rs`
-      - [x] semver_parser.mly → `flow_common_semver/src/semver_parser.rs`
-      - [x] semver_range.ml → `flow_common_semver/src/semver_range.rs`
-      - [x] semver_version.ml → `flow_common_semver/src/semver_version.rs`
+      - [ ] main.ml
+    - [x] semver.ml → `flow_common_semver/src/semver.rs`
+    - [x] semver_comparator.ml → `flow_common_semver/src/semver_comparator.rs`
+    - [x] semver_lexer.mll → `flow_common_semver/src/semver_lexer.rs`
+    - [x] semver_parser.mly → `flow_common_semver/src/semver_parser.rs`
+    - [x] semver_range.ml → `flow_common_semver/src/semver_range.rs`
+    - [x] semver_version.ml → `flow_common_semver/src/semver_version.rs`
   - [x] span/
-      - [x] spanMap.ml → `flow_common/src/span_map.rs`
+    - [x] spanMap.ml → `flow_common/src/span_map.rs`
   - [x] tarjan/
     - [x] __tests__/
-        - [x] tarjan_test.ml → `flow_common_tarjan/src/tarjan_test.rs`
-      - [x] tarjan.ml → `flow_common_tarjan/src/lib.rs`
-          - [x] `topsort`
-          - [x] `compare` (TarjanNode trait method)
-          - [x] `find` (TarjanMap trait method + Graph impl)
-          - [x] `to_string` (TarjanNode trait method)
+      - [x] tarjan_test.ml → `flow_common_tarjan/src/tarjan_test.rs`
+    - [x] tarjan.ml → `flow_common_tarjan/src/lib.rs`
+      - [x] `topsort`
+      - [x] `compare` (TarjanNode trait method)
+      - [x] `find` (TarjanMap trait method + Graph impl)
+      - [x] `to_string` (TarjanNode trait method)
   - [ ] test_utils/
-      - [ ] test_utils.ml
+    - [ ] test_utils.ml
   - [x] transaction/
-      - [x] transaction.ml → `flow_common_transaction/src/lib.rs`
-          - [x] `add`
-          - [x] `commit`
-          - [x] `rollback`
-          - [x] `with_transaction_sync`
+    - [x] transaction.ml → `flow_common_transaction/src/lib.rs`
+      - [x] `add`
+      - [x] `commit`
+      - [x] `rollback`
+      - [x] `with_transaction_sync`
   - [x] ty/ → `flow_common_ty/src/`
-      - [x] __tests__/
-        - [x] ty_printer_test.ml → `flow_common_ty/src/ty_printer_test.rs`
-        - [x] ty_simplifier_test.ml → `flow_common_ty/src/ty_simplifier_test.rs`
-        - [x] ty_tests.ml → simply an entrypoint of the above two
-      - [x] ty.ml → `flow_common_ty/src/ty.rs`
-          - [x] `bk_union` → `bk_union()`
-          - [x] `bk_inter` → `bk_inter()`
-          - [x] `mk_union` → `mk_union()`
-          - [x] `mk_inter` → `mk_inter()`
-          - [x] `explicit_any` → `explicit_any()`
-          - [x] `is_dynamic` → `is_dynamic()`
-          - [x] `mk_maybe` → `mk_maybe()`
-          - [x] `mk_generic_class` → `mk_generic_class()`
-          - [x] `mk_generic_interface` → `mk_generic_interface()`
-          - [x] `mk_generic_talias` → `mk_generic_talias()`
-          - [x] `mk_exact` → `mk_exact()`
-          - [x] `mk_array` → `mk_array()`
-          - [x] `debug_string_of_generic_kind` → `debug_string_of_generic_kind()`
-          - [x] `string_of_utility_ctor` → `string_of_utility_ctor()`
-          - [x] `types_of_utility` → `types_of_utility()`
-          - [x] `string_of_prop_source` → `string_of_prop_source()`
-          - [x] Type definitions (t, decl, elt, etc.) → enums/structs
-          - [x] Visitor classes → `ComparatorTy` in ty_utils
-          - [x] `symbols_of_elt` → `symbols_of_elt()`
-          - [x] `map_loc_symbol` - `Symbol::map_locs`
-      - [x] ty_ancestors.ml → `flow_common_ty/src/ty_ancestors.rs` (6/6 traits, 100% complete)
-          - [x] `class iter_ty_base` → `trait TyIterBase<Env, L>`
-          - [x] `class iter2_ty_base` → `trait TyIter2Base<Env, L>`
-          - [x] `class map_ty_base` → `trait TyMapBase<Env, L>`
-          - [x] `class endo_ty_base` → `trait TyEndoBase<Env, L>`
-          - [x] `class reduce_ty_base` → `trait TyReduceBase<Env, L>` + `trait Monoid`
-          - [x] `class mapreduce_ty_base` → `trait TyMapReduceBase<Env, L>`
-      - [x] ty_debug.ml → `flow_common_ty/src/ty_debug.rs`
-          - [x] Debug trait implementations for all Ty types
-      - [x] ty_printer.ml → `flow_common_ty/src/ty_printer.rs`
-          - [x] `better_quote` → `better_quote()`
-          - [x] `property_key_quotes_needed` → `property_key_quotes_needed()`
-          - [x] `string_of_elt` → `string_of_elt()`
-          - [x] `string_of_elt_single_line` → `string_of_elt_single_line()`
-          - [x] `string_of_decl_single_line` → `string_of_decl_single_line()`
-          - [x] `string_of_t` → `string_of_t()`
-          - [x] `string_of_t_single_line` → `string_of_t_single_line()`
-          - [x] `string_of_symbol_set` → `string_of_symbol_set()`
-          - [x] `string_of_type_at_pos_result` → `string_of_type_at_pos_result()`
-          - [x] `utf8_escape` → `utf8_escape()`
-      - [x] ty_serializer.ml → `flow_common_ty/src/ty_serializer.rs` (1/1 functions, 100% complete)
-          - [x] `type_` → `Serializer::type_()`
-          - [x] `type options` → `struct SerializerOptions`
-      - [x] ty_symbol.ml → `flow_common_ty/src/ty_symbol.rs` (1/1 functions, 100% complete)
-          - [x] `builtin_symbol` → `builtin_symbol()`
-          - [x] Type definitions (import_mode, imported_ident_, etc.) → enums/structs
-      - [x] ty_utils.ml → `flow_common_ty/src/ty_utils.rs` (9/9 functions, 100% complete)
-          - [x] `size_of_type` → `size_of_type()`
-          - [x] `size_of_elt` → `size_of_elt()`
-          - [x] `simplify_type` → `simplify_type()`
-          - [x] `simplify_decl` → `simplify_decl()`
-          - [x] `simplify_elt` → `simplify_elt()`
-          - [x] `unmaybe_ty` → `unmaybe_ty()`
-          - [x] `elt_equal` → `elt_equal()`
-          - [x] `typify_elt` → `typify_elt()`
-          - [x] `reinterpret_elt_as_type_identifier` → `reinterpret_elt_as_type_identifier()`
+    - [x] __tests__/
+      - [x] ty_printer_test.ml → `flow_common_ty/src/ty_printer_test.rs`
+      - [x] ty_simplifier_test.ml → `flow_common_ty/src/ty_simplifier_test.rs`
+      - [x] ty_tests.ml → simply an entrypoint of the above two
+    - [x] ty.ml → `flow_common_ty/src/ty.rs`
+      - [x] `bk_union` → `bk_union()`
+      - [x] `bk_inter` → `bk_inter()`
+      - [x] `mk_union` → `mk_union()`
+      - [x] `mk_inter` → `mk_inter()`
+      - [x] `explicit_any` → `explicit_any()`
+      - [x] `is_dynamic` → `is_dynamic()`
+      - [x] `mk_maybe` → `mk_maybe()`
+      - [x] `mk_generic_class` → `mk_generic_class()`
+      - [x] `mk_generic_interface` → `mk_generic_interface()`
+      - [x] `mk_generic_talias` → `mk_generic_talias()`
+      - [x] `mk_exact` → `mk_exact()`
+      - [x] `mk_array` → `mk_array()`
+      - [x] `debug_string_of_generic_kind` → `debug_string_of_generic_kind()`
+      - [x] `string_of_utility_ctor` → `string_of_utility_ctor()`
+      - [x] `types_of_utility` → `types_of_utility()`
+      - [x] `string_of_prop_source` → `string_of_prop_source()`
+      - [x] Type definitions (t, decl, elt, etc.) → enums/structs
+      - [x] Visitor classes → `ComparatorTy` in ty_utils
+      - [x] `symbols_of_elt` → `symbols_of_elt()`
+      - [x] `map_loc_symbol` - `Symbol::map_locs`
+    - [x] ty_ancestors.ml → `flow_common_ty/src/ty_ancestors.rs` (6/6 traits, 100% complete)
+      - [x] `class iter_ty_base` → `trait TyIterBase<Env, L>`
+      - [x] `class iter2_ty_base` → `trait TyIter2Base<Env, L>`
+      - [x] `class map_ty_base` → `trait TyMapBase<Env, L>`
+      - [x] `class endo_ty_base` → `trait TyEndoBase<Env, L>`
+      - [x] `class reduce_ty_base` → `trait TyReduceBase<Env, L>` + `trait Monoid`
+      - [x] `class mapreduce_ty_base` → `trait TyMapReduceBase<Env, L>`
+    - [x] ty_debug.ml → `flow_common_ty/src/ty_debug.rs`
+      - [x] Debug trait implementations for all Ty types
+    - [x] ty_printer.ml → `flow_common_ty/src/ty_printer.rs`
+      - [x] `better_quote` → `better_quote()`
+      - [x] `property_key_quotes_needed` → `property_key_quotes_needed()`
+      - [x] `string_of_elt` → `string_of_elt()`
+      - [x] `string_of_elt_single_line` → `string_of_elt_single_line()`
+      - [x] `string_of_decl_single_line` → `string_of_decl_single_line()`
+      - [x] `string_of_t` → `string_of_t()`
+      - [x] `string_of_t_single_line` → `string_of_t_single_line()`
+      - [x] `string_of_symbol_set` → `string_of_symbol_set()`
+      - [x] `string_of_type_at_pos_result` → `string_of_type_at_pos_result()`
+      - [x] `utf8_escape` → `utf8_escape()`
+    - [x] ty_serializer.ml → `flow_common_ty/src/ty_serializer.rs` (1/1 functions, 100% complete)
+      - [x] `type_` → `Serializer::type_()`
+      - [x] `type options` → `struct SerializerOptions`
+    - [x] ty_symbol.ml → `flow_common_ty/src/ty_symbol.rs` (1/1 functions, 100% complete)
+      - [x] `builtin_symbol` → `builtin_symbol()`
+      - [x] Type definitions (import_mode, imported_ident_, etc.) → enums/structs
+    - [x] ty_utils.ml → `flow_common_ty/src/ty_utils.rs` (9/9 functions, 100% complete)
+      - [x] `size_of_type` → `size_of_type()`
+      - [x] `size_of_elt` → `size_of_elt()`
+      - [x] `simplify_type` → `simplify_type()`
+      - [x] `simplify_decl` → `simplify_decl()`
+      - [x] `simplify_elt` → `simplify_elt()`
+      - [x] `unmaybe_ty` → `unmaybe_ty()`
+      - [x] `elt_equal` → `elt_equal()`
+      - [x] `typify_elt` → `typify_elt()`
+      - [x] `reinterpret_elt_as_type_identifier` → `reinterpret_elt_as_type_identifier()`
   - [ ] utils/
     - [x] __tests__/
-        - [x] bitset_test.ml → `flow_common/src/bitset.rs` (inline tests)
-        - [x] cache_test.ml → `flow_common_utils/src/cache.rs` (inline tests)
-        - [x] common_utils_tests.ml → `irrelevant` (OUnit aggregator, replaced by cargo test discovery)
-        - [x] graph_test.ml → `flow_common_utils/src/graph.rs` (inline tests)
-        - [x] line_test.ml → `flow_common_utils/src/line.rs` (inline tests)
-        - [x] nel_test.ml → `irrelevant`
-        - [x] resizableArray_test.ml → `irrelevant`
+      - [x] bitset_test.ml → `flow_common/src/bitset.rs` (inline tests)
+      - [x] cache_test.ml → `flow_common_utils/src/cache.rs` (inline tests)
+      - [x] common_utils_tests.ml → `irrelevant` (OUnit aggregator, replaced by cargo test discovery)
+      - [x] graph_test.ml → `flow_common_utils/src/graph.rs` (inline tests)
+      - [x] line_test.ml → `flow_common_utils/src/line.rs` (inline tests)
+      - [x] nel_test.ml → `irrelevant`
+      - [x] resizableArray_test.ml → `irrelevant`
     - [x] checked_set/
-        - [x] checkedSet.ml → `flow_common_utils/src/checked_set.rs`
-            - [x] `add`
-            - [x] `all`
-            - [x] `cardinal`
-            - [x] `debug_counts_to_string`
-            - [x] `debug_equal`
-            - [x] `debug_to_string`
-            - [x] `dependencies`
-            - [x] `dependencies_cardinal`
-            - [x] `dependents`
-            - [x] `dependents_cardinal`
-            - [x] `diff`
-            - [x] `empty`
-            - [x] `filter`
-            - [x] `focused`
-            - [x] `focused_cardinal`
-            - [x] `is_dependency`
-            - [x] `is_dependent`
-            - [x] `is_empty`
-            - [x] `is_focused`
-            - [x] `mem`
-            - [x] `mem_dependency`
-            - [x] `mem_dependent`
-            - [x] `mem_focused`
-            - [x] `of_focused_list`
-            - [x] `partition_dependencies`
-            - [x] `remove`
-            - [x] `union`
+      - [x] checkedSet.ml → `flow_common_utils/src/checked_set.rs`
+        - [x] `add`
+        - [x] `all`
+        - [x] `cardinal`
+        - [x] `debug_counts_to_string`
+        - [x] `debug_equal`
+        - [x] `debug_to_string`
+        - [x] `dependencies`
+        - [x] `dependencies_cardinal`
+        - [x] `dependents`
+        - [x] `dependents_cardinal`
+        - [x] `diff`
+        - [x] `empty`
+        - [x] `filter`
+        - [x] `focused`
+        - [x] `focused_cardinal`
+        - [x] `is_dependency`
+        - [x] `is_dependent`
+        - [x] `is_empty`
+        - [x] `is_focused`
+        - [x] `mem`
+        - [x] `mem_dependency`
+        - [x] `mem_dependent`
+        - [x] `mem_focused`
+        - [x] `of_focused_list`
+        - [x] `partition_dependencies`
+        - [x] `remove`
+        - [x] `union`
     - [x] filename_cache/
-        - [x] filenameCache.ml → `flow_common_utils/src/filename_cache.rs`
-            - [x] `include Cache.Make (Utils_js.FilenameMap)` surface → `type Cache<V> = crate::cache::Cache<FileKey, V>` plus wrapper fns
-            - [x] `make`
-            - [x] `clear`
-            - [x] `remove_entry`
-            - [x] `get_from_cache`
-            - [x] `with_cache`
-            - [x] `with_cache_sync`
-    - [x] loc_utils/
-        - [x] loc_collections.ml → `unnecessary`
-        - [x] loc_sig.ml → `flow_parser/src/loc_sig.rs`
-    - [x] cache.ml → `flow_common_utils/src/cache.rs`
-        - [x] `Make` functor → `Cache<K, V>` impl
+      - [x] filenameCache.ml → `flow_common_utils/src/filename_cache.rs`
+        - [x] `include Cache.Make (Utils_js.FilenameMap)` surface → `type Cache<V> = crate::cache::Cache<FileKey, V>` plus wrapper fns
         - [x] `make`
         - [x] `clear`
         - [x] `remove_entry`
         - [x] `get_from_cache`
         - [x] `with_cache`
         - [x] `with_cache_sync`
+    - [x] loc_utils/
+      - [x] loc_collections.ml → `unnecessary`
+      - [x] loc_sig.ml → `flow_parser/src/loc_sig.rs`
+    - [x] cache.ml → `flow_common_utils/src/cache.rs`
+      - [x] `Make` functor → `Cache<K, V>` impl
+      - [x] `make`
+      - [x] `clear`
+      - [x] `remove_entry`
+      - [x] `get_from_cache`
+      - [x] `with_cache`
+      - [x] `with_cache_sync`
     - [x] cache_sig.ml → unnecessary in rust (public API is in `flow_common_utils/src/cache.rs`)
     - [x] graph.ml → `flow_common_utils/src/graph.rs`
     - [x] graph_sig.ml → `unnecessary`
@@ -730,2459 +730,2459 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] utils_js.ml → `flow_common_utils/src/utils_js.rs`
     - [x] utils_jsx.ml → `flow_common_utils/src/utils_jsx.rs`
   - [x] vcs/
-      - [x] eden.ml → `flow_common_vcs/src/eden.rs`
-      - [x] git.ml → `flow_common_vcs/src/git.rs`
-      - [x] hg.ml → `flow_common_vcs/src/hg.rs`
-      - [x] vcs.ml → `flow_common_vcs/src/vcs.rs`
-      - [x] vcs_utils.ml → `flow_common_vcs/src/vcs_utils.rs`
+    - [x] eden.ml → `flow_common_vcs/src/eden.rs`
+    - [x] git.ml → `flow_common_vcs/src/git.rs`
+    - [x] hg.ml → `flow_common_vcs/src/hg.rs`
+    - [x] vcs.ml → `flow_common_vcs/src/vcs.rs`
+    - [x] vcs_utils.ml → `flow_common_vcs/src/vcs_utils.rs`
   - [x] xx/
     - [x] __tests__/
-        - [x] xx_tests.ml
-      - [x] xx.ml → `flow_common_xx/src/lib.rs`
-          - [x] `init` → `State::new`
-          - [x] `update` → `State::update`
-          - [x] `update_int` → `State::update_int`
-          - [x] `update_int64` → `State::update_int64`
-          - [x] `digest` → `State::digest`
-          - [x] `hash`
-          - [x] `XxHasher` (Rust-only: `std::hash::Hasher` adapter over `State`)
-          - [x] `content_hash_of` (Rust-only: replaces `Type_sig_bin.hash_serialized` for structured data)
-          - [x] `equal` → derived `Eq` on `u64`
-          - [x] `to_string` → unnecessary for `u64`
-          - [x] `modulo`
-          - [x] `pp_hash` → unnecessary for `u64`
-    - [x] docblock.ml → `flow_common/src/docblock.rs`
-    - [x] enclosing_context.ml →
-        - [x] `EnclosingContext` enum with variants
-        - [x] `is_conditional_test_context`
-    - [x] files.ml → `flow_common/src/files.rs`
-        - [x] `absolute_path`
-        - [x] `chop_flow_ext`
-        - [x] `chop_platform_suffix_for_file`
-        - [x] `chop_platform_suffix_for_haste_module`
-        - [x] `construct_path`
-        - [x] `expand_builtin_root_token`
-        - [x] `expand_project_root_token`
-        - [x] `filename_from_string`
-        - [x] `get_all_watched_extensions`
-        - [x] `grouped_platform_extension_opt`
-        - [x] `has_flow_ext`
-        - [x] `haste_name_opt`
-        - [x] `is_declaration`
-        - [x] `is_flow_file`
-        - [x] `is_ignored`
-        - [x] `is_in_flowlib`
-        - [x] `is_included`
-        - [x] `is_json_file`
-        - [x] `is_prefix`
-        - [x] `is_untyped`
-        - [x] `is_valid_path`
-        - [x] `is_within_node_modules`
-        - [x] `make_next_files`
-        - [x] `make_path_absolute`
-        - [x] `module_declaration_dirnames`
-        - [x] `module_file_exts`
-        - [x] `node_resolver_dirnames`
-        - [x] `normalize_path`
-        - [x] `platform_specific_extensions_and_indices_opt`
-        - [x] `relative_interface_mref_of_possibly_platform_specific_file`
-        - [x] `relative_path`
-        - [x] `split_path`
-        - [x] `wanted`
-        - [x] `watched_paths`
-        - [x] `absolute_path_regexp` → `ABSOLUTE_PATH_REGEXP` lazy_static
-        - [x] `canonicalize_filenames` → `canonicalize_filenames()`
-        - [x] `current_dir_name` → `CURRENT_DIR_NAME` lazy_static
-        - [x] `default_lib_dir` → pub field on `FileOptions`
-        - [x] `default_options` → `Default::default()` impl for `FileOptions`
-        - [x] `dir_sep` → `DIR_SEP` lazy_static
-        - [x] `eponymous_module` → in `flow_common_modulename` crate (circular dep)
-        - [x] `flow_ext` → `pub const FLOW_EXT`
-        - [x] `get_all` → `get_all()`
-        - [x] `get_flowtyped_path` → `get_flowtyped_path()`
-        - [x] `global_file_name` → `pub const GLOBAL_FILE_NAME`
-        - [x] `ignores` → pub field on `FileOptions`
-        - [x] `imaginary_realpath` → `imaginary_realpath()`
-        - [x] `implicitly_include_root` → pub field on `FileOptions`
-        - [x] `includes` → pub field on `FileOptions`
-        - [x] `mk_options` → pub struct construction for `FileOptions`
-        - [x] `mkdirp` → `mkdirp()`
-        - [x] `module_resource_exts` → pub field on `FileOptions`
-        - [x] `multi_platform` → pub field on `FileOptions`
-        - [x] `multi_platform_extension_group_mapping` → pub field on `FileOptions`
-        - [x] `multi_platform_extensions` → pub field on `FileOptions`
-        - [x] `node_modules_containers` → parameter passing (intentional Rust idiom)
-        - [x] `ordered_and_unordered_lib_paths`
-        - [x] `parent_dir_name` → `PARENT_DIR_NAME` lazy_static
-        - [x] `untyped` → pub field on `FileOptions`
-    - [x] flowSymbol.ml → `flow_common/src/flow_symbol.rs` (100% complete)
-        - [x] `kind` type → `SymbolKind` enum (all 16 variants)
-        - [x] `string_of_kind` → `SymbolKind::as_str()`
-        - [x] `symbol` type → `Symbol(Arc<SymbolInner>)`
-        - [x] `mk_symbol` → `Symbol::new()`
-        - [x] `mk_class_symbol` → `Symbol::mk_class_symbol()`
-        - [x] `mk_component_symbol` → `Symbol::mk_component_symbol()`
-        - [x] `mk_constant_symbol` → `Symbol::mk_constant_symbol()`
-        - [x] `mk_enum_symbol` → `Symbol::mk_enum_symbol()`
-        - [x] `mk_module_symbol` → `Symbol::mk_module_symbol()`
-        - [x] `mk_namespace_symbol` → `Symbol::mk_namespace_symbol()`
-        - [x] `mk_type_alias_symbol` → `Symbol::mk_type_alias_symbol()`
-        - [x] `mk_type_parameter_symbol` → `Symbol::mk_type_parameter_symbol()`
-        - [x] `mk_variable_symbol` → `Symbol::mk_variable_symbol()`
-        - [x] `kind_of_symbol` → `Symbol::kind()`
-        - [x] `name_of_symbol` → `Symbol::name()`
-        - [x] `def_loc_of_symbol` → `Symbol::def_loc_of_symbol()`
-        - [x] `dump_symbol` → `dump_symbol()`
-        - [x] `dump_symbol_opt` → `dump_symbol_opt()`
-    - [x] flow_import_specifier.ml → `flow_common/src/flow_import_specifier.rs` (5/5 functions, 100% complete)
-        - [x] `userland` → `Userland::from_smol_str()` (constructor)
-        - [x] `display_userland` → `Userland::display()`
-        - [x] `map_userland` → `Userland::map()`
-        - [x] `unwrap_userland` → `Userland::into_inner()` / `Userland::as_str()`
-        - [x] `userland_specifier` → `FlowImportSpecifier::userland()`
-    - [ ] flow_lsp_conversions.ml → `flow_server_env/src/flow_lsp_conversions.rs`
-        - [ ] `markup_string`
-        - [ ] `selection_range_of_loc`
-        - [ ] `func_details_result_to_lsp`
-        - [ ] `flow_signature_help_to_lsp`
-        - [x] `flow_completion_item_to_lsp`
-        - [x] `flow_completions_to_lsp`
-        - [ ] `file_key_to_uri`
-        - [ ] `loc_to_lsp`
-        - [ ] `loc_to_lsp_with_default`
-        - [ ] `flow_edit_to_textedit`
-        - [ ] `lsp_DocumentIdentifier_to_flow_path`
-        - [ ] `position_of_document_position`
-        - [x] `diagnostics_of_flow_errors`
-        - [ ] `synthetic_diagnostics_of_switch_to_match_eligible_locations`
-        - [ ] `synthetic_diagnostics_of_refined_locations`
-    - [x] flow_projects.ml → `flow_common/src/flow_projects.rs`
-        - [x] `default_options` → `ProjectsOptions::default()` (via Default trait)
-        - [x] `mk_options` → `ProjectsOptions::mk()`
-        - [x] `from_bitset_unchecked` → `FlowProjects::from_bitset_unchecked()`
-        - [x] `to_bitset` → `FlowProjects::to_bitset()`
-        - [x] `bitset_of_project_string` → `FlowProjects::from_project_str()`
-        - [x] `projects_bitset_of_path` → `FlowProjects::from_path()`
-        - [x] `is_common_code_path` → `ProjectsOptions::is_common_code_path()`
-        - [x] `projects_strict_boundary_validate_import_pattern_opt_outs` → `ProjectsOptions::projects_strict_boundary_validate_import_pattern_opt_outs()`
-        - [x] `is_import_specifier_that_opt_out_of_strict_boundary` → `ProjectsOptions::is_import_specifier_that_opt_out_of_strict_boundary()`
-        - [x] `reachable_projects_bitsets_from_projects_bitset` → `ProjectsOptions::reachable_projects_bitsets_from_projects_bitset()`
-        - [x] `individual_projects_bitsets_from_common_project_bitset` → `ProjectsOptions::individual_projects_bitsets_from_common_project_bitset()`
-        - [x] `individual_projects_bitsets_from_common_project_bitset_excluding_first` → `ProjectsOptions::individual_projects_bitsets_from_common_project_bitset_excluding_first()`
-        - [x] `multi_platform_ambient_supports_platform_for_project` → `ProjectsOptions::multi_platform_ambient_supports_platform_for_project()`
-        - [x] `equal` (FlowProjects has PartialEq derive)
-    - [x] flow_version.ml → `flow_common/src/flow_version.rs`
-    - [x] hint.ml → `flow_common/src/hint.rs` (6/6 functions, 100% complete)
-        - [x] `string_of_predicate_kind` → `string_of_predicate_kind()`
-        - [x] `string_of_hint_unknown_kind` → `HintDecomposition::to_debug_string()`
-        - [x] `string_of_hints` → `Hint::string_of_hints()`
-        - [x] `decompose_hints` → `Hint::decompose()`
-        - [x] `map_decomp_op` → `HintDecomposition::map()`
-        - [x] `map` → `Hint::map()`
-    - [x] js_number.ml → `flow_common/src/js_number.rs`
-        - [x] `is_float_safe_integer`
-        - [x] `max_safe_integer` → `pub const MAX_SAFE_INTEGER`
-        - [x] `min_safe_integer` → `pub const MIN_SAFE_INTEGER`
-    - [x] nameUtils.ml → `irrelevant` (directly use BTreeMap)
-    - [x] options.ml → `flow_common/src/options.rs`
-    - [x] path_matcher.ml → `flow_common/src/path_matcher.rs`
-        - [x] `empty`
-        - [x] `matches`
-        - [x] `stems`
-        - [x] `add` → `PathMatcher::add_path`
-    - [x] platform_set.ml → `flow_common/src/platform_set.rs`
-        - [x] `available_platforms`
-        - [x] `is_subset`
-        - [x] `no_overlap`
-        - [x] `platform_specific_implementation_mrefs_of_possibly_interface_file`
-        - [x] `to_platform_string_set`
-    - [x] reason.ml → `flow_common/src/reason.rs`
-        - [x] `code_desc_of_expression`
-        - [x] `code_desc_of_pattern`
-        - [x] `concretize_equal`
-        - [x] `dump_reason`
-        - [x] `func_reason`
-        - [x] `in_range`
-        - [x] `invalidate_rtype_alias` → `VirtualReasonDesc::invalidate_rtype_alias()`
-        - [x] `is_array_reason`
-        - [x] `is_instantiable_reason`
-        - [x] `is_literal_array_reason`
-        - [x] `is_literal_function_reason`
-        - [x] `is_literal_object_reason`
-        - [x] `is_nullish_reason`
-        - [x] `is_record_reason`
-        - [x] `is_scalar_reason`
-        - [x] `locationless_reason`
-        - [x] `mk_expression_reason`
-        - [x] `mk_id`
-        - [x] `mk_initial_arguments_reason`
-        - [x] `mk_obj_lit_reason`
-        - [x] `mk_pattern_reason`
-        - [x] `mk_reason`
-        - [x] `mk_typed_expression_reason`
-        - [x] `react_element_desc_of_component_reason`
-        - [x] `string_of_aloc`
-        - [x] `string_of_desc`
-        - [x] `string_of_loc`
-        - [x] `string_of_reason`
-        - [x] `string_of_source`
-        - [x] `annot_loc_of_reason` → `VirtualReason::annot_loc()`
-        - [x] `def_loc_of_reason` → `VirtualReason::def_loc()`
-        - [x] `def_loc_opt_of_reason` → `VirtualReason::def_loc_opt()`
-        - [x] `desc_of_reason` → `VirtualReason::desc()`
-        - [x] `is_blamable_reason` → `VirtualReasonDesc::is_blamable()`
-        - [x] `is_lib_reason` → `VirtualReasonDesc::is_lib()`
-        - [x] `is_lib_reason_def` → `VirtualReasonDesc::is_lib_def()`
-        - [x] `is_promise_reason` → `VirtualReasonDesc::is_promise()`
-        - [x] `is_scalar_reason_desc` → `VirtualReasonDesc::is_scalar()`
-        - [x] `loc_of_reason` → `VirtualReason::loc()`
-        - [x] `map_desc_locs` → `VirtualReasonDesc::map_locs()`
-        - [x] `map_reason_locs` → `VirtualReason::map_locs()`
-        - [x] `opt_annot_reason` → `VirtualReason::opt_annotate()`
-        - [x] `replace_desc_new_reason` → `VirtualReason::replace_desc_new()`
-        - [x] `replace_desc_reason` → `VirtualReason::replace_desc()`
-        - [x] `repos_reason` → `VirtualReason::reposition()`
-        - [x] `unwrap_reason_desc` → `VirtualReasonDesc::unwrap()`
-        - [x] `update_desc_new_reason` → `VirtualReason::update_desc_new()`
-        - [x] `update_desc_reason` → `VirtualReason::update_desc()`
-        - [x] `mk_annot_reason` → `mk_annot_reason()`
-        - [x] `display_string_of_name` → `Display for Name` trait impl (also `Name::as_str()`)
-        - [x] `json_of_loc` → `json_of_loc()`
-        - [x] `json_of_loc_props` → `json_of_loc_props()`
-        - [x] `json_of_source` → `json_of_source()`
-        - [x] `json_source_type_of_source` → `json_source_type_of_source()`
-        - [x] `pp_virtual_reason_desc` → `just use Debug`
-        - [x] `range_string_of_loc` → `range_string_of_loc()`
-        - [x] `show_reason_desc_function` → `just use Debug`
-        - [x] `show_virtual_reason_desc` → `just use Debug`
-    - [x] refinement_invalidation.ml → `flow_common/src/refinement_invalidation.rs`
-        - [x] `Reason` enum
-        - [x] `RefinementInvalidation` struct
-        - [x] `singleton`
-        - [x] `string_of_reason`
-        - [x] `union`
-        - [x] `merge`
-    - [x] relay_options.ml → `flow_common/src/relay_options.rs`
-    - [x] slow_to_check_logging.ml → `flow_common/src/slow_to_check_logging.rs`
-    - [x] subst_name.ml → `flow_common/src/subst_name.rs`
-    - [x] verbose.ml → `flow_common/src/verbose.rs`
+      - [x] xx_tests.ml
+    - [x] xx.ml → `flow_common_xx/src/lib.rs`
+      - [x] `init` → `State::new`
+      - [x] `update` → `State::update`
+      - [x] `update_int` → `State::update_int`
+      - [x] `update_int64` → `State::update_int64`
+      - [x] `digest` → `State::digest`
+      - [x] `hash`
+      - [x] `XxHasher` (Rust-only: `std::hash::Hasher` adapter over `State`)
+      - [x] `content_hash_of` (Rust-only: replaces `Type_sig_bin.hash_serialized` for structured data)
+      - [x] `equal` → derived `Eq` on `u64`
+      - [x] `to_string` → unnecessary for `u64`
+      - [x] `modulo`
+      - [x] `pp_hash` → unnecessary for `u64`
+  - [x] docblock.ml → `flow_common/src/docblock.rs`
+  - [x] enclosing_context.ml →
+    - [x] `EnclosingContext` enum with variants
+    - [x] `is_conditional_test_context`
+  - [x] files.ml → `flow_common/src/files.rs`
+    - [x] `absolute_path`
+    - [x] `chop_flow_ext`
+    - [x] `chop_platform_suffix_for_file`
+    - [x] `chop_platform_suffix_for_haste_module`
+    - [x] `construct_path`
+    - [x] `expand_builtin_root_token`
+    - [x] `expand_project_root_token`
+    - [x] `filename_from_string`
+    - [x] `get_all_watched_extensions`
+    - [x] `grouped_platform_extension_opt`
+    - [x] `has_flow_ext`
+    - [x] `haste_name_opt`
+    - [x] `is_declaration`
+    - [x] `is_flow_file`
+    - [x] `is_ignored`
+    - [x] `is_in_flowlib`
+    - [x] `is_included`
+    - [x] `is_json_file`
+    - [x] `is_prefix`
+    - [x] `is_untyped`
+    - [x] `is_valid_path`
+    - [x] `is_within_node_modules`
+    - [x] `make_next_files`
+    - [x] `make_path_absolute`
+    - [x] `module_declaration_dirnames`
+    - [x] `module_file_exts`
+    - [x] `node_resolver_dirnames`
+    - [x] `normalize_path`
+    - [x] `platform_specific_extensions_and_indices_opt`
+    - [x] `relative_interface_mref_of_possibly_platform_specific_file`
+    - [x] `relative_path`
+    - [x] `split_path`
+    - [x] `wanted`
+    - [x] `watched_paths`
+    - [x] `absolute_path_regexp` → `ABSOLUTE_PATH_REGEXP` lazy_static
+    - [x] `canonicalize_filenames` → `canonicalize_filenames()`
+    - [x] `current_dir_name` → `CURRENT_DIR_NAME` lazy_static
+    - [x] `default_lib_dir` → pub field on `FileOptions`
+    - [x] `default_options` → `Default::default()` impl for `FileOptions`
+    - [x] `dir_sep` → `DIR_SEP` lazy_static
+    - [x] `eponymous_module` → in `flow_common_modulename` crate (circular dep)
+    - [x] `flow_ext` → `pub const FLOW_EXT`
+    - [x] `get_all` → `get_all()`
+    - [x] `get_flowtyped_path` → `get_flowtyped_path()`
+    - [x] `global_file_name` → `pub const GLOBAL_FILE_NAME`
+    - [x] `ignores` → pub field on `FileOptions`
+    - [x] `imaginary_realpath` → `imaginary_realpath()`
+    - [x] `implicitly_include_root` → pub field on `FileOptions`
+    - [x] `includes` → pub field on `FileOptions`
+    - [x] `mk_options` → pub struct construction for `FileOptions`
+    - [x] `mkdirp` → `mkdirp()`
+    - [x] `module_resource_exts` → pub field on `FileOptions`
+    - [x] `multi_platform` → pub field on `FileOptions`
+    - [x] `multi_platform_extension_group_mapping` → pub field on `FileOptions`
+    - [x] `multi_platform_extensions` → pub field on `FileOptions`
+    - [x] `node_modules_containers` → parameter passing (intentional Rust idiom)
+    - [x] `ordered_and_unordered_lib_paths`
+    - [x] `parent_dir_name` → `PARENT_DIR_NAME` lazy_static
+    - [x] `untyped` → pub field on `FileOptions`
+  - [x] flowSymbol.ml → `flow_common/src/flow_symbol.rs` (100% complete)
+    - [x] `kind` type → `SymbolKind` enum (all 16 variants)
+    - [x] `string_of_kind` → `SymbolKind::as_str()`
+    - [x] `symbol` type → `Symbol(Arc<SymbolInner>)`
+    - [x] `mk_symbol` → `Symbol::new()`
+    - [x] `mk_class_symbol` → `Symbol::mk_class_symbol()`
+    - [x] `mk_component_symbol` → `Symbol::mk_component_symbol()`
+    - [x] `mk_constant_symbol` → `Symbol::mk_constant_symbol()`
+    - [x] `mk_enum_symbol` → `Symbol::mk_enum_symbol()`
+    - [x] `mk_module_symbol` → `Symbol::mk_module_symbol()`
+    - [x] `mk_namespace_symbol` → `Symbol::mk_namespace_symbol()`
+    - [x] `mk_type_alias_symbol` → `Symbol::mk_type_alias_symbol()`
+    - [x] `mk_type_parameter_symbol` → `Symbol::mk_type_parameter_symbol()`
+    - [x] `mk_variable_symbol` → `Symbol::mk_variable_symbol()`
+    - [x] `kind_of_symbol` → `Symbol::kind()`
+    - [x] `name_of_symbol` → `Symbol::name()`
+    - [x] `def_loc_of_symbol` → `Symbol::def_loc_of_symbol()`
+    - [x] `dump_symbol` → `dump_symbol()`
+    - [x] `dump_symbol_opt` → `dump_symbol_opt()`
+  - [x] flow_import_specifier.ml → `flow_common/src/flow_import_specifier.rs` (5/5 functions, 100% complete)
+    - [x] `userland` → `Userland::from_smol_str()` (constructor)
+    - [x] `display_userland` → `Userland::display()`
+    - [x] `map_userland` → `Userland::map()`
+    - [x] `unwrap_userland` → `Userland::into_inner()` / `Userland::as_str()`
+    - [x] `userland_specifier` → `FlowImportSpecifier::userland()`
+  - [ ] flow_lsp_conversions.ml → `flow_server_env/src/flow_lsp_conversions.rs`
+    - [ ] `markup_string`
+    - [ ] `selection_range_of_loc`
+    - [ ] `func_details_result_to_lsp`
+    - [ ] `flow_signature_help_to_lsp`
+    - [x] `flow_completion_item_to_lsp`
+    - [x] `flow_completions_to_lsp`
+    - [ ] `file_key_to_uri`
+    - [ ] `loc_to_lsp`
+    - [ ] `loc_to_lsp_with_default`
+    - [ ] `flow_edit_to_textedit`
+    - [ ] `lsp_DocumentIdentifier_to_flow_path`
+    - [ ] `position_of_document_position`
+    - [x] `diagnostics_of_flow_errors`
+    - [ ] `synthetic_diagnostics_of_switch_to_match_eligible_locations`
+    - [ ] `synthetic_diagnostics_of_refined_locations`
+  - [x] flow_projects.ml → `flow_common/src/flow_projects.rs`
+    - [x] `default_options` → `ProjectsOptions::default()` (via Default trait)
+    - [x] `mk_options` → `ProjectsOptions::mk()`
+    - [x] `from_bitset_unchecked` → `FlowProjects::from_bitset_unchecked()`
+    - [x] `to_bitset` → `FlowProjects::to_bitset()`
+    - [x] `bitset_of_project_string` → `FlowProjects::from_project_str()`
+    - [x] `projects_bitset_of_path` → `FlowProjects::from_path()`
+    - [x] `is_common_code_path` → `ProjectsOptions::is_common_code_path()`
+    - [x] `projects_strict_boundary_validate_import_pattern_opt_outs` → `ProjectsOptions::projects_strict_boundary_validate_import_pattern_opt_outs()`
+    - [x] `is_import_specifier_that_opt_out_of_strict_boundary` → `ProjectsOptions::is_import_specifier_that_opt_out_of_strict_boundary()`
+    - [x] `reachable_projects_bitsets_from_projects_bitset` → `ProjectsOptions::reachable_projects_bitsets_from_projects_bitset()`
+    - [x] `individual_projects_bitsets_from_common_project_bitset` → `ProjectsOptions::individual_projects_bitsets_from_common_project_bitset()`
+    - [x] `individual_projects_bitsets_from_common_project_bitset_excluding_first` → `ProjectsOptions::individual_projects_bitsets_from_common_project_bitset_excluding_first()`
+    - [x] `multi_platform_ambient_supports_platform_for_project` → `ProjectsOptions::multi_platform_ambient_supports_platform_for_project()`
+    - [x] `equal` (FlowProjects has PartialEq derive)
+  - [x] flow_version.ml → `flow_common/src/flow_version.rs`
+  - [x] hint.ml → `flow_common/src/hint.rs` (6/6 functions, 100% complete)
+    - [x] `string_of_predicate_kind` → `string_of_predicate_kind()`
+    - [x] `string_of_hint_unknown_kind` → `HintDecomposition::to_debug_string()`
+    - [x] `string_of_hints` → `Hint::string_of_hints()`
+    - [x] `decompose_hints` → `Hint::decompose()`
+    - [x] `map_decomp_op` → `HintDecomposition::map()`
+    - [x] `map` → `Hint::map()`
+  - [x] js_number.ml → `flow_common/src/js_number.rs`
+    - [x] `is_float_safe_integer`
+    - [x] `max_safe_integer` → `pub const MAX_SAFE_INTEGER`
+    - [x] `min_safe_integer` → `pub const MIN_SAFE_INTEGER`
+  - [x] nameUtils.ml → `irrelevant` (directly use BTreeMap)
+  - [x] options.ml → `flow_common/src/options.rs`
+  - [x] path_matcher.ml → `flow_common/src/path_matcher.rs`
+    - [x] `empty`
+    - [x] `matches`
+    - [x] `stems`
+    - [x] `add` → `PathMatcher::add_path`
+  - [x] platform_set.ml → `flow_common/src/platform_set.rs`
+    - [x] `available_platforms`
+    - [x] `is_subset`
+    - [x] `no_overlap`
+    - [x] `platform_specific_implementation_mrefs_of_possibly_interface_file`
+    - [x] `to_platform_string_set`
+  - [x] reason.ml → `flow_common/src/reason.rs`
+    - [x] `code_desc_of_expression`
+    - [x] `code_desc_of_pattern`
+    - [x] `concretize_equal`
+    - [x] `dump_reason`
+    - [x] `func_reason`
+    - [x] `in_range`
+    - [x] `invalidate_rtype_alias` → `VirtualReasonDesc::invalidate_rtype_alias()`
+    - [x] `is_array_reason`
+    - [x] `is_instantiable_reason`
+    - [x] `is_literal_array_reason`
+    - [x] `is_literal_function_reason`
+    - [x] `is_literal_object_reason`
+    - [x] `is_nullish_reason`
+    - [x] `is_record_reason`
+    - [x] `is_scalar_reason`
+    - [x] `locationless_reason`
+    - [x] `mk_expression_reason`
+    - [x] `mk_id`
+    - [x] `mk_initial_arguments_reason`
+    - [x] `mk_obj_lit_reason`
+    - [x] `mk_pattern_reason`
+    - [x] `mk_reason`
+    - [x] `mk_typed_expression_reason`
+    - [x] `react_element_desc_of_component_reason`
+    - [x] `string_of_aloc`
+    - [x] `string_of_desc`
+    - [x] `string_of_loc`
+    - [x] `string_of_reason`
+    - [x] `string_of_source`
+    - [x] `annot_loc_of_reason` → `VirtualReason::annot_loc()`
+    - [x] `def_loc_of_reason` → `VirtualReason::def_loc()`
+    - [x] `def_loc_opt_of_reason` → `VirtualReason::def_loc_opt()`
+    - [x] `desc_of_reason` → `VirtualReason::desc()`
+    - [x] `is_blamable_reason` → `VirtualReasonDesc::is_blamable()`
+    - [x] `is_lib_reason` → `VirtualReasonDesc::is_lib()`
+    - [x] `is_lib_reason_def` → `VirtualReasonDesc::is_lib_def()`
+    - [x] `is_promise_reason` → `VirtualReasonDesc::is_promise()`
+    - [x] `is_scalar_reason_desc` → `VirtualReasonDesc::is_scalar()`
+    - [x] `loc_of_reason` → `VirtualReason::loc()`
+    - [x] `map_desc_locs` → `VirtualReasonDesc::map_locs()`
+    - [x] `map_reason_locs` → `VirtualReason::map_locs()`
+    - [x] `opt_annot_reason` → `VirtualReason::opt_annotate()`
+    - [x] `replace_desc_new_reason` → `VirtualReason::replace_desc_new()`
+    - [x] `replace_desc_reason` → `VirtualReason::replace_desc()`
+    - [x] `repos_reason` → `VirtualReason::reposition()`
+    - [x] `unwrap_reason_desc` → `VirtualReasonDesc::unwrap()`
+    - [x] `update_desc_new_reason` → `VirtualReason::update_desc_new()`
+    - [x] `update_desc_reason` → `VirtualReason::update_desc()`
+    - [x] `mk_annot_reason` → `mk_annot_reason()`
+    - [x] `display_string_of_name` → `Display for Name` trait impl (also `Name::as_str()`)
+    - [x] `json_of_loc` → `json_of_loc()`
+    - [x] `json_of_loc_props` → `json_of_loc_props()`
+    - [x] `json_of_source` → `json_of_source()`
+    - [x] `json_source_type_of_source` → `json_source_type_of_source()`
+    - [x] `pp_virtual_reason_desc` → `just use Debug`
+    - [x] `range_string_of_loc` → `range_string_of_loc()`
+    - [x] `show_reason_desc_function` → `just use Debug`
+    - [x] `show_virtual_reason_desc` → `just use Debug`
+  - [x] refinement_invalidation.ml → `flow_common/src/refinement_invalidation.rs`
+    - [x] `Reason` enum
+    - [x] `RefinementInvalidation` struct
+    - [x] `singleton`
+    - [x] `string_of_reason`
+    - [x] `union`
+    - [x] `merge`
+  - [x] relay_options.ml → `flow_common/src/relay_options.rs`
+  - [x] slow_to_check_logging.ml → `flow_common/src/slow_to_check_logging.rs`
+  - [x] subst_name.ml → `flow_common/src/subst_name.rs`
+  - [x] verbose.ml → `flow_common/src/verbose.rs`
 - [ ] facebook/
   - [ ] http/
-      - [ ] flow_http_client.ml
+    - [ ] flow_http_client.ml
   - [ ] komodo/
     - [ ] binaries/
-        - [ ] komodo_cjs_to_import_export.ml
-        - [ ] komodo_stress_normalizer.ml
-        - [ ] komodo_utils.ml
+      - [ ] komodo_cjs_to_import_export.ml
+      - [ ] komodo_stress_normalizer.ml
+      - [ ] komodo_utils.ml
     - [ ] codemods/
       - [ ] cjs_to_import_export_codemod/
-          - [ ] export_type_heaps.ml
-          - [ ] flow_ast_bindings_utils.ml
-          - [ ] flow_ast_mutator.ml
-          - [ ] import_export_analyze_exports.ml
-          - [ ] import_export_analyze_imports.ml
-          - [ ] import_export_builder.ml
-          - [ ] import_export_error.ml
-          - [ ] reserved_words.ml
-        - [ ] annotate_exports_hardcoded_expr_fixes.ml
-        - [ ] cjs_to_import_export.ml
-        - [ ] hardcoded_module_fixes.ml
-        - [ ] stress_normalizer.ml
+        - [ ] export_type_heaps.ml
+        - [ ] flow_ast_bindings_utils.ml
+        - [ ] flow_ast_mutator.ml
+        - [ ] import_export_analyze_exports.ml
+        - [ ] import_export_analyze_imports.ml
+        - [ ] import_export_builder.ml
+        - [ ] import_export_error.ml
+        - [ ] reserved_words.ml
+      - [ ] annotate_exports_hardcoded_expr_fixes.ml
+      - [ ] cjs_to_import_export.ml
+      - [ ] hardcoded_module_fixes.ml
+      - [ ] stress_normalizer.ml
   - [ ] logging/
     - [ ] user/
-        - [ ] fb_whoami.ml
-      - [ ] flowEventLogger.ml
-      - [ ] flowInteractionLogger.ml
-      - [ ] log_saving.ml
+      - [ ] fb_whoami.ml
+    - [ ] flowEventLogger.ml
+    - [ ] flowInteractionLogger.ml
+    - [ ] log_saving.ml
   - [ ] rage/
-      - [ ] flytrap.ml
-      - [ ] rageCommand.ml
+    - [ ] flytrap.ml
+    - [ ] rageCommand.ml
   - [ ] saved_state/
-      - [ ] saved_state_fb_fetcher.ml
+    - [ ] saved_state_fb_fetcher.ml
   - [ ] server_callable/
     - [ ] lib/
-        - [ ] ast_visitor.ml
-        - [ ] comments.ml
-        - [ ] extract_flow_types.ml
-        - [ ] extract_generate_mock.ml
-        - [ ] extract_server_callable_component_base.ml
-        - [ ] extract_server_callable_entrypoint.ml
-        - [ ] extract_server_callable_instance.ml
-        - [ ] extract_server_callables.ml
-        - [ ] extract_typed_module_helpers.ml
-        - [ ] fb_strings.ml
-        - [ ] filesystem.ml
-        - [ ] json_generator.ml
-        - [ ] json_processer.ml
-        - [ ] server_callable_errors.ml
-        - [ ] server_callable_extraction_types.ml
-        - [ ] server_callable_modifiers.ml
-        - [ ] server_callable_scope.ml
-        - [ ] visit_module_exports.ml
+      - [ ] ast_visitor.ml
+      - [ ] comments.ml
+      - [ ] extract_flow_types.ml
+      - [ ] extract_generate_mock.ml
+      - [ ] extract_server_callable_component_base.ml
+      - [ ] extract_server_callable_entrypoint.ml
+      - [ ] extract_server_callable_instance.ml
+      - [ ] extract_server_callables.ml
+      - [ ] extract_typed_module_helpers.ml
+      - [ ] fb_strings.ml
+      - [ ] filesystem.ml
+      - [ ] json_generator.ml
+      - [ ] json_processer.ml
+      - [ ] server_callable_errors.ml
+      - [ ] server_callable_extraction_types.ml
+      - [ ] server_callable_modifiers.ml
+      - [ ] server_callable_scope.ml
+      - [ ] visit_module_exports.ml
     - [ ] tests/
-        - [ ] sc_snapshot_tests.ml
-        - [ ] test.ml
-      - [ ] server_callable_extract_metadata.ml
-      - [ ] server_callable_extract_metadata_lib.ml
+      - [ ] sc_snapshot_tests.ml
+      - [ ] test.ml
+    - [ ] server_callable_extract_metadata.ml
+    - [ ] server_callable_extract_metadata_lib.ml
   - [ ] tools_infra/
     - [ ] runners/
-        - [ ] command_runner.ml
+      - [ ] command_runner.ml
+- [ ] flow.ml
+- [ ] flow_dot_js.ml
 - [x] flowlib/
-    - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
+  - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
 - [ ] hack_forked/
   - [x] dfind/
-      - [x] dfindAddFile.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-      - [x] dfindEnv.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-      - [x] dfindLibLwt.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-      - [x] dfindMaybe.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-      - [x] dfindServer.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+    - [x] dfindAddFile.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+    - [x] dfindEnv.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+    - [x] dfindLibLwt.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+    - [x] dfindMaybe.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+    - [x] dfindServer.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
   - [ ] facebook/
     - [x] edenfs_watcher/
       - [x] edenfs_watcher.ml → `flow_edenfs_watcher/src/lib.rs` (thin Rust wrapper over `rust_edenfs_watcher::flow_api`)
       - [x] edenfs_watcher_types.ml → re-exported from `rust_edenfs_watcher::types`
     - [ ] logging/
       - [ ] scribe/
-          - [ ] scribe.ml
-        - [ ] eventLogger.ml
-        - [ ] eventLoggerFlusher.ml
-        - [ ] eventLoggerLwt.ml
-        - [ ] eventLoggerState.ml
-        - [ ] eventLoggerTypes.ml
-        - [ ] sandcastle.ml
-        - [ ] scuba.ml
-        - [ ] uname_stubs.ml
+        - [ ] scribe.ml
+      - [ ] eventLogger.ml
+      - [ ] eventLoggerFlusher.ml
+      - [ ] eventLoggerLwt.ml
+      - [ ] eventLoggerState.ml
+      - [ ] eventLoggerTypes.ml
+      - [ ] sandcastle.ml
+      - [ ] scuba.ml
+      - [ ] uname_stubs.ml
   - [ ] find/
-      - [ ] find.ml
+    - [ ] find.ml
   - [x] fsevents/
-      - [x] fsevents.ml → `rust notify crate`
+    - [x] fsevents.ml → `rust notify crate`
   - [x] fsnotify_darwin/
-      - [x] fsnotify.ml → `rust notify crate`
+    - [x] fsnotify.ml → `rust notify crate`
   - [x] fsnotify_linux/
-      - [x] fsnotify.ml → `rust notify crate`
+    - [x] fsnotify.ml → `rust notify crate`
   - [x] fsnotify_win/
-      - [x] fsnotify.ml → `rust notify crate`
+    - [x] fsnotify.ml → `rust notify crate`
   - [ ] procs/
-      - [ ] bucket.ml
-      - [ ] worker.ml
-      - [ ] workerController.ml
+    - [ ] bucket.ml
+    - [ ] worker.ml
+    - [ ] workerController.ml
   - [x] socket/
-      - [x] socket.ml → `flow_common_socket/src/socket.rs`
-          - [x] `addr` type → `Socket::Addr`
-          - [x] `with_addr`
-          - [x] `get_path`
-          - [x] `addr_for_open`
-          - [x] `init_unix_socket` → `flow_common_socket/src/socket.rs::init_tcp_socket`
+    - [x] socket.ml → `flow_common_socket/src/socket.rs`
+      - [x] `addr` type → `Socket::Addr`
+      - [x] `with_addr`
+      - [x] `get_path`
+      - [x] `addr_for_open`
+      - [x] `init_unix_socket` → `flow_common_socket/src/socket.rs::init_tcp_socket`
   - [ ] stubs/
     - [ ] logging/
       - [ ] common/
-          - [ ] eventLogger.ml
-          - [ ] scuba.ml
+        - [ ] eventLogger.ml
+        - [ ] scuba.ml
   - [ ] test/
     - [ ] facebook/
       - [ ] logging/
-          - [ ] scribeCatTest.ml
-          - [ ] scubaTableTest.ml
+        - [ ] scribeCatTest.ml
+        - [ ] scubaTableTest.ml
     - [ ] procs/
-        - [ ] procs_test_utils.ml
-        - [ ] procs_unit_test.ml
+      - [ ] procs_test_utils.ml
+      - [ ] procs_unit_test.ml
     - [ ] unit/
       - [ ] heap/
-          - [ ] test_hashtbl.ml
-          - [ ] test_removed.ml
+        - [ ] test_hashtbl.ml
+        - [ ] test_removed.ml
       - [ ] utils/
-          - [ ] buffered_line_reader_test.ml
-          - [ ] collections_test.ml
-          - [ ] file_url_test.ml
-          - [ ] hh_json_test.ml
-          - [ ] lsp_helpers_test.ml
-          - [ ] string_utils_test.ml
-          - [ ] timeout_test.ml
-          - [ ] timer_test.ml
-        - [ ] unit_test.ml
+        - [ ] buffered_line_reader_test.ml
+        - [ ] collections_test.ml
+        - [ ] file_url_test.ml
+        - [ ] hh_json_test.ml
+        - [ ] lsp_helpers_test.ml
+        - [ ] string_utils_test.ml
+        - [ ] timeout_test.ml
+        - [ ] timer_test.ml
+      - [ ] unit_test.ml
     - [ ] utils/
       - [ ] asserter/
-          - [ ] asserter.ml
+        - [ ] asserter.ml
       - [ ] disk/
-          - [ ] diskTest.ml
-          - [ ] test_disk_utils.ml
+        - [ ] diskTest.ml
+        - [ ] test_disk_utils.ml
       - [ ] tempfile/
-          - [ ] tempfile.ml
+        - [ ] tempfile.ml
     - [ ] watchman/
-        - [ ] watchman_unit_test.ml
+      - [ ] watchman_unit_test.ml
   - [ ] utils/
     - [ ] buffered_line_reader/
-        - [ ] buffered_line_reader.ml
-        - [ ] buffered_line_reader_lwt.ml
-        - [ ] buffered_line_reader_sig.ml
+      - [ ] buffered_line_reader.ml
+      - [ ] buffered_line_reader_lwt.ml
+      - [ ] buffered_line_reader_sig.ml
     - [x] build_mode/
       - [x] dev/
-          - [x] build_mode.ml → `cfg(debug_assertions)`
+        - [x] build_mode.ml → `cfg(debug_assertions)`
       - [x] prod/
-          - [x] build_mode.ml → `cfg(debug_assertions)`
+        - [x] build_mode.ml → `cfg(debug_assertions)`
     - [x] cgroup/
-        - [x] cGroup.ml → `flow_server/src/cgroup.rs`
+      - [x] cGroup.ml → `flow_server/src/cgroup.rs`
     - [ ] collections/
       - [ ] third-party/
-          - [x] flow_map.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
-          - [x] flow_set.ml → `irrelevant` (use `BTreeSet`, `HashSet` or `FlowOrdSet`)
-        - [x] iMap.ml → `irrelevant` (directly use things like `BTreeMap<i32, T>`)
-        - [x] iSet.ml → `irrelevant` (directly use things like `BTreeSet<i32>`)
-        - [x] immQueue.ml → `irrelevant` (directly use queue in rust)
-        - [x] intKey.ml → `irrelevant` (only useful for `iMap`, but `iMap` is useless in Rust)
-        - [ ] priorityQueue.ml
-        - [x] sMap.ml → `irrelevant` (directly use things like `BTreeMap<String>`)
-        - [x] sSet.ml → `irrelevant` (directly use things like `BTreeSet<String>`)
-        - [x] stringKey.ml → `irrelevant` (only useful for `sMap`, but `sMap` is useless in Rust)
+        - [x] flow_map.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
+        - [x] flow_set.ml → `irrelevant` (use `BTreeSet`, `HashSet` or `FlowOrdSet`)
+      - [x] iMap.ml → `irrelevant` (directly use things like `BTreeMap<i32, T>`)
+      - [x] iSet.ml → `irrelevant` (directly use things like `BTreeSet<i32>`)
+      - [x] immQueue.ml → `irrelevant` (directly use queue in rust)
+      - [x] intKey.ml → `irrelevant` (only useful for `iMap`, but `iMap` is useless in Rust)
+      - [ ] priorityQueue.ml
+      - [x] sMap.ml → `irrelevant` (directly use things like `BTreeMap<String>`)
+      - [x] sSet.ml → `irrelevant` (directly use things like `BTreeSet<String>`)
+      - [x] stringKey.ml → `irrelevant` (only useful for `sMap`, but `sMap` is useless in Rust)
       - [x] union_find.ml → `flow_utils_union_find/src/lib.rs` (6/6 functions, 100% complete)
-          - [x] `create_root` → `Node::create_root()`
-          - [x] `create_goto` → `Node::create_goto()`
-          - [x] `find_root` → `Graph::find_root()`
-          - [x] `find_root_id` → `Graph::find_root_id()`
-          - [x] `find_constraints` → `Graph::find_constraints()`
-          - [x] `find_graph` → `Graph::find_graph()`
-        - [x] wrappedMap.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
-        - [x] wrappedMap_sig.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
+        - [x] `create_root` → `Node::create_root()`
+        - [x] `create_goto` → `Node::create_goto()`
+        - [x] `find_root` → `Graph::find_root()`
+        - [x] `find_root_id` → `Graph::find_root_id()`
+        - [x] `find_constraints` → `Graph::find_constraints()`
+        - [x] `find_graph` → `Graph::find_graph()`
+      - [x] wrappedMap.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
+      - [x] wrappedMap_sig.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
     - [ ] core/
-        - [ ] build_id.ml
-        - [ ] exception.ml
-        - [ ] hh_logger.ml
-        - [ ] measure.ml
-        - [ ] random_id.ml
-        - [ ] utils.ml
+      - [ ] build_id.ml
+      - [ ] exception.ml
+      - [ ] hh_logger.ml
+      - [ ] measure.ml
+      - [ ] random_id.ml
+      - [ ] utils.ml
     - [ ] disk/
-        - [ ] disk.ml
+      - [ ] disk.ml
     - [ ] file_content/
-        - [ ] file_content.ml
+      - [ ] file_content.ml
     - [ ] file_url/
-        - [ ] file_url.ml
+      - [ ] file_url.ml
     - [ ] hh_json/
-        - [ ] hh_json.ml → `flow_hh_json/src/lib.rs` (partial: JSON printing functions only)
-            - [x] `json_string_of_value`
-            - [x] `json_to_multiline`
-            - [x] `print_json_endline`
-            - [x] `prerr_json_endline`
-        - [ ] hh_json_helpers.ml
+      - [ ] hh_json.ml → `flow_hh_json/src/lib.rs` (partial: JSON printing functions only)
+        - [x] `json_string_of_value`
+        - [x] `json_to_multiline`
+        - [x] `print_json_endline`
+        - [x] `prerr_json_endline`
+      - [ ] hh_json_helpers.ml
     - [ ] http_lite/
       - [ ] __tests__/
-          - [ ] http_lite_test.ml
-        - [ ] http_lite.ml
+        - [ ] http_lite_test.ml
+      - [ ] http_lite.ml
     - [ ] jsonrpc/
-        - [ ] jsonrpc.ml
+      - [ ] jsonrpc.ml
     - [ ] lsp/
       - [ ] __tests__/
-          - [ ] lsp_fmt_test.ml
-        - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_monitor_rpc/src/lsp_prot.rs` (Flow extensions)
-        - [ ] lsp_fmt.ml
-        - [ ] lsp_helpers.ml → `flow_server_env/src/lsp_helpers.rs`
-            - [ ] `lsp_uri_to_path`
-            - [ ] `path_to_lsp_uri`
-            - [ ] `lsp_textDocumentIdentifier_to_filename`
-            - [ ] `lsp_position_to_fc`
-            - [ ] `lsp_range_to_fc`
-            - [ ] `lsp_edit_to_fc`
-            - [x] `apply_changes`
-            - [ ] `get_char_from_lsp_position`
-            - [ ] `apply_changes_unsafe`
-            - [ ] `pos_compare`
-            - [ ] `ranges_overlap`
-            - [ ] `get_range_overlap`
-            - [ ] `update_pos_due_to_prior_replace`
-            - [ ] `update_range_due_to_replace`
-            - [ ] `update_diagnostics_due_to_change`
-            - [ ] `get_root`
-            - [ ] `supports_codeActionKinds`
-            - [ ] `supports_experimental_snippet_text_edit`
-            - [ ] `supports_configuration`
-            - [ ] `supports_status`
-            - [x] `supports_snippets`
-            - [x] `supports_tags`
-            - [x] `supports_preselect`
-            - [x] `supports_completion_item_insert_replace`
-            - [x] `supports_completion_item_label_details`
-            - [ ] `supports_hierarchical_document_symbol`
-            - [ ] `supports_connectionStatus`
-        - [x] lsp_mapper.ml → `flow_monitor_rpc/src/lsp_mapper.rs` (uses `lsp_types` crate)
+        - [ ] lsp_fmt_test.ml
+      - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_monitor_rpc/src/lsp_prot.rs` (Flow extensions)
+      - [ ] lsp_fmt.ml
+      - [ ] lsp_helpers.ml → `flow_server_env/src/lsp_helpers.rs`
+        - [ ] `lsp_uri_to_path`
+        - [ ] `path_to_lsp_uri`
+        - [ ] `lsp_textDocumentIdentifier_to_filename`
+        - [ ] `lsp_position_to_fc`
+        - [ ] `lsp_range_to_fc`
+        - [ ] `lsp_edit_to_fc`
+        - [x] `apply_changes`
+        - [ ] `get_char_from_lsp_position`
+        - [ ] `apply_changes_unsafe`
+        - [ ] `pos_compare`
+        - [ ] `ranges_overlap`
+        - [ ] `get_range_overlap`
+        - [ ] `update_pos_due_to_prior_replace`
+        - [ ] `update_range_due_to_replace`
+        - [ ] `update_diagnostics_due_to_change`
+        - [ ] `get_root`
+        - [ ] `supports_codeActionKinds`
+        - [ ] `supports_experimental_snippet_text_edit`
+        - [ ] `supports_configuration`
+        - [ ] `supports_status`
+        - [x] `supports_snippets`
+        - [x] `supports_tags`
+        - [x] `supports_preselect`
+        - [x] `supports_completion_item_insert_replace`
+        - [x] `supports_completion_item_label_details`
+        - [ ] `supports_hierarchical_document_symbol`
+        - [ ] `supports_connectionStatus`
+      - [x] lsp_mapper.ml → `flow_monitor_rpc/src/lsp_mapper.rs` (uses `lsp_types` crate)
     - [ ] lsp_writers/
-        - [ ] lsp_writers.ml
+      - [ ] lsp_writers.ml
     - [ ] marshal_tools/
-        - [ ] marshal_tools.ml
-        - [ ] marshal_tools_lwt.ml
+      - [ ] marshal_tools.ml
+      - [ ] marshal_tools_lwt.ml
     - [ ] opaque_digest/
-        - [ ] opaqueDigest.ml
+      - [ ] opaqueDigest.ml
     - [ ] procfs/
-        - [ ] procFS.ml
+      - [ ] procFS.ml
     - [ ] string/
-        - [ ] string_utils.ml (partial → `flow_common/src/string_utils.rs`)
-            - [x] `filename_escape`
+      - [ ] string_utils.ml (partial → `flow_common/src/string_utils.rs`)
+        - [x] `filename_escape`
     - [ ] sys/
       - [ ] __tests__/
-          - [ ] sys_utils_tests.ml
-        - [ ] daemon.ml
-        - [ ] file_path.ml
-        - [ ] fork.ml
-        - [ ] handle.ml
-        - [x] lock.ml → `flow_common/src/lock.rs` (full port: `grab`, `release`, `blocking_grab_then_release`, `fd_of`, `check`)
-        - [ ] pidLog.ml
-        - [ ] printSignal.ml
-        - [ ] proc_utils.ml
-        - [ ] sys_utils.ml (partial → `flow_common/src/sys_utils.rs`)
-            - [x] `normalize_filename_dir_sep`
-            - [ ] Other functions not ported
-        - [ ] timeout.ml
-        - [ ] timer.ml
-        - [ ] tty.ml
+        - [ ] sys_utils_tests.ml
+      - [ ] daemon.ml
+      - [ ] file_path.ml
+      - [ ] fork.ml
+      - [ ] handle.ml
+      - [x] lock.ml → `flow_common/src/lock.rs` (full port: `grab`, `release`, `blocking_grab_then_release`, `fd_of`, `check`)
+      - [ ] pidLog.ml
+      - [ ] printSignal.ml
+      - [ ] proc_utils.ml
+      - [ ] sys_utils.ml (partial → `flow_common/src/sys_utils.rs`)
+        - [x] `normalize_filename_dir_sep`
+        - [ ] Other functions not ported
+      - [ ] timeout.ml
+      - [ ] timer.ml
+      - [ ] tty.ml
   - [x] watchman/
-      - [x] watchman.ml → `flow_watchman/src/lib.rs`
+    - [x] watchman.ml → `flow_watchman/src/lib.rs`
 - [ ] heap/
   - [ ] __tests__/
-      - [ ] heap_tests.ml
-    - [x] entityHeap.ml → `flow_heap/src/entity.rs`
-        - [ ] Not a direct port
-    - [ ] heapIdent.ml
-    - [ ] localCache.ml
-    - [ ] prefix.ml
-    - [ ] sharedMem.ml
-    - [ ] workerCancel.ml
+    - [ ] heap_tests.ml
+  - [x] entityHeap.ml → `flow_heap/src/entity.rs`
+    - [ ] Not a direct port
+  - [ ] heapIdent.ml
+  - [ ] localCache.ml
+  - [ ] prefix.ml
+  - [ ] sharedMem.ml
+  - [ ] workerCancel.ml
 - [ ] lsp/
   - [ ] __tests__/
-      - [x] lspErrors_test.ml → tests in `flow_lsp/src/lsp_errors.rs`
-    - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
-    - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (persistent TCP connection to standalone server, server auto-start/kill, LSP request keying, and connected-mode event loop are now functional; shared connect params live in `flow_server_env/src/lsp_connect_params.rs`; see remaining function-level gaps)
-        - [x] `wrapped_id` type → `WrappedId`
-        - [x] `encode_wrapped`
-        - [x] `decode_wrapped`
-        - [x] `server_conn` type → `ServerConn`
-        - [x] `show_status_t` type → `ShowStatusT`
-        - [x] `open_file_info` type → `OpenFileInfo`
-        - [x] `initialized_env` type → `InitializedEnv`
-        - [x] `event` type → `Event`
-        - [x] `read_flowconfig_from_disk`
-        - [x] `string_of_server_state`
-        - [x] `string_of_state`
-        - [x] `to_stdout`
-        - [x] `get_ienv`
-        - [x] `update_ienv`
-        - [x] `update_recent_summaries`
-        - [x] `log_of_summaries`
-        - [x] `command_key_of_ienv`
-        - [x] `command_key_of_server_state`
-        - [x] `command_key_of_state`
-        - [x] `update_open_file`
-        - [x] `new_metadata`
-        - [x] `selectively_omit_errors`
-        - [x] `get_next_event_from_server` (now uses `persistent_rpc` over TCP to poll for server messages)
-        - [x] `get_next_event_from_client`
-        - [x] `get_next_event` (now uses `get_next_event_sync` which polls both server and client)
-        - [x] `convert_to_client_uris`
-        - [x] `convert_to_server_uris`
-        - [x] `send_request_to_client`
-        - [ ] `show_status` (Nuclide `window/status` capability is unported, so this only exercises the `ShowMessage` fallback path)
-        - [x] `send_to_server` (now uses `persistent_rpc` over TCP)
-        - [x] `send_lsp_to_server`
-        - [x] `request_configuration`
-        - [x] `subscribe_to_config_changes`
-        - [x] `do_initialize`
-        - [ ] `show_connected_status` (status UX is downgraded because `window/status` support is not modeled)
-        - [x] `track_to_server`
-        - [x] `track_from_server`
-        - [x] `parse_and_cache`
-        - [x] `do_documentSymbol`
-        - [x] `do_selectionRange`
-        - [ ] `do_rage` (log-file/temp-dir/PID-stack collection helpers are still unported, so rage output only includes adapter state)
-        - [x] `parse_json`
-        - [x] `collect_interaction_state`
-        - [x] `gc_pending_interactions`
-        - [x] `start_interaction`
-        - [x] `log_interaction`
-        - [x] `dismiss_tracks`
-        - [x] `do_live_diagnostics`
-        - [ ] `get_local_request_handler` (no OCaml-style mistyped-handler validation; non-error results are dispatched through a generic closure path)
-        - [x] `try_connect` (now implements persistent TCP connection with server auto-start, stale server kill, and handshake via `persistent_rpc`)
-        - [x] `log_needed` type
-        - [ ] `run` (main loop now polls both server and client via `get_next_event_sync`; still synchronous rather than Lwt-based, and no periodic tick/select)
-        - [x] `get_next_event_sync` (Rust-only: synchronous event multiplexer for server + client)
-        - [x] `persistent_rpc` (Rust-only: TCP-based server RPC for standalone mode)
-        - [x] `try_decode_wrapped`
-        - [x] `lsp_fmt_parse_id`
-        - [x] `lsp_helpers_supports_status`
-        - [x] `lsp_helpers_supports_connection_status`
-        - [x] `lsp_helpers_lsp_uri_to_path`
-        - [x] `lsp_helpers_get_root`
-        - [x] `parse_lsp_request`
-        - [x] `lsp_fmt_print_code_action_result`
-        - [x] `start_flow_server`
-        - [x] `kill_stale_server`
-    - [x] lspErrors.ml → `flow_lsp/src/lsp_errors.rs`
-    - [x] lspInteraction.ml → `flow_lsp/src/lsp_interaction.rs`
-        - [x] `id` type → `Id`
-        - [x] `trigger` type → `Trigger`
-        - [x] `source` type → `Source`
-        - [x] `ux` type → `Ux`
-        - [x] `server_status` type → `ServerStatus`
-        - [x] `buffer_status` type → `BufferStatus`
-        - [x] `state` type → `State`
-        - [x] `string_of_trigger`
-        - [x] `lsp_id_of_trigger`
-        - [x] `string_of_ux`
-        - [x] `uri_of_ux`
-        - [x] `string_of_server_status`
-        - [x] `string_of_buffer_status`
-        - [x] `source_of_trigger`
-        - [x] `string_of_source`
-        - [x] `pending_interaction` type → `PendingInteraction`
-        - [x] `internal_state` type → `InternalState`
-        - [x] `start`
-        - [x] `recheck_start`
-        - [x] `log_pushed_errors`
-        - [x] `log`
-        - [x] `gc`
-        - [x] `dismiss_tracks`
-        - [x] `init`
-        - [x] `flush`
-        - [x] `trigger_of_lsp_msg`
-    - [x] selectionRangeProvider.ml → `flow_lsp/src/selection_range_provider.rs`
+    - [x] lspErrors_test.ml → tests in `flow_lsp/src/lsp_errors.rs`
+  - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
+  - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (persistent TCP connection to standalone server, server auto-start/kill, LSP request keying, and connected-mode event loop are now functional; shared connect params live in `flow_server_env/src/lsp_connect_params.rs`; see remaining function-level gaps)
+    - [x] `wrapped_id` type → `WrappedId`
+    - [x] `encode_wrapped`
+    - [x] `decode_wrapped`
+    - [x] `server_conn` type → `ServerConn`
+    - [x] `show_status_t` type → `ShowStatusT`
+    - [x] `open_file_info` type → `OpenFileInfo`
+    - [x] `initialized_env` type → `InitializedEnv`
+    - [x] `event` type → `Event`
+    - [x] `read_flowconfig_from_disk`
+    - [x] `string_of_server_state`
+    - [x] `string_of_state`
+    - [x] `to_stdout`
+    - [x] `get_ienv`
+    - [x] `update_ienv`
+    - [x] `update_recent_summaries`
+    - [x] `log_of_summaries`
+    - [x] `command_key_of_ienv`
+    - [x] `command_key_of_server_state`
+    - [x] `command_key_of_state`
+    - [x] `update_open_file`
+    - [x] `new_metadata`
+    - [x] `selectively_omit_errors`
+    - [x] `get_next_event_from_server` (now uses `persistent_rpc` over TCP to poll for server messages)
+    - [x] `get_next_event_from_client`
+    - [x] `get_next_event` (now uses `get_next_event_sync` which polls both server and client)
+    - [x] `convert_to_client_uris`
+    - [x] `convert_to_server_uris`
+    - [x] `send_request_to_client`
+    - [ ] `show_status` (Nuclide `window/status` capability is unported, so this only exercises the `ShowMessage` fallback path)
+    - [x] `send_to_server` (now uses `persistent_rpc` over TCP)
+    - [x] `send_lsp_to_server`
+    - [x] `request_configuration`
+    - [x] `subscribe_to_config_changes`
+    - [x] `do_initialize`
+    - [ ] `show_connected_status` (status UX is downgraded because `window/status` support is not modeled)
+    - [x] `track_to_server`
+    - [x] `track_from_server`
+    - [x] `parse_and_cache`
+    - [x] `do_documentSymbol`
+    - [x] `do_selectionRange`
+    - [ ] `do_rage` (log-file/temp-dir/PID-stack collection helpers are still unported, so rage output only includes adapter state)
+    - [x] `parse_json`
+    - [x] `collect_interaction_state`
+    - [x] `gc_pending_interactions`
+    - [x] `start_interaction`
+    - [x] `log_interaction`
+    - [x] `dismiss_tracks`
+    - [x] `do_live_diagnostics`
+    - [ ] `get_local_request_handler` (no OCaml-style mistyped-handler validation; non-error results are dispatched through a generic closure path)
+    - [x] `try_connect` (now implements persistent TCP connection with server auto-start, stale server kill, and handshake via `persistent_rpc`)
+    - [x] `log_needed` type
+    - [ ] `run` (main loop now polls both server and client via `get_next_event_sync`; still synchronous rather than Lwt-based, and no periodic tick/select)
+    - [x] `get_next_event_sync` (Rust-only: synchronous event multiplexer for server + client)
+    - [x] `persistent_rpc` (Rust-only: TCP-based server RPC for standalone mode)
+    - [x] `try_decode_wrapped`
+    - [x] `lsp_fmt_parse_id`
+    - [x] `lsp_helpers_supports_status`
+    - [x] `lsp_helpers_supports_connection_status`
+    - [x] `lsp_helpers_lsp_uri_to_path`
+    - [x] `lsp_helpers_get_root`
+    - [x] `parse_lsp_request`
+    - [x] `lsp_fmt_print_code_action_result`
+    - [x] `start_flow_server`
+    - [x] `kill_stale_server`
+  - [x] lspErrors.ml → `flow_lsp/src/lsp_errors.rs`
+  - [x] lspInteraction.ml → `flow_lsp/src/lsp_interaction.rs`
+    - [x] `id` type → `Id`
+    - [x] `trigger` type → `Trigger`
+    - [x] `source` type → `Source`
+    - [x] `ux` type → `Ux`
+    - [x] `server_status` type → `ServerStatus`
+    - [x] `buffer_status` type → `BufferStatus`
+    - [x] `state` type → `State`
+    - [x] `string_of_trigger`
+    - [x] `lsp_id_of_trigger`
+    - [x] `string_of_ux`
+    - [x] `uri_of_ux`
+    - [x] `string_of_server_status`
+    - [x] `string_of_buffer_status`
+    - [x] `source_of_trigger`
+    - [x] `string_of_source`
+    - [x] `pending_interaction` type → `PendingInteraction`
+    - [x] `internal_state` type → `InternalState`
+    - [x] `start`
+    - [x] `recheck_start`
+    - [x] `log_pushed_errors`
+    - [x] `log`
+    - [x] `gc`
+    - [x] `dismiss_tracks`
+    - [x] `init`
+    - [x] `flush`
+    - [x] `trigger_of_lsp_msg`
+  - [x] selectionRangeProvider.ml → `flow_lsp/src/selection_range_provider.rs`
 - [x] monitor/
   - [x] connections/
-      - [x] ephemeralConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `EphemeralConnection`)
-      - [x] flowServerMonitorConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs`
-          - [x] `ConnectionProcessor` trait, `Command` enum, `Connection<P>` generic struct
-          - [x] `write`, `write_and_close`, `close_immediately`, `try_flush_and_close`, `is_closed`, `wait_for_closed`, `create`
-      - [x] persistentConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `MonitorPersistentConnection`)
-      - [x] serverConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `ServerConnection`)
+    - [x] ephemeralConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `EphemeralConnection`)
+    - [x] flowServerMonitorConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs`
+      - [x] `ConnectionProcessor` trait, `Command` enum, `Connection<P>` generic struct
+      - [x] `write`, `write_and_close`, `close_immediately`, `try_flush_and_close`, `is_closed`, `wait_for_closed`, `create`
+    - [x] persistentConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `MonitorPersistentConnection`)
+    - [x] serverConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `ServerConnection`)
   - [x] logger/
-      - [x] flowServerMonitorLogger.ml → `flow_server_monitor/src/flow_server_monitor_logger.rs`
-          - [x] `dest` type, `WriteLoop` (as synchronous log::Log), `init_logger`
-          - [x] `fatal/error/warn/info/debug` (async → log macros)
-          - [x] `fatal_s/error_s/warn_s/info_s/debug_s` (sync → log macros)
+    - [x] flowServerMonitorLogger.ml → `flow_server_monitor/src/flow_server_monitor_logger.rs`
+      - [x] `dest` type, `WriteLoop` (as synchronous log::Log), `init_logger`
+      - [x] `fatal/error/warn/info/debug` (async → log macros)
+      - [x] `fatal_s/error_s/warn_s/info_s/debug_s` (sync → log macros)
   - [x] rpc/
-      - [x] monitorRPC.ml → `flow_monitor_rpc/src/monitor_rpc.rs`
-          - [x] `channels` type → `Channels`
-          - [x] `state` type → `State`
-          - [x] `with_channel`, `with_infd`, `with_outfd`
-          - [x] `init`, `disable`
-          - [x] `read` (structure ported, Marshal transport stubbed)
-          - [x] `send` (structure ported, Marshal transport stubbed)
-          - [x] `respond_to_request`, `request_failed`
-          - [x] `respond_to_persistent_connection`, `send_telemetry`
-          - [x] `status_update`
+    - [x] monitorRPC.ml → `flow_monitor_rpc/src/monitor_rpc.rs`
+      - [x] `channels` type → `Channels`
+      - [x] `state` type → `State`
+      - [x] `with_channel`, `with_infd`, `with_outfd`
+      - [x] `init`, `disable`
+      - [x] `read` (structure ported, Marshal transport stubbed)
+      - [x] `send` (structure ported, Marshal transport stubbed)
+      - [x] `respond_to_request`, `request_failed`
+      - [x] `respond_to_persistent_connection`, `send_telemetry`
+      - [x] `status_update`
   - [x] status/
-      - [x] fileWatcherStatus.ml → `flow_monitor_rpc/src/file_watcher_status.rs`
-          - [x] `file_watcher` type → `FileWatcher`
-          - [x] `status'` type → `StatusKind`
-          - [x] `status` type → `Status`
-          - [x] `string_of_file_watcher`
-          - [x] `string_of_status`
-      - [x] serverStatus.ml → `flow_monitor_rpc/src/server_status.rs`
-          - [x] `progress` type → `Progress`
-          - [x] `deadline` type → `Deadline`
-          - [x] `event` type → `Event`
-          - [x] `typecheck_status` type → `TypecheckStatus`
-          - [x] `restart_reason` type → `RestartReason`
-          - [x] `typecheck_mode` type → `TypecheckMode`
-          - [x] `status` type → `Status`
-          - [x] `string_of_progress`
-          - [x] `string_of_event`
-          - [x] `string_of_typecheck_status`
-          - [x] `string_of_restart_reason`
-          - [x] `string_of_status`
-          - [x] `update`
-          - [x] `initial_status` → `INITIAL_STATUS`
-          - [x] `is_free`
-          - [x] `is_significant_transition`
-          - [x] `get_progress`
-          - [x] `change_init_to_restart`
+    - [x] fileWatcherStatus.ml → `flow_monitor_rpc/src/file_watcher_status.rs`
+      - [x] `file_watcher` type → `FileWatcher`
+      - [x] `status'` type → `StatusKind`
+      - [x] `status` type → `Status`
+      - [x] `string_of_file_watcher`
+      - [x] `string_of_status`
+    - [x] serverStatus.ml → `flow_monitor_rpc/src/server_status.rs`
+      - [x] `progress` type → `Progress`
+      - [x] `deadline` type → `Deadline`
+      - [x] `event` type → `Event`
+      - [x] `typecheck_status` type → `TypecheckStatus`
+      - [x] `restart_reason` type → `RestartReason`
+      - [x] `typecheck_mode` type → `TypecheckMode`
+      - [x] `status` type → `Status`
+      - [x] `string_of_progress`
+      - [x] `string_of_event`
+      - [x] `string_of_typecheck_status`
+      - [x] `string_of_restart_reason`
+      - [x] `string_of_status`
+      - [x] `update`
+      - [x] `initial_status` → `INITIAL_STATUS`
+      - [x] `is_free`
+      - [x] `is_significant_transition`
+      - [x] `get_progress`
+      - [x] `change_init_to_restart`
   - [x] utils/
-      - [x] exitSignal.ml → `flow_server_monitor/src/exit_signal.rs`
-          - [x] `signal` → `SIGNAL` (ExitCondition with Condvar+Mutex)
-    - [x] fileWatcher.ml → `flow_server_monitor/src/file_watcher.rs`
-        - [x] `exit_reason` type → `ExitReason`
-        - [x] `watcher` class type → `Watcher` trait
-        - [x] `dummy` class → `Dummy` struct
-        - [x] `changes_since_mergebase`, `query_mergebase`
-        - [x] `dfind` class → `flow_server_monitor/src/file_watcher.rs::dfind_file_watcher`
-        - [x] `WatchmanFileWatcher` module → `watchman_file_watcher` mod
-        - [x] `EdenFSFileWatcher` module → `edenfs_file_watcher` mod
-    - [x] flowServerMonitor.ml → `flow_server_monitor/src/flow_server_monitor.rs`
-        - [x] `handle_waiting_start_command`
-        - [x] `fallback_error_handler`
-        - [x] `log_monitor_options`
-        - [x] `daemonize`
-        - [x] `daemonize_with_pipe`
-        - [x] `spawn_monitor_child`
-        - [x] `start`
-    - [x] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor_daemon.rs`
-        - [x] `start_function` type → `StartFunction`
-        - [x] `wait_msg` type → `WaitMsg`
-        - [x] `state` type → `State`
-        - [x] `register_entry_point`
-        - [x] `wait_loop`
-        - [x] `daemonize`
-    - [x] flowServerMonitorOptions.ml → `flow_server_monitor/src/flow_server_monitor_options.rs`
-        - [x] `watchman_options` type → `WatchmanOptions`
-        - [x] `edenfs_options` type → `EdenfsOptions`
-        - [x] `file_watcher` type → `FileWatcher`
-        - [x] `t` type → `MonitorOptions`
-        - [x] `string_of_file_watcher`
-    - [x] flowServerMonitorServer.ml → `flow_server_monitor/src/flow_server_monitor_server.rs`
-        - [x] `command` type → `Command`
-        - [x] `exit`, `stop`, `StopReason`
-        - [x] `Doomsday` module → `doomsday` mod
-        - [x] `command_stream`, `push_to_command_stream`
-        - [x] `ServerInstance` module → `server_instance` mod
-        - [x] `KeepAliveLoop` → `keep_alive_loop_main`
-        - [x] `setup_signal_handlers`
-        - [x] `start`
-        - [x] `send_request`, `send_persistent_request`
-        - [x] `notify_new_persistent_connection`, `notify_dead_persistent_connection`
-    - [x] persistentConnectionMap.ml → `flow_server_monitor/src/persistent_connection_map.rs`
-        - [x] `add`, `get`, `remove`, `cardinal`, `get_all_clients`
-    - [x] requestMap.ml → `flow_server_monitor/src/request_map.rs`
-        - [x] `add`, `remove`, `remove_all`, `cardinal`
-    - [x] socketAcceptor.ml → `flow_server_monitor/src/socket_acceptor.rs`
-        - [x] `handle_ephemeral_request`, `handle_persistent_message`
-        - [x] `StatusWriter` trait, `status_loop_run`
-        - [x] `create_ephemeral_connection`, `create_persistent_connection`
-        - [x] `close`, `perform_handshake_and_get_client_handshake`
-        - [x] `Handler` trait, `socket_acceptor_loop`
-        - [x] `Autostop` module, `MonitorSocketHandler`, `LegacySocketHandler`
-        - [x] `run`, `run_legacy`
-    - [x] statusStream.ml → `flow_server_monitor/src/status_stream.rs`
-        - [x] `StatusInfo` type, `check_if_free`, `broadcast_significant_transition`
-        - [x] `process_update` (from UpdateLoop)
-        - [x] `file_watcher_for_status`, `empty`, `call_on_free`
-        - [x] `file_watcher_ready`, `file_watcher_deferred`
-        - [x] `reset`, `get_status`, `ever_been_free`
-        - [x] `wait_for_significant_status`, `update`
+    - [x] exitSignal.ml → `flow_server_monitor/src/exit_signal.rs`
+      - [x] `signal` → `SIGNAL` (ExitCondition with Condvar+Mutex)
+  - [x] fileWatcher.ml → `flow_server_monitor/src/file_watcher.rs`
+    - [x] `exit_reason` type → `ExitReason`
+    - [x] `watcher` class type → `Watcher` trait
+    - [x] `dummy` class → `Dummy` struct
+    - [x] `changes_since_mergebase`, `query_mergebase`
+    - [x] `dfind` class → `flow_server_monitor/src/file_watcher.rs::dfind_file_watcher`
+    - [x] `WatchmanFileWatcher` module → `watchman_file_watcher` mod
+    - [x] `EdenFSFileWatcher` module → `edenfs_file_watcher` mod
+  - [x] flowServerMonitor.ml → `flow_server_monitor/src/flow_server_monitor.rs`
+    - [x] `handle_waiting_start_command`
+    - [x] `fallback_error_handler`
+    - [x] `log_monitor_options`
+    - [x] `daemonize`
+    - [x] `daemonize_with_pipe`
+    - [x] `spawn_monitor_child`
+    - [x] `start`
+  - [x] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor_daemon.rs`
+    - [x] `start_function` type → `StartFunction`
+    - [x] `wait_msg` type → `WaitMsg`
+    - [x] `state` type → `State`
+    - [x] `register_entry_point`
+    - [x] `wait_loop`
+    - [x] `daemonize`
+  - [x] flowServerMonitorOptions.ml → `flow_server_monitor/src/flow_server_monitor_options.rs`
+    - [x] `watchman_options` type → `WatchmanOptions`
+    - [x] `edenfs_options` type → `EdenfsOptions`
+    - [x] `file_watcher` type → `FileWatcher`
+    - [x] `t` type → `MonitorOptions`
+    - [x] `string_of_file_watcher`
+  - [x] flowServerMonitorServer.ml → `flow_server_monitor/src/flow_server_monitor_server.rs`
+    - [x] `command` type → `Command`
+    - [x] `exit`, `stop`, `StopReason`
+    - [x] `Doomsday` module → `doomsday` mod
+    - [x] `command_stream`, `push_to_command_stream`
+    - [x] `ServerInstance` module → `server_instance` mod
+    - [x] `KeepAliveLoop` → `keep_alive_loop_main`
+    - [x] `setup_signal_handlers`
+    - [x] `start`
+    - [x] `send_request`, `send_persistent_request`
+    - [x] `notify_new_persistent_connection`, `notify_dead_persistent_connection`
+  - [x] persistentConnectionMap.ml → `flow_server_monitor/src/persistent_connection_map.rs`
+    - [x] `add`, `get`, `remove`, `cardinal`, `get_all_clients`
+  - [x] requestMap.ml → `flow_server_monitor/src/request_map.rs`
+    - [x] `add`, `remove`, `remove_all`, `cardinal`
+  - [x] socketAcceptor.ml → `flow_server_monitor/src/socket_acceptor.rs`
+    - [x] `handle_ephemeral_request`, `handle_persistent_message`
+    - [x] `StatusWriter` trait, `status_loop_run`
+    - [x] `create_ephemeral_connection`, `create_persistent_connection`
+    - [x] `close`, `perform_handshake_and_get_client_handshake`
+    - [x] `Handler` trait, `socket_acceptor_loop`
+    - [x] `Autostop` module, `MonitorSocketHandler`, `LegacySocketHandler`
+    - [x] `run`, `run_legacy`
+  - [x] statusStream.ml → `flow_server_monitor/src/status_stream.rs`
+    - [x] `StatusInfo` type, `check_if_free`, `broadcast_significant_transition`
+    - [x] `process_update` (from UpdateLoop)
+    - [x] `file_watcher_for_status`, `empty`, `call_on_free`
+    - [x] `file_watcher_ready`, `file_watcher_deferred`
+    - [x] `reset`, `get_status`, `ever_been_free`
+    - [x] `wait_for_significant_status`, `update`
 - [ ] parser/
   - [ ] __tests__/
-      - [x] flow_ast_mapper_test.ml → `flow_parser/src/flow_ast_mapper_test.rs`
-      - [x] jsdoc_test.ml → `flow_parser/src/jsdoc_test.rs`
-      - [x] loc_test.ml
-      - [x] offset_utils_test.ml
-      - [x] parser_tests.ml
+    - [x] flow_ast_mapper_test.ml → `flow_parser/src/flow_ast_mapper_test.rs`
+    - [x] jsdoc_test.ml → `flow_parser/src/jsdoc_test.rs`
+    - [x] loc_test.ml
+    - [x] offset_utils_test.ml
+    - [x] parser_tests.ml
   - [ ] test/
-      - [x] file_utils.ml
-      - [ ] parse_test262.ml
-      - [x] run_tests.ml
-    - [x] comment_attachment.ml → `flow_parser/src/comment_attachment.rs`
-    - [x] comment_utils.ml → `flow_parser/src/comment_utils.rs`
-    - [x] declaration_parser.ml → `flow_parser/src/declaration_parser.rs`
-    - [x] enum_common.ml → `flow_parser/src/enum_common.rs`
-    - [x] enum_parser.ml → `flow_parser/src/enum_parser.rs`
-    - [x] estree_translator.ml → `flow_parser/src/estree_translator.rs`
-    - [x] expression_parser.ml → `flow_parser/src/expression_parser.rs`
-    - [x] file_key.ml → `flow_parser/src/file_key.rs`
-    - [x] flow_ast.ml → `flow_parser/src/ast.rs`
-    - [x] flow_ast_mapper.ml → `flow_parser/src/ast_visitor.rs`
-    - [x] flow_ast_utils.ml → `flow_parser/src/ast_utils.rs`
-        - [x] `acceptable_statement_in_declaration_context`
-        - [x] `extract_bigint_literal`
-        - [x] `extract_number_literal`
-        - [x] `fold_bindings_of_pattern`
-        - [x] `fold_bindings_of_variable_declarations`
-        - [x] `get_call_to_jest_module_mocking_fn`
-        - [x] `get_call_to_object_dot_freeze_arg`
-        - [x] `get_inferred_type_guard_candidate`
-        - [x] `hoist_function_and_component_declarations`
-        - [x] `hook_call`
-        - [x] `hook_function`
-        - [x] `hook_name`
-        - [x] `is_bigint_literal`
-        - [x] `is_call_to_invariant`
-        - [x] `is_call_to_is_array`
-        - [x] `is_call_to_object_dot_freeze`
-        - [x] `is_call_to_object_static_method`
-        - [x] `is_call_to_require`
-        - [x] `is_module_dot_exports`
-        - [x] `is_number_literal`
-        - [x] `is_super_member_access`
-        - [x] `is_type_only_declaration_statement`
-        - [x] `match_pattern_has_binding`
-        - [x] `match_root_ident`
-        - [x] `merge_comments`
-        - [x] `merge_comments_with_internal`
-        - [x] `mk_comments`
-        - [x] `mk_comments_opt`
-        - [x] `mk_comments_with_internal_opt`
-        - [x] `negate_bigint_literal`
-        - [x] `negate_number_literal`
-        - [x] `partition_directives`
-        - [x] `pattern_has_binding`
-        - [x] `split_comments`
-        - [x] `expression_of_match_member_pattern`
-        - [x] `ident_of_source`
-        - [x] `loc_of_annotation_or_hint`
-        - [x] `loc_of_expression`
-        - [x] `loc_of_ident`
-        - [x] `loc_of_pattern`
-        - [x] `loc_of_return_annot`
-        - [x] `loc_of_statement`
-        - [x] `match_root_name` → `pub const MATCH_ROOT_NAME`
-        - [x] `name_of_ident`
-        - [x] `push_toplevel_type`
-        - [x] `source_of_ident`
-        - [x] `string_of_assignment_operator`
-        - [x] `string_of_bigint`
-        - [x] `string_of_binary_operator`
-        - [x] `string_of_variable_kind`
-        - [x] `to_string` (as `expression_sort::Kind::as_str()`)
-        - [x] `unwrap_nonnull_lhs`
-        - [x] `unwrap_nonnull_lhs_expr`
-        - [x] `well_known_symbol_name`
-    - [x] flow_lexer.ml → `flow_parser/src/flow_lexer.rs`
-        - [x] `token`
-        - [x] `is_valid_identifier_name`
-        - [x] `jsx_child`
-        - [x] `jsx_tag`
-        - [x] `regexp`
-        - [x] `template_tail`
-        - [x] `type_token`
-    - [ ] flow_parser_dot_js.ml
-    - [ ] flow_parser_js.ml
-    - [x] js_id.ml → `flow_parser/src/js_id_unicode.rs`
-    - [x] js_id_unicode.ml → `flow_parser/src/js_id_unicode.rs`
-    - [x] jsdoc.ml → `flow_parser/src/jsdoc.rs`
-    - [x] jsx_parser.ml → `flow_parser/src/jsx_parser.rs`
-    - [x] lex_env.ml → `flow_parser/src/lex_env.rs`
-    - [x] lex_result.ml → absorbed into `flow_parser/src/flow_lexer.rs` (LexResult struct)
-    - [x] loc.ml → `flow_parser/src/loc.rs`
-        - [x] `char_before` → `char_before()`
-        - [x] `compare_ignore_source` → `compare_ignore_source()`
-        - [x] `contains` → `contains()`
-        - [x] `cursor` → `cursor()`
-        - [x] `debug_to_string` → `debug_to_string()`
-        - [x] `end_loc` → `end_loc()`
-        - [x] `first_char` → `first_char()`
-        - [x] `intersects` → `intersects()`
-        - [x] `is_none` → `is_none()`
-        - [x] `is_none_ignore_source` → `is_none_ignore_source()`
-        - [x] `lines_intersect` → `lines_intersect()`
-        - [x] `source` → `source()`
-        - [x] `span_compare` → `span_compare()`
-        - [x] `start_loc` → `start_loc()`
-        - [x] `start_pos_to_string_for_vscode_loc_uri_fragment` → `start_pos_to_string_for_vscode_loc_uri_fragment()`
-        - [x] `to_string_no_source` → `to_string_no_source()`
-        - [x] `update_source` → `update_source()`
-        - [x] `btwn` → `between()`
-        - [x] `compare` → `Ord` trait impl
-        - [x] `equal` → `PartialEq` trait derive
-        - [x] `mk_loc` → `mk()`
-        - [x] `none` → `LOC_NONE` constant
-        - [x] `pos_cmp` → `Ord for Position` trait impl
-    - [x] match_pattern_parser.ml → `flow_parser/src/match_pattern_parser.rs`
-    - [x] object_parser.ml → `flow_parser/src/object_parser.rs`
-    - [x] offset_utils.ml → `flow_parser/src/offset_utils.rs`
-        - [x] `make`
-        - [x] `contains_multibyte_character`
-        - [x] `debug_string`
-        - [x] `line_lengths`
-        - [x] `offset`
-    - [x] parse_error.ml → `flow_parser/src/parse_error.rs`
-    - [x] parse_error_utils.ml → absorbed into `flow_parser/src/parse_error.rs` (camelize function)
-    - [x] parser_common.ml → `flow_parser/src/parser_common.rs`
-    - [x] parser_env.ml → `flow_parser/src/parser_env.rs`
-    - [x] parser_flow.ml → `flow_parser/src/main_parser.rs`
-    - [x] pattern_cover.ml → `flow_parser/src/pattern_cover.rs` (97 lines, 100% complete)
-    - [x] pattern_parser.ml → `flow_parser/src/pattern_parser.rs` (647 lines, 100% complete)
-    - [ ] relativeLoc.ml
-    - [x] statement_parser.ml → `flow_parser/src/statement_parser.rs` (4176 lines, 100% complete)
-    - [x] token.ml → `flow_parser/src/token.rs` (591 lines, 100% complete)
-    - [ ] token_translator.ml
-    - [ ] translator_intf.ml
-    - [x] type_parser.ml → `flow_parser/src/type_parser.rs` (3286 lines, 100% complete)
+    - [x] file_utils.ml
+    - [ ] parse_test262.ml
+    - [x] run_tests.ml
+  - [x] comment_attachment.ml → `flow_parser/src/comment_attachment.rs`
+  - [x] comment_utils.ml → `flow_parser/src/comment_utils.rs`
+  - [x] declaration_parser.ml → `flow_parser/src/declaration_parser.rs`
+  - [x] enum_common.ml → `flow_parser/src/enum_common.rs`
+  - [x] enum_parser.ml → `flow_parser/src/enum_parser.rs`
+  - [x] estree_translator.ml → `flow_parser/src/estree_translator.rs`
+  - [x] expression_parser.ml → `flow_parser/src/expression_parser.rs`
+  - [x] file_key.ml → `flow_parser/src/file_key.rs`
+  - [x] flow_ast.ml → `flow_parser/src/ast.rs`
+  - [x] flow_ast_mapper.ml → `flow_parser/src/ast_visitor.rs`
+  - [x] flow_ast_utils.ml → `flow_parser/src/ast_utils.rs`
+    - [x] `acceptable_statement_in_declaration_context`
+    - [x] `extract_bigint_literal`
+    - [x] `extract_number_literal`
+    - [x] `fold_bindings_of_pattern`
+    - [x] `fold_bindings_of_variable_declarations`
+    - [x] `get_call_to_jest_module_mocking_fn`
+    - [x] `get_call_to_object_dot_freeze_arg`
+    - [x] `get_inferred_type_guard_candidate`
+    - [x] `hoist_function_and_component_declarations`
+    - [x] `hook_call`
+    - [x] `hook_function`
+    - [x] `hook_name`
+    - [x] `is_bigint_literal`
+    - [x] `is_call_to_invariant`
+    - [x] `is_call_to_is_array`
+    - [x] `is_call_to_object_dot_freeze`
+    - [x] `is_call_to_object_static_method`
+    - [x] `is_call_to_require`
+    - [x] `is_module_dot_exports`
+    - [x] `is_number_literal`
+    - [x] `is_super_member_access`
+    - [x] `is_type_only_declaration_statement`
+    - [x] `match_pattern_has_binding`
+    - [x] `match_root_ident`
+    - [x] `merge_comments`
+    - [x] `merge_comments_with_internal`
+    - [x] `mk_comments`
+    - [x] `mk_comments_opt`
+    - [x] `mk_comments_with_internal_opt`
+    - [x] `negate_bigint_literal`
+    - [x] `negate_number_literal`
+    - [x] `partition_directives`
+    - [x] `pattern_has_binding`
+    - [x] `split_comments`
+    - [x] `expression_of_match_member_pattern`
+    - [x] `ident_of_source`
+    - [x] `loc_of_annotation_or_hint`
+    - [x] `loc_of_expression`
+    - [x] `loc_of_ident`
+    - [x] `loc_of_pattern`
+    - [x] `loc_of_return_annot`
+    - [x] `loc_of_statement`
+    - [x] `match_root_name` → `pub const MATCH_ROOT_NAME`
+    - [x] `name_of_ident`
+    - [x] `push_toplevel_type`
+    - [x] `source_of_ident`
+    - [x] `string_of_assignment_operator`
+    - [x] `string_of_bigint`
+    - [x] `string_of_binary_operator`
+    - [x] `string_of_variable_kind`
+    - [x] `to_string` (as `expression_sort::Kind::as_str()`)
+    - [x] `unwrap_nonnull_lhs`
+    - [x] `unwrap_nonnull_lhs_expr`
+    - [x] `well_known_symbol_name`
+  - [x] flow_lexer.ml → `flow_parser/src/flow_lexer.rs`
+    - [x] `token`
+    - [x] `is_valid_identifier_name`
+    - [x] `jsx_child`
+    - [x] `jsx_tag`
+    - [x] `regexp`
+    - [x] `template_tail`
+    - [x] `type_token`
+  - [ ] flow_parser_dot_js.ml
+  - [ ] flow_parser_js.ml
+  - [x] js_id.ml → `flow_parser/src/js_id_unicode.rs`
+  - [x] js_id_unicode.ml → `flow_parser/src/js_id_unicode.rs`
+  - [x] jsdoc.ml → `flow_parser/src/jsdoc.rs`
+  - [x] jsx_parser.ml → `flow_parser/src/jsx_parser.rs`
+  - [x] lex_env.ml → `flow_parser/src/lex_env.rs`
+  - [x] lex_result.ml → absorbed into `flow_parser/src/flow_lexer.rs` (LexResult struct)
+  - [x] loc.ml → `flow_parser/src/loc.rs`
+    - [x] `char_before` → `char_before()`
+    - [x] `compare_ignore_source` → `compare_ignore_source()`
+    - [x] `contains` → `contains()`
+    - [x] `cursor` → `cursor()`
+    - [x] `debug_to_string` → `debug_to_string()`
+    - [x] `end_loc` → `end_loc()`
+    - [x] `first_char` → `first_char()`
+    - [x] `intersects` → `intersects()`
+    - [x] `is_none` → `is_none()`
+    - [x] `is_none_ignore_source` → `is_none_ignore_source()`
+    - [x] `lines_intersect` → `lines_intersect()`
+    - [x] `source` → `source()`
+    - [x] `span_compare` → `span_compare()`
+    - [x] `start_loc` → `start_loc()`
+    - [x] `start_pos_to_string_for_vscode_loc_uri_fragment` → `start_pos_to_string_for_vscode_loc_uri_fragment()`
+    - [x] `to_string_no_source` → `to_string_no_source()`
+    - [x] `update_source` → `update_source()`
+    - [x] `btwn` → `between()`
+    - [x] `compare` → `Ord` trait impl
+    - [x] `equal` → `PartialEq` trait derive
+    - [x] `mk_loc` → `mk()`
+    - [x] `none` → `LOC_NONE` constant
+    - [x] `pos_cmp` → `Ord for Position` trait impl
+  - [x] match_pattern_parser.ml → `flow_parser/src/match_pattern_parser.rs`
+  - [x] object_parser.ml → `flow_parser/src/object_parser.rs`
+  - [x] offset_utils.ml → `flow_parser/src/offset_utils.rs`
+    - [x] `make`
+    - [x] `contains_multibyte_character`
+    - [x] `debug_string`
+    - [x] `line_lengths`
+    - [x] `offset`
+  - [x] parse_error.ml → `flow_parser/src/parse_error.rs`
+  - [x] parse_error_utils.ml → absorbed into `flow_parser/src/parse_error.rs` (camelize function)
+  - [x] parser_common.ml → `flow_parser/src/parser_common.rs`
+  - [x] parser_env.ml → `flow_parser/src/parser_env.rs`
+  - [x] parser_flow.ml → `flow_parser/src/main_parser.rs`
+  - [x] pattern_cover.ml → `flow_parser/src/pattern_cover.rs` (97 lines, 100% complete)
+  - [x] pattern_parser.ml → `flow_parser/src/pattern_parser.rs` (647 lines, 100% complete)
+  - [ ] relativeLoc.ml
+  - [x] statement_parser.ml → `flow_parser/src/statement_parser.rs` (4176 lines, 100% complete)
+  - [x] token.ml → `flow_parser/src/token.rs` (591 lines, 100% complete)
+  - [ ] token_translator.ml
+  - [ ] translator_intf.ml
+  - [x] type_parser.ml → `flow_parser/src/type_parser.rs` (3286 lines, 100% complete)
 - [ ] parser_utils/
   - [ ] __tests__/
-      - [x] file_sig_test.ml → `flow_parser_utils/src/file_sig_tests.rs`
-      - [ ] flow_ast_differ_test.ml
-      - [ ] flow_polymorphic_ast_mapper_test.ml
-      - [ ] parser_utils_tests.ml
-      - [ ] test_utils.ml
+    - [x] file_sig_test.ml → `flow_parser_utils/src/file_sig_tests.rs`
+    - [ ] flow_ast_differ_test.ml
+    - [ ] flow_polymorphic_ast_mapper_test.ml
+    - [ ] parser_utils_tests.ml
+    - [ ] test_utils.ml
   - [x] aloc/
     - [x] __tests__/
-        - [x] aloc_tests.ml → `flow_aloc/src/lib.rs`
-      - [x] aLoc.ml → `flow_aloc/src/lib.rs`
-          - [x] `compare` → `ALoc::compare()`
-          - [x] `concretize_compare` → `ALoc::concretize_compare()`
-          - [x] `concretize_equal` → `ALoc::concretize_equal()`
-          - [x] `debug_to_string` → `ALoc::debug_to_string()`
-          - [x] `equal` → `ALoc::equal()`
-          - [x] `get_key_exn` → `aloc_representation_do_not_use::get_key_exn()`
-          - [x] `init_table` → `aloc_representation_do_not_use::init_table()`
-          - [x] `is_keyed` → `aloc_representation_do_not_use::is_keyed()`
-          - [x] `make_id` → `aloc_representation_do_not_use::make_id()`
-          - [x] `make_keyed` → `aloc_representation_do_not_use::make_keyed()`
-          - [x] `make_table` → `aloc_representation_do_not_use::make_table()`
-          - [x] `none` → `ALoc::none()`
-          - [x] `of_loc` → `ALoc::of_loc()`
-          - [x] `quick_compare` → `ALoc::quick_compare()`
-          - [x] `source` → `ALoc::source()`
-          - [x] `string_of_key` → `aloc_representation_do_not_use::string_of_key()`
-          - [x] `to_loc` → `ALoc::to_loc()`
-          - [x] `to_loc_exn` → `ALoc::to_loc_exn()`
-          - [x] `to_loc_with_tables` → `ALoc::to_loc_with_tables()`
-          - [x] `to_string_no_source` → `ALoc::to_string_no_source()`
-          - [x] `update_source` → `ALoc::update_source()`
-          - [x] `compare_id` → `ALocId::compare()`
-          - [x] `empty_table` → `ALocTable::empty()`
-          - [x] `equal_id` → `ALocId::equal()`
-          - [x] `id_none` → `ALocId::none()`
-          - [x] `id_of_aloc` → `ALocId::of_aloc()`
+      - [x] aloc_tests.ml → `flow_aloc/src/lib.rs`
+    - [x] aLoc.ml → `flow_aloc/src/lib.rs`
+      - [x] `compare` → `ALoc::compare()`
+      - [x] `concretize_compare` → `ALoc::concretize_compare()`
+      - [x] `concretize_equal` → `ALoc::concretize_equal()`
+      - [x] `debug_to_string` → `ALoc::debug_to_string()`
+      - [x] `equal` → `ALoc::equal()`
+      - [x] `get_key_exn` → `aloc_representation_do_not_use::get_key_exn()`
+      - [x] `init_table` → `aloc_representation_do_not_use::init_table()`
+      - [x] `is_keyed` → `aloc_representation_do_not_use::is_keyed()`
+      - [x] `make_id` → `aloc_representation_do_not_use::make_id()`
+      - [x] `make_keyed` → `aloc_representation_do_not_use::make_keyed()`
+      - [x] `make_table` → `aloc_representation_do_not_use::make_table()`
+      - [x] `none` → `ALoc::none()`
+      - [x] `of_loc` → `ALoc::of_loc()`
+      - [x] `quick_compare` → `ALoc::quick_compare()`
+      - [x] `source` → `ALoc::source()`
+      - [x] `string_of_key` → `aloc_representation_do_not_use::string_of_key()`
+      - [x] `to_loc` → `ALoc::to_loc()`
+      - [x] `to_loc_exn` → `ALoc::to_loc_exn()`
+      - [x] `to_loc_with_tables` → `ALoc::to_loc_with_tables()`
+      - [x] `to_string_no_source` → `ALoc::to_string_no_source()`
+      - [x] `update_source` → `ALoc::update_source()`
+      - [x] `compare_id` → `ALocId::compare()`
+      - [x] `empty_table` → `ALocTable::empty()`
+      - [x] `equal_id` → `ALocId::equal()`
+      - [x] `id_none` → `ALocId::none()`
+      - [x] `id_of_aloc` → `ALocId::of_aloc()`
   - [x] exports/
     - [x] __tests__/
-        - [x] exports_tests.ml → `flow_imports_exports/src/exports_tests.rs`
-      - [x] exports.ml → `flow_imports_exports/src/exports.rs`
-          - [x] `empty`
-          - [x] `of_builtins`
-          - [x] `of_module`
-      - [x] imports.ml → `flow_imports_exports/src/imports.rs`
-          - [x] `add_globals`
-          - [x] `of_file_sig`
+      - [x] exports_tests.ml → `flow_imports_exports/src/exports_tests.rs`
+    - [x] exports.ml → `flow_imports_exports/src/exports.rs`
+      - [x] `empty`
+      - [x] `of_builtins`
+      - [x] `of_module`
+    - [x] imports.ml → `flow_imports_exports/src/imports.rs`
+      - [x] `add_globals`
+      - [x] `of_file_sig`
   - [x] iloc/
-      - [x] iLoc.ml → `flow_parser_utils/src/iloc.rs`
-          - [x] `ILoc` type (tuple struct with `Loc` and `u32`)
-          - [x] `Display`, `Ord`, `PartialOrd` impls
-          - [x] `LocSig` impl
+    - [x] iLoc.ml → `flow_parser_utils/src/iloc.rs`
+      - [x] `ILoc` type (tuple struct with `Loc` and `u32`)
+      - [x] `Display`, `Ord`, `PartialOrd` impls
+      - [x] `LocSig` impl
   - [x] output/
     - [x] __tests__/
       - [x] js_layout_generator/
-          - [x] assignment_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] comment_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] component_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] import_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] jsx_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] object_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] operator_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] pattern_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] program_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] trailing_commas_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-          - [x] variable_declaration_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-        - [x] js_layout_generator_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
-        - [x] layout_generator_test_utils.ml → `flow_parser_utils_output/src/layout_generator_test_utils.rs`
-        - [x] layout_test.ml → `flow_parser_utils_output/src/layout_test.rs`
-        - [x] layout_test_utils.ml → `flow_parser_utils_output/src/layout_test_utils.rs`
-        - [x] parser_utils_output_tests.ml → irrelevant (OUnit runner)
-        - [ ] source_test.ml
+        - [x] assignment_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] comment_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] component_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] import_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] jsx_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] object_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] operator_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] pattern_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] program_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] trailing_commas_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] variable_declaration_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+      - [x] js_layout_generator_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+      - [x] layout_generator_test_utils.ml → `flow_parser_utils_output/src/layout_generator_test_utils.rs`
+      - [x] layout_test.ml → `flow_parser_utils_output/src/layout_test.rs`
+      - [x] layout_test_utils.ml → `flow_parser_utils_output/src/layout_test_utils.rs`
+      - [x] parser_utils_output_tests.ml → irrelevant (OUnit runner)
+      - [ ] source_test.ml
     - [x] printers/
       - [x] __tests__/
-          - [x] parser_utils_output_printers_tests.ml → irrelevant (OUnit runner)
-          - [x] pretty_printer_test.ml → `flow_parser_utils_output/src/pretty_printer_test.rs`
-        - [x] ast_diff_printer.ml → `flow_parser_utils_output/src/ast_diff_printer.rs`
-        - [x] compact_printer.ml → `flow_parser_utils_output/src/compact_printer.rs`
-        - [x] pretty_printer.ml → `flow_parser_utils_output/src/pretty_printer.rs`
-        - [x] replacement_printer.ml → `flow_parser_utils_output/src/replacement_printer.rs`
-      - [x] js_layout_generator.ml → `flow_parser_utils_output/src/js_layout_generator.rs` (fully ported)
-      - [x] layout.ml → `flow_parser_utils_output/src/layout.rs`
-          - [x] `LayoutNode` enum
-          - [x] `WhenToBreak` enum
-          - [x] `ListConfig` struct
-          - [x] `print_pretty`
-          - [x] `print_single_line`
-          - [x] Composition utilities (group, fuse, join, list)
-      - [x] source.ml → `flow_parser_utils_output/src/source.rs`
-          - [x] `Source` struct with builder methods
+        - [x] parser_utils_output_printers_tests.ml → irrelevant (OUnit runner)
+        - [x] pretty_printer_test.ml → `flow_parser_utils_output/src/pretty_printer_test.rs`
+      - [x] ast_diff_printer.ml → `flow_parser_utils_output/src/ast_diff_printer.rs`
+      - [x] compact_printer.ml → `flow_parser_utils_output/src/compact_printer.rs`
+      - [x] pretty_printer.ml → `flow_parser_utils_output/src/pretty_printer.rs`
+      - [x] replacement_printer.ml → `flow_parser_utils_output/src/replacement_printer.rs`
+    - [x] js_layout_generator.ml → `flow_parser_utils_output/src/js_layout_generator.rs` (fully ported)
+    - [x] layout.ml → `flow_parser_utils_output/src/layout.rs`
+      - [x] `LayoutNode` enum
+      - [x] `WhenToBreak` enum
+      - [x] `ListConfig` struct
+      - [x] `print_pretty`
+      - [x] `print_single_line`
+      - [x] Composition utilities (group, fuse, join, list)
+    - [x] source.ml → `flow_parser_utils_output/src/source.rs`
+      - [x] `Source` struct with builder methods
   - [x] signature_builder/
-      - [x] expected_annotation_sort.ml → `flow_type_sig/src/expected_annotation_sort.rs` (1/1 function, 100% complete)
-          - [x] `to_string` → `Display` trait implementation (idiomatic Rust)
-      - [x] signature_error.ml → `flow_type_sig/src/signature_error.rs`
+    - [x] expected_annotation_sort.ml → `flow_type_sig/src/expected_annotation_sort.rs` (1/1 function, 100% complete)
+      - [x] `to_string` → `Display` trait implementation (idiomatic Rust)
+    - [x] signature_error.ml → `flow_type_sig/src/signature_error.rs`
   - [ ] type_sig/
     - [x] __tests__/
-        - [x] compact_table_tests.ml
-        - [x] type_sig_tests.ml
-      - [x] compact_table.ml → `flow_type_sig/src/compact_table.rs`
-          - [x] `create` → `Builder::new()`
-          - [x] `push` → `Builder::push()`
-          - [x] `tail_exn` → `Builder::tail_exn()`
-          - [x] `splice` → `Builder::splice()` (test-only)
-          - [x] `value` → `Node::data()`
-          - [x] `modify` → `Node::data_mut()`
-          - [x] `mark` → `Node::mark()`
-          - [x] `compact` → `Builder::compact_with_merge()` / `compact_without_merge()`
-          - [x] `index_exn` → `Node::index_exn()`
-          - [x] `copy` → `Indexed::copy()`
-          - [x] `get` → `Table::get()`
-          - [x] `length` → `Table::len()`
-          - [x] `iter` → `Table::iter()`
-          - [x] `to_array` → `Table::into_vec()` (similar functionality)
-          - [x] `Interned.create` → `InternedBuilder::new()`
-          - [x] `Interned.push` → `InternedBuilder::push()`
-          - [x] `Interned.compact` → `InternedBuilder::compact_without_merge()`
-          - [x] `init` → `Table::init()`
-          - [x] `iteri` → `Table::iteri()`
-          - [x] `map` → `Table::map()`
-          - [x] `mapi` → `Table::mapi()`
-          - [x] `to_array_map` → `Table::to_array_map()`
-          - [x] `IndexSet` module → `pub type IndexSet<Marker> = BTreeSet<Index<Marker>>`
-      - [x] packed_type_sig.ml → `flow_type_sig/src/packed_type_sig.rs`
-      - [x] type_sig.ml → `flow_type_sig/src/type_sig.rs` (2547 lines, 100% complete)
-          - [x] `TArg` type
-          - [x] `Arg` type
-          - [x] `TypeGuard` type
-          - [x] `TParam` type with polymorphic mapping
-      - [x] type_sig_bin.ml → `irrelevant` (Rust heap stores type sigs in-memory)
-      - [x] type_sig_collections.ml → `irrelevant` (just use `Table<T>` directly)
-      - [x] type_sig_hash.ml → `flow_type_sig/src/type_sig_hash.rs`
-          - [x] `checked_dep` type (CJS/ES)
-          - [x] `dependency` type (Cyclic/Acyclic/Resource/Unchecked)
-          - [x] `file` type
-          - [x] `require`
-          - [x] `import`
-          - [x] `import_ns`
-          - [x] `edge_local_def`
-          - [x] `edge_remote_ref`
-          - [x] `edge_pattern`
-          - [x] `edge_pattern_def`
-          - [x] `edge_require`
-          - [x] `edge_import`
-          - [x] `edge_import_ns`
-          - [x] `visit_ref`
-          - [x] `visit_tyref`
-          - [x] `visit_packed`
-          - [x] `visit_eval`
-          - [x] `visit_annot`
-          - [x] `visit_value`
-          - [x] `visit_op`
-          - [x] `visit_def`
-          - [x] `visit_remote_ref`
-          - [x] `visit_pattern`
-          - [x] `visit_export`
-          - [x] `visit_type_export`
-      - [x] type_sig_mark.ml → `flow_type_sig/src/type_sig_mark.rs` (4/4 functions, 100% complete)
-          - [x] `mark_binding` → `mark_binding()` (pub(crate))
-          - [x] `mark_exports` → `mark_exports()` (pub(super))
-          - [x] `mark_errors` → `mark_errors()` (pub(super))
-          - [x] `mark_builtin_module` → `mark_builtin_module()` (pub(super))
-      - [x] type_sig_options.ml → `flow_type_sig/src/type_sig_options.rs`
-          - [x] `TypeSigOptions` struct
-          - [x] `of_options`
-          - [x] `builtin_options`
-      - [x] type_sig_pack.ml → `flow_type_sig/src/type_sig_pack.rs` (1035 lines, 100% complete)
-          - [x] `RemoteRef` enum
-          - [x] `PackedRef` enum
-          - [x] `TyRef` enum
-          - [x] `Packed` type
-          - [x] `Pattern` type
-          - [x] `Export` type
-          - [x] `ModuleKind` type
-      - [x] type_sig_parse.ml → `flow_type_sig/src/type_sig_parse.rs` (9132 lines, 100% complete)
-      - [x] type_sig_utils.ml → `flow_type_sig/src/type_sig_utils.rs`
-          - [x] `parse_and_pack_builtins`
-          - [x] `parse_and_pack_module`
-    - [x] ast_builder.ml → `flow_parser_utils/src/ast_builder.rs`
-        - [x] `identifiers` module
-        - [x] `types` module (with `functions`, `objects` submodules)
-        - [x] `literals` module
-        - [x] `patterns` module
-        - [x] `functions` module
-        - [x] `classes` module (with `methods` submodule)
-        - [x] `jsxs` module
-        - [x] `statements` module (with `enum_declarations` submodule)
-        - [x] `expressions` module (with `members`, `literals` submodules)
-        - [x] `comments` module
-        - [x] `mk_program`
-        - [x] `test_ast_of_string`
-        - [x] `test_expression_of_string`
-        - [x] `test_statement_of_string`
-        - [x] `test_program_of_string`
-    - [x] ast_loc_utils.ml → `flow_parser_utils/src/ast_loc_utils.rs`
-        - [x] `LocToALocMapper` struct implementing `LocMapper` trait
-    - [x] export_condition_map.ml → `flow_parser_utils/src/export_condition_map.rs`
-        - [x] `create`
-        - [x] `create_from_shorthand`
-        - [x] `empty`
-        - [x] `parse`
-        - [x] `resolve_package_target`
-    - [x] file_sig.ml → `flow_parser_utils/src/file_sig.rs`
-        - [x] `empty` → `FileSig::empty()`
-        - [x] `default_opts` → `FileSigOptions::default()` (via Default trait)
-        - [x] `program` → `FileSig::from_program()`
-        - [x] `require_loc_map` → `FileSig::require_loc_map()`
-        - [x] `require_set` → `FileSig::require_set()`
-        - [x] `requires` → `FileSig::requires()`
-        - [x] `to_string` → `to_debug_string()`
-    - [x] flow_ast_contains_mapper.ml → `flow_services_code_action/src/contains_mapper.rs` (ported as composition helper)
-    - [x] flow_ast_differ.ml → `flow_parser_utils/src/flow_ast_differ.rs`
-    - [x] flow_ast_visitor.ml → `flow_parser/src/ast_visitor.rs`
-        - [x] `AstVisitor` trait with comprehensive visitor pattern
-        - [x] `Traversable` trait for AST nodes
-    - [x] flow_polymorphic_ast_mapper.ml → `flow_parser/src/polymorphic_ast_mapper.rs`
-        - [x] `LocMapper` trait
-        - [x] Generic AST transformation functions for all node types
-    - [x] graphql.ml → `flow_parser_utils/src/graphql.rs` (56 lines, 100% complete)
-    - [x] indexed_ast_mapper.ml → `flow_parser_utils/src/indexed_ast_mapper.rs`
-        - [x] `IndexMapper` struct with `LocMapper` impl
-        - [x] `UnindexMapper` struct with `LocMapper` impl
-    - [x] infer_type_hoister.ml → `flow_analysis/src/infer_type_hoister.rs`
-        - [x] `hoist_infer_types`
-    - [ ] json_of_estree.ml
-    - [x] package_exports.ml → `flow_parser_utils/src/package_exports.rs`
-        - [x] `create`
-        - [x] `empty`
-        - [x] `parse`
-        - [x] `resolve_package`
-    - [x] package_json.ml → `flow_parser_utils/src/package_json.rs`
-        - [x] `create`
-        - [x] `empty`
-        - [x] `exports`
-        - [x] `haste_commonjs`
-        - [x] `main`
-        - [x] `name`
-        - [x] `parse`
-    - [x] record_utils.ml → `flow_parser_utils/src/record_utils.rs`
-        - [x] `defaulted_props_of_record`
-    - [x] signature_utils.ml → `flow_parser_utils/src/signature_utils.rs`
-        - [x] `procedure_decider` module
-        - [x] `this_finder` module with AstVisitor implementations
-    - [x] this_finder.ml → `flow_parser_utils/src/this_finder.rs`
+      - [x] compact_table_tests.ml
+      - [x] type_sig_tests.ml
+    - [x] compact_table.ml → `flow_type_sig/src/compact_table.rs`
+      - [x] `create` → `Builder::new()`
+      - [x] `push` → `Builder::push()`
+      - [x] `tail_exn` → `Builder::tail_exn()`
+      - [x] `splice` → `Builder::splice()` (test-only)
+      - [x] `value` → `Node::data()`
+      - [x] `modify` → `Node::data_mut()`
+      - [x] `mark` → `Node::mark()`
+      - [x] `compact` → `Builder::compact_with_merge()` / `compact_without_merge()`
+      - [x] `index_exn` → `Node::index_exn()`
+      - [x] `copy` → `Indexed::copy()`
+      - [x] `get` → `Table::get()`
+      - [x] `length` → `Table::len()`
+      - [x] `iter` → `Table::iter()`
+      - [x] `to_array` → `Table::into_vec()` (similar functionality)
+      - [x] `Interned.create` → `InternedBuilder::new()`
+      - [x] `Interned.push` → `InternedBuilder::push()`
+      - [x] `Interned.compact` → `InternedBuilder::compact_without_merge()`
+      - [x] `init` → `Table::init()`
+      - [x] `iteri` → `Table::iteri()`
+      - [x] `map` → `Table::map()`
+      - [x] `mapi` → `Table::mapi()`
+      - [x] `to_array_map` → `Table::to_array_map()`
+      - [x] `IndexSet` module → `pub type IndexSet<Marker> = BTreeSet<Index<Marker>>`
+    - [x] packed_type_sig.ml → `flow_type_sig/src/packed_type_sig.rs`
+    - [x] type_sig.ml → `flow_type_sig/src/type_sig.rs` (2547 lines, 100% complete)
+      - [x] `TArg` type
+      - [x] `Arg` type
+      - [x] `TypeGuard` type
+      - [x] `TParam` type with polymorphic mapping
+    - [x] type_sig_bin.ml → `irrelevant` (Rust heap stores type sigs in-memory)
+    - [x] type_sig_collections.ml → `irrelevant` (just use `Table<T>` directly)
+    - [x] type_sig_hash.ml → `flow_type_sig/src/type_sig_hash.rs`
+      - [x] `checked_dep` type (CJS/ES)
+      - [x] `dependency` type (Cyclic/Acyclic/Resource/Unchecked)
+      - [x] `file` type
+      - [x] `require`
+      - [x] `import`
+      - [x] `import_ns`
+      - [x] `edge_local_def`
+      - [x] `edge_remote_ref`
+      - [x] `edge_pattern`
+      - [x] `edge_pattern_def`
+      - [x] `edge_require`
+      - [x] `edge_import`
+      - [x] `edge_import_ns`
+      - [x] `visit_ref`
+      - [x] `visit_tyref`
+      - [x] `visit_packed`
+      - [x] `visit_eval`
+      - [x] `visit_annot`
+      - [x] `visit_value`
+      - [x] `visit_op`
+      - [x] `visit_def`
+      - [x] `visit_remote_ref`
+      - [x] `visit_pattern`
+      - [x] `visit_export`
+      - [x] `visit_type_export`
+    - [x] type_sig_mark.ml → `flow_type_sig/src/type_sig_mark.rs` (4/4 functions, 100% complete)
+      - [x] `mark_binding` → `mark_binding()` (pub(crate))
+      - [x] `mark_exports` → `mark_exports()` (pub(super))
+      - [x] `mark_errors` → `mark_errors()` (pub(super))
+      - [x] `mark_builtin_module` → `mark_builtin_module()` (pub(super))
+    - [x] type_sig_options.ml → `flow_type_sig/src/type_sig_options.rs`
+      - [x] `TypeSigOptions` struct
+      - [x] `of_options`
+      - [x] `builtin_options`
+    - [x] type_sig_pack.ml → `flow_type_sig/src/type_sig_pack.rs` (1035 lines, 100% complete)
+      - [x] `RemoteRef` enum
+      - [x] `PackedRef` enum
+      - [x] `TyRef` enum
+      - [x] `Packed` type
+      - [x] `Pattern` type
+      - [x] `Export` type
+      - [x] `ModuleKind` type
+    - [x] type_sig_parse.ml → `flow_type_sig/src/type_sig_parse.rs` (9132 lines, 100% complete)
+    - [x] type_sig_utils.ml → `flow_type_sig/src/type_sig_utils.rs`
+      - [x] `parse_and_pack_builtins`
+      - [x] `parse_and_pack_module`
+  - [x] ast_builder.ml → `flow_parser_utils/src/ast_builder.rs`
+    - [x] `identifiers` module
+    - [x] `types` module (with `functions`, `objects` submodules)
+    - [x] `literals` module
+    - [x] `patterns` module
+    - [x] `functions` module
+    - [x] `classes` module (with `methods` submodule)
+    - [x] `jsxs` module
+    - [x] `statements` module (with `enum_declarations` submodule)
+    - [x] `expressions` module (with `members`, `literals` submodules)
+    - [x] `comments` module
+    - [x] `mk_program`
+    - [x] `test_ast_of_string`
+    - [x] `test_expression_of_string`
+    - [x] `test_statement_of_string`
+    - [x] `test_program_of_string`
+  - [x] ast_loc_utils.ml → `flow_parser_utils/src/ast_loc_utils.rs`
+    - [x] `LocToALocMapper` struct implementing `LocMapper` trait
+  - [x] export_condition_map.ml → `flow_parser_utils/src/export_condition_map.rs`
+    - [x] `create`
+    - [x] `create_from_shorthand`
+    - [x] `empty`
+    - [x] `parse`
+      - [x] `resolve_package_target`
+  - [x] file_sig.ml → `flow_parser_utils/src/file_sig.rs`
+    - [x] `empty` → `FileSig::empty()`
+    - [x] `default_opts` → `FileSigOptions::default()` (via Default trait)
+    - [x] `program` → `FileSig::from_program()`
+    - [x] `require_loc_map` → `FileSig::require_loc_map()`
+    - [x] `require_set` → `FileSig::require_set()`
+    - [x] `requires` → `FileSig::requires()`
+    - [x] `to_string` → `to_debug_string()`
+  - [x] flow_ast_contains_mapper.ml → `flow_services_code_action/src/contains_mapper.rs` (ported as composition helper)
+  - [x] flow_ast_differ.ml → `flow_parser_utils/src/flow_ast_differ.rs`
+  - [x] flow_ast_visitor.ml → `flow_parser/src/ast_visitor.rs`
+    - [x] `AstVisitor` trait with comprehensive visitor pattern
+    - [x] `Traversable` trait for AST nodes
+  - [x] flow_polymorphic_ast_mapper.ml → `flow_parser/src/polymorphic_ast_mapper.rs`
+    - [x] `LocMapper` trait
+    - [x] Generic AST transformation functions for all node types
+  - [x] graphql.ml → `flow_parser_utils/src/graphql.rs` (56 lines, 100% complete)
+  - [x] indexed_ast_mapper.ml → `flow_parser_utils/src/indexed_ast_mapper.rs`
+    - [x] `IndexMapper` struct with `LocMapper` impl
+    - [x] `UnindexMapper` struct with `LocMapper` impl
+  - [x] infer_type_hoister.ml → `flow_analysis/src/infer_type_hoister.rs`
+    - [x] `hoist_infer_types`
+  - [ ] json_of_estree.ml
+  - [x] package_exports.ml → `flow_parser_utils/src/package_exports.rs`
+    - [x] `create`
+    - [x] `empty`
+    - [x] `parse`
+    - [x] `resolve_package`
+  - [x] package_json.ml → `flow_parser_utils/src/package_json.rs`
+    - [x] `create`
+    - [x] `empty`
+    - [x] `exports`
+    - [x] `haste_commonjs`
+    - [x] `main`
+    - [x] `name`
+    - [x] `parse`
+  - [x] record_utils.ml → `flow_parser_utils/src/record_utils.rs`
+    - [x] `defaulted_props_of_record`
+  - [x] signature_utils.ml → `flow_parser_utils/src/signature_utils.rs`
+    - [x] `procedure_decider` module
+    - [x] `this_finder` module with AstVisitor implementations
+  - [x] this_finder.ml → `flow_parser_utils/src/this_finder.rs`
 - [x] parsing/
-    - [x] docblock_parser.ml → `flow_parsing/src/docblock_parser.rs`
-        - [x] `docblock_max_tokens` → `DOCBLOCK_MAX_TOKENS` constant
-        - [x] `parse_docblock` → `parse_docblock()`
-    - [x] parsing_service_js.ml → `flow_parsing/src/parsing_service.rs`
-        - [x] `do_parse`
-        - [x] `content_hash_matches_file_hash`
-        - [x] `does_content_match_file_hash`
-        - [x] `content_hash_matches_old_file_hash`
-        - [x] `fold_failed`
-        - [x] `reducer`
-        - [x] `merge`
-        - [x] `parse`
-        - [x] `ensure_parsed`
-        - [x] `parse_file_sig`
-        - [x] `parse_package_json_file`
-        - [x] `parse_type_sig`
-        - [x] `parse_with_defaults`
-        - [x] `reparse_with_defaults`
-        - [ ] `next_of_filename_set`
+  - [x] docblock_parser.ml → `flow_parsing/src/docblock_parser.rs`
+    - [x] `docblock_max_tokens` → `DOCBLOCK_MAX_TOKENS` constant
+    - [x] `parse_docblock` → `parse_docblock()`
+  - [x] parsing_service_js.ml → `flow_parsing/src/parsing_service.rs`
+    - [x] `do_parse`
+    - [x] `content_hash_matches_file_hash`
+    - [x] `does_content_match_file_hash`
+    - [x] `content_hash_matches_old_file_hash`
+    - [x] `fold_failed`
+    - [x] `reducer`
+    - [x] `merge`
+    - [x] `parse`
+    - [x] `ensure_parsed`
+    - [x] `parse_file_sig`
+    - [x] `parse_package_json_file`
+    - [x] `parse_type_sig`
+    - [x] `parse_with_defaults`
+    - [x] `reparse_with_defaults`
+    - [ ] `next_of_filename_set`
 - [ ] procs/
-    - [ ] multiWorkerLwt.ml → `flow_server/src/multi_worker.rs`
-        - [x] `set_report_canceled_callback`
-        - [x] `report_canceled`
-        - [ ] `single_threaded_call_with_worker_id`
-        - [ ] `multi_threaded_call`
-        - [ ] `multi_threaded_call_with_worker_id`
-        - [ ] `call`
-        - [ ] `call_with_worker_id`
-        - [ ] `fold`
-        - [ ] `iter`
-        - [ ] `next`
-        - [ ] `next2`
-        - [ ] `make`
+  - [ ] multiWorkerLwt.ml → `flow_server/src/multi_worker.rs`
+    - [x] `set_report_canceled_callback`
+    - [x] `report_canceled`
+    - [ ] `single_threaded_call_with_worker_id`
+    - [ ] `multi_threaded_call`
+    - [ ] `multi_threaded_call_with_worker_id`
+    - [ ] `call`
+    - [ ] `call_with_worker_id`
+    - [ ] `fold`
+    - [ ] `iter`
+    - [ ] `next`
+    - [ ] `next2`
+    - [ ] `make`
 - [ ] server/
   - [ ] command_handler/
-      - [ ] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
-          - [x] `type_parse_artifacts_with_cache`
-          - [x] `get_status`
-          - [ ] `autocomplete_on_parsed`
-          - [ ] `autocomplete`
-          - [x] `errors_of_file`
-          - [x] `check_file`
-          - [x] `get_def_of_check_result`
-          - [x] `infer_type_to_response`
-          - [x] `documentation_at_loc`
-          - [ ] `infer_type`
-          - [x] `type_of_name`
-          - [x] `inlay_hint`
-          - [x] `insert_type`
-          - [x] `autofix_exports`
-          - [x] `autofix_missing_local_annot`
-          - [x] `collect_rage`
-          - [x] `dump_types`
-          - [x] `coverage`
-          - [x] `batch_coverage`
-          - [x] `serialize_graph`
-          - [x] `output_dependencies`
-          - [x] `get_cycle`
-          - [x] `find_module`
-          - [x] `get_def`
-          - [ ] `save_state`
-          - [x] `auto_close_jsx`
-          - [x] `prepare_document_paste`
-          - [x] `provide_document_paste`
-          - [x] `linked_editing_range`
-          - [x] `find_code_actions`
-          - [x] `add_missing_imports`
-          - [x] `organize_imports`
-          - [x] `handle_apply_code_action`
-          - [ ] `handle_autocomplete`
-          - [x] `handle_autofix_exports`
-          - [x] `handle_autofix_missing_local_annot`
-          - [x] `handle_check_file`
-          - [x] `handle_coverage`
-          - [x] `handle_batch_coverage`
-          - [x] `handle_cycle`
-          - [x] `handle_dump_types`
-          - [x] `handle_find_module`
-          - [x] `handle_get_def`
-          - [x] `handle_graph_dep_graph`
-          - [ ] `handle_infer_type`
-          - [x] `handle_type_of_name`
-          - [x] `handle_inlay_hint`
-          - [x] `handle_llm_context`
-          - [x] `handle_insert_type`
-          - [x] `handle_rage`
-          - [x] `handle_status`
-          - [ ] `handle_save_state`
-          - [x] `handle_persistent_canceled`
-          - [x] `handle_persistent_uncaught_exception`
-          - [x] `handle_persistent_subscribe`
-          - [x] `handle_persistent_did_open_notification`
-          - [x] `handle_persistent_did_open_notification_no_op`
-          - [x] `handle_persistent_did_change_notification`
-          - [x] `handle_persistent_did_save_notification`
-          - [x] `handle_persistent_did_close_notification`
-          - [x] `handle_persistent_did_close_notification_no_op`
-          - [x] `handle_persistent_cancel_notification`
-          - [x] `handle_persistent_did_change_configuration_notification`
-          - [x] `handle_persistent_get_def`
-          - [x] `handle_persistent_infer_type`
-          - [x] `handle_persistent_code_action_request`
-          - [ ] `handle_persistent_autocomplete_lsp`
-          - [x] `handle_persistent_signaturehelp_lsp`
-          - [x] `handle_persistent_workspace_symbol`
-          - [ ] `handle_persistent_find_references`
-          - [x] `handle_persistent_document_highlight`
-          - [x] `handle_persistent_prepare_rename`
-          - [x] `handle_persistent_rename`
-          - [x] `handle_persistent_coverage`
-          - [x] `handle_persistent_llm_context`
-          - [ ] `handle_persistent_rage`
-          - [x] `handle_persistent_ping`
-          - [x] `handle_persistent_log_command`
-          - [x] `handle_persistent_add_missing_imports_command`
-          - [x] `handle_persistent_organize_imports_command`
-          - [x] `handle_persistent_auto_close_jsx`
-          - [x] `handle_persistent_prepare_document_paste`
-          - [x] `handle_persistent_provide_document_paste_edits`
-          - [x] `handle_persistent_linked_editing_range`
-          - [x] `handle_persistent_rename_file_imports`
-          - [x] `handle_persistent_malformed_command`
-          - [x] `handle_persistent_unsupported`
-          - [x] `handle_persistent_text_document_diagnostics_lsp`
-          - [x] `handle_persistent_immediately_unsafe`
-          - [x] `handle_persistent_immediately`
-          - [ ] `enqueue_or_handle_ephemeral`
-          - [ ] `enqueue_persistent`
-          - [x] `handle_ephemeral_command_for_standalone` (Rust-only: standalone-mode ephemeral dispatch)
-          - [x] `handle_ephemeral_command_for_standalone_wrapped`
-          - [x] `classify_ephemeral_command`
-          - [x] `handle_ephemeral_immediate_command`
-          - [x] `standalone_response_needs_checked_dependencies_retry`
-      - [x] llmTypedContextProvider.ml → `flow_server_command_handler/src/llm_typed_context_provider.rs`
+    - [ ] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
+      - [x] `type_parse_artifacts_with_cache`
+      - [x] `get_status`
+      - [ ] `autocomplete_on_parsed`
+      - [ ] `autocomplete`
+      - [x] `errors_of_file`
+      - [x] `check_file`
+      - [x] `get_def_of_check_result`
+      - [x] `infer_type_to_response`
+      - [x] `documentation_at_loc`
+      - [ ] `infer_type`
+      - [x] `type_of_name`
+      - [x] `inlay_hint`
+      - [x] `insert_type`
+      - [x] `autofix_exports`
+      - [x] `autofix_missing_local_annot`
+      - [x] `collect_rage`
+      - [x] `dump_types`
+      - [x] `coverage`
+      - [x] `batch_coverage`
+      - [x] `serialize_graph`
+      - [x] `output_dependencies`
+      - [x] `get_cycle`
+      - [x] `find_module`
+      - [x] `get_def`
+      - [ ] `save_state`
+      - [x] `auto_close_jsx`
+      - [x] `prepare_document_paste`
+      - [x] `provide_document_paste`
+      - [x] `linked_editing_range`
+      - [x] `find_code_actions`
+      - [x] `add_missing_imports`
+      - [x] `organize_imports`
+      - [x] `handle_apply_code_action`
+      - [ ] `handle_autocomplete`
+      - [x] `handle_autofix_exports`
+      - [x] `handle_autofix_missing_local_annot`
+      - [x] `handle_check_file`
+      - [x] `handle_coverage`
+      - [x] `handle_batch_coverage`
+      - [x] `handle_cycle`
+      - [x] `handle_dump_types`
+      - [x] `handle_find_module`
+      - [x] `handle_get_def`
+      - [x] `handle_graph_dep_graph`
+      - [ ] `handle_infer_type`
+      - [x] `handle_type_of_name`
+      - [x] `handle_inlay_hint`
+      - [x] `handle_llm_context`
+      - [x] `handle_insert_type`
+      - [x] `handle_rage`
+      - [x] `handle_status`
+      - [ ] `handle_save_state`
+      - [x] `handle_persistent_canceled`
+      - [x] `handle_persistent_uncaught_exception`
+      - [x] `handle_persistent_subscribe`
+      - [x] `handle_persistent_did_open_notification`
+      - [x] `handle_persistent_did_open_notification_no_op`
+      - [x] `handle_persistent_did_change_notification`
+      - [x] `handle_persistent_did_save_notification`
+      - [x] `handle_persistent_did_close_notification`
+      - [x] `handle_persistent_did_close_notification_no_op`
+      - [x] `handle_persistent_cancel_notification`
+      - [x] `handle_persistent_did_change_configuration_notification`
+      - [x] `handle_persistent_get_def`
+      - [x] `handle_persistent_infer_type`
+      - [x] `handle_persistent_code_action_request`
+      - [ ] `handle_persistent_autocomplete_lsp`
+      - [x] `handle_persistent_signaturehelp_lsp`
+      - [x] `handle_persistent_workspace_symbol`
+      - [ ] `handle_persistent_find_references`
+      - [x] `handle_persistent_document_highlight`
+      - [x] `handle_persistent_prepare_rename`
+      - [x] `handle_persistent_rename`
+      - [x] `handle_persistent_coverage`
+      - [x] `handle_persistent_llm_context`
+      - [ ] `handle_persistent_rage`
+      - [x] `handle_persistent_ping`
+      - [x] `handle_persistent_log_command`
+      - [x] `handle_persistent_add_missing_imports_command`
+      - [x] `handle_persistent_organize_imports_command`
+      - [x] `handle_persistent_auto_close_jsx`
+      - [x] `handle_persistent_prepare_document_paste`
+      - [x] `handle_persistent_provide_document_paste_edits`
+      - [x] `handle_persistent_linked_editing_range`
+      - [x] `handle_persistent_rename_file_imports`
+      - [x] `handle_persistent_malformed_command`
+      - [x] `handle_persistent_unsupported`
+      - [x] `handle_persistent_text_document_diagnostics_lsp`
+      - [x] `handle_persistent_immediately_unsafe`
+      - [x] `handle_persistent_immediately`
+      - [ ] `enqueue_or_handle_ephemeral`
+      - [ ] `enqueue_persistent`
+      - [x] `handle_ephemeral_command_for_standalone` (Rust-only: standalone-mode ephemeral dispatch)
+      - [x] `handle_ephemeral_command_for_standalone_wrapped`
+      - [x] `classify_ephemeral_command`
+      - [x] `handle_ephemeral_immediate_command`
+      - [x] `standalone_response_needs_checked_dependencies_retry`
+    - [x] llmTypedContextProvider.ml → `flow_server_command_handler/src/llm_typed_context_provider.rs`
   - [ ] env/
-      - [x] collated_errors.ml → `flow_server_env/src/collated_errors.rs`
-          - [x] `error_state_timestamps` type → `ErrorStateTimestamps`
-          - [x] `empty_error_state_timestamps`
-          - [x] `t` type → `CollatedErrors`
-          - [x] `empty`
-          - [x] `clear_all`
-          - [x] `clear_merge`
-      - [x] dependency_info.ml → `flow_server_env/src/dependency_info.rs`
-          - [x] `debug_to_string`
-          - [x] `implementation_dependency_graph`
-          - [x] `of_map`
-          - [x] `sig_dependency_graph`
-          - [x] `update`
-      - [x] serverEnv.ml → `flow_server_env/src/server_env.rs`
-          - [x] `genv` type → `Genv`
-          - [x] `errors` type → `Errors`
-          - [x] `env` type → `Env`
+    - [x] collated_errors.ml → `flow_server_env/src/collated_errors.rs`
+      - [x] `error_state_timestamps` type → `ErrorStateTimestamps`
+      - [x] `empty_error_state_timestamps`
+      - [x] `t` type → `CollatedErrors`
+      - [x] `empty`
+      - [x] `clear_all`
+      - [x] `clear_merge`
+    - [x] dependency_info.ml → `flow_server_env/src/dependency_info.rs`
+      - [x] `debug_to_string`
+      - [x] `implementation_dependency_graph`
+      - [x] `of_map`
+      - [x] `sig_dependency_graph`
+      - [x] `update`
+    - [x] serverEnv.ml → `flow_server_env/src/server_env.rs`
+      - [x] `genv` type → `Genv`
+      - [x] `errors` type → `Errors`
+      - [x] `env` type → `Env`
   - [x] error_collator/
-      - [x] errorCollator.ml → `flow_server_env/src/error_collator.rs`
-          - [x] `add_suppression_warnings` (private)
-          - [x] `collate_duplicate_providers` (private)
-          - [x] `update_local_collated_errors`
-          - [x] `update_collated_errors`
-          - [x] `get_with_separate_warnings` (internal 3-tuple version, private)
-          - [x] `type_error_stat` (private)
-          - [x] `error_resolution_stat` type → `ErrorResolutionStat`
-          - [x] `update_error_state_timestamps`
-          - [x] `get_without_suppressed`
-          - [x] `get`
-          - [x] `get_with_separate_warnings` (public 2-tuple version)
+    - [x] errorCollator.ml → `flow_server_env/src/error_collator.rs`
+      - [x] `add_suppression_warnings` (private)
+      - [x] `collate_duplicate_providers` (private)
+      - [x] `update_local_collated_errors`
+      - [x] `update_collated_errors`
+      - [x] `get_with_separate_warnings` (internal 3-tuple version, private)
+      - [x] `type_error_stat` (private)
+      - [x] `error_resolution_stat` type → `ErrorResolutionStat`
+      - [x] `update_error_state_timestamps`
+      - [x] `get_without_suppressed`
+      - [x] `get`
+      - [x] `get_with_separate_warnings` (public 2-tuple version)
   - [ ] file_watcher_spec/
-      - [x] file_watcher_spec.ml → `flow_server_file_watcher_spec/src/file_watcher_spec.rs`
+    - [x] file_watcher_spec.ml → `flow_server_file_watcher_spec/src/file_watcher_spec.rs`
   - [ ] monitor_listener/
-      - [x] serverMonitorListener.ml → `flow_server_env/src/server_monitor_listener.rs`
-      - [x] serverMonitorListenerState.ml → `flow_server_env/src/server_monitor_listener_state.rs`
-          - [x] `push_new_workload`
-          - [x] `push_new_parallelizable_workload`
-          - [x] `defer_parallelizable_workload`
-          - [x] `requeue_deferred_parallelizable_workloads`
-          - [x] `push_new_env_update`
-          - [x] `cancellation_requests`
-          - [x] `push_files_to_recheck`
-          - [x] `push_files_to_prioritize`
-          - [x] `push_files_to_force_focused_and_recheck`
-          - [x] `push_global_find_ref_request`
-          - [x] `push_lazy_init`
-          - [x] `push_dependencies_to_prioritize`
-          - [x] `push_after_reinit`
-          - [x] `pop_next_workload`
-          - [x] `pop_next_parallelizable_workload`
-          - [x] `update_env`
-          - [x] `recheck_fetch`
-          - [x] `requeue_workload`
-          - [x] `get_and_clear_recheck_workload`
-          - [x] `wait_for_recheck`
-          - [x] `wait_for_parallelizable_workload`
-          - [x] `wait_for_updates_for_recheck`
-          - [x] `wait_for_anything`
-      - [x] workloadStream.ml → `flow_server_env/src/workload_stream.rs`
-          - [x] `push`
-          - [x] `push_parallelizable`
-          - [x] `requeue_parallelizable`
-          - [x] `pop`
-          - [x] `pop_parallelizable`
-          - [x] `wait_for_workload`
-          - [x] `wait_for_parallelizable_workload`
+    - [x] serverMonitorListener.ml → `flow_server_env/src/server_monitor_listener.rs`
+    - [x] serverMonitorListenerState.ml → `flow_server_env/src/server_monitor_listener_state.rs`
+      - [x] `push_new_workload`
+      - [x] `push_new_parallelizable_workload`
+      - [x] `defer_parallelizable_workload`
+      - [x] `requeue_deferred_parallelizable_workloads`
+      - [x] `push_new_env_update`
+      - [x] `cancellation_requests`
+      - [x] `push_files_to_recheck`
+      - [x] `push_files_to_prioritize`
+      - [x] `push_files_to_force_focused_and_recheck`
+      - [x] `push_global_find_ref_request`
+      - [x] `push_lazy_init`
+      - [x] `push_dependencies_to_prioritize`
+      - [x] `push_after_reinit`
+      - [x] `pop_next_workload`
+      - [x] `pop_next_parallelizable_workload`
+      - [x] `update_env`
+      - [x] `recheck_fetch`
+      - [x] `requeue_workload`
+      - [x] `get_and_clear_recheck_workload`
+      - [x] `wait_for_recheck`
+      - [x] `wait_for_parallelizable_workload`
+      - [x] `wait_for_updates_for_recheck`
+      - [x] `wait_for_anything`
+    - [x] workloadStream.ml → `flow_server_env/src/workload_stream.rs`
+      - [x] `push`
+      - [x] `push_parallelizable`
+      - [x] `requeue_parallelizable`
+      - [x] `pop`
+      - [x] `pop_parallelizable`
+      - [x] `wait_for_workload`
+      - [x] `wait_for_parallelizable_workload`
   - [x] persistent_connection/
-      - [x] persistent_connection.ml → `flow_server_env/src/persistent_connection.rs`
-          - [x] `Client_config.client_toggle` type → `client_config::ClientToggle`
-          - [x] `Client_config.t` → `client_config::T`
-          - [x] `Client_config.rank_autoimports_by_usage`
-          - [x] `Client_config.suggest_autoimports`
-          - [x] `Client_config.show_suggest_ranking_info`
-          - [x] `t` type → `PersistentConnection`
-          - [x] `single_client` type → `SingleClient` / `SingleClientRef`
-          - [x] `empty`
-          - [x] `add_client`
-          - [x] `remove_client`
-          - [x] `add_client_to_clients`
-          - [x] `remove_client_from_clients`
-          - [x] `update_clients`
-          - [x] `send_lsp`
-          - [x] `send_start_recheck`
-          - [x] `send_end_recheck`
-          - [x] `send_response`
-          - [x] `send_errors_if_subscribed`
-          - [x] `subscribe_client`
-          - [x] `client_did_open`
-          - [x] `client_did_change`
-          - [x] `client_did_close`
-          - [x] `client_did_change_configuration`
-          - [x] `get_file`
-          - [x] `get_client`
-          - [x] `get_id`
-          - [x] `lsp_initialize_params`
-          - [x] `client_config`
-          - [x] `type_parse_artifacts_cache`
-          - [x] `autocomplete_artifacts_cache`
-          - [x] `clear_type_parse_artifacts_caches`
-          - [x] `push_outstanding_handler`
-          - [x] `pop_outstanding_handler`
-          - [x] `autocomplete_session`
-          - [x] `all_clients`
-          - [x] `pop_message`
-          - [x] `has_client`
-          - [x] `send_status`
-          - [x] `send_server_exit`
-          - [x] `send_telemetry`
+    - [x] persistent_connection.ml → `flow_server_env/src/persistent_connection.rs`
+      - [x] `Client_config.client_toggle` type → `client_config::ClientToggle`
+      - [x] `Client_config.t` → `client_config::T`
+      - [x] `Client_config.rank_autoimports_by_usage`
+      - [x] `Client_config.suggest_autoimports`
+      - [x] `Client_config.show_suggest_ranking_info`
+      - [x] `t` type → `PersistentConnection`
+      - [x] `single_client` type → `SingleClient` / `SingleClientRef`
+      - [x] `empty`
+      - [x] `add_client`
+      - [x] `remove_client`
+      - [x] `add_client_to_clients`
+      - [x] `remove_client_from_clients`
+      - [x] `update_clients`
+      - [x] `send_lsp`
+      - [x] `send_start_recheck`
+      - [x] `send_end_recheck`
+      - [x] `send_response`
+      - [x] `send_errors_if_subscribed`
+      - [x] `subscribe_client`
+      - [x] `client_did_open`
+      - [x] `client_did_change`
+      - [x] `client_did_close`
+      - [x] `client_did_change_configuration`
+      - [x] `get_file`
+      - [x] `get_client`
+      - [x] `get_id`
+      - [x] `lsp_initialize_params`
+      - [x] `client_config`
+      - [x] `type_parse_artifacts_cache`
+      - [x] `autocomplete_artifacts_cache`
+      - [x] `clear_type_parse_artifacts_caches`
+      - [x] `push_outstanding_handler`
+      - [x] `pop_outstanding_handler`
+      - [x] `autocomplete_session`
+      - [x] `all_clients`
+      - [x] `pop_message`
+      - [x] `has_client`
+      - [x] `send_status`
+      - [x] `send_server_exit`
+      - [x] `send_telemetry`
   - [x] protocol/
-      - [x] lspProt.ml → `flow_monitor_rpc/src/lsp_prot.rs` (Flow-specific LSP extension types; standard LSP types use `lsp_types` crate)
-          - [x] `client_id` type → `ClientId`
-          - [x] `error_kind` type → `ErrorKind`
-          - [x] `error_info` type → `ErrorInfo`
-          - [x] `metadata` type → `Metadata`
-          - [x] `empty_metadata`
-          - [x] `request` type → `Request`
-          - [x] `request_with_metadata` type → `RequestWithMetadata`
-          - [x] `errors_reason` type → `ErrorsReason`
-          - [x] `error_response_kind` type → `ErrorResponseKind`
-          - [x] `live_errors_failure` type → `LiveErrorsFailure`
-          - [x] `live_errors_response` type → `LiveErrorsResponse`
-          - [x] `response` type → `Response`
-          - [x] `response_with_metadata` type → `ResponseWithMetadata`
-          - [x] `recheck_stats` type → `RecheckStats`
-          - [x] `telemetry_from_server` type → `TelemetryFromServer`
-          - [x] `notification_from_server` type → `NotificationFromServer`
-          - [x] `message_from_server` type → `MessageFromServer`
-          - [x] `string_of_request`
-          - [x] `string_of_request_with_metadata`
-          - [x] `json_of_request`
-          - [x] `string_of_response`
-          - [x] `message_from_server_mapper` type → `MessageFromServerMapper`
-          - [x] `default_message_from_server_mapper`
-      - [x] monitorProt.ml → `flow_monitor_rpc/src/monitor_prot.rs`
-          - [x] `request_id` type → `RequestId`
-          - [x] `file_watcher_metadata` type → `FileWatcherMetadata`
-          - [x] `empty_file_watcher_metadata`
-          - [x] `merge_file_watcher_metadata`
-          - [x] `please_die_reason` type → `PleaseDieReason`
-          - [x] `monitor_to_server_message` type → `MonitorToServerMessage`
-          - [x] `server_to_monitor_message` type → `ServerToMonitorMessage`
-          - [x] `monitor_to_client_message` type → `MonitorToClientMessage`
-      - [x] serverCommandWithContext.ml → `flow_monitor_rpc/src/server_command_with_context.rs`
-          - [x] `t` type → `ServerCommandWithContext`
-      - [x] serverProt.ml → `flow_monitor_rpc/src/server_prot.rs`
-          - [x] `Infer_type_options`
-          - [x] `Inlay_hint_options`
-          - [x] `Type_of_name_options`
-          - [x] `Llm_context_options`
-          - [x] `Code_action`
-          - [x] `Request.command`
-          - [x] `Request.to_string`
-          - [x] `Response.lazy_stats`
-          - [x] `Response.func_param_result`
-          - [x] `Response.func_details_result`
-          - [x] `Response.Completion`
-          - [x] `Response.InferTypeOfName`
-          - [x] `Response.InferType`
-          - [x] `Response.InlayHint`
-          - [x] `Response.status_response`
-          - [x] `Response.response`
-          - [x] `Response.to_string`
-      - [x] socketHandshake.ml → `flow_server_env/src/socket_handshake.rs`
-      - [x] (Rust-only) `flow_server_env/src/server_socket_rpc.rs` — JSON/TCP wire protocol for server requests/responses in standalone mode
-      - [x] (Rust-only) `flow_server_env/src/lsp_connect_params.rs` — shared connect params and persistent client handshake builder for LSP
+    - [x] lspProt.ml → `flow_monitor_rpc/src/lsp_prot.rs` (Flow-specific LSP extension types; standard LSP types use `lsp_types` crate)
+      - [x] `client_id` type → `ClientId`
+      - [x] `error_kind` type → `ErrorKind`
+      - [x] `error_info` type → `ErrorInfo`
+      - [x] `metadata` type → `Metadata`
+      - [x] `empty_metadata`
+      - [x] `request` type → `Request`
+      - [x] `request_with_metadata` type → `RequestWithMetadata`
+      - [x] `errors_reason` type → `ErrorsReason`
+      - [x] `error_response_kind` type → `ErrorResponseKind`
+      - [x] `live_errors_failure` type → `LiveErrorsFailure`
+      - [x] `live_errors_response` type → `LiveErrorsResponse`
+      - [x] `response` type → `Response`
+      - [x] `response_with_metadata` type → `ResponseWithMetadata`
+      - [x] `recheck_stats` type → `RecheckStats`
+      - [x] `telemetry_from_server` type → `TelemetryFromServer`
+      - [x] `notification_from_server` type → `NotificationFromServer`
+      - [x] `message_from_server` type → `MessageFromServer`
+      - [x] `string_of_request`
+      - [x] `string_of_request_with_metadata`
+      - [x] `json_of_request`
+      - [x] `string_of_response`
+    - [x] `message_from_server_mapper` type → `MessageFromServerMapper`
+      - [x] `default_message_from_server_mapper`
+    - [x] monitorProt.ml → `flow_monitor_rpc/src/monitor_prot.rs`
+      - [x] `request_id` type → `RequestId`
+      - [x] `file_watcher_metadata` type → `FileWatcherMetadata`
+      - [x] `empty_file_watcher_metadata`
+      - [x] `merge_file_watcher_metadata`
+      - [x] `please_die_reason` type → `PleaseDieReason`
+      - [x] `monitor_to_server_message` type → `MonitorToServerMessage`
+      - [x] `server_to_monitor_message` type → `ServerToMonitorMessage`
+      - [x] `monitor_to_client_message` type → `MonitorToClientMessage`
+    - [x] serverCommandWithContext.ml → `flow_monitor_rpc/src/server_command_with_context.rs`
+      - [x] `t` type → `ServerCommandWithContext`
+    - [x] serverProt.ml → `flow_monitor_rpc/src/server_prot.rs`
+      - [x] `Infer_type_options`
+      - [x] `Inlay_hint_options`
+      - [x] `Type_of_name_options`
+      - [x] `Llm_context_options`
+      - [x] `Code_action`
+      - [x] `Request.command`
+      - [x] `Request.to_string`
+      - [x] `Response.lazy_stats`
+      - [x] `Response.func_param_result`
+      - [x] `Response.func_details_result`
+      - [x] `Response.Completion`
+      - [x] `Response.InferTypeOfName`
+      - [x] `Response.InferType`
+      - [x] `Response.InlayHint`
+      - [x] `Response.status_response`
+      - [x] `Response.response`
+      - [x] `Response.to_string`
+    - [x] socketHandshake.ml → `flow_server_env/src/socket_handshake.rs`
+    - [x] (Rust-only) `flow_server_env/src/server_socket_rpc.rs` — JSON/TCP wire protocol for server requests/responses in standalone mode
+    - [x] (Rust-only) `flow_server_env/src/lsp_connect_params.rs` — shared connect params and persistent client handshake builder for LSP
   - [ ] rechecker/
-      - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
-      - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (async cancellation and parallelizable-workload machinery are still stubbed/simplified)
-          - [ ] `Parallelizable_workload_loop` module (Lwt `pick`/cancellation loop is comment-only; no Rust async runtime equivalent is wired up yet)
-          - [ ] `start_parallelizable_workloads` (returns a no-op stopper because the parallelizable workload loop is unported)
-          - [x] `get_lazy_stats`
-          - [x] `process_updates`
-          - [x] `send_start_recheck`
-          - [x] `send_end_recheck`
-          - [ ] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml, and canceled-path semantics are still simplified)
-          - [ ] `run_but_cancel_on_file_changes` (no race against file-watcher updates; it just runs `f()` synchronously)
-          - [x] `recheck_outcome` type → `RecheckOutcome`
-          - [ ] `recheck_single` (restart-after-cancel path is still partial because cancellation/requeue/`SharedMem.collect_slice` behavior depends on the unported async cancellation machinery)
-          - [x] `recheck_loop`
+    - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
+    - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (async cancellation and parallelizable-workload machinery are still stubbed/simplified)
+      - [ ] `Parallelizable_workload_loop` module (Lwt `pick`/cancellation loop is comment-only; no Rust async runtime equivalent is wired up yet)
+      - [ ] `start_parallelizable_workloads` (returns a no-op stopper because the parallelizable workload loop is unported)
+      - [x] `get_lazy_stats`
+      - [x] `process_updates`
+      - [x] `send_start_recheck`
+      - [x] `send_end_recheck`
+      - [ ] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml, and canceled-path semantics are still simplified)
+      - [ ] `run_but_cancel_on_file_changes` (no race against file-watcher updates; it just runs `f()` synchronously)
+      - [x] `recheck_outcome` type → `RecheckOutcome`
+      - [ ] `recheck_single` (restart-after-cancel path is still partial because cancellation/requeue/`SharedMem.collect_slice` behavior depends on the unported async cancellation machinery)
+      - [x] `recheck_loop`
   - [x] server_files/
-      - [x] server_files_js.ml → `flow_server_files/src/server_files_js.rs` (14/14 functions, 100% complete)
-          - [x] `default_flowconfig_name`
-          - [x] `default_temp_dir`
-          - [x] `add_dir_sep`
-          - [x] `mk_root`
-          - [x] `digest_root_part`
-          - [x] `file_of_root`
-          - [x] `config_file`
-          - [x] `max_root_part_len`
-          - [x] `log_file`
-          - [x] `dfind_log_file`
-          - [x] `monitor_log_file`
-          - [x] `lock_file`
-          - [x] `pids_file`
-          - [x] `recheck_stats_file`
-          - [x] `socket_file`
-          - [x] `legacy2_socket_file`
-          - [x] `legacy1_socket_file`
+    - [x] server_files_js.ml → `flow_server_files/src/server_files_js.rs` (14/14 functions, 100% complete)
+      - [x] `default_flowconfig_name`
+      - [x] `default_temp_dir`
+      - [x] `add_dir_sep`
+      - [x] `mk_root`
+      - [x] `digest_root_part`
+      - [x] `file_of_root`
+      - [x] `config_file`
+      - [x] `max_root_part_len`
+      - [x] `log_file`
+      - [x] `dfind_log_file`
+      - [x] `monitor_log_file`
+      - [x] `lock_file`
+      - [x] `pids_file`
+      - [x] `recheck_stats_file`
+      - [x] `socket_file`
+      - [x] `legacy2_socket_file`
+      - [x] `legacy1_socket_file`
   - [ ] server_utils/
-      - [x] file_input.ml → `flow_server_utils/src/file_input.rs`
-          - [x] `FileInput` enum
-          - [x] `path_of_file_input`
-          - [x] `filename_of_file_input`
-          - [x] `content_of_file_input_unsafe`
-          - [x] `content_of_file_input`
+    - [x] file_input.ml → `flow_server_utils/src/file_input.rs`
+      - [x] `FileInput` enum
+      - [x] `path_of_file_input`
+      - [x] `filename_of_file_input`
+      - [x] `content_of_file_input_unsafe`
+      - [x] `content_of_file_input`
   - [ ] watchman_expression_terms/
-      - [x] watchman_expression_terms.ml → `flow_server_watchman_expression_terms/src/lib.rs`
-    - [ ] server.ml → `flow_server/src/server.rs` (daemon/monitor transport, background Lwt loops, and some exception handling paths are still simplified)
-        - [x] `sample_init_memory`
-        - [ ] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
-        - [x] `string_of_saved_state_fetcher`
-        - [ ] `init` (`focus_targets` is ignored and failure paths use `expect`/panic instead of the OCaml Lwt/exception flow)
-        - [x] `idle_logging_loop`
-        - [x] `gc_loop`
-        - [ ] `serve` (uses detached threads plus blocking waits instead of `Lwt.pick`/cancellation between idle work and monitor events)
-        - [x] `on_compact`
-        - [x] `create_program_init`
-        - [x] `detect_linux_distro`
-        - [x] `check_supported_operating_system`
-        - [ ] `run` (monitor IPC is disabled and there is no parallel `ServerMonitorListener.listen_for_messages` thread)
-        - [ ] `exit_msg_of_exception` (uses display text rather than OCaml's full backtrace string formatting)
-        - [ ] `run_from_daemonize` (panic-string matching approximates the OCaml typed exception handling/exits)
-        - [ ] `check_once` (`format_errors` callback wiring and `focus_targets` behavior are still simplified away)
-        - [ ] `daemonize` (delegates to `server_daemon::daemonize`, which still runs in-process instead of `Daemon.spawn`)
-    - [x] serverEnvBuild.ml → `flow_server/src/server_env_build.rs`
-    - [x] serverWorker.ml → `flow_server/src/server_worker.rs`
-    - [ ] server_daemon.ml → `flow_server/src/server_daemon.rs` (daemon spawn/fork behavior is still replaced with an in-process call)
-        - [x] `Server_files` module → `flow_server_files::server_files_js`
-        - [x] `args` type → `Args`
-        - [x] `entry_point` type → `EntryPoint`
-        - [x] `open_log_file`
-        - [x] `new_entry_point`
-        - [x] `register_entry_point`
-        - [ ] `daemonize` (calls the entry point directly in-process; no `Daemon.spawn`, fork/exec, or detached server master process)
+    - [x] watchman_expression_terms.ml → `flow_server_watchman_expression_terms/src/lib.rs`
+  - [ ] server.ml → `flow_server/src/server.rs` (daemon/monitor transport, background Lwt loops, and some exception handling paths are still simplified)
+    - [x] `sample_init_memory`
+    - [ ] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
+    - [x] `string_of_saved_state_fetcher`
+    - [ ] `init` (`focus_targets` is ignored and failure paths use `expect`/panic instead of the OCaml Lwt/exception flow)
+    - [x] `idle_logging_loop`
+    - [x] `gc_loop`
+    - [ ] `serve` (uses detached threads plus blocking waits instead of `Lwt.pick`/cancellation between idle work and monitor events)
+    - [x] `on_compact`
+    - [x] `create_program_init`
+    - [x] `detect_linux_distro`
+    - [x] `check_supported_operating_system`
+    - [ ] `run` (monitor IPC is disabled and there is no parallel `ServerMonitorListener.listen_for_messages` thread)
+    - [ ] `exit_msg_of_exception` (uses display text rather than OCaml's full backtrace string formatting)
+    - [ ] `run_from_daemonize` (panic-string matching approximates the OCaml typed exception handling/exits)
+    - [ ] `check_once` (`format_errors` callback wiring and `focus_targets` behavior are still simplified away)
+    - [ ] `daemonize` (delegates to `server_daemon::daemonize`, which still runs in-process instead of `Daemon.spawn`)
+  - [x] serverEnvBuild.ml → `flow_server/src/server_env_build.rs`
+  - [x] serverWorker.ml → `flow_server/src/server_worker.rs`
+  - [ ] server_daemon.ml → `flow_server/src/server_daemon.rs` (daemon spawn/fork behavior is still replaced with an in-process call)
+    - [x] `Server_files` module → `flow_server_files::server_files_js`
+    - [x] `args` type → `Args`
+    - [x] `entry_point` type → `EntryPoint`
+    - [x] `open_log_file`
+    - [x] `new_entry_point`
+    - [x] `register_entry_point`
+    - [ ] `daemonize` (calls the entry point directly in-process; no `Daemon.spawn`, fork/exec, or detached server master process)
 - [ ] services/
   - [x] autocomplete/ → `flow_services_autocomplete`
     - [x] __tests__/
-        - [x] autocomplete_sigil_tests.ml → `flow_services_autocomplete/src/autocomplete_sigil_tests.rs`
-        - [x] autocomplete_tests.ml → irrelevant (OUnit runner)
-      - [x] autocompleteService_js.ml → `flow_services_autocomplete/src/autocomplete_service_js.rs`
-      - [x] autocomplete_js.ml → `flow_services_autocomplete/src/autocomplete_js.rs`
-      - [x] autocomplete_sigil.ml → `flow_services_autocomplete/src/autocomplete_sigil.rs`
-      - [x] find_method.ml → `flow_services_autocomplete/src/find_method.rs`
-      - [x] keywords.ml → `flow_services_autocomplete/src/keywords.rs`
+      - [x] autocomplete_sigil_tests.ml → `flow_services_autocomplete/src/autocomplete_sigil_tests.rs`
+      - [x] autocomplete_tests.ml → irrelevant (OUnit runner)
+    - [x] autocompleteService_js.ml → `flow_services_autocomplete/src/autocomplete_service_js.rs`
+    - [x] autocomplete_js.ml → `flow_services_autocomplete/src/autocomplete_js.rs`
+    - [x] autocomplete_sigil.ml → `flow_services_autocomplete/src/autocomplete_sigil.rs`
+    - [x] find_method.ml → `flow_services_autocomplete/src/find_method.rs`
+    - [x] keywords.ml → `flow_services_autocomplete/src/keywords.rs`
   - [x] code_action/ → `flow_services_code_action`
     - [x] __tests__/
-        - [x] autofix_imports_tests.ml → `flow_services_code_action/src/autofix_imports_tests.rs`
-        - [x] autofix_type_to_value_import_tests.ml → `flow_services_code_action/src/autofix_type_to_value_import_tests.rs`
-        - [x] code_action_service_tests.ml → `flow_services_code_action/src/code_action_service_tests.rs`
-        - [x] code_action_tests.ml → irrelevant (OUnit runner, test discovery automatic in Rust)
-        - [x] insert_type_utils_tests.ml → `flow_services_code_action/src/insert_type_utils_tests.rs`
-        - [x] refactor_extract_tests.ml → `flow_services_code_action/src/refactor_extract_tests.rs`
-        - [x] refactor_extract_utils_tests.ml → `flow_services_code_action/src/refactor_extract_utils_tests.rs`
-        - [x] validation_tests.ml → `flow_services_code_action/src/validation_tests.rs`
-      - [x] ast_extraction_utils.ml → `flow_services_code_action/src/ast_extraction_utils.rs` (has Rust-specific helper functions for OCaml class-based AST visitors)
-      - [x] autofix_casting_syntax.ml → `flow_services_code_action/src/autofix_casting_syntax.rs`
-      - [x] autofix_class_member_access.ml → `flow_services_code_action/src/autofix_class_member_access.rs`
-      - [x] autofix_enum_member_name.ml → `flow_services_code_action/src/autofix_enum_member_name.rs`
-      - [x] autofix_exports.ml → `flow_services_code_action/src/autofix_exports.rs`
-      - [x] autofix_imports.ml → `flow_services_code_action/src/autofix_imports.rs`
-      - [x] autofix_interface.ml → `flow_services_code_action/src/autofix_interface.rs`
-      - [x] autofix_legacy_flow_syntax.ml → `flow_services_code_action/src/autofix_legacy_flow_syntax.rs`
-      - [x] autofix_match_syntax.ml → `flow_services_code_action/src/autofix_match_syntax.rs`
-      - [x] autofix_method.ml → `flow_services_code_action/src/autofix_method.rs`
-      - [x] autofix_missing_local_annots.ml → `flow_services_code_action/src/autofix_missing_local_annots.rs`
-      - [x] autofix_new_to_record.ml → `flow_services_code_action/src/autofix_new_to_record.rs`
-      - [x] autofix_object_to_record.ml → `flow_services_code_action/src/autofix_object_to_record.rs`
-      - [x] autofix_optional_chaining.ml → `flow_services_code_action/src/autofix_optional_chaining.rs`
-      - [x] autofix_prop_typo.ml → `flow_services_code_action/src/autofix_prop_typo.rs`
-      - [x] autofix_record_declaration.ml → `flow_services_code_action/src/autofix_record_declaration.rs`
-      - [x] autofix_renders_variant.ml → `flow_services_code_action/src/autofix_renders_variant.rs`
-      - [x] autofix_replace_type.ml → `flow_services_code_action/src/autofix_replace_type.rs`
-      - [x] autofix_ts_syntax.ml → `flow_services_code_action/src/autofix_ts_syntax.rs`
-      - [x] autofix_type_name.ml → `flow_services_code_action/src/autofix_type_name.rs`
-      - [x] autofix_type_to_value_import.ml → `flow_services_code_action/src/autofix_type_to_value_import.rs`
-      - [x] autofix_unused_promise.ml → `flow_services_code_action/src/autofix_unused_promise.rs`
-      - [x] code_action_service.ml → `flow_services_code_action/src/code_action_service.rs`
-      - [x] code_action_text_edits.ml → `flow_services_code_action/src/code_action_text_edits.rs` (shared copy in `flow_services_autocomplete/src/code_action_text_edits.rs`)
-      - [x] code_action_utils.ml → `flow_services_code_action/src/code_action_utils.rs`
-      - [x] convert_type_to_readonly_form.ml → `flow_services_code_action/src/convert_type_to_readonly_form.rs`
-      - [x] document_paste.ml → `flow_services_code_action/src/document_paste.rs`
-      - [x] insert_inferred_render_type.ml → `flow_services_code_action/src/insert_inferred_render_type.rs`
-      - [x] insert_type.ml → `flow_services_code_action/src/insert_type.rs`
-      - [x] insert_type_imports.ml → `flow_services_code_action/src/insert_type_imports.rs` (uses named ConvertTyVisitor struct with stored error state instead of OCaml inline visitor object)
-      - [x] insert_type_utils.ml → `flow_services_code_action/src/insert_type_utils.rs`
-      - [x] lsp_import_edits.ml → `flow_services_autocomplete/src/lsp_import_edits.rs` (shared helper used by autocomplete)
-      - [x] lsp_module_system_info.ml → `flow_services_code_action/src/lsp_module_system_info.rs` (shared copy in `flow_services_autocomplete/src/module_system_info.rs`)
-      - [x] refactor_add_jsx_props.ml → `flow_services_code_action/src/refactor_add_jsx_props.rs`
-      - [x] refactor_arrow_functions.ml → `flow_services_code_action/src/refactor_arrow_functions.rs`
-      - [x] refactor_extract.ml → `flow_services_code_action/src/refactor_extract.rs`
-      - [x] refactor_extract_utils.ml → `flow_services_code_action/src/refactor_extract_utils.rs`
-      - [x] refactor_match_discriminant.ml → `flow_services_code_action/src/refactor_match_discriminant.rs`
-      - [x] refactor_switch_to_match_statement.ml → `flow_services_code_action/src/refactor_switch_to_match_statement.rs`
-      - [x] stub_unbound_name.ml → `flow_services_code_action/src/stub_unbound_name.rs`
+      - [x] autofix_imports_tests.ml → `flow_services_code_action/src/autofix_imports_tests.rs`
+      - [x] autofix_type_to_value_import_tests.ml → `flow_services_code_action/src/autofix_type_to_value_import_tests.rs`
+      - [x] code_action_service_tests.ml → `flow_services_code_action/src/code_action_service_tests.rs`
+      - [x] code_action_tests.ml → irrelevant (OUnit runner, test discovery automatic in Rust)
+      - [x] insert_type_utils_tests.ml → `flow_services_code_action/src/insert_type_utils_tests.rs`
+      - [x] refactor_extract_tests.ml → `flow_services_code_action/src/refactor_extract_tests.rs`
+      - [x] refactor_extract_utils_tests.ml → `flow_services_code_action/src/refactor_extract_utils_tests.rs`
+      - [x] validation_tests.ml → `flow_services_code_action/src/validation_tests.rs`
+    - [x] ast_extraction_utils.ml → `flow_services_code_action/src/ast_extraction_utils.rs` (has Rust-specific helper functions for OCaml class-based AST visitors)
+    - [x] autofix_casting_syntax.ml → `flow_services_code_action/src/autofix_casting_syntax.rs`
+    - [x] autofix_class_member_access.ml → `flow_services_code_action/src/autofix_class_member_access.rs`
+    - [x] autofix_enum_member_name.ml → `flow_services_code_action/src/autofix_enum_member_name.rs`
+    - [x] autofix_exports.ml → `flow_services_code_action/src/autofix_exports.rs`
+    - [x] autofix_imports.ml → `flow_services_code_action/src/autofix_imports.rs`
+    - [x] autofix_interface.ml → `flow_services_code_action/src/autofix_interface.rs`
+    - [x] autofix_legacy_flow_syntax.ml → `flow_services_code_action/src/autofix_legacy_flow_syntax.rs`
+    - [x] autofix_match_syntax.ml → `flow_services_code_action/src/autofix_match_syntax.rs`
+    - [x] autofix_method.ml → `flow_services_code_action/src/autofix_method.rs`
+    - [x] autofix_missing_local_annots.ml → `flow_services_code_action/src/autofix_missing_local_annots.rs`
+    - [x] autofix_new_to_record.ml → `flow_services_code_action/src/autofix_new_to_record.rs`
+    - [x] autofix_object_to_record.ml → `flow_services_code_action/src/autofix_object_to_record.rs`
+    - [x] autofix_optional_chaining.ml → `flow_services_code_action/src/autofix_optional_chaining.rs`
+    - [x] autofix_prop_typo.ml → `flow_services_code_action/src/autofix_prop_typo.rs`
+    - [x] autofix_record_declaration.ml → `flow_services_code_action/src/autofix_record_declaration.rs`
+    - [x] autofix_renders_variant.ml → `flow_services_code_action/src/autofix_renders_variant.rs`
+    - [x] autofix_replace_type.ml → `flow_services_code_action/src/autofix_replace_type.rs`
+    - [x] autofix_ts_syntax.ml → `flow_services_code_action/src/autofix_ts_syntax.rs`
+    - [x] autofix_type_name.ml → `flow_services_code_action/src/autofix_type_name.rs`
+    - [x] autofix_type_to_value_import.ml → `flow_services_code_action/src/autofix_type_to_value_import.rs`
+    - [x] autofix_unused_promise.ml → `flow_services_code_action/src/autofix_unused_promise.rs`
+    - [x] code_action_service.ml → `flow_services_code_action/src/code_action_service.rs`
+    - [x] code_action_text_edits.ml → `flow_services_code_action/src/code_action_text_edits.rs` (shared copy in `flow_services_autocomplete/src/code_action_text_edits.rs`)
+    - [x] code_action_utils.ml → `flow_services_code_action/src/code_action_utils.rs`
+    - [x] convert_type_to_readonly_form.ml → `flow_services_code_action/src/convert_type_to_readonly_form.rs`
+    - [x] document_paste.ml → `flow_services_code_action/src/document_paste.rs`
+    - [x] insert_inferred_render_type.ml → `flow_services_code_action/src/insert_inferred_render_type.rs`
+    - [x] insert_type.ml → `flow_services_code_action/src/insert_type.rs`
+    - [x] insert_type_imports.ml → `flow_services_code_action/src/insert_type_imports.rs` (uses named ConvertTyVisitor struct with stored error state instead of OCaml inline visitor object)
+    - [x] insert_type_utils.ml → `flow_services_code_action/src/insert_type_utils.rs`
+    - [x] lsp_import_edits.ml → `flow_services_autocomplete/src/lsp_import_edits.rs` (shared helper used by autocomplete)
+    - [x] lsp_module_system_info.ml → `flow_services_code_action/src/lsp_module_system_info.rs` (shared copy in `flow_services_autocomplete/src/module_system_info.rs`)
+    - [x] refactor_add_jsx_props.ml → `flow_services_code_action/src/refactor_add_jsx_props.rs`
+    - [x] refactor_arrow_functions.ml → `flow_services_code_action/src/refactor_arrow_functions.rs`
+    - [x] refactor_extract.ml → `flow_services_code_action/src/refactor_extract.rs`
+    - [x] refactor_extract_utils.ml → `flow_services_code_action/src/refactor_extract_utils.rs`
+    - [x] refactor_match_discriminant.ml → `flow_services_code_action/src/refactor_match_discriminant.rs`
+    - [x] refactor_switch_to_match_statement.ml → `flow_services_code_action/src/refactor_switch_to_match_statement.rs`
+    - [x] stub_unbound_name.ml → `flow_services_code_action/src/stub_unbound_name.rs`
   - [x] coverage/
-      - [x] coverage.ml → `flow_services_coverage/src/lib.rs` (fully ported)
-          - [x] `op_mode` type → `OpMode`
-          - [x] `unit_of_op`
-          - [x] `Kind` module → `Kind` enum with methods
-          - [x] `file_coverage` type → `FileCoverage`
-          - [x] `initial_coverage`
-          - [x] `tvar_status` type → `TvarStatus`
-          - [x] `visitor` object → `CoverageVisitor` struct with methods
-          - [x] `coverage_folder` class → `CoverageFolder` struct implementing `AstVisitor`
-          - [x] `coverage_fold_tast`
-          - [x] `covered_types`
-          - [x] `file_coverage` function
+    - [x] coverage.ml → `flow_services_coverage/src/lib.rs` (fully ported)
+      - [x] `op_mode` type → `OpMode`
+      - [x] `unit_of_op`
+      - [x] `Kind` module → `Kind` enum with methods
+      - [x] `file_coverage` type → `FileCoverage`
+      - [x] `initial_coverage`
+      - [x] `tvar_status` type → `TvarStatus`
+      - [x] `visitor` object → `CoverageVisitor` struct with methods
+      - [x] `coverage_folder` class → `CoverageFolder` struct implementing `AstVisitor`
+      - [x] `coverage_fold_tast`
+      - [x] `covered_types`
+      - [x] `file_coverage` function
   - [x] export/ → `flow_services_export`
     - [x] __tests__/
-        - [x] export_service_tests.ml → `flow_services_export/src/export_service_tests.rs`
-        - [x] export_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
+      - [x] export_service_tests.ml → `flow_services_export/src/export_service_tests.rs`
+      - [x] export_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
     - [x] index/
       - [x] __tests__/
-          - [x] export_index_tests.ml → `flow_services_export/src/export_index_tests.rs`
-          - [x] index_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
-        - [x] export_index.ml → `flow_services_export_index/src/export_index.rs`
+        - [x] export_index_tests.ml → `flow_services_export/src/export_index_tests.rs`
+        - [x] index_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
+      - [x] export_index.ml → `flow_services_export_index/src/export_index.rs`
     - [x] search/
       - [x] __tests__/
-          - [x] export_search_tests.ml → `flow_services_export/src/export_search_tests.rs`
-          - [x] search_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
+        - [x] export_search_tests.ml → `flow_services_export/src/export_search_tests.rs`
+        - [x] search_tests.ml → N/A (OUnit2 runner, handled by `#[test]`)
       - [x] types/
-          - [x] export_search_types.ml → `flow_services_export/src/export_search_types.rs`
-        - [x] export_search.ml → `flow_services_export/src/export_search.rs`
-      - [x] export_service.ml → `flow_services_export/src/export_service.rs`
+        - [x] export_search_types.ml → `flow_services_export/src/export_search_types.rs`
+      - [x] export_search.ml → `flow_services_export/src/export_search.rs`
+    - [x] export_service.ml → `flow_services_export/src/export_service.rs`
   - [x] get_def/ → `flow_services_get_def`
     - [x] types/
-        - [x] get_def_types.ml → `flow_services_get_def/src/get_def_types.rs`
-          - [x] `single_property_def_info` → `SinglePropertyDefInfo`
-          - [x] `property_def_info` → `PropertyDefInfo`
-          - [x] `def_info` → `DefInfo`
-          - [x] `Purpose.t` → `Purpose`
-      - [x] findRefsUtils.ml → `flow_services_get_def/src/find_refs_utils.rs`
-          - [x] `AstInfo` type alias
-      - [x] getDefUtils.ml → `flow_services_get_def/src/get_def_utils.rs`
-          - [x] `get_object_literal_loc`
-          - [x] `DefKind` type
-          - [x] `map_def_kind_loc`
-          - [x] `ObjectKeyLiteralSearcher` (merged into `get_def_utils`)
-          - [x] `loc_of_single_def_info`
-          - [x] `all_locs_of_ordinary_property_def_info`
-          - [x] `all_locs_of_def_info`
-          - [x] `DefLoc` type
-          - [x] `debug_string_of_def_loc`
-          - [x] `extract_def_loc`
-          - [x] `get_property_def_info`
-          - [x] `get_def_info`
-      - [x] getDef_js.ml → `flow_services_get_def/src/get_def_js.rs`
-          - [x] `Get_def_result.t` → `GetDefResult`
-          - [x] `extract_member_def`
-          - [x] `process_request`
-          - [x] `get_def` (with `loop` inner function → `loop_fn`)
-      - [x] get_def_process_location.ml → `flow_services_get_def/src/get_def_process_location.rs`
-          - [x] `InternalError` type
-          - [x] `ProcessLocationResult` type (was `result` in OCaml)
-          - [x] `process_type_request`
-          - [x] `Searcher` class hierarchy → `Searcher<T,C>` + `SearcherCallback<T>` trait
-          - [x] `TypedAstSearcherCallback` (was `typed_ast_searcher` class)
-          - [x] `OnDemandSearcherCallback` (was `on_demand_searcher` class)
-          - [x] `ImportSearcher` / `ExportSearcher` (AstVisitor impls)
-          - [x] `process_location`
-      - [x] get_def_request.ml → `flow_services_get_def/src/get_def_request.rs`
-          - [x] `MemberInfo` type
-          - [x] `GetDefRequest` type (was `t` in OCaml)
-      - [x] object_key_visitor.ml → `flow_services_get_def/src/object_key_visitor.rs`
-          - [x] `ObjectKeyVisitorCallback` trait (was class with virtual method)
-          - [x] `ObjectKeyVisitor` struct with AstVisitor
-          - [x] `visit`
+      - [x] get_def_types.ml → `flow_services_get_def/src/get_def_types.rs`
+        - [x] `single_property_def_info` → `SinglePropertyDefInfo`
+        - [x] `property_def_info` → `PropertyDefInfo`
+        - [x] `def_info` → `DefInfo`
+        - [x] `Purpose.t` → `Purpose`
+    - [x] findRefsUtils.ml → `flow_services_get_def/src/find_refs_utils.rs`
+      - [x] `AstInfo` type alias
+    - [x] getDefUtils.ml → `flow_services_get_def/src/get_def_utils.rs`
+      - [x] `get_object_literal_loc`
+      - [x] `DefKind` type
+      - [x] `map_def_kind_loc`
+      - [x] `ObjectKeyLiteralSearcher` (merged into `get_def_utils`)
+      - [x] `loc_of_single_def_info`
+      - [x] `all_locs_of_ordinary_property_def_info`
+      - [x] `all_locs_of_def_info`
+      - [x] `DefLoc` type
+      - [x] `debug_string_of_def_loc`
+      - [x] `extract_def_loc`
+      - [x] `get_property_def_info`
+      - [x] `get_def_info`
+    - [x] getDef_js.ml → `flow_services_get_def/src/get_def_js.rs`
+      - [x] `Get_def_result.t` → `GetDefResult`
+      - [x] `extract_member_def`
+      - [x] `process_request`
+      - [x] `get_def` (with `loop` inner function → `loop_fn`)
+    - [x] get_def_process_location.ml → `flow_services_get_def/src/get_def_process_location.rs`
+      - [x] `InternalError` type
+      - [x] `ProcessLocationResult` type (was `result` in OCaml)
+      - [x] `process_type_request`
+      - [x] `Searcher` class hierarchy → `Searcher<T,C>` + `SearcherCallback<T>` trait
+      - [x] `TypedAstSearcherCallback` (was `typed_ast_searcher` class)
+      - [x] `OnDemandSearcherCallback` (was `on_demand_searcher` class)
+      - [x] `ImportSearcher` / `ExportSearcher` (AstVisitor impls)
+      - [x] `process_location`
+    - [x] get_def_request.ml → `flow_services_get_def/src/get_def_request.rs`
+      - [x] `MemberInfo` type
+      - [x] `GetDefRequest` type (was `t` in OCaml)
+    - [x] object_key_visitor.ml → `flow_services_get_def/src/object_key_visitor.rs`
+      - [x] `ObjectKeyVisitorCallback` trait (was class with virtual method)
+      - [x] `ObjectKeyVisitor` struct with AstVisitor
+      - [x] `visit`
   - [ ] inference/
     - [x] __tests__/
-        - [x] dep_graph_test_utils.ml → `flow_services_inference/src/dep_graph_test_utils.rs`
-        - [x] inference_tests.ml → `N/A` (just an entrypoint)
-        - [x] pure_dep_graph_operations_test.ml → `flow_services_inference/src/pure_dep_graph_operations_test.rs`
-        - [x] types_js_test.ml → `flow_services_inference/src/types_js_test.rs`
+      - [x] dep_graph_test_utils.ml → `flow_services_inference/src/dep_graph_test_utils.rs`
+      - [x] inference_tests.ml → `N/A` (just an entrypoint)
+      - [x] pure_dep_graph_operations_test.ml → `flow_services_inference/src/pure_dep_graph_operations_test.rs`
+      - [x] types_js_test.ml → `flow_services_inference/src/types_js_test.rs`
     - [ ] types/
-        - [x] types_js_types.ml → `flow_services_inference_types/src/lib.rs`
-      - [x] check_cache.ml → `flow_services_inference/src/check_cache.rs`
-          - [x] `create`
-          - [x] `release_ccx`
-          - [x] `drop_least_recently_used`
-          - [x] `find_or_create_ccx`
-          - [x] `find_or_create`
-          - [x] `clear`
-      - [x] check_service.ml → `flow_services_inference/src/check_service.rs`
-          - [x] `typed_builtin_module_opt`
-          - [x] `unknown_module_t`
-          - [x] `unchecked_module_t`
-          - [x] `get_lint_severities` (as `get_lint_severities_for_check`)
-          - [x] `mk_check_file` (with `check_file` and `compute_env` closures)
-          - [x] `dep_module_t` (extracted as free function)
-          - [x] `sig_module_t` (extracted as free function)
-          - [x] `dep_file` (extracted as free function)
-          - [x] `build_exports_from_module_kind` (helper for dep_file exports)
-      - [x] dep_service.ml → `flow_services_inference/src/dep_service.rs`
-          - [x] `calc_dependency_info`
-          - [x] `calc_partial_dependency_graph`
-          - [x] `calc_unchanged_dependents`
-      - [x] inference_utils.ml → `flow_services_inference/src/inference_utils.rs`
-          - [x] `error_of_docblock_error`
-          - [x] `set_of_docblock_errors`
-          - [x] `error_of_parse_error`
-          - [x] `set_of_parse_error`
-          - [x] `error_of_parse_exception`
-          - [x] `set_of_parse_exception`
-          - [x] `error_of_file_sig_tolerable_error`
-          - [x] `set_of_file_sig_tolerable_errors`
-      - [x] init_js.ml → `flow_services_inference/src/init.rs`
-      - [x] job_utils.ml
-      - [ ] merge_service.ml → `flow_services_inference/src/merge_service.rs`
-          - [x] `merge`
-          - [x] `merge_runner`
-          - [x] `sig_hash`
-          - [x] `acyclic_dep`
-          - [x] `check_contents_cache`
-          - [x] `check_contents_context`
-          - [x] `compute_env_of_contents`
-          - [ ] `mk_check` (no slow to check defence yet)
-      - [x] merge_stream.ml → `flow_services_inference/src/merge_stream.rs` (7/7 functions, 100% complete)
-          - [x] `create` → `MergeStream::new()`
-          - [x] `update_server_status` → `MergeStream::update_server_status()`
-          - [x] `next` → `MergeStream::next()`
-          - [x] `merge` → `MergeStream::merge()`
-          - [x] `total_files` → `MergeStream::total_files()`
-          - [x] `skipped_count` → `MergeStream::skipped_count()`
-          - [x] `sig_new_or_changed` → `MergeStream::sig_new_or_changed()`
-      - [x] obj_to_obj_hook.ml → `flow_services_inference/src/obj_to_obj_hook.rs`
-          - [x] `get_object_literal_loc`
-          - [x] `obj_to_obj_hook` (as `obj_to_obj_hook_fn`)
-          - [x] `with_obj_to_obj_hook`
-      - [x] pure_dep_graph_operations.ml → `flow_services_inference/src/pure_dep_graph_operations.rs`
-          - [x] `calc_all_dependents`
-          - [x] `calc_direct_dependencies`
-          - [x] `calc_direct_dependents`
-      - [x] recheck_stats.ml → `flow_services_inference/src/recheck_stats.rs`
-          - [x] `Estimates` type
-          - [x] `Averages` type (private)
-          - [x] `moving_average`
-          - [x] `get_file`
-          - [x] `load_per_file_time`
-          - [x] `save_averages`
-          - [x] `init`
-          - [x] `record_recheck_time`
-          - [x] `record_last_estimates`
-          - [x] `get_init_time`
-          - [x] `get_per_file_time`
-      - [x] type_contents.ml → `flow_services_inference/src/type_contents.rs`
-          - [x] `ParseContentsReturn` type
-          - [x] `do_parse_wrapper`
-          - [x] `with_timer`
-          - [x] `parse_contents`
-          - [x] `errors_of_file_artifacts`
-          - [x] `printable_errors_of_file_artifacts_result`
-          - [x] `unchecked_dependencies`
-          - [x] `ensure_checked_dependencies`
-          - [x] `check_contents`
-          - [x] `compute_env_of_contents`
-          - [x] `type_parse_artifacts`
-      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs`
-          - [x] `calc_deps` → `calc_deps()`
-          - [x] `clear_errors` → `clear_errors()`
-          - [x] `filter_errors` → `filter_errors()`
-          - [x] `ensure_parsed_or_trigger_recheck` → `ensure_parsed_or_trigger_recheck()`
-          - [x] `full_check_for_init` → `full_check_for_init()`
-          - [x] `recheck` → `recheck()`
-          - [x] `libdef_check_for_lazy_init` → `libdef_check_for_lazy_init()`
-          - [x] `include_dependencies_and_dependents`
-          - [x] `run_merge_service`
-          - [x] `merge`
-          - [x] `update_merge_results`
-          - [x] `check_files`
-          - [x] `ensure_parsed`
-          - [x] `handle_unexpected_file_changes`
-          - [x] `init_libs`
-          - [x] `filter_out_node_modules`
-          - [x] `unfocused_files_to_infer`
-          - [x] `focused_files_to_infer`
-          - [x] `files_to_infer`
-          - [x] `restart_if_faster_than_recheck`
-          - [x] `recheck_parse_and_update_dependency_info`
-          - [x] `determine_what_to_recheck`
-          - [x] `recheck_merge`
-          - [x] `recheck::full`
-          - [x] `recheck::parse_and_update_dependency_info`
-          - [x] `clear_caches`
-          - [x] `with_transaction`
-          - [x] `recheck_impl`
-          - [x] `make_next_files`
-          - [x] `init_from_scratch`
-          - [x] `load_saved_state`
-          - [x] `exit_if_no_fallback`
-          - [x] `reinit`
-          - [x] `reinit_full_check`
-          - [x] `check_files_for_init`
-          - [x] `check_once` (Rust-only convenience)
-          - [x] `init` → `flow_services_inference/src/type_service.rs`
-          - [x] `init_from_saved_state`
-          - [x] `handle_updates_since_saved_state`
+      - [x] types_js_types.ml → `flow_services_inference_types/src/lib.rs`
+    - [x] check_cache.ml → `flow_services_inference/src/check_cache.rs`
+      - [x] `create`
+      - [x] `release_ccx`
+      - [x] `drop_least_recently_used`
+      - [x] `find_or_create_ccx`
+      - [x] `find_or_create`
+      - [x] `clear`
+    - [x] check_service.ml → `flow_services_inference/src/check_service.rs`
+      - [x] `typed_builtin_module_opt`
+      - [x] `unknown_module_t`
+      - [x] `unchecked_module_t`
+      - [x] `get_lint_severities` (as `get_lint_severities_for_check`)
+      - [x] `mk_check_file` (with `check_file` and `compute_env` closures)
+      - [x] `dep_module_t` (extracted as free function)
+      - [x] `sig_module_t` (extracted as free function)
+      - [x] `dep_file` (extracted as free function)
+      - [x] `build_exports_from_module_kind` (helper for dep_file exports)
+    - [x] dep_service.ml → `flow_services_inference/src/dep_service.rs`
+      - [x] `calc_dependency_info`
+      - [x] `calc_partial_dependency_graph`
+      - [x] `calc_unchanged_dependents`
+    - [x] inference_utils.ml → `flow_services_inference/src/inference_utils.rs`
+      - [x] `error_of_docblock_error`
+      - [x] `set_of_docblock_errors`
+      - [x] `error_of_parse_error`
+      - [x] `set_of_parse_error`
+      - [x] `error_of_parse_exception`
+      - [x] `set_of_parse_exception`
+      - [x] `error_of_file_sig_tolerable_error`
+      - [x] `set_of_file_sig_tolerable_errors`
+    - [x] init_js.ml → `flow_services_inference/src/init.rs`
+    - [x] job_utils.ml
+    - [ ] merge_service.ml → `flow_services_inference/src/merge_service.rs`
+      - [x] `merge`
+      - [x] `merge_runner`
+      - [x] `sig_hash`
+      - [x] `acyclic_dep`
+      - [x] `check_contents_cache`
+      - [x] `check_contents_context`
+      - [x] `compute_env_of_contents`
+      - [ ] `mk_check` (no slow to check defence yet)
+    - [x] merge_stream.ml → `flow_services_inference/src/merge_stream.rs` (7/7 functions, 100% complete)
+      - [x] `create` → `MergeStream::new()`
+      - [x] `update_server_status` → `MergeStream::update_server_status()`
+      - [x] `next` → `MergeStream::next()`
+      - [x] `merge` → `MergeStream::merge()`
+      - [x] `total_files` → `MergeStream::total_files()`
+      - [x] `skipped_count` → `MergeStream::skipped_count()`
+      - [x] `sig_new_or_changed` → `MergeStream::sig_new_or_changed()`
+    - [x] obj_to_obj_hook.ml → `flow_services_inference/src/obj_to_obj_hook.rs`
+      - [x] `get_object_literal_loc`
+      - [x] `obj_to_obj_hook` (as `obj_to_obj_hook_fn`)
+      - [x] `with_obj_to_obj_hook`
+    - [x] pure_dep_graph_operations.ml → `flow_services_inference/src/pure_dep_graph_operations.rs`
+      - [x] `calc_all_dependents`
+      - [x] `calc_direct_dependencies`
+      - [x] `calc_direct_dependents`
+    - [x] recheck_stats.ml → `flow_services_inference/src/recheck_stats.rs`
+      - [x] `Estimates` type
+      - [x] `Averages` type (private)
+      - [x] `moving_average`
+      - [x] `get_file`
+      - [x] `load_per_file_time`
+      - [x] `save_averages`
+      - [x] `init`
+      - [x] `record_recheck_time`
+      - [x] `record_last_estimates`
+      - [x] `get_init_time`
+      - [x] `get_per_file_time`
+    - [x] type_contents.ml → `flow_services_inference/src/type_contents.rs`
+      - [x] `ParseContentsReturn` type
+      - [x] `do_parse_wrapper`
+      - [x] `with_timer`
+      - [x] `parse_contents`
+      - [x] `errors_of_file_artifacts`
+      - [x] `printable_errors_of_file_artifacts_result`
+      - [x] `unchecked_dependencies`
+      - [x] `ensure_checked_dependencies`
+      - [x] `check_contents`
+      - [x] `compute_env_of_contents`
+      - [x] `type_parse_artifacts`
+    - [ ] types_js.ml → `flow_services_inference/src/type_service.rs`
+      - [x] `calc_deps` → `calc_deps()`
+      - [x] `clear_errors` → `clear_errors()`
+      - [x] `filter_errors` → `filter_errors()`
+      - [x] `ensure_parsed_or_trigger_recheck` → `ensure_parsed_or_trigger_recheck()`
+      - [x] `full_check_for_init` → `full_check_for_init()`
+      - [x] `recheck` → `recheck()`
+      - [x] `libdef_check_for_lazy_init` → `libdef_check_for_lazy_init()`
+      - [x] `include_dependencies_and_dependents`
+      - [x] `run_merge_service`
+      - [x] `merge`
+      - [x] `update_merge_results`
+      - [x] `check_files`
+      - [x] `ensure_parsed`
+      - [x] `handle_unexpected_file_changes`
+      - [x] `init_libs`
+      - [x] `filter_out_node_modules`
+      - [x] `unfocused_files_to_infer`
+      - [x] `focused_files_to_infer`
+      - [x] `files_to_infer`
+      - [x] `restart_if_faster_than_recheck`
+      - [x] `recheck_parse_and_update_dependency_info`
+      - [x] `determine_what_to_recheck`
+      - [x] `recheck_merge`
+      - [x] `recheck::full`
+      - [x] `recheck::parse_and_update_dependency_info`
+      - [x] `clear_caches`
+      - [x] `with_transaction`
+      - [x] `recheck_impl`
+      - [x] `make_next_files`
+      - [x] `init_from_scratch`
+      - [x] `load_saved_state`
+      - [x] `exit_if_no_fallback`
+      - [x] `reinit`
+      - [x] `reinit_full_check`
+      - [x] `check_files_for_init`
+      - [x] `check_once` (Rust-only convenience)
+      - [x] `init` → `flow_services_inference/src/type_service.rs`
+      - [x] `init_from_saved_state`
+      - [x] `handle_updates_since_saved_state`
   - [x] jsdoc/
-      - [x] find_documentation.ml → `flow_services_autocomplete/src/find_documentation.rs`
-      - [x] insert_jsdoc.ml → `flow_services_autocomplete/src/insert_jsdoc.rs`
-      - [x] jsdoc_stub.ml → `flow_services_autocomplete/src/jsdoc_stub.rs`
+    - [x] find_documentation.ml → `flow_services_autocomplete/src/find_documentation.rs`
+    - [x] insert_jsdoc.ml → `flow_services_autocomplete/src/insert_jsdoc.rs`
+    - [x] jsdoc_stub.ml → `flow_services_autocomplete/src/jsdoc_stub.rs`
   - [x] jsx/ → `flow_services_jsx`
-      - [x] auto_close_jsx.ml → `flow_services_jsx/src/auto_close_jsx.rs`
-      - [x] linked_editing_jsx.ml → `flow_services_jsx/src/linked_editing_jsx.rs`
+    - [x] auto_close_jsx.ml → `flow_services_jsx/src/auto_close_jsx.rs`
+    - [x] linked_editing_jsx.ml → `flow_services_jsx/src/linked_editing_jsx.rs`
   - [ ] module/
-      - [x] module_js.ml → `flow_services_module/src/lib.rs` (6/6 functions, 100% complete)
-          - [x] `exported_module` → `exported_module()`
-          - [x] `imported_module` → `imported_module()`
-          - [x] `commit_modules` → `commit_modules()`
-          - [x] `add_parsed_resolved_requires` → `add_parsed_resolved_requires()`
-          - [x] `package_incompatible` → `package_incompatible()`
-          - [x] `string_of_package_incompatible_reason` → `Display` trait on `PackageIncompatibleReason`
+    - [x] module_js.ml → `flow_services_module/src/lib.rs` (6/6 functions, 100% complete)
+      - [x] `exported_module` → `exported_module()`
+      - [x] `imported_module` → `imported_module()`
+      - [x] `commit_modules` → `commit_modules()`
+      - [x] `add_parsed_resolved_requires` → `add_parsed_resolved_requires()`
+      - [x] `package_incompatible` → `package_incompatible()`
+      - [x] `string_of_package_incompatible_reason` → `Display` trait on `PackageIncompatibleReason`
   - [ ] references/ → `flow_services_references`
     - [x] types/
-        - [x] findRefsTypes.ml → `flow_services_references/src/find_refs_types.rs`
-          - [x] `ref_kind` → `RefKind`
-          - [x] `string_of_ref_kind` → `string_of_ref_kind()`
-          - [x] `single_ref` → `SingleRef`
-          - [x] `find_refs_found` → `FindRefsFound`
-          - [x] `find_refs_ok` → `FindRefsOk`
-          - [x] `kind` → `Kind`
-          - [x] `request` → `Request`
-          - [x] `empty_request` → `empty_request()`
-      - [x] findRefs_js.ml → `flow_services_references/src/find_refs_js.rs`
-        - [x] `sort_and_dedup` → `sort_and_dedup()`
-        - [x] `local_refs_of_find_ref_request` → `local_refs_of_find_ref_request()`
-        - [x] `find_local_refs` → `find_local_refs()`
-      - [x] localImportRefSearcher.ml → `flow_services_references/src/local_import_ref_searcher.rs`
-        - [x] `search_result` → `SearchResult`
-        - [x] `search` → `search()`
-      - [x] prepareRenameSearcher.ml → `flow_services_references/src/prepare_rename_searcher.rs`
-        - [x] `search_rename_loc` → `search_rename_loc()`
-      - [x] propertyFindRefs.ml → `flow_services_references/src/property_find_refs.rs`
-        - [x] `add_ref_kind` → `add_ref_kind()`
-        - [x] `LiteralToPropLoc` → `literal_to_prop_loc`
-        - [x] `annot_of_jsx_name` → `annot_of_jsx_name()`
-        - [x] `Potential_ordinary_refs_search` → `potential_ordinary_refs_search`
-        - [x] `type_matches_locs` → `type_matches_locs()`
-        - [x] `get_loc_of_def_info` → `get_loc_of_def_info()`
-        - [x] `process_prop_refs` → `process_prop_refs()`
-        - [x] `ordinary_property_find_refs_in_file` → `ordinary_property_find_refs_in_file()`
-        - [x] `property_find_refs_in_file` → `property_find_refs_in_file()`
-        - [x] `find_local_refs` → `find_local_refs()`
-      - [x] renameMapper.ml → `flow_services_references/src/rename_mapper.rs`
-        - [x] `get_rename_order` → `get_rename_order()`
-        - [x] `rename_mapper` → `RenameMapper` + `AstVisitor` impl
-        - [x] `rename` → `rename()`
-      - [ ] renameModule.ml
-      - [x] variableFindRefs.ml → `flow_services_references/src/variable_find_refs.rs`
-        - [x] `local_find_refs` → `local_find_refs()`
+      - [x] findRefsTypes.ml → `flow_services_references/src/find_refs_types.rs`
+        - [x] `ref_kind` → `RefKind`
+        - [x] `string_of_ref_kind` → `string_of_ref_kind()`
+        - [x] `single_ref` → `SingleRef`
+        - [x] `find_refs_found` → `FindRefsFound`
+        - [x] `find_refs_ok` → `FindRefsOk`
+        - [x] `kind` → `Kind`
+        - [x] `request` → `Request`
+        - [x] `empty_request` → `empty_request()`
+    - [x] findRefs_js.ml → `flow_services_references/src/find_refs_js.rs`
+      - [x] `sort_and_dedup` → `sort_and_dedup()`
+      - [x] `local_refs_of_find_ref_request` → `local_refs_of_find_ref_request()`
+      - [x] `find_local_refs` → `find_local_refs()`
+    - [x] localImportRefSearcher.ml → `flow_services_references/src/local_import_ref_searcher.rs`
+      - [x] `search_result` → `SearchResult`
+      - [x] `search` → `search()`
+    - [x] prepareRenameSearcher.ml → `flow_services_references/src/prepare_rename_searcher.rs`
+      - [x] `search_rename_loc` → `search_rename_loc()`
+    - [x] propertyFindRefs.ml → `flow_services_references/src/property_find_refs.rs`
+      - [x] `add_ref_kind` → `add_ref_kind()`
+      - [x] `LiteralToPropLoc` → `literal_to_prop_loc`
+      - [x] `annot_of_jsx_name` → `annot_of_jsx_name()`
+      - [x] `Potential_ordinary_refs_search` → `potential_ordinary_refs_search`
+      - [x] `type_matches_locs` → `type_matches_locs()`
+      - [x] `get_loc_of_def_info` → `get_loc_of_def_info()`
+      - [x] `process_prop_refs` → `process_prop_refs()`
+      - [x] `ordinary_property_find_refs_in_file` → `ordinary_property_find_refs_in_file()`
+      - [x] `property_find_refs_in_file` → `property_find_refs_in_file()`
+      - [x] `find_local_refs` → `find_local_refs()`
+    - [x] renameMapper.ml → `flow_services_references/src/rename_mapper.rs`
+      - [x] `get_rename_order` → `get_rename_order()`
+      - [x] `rename_mapper` → `RenameMapper` + `AstVisitor` impl
+      - [x] `rename` → `rename()`
+    - [ ] renameModule.ml
+    - [x] variableFindRefs.ml → `flow_services_references/src/variable_find_refs.rs`
+      - [x] `local_find_refs` → `local_find_refs()`
   - [x] saved_state/ → `flow_saved_state`
     - [x] compression/
-        - [x] saved_state_compression.ml → `flow_saved_state/src/compression/saved_state_compression.rs`
+      - [x] saved_state_compression.ml → `flow_saved_state/src/compression/saved_state_compression.rs`
     - [x] fetcher/
-        - [x] saved_state_dummy_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_dummy_fetcher.rs`
-        - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs`
-        - [x] saved_state_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fetcher.rs`
-        - [x] saved_state_local_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_local_fetcher.rs`
-        - [x] saved_state_scm_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_scm_fetcher.rs`
-      - [x] saved_state.ml → `flow_saved_state/src/saved_state.rs`
-        - [x] `save`
-        - [x] `load`
-        - [x] `invalid_reason_to_string`
-        - [x] `backtrace_of_invalid_reason`
-        - [x] `non_flowlib_libs`
-        - [x] `denormalize_file_data`
-        - [x] `restore_dependency_info`
+      - [x] saved_state_dummy_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_dummy_fetcher.rs`
+      - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs`
+      - [x] saved_state_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fetcher.rs`
+      - [x] saved_state_local_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_local_fetcher.rs`
+      - [x] saved_state_scm_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_scm_fetcher.rs`
+    - [x] saved_state.ml → `flow_saved_state/src/saved_state.rs`
+      - [x] `save`
+      - [x] `load`
+      - [x] `invalid_reason_to_string`
+      - [x] `backtrace_of_invalid_reason`
+      - [x] `non_flowlib_libs`
+      - [x] `denormalize_file_data`
+      - [x] `restore_dependency_info`
   - [x] type_info/ → `flow_services_type_info`
-      - [x] signature_help.ml → `flow_services_type_info/src/signature_help.rs`
-      - [x] type_info_service.ml → `flow_services_type_info/src/type_info_service.rs`
+    - [x] signature_help.ml → `flow_services_type_info/src/signature_help.rs`
+    - [x] type_info_service.ml → `flow_services_type_info/src/type_info_service.rs`
   - [x] type_of_name/ → `flow_services_type_of_name`
-      - [x] type_of_name.ml → `flow_services_type_of_name/src/type_of_name.rs`
+    - [x] type_of_name.ml → `flow_services_type_of_name/src/type_of_name.rs`
 - [ ] state/
   - [ ] heaps/
     - [x] context/
-        - [x] context_heaps.ml (unused in Rust; master_cx stored on server env)
+      - [x] context_heaps.ml (unused in Rust; master_cx stored on server env)
     - [ ] diffing/
-        - [ ] diff_heaps.ml
+      - [ ] diff_heaps.ml
     - [ ] parsing/
-        - [ ] parsing_heaps.ml → `flow_heap/src/parsing_heaps.rs`
-            - [x] `add_merge_on_diff`
-            - [x] `add_package`
-            - [x] `add_parsed`
-            - [x] `add_unparsed`
-            - [x] `get_aloc_table_unsafe`
-            - [x] `get_ast_unsafe`
-            - [x] `get_dependency`
-            - [x] `get_dependency_unsafe`
-            - [x] `get_docblock_unsafe`
-            - [x] `get_exports_unsafe`
-            - [x] `get_file_hash_unsafe`
-            - [x] `get_haste_module`
-            - [x] `get_haste_module_unsafe`
-            - [x] `get_imports_unsafe`
-            - [x] `get_package_info`
-            - [x] `get_package_parse`
-            - [x] `get_package_parse_unsafe`
-            - [x] `get_parse`
-            - [x] `get_parse_unsafe`
-            - [x] `get_provider`
-            - [x] `get_resolved_requires_unsafe`
-            - [x] `get_tolerable_file_sig_unsafe`
-            - [x] `get_type_sig_unsafe`
-            - [x] `get_typed_parse`
-            - [x] `get_typed_parse_unsafe`
-            - [x] `has_ast`
-            - [x] `is_package_file`
-            - [x] `is_typed_file`
-            - [x] `iter_dependents`
-            - [x] `add_resolved_requires` → `set_resolved_requires()`
-            - [ ] `clear_not_found`
-            - [x] `create` → `SharedMem::new()`
-            - [x] `get_aloc_table`
-            - [x] `get_ast`
-            - [x] `get_docblock`
-            - [x] `get_exports`
-            - [ ] `get_file_addr` (OCaml shared-memory internal, not needed in Rust)
-            - [ ] `get_file_addr_unsafe` (OCaml shared-memory internal, not needed in Rust)
-            - [x] `get_file_hash`
-            - [x] `get_file_sig`
-            - [x] `get_file_sig_unsafe`
-            - [x] `get_haste_info`
-            - [x] `get_haste_module_info`
-            - [x] `get_imports`
-            - [x] `get_leader`
-            - [x] `get_leader_unsafe`
-            - [x] `get_old_exports`
-            - [x] `get_old_file_hash`
-            - [x] `get_old_haste_info` → `get_haste_info_committed()`
-            - [x] `get_old_imports`
-            - [x] `get_old_parse` → `get_parse_committed()`
-            - [x] `get_old_provider`
-            - [x] `get_old_resolved_modules_unsafe`
-            - [x] `get_old_resolved_requires_unsafe`
-            - [x] `get_old_typed_parse` → `get_typed_parse_committed()`
-            - [x] `get_resolved_modules_unsafe`
-            - [x] `get_tolerable_file_sig`
-            - [x] `get_type_sig`
-            - [x] `loc_of_aloc`
-            - [ ] `read_aloc_table_unsafe`
-            - [ ] `read_ast_unsafe`
-            - [ ] `read_dependency`
-            - [ ] `read_dependency_name`
-            - [ ] `read_docblock_unsafe`
-            - [ ] `read_exports`
-            - [ ] `read_file_hash`
-            - [ ] `read_file_key`
-            - [ ] `read_file_name`
-            - [ ] `read_file_sig_unsafe`
-            - [ ] `read_haste_module_info`
-            - [ ] `read_imports`
-            - [ ] `read_package_info`
-            - [ ] `read_phantom_dependencies`
-            - [ ] `read_requires`
-            - [ ] `read_resolved_module`
-            - [ ] `read_resolved_modules`
-            - [ ] `read_tolerable_file_sig_unsafe`
-            - [ ] `read_type_sig_unsafe`
-            - [ ] `record_not_found`
-            - [ ] `record_unchanged`
-            - [x] `typed_component`
+      - [ ] parsing_heaps.ml → `flow_heap/src/parsing_heaps.rs`
+        - [x] `add_merge_on_diff`
+        - [x] `add_package`
+        - [x] `add_parsed`
+        - [x] `add_unparsed`
+        - [x] `get_aloc_table_unsafe`
+        - [x] `get_ast_unsafe`
+        - [x] `get_dependency`
+        - [x] `get_dependency_unsafe`
+        - [x] `get_docblock_unsafe`
+        - [x] `get_exports_unsafe`
+        - [x] `get_file_hash_unsafe`
+        - [x] `get_haste_module`
+        - [x] `get_haste_module_unsafe`
+        - [x] `get_imports_unsafe`
+        - [x] `get_package_info`
+        - [x] `get_package_parse`
+        - [x] `get_package_parse_unsafe`
+        - [x] `get_parse`
+        - [x] `get_parse_unsafe`
+        - [x] `get_provider`
+        - [x] `get_resolved_requires_unsafe`
+        - [x] `get_tolerable_file_sig_unsafe`
+        - [x] `get_type_sig_unsafe`
+        - [x] `get_typed_parse`
+        - [x] `get_typed_parse_unsafe`
+        - [x] `has_ast`
+        - [x] `is_package_file`
+        - [x] `is_typed_file`
+        - [x] `iter_dependents`
+        - [x] `add_resolved_requires` → `set_resolved_requires()`
+        - [ ] `clear_not_found`
+        - [x] `create` → `SharedMem::new()`
+        - [x] `get_aloc_table`
+        - [x] `get_ast`
+        - [x] `get_docblock`
+        - [x] `get_exports`
+        - [ ] `get_file_addr` (OCaml shared-memory internal, not needed in Rust)
+        - [ ] `get_file_addr_unsafe` (OCaml shared-memory internal, not needed in Rust)
+        - [x] `get_file_hash`
+        - [x] `get_file_sig`
+        - [x] `get_file_sig_unsafe`
+        - [x] `get_haste_info`
+        - [x] `get_haste_module_info`
+        - [x] `get_imports`
+        - [x] `get_leader`
+        - [x] `get_leader_unsafe`
+        - [x] `get_old_exports`
+        - [x] `get_old_file_hash`
+        - [x] `get_old_haste_info` → `get_haste_info_committed()`
+        - [x] `get_old_imports`
+        - [x] `get_old_parse` → `get_parse_committed()`
+        - [x] `get_old_provider`
+        - [x] `get_old_resolved_modules_unsafe`
+        - [x] `get_old_resolved_requires_unsafe`
+        - [x] `get_old_typed_parse` → `get_typed_parse_committed()`
+        - [x] `get_resolved_modules_unsafe`
+        - [x] `get_tolerable_file_sig`
+        - [x] `get_type_sig`
+        - [x] `loc_of_aloc`
+        - [ ] `read_aloc_table_unsafe`
+        - [ ] `read_ast_unsafe`
+        - [ ] `read_dependency`
+        - [ ] `read_dependency_name`
+        - [ ] `read_docblock_unsafe`
+        - [ ] `read_exports`
+        - [ ] `read_file_hash`
+        - [ ] `read_file_key`
+        - [ ] `read_file_name`
+        - [ ] `read_file_sig_unsafe`
+        - [ ] `read_haste_module_info`
+        - [ ] `read_imports`
+        - [ ] `read_package_info`
+        - [ ] `read_phantom_dependencies`
+        - [ ] `read_requires`
+        - [ ] `read_resolved_module`
+        - [ ] `read_resolved_modules`
+        - [ ] `read_tolerable_file_sig_unsafe`
+        - [ ] `read_type_sig_unsafe`
+        - [ ] `record_not_found`
+        - [ ] `record_unchanged`
+        - [x] `typed_component`
   - [x] readers/
-      - [x] abstract_state_reader.ml → `unnecessary`
-      - [x] mutator_state_reader.ml → `unnecessary`
-      - [x] state_reader.ml → `unnecessary`
+    - [x] abstract_state_reader.ml → `unnecessary`
+    - [x] mutator_state_reader.ml → `unnecessary`
+    - [x] state_reader.ml → `unnecessary`
 - [ ] stubs/
-    - [x] annotate_exports_hardcoded_expr_fixes.ml → `flow_codemods/src/utils/codemod_annotator.rs` (oss stub, inlined)
-    - [ ] eventLoggerLwt.ml
-    - [x] extra_commands.ml → `flow_cli/src/extra_commands.rs` (oss stub)
-    - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs`
-    - [ ] flowInteractionLogger.ml
-    - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
-    - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs` (oss stub)
-    - [x] startup_initializer.ml → `flow_server_monitor/src/startup_initializer.rs` (oss stub)
+  - [x] annotate_exports_hardcoded_expr_fixes.ml → `flow_codemods/src/utils/codemod_annotator.rs` (oss stub, inlined)
+  - [ ] eventLoggerLwt.ml
+  - [x] extra_commands.ml → `flow_cli/src/extra_commands.rs` (oss stub)
+  - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs`
+  - [ ] flowInteractionLogger.ml
+  - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
+  - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs` (oss stub)
+  - [x] startup_initializer.ml → `flow_server_monitor/src/startup_initializer.rs` (oss stub)
 - [ ] third-party/
   - [x] core/
-      - [x] core_doubly_linked.ml → `irrelevant` (rust port uses LinkedHashMap)
-      - [x] core_doubly_linked_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
-      - [x] core_hash_queue.ml → `irrelevant` (rust port uses LinkedHashMap)
-      - [x] core_hash_queue_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
-      - [x] core_hashtbl.ml → `irrelevant` (rust port uses LinkedHashMap)
-      - [x] core_hashtbl_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
-      - [x] core_union_find.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_doubly_linked.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_doubly_linked_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_hash_queue.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_hash_queue_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_hashtbl.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_hashtbl_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
+    - [x] core_union_find.ml → `irrelevant` (rust port uses LinkedHashMap)
   - [ ] fuzzy-path/
     - [x] src/
-        - [x] fuzzy_path.ml → `flow_services_export/src/fuzzy_path/`
+      - [x] fuzzy_path.ml → `flow_services_export/src/fuzzy_path/`
     - [x] test/
-        - [x] expect_test.ml → `flow_services_export/src/fuzzy_path/expect_test.rs`
-        - [x] test.ml → `flow_services_export/src/fuzzy_path/test.rs`
+      - [x] expect_test.ml → `flow_services_export/src/fuzzy_path/expect_test.rs`
+      - [x] test.ml → `flow_services_export/src/fuzzy_path/test.rs`
   - [ ] ocaml-base64/
     - [ ] src/
-        - [ ] base64.ml
-        - [ ] unsafe.ml
+      - [ ] base64.ml
+      - [ ] unsafe.ml
   - [x] sedlex/
-      - [x] flow_sedlexing.ml → `irrelevant` (rust port uses logos)
+    - [x] flow_sedlexing.ml → `irrelevant` (rust port uses logos)
   - [x] sedlex-ppx/
-      - [x] flow_sedlex.ml → `irrelevant` (rust port uses logos)
-      - [x] ppx_sedlex.ml → `irrelevant` (rust port uses logos)
-      - [x] sedlex_cset.ml → `irrelevant` (rust port uses logos)
+    - [x] flow_sedlex.ml → `irrelevant` (rust port uses logos)
+    - [x] ppx_sedlex.ml → `irrelevant` (rust port uses logos)
+    - [x] sedlex_cset.ml → `irrelevant` (rust port uses logos)
 - [x] typing/
   - [x] __tests__/
-      - [x] type_hint_test.ml → `flow_typing/src/type_hint_test.rs`
-      - [x] type_test.ml → `flow_typing/src/type_test.rs`
-      - [x] typed_ast_test.ml → `flow_typing/src/typed_ast_test.rs`
-      - [x] typing_tests.ml → irrelevant (OUnit runner)
+    - [x] type_hint_test.ml → `flow_typing/src/type_hint_test.rs`
+    - [x] type_test.ml → `flow_typing/src/type_test.rs`
+    - [x] typed_ast_test.ml → `flow_typing/src/typed_ast_test.rs`
+    - [x] typing_tests.ml → irrelevant (OUnit runner)
   - [x] errors/
-      - [x] error_message.ml → `flow_typing_errors/src/error_message.rs`
-      - [x] error_suppressions.ml → `flow_typing_errors/src/error_suppressions.rs`
-          - [x] `add`
-          - [x] `add_lint_suppressions`
-          - [x] `all_unused_locs`
-          - [x] `empty`
-          - [x] `filter_by_file`
-          - [x] `filter_lints`
-          - [x] `filter_suppressed_errors`
-          - [x] `get_lint_settings`
-          - [x] `remove`
-          - [x] `union`
-          - [x] `update_suppressions`
-      - [x] flow_error.ml → `flow_typing_errors/src/flow_error.rs`
-          - [x] `loc_of_error`
-          - [x] `msg_of_error`
-          - [x] `code_of_error`
-          - [x] `convert_type_to_type_desc`
-          - [x] `error_of_msg`
-          - [x] `is_lint_only_errorset`
-          - [x] `kind_of_error`
-          - [x] `map_loc_of_error`
-          - [x] `ordered_reasons`
-          - [x] `source_file`
-      - [x] flow_intermediate_error.ml → `flow_typing_errors/src/intermediate_error.rs`
-          - [x] `make_intermediate_error`
-          - [x] `to_printable_error`
-          - [x] `make_errors_printable`
-          - [x] `post_process_errors`
-          - [x] `score_of_msg`
-      - [x] flow_intermediate_error_types.ml → `flow_typing_errors/src/intermediate_error_types.rs`
-      - [x] suppression_comments.ml → `flow_typing_errors/src/suppression_comments.rs`
+    - [x] error_message.ml → `flow_typing_errors/src/error_message.rs`
+    - [x] error_suppressions.ml → `flow_typing_errors/src/error_suppressions.rs`
+      - [x] `add`
+      - [x] `add_lint_suppressions`
+      - [x] `all_unused_locs`
+      - [x] `empty`
+      - [x] `filter_by_file`
+      - [x] `filter_lints`
+      - [x] `filter_suppressed_errors`
+      - [x] `get_lint_settings`
+      - [x] `remove`
+      - [x] `union`
+      - [x] `update_suppressions`
+    - [x] flow_error.ml → `flow_typing_errors/src/flow_error.rs`
+      - [x] `loc_of_error`
+      - [x] `msg_of_error`
+      - [x] `code_of_error`
+      - [x] `convert_type_to_type_desc`
+      - [x] `error_of_msg`
+      - [x] `is_lint_only_errorset`
+      - [x] `kind_of_error`
+      - [x] `map_loc_of_error`
+      - [x] `ordered_reasons`
+      - [x] `source_file`
+    - [x] flow_intermediate_error.ml → `flow_typing_errors/src/intermediate_error.rs`
+      - [x] `make_intermediate_error`
+      - [x] `to_printable_error`
+      - [x] `make_errors_printable`
+      - [x] `post_process_errors`
+      - [x] `score_of_msg`
+    - [x] flow_intermediate_error_types.ml → `flow_typing_errors/src/intermediate_error_types.rs`
+    - [x] suppression_comments.ml → `flow_typing_errors/src/suppression_comments.rs`
   - [x] generics/
-      - [x] generic.ml → `flow_typing_generics/src/lib.rs` (22/22 functions, 100% complete)
-          - [x] `bound_to_string` → `GenericBound::to_string()`
-          - [x] `to_string` → `Display for GenericId`
-          - [x] `all_subst_names_of_id` → `GenericId::all_subst_names()`
-          - [x] `all_subst_names_of_bound` → `GenericBound::all_subst_names()`
-          - [x] `id_to_kind` → `GenericId::to_kind()`
-          - [x] `subst_name_of_id` → `GenericId::subst_name()`
-          - [x] `equal_bound` → `GenericBound::equal()`
-          - [x] `equal_spreads` → `equal_spreads()`
-          - [x] `equal_id` → `GenericId::equal()`
-          - [x] `collapse` → `GenericId::collapse()`
-          - [x] `spread_empty` → `spread_empty()`
-          - [x] `make_spread` → `GenericId::make_spread()`
-          - [x] `make_bound_id` → `GenericId::make_bound_id()`
-          - [x] `make_op_id` → `GenericId::make_op_id()`
-          - [x] `spread_subtract` → `spread_subtract()`
-          - [x] `spread_append` → `spread_append()`
-          - [x] `fold_ids` → `GenericId::fold_ids()`
-          - [x] `spread_exists` → `spread_exists()`
-          - [x] `satisfies` → `GenericId::satisfies()`
-          - [x] `ArraySpread.merge_ro` → `array_spread::merge_ro()` (private)
-          - [x] `ArraySpread.merge` → `array_spread::merge()`
-          - [x] `ArraySpread.to_option` → `array_spread::to_option()`
+    - [x] generic.ml → `flow_typing_generics/src/lib.rs` (22/22 functions, 100% complete)
+      - [x] `bound_to_string` → `GenericBound::to_string()`
+      - [x] `to_string` → `Display for GenericId`
+      - [x] `all_subst_names_of_id` → `GenericId::all_subst_names()`
+      - [x] `all_subst_names_of_bound` → `GenericBound::all_subst_names()`
+      - [x] `id_to_kind` → `GenericId::to_kind()`
+      - [x] `subst_name_of_id` → `GenericId::subst_name()`
+      - [x] `equal_bound` → `GenericBound::equal()`
+      - [x] `equal_spreads` → `equal_spreads()`
+      - [x] `equal_id` → `GenericId::equal()`
+      - [x] `collapse` → `GenericId::collapse()`
+      - [x] `spread_empty` → `spread_empty()`
+      - [x] `make_spread` → `GenericId::make_spread()`
+      - [x] `make_bound_id` → `GenericId::make_bound_id()`
+      - [x] `make_op_id` → `GenericId::make_op_id()`
+      - [x] `spread_subtract` → `spread_subtract()`
+      - [x] `spread_append` → `spread_append()`
+      - [x] `fold_ids` → `GenericId::fold_ids()`
+      - [x] `spread_exists` → `spread_exists()`
+      - [x] `satisfies` → `GenericId::satisfies()`
+      - [x] `ArraySpread.merge_ro` → `array_spread::merge_ro()` (private)
+      - [x] `ArraySpread.merge` → `array_spread::merge()`
+      - [x] `ArraySpread.to_option` → `array_spread::to_option()`
   - [x] polarity/
-      - [x] polarity.ml → `flow_common/src/polarity.rs`
-          - [x] `apply_const`
-          - [x] `compat`
-          - [x] `equal`
-          - [x] `inv`
-          - [x] `mult`
-          - [x] `object_literal_polarity`
-          - [x] `sigil`
-          - [x] `string`
-    - [x] abnormal.ml → `flow_typing_utils/src/abnormal.rs`
-        - [x] `AbnormalControlFlow` struct (replaces exception)
-        - [x] `throw_expr_control_flow_exception` → just do `Err(AbnormalControlFlow((loc, expr)))`
-        - [x] `catch_stmt_control_flow_exception`
-        - [x] `catch_expr_control_flow_exception`
-        - [x] `try_with_abnormal_exn`
-    - [x] annotation_inference.ml → `flow_typing_utils/src/annotation_inference.rs`
-    - [x] avar.ml → `flow_typing_utils/src/avar.rs`
-    - [x] builtins.ml → `flow_typing_builtins/src/builtins.rs`
-        - [x] `Builtins` struct
-        - [x] `builtin_ordinary_name_set`
-        - [x] `builtin_modules_set`
-        - [x] `get_builtin_value_opt`
-        - [x] `get_builtin_type_opt`
-        - [x] `get_builtin_module_opt`
-        - [x] `of_name_map`
-        - [x] `empty`
-    - [x] check_polarity.ml → `flow_typing_utils/src/check_polarity.rs`
-    - [x] class_sig.ml → `flow_typing_statement/src/class_sig.rs`
-    - [x] class_sig_intf.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] component_declaration_config.ml → `flow_typing_statement/src/component_declaration_config.rs`
-    - [x] component_params.ml → `flow_typing_statement/src/component_params.rs`
-    - [x] component_params_intf.ml → `flow_typing_statement/src/component_params_intf.rs`
-    - [x] component_sig.ml → `flow_typing_statement/src/component_sig.rs`
-    - [x] component_sig_intf.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] component_sig_types.ml → `flow_typing_loc_env/src/component_sig_types.rs`
-    - [x] concrete_type_eq.ml → `flow_typing_flow_common/src/concrete_type_eq.rs`
-        - [x] `swap_reason`
-        - [x] `eq`
-        - [x] `eq_targs`
-    - [x] context.ml → `flow_typing_context/src/lib.rs`
-    - [x] convertTypes.ml → `flow_typing_utils/src/convert_types.rs`
-    - [x] cycles.ml → `flow_typing/src/cycles.rs`
-        - [x] `handle_element`
-        - [x] `key_of_element`
-        - [x] `handle_component`
-    - [x] debug_js.ml → `flow_typing_debug/src/lib.rs`
-        - [x] `string_of_selector`
-        - [x] `string_of_destructor`
-        - [x] `dump_reason`
-        - [x] `dump_t`
-        - [x] `dump_use_t`
-        - [x] `dump_prop`
-        - [x] `dump_normalized_prop`
-        - [x] `dump_tvar`
-        - [x] `dump_flow`
-        - [x] `string_of_reason`
-        - [x] `string_of_file`
-        - [x] `string_of_default`
-        - [x] `string_of_signature_error`
-        - [x] `dump_error_message`
-        - [x] `verbose` module
-    - [x] default.ml → `flow_typing_default/src/lib.rs`
-    - [x] default_resolve.ml → `flow_typing_flow_js/src/default_resolve.rs`
-        - [x] `default_resolve_touts`
-    - [x] destructuring.ml → `flow_typing_statement/src/destructuring.rs`
-    - [x] destructuring_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] env_resolution.ml → `flow_typing/src/env_resolution.rs`
-    - [x] exhaustive.ml → `flow_typing_utils/src/exhaustive.rs`
-    - [x] existsCheck.ml → `flow_typing_exists_check/src/`lib.rs
-    - [x] exists_marker.ml → `flow_typing_statement/src/exists_marker.rs`
-    - [x] fix_statement.ml → `unnecessary in rust`
-    - [x] flow_cache.ml → `flow_typing_flow_common/src/flow_cache.rs`
-        - [x] `flow_constraint` module
-        - [x] `eval` module
-        - [x] `fix` module
-        - [x] `summarize_flow_constraint`
-    - [x] flow_common.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] flow_js.ml → `flow_typing_flow_js/src/flow_js/` (directory with multiple files)
-        - Top-level items (before M__flow):
-            - [x] `not_linked` → `helpers.rs`
-            - [x] `RecursionCheck` module → `recursion_check.rs`
-            - [x] `ConstFoldExpansion` module → `const_fold_expansion.rs`
-                - [x] `get_rmap`
-                - [x] `increment`
-                - [x] `guard`
-            - [x] `subst` → `mod.rs` (public wrapper around `type_subst::subst`)
-            - [ ] `check_canceled` → `helpers.rs` (intentionally empty; revisit when full checker is ported)
-            - [x] `is_concrete` → moved to `flow_typing_type/src/type_util.rs`
-            - [x] `inherited_method` → `helpers.rs`
-            - [x] `find_resolved_opt` → `helpers.rs`
-            - [x] `drop_resolved` → `helpers.rs`
-        - M__flow module → split across files:
-            - [x] `__flow` (main dispatch) → `dispatch.rs` (9224 lines, fully ported)
-            - [x] `empty_success` → `helpers.rs`
-            - [x] `handle_generic` → `helpers.rs`
-            - Any helpers → `any_helpers.rs`:
-                - [x] `expand_any`
-                - [x] `any_prop_to_function`
-                - [x] `invariant_any_propagation_flow`
-                - [x] `any_prop_call_prop`
-                - [x] `any_prop_properties`
-                - [x] `any_prop_obj`
-                - [x] `any_prop_tvar`
-                - [x] `any_prop_to_type_args`
-                - [x] `any_prop_inst`
-                - [x] `any_propagated`
-                - [x] `any_propagated_use`
-            - Inheritance helpers → `inheritance_helpers.rs`:
-                - [x] `flow_type_args`
-                - [x] `inst_type_to_obj_type`
-                - [x] `structural_subtype`
-                - [x] `inst_structural_subtype`
-                - [x] `check_super`
-            - Eval/destructor helpers → `eval_helpers.rs`:
-                - [x] `destruct`
-                - [x] `eval_selector`
-                - [x] `evaluate_type_destructor`
-                - [x] `mk_type_destructor`
-                - [x] `eval_destructor`
-                - [x] `eagerly_eval_destructor_if_resolved`
-                - [x] `mk_possibly_evaluated_destructor_for_annotations`
-            - Instantiation helpers → `instantiation_helpers.rs`:
-                - [x] `instantiate_with_targs_with_soln`
-                - [x] `instantiate_with_targs`
-                - [x] `instantiate_poly_call_or_new_with_soln`
-                - [x] `instantiate_poly_call_or_new`
-                - [x] `instantiate_poly_default_args`
-                - [x] `instantiate_this_class`
-            - Enum helpers → `enum_helpers.rs`:
-                - [x] `enum_exhaustive_check`
-                - [x] `enum_exhaustive_check_incomplete`
-            - Get prop helpers → `get_prop_helpers.rs`:
-                - [x] `Get_prop_helper` module → `impl GetPropHelper for FlowJs`
-                - [x] `prop_typo_suggestion`
-                - [x] `get_private_prop`
-                - [x] `elem_action_on_obj`
-                - [x] `write_obj_prop`
-            - Constraint helpers → `constraint_helpers.rs`:
-                - [x] `flows_to_t`
-                - [x] `flows_from_t`
-                - [x] `flows_across`
-                - [x] `add_upper`
-                - [x] `add_lower`
-                - [x] `iter_with_filter`
-                - [x] `edges_to_t`
-                - [x] `edges_from_t`
-                - [x] `edges_to_ts`
-                - [x] `edges_from_ts`
-                - [x] `edges_and_flows_to_t`
-                - [x] `edges_and_flows_from_t`
-                - [x] `add_uppertvar`
-                - [x] `add_lowertvar`
-                - [x] `edges_to_tvar`
-                - [x] `edges_from_tvar`
-                - [x] `add_upper_edges`
-                - [x] `add_lower_edges`
-                - [x] `unify_flip`
-                - [x] `goto`
-                - [x] `merge_ids`
-                - [x] `resolve_id`
-            - Unification helpers → `unification_helpers.rs`:
-                - [x] `ok_unify`
-                - [x] `__unify`
-                - [x] `__unify_inner`
-                - [x] `unify_props`
-                - [x] `unify_prop_with_dict`
-                - [x] `naive_unify`
-                - [x] `array_unify`
-            - Multi-arg helpers → `multi_arg_helpers.rs`:
-                - [x] `multiflow_call`
-                - [x] `multiflow_subtype`
-                - [x] `multiflow_full`
-                - [x] `multiflow_partial`
-                - [x] `resolve_call_list`
-                - [x] `resolve_spread_list`
-                - [x] `resolve_spread_list_rec`
-                - [x] `finish_resolve_spread_list`
-            - More helpers → `helpers.rs`:
-                - [x] `speculative_subtyping_succeeds`
-                - [x] `perform_lookup_action`
-                - [x] `mk_react_dro`
-                - [x] `resolve_union`
-                - [x] `filter_optional`
-                - [x] `pick_use_op`
-                - [x] `flow_use_op`
-                - [x] `apply_method_action`
-                - [x] `perform_elem_action`
-                - [x] `get_builtin_typeapp`
-                - [x] `get_builtin_react_typeapp`
-                - [x] `get_builtin_type`
-                - [x] `get_builtin_react_type`
-                - [x] `mk_typeapp_instance_annot`
-                - [x] `mk_typeapp_instance`
-                - [x] `mk_typeapp_instance_of_poly`
-                - [x] `mk_instance`
-                - [x] `mk_instance_source`
-                - [x] `mk_instance_raw`
-                - [x] `instance_lookup_kind`
-                - [x] `reposition_reason`
-                - [x] `reposition`
-                - [x] `flow_all_in_union`
-                - [x] `call_args_iter`
-                - [x] `extract_non_spread`
-                - [x] `join_flow`
-                - [x] `rec_flow`
-                - [x] `rec_flow_t`
-                - [x] `flow_opt`
-                - [x] `flow_opt_t`
-                - [x] `flow`
-                - [x] `flow_t`
-                - [x] `flow_p`
-                - [x] `rec_unify`
-                - [x] `unify_opt`
-                - [x] `unify`
-                - [x] `continue_`
-                - [x] `continue_repos`
-                - [x] `type_app_variance_check`
-                - [x] `possible_concrete_types`
-                - [x] `singleton_concrete_type`
-                - [x] `possible_concrete_types_for_optional_chain`
-                - [x] `possible_concrete_types_for_inspection`
-                - [x] `singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports`
-                - [x] `singleton_concretize_type_for_imports_exports`
-                - [x] `singleton_concrete_type_for_inspection`
-                - [x] `add_specialized_callee_method_action`
-                - [x] `possible_concrete_types_for_imports_exports`
-                - [x] `possible_concrete_types_for_predicate`
-                - [x] `possible_concrete_types_for_sentinel_prop_test`
-                - [x] `all_possible_concrete_types`
-                - [x] `possible_concrete_types_for_operators_checking`
-                - [x] `possible_concrete_types_for_object_assign`
-                - [x] `possible_concrete_types_for_computed_object_keys`
-                - [x] `singleton_concrete_type_for_match_arg`
-                - [x] `possible_concrete_types_for_match_arg`
-        - FlowJs module → `mod.rs`:
-            - [x] `FlowJs` struct + `S` trait impl (all trait methods implemented)
-            - [x] Public wrappers: `flow`, `flow_t`, `subst`, `mk_default`, `mk_instance`, `get_builtin_type`, `get_builtin_react_type`, `reposition_reason`, `filter_optional`, `unify`, `reposition`, `mk_typeapp_instance_annot`, `mk_type_destructor`, `add_output`
-            - [x] Non-speculating wrappers: `flow_non_speculating`, `flow_t_non_speculating`, `mk_default_non_speculating`, `mk_instance_non_speculating`, `get_builtin_type_non_speculating`, `get_builtin_react_type_non_speculating`, `reposition_reason_non_speculating`, `filter_optional_non_speculating`, `unify_non_speculating`, `reposition_non_speculating`, `mk_typeapp_instance_annot_non_speculating`, `mk_type_destructor_non_speculating`, `add_output_non_speculating`
-    - [x] flow_js_utils.ml → `flow_typing_flow_common/src/flow_js_utils.rs`
-    - [x] func_class_sig_types.ml → `flow_typing_loc_env/src/func_class_sig_types.rs`
-    - [x] func_params.ml → `flow_typing_statement/src/func_params.rs`
-    - [x] func_params_intf.ml → `flow_typing_statement/src/func_params_intf.rs`
-    - [x] func_sig.ml → `flow_typing_statement/src/func_sig.rs`
-    - [x] func_sig_intf.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] func_stmt_config.ml → `flow_typing_statement/src/func_stmt_config.rs`
-    - [x] func_stmt_config_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] func_stmt_config_types.ml → `flow_typing_loc_env/src/func_stmt_config_types.rs`
-    - [x] implicit_instantiation.ml → `flow_typing_flow_js/src/implicit_instantiation.rs`
-    - [x] implicit_instantiation_check.ml → `flow_typing_implicit_instantiation_check/src/lib.rs`
-    - [x] instantiation_utils.ml → `flow_typing_flow_common/src/instantiation_utils.rs`
-        - [x] `implicit_type_argument` module (`mk_targ`, `abstract_targ`)
-        - [x] `type_app_expansion` module (`push_unless_loop`, `pop`, `get`, `set`)
-    - [x] key.ml → `flow_typing_key` crate (`src/lib.rs`)
-        - [x] `Base` enum (OrdinaryIdentifier, This, Super)
-        - [x] `Proj` enum (Prop, Elem, PrivateField)
-        - [x] `Key` struct
-        - [x] `string_of_key` → `impl Display for Key`
-        - [x] `uses_propname` → `Key::uses_propname` method
-        - [x] `is_simple` → `Key::is_simple` method
-        - [x] `reason_desc` → `Key::reason_desc` method
-    - [x] key_map.ml → `just use map of keys directly`
-    - [x] loc_env.ml → `flow_typing_loc_env/src/loc_env.rs`
-    - [x] marked.ml → `flow_typing/src/marked.rs`
-        - [x] `Marked<K>` generic struct (replaces OCaml functor)
-        - [x] `new` (empty)
-        - [x] `add`
-        - [x] `get`
-        - [x] `mem`
-        - [x] `exclude`
-        - [x] `IdMarked` type alias
-    - [x] match_pattern.ml → `flow_typing_statement/src/match_pattern.rs`
-    - [x] match_pattern_ir.ml → `flow_typing_loc_env/src/match_pattern_ir.rs`
-    - [x] members.ml → `flow_typing_utils/src/members.rs`
-    - [x] merge_js.ml → `flow_typing/src/merge.rs`
-        - [x] `get_lint_severities`
-        - [x] `copy_into`
-        - [x] `merge_lib_files`
-        - [x] `mk_builtins`
-        - [x] `post_merge_checks`
-    - [x] module_exports_checker.ml → `flow_typing_utils/src/module_exports_checker.rs`
-    - [x] module_info_analyzer.ml → `flow_typing_statement/src/module_info_analyzer.rs`
-    - [x] natural_inference.ml → `flow_typing_flow_js/src/natural_inference.rs`
-    - [x] node_cache.ml → `flow_typing_loc_env/src/node_cache.rs`
-    - [x] obj_type.ml → `flow_typing_flow_common/src/obj_type.rs`
-        - [x] `mk_seal`
-        - [x] `mk_with_proto`
-        - [x] `mk`
-        - [x] `is_exact`
-        - [x] `get_dict_opt`
-        - [x] `map_dict`
-        - [x] `obj_kind_from_optional_dict`
-    - [x] object_kit.ml → `flow_typing_flow_js/src/object_kit.rs`
-    - [x] optional_chain_kit.ml → `flow_typing_flow_js/src/optional_chain_kit.rs`
-    - [x] predicate_kit.ml → `flow_typing_utils/src/predicate_kit.rs`
-    - [x] query_types.ml → `flow_typing/src/query_types.rs`
-        - [x] `type 'a result` → `QueryResult<A>` enum
-        - [x] `concretize_loc_pairs`
-        - [x] `sort_loc_pairs`
-        - [x] `result_of_normalizer_error`
-        - [x] `max_size_of_evaluated_type` → `MAX_SIZE_OF_EVALUATED_TYPE`
-        - [x] `dump_type_at_pos`
-        - [x] `type_at_pos_type`
-        - [x] `dump_types`
-        - [x] `dump_types_for_tool`
-        - [x] `insert_type_normalize`
-    - [x] react_kit.ml → `flow_typing_flow_js/src/react_kit.rs`
-    - [x] react_rules.ml → `flow_typing_statement/src/react_rules.rs`
-    - [x] refinement.ml → `flow_typing_statement/src/refinement.rs`
-    - [x] renders_kit.ml → `flow_typing_flow_js/src/renders_kit.rs`
-    - [x] slice_utils.ml → `flow_typing_flow_js/src/slice_utils.rs`
-    - [x] sort_js.ml → `directly use tarjans instead`
-    - [x] source_or_generated_id.ml → `flow_typing_type/src/source_or_generated_id.rs` (7/7 functions, 100% complete)
-        - [x] `compare_id` → `Ord for Id` trait impl
-        - [x] `equal_id` → `PartialEq for Id` trait impl
-        - [x] `generate_id` → `Id::generate_id()`
-        - [x] `id_of_aloc_id` → `Id::of_aloc_id()`
-        - [x] `from_type_sig` → `Id::from_type_sig()`
-        - [x] `string_of_id` → `Id::debug_string()`
-        - [x] `stable_string_of_id` → `Id::stable_string()`
-    - [x] speculation.ml → `flow_typing_flow_common/src/speculation.rs`
-        - [x] `SpeculationId` type
-        - [x] `set_speculative`
-        - [x] `restore_speculative`
-        - [x] `speculating`
-        - [x] `defer_error`
-    - [x] speculation_flow.ml → `flow_typing_utils/src/speculation_flow.rs`
-    - [x] speculation_kit.ml → `flow_typing_flow_js/src/speculation_kit.rs`
-    - [x] speculation_state.ml → `flow_typing_speculation_state/src/lib.rs`
-    - [x] spread_cache.ml → `flow_typing_spread_cache/src/lib.rs`
-    - [x] statement_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] statement.ml → `flow_typing_statement/src/statement.rs`
-    - [x] strict_es6_import_export.ml → `flow_typing_utils/src/strict_es6_import_export.rs`
-    - [x] subtyping_kit.ml → `flow_typing_flow_js/src/subtyping_kit.rs`
-    - [x] switch_to_match.ml → `flow_typing_statement/src/switch_to_match.rs`
-    - [x] tvar.ml → `flow_typing_tvar/src/lib.rs`
-        - [x] `mk_no_wrap`
-        - [x] `mk`
-        - [x] `mk_where`
-        - [x] `mk_where_result` (use it when the lambda of `mk_where` return `Result`)
-        - [x] `mk_where_no_wrap`
-        - [x] `mk_no_wrap_where`
-        - [x] `mk_fully_resolved_lazy`
-        - [x] `mk_fully_resolved_no_wrap`
-        - [x] `mk_fully_resolved`
-        - [x] `mk_resolved`
-    - [x] tvar_resolver.ml → `flow_typing_flow_js/src/tvar_resolver.rs`
-    - [x] ty_members.ml → `flow_typing/src/ty_members.rs`
-        - [x] `MemberInfo` struct
-        - [x] `MembershipBehavior` enum
-        - [x] `members_of_ty`
-        - [x] `TyMembers` struct
-        - [x] `extract`
-    - [x] ty_normalizer.ml → `flow_typing_ty_normalizer/src/normalizer.rs`
-        - [x] `ErrorKind` enum
-        - [x] `Error` struct
-        - [x] `lookahead` module
-        - [x] `NormalizerInput` trait (INPUT module type)
-        - [x] `State` struct
-        - [x] `IdKey` enum
-        - [x] `element_converter` module
-        - [x] `Normalizer` struct (Make functor)
-        - [x] `make_normalizer`
-    - [x] ty_normalizer_env.ml → `flow_typing_ty_normalizer/src/env.rs`
-        - [x] `EvaluateTypeDestructorsMode` enum
-        - [x] `Options` struct
-        - [x] `Options::default` function
-        - [x] `default_codemod_options` function
-        - [x] `Genv` struct
-        - [x] `SymbolSet` type alias
-        - [x] `Env` struct
-        - [x] `Env::init` method
-        - [x] `Env::descend` method
-        - [x] `Env::get_cx` method
-        - [x] `Env::imported_names` method
-        - [x] `Env::expand_internal_types` method
-        - [x] `Env::evaluate_type_destructors` method
-        - [x] `Env::omit_targ_defaults` method
-        - [x] `Env::optimize_types` method
-        - [x] `Env::max_depth` method
-        - [x] `Env::merge_bot_and_any_kinds` method
-        - [x] `Env::verbose` method
-        - [x] `Env::toplevel_is_type_identifier_reference` method
-    - [x] ty_normalizer_flow.ml → `flow_typing/src/ty_normalizer_flow.rs`
-        - [x] `FlowInput` struct (implements `NormalizerInput`)
-        - [x] `FlowNormalizer` type alias
-        - [x] `from_types`
-        - [x] `from_type_with_found_computed_type`
-        - [x] `from_type`
-        - [x] `from_module_type`
-        - [x] `expand_members`
-        - [x] `expand_literal_union`
-        - [x] `mk_genv`
-        - [x] `debug_string_of_t`
-    - [x] ty_normalizer_imports.ml → `flow_typing/src/ty_normalizer_imports.rs`
-    - [x] ty_normalizer_no_flow.ml → `flow_typing_ty_normalizer/src/no_flow.rs`
-        - [x] `NoFlowInput` struct (implements `NormalizerInput`)
-        - [x] `NoFlowNormalizer` type alias
-        - [x] `from_type`
-        - [x] `mk_genv`
-        - [x] `mk_default_genv`
-        - [x] `debug_string_of_t`
-        - [x] `type_to_desc_for_errors`
-    - [x] type.ml → `flow_typing_type/src/type_.rs` (EVERYTHING)
-    - [x] typeUtil.ml → `flow_typing_type/src/type_util.rs`
-    - [x] type_annotation.ml → `flow_typing_statement/src/type_annotation.rs`
-    - [x] type_annotation_cons_gen.ml → `flow_typing_statement/src/type_annotation_cons_gen.rs`
-    - [x] type_annotation_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
-    - [x] type_env.ml → `flow_typing_utils/src/type_env.rs`
-    - [x] type_filter.ml → `flow_typing_utils/src/type_filter.rs`
-    - [x] type_guard.ml → `flow_typing_utils/src/type_guard.rs`
-    - [x] type_hint.ml → `flow_typing_utils/src/type_hint.rs`
-    - [x] type_inference_hooks_js.ml → `flow_typing_flow_js/src/type_inference_hooks_js.rs`
-    - [x] type_inference_js.ml → `flow_typing/src/type_inference.rs`
-        - [x] `scan_for_suppressions`
-        - [x] `infer_ast`
-        - [x] `infer_file`
-        - [x] `initialize_env`
-    - [x] type_mapper.ml → `flow_typing_visitors/src/type_mapper.rs`
-    - [x] type_operation_utils.ml → `flow_typing_utils/src/type_operation_utils.rs`
-    - [x] type_sig_merge.ml → `flow_typing_utils/src/type_sig_merge.rs`
-    - [x] type_subst.ml → `flow_typing_flow_common/src/type_subst.rs`
-        - [x] `Replacement` enum
-        - [x] `free_var_finder`
-        - [x] `free_var_finder_in_destructor`
-        - [x] `new_name`
-        - [x] `Purpose` enum
-        - [x] `Substituter` (TypeMapper impl)
-        - [x] `call_prop`
-        - [x] `props`
-        - [x] `exports`
-        - [x] `subst`
-        - [x] `subst_destructor`
-        - [x] `subst_instance_type`
-    - [x] type_visitor.ml → `flow_typing_visitors/src/type_visitor.rs`
-    - [x] typed_ast_finder.ml → `flow_typing/src/typed_ast_finder.rs`
-        - [x] `mk_bound_t`
-        - [x] `EnclosingNode` enum
-        - [x] `infer_node`
-        - [x] `FindTypeAnnotVisitor` (LocMapper-based)
-        - [x] `find_type_annot_in_node`
-        - [x] `exact_match_query` module
-        - [x] `find_exact_match_annotation`
-        - [x] `enclosing_node_mapper` class (folded into `Searcher` in `flow_services_get_def/src/get_def_process_location.rs`)
-        - [x] `type_parameter_mapper_generic` class (folded into `TypeAtPosSearcher` methods)
-        - [x] `type_parameter_mapper` class (folded into `TypeAtPosSearcher`'s `AstVisitor` impl)
-        - [x] `Type_at_pos` module (`type_at_pos` module: `TypeAtPosResult`, `FoundResult`, `TypeAtPosSearcher`, `find`)
-        - [x] `find_type_at_pos_annotation`
-    - [x] typed_ast_utils.ml → `flow_typing_utils/src/typed_ast_utils.rs`
-        - [x] `AvailableAst` enum
-        - [x] `typed_ast_of_available_ast`
-        - [x] `polarity`
-        - [x] `typed_ast_to_map`
-        - [x] `typed_ast_to_list`
-  - [ ] flow.ml
-  - [ ] flow_dot_js.ml
+    - [x] polarity.ml → `flow_common/src/polarity.rs`
+      - [x] `apply_const`
+      - [x] `compat`
+      - [x] `equal`
+      - [x] `inv`
+      - [x] `mult`
+      - [x] `object_literal_polarity`
+      - [x] `sigil`
+      - [x] `string`
+  - [x] abnormal.ml → `flow_typing_utils/src/abnormal.rs`
+    - [x] `AbnormalControlFlow` struct (replaces exception)
+    - [x] `throw_expr_control_flow_exception` → just do `Err(AbnormalControlFlow((loc, expr)))`
+    - [x] `catch_stmt_control_flow_exception`
+    - [x] `catch_expr_control_flow_exception`
+    - [x] `try_with_abnormal_exn`
+  - [x] annotation_inference.ml → `flow_typing_utils/src/annotation_inference.rs`
+  - [x] avar.ml → `flow_typing_utils/src/avar.rs`
+  - [x] builtins.ml → `flow_typing_builtins/src/builtins.rs`
+    - [x] `Builtins` struct
+    - [x] `builtin_ordinary_name_set`
+    - [x] `builtin_modules_set`
+    - [x] `get_builtin_value_opt`
+    - [x] `get_builtin_type_opt`
+    - [x] `get_builtin_module_opt`
+    - [x] `of_name_map`
+    - [x] `empty`
+  - [x] check_polarity.ml → `flow_typing_utils/src/check_polarity.rs`
+  - [x] class_sig.ml → `flow_typing_statement/src/class_sig.rs`
+  - [x] class_sig_intf.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] component_declaration_config.ml → `flow_typing_statement/src/component_declaration_config.rs`
+  - [x] component_params.ml → `flow_typing_statement/src/component_params.rs`
+  - [x] component_params_intf.ml → `flow_typing_statement/src/component_params_intf.rs`
+  - [x] component_sig.ml → `flow_typing_statement/src/component_sig.rs`
+  - [x] component_sig_intf.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] component_sig_types.ml → `flow_typing_loc_env/src/component_sig_types.rs`
+  - [x] concrete_type_eq.ml → `flow_typing_flow_common/src/concrete_type_eq.rs`
+    - [x] `swap_reason`
+    - [x] `eq`
+    - [x] `eq_targs`
+  - [x] context.ml → `flow_typing_context/src/lib.rs`
+  - [x] convertTypes.ml → `flow_typing_utils/src/convert_types.rs`
+  - [x] cycles.ml → `flow_typing/src/cycles.rs`
+    - [x] `handle_element`
+    - [x] `key_of_element`
+    - [x] `handle_component`
+  - [x] debug_js.ml → `flow_typing_debug/src/lib.rs`
+    - [x] `string_of_selector`
+    - [x] `string_of_destructor`
+    - [x] `dump_reason`
+    - [x] `dump_t`
+    - [x] `dump_use_t`
+    - [x] `dump_prop`
+    - [x] `dump_normalized_prop`
+    - [x] `dump_tvar`
+    - [x] `dump_flow`
+    - [x] `string_of_reason`
+    - [x] `string_of_file`
+    - [x] `string_of_default`
+    - [x] `string_of_signature_error`
+    - [x] `dump_error_message`
+    - [x] `verbose` module
+  - [x] default.ml → `flow_typing_default/src/lib.rs`
+  - [x] default_resolve.ml → `flow_typing_flow_js/src/default_resolve.rs`
+    - [x] `default_resolve_touts`
+  - [x] destructuring.ml → `flow_typing_statement/src/destructuring.rs`
+  - [x] destructuring_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] env_resolution.ml → `flow_typing/src/env_resolution.rs`
+  - [x] exhaustive.ml → `flow_typing_utils/src/exhaustive.rs`
+  - [x] existsCheck.ml → `flow_typing_exists_check/src/`lib.rs
+  - [x] exists_marker.ml → `flow_typing_statement/src/exists_marker.rs`
+  - [x] fix_statement.ml → `unnecessary in rust`
+  - [x] flow_cache.ml → `flow_typing_flow_common/src/flow_cache.rs`
+    - [x] `flow_constraint` module
+    - [x] `eval` module
+    - [x] `fix` module
+    - [x] `summarize_flow_constraint`
+  - [x] flow_common.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] flow_js.ml → `flow_typing_flow_js/src/flow_js/` (directory with multiple files)
+    - Top-level items (before M__flow):
+      - [x] `not_linked` → `helpers.rs`
+      - [x] `RecursionCheck` module → `recursion_check.rs`
+      - [x] `ConstFoldExpansion` module → `const_fold_expansion.rs`
+        - [x] `get_rmap`
+        - [x] `increment`
+        - [x] `guard`
+      - [x] `subst` → `mod.rs` (public wrapper around `type_subst::subst`)
+      - [ ] `check_canceled` → `helpers.rs` (intentionally empty; revisit when full checker is ported)
+      - [x] `is_concrete` → moved to `flow_typing_type/src/type_util.rs`
+      - [x] `inherited_method` → `helpers.rs`
+      - [x] `find_resolved_opt` → `helpers.rs`
+      - [x] `drop_resolved` → `helpers.rs`
+    - M__flow module → split across files:
+      - [x] `__flow` (main dispatch) → `dispatch.rs` (9224 lines, fully ported)
+      - [x] `empty_success` → `helpers.rs`
+      - [x] `handle_generic` → `helpers.rs`
+      - Any helpers → `any_helpers.rs`:
+        - [x] `expand_any`
+        - [x] `any_prop_to_function`
+        - [x] `invariant_any_propagation_flow`
+        - [x] `any_prop_call_prop`
+        - [x] `any_prop_properties`
+        - [x] `any_prop_obj`
+        - [x] `any_prop_tvar`
+        - [x] `any_prop_to_type_args`
+        - [x] `any_prop_inst`
+        - [x] `any_propagated`
+        - [x] `any_propagated_use`
+      - Inheritance helpers → `inheritance_helpers.rs`:
+        - [x] `flow_type_args`
+        - [x] `inst_type_to_obj_type`
+        - [x] `structural_subtype`
+        - [x] `inst_structural_subtype`
+        - [x] `check_super`
+      - Eval/destructor helpers → `eval_helpers.rs`:
+        - [x] `destruct`
+        - [x] `eval_selector`
+        - [x] `evaluate_type_destructor`
+        - [x] `mk_type_destructor`
+        - [x] `eval_destructor`
+        - [x] `eagerly_eval_destructor_if_resolved`
+        - [x] `mk_possibly_evaluated_destructor_for_annotations`
+      - Instantiation helpers → `instantiation_helpers.rs`:
+        - [x] `instantiate_with_targs_with_soln`
+        - [x] `instantiate_with_targs`
+        - [x] `instantiate_poly_call_or_new_with_soln`
+        - [x] `instantiate_poly_call_or_new`
+        - [x] `instantiate_poly_default_args`
+        - [x] `instantiate_this_class`
+      - Enum helpers → `enum_helpers.rs`:
+        - [x] `enum_exhaustive_check`
+        - [x] `enum_exhaustive_check_incomplete`
+      - Get prop helpers → `get_prop_helpers.rs`:
+        - [x] `Get_prop_helper` module → `impl GetPropHelper for FlowJs`
+        - [x] `prop_typo_suggestion`
+        - [x] `get_private_prop`
+        - [x] `elem_action_on_obj`
+        - [x] `write_obj_prop`
+      - Constraint helpers → `constraint_helpers.rs`:
+        - [x] `flows_to_t`
+        - [x] `flows_from_t`
+        - [x] `flows_across`
+        - [x] `add_upper`
+        - [x] `add_lower`
+        - [x] `iter_with_filter`
+        - [x] `edges_to_t`
+        - [x] `edges_from_t`
+        - [x] `edges_to_ts`
+        - [x] `edges_from_ts`
+        - [x] `edges_and_flows_to_t`
+        - [x] `edges_and_flows_from_t`
+        - [x] `add_uppertvar`
+        - [x] `add_lowertvar`
+        - [x] `edges_to_tvar`
+        - [x] `edges_from_tvar`
+        - [x] `add_upper_edges`
+        - [x] `add_lower_edges`
+        - [x] `unify_flip`
+        - [x] `goto`
+        - [x] `merge_ids`
+        - [x] `resolve_id`
+      - Unification helpers → `unification_helpers.rs`:
+        - [x] `ok_unify`
+        - [x] `__unify`
+        - [x] `__unify_inner`
+        - [x] `unify_props`
+        - [x] `unify_prop_with_dict`
+        - [x] `naive_unify`
+        - [x] `array_unify`
+      - Multi-arg helpers → `multi_arg_helpers.rs`:
+        - [x] `multiflow_call`
+        - [x] `multiflow_subtype`
+        - [x] `multiflow_full`
+        - [x] `multiflow_partial`
+        - [x] `resolve_call_list`
+        - [x] `resolve_spread_list`
+        - [x] `resolve_spread_list_rec`
+        - [x] `finish_resolve_spread_list`
+      - More helpers → `helpers.rs`:
+        - [x] `speculative_subtyping_succeeds`
+        - [x] `perform_lookup_action`
+        - [x] `mk_react_dro`
+        - [x] `resolve_union`
+        - [x] `filter_optional`
+        - [x] `pick_use_op`
+        - [x] `flow_use_op`
+        - [x] `apply_method_action`
+        - [x] `perform_elem_action`
+        - [x] `get_builtin_typeapp`
+        - [x] `get_builtin_react_typeapp`
+        - [x] `get_builtin_type`
+        - [x] `get_builtin_react_type`
+        - [x] `mk_typeapp_instance_annot`
+        - [x] `mk_typeapp_instance`
+        - [x] `mk_typeapp_instance_of_poly`
+        - [x] `mk_instance`
+        - [x] `mk_instance_source`
+        - [x] `mk_instance_raw`
+        - [x] `instance_lookup_kind`
+        - [x] `reposition_reason`
+        - [x] `reposition`
+        - [x] `flow_all_in_union`
+        - [x] `call_args_iter`
+        - [x] `extract_non_spread`
+        - [x] `join_flow`
+        - [x] `rec_flow`
+        - [x] `rec_flow_t`
+        - [x] `flow_opt`
+        - [x] `flow_opt_t`
+        - [x] `flow`
+        - [x] `flow_t`
+        - [x] `flow_p`
+        - [x] `rec_unify`
+        - [x] `unify_opt`
+        - [x] `unify`
+        - [x] `continue_`
+        - [x] `continue_repos`
+        - [x] `type_app_variance_check`
+        - [x] `possible_concrete_types`
+        - [x] `singleton_concrete_type`
+        - [x] `possible_concrete_types_for_optional_chain`
+        - [x] `possible_concrete_types_for_inspection`
+        - [x] `singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports`
+        - [x] `singleton_concretize_type_for_imports_exports`
+        - [x] `singleton_concrete_type_for_inspection`
+        - [x] `add_specialized_callee_method_action`
+        - [x] `possible_concrete_types_for_imports_exports`
+        - [x] `possible_concrete_types_for_predicate`
+        - [x] `possible_concrete_types_for_sentinel_prop_test`
+        - [x] `all_possible_concrete_types`
+        - [x] `possible_concrete_types_for_operators_checking`
+        - [x] `possible_concrete_types_for_object_assign`
+        - [x] `possible_concrete_types_for_computed_object_keys`
+        - [x] `singleton_concrete_type_for_match_arg`
+        - [x] `possible_concrete_types_for_match_arg`
+    - FlowJs module → `mod.rs`:
+      - [x] `FlowJs` struct + `S` trait impl (all trait methods implemented)
+      - [x] Public wrappers: `flow`, `flow_t`, `subst`, `mk_default`, `mk_instance`, `get_builtin_type`, `get_builtin_react_type`, `reposition_reason`, `filter_optional`, `unify`, `reposition`, `mk_typeapp_instance_annot`, `mk_type_destructor`, `add_output`
+      - [x] Non-speculating wrappers: `flow_non_speculating`, `flow_t_non_speculating`, `mk_default_non_speculating`, `mk_instance_non_speculating`, `get_builtin_type_non_speculating`, `get_builtin_react_type_non_speculating`, `reposition_reason_non_speculating`, `filter_optional_non_speculating`, `unify_non_speculating`, `reposition_non_speculating`, `mk_typeapp_instance_annot_non_speculating`, `mk_type_destructor_non_speculating`, `add_output_non_speculating`
+  - [x] flow_js_utils.ml → `flow_typing_flow_common/src/flow_js_utils.rs`
+  - [x] func_class_sig_types.ml → `flow_typing_loc_env/src/func_class_sig_types.rs`
+  - [x] func_params.ml → `flow_typing_statement/src/func_params.rs`
+  - [x] func_params_intf.ml → `flow_typing_statement/src/func_params_intf.rs`
+  - [x] func_sig.ml → `flow_typing_statement/src/func_sig.rs`
+  - [x] func_sig_intf.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] func_stmt_config.ml → `flow_typing_statement/src/func_stmt_config.rs`
+  - [x] func_stmt_config_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] func_stmt_config_types.ml → `flow_typing_loc_env/src/func_stmt_config_types.rs`
+  - [x] implicit_instantiation.ml → `flow_typing_flow_js/src/implicit_instantiation.rs`
+  - [x] implicit_instantiation_check.ml → `flow_typing_implicit_instantiation_check/src/lib.rs`
+  - [x] instantiation_utils.ml → `flow_typing_flow_common/src/instantiation_utils.rs`
+    - [x] `implicit_type_argument` module (`mk_targ`, `abstract_targ`)
+    - [x] `type_app_expansion` module (`push_unless_loop`, `pop`, `get`, `set`)
+  - [x] key.ml → `flow_typing_key` crate (`src/lib.rs`)
+    - [x] `Base` enum (OrdinaryIdentifier, This, Super)
+    - [x] `Proj` enum (Prop, Elem, PrivateField)
+    - [x] `Key` struct
+    - [x] `string_of_key` → `impl Display for Key`
+    - [x] `uses_propname` → `Key::uses_propname` method
+    - [x] `is_simple` → `Key::is_simple` method
+    - [x] `reason_desc` → `Key::reason_desc` method
+  - [x] key_map.ml → `just use map of keys directly`
+  - [x] loc_env.ml → `flow_typing_loc_env/src/loc_env.rs`
+  - [x] marked.ml → `flow_typing/src/marked.rs`
+    - [x] `Marked<K>` generic struct (replaces OCaml functor)
+    - [x] `new` (empty)
+    - [x] `add`
+    - [x] `get`
+    - [x] `mem`
+    - [x] `exclude`
+    - [x] `IdMarked` type alias
+  - [x] match_pattern.ml → `flow_typing_statement/src/match_pattern.rs`
+  - [x] match_pattern_ir.ml → `flow_typing_loc_env/src/match_pattern_ir.rs`
+  - [x] members.ml → `flow_typing_utils/src/members.rs`
+  - [x] merge_js.ml → `flow_typing/src/merge.rs`
+    - [x] `get_lint_severities`
+    - [x] `copy_into`
+    - [x] `merge_lib_files`
+    - [x] `mk_builtins`
+    - [x] `post_merge_checks`
+  - [x] module_exports_checker.ml → `flow_typing_utils/src/module_exports_checker.rs`
+  - [x] module_info_analyzer.ml → `flow_typing_statement/src/module_info_analyzer.rs`
+  - [x] natural_inference.ml → `flow_typing_flow_js/src/natural_inference.rs`
+  - [x] node_cache.ml → `flow_typing_loc_env/src/node_cache.rs`
+  - [x] obj_type.ml → `flow_typing_flow_common/src/obj_type.rs`
+    - [x] `mk_seal`
+    - [x] `mk_with_proto`
+    - [x] `mk`
+    - [x] `is_exact`
+    - [x] `get_dict_opt`
+    - [x] `map_dict`
+    - [x] `obj_kind_from_optional_dict`
+  - [x] object_kit.ml → `flow_typing_flow_js/src/object_kit.rs`
+  - [x] optional_chain_kit.ml → `flow_typing_flow_js/src/optional_chain_kit.rs`
+  - [x] predicate_kit.ml → `flow_typing_utils/src/predicate_kit.rs`
+  - [x] query_types.ml → `flow_typing/src/query_types.rs`
+    - [x] `type 'a result` → `QueryResult<A>` enum
+    - [x] `concretize_loc_pairs`
+    - [x] `sort_loc_pairs`
+    - [x] `result_of_normalizer_error`
+    - [x] `max_size_of_evaluated_type` → `MAX_SIZE_OF_EVALUATED_TYPE`
+    - [x] `dump_type_at_pos`
+    - [x] `type_at_pos_type`
+    - [x] `dump_types`
+    - [x] `dump_types_for_tool`
+    - [x] `insert_type_normalize`
+  - [x] react_kit.ml → `flow_typing_flow_js/src/react_kit.rs`
+  - [x] react_rules.ml → `flow_typing_statement/src/react_rules.rs`
+  - [x] refinement.ml → `flow_typing_statement/src/refinement.rs`
+  - [x] renders_kit.ml → `flow_typing_flow_js/src/renders_kit.rs`
+  - [x] slice_utils.ml → `flow_typing_flow_js/src/slice_utils.rs`
+  - [x] sort_js.ml → `directly use tarjans instead`
+  - [x] source_or_generated_id.ml → `flow_typing_type/src/source_or_generated_id.rs` (7/7 functions, 100% complete)
+    - [x] `compare_id` → `Ord for Id` trait impl
+    - [x] `equal_id` → `PartialEq for Id` trait impl
+    - [x] `generate_id` → `Id::generate_id()`
+    - [x] `id_of_aloc_id` → `Id::of_aloc_id()`
+    - [x] `from_type_sig` → `Id::from_type_sig()`
+    - [x] `string_of_id` → `Id::debug_string()`
+    - [x] `stable_string_of_id` → `Id::stable_string()`
+  - [x] speculation.ml → `flow_typing_flow_common/src/speculation.rs`
+    - [x] `SpeculationId` type
+    - [x] `set_speculative`
+    - [x] `restore_speculative`
+    - [x] `speculating`
+    - [x] `defer_error`
+  - [x] speculation_flow.ml → `flow_typing_utils/src/speculation_flow.rs`
+  - [x] speculation_kit.ml → `flow_typing_flow_js/src/speculation_kit.rs`
+  - [x] speculation_state.ml → `flow_typing_speculation_state/src/lib.rs`
+  - [x] spread_cache.ml → `flow_typing_spread_cache/src/lib.rs`
+  - [x] statement_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] statement.ml → `flow_typing_statement/src/statement.rs`
+  - [x] strict_es6_import_export.ml → `flow_typing_utils/src/strict_es6_import_export.rs`
+  - [x] subtyping_kit.ml → `flow_typing_flow_js/src/subtyping_kit.rs`
+  - [x] switch_to_match.ml → `flow_typing_statement/src/switch_to_match.rs`
+  - [x] tvar.ml → `flow_typing_tvar/src/lib.rs`
+    - [x] `mk_no_wrap`
+    - [x] `mk`
+    - [x] `mk_where`
+    - [x] `mk_where_result` (use it when the lambda of `mk_where` return `Result`)
+    - [x] `mk_where_no_wrap`
+    - [x] `mk_no_wrap_where`
+    - [x] `mk_fully_resolved_lazy`
+    - [x] `mk_fully_resolved_no_wrap`
+    - [x] `mk_fully_resolved`
+    - [x] `mk_resolved`
+  - [x] tvar_resolver.ml → `flow_typing_flow_js/src/tvar_resolver.rs`
+  - [x] ty_members.ml → `flow_typing/src/ty_members.rs`
+    - [x] `MemberInfo` struct
+    - [x] `MembershipBehavior` enum
+    - [x] `members_of_ty`
+    - [x] `TyMembers` struct
+    - [x] `extract`
+  - [x] ty_normalizer.ml → `flow_typing_ty_normalizer/src/normalizer.rs`
+    - [x] `ErrorKind` enum
+    - [x] `Error` struct
+    - [x] `lookahead` module
+    - [x] `NormalizerInput` trait (INPUT module type)
+    - [x] `State` struct
+    - [x] `IdKey` enum
+    - [x] `element_converter` module
+    - [x] `Normalizer` struct (Make functor)
+    - [x] `make_normalizer`
+  - [x] ty_normalizer_env.ml → `flow_typing_ty_normalizer/src/env.rs`
+    - [x] `EvaluateTypeDestructorsMode` enum
+    - [x] `Options` struct
+    - [x] `Options::default` function
+    - [x] `default_codemod_options` function
+    - [x] `Genv` struct
+    - [x] `SymbolSet` type alias
+    - [x] `Env` struct
+    - [x] `Env::init` method
+    - [x] `Env::descend` method
+    - [x] `Env::get_cx` method
+    - [x] `Env::imported_names` method
+    - [x] `Env::expand_internal_types` method
+    - [x] `Env::evaluate_type_destructors` method
+    - [x] `Env::omit_targ_defaults` method
+    - [x] `Env::optimize_types` method
+    - [x] `Env::max_depth` method
+    - [x] `Env::merge_bot_and_any_kinds` method
+    - [x] `Env::verbose` method
+    - [x] `Env::toplevel_is_type_identifier_reference` method
+  - [x] ty_normalizer_flow.ml → `flow_typing/src/ty_normalizer_flow.rs`
+    - [x] `FlowInput` struct (implements `NormalizerInput`)
+    - [x] `FlowNormalizer` type alias
+    - [x] `from_types`
+    - [x] `from_type_with_found_computed_type`
+    - [x] `from_type`
+    - [x] `from_module_type`
+    - [x] `expand_members`
+    - [x] `expand_literal_union`
+    - [x] `mk_genv`
+    - [x] `debug_string_of_t`
+  - [x] ty_normalizer_imports.ml → `flow_typing/src/ty_normalizer_imports.rs`
+  - [x] ty_normalizer_no_flow.ml → `flow_typing_ty_normalizer/src/no_flow.rs`
+    - [x] `NoFlowInput` struct (implements `NormalizerInput`)
+    - [x] `NoFlowNormalizer` type alias
+    - [x] `from_type`
+    - [x] `mk_genv`
+    - [x] `mk_default_genv`
+    - [x] `debug_string_of_t`
+    - [x] `type_to_desc_for_errors`
+  - [x] type.ml → `flow_typing_type/src/type_.rs` (EVERYTHING)
+  - [x] typeUtil.ml → `flow_typing_type/src/type_util.rs`
+  - [x] type_annotation.ml → `flow_typing_statement/src/type_annotation.rs`
+  - [x] type_annotation_cons_gen.ml → `flow_typing_statement/src/type_annotation_cons_gen.rs`
+  - [x] type_annotation_sig.ml → `irrelevant` (rust doesn't need it to deal with cyclic modules)
+  - [x] type_env.ml → `flow_typing_utils/src/type_env.rs`
+  - [x] type_filter.ml → `flow_typing_utils/src/type_filter.rs`
+  - [x] type_guard.ml → `flow_typing_utils/src/type_guard.rs`
+  - [x] type_hint.ml → `flow_typing_utils/src/type_hint.rs`
+  - [x] type_inference_hooks_js.ml → `flow_typing_flow_js/src/type_inference_hooks_js.rs`
+  - [x] type_inference_js.ml → `flow_typing/src/type_inference.rs`
+    - [x] `scan_for_suppressions`
+    - [x] `infer_ast`
+    - [x] `infer_file`
+    - [x] `initialize_env`
+  - [x] type_mapper.ml → `flow_typing_visitors/src/type_mapper.rs`
+  - [x] type_operation_utils.ml → `flow_typing_utils/src/type_operation_utils.rs`
+  - [x] type_sig_merge.ml → `flow_typing_utils/src/type_sig_merge.rs`
+  - [x] type_subst.ml → `flow_typing_flow_common/src/type_subst.rs`
+    - [x] `Replacement` enum
+    - [x] `free_var_finder`
+    - [x] `free_var_finder_in_destructor`
+    - [x] `new_name`
+    - [x] `Purpose` enum
+    - [x] `Substituter` (TypeMapper impl)
+    - [x] `call_prop`
+    - [x] `props`
+    - [x] `exports`
+    - [x] `subst`
+    - [x] `subst_destructor`
+    - [x] `subst_instance_type`
+  - [x] type_visitor.ml → `flow_typing_visitors/src/type_visitor.rs`
+  - [x] typed_ast_finder.ml → `flow_typing/src/typed_ast_finder.rs`
+    - [x] `mk_bound_t`
+    - [x] `EnclosingNode` enum
+    - [x] `infer_node`
+    - [x] `FindTypeAnnotVisitor` (LocMapper-based)
+    - [x] `find_type_annot_in_node`
+    - [x] `exact_match_query` module
+    - [x] `find_exact_match_annotation`
+    - [x] `enclosing_node_mapper` class (folded into `Searcher` in `flow_services_get_def/src/get_def_process_location.rs`)
+    - [x] `type_parameter_mapper_generic` class (folded into `TypeAtPosSearcher` methods)
+    - [x] `type_parameter_mapper` class (folded into `TypeAtPosSearcher`'s `AstVisitor` impl)
+    - [x] `Type_at_pos` module (`type_at_pos` module: `TypeAtPosResult`, `FoundResult`, `TypeAtPosSearcher`, `find`)
+    - [x] `find_type_at_pos_annotation`
+  - [x] typed_ast_utils.ml → `flow_typing_utils/src/typed_ast_utils.rs`
+    - [x] `AvailableAst` enum
+    - [x] `typed_ast_of_available_ast`
+    - [x] `polarity`
+    - [x] `typed_ast_to_map`
+    - [x] `typed_ast_to_list`
