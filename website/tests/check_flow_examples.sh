@@ -57,12 +57,13 @@ if [[ "$FLOW" != /* ]]; then
       exit 1
     fi
   elif [[ ! -x "$FLOW" ]]; then
-    FLOW="$(which "$FLOW")"
+    FLOW="$(which "$FLOW" 2>/dev/null || true)"
   fi
 fi
 
-if [[ ! -x "$FLOW" ]]; then
-  echo "Flow binary not found or not executable: $FLOW" >&2
+if ! "$FLOW" version >/dev/null 2>&1; then
+  echo "Flow binary not working: $FLOW" >&2
+  echo "Did you build it first? Try: buck build //flow" >&2
   exit 1
 fi
 
