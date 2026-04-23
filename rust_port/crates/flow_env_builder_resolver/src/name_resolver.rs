@@ -183,7 +183,26 @@ mod partial_env_snapshot {
         }
     }
 
-    pub(super) type PartialEnvSnapshot = FlowOrdMap<FlowSmolStr, Entry>;
+    #[derive(Debug, Clone, Dupe, Default)]
+    pub(super) struct PartialEnvSnapshot(Rc<HashMap<FlowSmolStr, Entry>>);
+
+    impl PartialEnvSnapshot {
+        pub(super) fn from_hash_map(map: HashMap<FlowSmolStr, Entry>) -> Self {
+            PartialEnvSnapshot(Rc::new(map))
+        }
+
+        pub(super) fn get(&self, x: &FlowSmolStr) -> Option<&Entry> {
+            self.0.get(x)
+        }
+    }
+
+    impl<'a> IntoIterator for &'a PartialEnvSnapshot {
+        type Item = (&'a FlowSmolStr, &'a Entry);
+        type IntoIter = std::collections::hash_map::Iter<'a, FlowSmolStr, Entry>;
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.iter()
+        }
+    }
 
     pub(super) fn read_with_fallback<F>(
         x: &FlowSmolStr,
@@ -356,18 +375,17 @@ mod full_env {
     where
         F: Fn(&FlowSmolStr, &EnvVal) -> PartialEnvEntry,
     {
-        let mut acc = FlowOrdMap::new();
+        let captured = scope.captured.borrow();
+        let mut acc = HashMap::with_capacity(scope.local_stacked_env.len() + captured.len());
         for (x, stack) in &scope.local_stacked_env {
             if let Some(last) = stack.back() {
                 acc.insert(x.dupe(), f(x, last));
             }
         }
-        for (x, v) in scope.captured.borrow().iter() {
-            if !acc.contains_key(x) {
-                acc.insert(x.dupe(), f(x, v));
-            }
+        for (x, v) in captured.iter() {
+            acc.entry(x.dupe()).or_insert_with(|| f(x, v));
         }
-        acc
+        PartialEnvSnapshot::from_hash_map(acc)
     }
 
     fn iter_function_scope<F>(scope: &FunctionScope, mut f: F)
