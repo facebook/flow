@@ -206,19 +206,19 @@ No errors!
 No errors!
 
 === enums/index.md block 4 ===
-Error ----------------------------------------------------------------------------------------------------------- -:10:9
+Error ------------------------------------------------------------------------------------------------------------ -:9:9
 
 Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`.
 [invalid-exhaustive-check]
 
-   -:10:9
-   10| switch (status) {
-               ^^^^^^
+   -:9:9
+   9| switch (status) { // Error: incomplete exhaustive check
+              ^^^^^^
 
 References:
    -:7:15
-    7| const status: Status = Status.Active;
-                     ^^^^^^ [1]
+   7| const status: Status = Status.Active;
+                    ^^^^^^ [1]
 
 
 
@@ -296,19 +296,19 @@ No errors!
 No errors!
 
 === enums/using-enums.md block 5 ===
-Error ----------------------------------------------------------------------------------------------------------- -:10:9
+Error ------------------------------------------------------------------------------------------------------------ -:9:9
 
 Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`.
 [invalid-exhaustive-check]
 
-   -:10:9
-   10| switch (status) {
-               ^^^^^^
+   -:9:9
+   9| switch (status) { // Error: you haven't checked 'Status.Off' in the switch
+              ^^^^^^
 
 References:
    -:7:15
-    7| const status: Status = Status.Active;
-                     ^^^^^^ [1]
+   7| const status: Status = Status.Active;
+                    ^^^^^^ [1]
 
 
 
@@ -358,19 +358,19 @@ References:
 Found 1 error
 
 === enums/using-enums.md block 8 ===
-Error ----------------------------------------------------------------------------------------------------------- -:10:1
+Error ------------------------------------------------------------------------------------------------------------ -:9:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `Status.Off` to match
 member Off of enum `Status` [1]. [match-not-exhaustive]
 
-   -:10:1
-   10| match (status) {
-       ^^^^^
+   -:9:1
+   9| match (status) { // Error: you haven't checked 'Status.Off' in the match
+      ^^^^^
 
 References:
    -:5:3
-    5|   Off = 3,
-         ^^^^^^^ [1]
+   5|   Off = 3,
+        ^^^^^^^ [1]
 
 
 
@@ -384,7 +384,7 @@ default case [2] does not check for the missing members as the `require-explicit
 enabled. [require-explicit-enum-switch-cases]
 
    -:11:9
-   11| switch (status) {
+   11| switch (status) { // Error
                ^^^^^^
 
 References:
@@ -404,7 +404,7 @@ The match wildcard [1] does not check for missing enum member `Status.Off`, beca
 lint has been enabled. To fix, add cases covering those enum members. [require-explicit-enum-checks]
 
    -:21:1
-   21| match (status) {
+   21| match (status) { // Error
        ^^^^^
 
 References:
@@ -981,29 +981,29 @@ References:
 Found 1 error
 
 === lang/annotation-requirement.md block 14 ===
-Error ----------------------------------------------------------------------------------------------------------- -:8:28
+Error ----------------------------------------------------------------------------------------------------------- -:7:28
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at identifier: [signature-verification-failure]
 
-   8| export function getLength2(x) {
+   7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
                                  ^
 
 
-Error ----------------------------------------------------------------------------------------------------------- -:8:28
+Error ----------------------------------------------------------------------------------------------------------- -:7:28
 
 Missing an annotation on `x`. [missing-local-annot]
 
-   8| export function getLength2(x) {
+   7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
                                  ^
 
 
-Error ----------------------------------------------------------------------------------------------------------- -:8:30
+Error ----------------------------------------------------------------------------------------------------------- -:7:30
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at function return: [signature-verification-failure]
 
-   8| export function getLength2(x) {
+   7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
                                    
 
 
@@ -1945,34 +1945,26 @@ References:
 Found 1 error
 
 === linting/rule-reference.md block 15 ===
-Error ----------------------------------------------------------------------------------------------------------- -:3:21
-
-Deprecated type. Use `boolean` instead. [deprecated-type]
-
-   3| const x: ?(number | bool) = 0;
-                          ^^^^
-
-
 Error ------------------------------------------------------------------------------------------------------------ -:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
 [sketchy-null-number]
 
    -:4:5
-   4| if (x) {}
+   4| if (x) {} // Error
           ^
 
 References:
    -:3:12
-   3| const x: ?(number | bool) = 0;
+   3| const x: ?(number | boolean) = 0;
                  ^^^^^^ [1]
    -:3:10
-   3| const x: ?(number | bool) = 0;
-               ^^^^^^^^^^^^^^^^ [2]
+   3| const x: ?(number | boolean) = 0;
+               ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
-Found 2 errors
+Found 1 error
 
 === linting/rule-reference.md block 16 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:18
@@ -2426,7 +2418,7 @@ The return value of a React hook [1] cannot be written to.
 .
 
    -:9:9
-     9|   state.val = 42; // Flow error: cannot mutate return value of hook
+     9|   state.val = 42; // Error: cannot mutate return value of hook
                 ^^^
 
 References:
@@ -2443,7 +2435,7 @@ Error --------------------------------------------------------------------------
 Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
 (https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
 
-   13|       {ref.current /* Flow error: cannot read ref during rendering */}
+   13|       {ref.current /* Error: cannot read ref during rendering */}
               ^^^ [1]
 
 
@@ -2460,7 +2452,7 @@ React hook arguments [1] and their nested elements cannot be written to.
 .
 
    -:3:3
-   3|   values[0] = 42; // Flow error: mutating argument to hook
+   3|   values[0] = 42; // Error: mutating argument to hook
         ^^^^^^^^^
 
 References:
@@ -2528,12 +2520,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    -:5:13
-   5|   const x = useHook(); // Flow error: cannot call a hook outside of a component or hook
+   5|   const x = useHook(); // Error: cannot call a hook outside of a component or hook
                   ^^^^^^^^^
 
 References:
    -:5:13
-   5|   const x = useHook(); // Flow error: cannot call a hook outside of a component or hook
+   5|   const x = useHook(); // Error: cannot call a hook outside of a component or hook
                   ^^^^^^^ [1]
 
 
@@ -2543,12 +2535,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    -:10:3
-   10|   renamedHook(); // Flow error: cannot call a hook whose name does not begin with `use`
+   10|   renamedHook(); // Error: cannot call a hook whose name does not begin with `use`
          ^^^^^^^^^^^^^
 
 References:
    -:10:3
-   10|   renamedHook(); // Flow error: cannot call a hook whose name does not begin with `use`
+   10|   renamedHook(); // Error: cannot call a hook whose name does not begin with `use`
          ^^^^^^^^^^^ [1]
 
 
@@ -3829,55 +3821,45 @@ References:
                                       ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------------- -:6:10
 
-Cannot declare `identity` [1] because the name is already bound. [name-already-bound]
+Found 1 error
 
-   -:6:10
-   6| function identity<T>(value: T): T {
-               ^^^^^^^^
-
-References:
-   -:2:10
-   2| function identity<T>(value: T): T {
-               ^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------------- -:7:11
+=== types/generics.md block 14 ===
+Error ----------------------------------------------------------------------------------------------------------- -:3:11
 
 Cannot assign `"foo"` to `value` because string [1] is incompatible with `T` [2]. [incompatible-type]
 
-   -:7:11
-   7|   value = "foo"; // Error!
+   -:3:11
+   3|   value = "foo"; // Error!
                 ^^^^^ [1]
 
 References:
-   -:6:29
-   6| function identity<T>(value: T): T {
+   -:2:29
+   2| function identity<T>(value: T): T {
                                   ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------------- -:8:10
+Error ----------------------------------------------------------------------------------------------------------- -:4:10
 
 Cannot return `value` because string [1] is incompatible with `T` [2]. [incompatible-type]
 
-   -:8:10
-   8|   return value;  // Error!
+   -:4:10
+   4|   return value;  // Error!
                ^^^^^
 
 References:
-   -:7:11
-   7|   value = "foo"; // Error!
+   -:3:11
+   3|   value = "foo"; // Error!
                 ^^^^^ [1]
-   -:6:33
-   6| function identity<T>(value: T): T {
+   -:2:33
+   2| function identity<T>(value: T): T {
                                       ^ [2]
 
 
 
-Found 4 errors
+Found 2 errors
 
-=== types/generics.md block 14 ===
+=== types/generics.md block 15 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:16
 
 Cannot assign `identity(...)` to `three` because number literal `42` [1] is incompatible with number literal `3` [2].
@@ -3899,7 +3881,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 15 ===
+=== types/generics.md block 16 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:19
 
 Cannot get `obj.foo` because property `foo` is missing in `unknown` [1]. [incompatible-use]
@@ -3917,10 +3899,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 16 ===
+=== types/generics.md block 17 ===
 No errors!
 
-=== types/generics.md block 17 ===
+=== types/generics.md block 18 ===
 Error ------------------------------------------------------------------------------------------------------------ -:8:8
 
 Cannot call `logFoo` because in type argument `T`: property `foo` is missing in object literal [1] but exists in object
@@ -3939,7 +3921,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 18 ===
+=== types/generics.md block 19 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:31
 
 Cannot call `identity` because in type argument `T`: string [1] is incompatible with number [2]. [incompatible-type]
@@ -3957,10 +3939,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 19 ===
+=== types/generics.md block 20 ===
 No errors!
 
-=== types/generics.md block 20 ===
+=== types/generics.md block 21 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:18
 
 Cannot assign `identity(...)` to `bar` because string [1] is incompatible with string literal `bar` [2].
@@ -3982,10 +3964,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 21 ===
+=== types/generics.md block 22 ===
 No errors!
 
-=== types/generics.md block 22 ===
+=== types/generics.md block 23 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:21
 
 Cannot assign `val` to `bar` because string [1] is incompatible with string literal `bar` [2]. [incompatible-type]
@@ -4006,10 +3988,10 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 23 ===
+=== types/generics.md block 24 ===
 No errors!
 
-=== types/generics.md block 24 ===
+=== types/generics.md block 25 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:12
 
 Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
@@ -4027,7 +4009,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 25 ===
+=== types/generics.md block 26 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:12
 
 Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
@@ -4045,7 +4027,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 26 ===
+=== types/generics.md block 27 ===
 Error ---------------------------------------------------------------------------------------------------------- -:11:19
 
 Cannot use `HasProp` [1] without 1 type argument. [missing-type-arg]
@@ -4063,13 +4045,13 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 27 ===
-No errors!
-
 === types/generics.md block 28 ===
 No errors!
 
 === types/generics.md block 29 ===
+No errors!
+
+=== types/generics.md block 30 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `x` to `GenericBoxError` because in type argument `T` [1]: string [2] is incompatible with number [3].
@@ -4094,7 +4076,7 @@ References:
 
 Found 1 error
 
-=== types/generics.md block 30 ===
+=== types/generics.md block 31 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:34
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -6707,7 +6689,7 @@ Error --------------------------------------------------------------------------
 
 `typeof` can only be used to get the type of variables. [ParseError]
 
-   9| type T = typeof {a: 1}; // Invalid!
+   9| type T = typeof {a: 1}; // Error
                       ^
 
 

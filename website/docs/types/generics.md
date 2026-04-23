@@ -173,7 +173,8 @@ that you aren't replacing it with something else.
 function identity<T>(value: T): T {
   return "foo"; // Error!
 }
-
+```
+```js flow-check
 function identity<T>(value: T): T {
   value = "foo"; // Error!
   return value;  // Error!

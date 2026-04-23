@@ -247,8 +247,7 @@ enum Status {
 }
 const status: Status = Status.Active;
 
-// Error: you haven't checked 'Status.Off' in the switch
-switch (status) {
+switch (status) { // Error: you haven't checked 'Status.Off' in the switch
   case Status.Active:
     break;
   case Status.Paused:
@@ -391,8 +390,7 @@ enum Status {
 }
 const status: Status = Status.Active;
 
-// Error: you haven't checked 'Status.Off' in the match
-match (status) {
+match (status) { // Error: you haven't checked 'Status.Off' in the match
   Status.Active => {}
   Status.Paused => {}
 }
@@ -446,7 +444,7 @@ enum Status {
 const status: Status = Status.Active;
 
 // flowlint-next-line require-explicit-enum-switch-cases:error
-switch (status) {
+switch (status) { // Error
   case Status.Active:
     break;
   case Status.Paused:
@@ -456,7 +454,7 @@ switch (status) {
 }
 
 // flowlint-next-line require-explicit-enum-checks:error
-match (status) {
+match (status) { // Error
   Status.Active => {}
   Status.Paused => {}
   _ => {}

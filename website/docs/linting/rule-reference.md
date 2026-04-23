@@ -248,7 +248,7 @@ sketchy-null-bool=off
 ```
 and now
 ```js
-function foo (bar: ?bool): void {
+function foo (bar: ?boolean): void {
   if (bar) {
     ...
   } else {
@@ -261,8 +261,8 @@ doesn't report a warning.
 Suppressing one type of sketchy null check only suppresses that type, so, for example
 ```js flow-check
 // flowlint sketchy-null:error, sketchy-null-bool:off
-const x: ?(number | bool) = 0;
-if (x) {}
+const x: ?(number | boolean) = 0;
+if (x) {} // Error
 ```
 would still have a `sketchy-null-number` error on line 3.
 

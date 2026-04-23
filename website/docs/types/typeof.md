@@ -44,7 +44,7 @@ let num: typeof obj1.bar = 1;
 let arr1 = [1, 2, 3];
 let arr2: typeof arr1 = [3, 2, 1];
 
-type T = typeof {a: 1}; // Invalid!
+type T = typeof {a: 1}; // Error
 ```
 
 ## `typeof` inherits behaviors of inference {#toc-typeof-inherits-behaviors-of-inference}

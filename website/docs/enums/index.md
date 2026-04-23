@@ -89,11 +89,10 @@ enum Status {
 }
 const status: Status = Status.Active;
 
-// ERROR: Incomplete exhaustive check
-switch (status) {
+switch (status) { // Error: incomplete exhaustive check
   case Status.Active:  break;
   case Status.Paused: break;
-  // We forgot to add `case: Status.Off:` here, resulting in error above.
+  // We forgot to add `case: Status.Off:` here, resulting in the error.
   // Using `default:` would also work to check all remaining members.
 }
 ```

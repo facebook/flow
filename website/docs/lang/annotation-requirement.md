@@ -327,8 +327,7 @@ export function getLength(x: string): number {
   return x.length;
 }
 
-// Error: Flow cannot determine the parameter or return type
-export function getLength2(x) {
+export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
   return x.length;
 }
 ```

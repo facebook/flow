@@ -82,11 +82,11 @@ component MyComponent() {
   const ref = useRef<?number>(null);
   const [state, setState] = useState<{ val: number }>({val: 0});
 
-  state.val = 42; // Flow error: cannot mutate return value of hook
+  state.val = 42; // Error: cannot mutate return value of hook
 
   return (
     <div>
-      {ref.current /* Flow error: cannot read ref during rendering */}
+      {ref.current /* Error: cannot read ref during rendering */}
     </div>
   );
 }
@@ -97,7 +97,7 @@ raise errors when illegal mutations occur within hook declarations.
 
 ```js flow-check
 hook useIllegalMutation(values: Array<number>) {
-  values[0] = 42; // Flow error: mutating argument to hook
+  values[0] = 42; // Error: mutating argument to hook
   // ...
 }
 ```
@@ -151,12 +151,12 @@ are never hooks.
 hook useHook() { return null }
 
 function regularJavascript() {
-  const x = useHook(); // Flow error: cannot call a hook outside of a component or hook
+  const x = useHook(); // Error: cannot call a hook outside of a component or hook
 }
 
 component Component() { 
   const renamedHook = useHook;
-  renamedHook(); // Flow error: cannot call a hook whose name does not begin with `use`
+  renamedHook(); // Error: cannot call a hook whose name does not begin with `use`
 
   return null;
 }
