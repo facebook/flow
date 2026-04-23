@@ -137,6 +137,8 @@ val file_watcher_edenfs_timeout : config -> int
 
 val file_watcher_edenfs_throttle_time_ms : config -> int
 
+val file_watcher_edenfs_max_commit_distance : config -> int
+
 val files_implicitly_include_root : config -> bool
 
 val format_bracket_spacing : config -> bool option

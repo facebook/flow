@@ -76,6 +76,7 @@ type settings = {
   state_tracking: bool;
   sync_queries_obey_deferral: bool;
   defer_states: string list;
+  max_commit_distance: int;
 }
 
 type changes =
@@ -87,6 +88,10 @@ type changes =
     }
   | StateEnter of string
   | StateLeave of string
+  | CommitDistanceExceeded of {
+      from_commit: string;
+      to_commit: string;
+    }
 [@@deriving show]
 
 type edenfs_watcher_error =

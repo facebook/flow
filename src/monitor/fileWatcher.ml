@@ -669,6 +669,17 @@ end = struct
         | Edenfs_watcher_types.StateEnter _
         | Edenfs_watcher_types.StateLeave _ ->
           (files, metadata)
+        | Edenfs_watcher_types.CommitDistanceExceeded { from_commit; to_commit } ->
+          Logger.info
+            "EdenFS watcher reports commit distance exceeded from %s to %s"
+            from_commit
+            to_commit;
+          let metadata =
+            MonitorProt.merge_file_watcher_metadata
+              metadata
+              { MonitorProt.changed_mergebase = Some true; missed_changes = true }
+          in
+          (files, metadata)
     )
 
   module EdenFSListenLoop = LwtLoop.Make (struct
@@ -695,7 +706,8 @@ end = struct
             Logger.info "EdenFS reports %s ended. Filesystem notifications resumed." name;
             StatusStream.file_watcher_ready ()
           | Edenfs_watcher_types.FileChanges _
-          | Edenfs_watcher_types.CommitTransition _ ->
+          | Edenfs_watcher_types.CommitTransition _
+          | Edenfs_watcher_types.CommitDistanceExceeded _ ->
             ()
           )
 
@@ -829,6 +841,7 @@ end = struct
           edenfs_timeout_secs;
           edenfs_throttle_time_ms;
           edenfs_defer_states;
+          edenfs_max_commit_distance;
           edenfs_watchman_fallback = _;
         } =
           edenfs_options
@@ -844,6 +857,7 @@ end = struct
             state_tracking = true;
             sync_queries_obey_deferral = false;
             defer_states = edenfs_defer_states;
+            max_commit_distance = edenfs_max_commit_distance;
           }
         in
         init_thread <- Some (Lwt.return (Edenfs_watcher.init settings))

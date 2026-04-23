@@ -28,6 +28,8 @@ pub struct EdenfsOptions {
     pub edenfs_throttle_time_ms: u32,
     /// States to track and defer in the EdenFS watcher
     pub edenfs_defer_states: Vec<String>,
+    /// Skip file diff and signal a restart when a commit transition exceeds this many commits. 0 disables.
+    pub edenfs_max_commit_distance: u32,
     /// Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount)
     pub edenfs_watchman_fallback: WatchmanOptions,
 }

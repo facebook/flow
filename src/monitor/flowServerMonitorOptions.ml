@@ -20,6 +20,8 @@ type edenfs_options = {
   edenfs_timeout_secs: int;  (** Timeout for EdenFS watcher initialization *)
   edenfs_throttle_time_ms: int;  (** Throttle time for EdenFS watcher notifications *)
   edenfs_defer_states: string list;  (** States to track and defer in the EdenFS watcher *)
+  edenfs_max_commit_distance: int;
+      (** Skip file diff and signal a restart when a commit transition exceeds this many commits. 0 disables. *)
   edenfs_watchman_fallback: watchman_options;
       (** Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount) *)
 }

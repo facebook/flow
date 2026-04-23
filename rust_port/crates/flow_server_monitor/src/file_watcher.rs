@@ -772,6 +772,23 @@ pub mod edenfs_file_watcher {
                 }
                 flow_edenfs_watcher::Changes::StateEnter(_)
                 | flow_edenfs_watcher::Changes::StateLeave(_) => {}
+                flow_edenfs_watcher::Changes::CommitDistanceExceeded {
+                    from_commit,
+                    to_commit,
+                } => {
+                    log::info!(
+                        "EdenFS watcher reports commit distance exceeded from {} to {}",
+                        from_commit,
+                        to_commit
+                    );
+                    metadata = flow_monitor_rpc::monitor_prot::merge_file_watcher_metadata(
+                        &metadata,
+                        &FileWatcherMetadata {
+                            changed_mergebase: Some(true),
+                            missed_changes: true,
+                        },
+                    );
+                }
             }
         }
         (files, metadata)
@@ -822,7 +839,8 @@ pub mod edenfs_file_watcher {
                         status_stream::file_watcher_ready();
                     }
                     flow_edenfs_watcher::Changes::FileChanges(_)
-                    | flow_edenfs_watcher::Changes::CommitTransition { .. } => {}
+                    | flow_edenfs_watcher::Changes::CommitTransition { .. }
+                    | flow_edenfs_watcher::Changes::CommitDistanceExceeded { .. } => {}
                 }
             }
         }
@@ -1069,6 +1087,7 @@ pub mod edenfs_file_watcher {
                 edenfs_timeout_secs,
                 edenfs_throttle_time_ms,
                 edenfs_defer_states,
+                edenfs_max_commit_distance,
                 edenfs_watchman_fallback: _,
             } = &self.edenfs_options;
             let settings = flow_edenfs_watcher::Settings {
@@ -1081,6 +1100,7 @@ pub mod edenfs_file_watcher {
                 state_tracking: true,
                 sync_queries_obey_deferral: false,
                 defer_states: edenfs_defer_states.clone(),
+                max_commit_distance: *edenfs_max_commit_distance as isize,
             };
             *self.init_thread.lock().unwrap() =
                 Some(runtime::handle().spawn(async move { flow_edenfs_watcher::init(settings) }));

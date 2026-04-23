@@ -97,6 +97,7 @@ pub mod opts {
         pub file_watcher: Option<FileWatcher>,
         pub file_watcher_edenfs_throttle_time_ms: u32,
         pub file_watcher_edenfs_timeout: u32,
+        pub file_watcher_edenfs_max_commit_distance: u32,
         pub file_watcher_mergebase_with: Option<String>,
         pub file_watcher_mergebase_with_git: Option<String>,
         pub file_watcher_mergebase_with_hg: Option<String>,
@@ -260,6 +261,7 @@ pub mod opts {
             file_watcher: None,
             file_watcher_edenfs_throttle_time_ms: 50,
             file_watcher_edenfs_timeout: 60,
+            file_watcher_edenfs_max_commit_distance: 0,
             file_watcher_mergebase_with: None,
             file_watcher_mergebase_with_git: None,
             file_watcher_mergebase_with_hg: None,
@@ -1281,6 +1283,25 @@ pub mod opts {
         parse_uint(
             |opts, v| {
                 opts.file_watcher_edenfs_timeout = v;
+                Ok(())
+            },
+            None,
+            false,
+            values,
+            config,
+        )
+    }
+
+    fn file_watcher_edenfs_max_commit_distance_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_uint(
+            |opts, v| {
+                if v > 0 && !opts.saved_state_restart_on_reinit {
+                    return Err("file_watcher.edenfs.max_commit_distance requires saved_state_restart_on_reinit=true".to_string());
+                }
+                opts.file_watcher_edenfs_max_commit_distance = v;
                 Ok(())
             },
             None,
@@ -2521,6 +2542,9 @@ pub mod opts {
                 "file_watcher.edenfs.timeout" => {
                     Some(file_watcher_edenfs_timeout_parser(values, config))
                 }
+                "file_watcher.edenfs.max_commit_distance" => Some(
+                    file_watcher_edenfs_max_commit_distance_parser(values, config),
+                ),
                 "file_watcher.mergebase_with" => {
                     Some(file_watcher_mergebase_with_parser(values, config))
                 }

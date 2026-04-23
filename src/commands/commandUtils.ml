@@ -2132,6 +2132,12 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
         edenfs_timeout_secs = FlowConfig.file_watcher_edenfs_timeout flowconfig;
         edenfs_throttle_time_ms = FlowConfig.file_watcher_edenfs_throttle_time_ms flowconfig;
         edenfs_defer_states;
+        edenfs_max_commit_distance =
+          (match Sys.getenv_opt "FLOW_EDENFS_MAX_COMMIT_DISTANCE" with
+          | Some v ->
+            (try int_of_string v with
+            | Failure _ -> 0)
+          | None -> FlowConfig.file_watcher_edenfs_max_commit_distance flowconfig);
         edenfs_watchman_fallback = watchman_fallback;
       }
 

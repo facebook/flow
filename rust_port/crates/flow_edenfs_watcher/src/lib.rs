@@ -133,6 +133,7 @@ mod stub {
         pub state_tracking: bool,
         pub sync_queries_obey_deferral: bool,
         pub defer_states: Vec<String>,
+        pub max_commit_distance: isize,
     }
 
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -145,6 +146,10 @@ mod stub {
         },
         StateEnter(String),
         StateLeave(String),
+        CommitDistanceExceeded {
+            from_commit: String,
+            to_commit: String,
+        },
     }
 
     #[derive(Debug, Clone, PartialEq, Eq)]
