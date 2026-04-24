@@ -137,6 +137,8 @@ if (isNumber(val)) {
 
 ## Why can't I pass an `Array<string>` to a function that takes an `Array<string | number>`
 
+This happens because mutable arrays are *invariantly* typed — the element type must match exactly, not just be a subtype. See [Type Variance](./lang/variance.md) for a full explanation of invariance.
+
 The function's argument allows `string` values in its array, but in this case Flow prevents the original array from receiving a `number`.
 Inside the function, you would be able to push a `number` to the argument array, causing the type of the original array to no longer be accurate.
 
@@ -170,6 +172,8 @@ fn(arr);
 ```
 
 ## Why can't I pass `{a: string}` to a function that takes `{a: string | number}`
+
+This happens because mutable object properties are *invariantly* typed — the property type must match exactly, not just be a subtype. See [Type Variance](./lang/variance.md) for a full explanation of invariance.
 
 The function argument allows `string` values in its field, but in this case Flow prevents the original object from having a `number` written to it.
 Within the body of the function you would be able to mutate the object so that the property `a` would receive a `number`, causing the type of the original object to no longer be accurate.

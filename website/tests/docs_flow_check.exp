@@ -1010,6 +1010,148 @@ annotation at function return: [signature-verification-failure]
 
 Found 3 errors
 
+=== lang/annotation-requirement.md block 15 ===
+Error ----------------------------------------------------------------------------------------------------------- -:3:22
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   3|   export const obj = {[key]: 1}; // Error: Expected simple key in object
+                           ^^^^^^^^^^
+
+
+
+Found 1 error
+
+=== lang/annotation-requirement.md block 16 ===
+Error ----------------------------------------------------------------------------------------------------------- -:3:21
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+spread in array: [signature-verification-failure]
+
+   3|   export const ys = [...xs, 3]; // Error: Unexpected spread in array
+                          ^^^^^^^^^^
+
+
+
+Found 1 error
+
+=== lang/annotation-requirement.md block 17 ===
+Error ----------------------------------------------------------------------------------------------------------- -:2:22
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+array hole: [signature-verification-failure]
+
+   2|   export const arr = [1, , 3]; // Error: Unexpected array hole
+                           ^^^^^^^^
+
+
+
+Found 1 error
+
+=== lang/annotation-requirement.md block 18 ===
+Error ----------------------------------------------------------------------------------------------------------- -:2:16
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   2|   export const items = []; // Error
+                     ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:2:24
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the element type of an empty array. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   2|   export const items = []; // Error
+                             ^^
+
+
+
+Found 2 errors
+
+=== lang/annotation-requirement.md block 19 ===
+Error ----------------------------------------------------------------------------------------------------------- -:3:24
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this conditional expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   3|   export const value = condition ? 1 : "a"; // Error
+                             ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+=== lang/annotation-requirement.md block 20 ===
+Error ------------------------------------------------------------------------------------------------------------ -:2:5
+
+Variable `lastSeen` [1] should be annotated, because it is only initialized in a generic context [2]
+[invalid-declaration]
+
+   -:2:5
+   2| let lastSeen; // Error: only initialized in a generic context
+          ^^^^^^^^ [1]
+
+References:
+   -:4:3
+   4|   lastSeen = value;
+        ^^^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== lang/annotation-requirement.md block 21 ===
+No errors!
+
+=== lang/annotation-requirement.md block 22 ===
+Error ------------------------------------------------------------------------------------------------------------ -:2:5
+
+Variable `cached` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2]
+[invalid-declaration]
+
+   -:2:5
+   2| let cached = null; // Error: only assigned by null and in generic context
+          ^^^^^^ [1]
+
+References:
+   -:4:3
+   4|   cached = value; // Error: T is incompatible with null
+        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:4:12
+
+Cannot assign `value` to `cached` because `unknown` [1] is incompatible with null [2]. [incompatible-type]
+
+All writes to `cached` must be compatible with the type of its initializer [3]. Add an annotation to `cached` [3] if a
+different type is desired.
+
+   -:4:12
+   4|   cached = value; // Error: T is incompatible with null
+                 ^^^^^
+
+References:
+   -:3:26
+   3| function cache<T>(value: T): T {
+                               ^ [1]
+   -:2:14
+   2| let cached = null; // Error: only assigned by null and in generic context
+                   ^^^^ [2]
+   -:2:5
+   2| let cached = null; // Error: only assigned by null and in generic context
+          ^^^^^^ [3]
+
+
+
+Found 2 errors
+
+=== lang/annotation-requirement.md block 23 ===
+No errors!
+
 === lang/depth-subtyping.md block 1 ===
 No errors!
 
@@ -1703,6 +1845,25 @@ References:
    -:5:37
    5| declare function acceptsExact(item: Exact): void;
                                           ^^^^^ [2]
+
+
+
+Found 1 error
+
+=== lang/variance.md block 9 ===
+Error ----------------------------------------------------------------------------------------------------------- -:4:12
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:4:12
+   4|   set(val: T): void; // Error: T is in an input position but is expected only in output positions
+                 ^
+
+References:
+   -:2:11
+   2| type Box<+T> = {
+                ^ [1]
 
 
 
@@ -3194,6 +3355,9 @@ References:
 Found 3 errors
 
 === types/classes.md block 8 ===
+No errors!
+
+=== types/classes.md block 9 ===
 Error ------------------------------------------------------------------------------------------------------------ -:7:3
 
 Cannot assign function to `a.method` because property `method` is not writable. [cannot-write]
@@ -3205,7 +3369,7 @@ Cannot assign function to `a.method` because property `method` is not writable. 
 
 Found 1 error
 
-=== types/classes.md block 9 ===
+=== types/classes.md block 10 ===
 Error ----------------------------------------------------------------------------------------------------------- -:12:3
 
 Private fields can only be referenced from within a class. [ParseError]
@@ -3217,7 +3381,7 @@ Private fields can only be referenced from within a class. [ParseError]
 
 Found 1 error
 
-=== types/classes.md block 10 ===
+=== types/classes.md block 11 ===
 Error ------------------------------------------------------------------------------------------------------------ -:3:8
 
 Missing an annotation on return. [missing-local-annot]
@@ -3237,10 +3401,10 @@ Missing an annotation on return. [missing-local-annot]
 
 Found 2 errors
 
-=== types/classes.md block 11 ===
+=== types/classes.md block 12 ===
 No errors!
 
-=== types/classes.md block 12 ===
+=== types/classes.md block 13 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:10
 
 Cannot assign `42` to `this.prop` because property `prop` is missing in `MyClass` [1]. [prop-missing]
@@ -3258,9 +3422,6 @@ References:
 
 Found 1 error
 
-=== types/classes.md block 13 ===
-No errors!
-
 === types/classes.md block 14 ===
 No errors!
 
@@ -3271,6 +3432,9 @@ No errors!
 No errors!
 
 === types/classes.md block 17 ===
+No errors!
+
+=== types/classes.md block 18 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:10
 
 Cannot assign `1` to `this.prop` because property `prop` is not writable. [cannot-write]
@@ -3290,7 +3454,7 @@ Cannot assign `1` to `a.prop` because property `prop` is not writable. [cannot-w
 
 Found 2 errors
 
-=== types/classes.md block 18 ===
+=== types/classes.md block 19 ===
 Error ---------------------------------------------------------------------------------------------------------- -:15:21
 
 Private fields can only be referenced from within a class. [ParseError]
@@ -3302,13 +3466,13 @@ Private fields can only be referenced from within a class. [ParseError]
 
 Found 1 error
 
-=== types/classes.md block 19 ===
-No errors!
-
 === types/classes.md block 20 ===
 No errors!
 
 === types/classes.md block 21 ===
+No errors!
+
+=== types/classes.md block 22 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:7
 
 Cannot implement `WithXNum` [1] with `MyClass` because property `x` is missing in `MyClass` [2] but exists in
@@ -3327,10 +3491,10 @@ References:
 
 Found 1 error
 
-=== types/classes.md block 22 ===
+=== types/classes.md block 23 ===
 No errors!
 
-=== types/classes.md block 23 ===
+=== types/classes.md block 24 ===
 Error ----------------------------------------------------------------------------------------------------------- -:10:5
 
 Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
@@ -3376,13 +3540,13 @@ References:
 
 Found 3 errors
 
-=== types/classes.md block 24 ===
-No errors!
-
 === types/classes.md block 25 ===
 No errors!
 
 === types/classes.md block 26 ===
+No errors!
+
+=== types/classes.md block 27 ===
 No errors!
 
 === types/comments.md block 1 ===

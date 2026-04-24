@@ -92,7 +92,15 @@ class MyClass {
 ```
 
 Unlike class properties, however, class methods cannot be unbound or rebound from
-the class on which you defined them. So all of the following are errors in Flow:
+the class on which you defined them. Flow tracks the `this`-binding of class
+methods: a method defined on a class has its `this` type tied to the class
+instance. Extracting a method reference — by accessing `obj.method` without
+calling it, destructuring it, or rebinding it with `.bind()` — would produce a
+function that has lost its `this` type. Calling such an unbound function could
+lead to runtime errors because `this` would no longer refer to the expected
+instance.
+
+So all of the following are errors in Flow:
 
 ```js flow-check
 class MyClass { method() {} }
@@ -100,6 +108,19 @@ const a = new MyClass();
 a.method; // Error!
 const {method} = a; // Error!
 a.method.bind({}); // Error!
+```
+
+If you need to pass a method as a callback, wrap it in an arrow function so
+that `this` remains bound:
+
+```js flow-check
+class MyClass {
+  value: number = 1;
+  method(): number { return this.value; }
+}
+
+const a = new MyClass();
+const callback = () => a.method(); // Works!
 ```
 
 Methods are considered [read-only](../lang/variance.md):

@@ -164,6 +164,37 @@ so passing an inexact object to it would be unsound. Even though passing an exac
 to a function expecting an inexact one works (an exact type is a subtype of a compatible inexact type),
 the function types are flipped due to contravariance.
 
+## Input and Output Positions {#toc-input-output-positions}
+
+Flow's error messages refer to "input positions" and "output positions" when
+reporting variance errors. These terms correspond directly to the variance
+concepts described above:
+
+- An **output position** is a place where a value is *read out* of a type: return
+  types, read-only properties, getter results. A type parameter marked with `+`
+  (covariant) can only appear in output positions.
+- An **input position** is a place where a value is *written into* a type: function
+  parameters, write-only properties, setter arguments. A type parameter marked
+  with `-` (contravariant) can only appear in input positions.
+- A type parameter with no sigil (invariant) can appear in both input and output
+  positions.
+
+When you see an error like "Cannot use `T` in an input position because `T` is
+expected to occur only in output positions," it means you have a type parameter
+marked as covariant (`+T`) but you are using it somewhere that writes a value
+in, such as a function parameter:
+
+```js flow-check
+type Box<+T> = {
+  get(): T;
+  set(val: T): void; // Error: T is in an input position but is expected only in output positions
+};
+```
+
+The fix depends on your intent: if the type genuinely needs to both read and
+write `T`, remove the `+` sigil to make `T` invariant. If the type should only
+produce values of type `T` (never accept them), remove the setter.
+
 ## See Also {#toc-see-also}
 
 - [Subtypes](./subtypes.md) — the underlying subtyping relationships that variance builds on

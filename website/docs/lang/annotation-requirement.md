@@ -316,8 +316,12 @@ const [str, setStr] = useState<?string>("");
 ## Module Exports {#toc-module-exports}
 
 Flow builds type signatures for each module based solely on the module's exports,
-without analyzing the module's internal implementation. This means exported values
-must have enough type information at the export site for Flow to determine their types.
+without analyzing the module's internal implementation. This process is called
+**signature extraction**: Flow constructs a "typed interface" for each module — a
+summary of every exported value's type — by looking only at the export site, not
+the module body. This is what enables Flow to typecheck modules in parallel and
+provide fast IDE feedback: each module's type can be understood without
+typechecking its dependencies' implementations.
 
 For example, an exported function needs parameter and return annotations:
 
@@ -341,11 +345,111 @@ export const count = items.length; // OK: type determined from .length
 ```
 
 If Flow cannot determine the type of an export, you'll see a `[signature-verification-failure]`
-error. The fix is to add a type annotation to the export.
+error with the message "Cannot build a typed interface for this module." The fix
+is to add a type annotation to the export.
 
-This requirement enables Flow to typecheck modules in parallel and provide faster
-IDE feedback, since each module's type can be understood without typechecking its
-dependencies' implementations.
+### Unsupported expression forms in exports {#toc-unsupported-expression-forms}
+
+Beyond missing annotations, certain expression forms are not supported in
+exported positions because Flow cannot determine their types during signature
+extraction. These typically produce a `[signature-verification-failure]` error
+with a specific sub-message:
+
+- **Unexpected object key** — exported objects must use simple literal keys (string
+  or number literals, identifiers). Computed keys prevent Flow from knowing the
+  shape of the object at the export site.
+  ```js flow-check
+  const key = "x";
+  export const obj = {[key]: 1}; // Error: Expected simple key in object
+  ```
+  Fix: annotate the export, e.g., `export const obj: {x: number} = {[key]: 1}`.
+
+- **Unexpected array spread** — spreading into an exported array literal is not
+  supported because Flow would need to evaluate the spread to determine the
+  array's element type.
+  ```js flow-check
+  const xs = [1, 2];
+  export const ys = [...xs, 3]; // Error: Unexpected spread in array
+  ```
+  Fix: add a type annotation, e.g., `export const ys: Array<number> = [...xs, 3]`.
+
+- **Array hole** — exported arrays with holes (elisions like `[1, , 3]`) are
+  not supported.
+  ```js flow-check
+  export const arr = [1, , 3]; // Error: Unexpected array hole
+  ```
+  Fix: fill in the hole or annotate the export, e.g., `export const arr: Array<number | void> = [1, , 3]`.
+
+- **Empty array** — an empty array `[]` in an export position has no elements
+  for Flow to infer an element type from.
+  ```js flow-check
+  export const items = []; // Error
+  ```
+  Fix: add a type annotation, e.g., `export const items: Array<string> = []`.
+
+- **Unsupported expression** — some complex expressions (e.g., conditionals,
+  function calls, logical expressions) cannot be evaluated during signature
+  extraction.
+  ```js flow-check
+  declare const condition: boolean;
+  export const value = condition ? 1 : "a"; // Error
+  ```
+  Fix: add a type annotation, e.g., `export const value: number | string = condition ? 1 : "a"`.
+
+### Generic Context {#toc-generic-context}
+
+When a variable declared in an outer scope is only assigned inside a generic
+function, Flow cannot safely infer the variable's type. The assignments happen
+in a "generic context" — they involve type parameters that could take on any
+concrete type at each call site. Since the variable lives outside the generic
+function, Flow needs to know its type independently of any particular call.
+
+You'll see an `[invalid-declaration]` error like: "Variable X should be
+annotated, because it is only initialized in a generic context."
+
+```js flow-check
+let lastSeen; // Error: only initialized in a generic context
+function remember<T>(value: T): T {
+  lastSeen = value;
+  return value;
+}
+console.log(lastSeen);
+```
+
+The fix is to add a type annotation to the variable:
+
+```js flow-check
+let lastSeen: mixed; // Works!
+function remember<T>(value: T): T {
+  lastSeen = value;
+  return value;
+}
+console.log(lastSeen);
+```
+
+This also applies when a variable is initialized to `null` and only otherwise
+assigned in a generic context — you'll see: "Variable X should be annotated,
+because it is only ever assigned to by `null` and in generic context."
+
+```js flow-check
+let cached = null; // Error: only assigned by null and in generic context
+function cache<T>(value: T): T {
+  cached = value; // Error: T is incompatible with null
+  return value;
+}
+console.log(cached);
+```
+
+As with the previous example, the fix is to annotate the variable:
+
+```js flow-check
+let cached: mixed = null; // Works!
+function cache<T>(value: T): T {
+  cached = value;
+  return value;
+}
+console.log(cached);
+```
 
 ## Empty Array Literals {#toc-empty-array-literals}
 Empty array literals (`[]`) are handled specially in Flow. You can read about their [behavior and requirements](../types/arrays.md#toc-empty-array-literals).
