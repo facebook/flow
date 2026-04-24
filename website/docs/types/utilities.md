@@ -499,7 +499,7 @@ const obj = {
   b: 'foo'
 };
 
-declare function run<O: {...}>(o: O): $KeyMirror<O>;
+declare function run<O extends {...}>(o: O): $KeyMirror<O>;
 
 // newObj is of type {a: 'a', b: 'b'}
 const newObj = run(obj);

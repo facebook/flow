@@ -221,11 +221,10 @@ logFoo({ foo: 'foo', bar: 'bar' });  // Works.
 logFoo({ bar: 'bar' }); // Works. :(
 ```
 
-Instead, you could add a type to your generic like you would with a function
-parameter.
+Instead, you could add a bound to your generic using the `extends` keyword.
 
 ```js flow-check
-function logFoo<T: {foo: string, ...}>(obj: T): T {
+function logFoo<T extends {foo: string, ...}>(obj: T): T {
   console.log(obj.foo); // Works!
   return obj;
 }
@@ -238,7 +237,7 @@ This way you can keep the behavior of generics while only allowing certain
 types to be used.
 
 ```js flow-check
-function identity<T: number>(value: T): T {
+function identity<T extends number>(value: T): T {
   return value;
 }
 
@@ -275,7 +274,7 @@ Generics allow you to hold onto the more specific type while adding a
 constraint. In this way types on generics act as "bounds".
 
 ```js flow-check
-function identity<T: string>(val: T): T {
+function identity<T extends string>(val: T): T {
   return val;
 }
 
@@ -287,7 +286,7 @@ Note that when you have a value with a bound generic type, you can't use it as
 if it were a more specific type.
 
 ```js flow-check
-function identity<T: string>(val: T): T {
+function identity<T extends string>(val: T): T {
   let str: string = val; // Works!
   let bar: 'bar'  = val; // Error!
   return val;
@@ -367,7 +366,7 @@ You can also provide defaults for parameterized generics just like parameters
 of a function.
 
 ```js flow-check
-type Item<T: number = 1> = {
+type Item<T extends number = 1> = {
   prop: T,
 };
 

@@ -166,7 +166,7 @@ based on another object.
 If we cast through any, we can return a type which is more useful.
 
 ```js flow-check
-function cloneObject<T: {+[key: string]: unknown }>(obj: T): T {
+function cloneObject<T extends {+[key: string]: unknown }>(obj: T): T {
   const clone: {[string]: unknown} = {};
 
   Object.keys(obj).forEach(key => {

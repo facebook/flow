@@ -106,7 +106,7 @@ type ExtractReturnTypeNoValidation<T> =
 Instead, you might want Flow to error when the input is not a function type. This can be accomplished by adding constraints to the type parameter:
 
 ```js flow-check
-type ReturnType<T: (...args: ReadonlyArray<empty>) => unknown> =
+type ReturnType<T extends (...args: ReadonlyArray<empty>) => unknown> =
   T extends (...args: ReadonlyArray<empty>) => infer Return ? Return : any;
 
 1 as ReturnType<(string) => number>;

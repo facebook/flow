@@ -27,7 +27,7 @@ Let's start with the simplest HOC:
 ```js flow-check
 import * as React from 'react';
 
-function trivialHOC<Config: {...}>(
+function trivialHOC<Config extends {...}>(
   Component: component(...Config),
 ): component(...Config) {
   return Component;
@@ -52,7 +52,7 @@ import * as React from 'react';
 
 type InjectedProps = {foo: number}
 
-function injectProp<Config: {...}>(
+function injectProp<Config extends {...}>(
   Component: component(...{...Config, ...InjectedProps, ...})
 ): component(...Config) {
   return function WrapperComponent(
@@ -125,7 +125,7 @@ import * as React from 'react';
 
 type InjectedProps = {foo: number}
 
-function injectAndPreserveInstance<Config: {...}, Instance>(
+function injectAndPreserveInstance<Config extends {...}, Instance>(
   Component: component(ref?: React.RefSetter<Instance>, ...{...Config, ...InjectedProps})
 ): component(ref?: React.RefSetter<Instance>, ...Config) {
   return React.forwardRef<Config, Instance>((props, ref) =>
@@ -154,7 +154,7 @@ If you try to export a wrapped component, chances are that you'll run into a mis
 ```js flow-check
 import * as React from 'react';
 
-function trivialHOC<Config: {...}>(
+function trivialHOC<Config extends {...}>(
   Component: component(...Config),
 ): component(...Config) {
   return Component;
@@ -172,7 +172,7 @@ You can add an annotation to your exported component using component types:
 ```js flow-check
 import * as React from 'react';
 
-function trivialHOC<Config: {...}>(
+function trivialHOC<Config extends {...}>(
   Component: component(...Config),
 ): component(...Config) {
   return Component;

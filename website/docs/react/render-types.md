@@ -204,7 +204,7 @@ Components can be "transparent":
 ```js flow-check
 import * as React from 'react';
 
-component TransparentComponent<T: React.Node>(children: T) renders T {
+component TransparentComponent<T extends React.Node>(children: T) renders T {
   // .. do something
   return children;
 }

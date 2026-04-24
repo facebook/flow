@@ -3618,9 +3618,9 @@ Cannot instantiate `ReturnType` because in type argument `T`: string [1] is inco
                       ^^^^^^ [1]
 
 References:
-   -:2:20
-   2| type ReturnType<T: (...args: ReadonlyArray<empty>) => unknown> =
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   -:2:27
+   2| type ReturnType<T extends (...args: ReadonlyArray<empty>) => unknown> =
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
@@ -4077,9 +4077,9 @@ type [2]. [incompatible-type]
              ^^^^^^^^^^^^^^ [1]
 
 References:
-   -:2:20
-   2| function logFoo<T: {foo: string, ...}>(obj: T): T {
-                         ^^^^^^^^^^^^^^^^^^ [2]
+   -:2:27
+   2| function logFoo<T extends {foo: string, ...}>(obj: T): T {
+                                ^^^^^^^^^^^^^^^^^^ [2]
 
 
 
@@ -4095,9 +4095,9 @@ Cannot call `identity` because in type argument `T`: string [1] is incompatible 
                                     ^^^^^^^ [1]
 
 References:
-   -:2:22
-   2| function identity<T: number>(value: T): T {
-                           ^^^^^^ [2]
+   -:2:29
+   2| function identity<T extends number>(value: T): T {
+                                  ^^^^^^ [2]
 
 
 
@@ -4141,9 +4141,9 @@ Cannot assign `val` to `bar` because string [1] is incompatible with string lite
                           ^^^
 
 References:
-   -:2:35
-   2| function identity<T: string>(val: T): T {
-                                        ^ [1]
+   -:2:42
+   2| function identity<T extends string>(val: T): T {
+                                               ^ [1]
    -:4:12
    4|   let bar: 'bar'  = val; // Error!
                  ^^^^^ [2]
@@ -6343,9 +6343,9 @@ References:
    -:13:29
    13| declare const arrays: Array<Array<number>>;
                                    ^^^^^^^^^^^^^ [1]
-   -:2:27
-    2| function mapTupleArray<T: [...], R>(
-                                 ^^^^^ [2]
+   -:2:34
+    2| function mapTupleArray<T extends [...], R>(
+                                        ^^^^^ [2]
 
 
 
@@ -6646,12 +6646,12 @@ Cannot return `x` because null or undefined [1] is incompatible with boolean [2]
                ^
 
 References:
-   -:2:32
-   2| function nonMaybe<V: {...}>(x: ?V): x is V {
-                                     ^^ [1]
-   -:2:37
-   2| function nonMaybe<V: {...}>(x: ?V): x is V {
-                                          ^^^^^^ [2]
+   -:2:39
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                            ^^ [1]
+   -:2:44
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                                 ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
@@ -6663,12 +6663,12 @@ Cannot return `x` because object type [1] is incompatible with boolean [2]. [inc
                ^
 
 References:
-   -:2:33
-   2| function nonMaybe<V: {...}>(x: ?V): x is V {
-                                      ^ [1]
-   -:2:37
-   2| function nonMaybe<V: {...}>(x: ?V): x is V {
-                                          ^^^^^^ [2]
+   -:2:40
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                             ^ [1]
+   -:2:44
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                                 ^^^^^^ [2]
 
 
 
@@ -7737,9 +7737,9 @@ Cannot cast `newObj.b` to string literal `a` because string literal `b` [1] is i
        ^^^^^^^^
 
 References:
-   -:7:39
-    7| declare function run<O: {...}>(o: O): $KeyMirror<O>;
-                                             ^^^^^^^^^^^^^ [1]
+   -:7:46
+    7| declare function run<O extends {...}>(o: O): $KeyMirror<O>;
+                                                    ^^^^^^^^^^^^^ [1]
    -:13:13
    13| newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
                    ^^^ [2]

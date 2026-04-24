@@ -272,13 +272,13 @@ A type guard function needs to return a boolean expression. The following are in
 function isNumberNoReturn(x: string): x is string {} // Error
 ```
 ```js flow-check
-function nonMaybe<V: {...}>(x: ?V): x is V {
+function nonMaybe<V extends {...}>(x: ?V): x is V {
   return x; // Error
 }
 ```
 A correct version of `nonMaybe` would be
 ```js flow-check
-function nonMaybe<V: {...}>(x: ?V): x is V {
+function nonMaybe<V extends {...}>(x: ?V): x is V {
   return !!x;
 }
 ```

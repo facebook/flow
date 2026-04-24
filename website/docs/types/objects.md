@@ -480,7 +480,7 @@ func({a: 1, b: "foo"}); // Works!
 It's often the right choice for a [generic](./generics.md) bounded to accept any object:
 
 ```js flow-check
-function func<T: {...}>(obj: T) {
+function func<T extends {...}>(obj: T) {
   // ...
 }
 

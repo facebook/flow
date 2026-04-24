@@ -250,7 +250,7 @@ const n: number = fn('number');
 If you want to specify you want to allow any function, and do not care what it is, you can use this pattern:
 
 ```js flow-check
-function useCallback<T: (...ReadonlyArray<empty>) => unknown>(
+function useCallback<T extends (...ReadonlyArray<empty>) => unknown>(
   callback: T,
   inputs: ?ReadonlyArray<unknown>,
 ): T {
@@ -263,7 +263,7 @@ useCallback((x: number) => [1]); // OK
 You could use type arguments to capture the arguments and return type, to do more complicated transformations:
 
 ```js flow-check
-function func<TArgs: ReadonlyArray<unknown>, TReturn>(
+function func<TArgs extends ReadonlyArray<unknown>, TReturn>(
   callback: (...TArgs) => TReturn,
 ): (boolean, ...TArgs) => Array<TReturn> {
   return (b, ...args): Array<TReturn> => {

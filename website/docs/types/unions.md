@@ -203,7 +203,7 @@ type PayloadMap = {
   PONG: number,
 };
 
-function handle<T: keyof PayloadMap>(
+function handle<T extends keyof PayloadMap>(
   type: T,
   payload: PayloadMap[T],
 ) {

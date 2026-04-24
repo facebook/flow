@@ -70,7 +70,7 @@ type MappedType = {[key in Union]: number};
 
 Importantly, when using string literals the union is collapsed into a *single object type*:
 ```js flow-check
-type MappedTypeFromKeys<Keys: string> = {[key in Keys]: number};
+type MappedTypeFromKeys<Keys extends string> = {[key in Keys]: number};
 type MappedFooAndBar = MappedTypeFromKeys<'foo' | 'bar'>;
 // = {foo: number, bar: number}, not {foo: number} | {bar: number}
 ```
@@ -78,7 +78,7 @@ type MappedFooAndBar = MappedTypeFromKeys<'foo' | 'bar'>;
 If you use a type like `number` or `string` in the source of your mapped type then Flow will create
 an indexer:
 ```js flow-check
-type MappedTypeFromKeys<Keys: string> = {[key in Keys]: number};
+type MappedTypeFromKeys<Keys extends string> = {[key in Keys]: number};
 type MappedFooAndBarWithIndexer = MappedTypeFromKeys<'foo' | 'bar' | string>;
 // = {foo: number, bar: number, [string]: number}
 ```
@@ -91,7 +91,7 @@ Flow will distribute the mapped type over unions of object types.
 For example:
 ```js flow-check
 // This mapped type uses keyof inline
-type MakeAllValuesNumber<O: {...}> = {[key in keyof O]: number};
+type MakeAllValuesNumber<O extends {...}> = {[key in keyof O]: number};
 type ObjWithFoo = {foo: string};
 type ObjWithBar = {bar: string};
 
@@ -101,7 +101,7 @@ type DistributedMappedType = MakeAllValuesNumber<
 >; // = {foo: number} | {bar: number};
 
 // This mapped type uses a type parameter bound by keyof
-type Pick<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
+type Pick<O extends {...}, Keys extends keyof O> = {[key in Keys]: O[key]};
 type O1 = {foo: number, bar: number};
 type O2 = {bar: string, baz: number};
 type PickBar = Pick<O1 | O2, 'bar'>; // = {bar: number} | {bar: string};
@@ -109,7 +109,7 @@ type PickBar = Pick<O1 | O2, 'bar'>; // = {bar: number} | {bar: string};
 
 Distributive mapped types will also distribute over `null` and `undefined`:
 ```js flow-check
-type Distributive<O: ?{...}> = {[key in keyof O]: O[key]};
+type Distributive<O extends ?{...}> = {[key in keyof O]: O[key]};
 type Obj = {foo: number};
 type MaybeMapped = Distributive<?Obj>;// = ?{foo: number}
 null as MaybeMapped; // OK

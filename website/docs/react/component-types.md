@@ -69,7 +69,7 @@ You can also write polymorphic Component Types, which is helpful for declaring "
 ```js flow-check
 import * as React from 'react';
 
-declare const TransparentComponent: component<T: React.Node>(children: T) renders T;
+declare const TransparentComponent: component<T extends React.Node>(children: T) renders T;
 
 component Example() { return null }
 
@@ -95,11 +95,11 @@ component Example(someProp: number, ref: React.RefSetter<number>) renders Foo {
 Example as component(someProp: number, ref: React.RefSetter<number>) renders Foo; // OK!
 
 
-component PolymorphicExample<T: React.Node>(children: T) renders T {
+component PolymorphicExample<T extends React.Node>(children: T) renders T {
     return children;
 }
 
-PolymorphicExample as component<T: React.Node>(children: T) renders T; // OK!
+PolymorphicExample as component<T extends React.Node>(children: T) renders T; // OK!
 ```
 
 ## See Also {#toc-see-also}
