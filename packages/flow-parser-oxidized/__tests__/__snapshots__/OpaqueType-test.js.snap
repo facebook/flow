@@ -1,0 +1,117 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OpaqueType Basic Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "Foo",
+        "type": "Identifier",
+      },
+      "impltype": null,
+      "supertype": null,
+      "type": "DeclareOpaqueType",
+      "typeParameters": null,
+    },
+    {
+      "id": {
+        "name": "Foo",
+        "type": "Identifier",
+      },
+      "impltype": {
+        "id": {
+          "name": "Boz",
+          "type": "Identifier",
+        },
+        "type": "GenericTypeAnnotation",
+        "typeParameters": null,
+      },
+      "supertype": null,
+      "type": "OpaqueType",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`OpaqueType Basic ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "Foo",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "impltype": null,
+      "lowerBound": {
+        "id": {
+          "name": "Bar",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "GenericTypeAnnotation",
+        "typeParameters": null,
+      },
+      "supertype": null,
+      "type": "DeclareOpaqueType",
+      "typeParameters": null,
+      "upperBound": {
+        "id": {
+          "name": "Baz",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "GenericTypeAnnotation",
+        "typeParameters": null,
+      },
+    },
+    {
+      "id": {
+        "name": "Foo",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "impltype": {
+        "id": {
+          "name": "Boz",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "GenericTypeAnnotation",
+        "typeParameters": null,
+      },
+      "lowerBound": {
+        "id": {
+          "name": "Bar",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "GenericTypeAnnotation",
+        "typeParameters": null,
+      },
+      "supertype": null,
+      "type": "OpaqueType",
+      "typeParameters": null,
+      "upperBound": {
+        "id": {
+          "name": "Baz",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "GenericTypeAnnotation",
+        "typeParameters": null,
+      },
+    },
+  ],
+  "type": "Program",
+}
+`;

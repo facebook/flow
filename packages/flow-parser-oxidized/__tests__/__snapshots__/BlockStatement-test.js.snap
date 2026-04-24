@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BlockStatement implicit block is removed Babel 1`] = `
+{
+  "body": [
+    {
+      "alternate": null,
+      "consequent": {
+        "async": false,
+        "body": {
+          "body": [],
+          "directives": [],
+          "type": "BlockStatement",
+        },
+        "generator": false,
+        "id": {
+          "name": "a",
+          "type": "Identifier",
+        },
+        "params": [],
+        "type": "FunctionDeclaration",
+      },
+      "test": {
+        "name": "a",
+        "type": "Identifier",
+      },
+      "type": "IfStatement",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`BlockStatement implicit block is removed ESTree 1`] = `
+{
+  "body": [
+    {
+      "alternate": null,
+      "consequent": {
+        "async": false,
+        "body": {
+          "body": [],
+          "type": "BlockStatement",
+        },
+        "expression": false,
+        "generator": false,
+        "id": {
+          "name": "a",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "params": [],
+        "predicate": null,
+        "returnType": null,
+        "type": "FunctionDeclaration",
+        "typeParameters": null,
+      },
+      "test": {
+        "name": "a",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "type": "IfStatement",
+    },
+  ],
+  "type": "Program",
+}
+`;

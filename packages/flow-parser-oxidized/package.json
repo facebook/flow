@@ -8,9 +8,9 @@
     "name": "Flow Team",
     "email": "flow@fb.com"
   },
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "files": [
-    "src",
+    "dist",
     "README.md"
   ],
   "engines": {
@@ -20,6 +20,31 @@
     "type": "git",
     "url": "https://github.com/facebook/flow.git"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "test": "jest"
+  },
+  "dependencies": {
+    "flow-enums-runtime": "0.0.6",
+    "flow-estree-oxidized": "0.0.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.16.0",
+    "@babel/core": "^7.16.10",
+    "@babel/preset-env": "^7.16.5",
+    "@babel/plugin-syntax-flow": "^7.16.7",
+    "@babel/plugin-transform-flow-strip-types": "^7.16.7",
+    "@babel/plugin-proposal-class-properties": "^7.16.5",
+    "babel-plugin-transform-flow-enums": "^0.0.2",
+    "jest": "^27.4.3",
+    "@babel/parser": "7.7.4",
+    "@babel/generator": "7.7.4",
+    "@babel/types": "7.7.4",
+    "espree": "9.3.2",
+    "hermes-parser": "0.35.0",
+    "hermes-estree": "0.35.0",
+    "prettier": "3.8.1",
+    "prettier-plugin-hermes-parser": "0.35.0",
+    "string-width": "4.2.3"
+  }
 }

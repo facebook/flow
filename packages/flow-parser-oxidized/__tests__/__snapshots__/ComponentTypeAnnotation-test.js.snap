@@ -1,0 +1,162 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ComponentTypeAnnotation Basic Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "type": "Identifier",
+      },
+      "right": {
+        "type": "AnyTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ComponentTypeAnnotation Basic ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "params": [],
+        "rendersType": null,
+        "rest": null,
+        "type": "ComponentTypeAnnotation",
+        "typeParameters": null,
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ComponentTypeAnnotation Union Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "type": "Identifier",
+      },
+      "right": {
+        "type": "UnionTypeAnnotation",
+        "types": [
+          {
+            "type": "AnyTypeAnnotation",
+          },
+          {
+            "type": "NullLiteralTypeAnnotation",
+          },
+        ],
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+    {
+      "id": {
+        "name": "T",
+        "type": "Identifier",
+      },
+      "right": {
+        "type": "UnionTypeAnnotation",
+        "types": [
+          {
+            "type": "AnyTypeAnnotation",
+          },
+          {
+            "type": "NullLiteralTypeAnnotation",
+          },
+        ],
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ComponentTypeAnnotation Union ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "type": "UnionTypeAnnotation",
+        "types": [
+          {
+            "params": [],
+            "rendersType": null,
+            "rest": null,
+            "type": "ComponentTypeAnnotation",
+            "typeParameters": null,
+          },
+          {
+            "type": "NullLiteralTypeAnnotation",
+          },
+        ],
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+    {
+      "id": {
+        "name": "T",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "type": "UnionTypeAnnotation",
+        "types": [
+          {
+            "params": [],
+            "rendersType": {
+              "operator": "renders",
+              "type": "TypeOperator",
+              "typeAnnotation": {
+                "id": {
+                  "name": "Foo",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+            },
+            "rest": null,
+            "type": "ComponentTypeAnnotation",
+            "typeParameters": null,
+          },
+          {
+            "type": "NullLiteralTypeAnnotation",
+          },
+        ],
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;

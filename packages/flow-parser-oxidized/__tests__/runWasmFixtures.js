@@ -15,7 +15,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 const util = require('node:util');
 
-const flow = require('../src');
+// Bypasses the public `../src` (i.e. `index.js`) entry on purpose. `parse()`
+// in index.js applies hermes-parser-compatible adapter fixups (literalType
+// synthesis, ChainExpression wrapping, docblock attachment, etc.) so that
+// downstream JS tooling sees a canonical hermes-parser-shape AST. The
+// fixtures under flow/src/parser/test/flow/ were captured against the OCaml
+// Flow parser's raw output, which doesn't have those fixups, so we go
+// straight to the underlying deserializer here. Don't "fix" this back to
+// `require('../src')` — that breaks ~12 fixtures with adapter-shape diffs.
+// Drop-in / contract parity with hermes-parser is exercised separately by
+// the jest tests under this directory; that suite goes through index.js.
+const FlowParser = require('../src/FlowParser');
 
 // Walk directory tree returning sorted list of files relative to root.
 function listFiles(root, dir) {
@@ -218,7 +228,7 @@ function runOneCase(testCase, parseOptions) {
 
   let flowAst;
   try {
-    flowAst = flow.parse(testCase.content, {
+    flowAst = FlowParser.parse(testCase.content, {
       ...parseOptions,
       sourceFilename: testCase.filename,
     });

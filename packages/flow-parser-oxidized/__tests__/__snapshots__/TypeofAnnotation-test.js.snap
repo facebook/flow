@@ -1,0 +1,118 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`typeof expression Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "type": "Identifier",
+      },
+      "right": {
+        "argument": {
+          "id": {
+            "name": "f",
+            "type": "Identifier",
+          },
+          "type": "GenericTypeAnnotation",
+          "typeParameters": null,
+        },
+        "type": "TypeofTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`typeof expression Babel 2`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "type": "Identifier",
+      },
+      "right": {
+        "argument": {
+          "id": {
+            "name": "f",
+            "type": "Identifier",
+          },
+          "type": "GenericTypeAnnotation",
+          "typeParameters": null,
+        },
+        "type": "TypeofTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`typeof expression ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "argument": {
+          "name": "f",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "TypeofTypeAnnotation",
+        "typeArguments": null,
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`typeof expression ESTree 2`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "T",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "argument": {
+          "name": "f",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "TypeofTypeAnnotation",
+        "typeArguments": {
+          "params": [
+            {
+              "type": "NumberTypeAnnotation",
+            },
+          ],
+          "type": "TypeParameterInstantiation",
+        },
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;

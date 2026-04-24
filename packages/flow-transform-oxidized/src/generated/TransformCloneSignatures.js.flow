@@ -1,0 +1,32 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict-local
+ * @format
+ */
+
+import type {CallExpression} from 'hermes-estree';
+import type {CallExpressionProps} from './node-types';
+import type {DetachedNode} from '../detachedNode';
+
+/*
+ * !!! THIS FILE WILL BE OVERWRITTEN BY CODEGEN !!!
+ *
+ * Statically it should only contain the minimal set of
+ * definitions required to typecheck the code and execute
+ * the transformation tests.
+ */
+
+type CallExpressionCloneSignature = ((
+  node: CallExpression,
+  newProps: Partial<CallExpressionProps>,
+) => DetachedNode<CallExpression>) &
+  ((
+    node: ?CallExpression,
+    newProps: Partial<CallExpressionProps>,
+  ) => DetachedNode<CallExpression> | null);
+
+export type TransformCloneSignatures = CallExpressionCloneSignature;

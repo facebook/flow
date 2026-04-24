@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`\`as\` expression Babel 1`] = `
+{
+  "body": [
+    {
+      "expression": {
+        "expression": {
+          "name": "x",
+          "type": "Identifier",
+        },
+        "type": "TypeCastExpression",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "type": "NumberTypeAnnotation",
+          },
+        },
+      },
+      "type": "ExpressionStatement",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`\`as\` expression ESTree 1`] = `
+{
+  "body": [
+    {
+      "directive": null,
+      "expression": {
+        "expression": {
+          "name": "x",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": null,
+        },
+        "type": "AsExpression",
+        "typeAnnotation": {
+          "type": "NumberTypeAnnotation",
+        },
+      },
+      "type": "ExpressionStatement",
+    },
+  ],
+  "type": "Program",
+}
+`;

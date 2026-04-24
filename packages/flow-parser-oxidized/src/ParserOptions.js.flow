@@ -8,14 +8,25 @@
  * @format
  */
 
+import type {Expression} from 'flow-estree-oxidized';
+
 export type ParserOptions = {
   allowReturnOutsideFunction?: boolean,
+  babel?: boolean,
   flow?: 'all' | 'detect',
   enableExperimentalComponentSyntax?: boolean,
   enableExperimentalFlowMatchSyntax?: boolean,
+  enableExperimentalFlowRecordSyntax?: boolean,
+  reactRuntimeTarget?: '18' | '19',
   sourceFilename?: string,
   sourceType?: 'module' | 'script' | 'unambiguous',
   tokens?: boolean,
+  transformOptions?: {
+    +TransformEnumSyntax?: {
+      +enable: boolean,
+      +getRuntime?: () => Expression,
+    },
+  },
 };
 
 declare module.exports: {

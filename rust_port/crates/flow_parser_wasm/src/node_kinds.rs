@@ -1101,6 +1101,7 @@ define_nodes! {
     DeclareComponent = 101 {
         id: Node,
         params: NodeList,
+        rest: Node,
         rendersType: Node,
         typeParameters: Node,
     } from Statement::DeclareComponent { loc, inner }
@@ -1760,10 +1761,28 @@ define_nodes! {
         id: Node,
         implicitDeclare: Boolean,
         params: NodeList,
+        rest: Node,
         rendersType: Node,
         typeParameters: Node,
         async: Boolean,
     },
+    // ThisTypeAnnotation is the ESTree node upstream uses for `type T = this`.
+    // Defined here so the schema-driven codegen artifacts (predicates,
+    // selectors, visitor keys, types) include it natively and stay byte-for-
+    // byte aligned with upstream — without hand-coded workarounds.
+    //
+    // The Rust serializer never emits this kind on the wire: the OCaml parser
+    // produces `Type::Generic { id: Identifier "this", targs: None }` for both
+    // `type T = this` AND `(this) => void` / `m(): this`, and the WASM
+    // fixture suite verifies wire-format parity with that baseline (so a
+    // Rust-side conversion would regress those fixtures).
+    //
+    // The conversion to ThisTypeAnnotation is instead applied in the JS
+    // Layer-2 adapter (`applyPerNodeFixups` in `flow-parser-oxidized/src/
+    // index.js`), mirroring upstream `HermesToESTreeAdapter.
+    // mapGenericTypeAnnotation`. No `from` clause: this kind has no AST
+    // variant — it's reachable only via the JS-side adapter rewrite.
+    ThisTypeAnnotation = 229 {},
 }
 
 // Compile-time check: SCHEMA entries must be in `kind_id` order starting

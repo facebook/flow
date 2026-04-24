@@ -1,0 +1,24 @@
+{
+  "name": "flow-typed-oxidized",
+  "version": "0.0.1",
+  "description": "Flow type declarations for third-party packages used by the oxidized Flow tooling, forked from hermes-parser/js/flow-typed.",
+  "homepage": "https://flow.org",
+  "license": "MIT",
+  "author": {
+    "name": "Flow Team",
+    "email": "flow@fb.com"
+  },
+  "files": [
+    "*.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

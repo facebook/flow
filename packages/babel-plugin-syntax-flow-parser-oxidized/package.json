@@ -1,0 +1,23 @@
+{
+  "name": "babel-plugin-syntax-flow-parser-oxidized",
+  "version": "0.0.1",
+  "description": "Babel plugin which switches Babel to use the flow-parser-oxidized parser.",
+  "homepage": "https://flow.org",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "dependencies": {
+    "flow-parser-oxidized": "0.0.1"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.22.5"
+  }
+}

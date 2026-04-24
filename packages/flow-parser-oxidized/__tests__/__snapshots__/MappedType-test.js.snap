@@ -1,0 +1,214 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MappedType Basic Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "Mapped",
+        "type": "Identifier",
+      },
+      "right": {
+        "type": "AnyTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`MappedType Basic ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "Mapped",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [],
+        "inexact": false,
+        "internalSlots": [],
+        "properties": [
+          {
+            "keyTparam": {
+              "bound": null,
+              "const": false,
+              "default": null,
+              "name": "key",
+              "type": "TypeParameter",
+              "usesExtendsBound": false,
+              "variance": null,
+            },
+            "nameType": null,
+            "optional": null,
+            "propType": {
+              "indexType": {
+                "id": {
+                  "name": "key",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+              "objectType": {
+                "id": {
+                  "name": "O",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+              "type": "IndexedAccessType",
+            },
+            "sourceType": {
+              "argument": {
+                "id": {
+                  "name": "O",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+              "type": "KeyofTypeAnnotation",
+            },
+            "type": "ObjectTypeMappedTypeProperty",
+            "variance": null,
+            "varianceOp": null,
+          },
+        ],
+        "type": "ObjectTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`MappedType Union Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "Mapped",
+        "type": "Identifier",
+      },
+      "right": {
+        "type": "AnyTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`MappedType Union ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "Mapped",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [],
+        "inexact": false,
+        "internalSlots": [],
+        "properties": [
+          {
+            "keyTparam": {
+              "bound": null,
+              "const": false,
+              "default": null,
+              "name": "key",
+              "type": "TypeParameter",
+              "usesExtendsBound": false,
+              "variance": null,
+            },
+            "nameType": null,
+            "optional": null,
+            "propType": {
+              "indexType": {
+                "id": {
+                  "name": "key",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+              "objectType": {
+                "id": {
+                  "name": "O",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+              "type": "IndexedAccessType",
+            },
+            "sourceType": {
+              "argument": {
+                "type": "UnionTypeAnnotation",
+                "types": [
+                  {
+                    "id": {
+                      "name": "O",
+                      "optional": false,
+                      "type": "Identifier",
+                      "typeAnnotation": null,
+                    },
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null,
+                  },
+                  {
+                    "id": {
+                      "name": "Z",
+                      "optional": false,
+                      "type": "Identifier",
+                      "typeAnnotation": null,
+                    },
+                    "type": "GenericTypeAnnotation",
+                    "typeParameters": null,
+                  },
+                ],
+              },
+              "type": "KeyofTypeAnnotation",
+            },
+            "type": "ObjectTypeMappedTypeProperty",
+            "variance": null,
+            "varianceOp": null,
+          },
+        ],
+        "type": "ObjectTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": null,
+    },
+  ],
+  "type": "Program",
+}
+`;

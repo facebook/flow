@@ -1,0 +1,14 @@
+{
+  "name": "flow-packages-oxidized-workspace",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Yarn workspace root for the in-tree oxidized Flow packages (flow-parser-oxidized, flow-estree-oxidized, flow-eslint-oxidized, babel-plugin-syntax-flow-parser-oxidized, prettier-plugin-flow-parser-oxidized, flow-transform-oxidized). Pattern after xplat/js/graphql. The workspaces array is intentionally limited to the oxidized packages we control in this stack — the other siblings under flow/packages/ (flow-parser, flow-remove-types, etc.) continue to operate as standalone yarn packages outside this workspace_root.",
+  "workspaces": [
+    "flow-parser-oxidized",
+    "flow-estree-oxidized",
+    "flow-eslint-oxidized",
+    "babel-plugin-syntax-flow-parser-oxidized",
+    "prettier-plugin-flow-parser-oxidized",
+    "flow-transform-oxidized"
+  ]
+}

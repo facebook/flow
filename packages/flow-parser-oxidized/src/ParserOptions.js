@@ -11,12 +11,16 @@
 
 const ParserOptionsKeys = new Set([
   'allowReturnOutsideFunction',
+  'babel',
   'flow',
   'enableExperimentalComponentSyntax',
   'enableExperimentalFlowMatchSyntax',
+  'enableExperimentalFlowRecordSyntax',
+  'reactRuntimeTarget',
   'sourceFilename',
   'sourceType',
   'tokens',
+  'transformOptions',
 ]);
 
 module.exports = {ParserOptionsKeys};

@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ArrowFunctionExpression \`id\` field exists and is \`null\` Babel 1`] = `
+{
+  "body": [
+    {
+      "expression": {
+        "async": false,
+        "body": {
+          "extra": {
+            "raw": "0",
+            "rawValue": 0,
+          },
+          "type": "NumericLiteral",
+          "value": 0,
+        },
+        "id": null,
+        "params": [],
+        "type": "ArrowFunctionExpression",
+      },
+      "type": "ExpressionStatement",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ArrowFunctionExpression \`id\` field exists and is \`null\` ESTree 1`] = `
+{
+  "body": [
+    {
+      "directive": null,
+      "expression": {
+        "async": false,
+        "body": {
+          "literalType": "numeric",
+          "raw": "0",
+          "type": "Literal",
+          "value": 0,
+        },
+        "expression": true,
+        "id": null,
+        "params": [],
+        "predicate": null,
+        "returnType": null,
+        "type": "ArrowFunctionExpression",
+        "typeParameters": null,
+      },
+      "type": "ExpressionStatement",
+    },
+  ],
+  "type": "Program",
+}
+`;

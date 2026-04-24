@@ -1,0 +1,27 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict-local
+ * @format
+ */
+
+/*
+ * !!! THIS FILE WILL BE OVERWRITTEN BY CODEGEN !!!
+ *
+ * Statically it should only contain the minimal set of
+ * definitions required to typecheck the code and execute
+ * the transformation tests.
+ */
+
+import type {VariableDeclaration} from 'hermes-estree';
+import type {DetachedNode} from '../detachedNode';
+
+type VariableDeclarationReplaceSignature = (
+  target: VariableDeclaration,
+  nodeToReplaceWith: DetachedNode<VariableDeclaration>,
+  options?: $ReadOnly<{keepComments?: boolean}>,
+) => void;
+export type TransformReplaceSignatures = VariableDeclarationReplaceSignature;

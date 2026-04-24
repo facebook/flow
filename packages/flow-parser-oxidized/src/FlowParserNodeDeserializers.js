@@ -1155,6 +1155,7 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       params: this.deserializeNodeList(),
+      rest: this.deserializeNode(),
       rendersType: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
     };
@@ -2439,9 +2440,18 @@ module.exports = [
       id: this.deserializeNode(),
       implicitDeclare: this.deserializeBoolean(),
       params: this.deserializeNodeList(),
+      rest: this.deserializeNode(),
       rendersType: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
       async: this.deserializeBoolean(),
+    };
+  },
+
+  // 229: ThisTypeAnnotation
+  function () {
+    return {
+      type: 'ThisTypeAnnotation',
+      loc: this.addEmptyLoc(),
     };
   },
 ];

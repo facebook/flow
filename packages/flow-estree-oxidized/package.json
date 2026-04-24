@@ -1,0 +1,25 @@
+{
+  "name": "flow-estree-oxidized",
+  "version": "0.0.1",
+  "description": "Flow types for the Flow-ESTree spec produced by the Flow Rust parser, forked from hermes-estree.",
+  "homepage": "https://flow.org",
+  "license": "MIT",
+  "author": {
+    "name": "Flow Team",
+    "email": "flow@fb.com"
+  },
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

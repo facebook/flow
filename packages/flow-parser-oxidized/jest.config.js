@@ -1,0 +1,56 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @format
+ */
+
+'use strict';
+
+const path = require('path');
+
+module.exports = {
+  // All imported modules in your tests should be mocked automatically
+  automock: false,
+  // Automatically clear mock calls and instances between every test
+  clearMocks: true,
+  // Indicates whether the coverage information should be collected while executing the test
+  collectCoverage: false,
+  // The glob patterns Jest uses to detect test files
+  testMatch: ['**/__tests__/**/*-test.js'],
+  // Snapshot format aligned with jest 30's default: omit the `Object {}` and
+  // `Array []` constructor prefixes around plain literals. Upstream
+  // hermes-parser uses jest 30; the fbcode offline mirror only has jest
+  // 27.5.1 (see task #25). pretty-format 27.5.1 supports
+  // `printBasicPrototype: false` natively, so we get matching snapshot
+  // output without changing our jest pin.
+  snapshotFormat: {
+    escapeString: false,
+    printBasicPrototype: false,
+  },
+  // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped.
+  // The print-blocked suites previously listed here are now opted out at the
+  // test level via per-test `test.skip(..., 'ESTree (blocked on Phase E
+  // hermes-transform vendor, task #27)', ...)` so each skipped test is
+  // visible individually in jest output (no silent skips). See task #45
+  // cleanup.
+  testPathIgnorePatterns: ['/node_modules/'],
+  // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
+  transformIgnorePatterns: ['/node_modules/', '/dist/'],
+
+  // Sibling package resolution: the `flow-estree-oxidized` package is also
+  // forked under fbcode/flow/packages — point jest at its src/index.js so we
+  // don't need a built dist tree to run tests.
+  moduleNameMapper: {
+    '^flow-estree-oxidized$': path.resolve(
+      __dirname,
+      '..',
+      'flow-estree-oxidized',
+      'src',
+      'index.js',
+    ),
+  },
+};

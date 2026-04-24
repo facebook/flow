@@ -50,11 +50,11 @@ function initFlowParserWASM() {
   // or record syntax opt in via their `.options.json`), an `enableTypes`
   // flag that mirrors OCaml's `types` option (on by default; fixtures that
   // need to exercise the no-type-grammar path opt out via `types: false`),
-  // and a `sourceType` integer (0=unspecified/detect, 1=script, 2=module)
-  // that mirrors the JS-level `options.sourceType` so the parser can switch
-  // between script and module modes (and detect via @flow pragma when 0).
+  // and a `sourceType` integer (0=unspecified, 1=script, 2=module). The
+  // Rust parser does no pragma-conditional type parsing — `@flow` detection
+  // is the JS adapter's job (src/index.js) and resolves to a concrete
+  // `enableTypes` bool before this call.
   flowParse = FlowParserWASM.cwrap('hermesParse', 'number', [
-    'number',
     'number',
     'number',
     'number',
@@ -178,15 +178,13 @@ function parse(source, options) {
     const enableTypes = options.enableTypes === false ? 0 : 1;
     // `sourceType` is sent to Rust as an integer code:
     //   0 = unspecified / parser default
-    //   1 = 'script' (script-with-import/export toleration)
-    //   2 = 'module' — currently unsupported by flow_parser (no top-level
-    //       await; see parser_env.rs:392-393), so this *intentionally*
-    //       trips the Rust-side panic at lib.rs:128-147. Callers who want
-    //       parser-default behaviour should pass `sourceType: 'unambiguous'`
-    //       (which index.js deletes → undefined → 0) or omit `sourceType`.
-    //       Silently collapsing 'module' onto 0 would mis-parse module-only
-    //       syntax (top-level await) under script semantics — better to
-    //       fail loud than silently produce a wrong AST.
+    //   1 = 'script'
+    //   2 = 'module'
+    // All three map to the same parse on the Rust side: flow_parser has no
+    // script/module gate, top-level imports/exports are always accepted,
+    // and top-level `await` is always rejected (matching OCaml flow_parser,
+    // which also pins `allow_await:false` at the top level). The integer
+    // round-trips for diagnostics; semantics are identical.
     const sourceTypeCode =
       options.sourceType === 'script'
         ? 1
@@ -198,7 +196,6 @@ function parse(source, options) {
       sourceBuffer.length + 1,
       filenameAddr,
       filenameLen,
-      flag(options.flow === 'detect'),
       flag(options.enableExperimentalComponentSyntax),
       flag(options.enableExperimentalFlowMatchSyntax),
       // Decorators default to disabled — OCaml's `default_parse_options`
@@ -240,7 +237,63 @@ function parse(source, options) {
       FlowParserWASM,
       options,
     );
-    return deserializer.deserialize();
+    const ast = deserializer.deserialize();
+
+    // Wire→ESTree loc/range normalization. The wire format carries
+    // `rangeStart` / `rangeEnd` on the loc object; ESTree consumers expect a
+    // `range: [start, end]` array on the *node* itself, plus a clean
+    // `loc: { source, start, end }`. This walk is the parser-level analog of
+    // upstream HermesToESTreeAdapter.transform()'s mandatory range conversion
+    // (HermesToESTreeAdapter.js:39 — `node.range = [loc.rangeStart, loc.rangeEnd]`).
+    // Lives here (not in src/index.js) so callers that bypass the public
+    // hermes-parser-compatibility wrapper (e.g. the wasm fixture runner that
+    // tests raw Flow ESTree parity with the OCaml parser) still get the
+    // canonical ESTree loc/range shape. The 6 hermes-parser adapter fixups
+    // (literalType / ChainExpression wrap / docblock / BigInt / ImportSpecifier /
+    // RegExpLiteral) are layered on top by src/index.js's parse().
+    //
+    // Track visited nodes so a malformed AST with a cycle doesn't blow the
+    // stack; track visited locs separately because two nodes can share a loc
+    // reference and we must read `rangeStart`/`rangeEnd` before deleting them.
+    const sourceFilename =
+      typeof options.sourceFilename === 'string'
+        ? options.sourceFilename
+        : null;
+    const visitedNodes = new WeakSet();
+    const locRanges = new WeakMap();
+    function fixLocs(node) {
+      if (node == null || typeof node !== 'object') {
+        return;
+      }
+      if (visitedNodes.has(node)) {
+        return;
+      }
+      visitedNodes.add(node);
+      if (node.loc != null) {
+        let range = locRanges.get(node.loc);
+        if (range == null) {
+          node.loc.source = sourceFilename;
+          range = [node.loc.rangeStart, node.loc.rangeEnd];
+          locRanges.set(node.loc, range);
+          delete node.loc.rangeStart;
+          delete node.loc.rangeEnd;
+        }
+        node.range = range;
+      }
+      for (const key of Object.keys(node)) {
+        const val = node[key];
+        if (Array.isArray(val)) {
+          for (const child of val) {
+            fixLocs(child);
+          }
+        } else if (val != null && typeof val === 'object' && val.type != null) {
+          fixLocs(val);
+        }
+      }
+    }
+    fixLocs(ast);
+
+    return ast;
   } finally {
     if (parseResult !== 0) {
       flowParseResult_free(parseResult);

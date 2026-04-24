@@ -1,0 +1,37 @@
+{
+  "name": "flow-transform-oxidized",
+  "version": "0.0.1",
+  "description": "Tools built on top of flow-estree-oxidized to enable codebase transformation",
+  "homepage": "https://flow.org",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "main": "dist/index.js",
+  "dependencies": {
+    "@babel/code-frame": "^7.16.0",
+    "esquery": "^1.4.0",
+    "flow-enums-runtime": "^0.0.6",
+    "flow-eslint-oxidized": "0.0.1",
+    "flow-estree-oxidized": "0.0.1",
+    "flow-parser-oxidized": "0.0.1",
+    "string-width": "4.2.3"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0",
+    "prettier-plugin-flow-parser-oxidized": "*"
+  },
+  "peerDependenciesMeta": {
+    "prettier-plugin-flow-parser-oxidized": {
+      "optional": true
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "ESLINT_LICENCE",
+    "PRETTIER_LICENCE",
+    "README.md"
+  ]
+}

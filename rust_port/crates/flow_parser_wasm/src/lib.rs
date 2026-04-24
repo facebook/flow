@@ -65,34 +65,39 @@ fn nonneg_u32(v: i32) -> u32 {
 /// - source_size: length including null terminator
 /// - source_filename: pointer to UTF-8 filename in WASM memory (null-terminated, may be null)
 /// - source_filename_size: length including null terminator (0 if filename is null)
-/// - detect_flow: accepted but unused; pragma detection is the JS bridge's
-///   responsibility (the type grammar is gated by `enable_types`).
 /// - enable_components: enable component syntax
 /// - enable_match: enable match expression syntax
 /// - enable_decorators: enable Stage-1 decorator syntax (when 0, `@` is a parse error)
 /// - tokens: if true, serialize token information
-/// - allow_return_outside: accepted but unused; `Parse_error::IllegalReturn`
-///   is raised unconditionally at statement_parser.rs:722-723 when
-///   `!env.in_function()`, so top-level `return` still errors here.
+/// - allow_return_outside: accepted but unused; OCaml flow_parser's
+///   `parse_options` has no equivalent gate, and the `IllegalReturn`
+///   diagnostic is raised unconditionally at statement_parser.rs:722-723
+///   when `!env.in_function()`. The hermes-parser-compatible
+///   `allowReturnOutsideFunction` semantics are implemented at the JS
+///   adapter layer (src/index.js) by filtering this specific diagnostic
+///   from the error list before throwing — keeping the Rust port faithful
+///   to OCaml without adding a new option to ParseOptions.
 /// - assert_operator: enable Flow `expr!` non-null assertion
 /// - enable_enums: enable Flow enum syntax (off by default per OCaml `default_parse_options`)
 /// - enable_records: enable Flow record syntax (`#{ ... }`); off by default
 /// - enable_types: enable Flow/TS type-grammar (on by default; fixtures opt out via `types: false`)
 /// - source_type: 0 = unspecified, 1 = script, 2 = module. flow_parser has
-///   no script/module gate (parser_env.rs:218); `init_env` pins
+///   no script/module gate (parser_env.rs:218): `init_env` pins
 ///   `allow_yield: false, allow_await: false` at the top level
-///   (parser_env.rs:392-393) which is script semantics, while
-///   `parse_module_body_with_directives` (statement_parser.rs:5106)
-///   unconditionally accepts top-level `import`/`export`. 0 and 1 use this
-///   permissive hybrid; 2 panics because accepting it would silently
-///   misparse top-level `await`.
+///   (parser_env.rs:392-393), while `parse_module_body_with_directives`
+///   (statement_parser.rs:5106) unconditionally accepts top-level
+///   `import`/`export`. All three values map to the same parse: imports
+///   and exports are accepted regardless, and top-level `await` is
+///   rejected with the same `Parse_error.AwaitAsIdentifierReference` that
+///   the OCaml flow_parser raises (parser_common.ml:481-491) — OCaml has
+///   no top-level-await gate either, so accepting `module` here matches
+///   OCaml semantics rather than diverging from it.
 #[unsafe(no_mangle)]
 pub extern "C" fn hermesParse(
     source: *const u8,
     source_size: usize,
     source_filename: *const u8,
     source_filename_size: usize,
-    _detect_flow: i32,
     enable_components: i32,
     enable_match: i32,
     enable_decorators: i32,
@@ -105,14 +110,7 @@ pub extern "C" fn hermesParse(
     source_type: i32,
 ) -> *mut ParseResult {
     match source_type {
-        0 | 1 => {}
-        2 => panic!(
-            "hermesParse: source_type=2 (module) is not supported. flow_parser pins \
-             `allow_await: false` at the top level (parser_env.rs:392-393), so it cannot \
-             reserve top-level `await` as the await-expression keyword. Pass 'script' \
-             or omit `sourceType`. If module mode is critical, add an \
-             `allow_top_level_await` gate to `flow_parser::ParseOptions`."
-        ),
+        0..=2 => {}
         other => panic!(
             "hermesParse: invalid source_type={other}; expected 0 (unspecified), \
              1 (script), or 2 (module)."
@@ -193,13 +191,30 @@ pub extern "C" fn hermesParse(
         flow_parser::file_key::FileKeyInner::SourceFile(filename_str),
     );
 
-    let (program, errors) = flow_parser::parse_program_file::<()>(
-        false, // panic_if_failed
-        None,  // token_sink (TODO: support tokens)
-        Some(parse_options),
-        file_key,
-        Ok(source_str),
-    );
+    // When the JS caller asks for `tokens: true`, install a token sink that
+    // captures every lexed `TokenSinkResult` for the duration of the parse.
+    // The buffer is owned here, mutated by the sink callback, then handed to
+    // the serializer below. When tokens are not requested we pass `None` to
+    // the parser to avoid the per-token callback overhead.
+    let mut token_buffer: Vec<flow_parser::TokenSinkResult> = Vec::new();
+    let (program, errors) = if tokens != 0 {
+        let mut sink = |t: flow_parser::TokenSinkResult| token_buffer.push(t);
+        flow_parser::parse_program_file::<()>(
+            false, // panic_if_failed
+            Some(&mut sink),
+            Some(parse_options),
+            file_key,
+            Ok(source_str),
+        )
+    } else {
+        flow_parser::parse_program_file::<()>(
+            false, // panic_if_failed
+            None,  // token_sink
+            Some(parse_options),
+            file_key,
+            Ok(source_str),
+        )
+    };
 
     let mut result = Box::new(ParseResult {
         error: None,
@@ -219,7 +234,12 @@ pub extern "C" fn hermesParse(
         result.error_column = nonneg_u32(loc.start.column);
     }
     let ser = serializer::Serializer::new(source_str);
-    let buffers = ser.serialize_program(&program, &errors, tokens != 0);
+    let token_slice = if tokens != 0 {
+        Some(token_buffer.as_slice())
+    } else {
+        None
+    };
+    let buffers = ser.serialize_program(&program, &errors, token_slice);
     result.program_buffer = buffers.program_buffer;
     result.position_buffer = buffers.position_buffer;
     result.string_buffer = buffers.string_buffer;
@@ -387,7 +407,7 @@ mod tests {
             errors
         );
         let ser = Serializer::new(source);
-        let buffers = ser.serialize_program(&program, &[], false);
+        let buffers = ser.serialize_program(&program, &[], None);
         buffers.program_buffer
     }
 
@@ -439,5 +459,62 @@ mod tests {
             !buffer_contains_kind(&buf, NodeKind::TupleTypeElement),
             "should not wrap a non-optional unlabeled element in TupleTypeElement"
         );
+    }
+
+    /// Exercise the FFI `hermesParse` entry point with the supplied
+    /// `source_type` and return the resulting `ParseResult`. Test callers
+    /// own the returned pointer and must call `hermesParseResult_free`.
+    fn ffi_parse_with_source_type(source: &str, source_type: i32) -> *mut super::ParseResult {
+        // The C ABI expects a null-terminated UTF-8 buffer; mirror the JS
+        // bridge which appends `\0` and passes `Buffer.length + 1`.
+        let mut bytes = source.as_bytes().to_vec();
+        bytes.push(0);
+        let size = bytes.len();
+        let ptr = bytes.as_ptr();
+        let result = super::hermesParse(
+            ptr,
+            size,
+            std::ptr::null(),
+            0,
+            1, // enable_components
+            1, // enable_match
+            1, // enable_decorators
+            0, // tokens
+            0, // allow_return_outside
+            0, // assert_operator
+            1, // enable_enums
+            1, // enable_records
+            1, // enable_types
+            source_type,
+        );
+        // `bytes` must outlive the call — ensure rustc cannot drop it
+        // before `hermesParse` returns by reading it after.
+        drop(bytes);
+        result
+    }
+
+    #[test]
+    fn module_source_type_does_not_panic() {
+        // Pre-fix this would panic with "source_type=2 (module) is not
+        // supported. flow_parser pins `allow_await: false` at the top
+        // level...". Now `source_type=2` is accepted: imports/exports
+        // already parsed regardless of the integer code, and `await` at
+        // top level remains usable as an identifier reference (matching
+        // OCaml flow_parser, which also pins `allow_await:false` and
+        // therefore treats `await` as a valid identifier outside async
+        // function bodies — see parser_common.ml:481-491).
+        let result = ffi_parse_with_source_type("export const x = 1;", 2);
+        assert!(!result.is_null(), "ParseResult pointer should be non-null");
+        let buf_ptr = super::hermesParseResult_getProgramBuffer(result);
+        assert!(
+            !buf_ptr.is_null(),
+            "program buffer should be non-null for valid module input"
+        );
+        let err_ptr = super::hermesParseResult_getError(result);
+        assert!(
+            err_ptr.is_null(),
+            "valid module input should not produce a parse error"
+        );
+        super::hermesParseResult_free(result);
     }
 }

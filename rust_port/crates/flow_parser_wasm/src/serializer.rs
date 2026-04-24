@@ -12,10 +12,12 @@
 //! - `program_buffer: Vec<u32>` — nodes and their properties
 //! - `position_buffer: Vec<PositionResult>` — source positions in UTF-16
 
+use flow_parser::TokenSinkResult;
 use flow_parser::ast;
 use flow_parser::ast::CommentKind;
 use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
+use flow_parser::token::TokenKind;
 
 use crate::node_kinds::NodeKind;
 use crate::position::PositionInfo;
@@ -205,7 +207,7 @@ impl<'a> Serializer<'a> {
         mut self,
         program: &ast::Program<Loc, Loc>,
         errors: &[(Loc, ParseError)],
-        _tokens: bool,
+        tokens: Option<&[TokenSinkResult]>,
     ) -> SerializerBuffers {
         // Top-level protocol (matches FlowParserDeserializer.deserialize):
         // 1. Program locId (u32)
@@ -249,8 +251,28 @@ impl<'a> Serializer<'a> {
             None => self.write_null_node(),
         }
 
-        // Tokens: not yet wired through.
-        self.buf.push(0);
+        // Tokens: when the caller passed `tokens: true` in ParserOptions, the
+        // wasm bridge installs a token sink that captures every lexed token
+        // into a `Vec<TokenSinkResult>` for the duration of the parse, then
+        // hands the buffer here. Emit `[count, [tokenTypeIdx, locId, value]...]`
+        // to match `FlowParserDeserializer.deserializeTokens` (`tokenTypes`
+        // array index → JS string). When tokens is None, emit a count of 0
+        // (the deserializer always reads the slot, even when callers didn't
+        // request tokens — see FlowParserDeserializer.deserialize line 96-102).
+        match tokens {
+            Some(tokens) => {
+                self.buf.push(tokens.len() as u32);
+                for t in tokens.iter() {
+                    self.buf
+                        .push(token_kind_to_estree_type_index(&t.token_kind));
+                    let loc_id = self.add_loc(&t.token_loc);
+                    self.buf.push(loc_id);
+                    let value = t.token_kind.to_value();
+                    self.write_str(&value);
+                }
+            }
+            None => self.buf.push(0),
+        }
 
         // Errors: count followed by (locId, message) pairs. Surfaced to JS
         // as `program.errors`.
@@ -2572,6 +2594,76 @@ impl<'a> Serializer<'a> {
         self.write_bool(param.shorthand);
     }
 
+    /// Emit a `declare component` parameter as ESTree `ComponentTypeParameter`
+    /// (NodeKind 164 — `name typeAnnotation optional`) to match hermes-parser's
+    /// AST shape for declare component params. The OCaml AST stores these in
+    /// the same value-position `component_params::Param` shape used by
+    /// `component`, so we extract the type annotation from `local` and emit
+    /// the type-position shape that scope-manager / type tooling expect.
+    fn serialize_declare_component_param(
+        &mut self,
+        param: &ast::statement::component_params::Param<Loc, Loc>,
+    ) {
+        // 164: ComponentTypeParameter — name typeAnnotation optional
+        self.write_node_header(NodeKind::ComponentTypeParameter, &param.loc);
+        self.serialize_component_param_name(&param.name);
+        // local for `declare component` is always a Pattern::Identifier; its
+        // `annot` carries the type annotation (only the inner Type, not the
+        // outer TypeAnnotation wrapper, per hermes ComponentTypeParameter
+        // shape). For unusual shapes (AssignmentPattern from a default value,
+        // Object/Array pattern) — which are hermes parse errors but the OCaml
+        // flow parser accepts — fall back to a null annotation.
+        match &param.local {
+            ast::pattern::Pattern::Identifier { inner, .. } => {
+                match &inner.annot {
+                    ast::types::AnnotationOrHint::Available(annot) => {
+                        self.serialize_type(&annot.annotation);
+                    }
+                    ast::types::AnnotationOrHint::Missing(_) => {
+                        self.write_null_node();
+                    }
+                }
+                self.write_bool(inner.optional);
+            }
+            _ => {
+                self.write_null_node();
+                self.write_bool(false);
+            }
+        }
+    }
+
+    /// Emit a `declare component` rest parameter as ESTree
+    /// `ComponentTypeParameter` to match hermes-parser. The OCaml AST stores
+    /// the rest pattern as a single `Pattern` whose inner Identifier carries
+    /// both the rest binding name and the type annotation; we split them out
+    /// into the type-position `name`/`typeAnnotation` fields.
+    fn serialize_declare_component_rest(
+        &mut self,
+        rest: &ast::statement::component_params::RestParam<Loc, Loc>,
+    ) {
+        // 164: ComponentTypeParameter — name typeAnnotation optional
+        self.write_node_header(NodeKind::ComponentTypeParameter, &rest.loc);
+        match &rest.argument {
+            ast::pattern::Pattern::Identifier { inner, .. } => {
+                self.serialize_identifier_node(&inner.name);
+                match &inner.annot {
+                    ast::types::AnnotationOrHint::Available(annot) => {
+                        self.serialize_type(&annot.annotation);
+                    }
+                    ast::types::AnnotationOrHint::Missing(_) => {
+                        self.write_null_node();
+                    }
+                }
+                self.write_bool(inner.optional);
+            }
+            _ => {
+                self.write_null_node();
+                self.write_null_node();
+                self.write_bool(false);
+            }
+        }
+    }
+
     fn serialize_enum_declaration(
         &mut self,
         loc: &Loc,
@@ -2792,11 +2884,20 @@ impl<'a> Serializer<'a> {
                         self.write_bool(declaration.abstract_);
                     }
                     Declaration::Component { loc, declaration } => {
+                        // 101: DeclareComponent — id params rest rendersType
+                        // typeParameters. Same shape as `serialize_declare_component`
+                        // (the standalone `Statement::DeclareComponent` path);
+                        // see that function for why params are
+                        // ComponentTypeParameter and rest is a sibling field.
                         self.write_node_header(NodeKind::DeclareComponent, loc);
                         self.serialize_identifier_node(&declaration.id);
                         self.buf.push(declaration.params.params.len() as u32);
                         for param in declaration.params.params.iter() {
-                            self.serialize_component_declaration_param(param);
+                            self.serialize_declare_component_param(param);
+                        }
+                        match &declaration.params.rest {
+                            Some(rest) => self.serialize_declare_component_rest(rest),
+                            None => self.write_null_node(),
                         }
                         self.serialize_renders_annotation(&declaration.renders);
                         self.serialize_type_params_opt(&declaration.tparams);
@@ -2932,17 +3033,33 @@ impl<'a> Serializer<'a> {
         self.serialize_identifier_node(&inner.id);
         // implicitDeclare
         self.write_bool(implicit_declare);
-        // params NodeList — each non-rest is ComponentParameter(97); a
-        // trailing RestParam (e.g. `...rest`) is appended as RestElement(80).
-        let rest_count = if inner.params.rest.is_some() { 1 } else { 0 };
-        self.buf
-            .push((inner.params.params.len() + rest_count) as u32);
-        for param in inner.params.params.iter() {
-            self.serialize_component_declaration_param(param);
-        }
-        if let Some(rest) = &inner.params.rest {
-            self.write_node_header(NodeKind::RestElement, &rest.loc);
-            self.serialize_pattern(&rest.argument);
+        // params NodeList. For body=Some (ComponentDeclaration), each
+        // non-rest param is value-position ComponentParameter(97) and the
+        // trailing rest is appended as RestElement(80). For body=None
+        // (DeclareComponentAmbient), match hermes-parser by emitting each
+        // param as type-position ComponentTypeParameter(164) and writing
+        // `rest` as a separate field rather than appending to the list.
+        if implicit_declare {
+            self.buf.push(inner.params.params.len() as u32);
+            for param in inner.params.params.iter() {
+                self.serialize_declare_component_param(param);
+            }
+            // rest field: ComponentTypeParameter or null
+            match &inner.params.rest {
+                Some(rest) => self.serialize_declare_component_rest(rest),
+                None => self.write_null_node(),
+            }
+        } else {
+            let rest_count = if inner.params.rest.is_some() { 1 } else { 0 };
+            self.buf
+                .push((inner.params.params.len() + rest_count) as u32);
+            for param in inner.params.params.iter() {
+                self.serialize_component_declaration_param(param);
+            }
+            if let Some(rest) = &inner.params.rest {
+                self.write_node_header(NodeKind::RestElement, &rest.loc);
+                self.serialize_pattern(&rest.argument);
+            }
         }
         // rendersType
         self.serialize_renders_annotation(&inner.renders);
@@ -3099,19 +3216,21 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareComponent<Loc, Loc>,
     ) {
-        // 101: DeclareComponent — id params rendersType typeParameters
+        // 101: DeclareComponent — id params rest rendersType typeParameters.
+        // Per hermes-parser, params are type-position ComponentTypeParameter
+        // (not value-position ComponentParameter) and rest is a separate
+        // sibling field, not appended to the params list.
         self.write_node_header(NodeKind::DeclareComponent, loc);
         self.serialize_identifier_node(&inner.id);
-        // params NodeList — append RestElement(80) for the trailing rest.
-        let rest_count = if inner.params.rest.is_some() { 1 } else { 0 };
-        self.buf
-            .push((inner.params.params.len() + rest_count) as u32);
+        // params NodeList — type-position ComponentTypeParameter(164) each.
+        self.buf.push(inner.params.params.len() as u32);
         for param in inner.params.params.iter() {
-            self.serialize_component_declaration_param(param);
+            self.serialize_declare_component_param(param);
         }
-        if let Some(rest) = &inner.params.rest {
-            self.write_node_header(NodeKind::RestElement, &rest.loc);
-            self.serialize_pattern(&rest.argument);
+        // rest: ComponentTypeParameter or null
+        match &inner.params.rest {
+            Some(rest) => self.serialize_declare_component_rest(rest),
+            None => self.write_null_node(),
         }
         // rendersType
         self.serialize_renders_annotation(&inner.renders);
@@ -3414,6 +3533,180 @@ fn is_pattern_key_computed(key: &ast::pattern::object::Key<Loc, Loc>) -> bool {
     matches!(key, ast::pattern::object::Key::Computed(_))
 }
 
+/// Map a `TokenKind` to the ESTree token-type index expected by
+/// `FlowParserDeserializer.tokenTypes` (FlowParserDeserializer.js:28-40):
+///
+///   0 Boolean | 1 Identifier | 2 Keyword | 3 Null | 4 Numeric | 5 BigInt
+///   6 Punctuator | 7 String | 8 RegularExpression | 9 Template | 10 JSXText
+///
+/// This is the standard ESLint token taxonomy. Mirrors the Hermes serializer's
+/// per-token classification (which the Rust port has no token translator for —
+/// upstream Hermes computes the same buckets in C++ at lex time). Type-grammar
+/// keywords (`any`, `mixed`, `keyof`, …) and the JSX placeholder tokens fall
+/// under `Identifier` because that's how ESLint-compatible consumers see them.
+fn token_kind_to_estree_type_index(t: &TokenKind) -> u32 {
+    match t {
+        // Literal tokens
+        TokenKind::TTrue | TokenKind::TFalse => 0, // Boolean
+        TokenKind::TNull => 3,                     // Null
+        TokenKind::TNumber { .. } | TokenKind::TNumberSingletonType { .. } => 4, // Numeric
+        TokenKind::TBigint { .. } | TokenKind::TBigintSingletonType { .. } => 5, // BigInt
+        TokenKind::TString(..) => 7,               // String
+        TokenKind::TRegexp(..) => 8,               // RegularExpression
+        TokenKind::TTemplatePart(..) => 9,         // Template
+        TokenKind::TJsxChildText(..) | TokenKind::TJsxQuoteText(..) => 10, // JSXText
+
+        // Identifiers (incl. JSX identifiers)
+        TokenKind::TIdentifier { .. } | TokenKind::TJsxIdentifier { .. } => 1,
+
+        // Keywords (ECMAScript reserved + Flow contextual keywords that the
+        // lexer emits as their own kinds).
+        TokenKind::TFunction
+        | TokenKind::TIf
+        | TokenKind::TIn
+        | TokenKind::TInstanceof
+        | TokenKind::TReturn
+        | TokenKind::TSwitch
+        | TokenKind::TMatch
+        | TokenKind::TRecord
+        | TokenKind::TThis
+        | TokenKind::TThrow
+        | TokenKind::TTry
+        | TokenKind::TVar
+        | TokenKind::TWhile
+        | TokenKind::TWith
+        | TokenKind::TConst
+        | TokenKind::TLet
+        | TokenKind::TBreak
+        | TokenKind::TCase
+        | TokenKind::TCatch
+        | TokenKind::TContinue
+        | TokenKind::TDefault
+        | TokenKind::TDo
+        | TokenKind::TFinally
+        | TokenKind::TFor
+        | TokenKind::TClass
+        | TokenKind::TExtends
+        | TokenKind::TStatic
+        | TokenKind::TElse
+        | TokenKind::TNew
+        | TokenKind::TDelete
+        | TokenKind::TTypeof
+        | TokenKind::TVoid
+        | TokenKind::TEnum
+        | TokenKind::TExport
+        | TokenKind::TImport
+        | TokenKind::TSuper
+        | TokenKind::TImplements
+        | TokenKind::TInterface
+        | TokenKind::TPackage
+        | TokenKind::TPrivate
+        | TokenKind::TProtected
+        | TokenKind::TPublic
+        | TokenKind::TYield
+        | TokenKind::TDebugger
+        | TokenKind::TDeclare
+        | TokenKind::TType
+        | TokenKind::TOpaque
+        | TokenKind::TOf
+        | TokenKind::TAsync
+        | TokenKind::TAwait
+        | TokenKind::TChecks => 2, // Keyword
+
+        // Type primitives surface as identifiers to ESLint consumers (no
+        // dedicated token-type bucket exists for them).
+        TokenKind::TAnyType
+        | TokenKind::TMixedType
+        | TokenKind::TEmptyType
+        | TokenKind::TBooleanType(_)
+        | TokenKind::TNumberType
+        | TokenKind::TBigintType
+        | TokenKind::TStringType
+        | TokenKind::TVoidType
+        | TokenKind::TSymbolType
+        | TokenKind::TUnknownType
+        | TokenKind::TNeverType
+        | TokenKind::TUndefinedType
+        | TokenKind::TKeyof
+        | TokenKind::TReadonly
+        | TokenKind::TWriteonly
+        | TokenKind::TInfer
+        | TokenKind::TIs
+        | TokenKind::TAsserts
+        | TokenKind::TImplies
+        | TokenKind::TRendersQuestion
+        | TokenKind::TRendersStar => 1, // Identifier
+
+        // Everything else lexes as punctuation. Includes T_ERROR / T_EOF /
+        // T_INTERPRETER which never reach userland token streams in well-formed
+        // input but need a fallback to satisfy the exhaustive match.
+        TokenKind::TLcurly
+        | TokenKind::TRcurly
+        | TokenKind::TLcurlybar
+        | TokenKind::TRcurlybar
+        | TokenKind::TLparen
+        | TokenKind::TRparen
+        | TokenKind::TLbracket
+        | TokenKind::TRbracket
+        | TokenKind::TSemicolon
+        | TokenKind::TComma
+        | TokenKind::TPeriod
+        | TokenKind::TArrow
+        | TokenKind::TEllipsis
+        | TokenKind::TAt
+        | TokenKind::TPound
+        | TokenKind::TRshift3Assign
+        | TokenKind::TRshiftAssign
+        | TokenKind::TLshiftAssign
+        | TokenKind::TBitXorAssign
+        | TokenKind::TBitOrAssign
+        | TokenKind::TBitAndAssign
+        | TokenKind::TModAssign
+        | TokenKind::TDivAssign
+        | TokenKind::TMultAssign
+        | TokenKind::TExpAssign
+        | TokenKind::TMinusAssign
+        | TokenKind::TPlusAssign
+        | TokenKind::TNullishAssign
+        | TokenKind::TAndAssign
+        | TokenKind::TOrAssign
+        | TokenKind::TAssign
+        | TokenKind::TPlingPeriod
+        | TokenKind::TPlingPling
+        | TokenKind::TPling
+        | TokenKind::TColon
+        | TokenKind::TOr
+        | TokenKind::TAnd
+        | TokenKind::TBitOr
+        | TokenKind::TBitXor
+        | TokenKind::TBitAnd
+        | TokenKind::TEqual
+        | TokenKind::TNotEqual
+        | TokenKind::TStrictEqual
+        | TokenKind::TStrictNotEqual
+        | TokenKind::TLessThanEqual
+        | TokenKind::TGreaterThanEqual
+        | TokenKind::TLessThan
+        | TokenKind::TGreaterThan
+        | TokenKind::TLshift
+        | TokenKind::TRshift
+        | TokenKind::TRshift3
+        | TokenKind::TPlus
+        | TokenKind::TMinus
+        | TokenKind::TDiv
+        | TokenKind::TMult
+        | TokenKind::TExp
+        | TokenKind::TMod
+        | TokenKind::TNot
+        | TokenKind::TBitNot
+        | TokenKind::TIncr
+        | TokenKind::TDecr
+        | TokenKind::TInterpreter(..)
+        | TokenKind::TError(_)
+        | TokenKind::TEof => 6, // Punctuator
+    }
+}
+
 /// Convert a cleaned (no `_` separators, no `n` suffix) bigint literal source
 /// such as `"0xfff123"`, `"0b101011101"`, `"0o16432"`, or `"1000"` into its
 /// decimal-digit string. Returns `None` if the input is not a valid integer
@@ -3512,7 +3805,7 @@ mod tests {
         );
         assert!(errors.is_empty(), "Parse errors: {:?}", errors);
         let ser = Serializer::new(source);
-        ser.serialize_program(&program, &[], false)
+        ser.serialize_program(&program, &[], None)
     }
 
     #[test]

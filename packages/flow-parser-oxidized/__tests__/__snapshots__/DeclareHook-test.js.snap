@@ -1,0 +1,408 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DeclareHook Basic Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "useFoo",
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [],
+            "rest": null,
+            "returnType": {
+              "type": "AnyTypeAnnotation",
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "predicate": null,
+      "type": "DeclareFunction",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Basic ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "useFoo",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [],
+            "rest": null,
+            "returnType": {
+              "type": "AnyTypeAnnotation",
+            },
+            "type": "HookTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "implicitDeclare": false,
+      "type": "DeclareHook",
+      "typeAnnotation": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Export Babel 1`] = `
+{
+  "body": [
+    {
+      "declaration": {
+        "id": {
+          "name": "useFoo",
+          "type": "Identifier",
+          "typeAnnotation": {
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "params": [],
+              "rest": null,
+              "returnType": {
+                "type": "AnyTypeAnnotation",
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null,
+            },
+          },
+        },
+        "predicate": null,
+        "type": "DeclareFunction",
+      },
+      "default": false,
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration",
+    },
+    {
+      "declaration": {
+        "id": {
+          "name": "useBar",
+          "type": "Identifier",
+          "typeAnnotation": {
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "params": [],
+              "rest": null,
+              "returnType": {
+                "type": "AnyTypeAnnotation",
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null,
+            },
+          },
+        },
+        "predicate": null,
+        "type": "DeclareFunction",
+      },
+      "default": true,
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Export ESTree 1`] = `
+{
+  "body": [
+    {
+      "declaration": {
+        "id": {
+          "name": "useFoo",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": {
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "params": [],
+              "rest": null,
+              "returnType": {
+                "type": "AnyTypeAnnotation",
+              },
+              "type": "HookTypeAnnotation",
+              "typeParameters": null,
+            },
+          },
+        },
+        "implicitDeclare": false,
+        "type": "DeclareHook",
+        "typeAnnotation": null,
+      },
+      "default": false,
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration",
+    },
+    {
+      "declaration": {
+        "id": {
+          "name": "useBar",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": {
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "params": [],
+              "rest": null,
+              "returnType": {
+                "type": "AnyTypeAnnotation",
+              },
+              "type": "HookTypeAnnotation",
+              "typeParameters": null,
+            },
+          },
+        },
+        "implicitDeclare": false,
+        "type": "DeclareHook",
+        "typeAnnotation": null,
+      },
+      "default": true,
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Params and return value Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "useFoo",
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [
+              {
+                "name": {
+                  "name": "bar",
+                  "type": "Identifier",
+                },
+                "optional": false,
+                "type": "FunctionTypeParam",
+                "typeAnnotation": {
+                  "type": "StringTypeAnnotation",
+                },
+              },
+            ],
+            "rest": null,
+            "returnType": {
+              "type": "UnionTypeAnnotation",
+              "types": [
+                {
+                  "id": {
+                    "name": "Foo",
+                    "type": "Identifier",
+                  },
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null,
+                },
+                {
+                  "id": {
+                    "name": "Bar",
+                    "type": "Identifier",
+                  },
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null,
+                },
+              ],
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "predicate": null,
+      "type": "DeclareFunction",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Params and return value ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "useFoo",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [
+              {
+                "name": {
+                  "name": "bar",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "optional": false,
+                "type": "FunctionTypeParam",
+                "typeAnnotation": {
+                  "type": "StringTypeAnnotation",
+                },
+              },
+            ],
+            "rest": null,
+            "returnType": {
+              "type": "UnionTypeAnnotation",
+              "types": [
+                {
+                  "id": {
+                    "name": "Foo",
+                    "optional": false,
+                    "type": "Identifier",
+                    "typeAnnotation": null,
+                  },
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null,
+                },
+                {
+                  "id": {
+                    "name": "Bar",
+                    "optional": false,
+                    "type": "Identifier",
+                    "typeAnnotation": null,
+                  },
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null,
+                },
+              ],
+            },
+            "type": "HookTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "implicitDeclare": false,
+      "type": "DeclareHook",
+      "typeAnnotation": null,
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Rest params Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "useFoo",
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [],
+            "rest": {
+              "name": null,
+              "optional": false,
+              "type": "FunctionTypeParam",
+              "typeAnnotation": {
+                "id": {
+                  "name": "rest",
+                  "type": "Identifier",
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+            },
+            "returnType": {
+              "id": {
+                "name": "Foo",
+                "type": "Identifier",
+              },
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null,
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "predicate": null,
+      "type": "DeclareFunction",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareHook Rest params ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "useFoo",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [],
+            "rest": {
+              "name": null,
+              "optional": false,
+              "type": "FunctionTypeParam",
+              "typeAnnotation": {
+                "id": {
+                  "name": "rest",
+                  "optional": false,
+                  "type": "Identifier",
+                  "typeAnnotation": null,
+                },
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null,
+              },
+            },
+            "returnType": {
+              "id": {
+                "name": "Foo",
+                "optional": false,
+                "type": "Identifier",
+                "typeAnnotation": null,
+              },
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null,
+            },
+            "type": "HookTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "implicitDeclare": false,
+      "type": "DeclareHook",
+      "typeAnnotation": null,
+    },
+  ],
+  "type": "Program",
+}
+`;

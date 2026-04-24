@@ -1,0 +1,22 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ * @generated
+ */
+
+/*
+ * !!! GENERATED FILE !!!
+ *
+ * Any manual changes to this file will be overwritten. To regenerate run `buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- --estree-visitor-keys-flow`.
+ */
+
+'use strict';
+
+export type VisitorKeys = $ReadOnly<{[string]: $ReadOnlyArray<string>}>;
+
+declare module.exports: VisitorKeys;

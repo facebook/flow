@@ -1,0 +1,2174 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @generated
+ */
+
+/*
+ * !!! GENERATED FILE !!!
+ *
+ * Any manual changes to this file will be overwritten. To regenerate run `buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- --estree-selectors`.
+ */
+
+// lint directives to let us do some basic validation of generated files
+/* eslint no-undef: 'error', no-unused-vars: ['error', {vars: "local"}], no-redeclare: 'error' */
+/* global $NonMaybeType, Partial, $ReadOnly, $ReadOnlyArray, $FlowFixMe */
+
+'use strict';
+
+import type {
+ESNode,
+EmptyStatement,
+ExpressionStatement,
+BlockStatement,
+IfStatement,
+LabeledStatement,
+BreakStatement,
+ContinueStatement,
+WithStatement,
+SwitchStatement,
+ReturnStatement,
+ThrowStatement,
+TryStatement,
+WhileStatement,
+DoWhileStatement,
+ForStatement,
+ForInStatement,
+ForOfStatement,
+DebuggerStatement,
+MatchStatement,
+FunctionDeclaration,
+VariableDeclaration,
+VariableDeclarator,
+ClassDeclaration,
+ComponentDeclaration,
+HookDeclaration,
+EnumDeclaration,
+InterfaceDeclaration,
+TypeAlias,
+RecordDeclaration,
+ImportDeclaration,
+ImportDefaultSpecifier,
+ImportNamespaceSpecifier,
+ImportSpecifier,
+ImportAttribute,
+ExportNamedDeclaration,
+ExportDefaultDeclaration,
+ExportAllDeclaration,
+ExportSpecifier,
+ThisExpression,
+Super,
+ArrayExpression,
+ObjectExpression,
+FunctionExpression,
+ArrowFunctionExpression,
+SequenceExpression,
+UnaryExpression,
+BinaryExpression,
+LogicalExpression,
+ConditionalExpression,
+UpdateExpression,
+AssignmentExpression,
+MemberExpression,
+CallExpression,
+NewExpression,
+YieldExpression,
+AwaitExpression,
+ImportExpression,
+MetaProperty,
+TaggedTemplateExpression,
+TemplateLiteral,
+TemplateElement,
+TypeCastExpression,
+AsExpression,
+AsConstExpression,
+MatchExpression,
+RecordExpression,
+RecordExpressionProperties,
+Identifier,
+PrivateIdentifier,
+ObjectPattern,
+ArrayPattern,
+RestElement,
+AssignmentPattern,
+Property,
+SpreadElement,
+ClassExpression,
+ClassBody,
+ClassImplements,
+MethodDefinition,
+PropertyDefinition,
+StaticBlock,
+Decorator,
+SwitchCase,
+CatchClause,
+ComponentParameter,
+DeclareVariable,
+DeclareFunction,
+DeclareClass,
+DeclareComponent,
+DeclareHook,
+DeclareModule,
+DeclareModuleExports,
+DeclareExportDeclaration,
+DeclareExportAllDeclaration,
+DeclareNamespace,
+DeclareInterface,
+DeclareTypeAlias,
+DeclareEnum,
+TypeAnnotation,
+Variance,
+AnyTypeAnnotation,
+MixedTypeAnnotation,
+EmptyTypeAnnotation,
+VoidTypeAnnotation,
+NullLiteralTypeAnnotation,
+SymbolTypeAnnotation,
+NumberTypeAnnotation,
+BigIntTypeAnnotation,
+StringTypeAnnotation,
+BooleanTypeAnnotation,
+NullableTypeAnnotation,
+ArrayTypeAnnotation,
+IndexedAccessType,
+OptionalIndexedAccessType,
+UnionTypeAnnotation,
+IntersectionTypeAnnotation,
+KeyofTypeAnnotation,
+TypeOperator,
+StringLiteralTypeAnnotation,
+NumberLiteralTypeAnnotation,
+BigIntLiteralTypeAnnotation,
+BooleanLiteralTypeAnnotation,
+ExistsTypeAnnotation,
+UnknownTypeAnnotation,
+NeverTypeAnnotation,
+UndefinedTypeAnnotation,
+GenericTypeAnnotation,
+QualifiedTypeIdentifier,
+QualifiedTypeofIdentifier,
+TypeofTypeAnnotation,
+TupleTypeAnnotation,
+TupleTypeLabeledElement,
+TupleTypeSpreadElement,
+ObjectTypeAnnotation,
+ObjectTypeProperty,
+ObjectTypeSpreadProperty,
+ObjectTypeIndexer,
+ObjectTypeCallProperty,
+ObjectTypeMappedTypeProperty,
+ObjectTypeInternalSlot,
+FunctionTypeParam,
+TypePredicate,
+ConditionalTypeAnnotation,
+InferTypeAnnotation,
+InterfaceExtends,
+InterfaceTypeAnnotation,
+TypeParameterDeclaration,
+TypeParameter,
+TypeParameterInstantiation,
+ComponentTypeAnnotation,
+ComponentTypeParameter,
+DeclaredPredicate,
+InferredPredicate,
+JSXElement,
+JSXFragment,
+JSXOpeningElement,
+JSXOpeningFragment,
+JSXClosingElement,
+JSXClosingFragment,
+JSXAttribute,
+JSXSpreadAttribute,
+JSXEmptyExpression,
+JSXExpressionContainer,
+JSXSpreadChild,
+JSXText,
+JSXMemberExpression,
+JSXNamespacedName,
+JSXIdentifier,
+EnumBooleanBody,
+EnumBooleanMember,
+EnumNumberBody,
+EnumNumberMember,
+EnumStringBody,
+EnumStringMember,
+EnumSymbolBody,
+EnumDefaultedMember,
+EnumBigIntBody,
+EnumBigIntMember,
+RecordDeclarationBody,
+RecordDeclarationProperty,
+RecordDeclarationStaticProperty,
+RecordDeclarationImplements,
+MatchExpressionCase,
+MatchStatementCase,
+MatchWildcardPattern,
+MatchLiteralPattern,
+MatchUnaryPattern,
+MatchObjectPattern,
+MatchInstancePattern,
+MatchInstanceObjectPattern,
+MatchOrPattern,
+MatchAsPattern,
+MatchIdentifierPattern,
+MatchMemberPattern,
+MatchBindingPattern,
+MatchArrayPattern,
+MatchObjectPatternProperty,
+MatchRestPattern,
+Program,
+FunctionTypeAnnotation,
+OpaqueType,
+DeclareOpaqueType,
+HookTypeAnnotation,
+ThisTypeAnnotation,
+Literal,
+ChainExpression,
+} from '../types';
+
+interface ExpressionStatement_With_expression extends ExpressionStatement { +expression: $NonMaybeType<ExpressionStatement['expression']> }
+interface ExpressionStatement_With_directive extends ExpressionStatement { +directive: $NonMaybeType<ExpressionStatement['directive']> }
+interface BlockStatement_With_body extends BlockStatement { +body: $NonMaybeType<BlockStatement['body']> }
+interface IfStatement_With_test extends IfStatement { +test: $NonMaybeType<IfStatement['test']> }
+interface IfStatement_With_consequent extends IfStatement { +consequent: $NonMaybeType<IfStatement['consequent']> }
+interface IfStatement_With_alternate extends IfStatement { +alternate: $NonMaybeType<IfStatement['alternate']> }
+interface LabeledStatement_With_label extends LabeledStatement { +label: $NonMaybeType<LabeledStatement['label']> }
+interface LabeledStatement_With_body extends LabeledStatement { +body: $NonMaybeType<LabeledStatement['body']> }
+interface BreakStatement_With_label extends BreakStatement { +label: $NonMaybeType<BreakStatement['label']> }
+interface ContinueStatement_With_label extends ContinueStatement { +label: $NonMaybeType<ContinueStatement['label']> }
+interface WithStatement_With_object extends WithStatement { +object: $NonMaybeType<WithStatement['object']> }
+interface WithStatement_With_body extends WithStatement { +body: $NonMaybeType<WithStatement['body']> }
+interface SwitchStatement_With_discriminant extends SwitchStatement { +discriminant: $NonMaybeType<SwitchStatement['discriminant']> }
+interface SwitchStatement_With_cases extends SwitchStatement { +cases: $NonMaybeType<SwitchStatement['cases']> }
+interface ReturnStatement_With_argument extends ReturnStatement { +argument: $NonMaybeType<ReturnStatement['argument']> }
+interface ThrowStatement_With_argument extends ThrowStatement { +argument: $NonMaybeType<ThrowStatement['argument']> }
+interface TryStatement_With_block extends TryStatement { +block: $NonMaybeType<TryStatement['block']> }
+interface TryStatement_With_handler extends TryStatement { +handler: $NonMaybeType<TryStatement['handler']> }
+interface TryStatement_With_finalizer extends TryStatement { +finalizer: $NonMaybeType<TryStatement['finalizer']> }
+interface WhileStatement_With_test extends WhileStatement { +test: $NonMaybeType<WhileStatement['test']> }
+interface WhileStatement_With_body extends WhileStatement { +body: $NonMaybeType<WhileStatement['body']> }
+interface DoWhileStatement_With_body extends DoWhileStatement { +body: $NonMaybeType<DoWhileStatement['body']> }
+interface DoWhileStatement_With_test extends DoWhileStatement { +test: $NonMaybeType<DoWhileStatement['test']> }
+interface ForStatement_With_init extends ForStatement { +init: $NonMaybeType<ForStatement['init']> }
+interface ForStatement_With_test extends ForStatement { +test: $NonMaybeType<ForStatement['test']> }
+interface ForStatement_With_update extends ForStatement { +update: $NonMaybeType<ForStatement['update']> }
+interface ForStatement_With_body extends ForStatement { +body: $NonMaybeType<ForStatement['body']> }
+interface ForInStatement_With_left extends ForInStatement { +left: $NonMaybeType<ForInStatement['left']> }
+interface ForInStatement_With_right extends ForInStatement { +right: $NonMaybeType<ForInStatement['right']> }
+interface ForInStatement_With_body extends ForInStatement { +body: $NonMaybeType<ForInStatement['body']> }
+interface ForInStatement_With_each extends ForInStatement { +each: $NonMaybeType<ForInStatement['each']> }
+interface ForOfStatement_With_left extends ForOfStatement { +left: $NonMaybeType<ForOfStatement['left']> }
+interface ForOfStatement_With_right extends ForOfStatement { +right: $NonMaybeType<ForOfStatement['right']> }
+interface ForOfStatement_With_body extends ForOfStatement { +body: $NonMaybeType<ForOfStatement['body']> }
+interface ForOfStatement_With_await extends ForOfStatement { +await: $NonMaybeType<ForOfStatement['await']> }
+interface MatchStatement_With_argument extends MatchStatement { +argument: $NonMaybeType<MatchStatement['argument']> }
+interface MatchStatement_With_cases extends MatchStatement { +cases: $NonMaybeType<MatchStatement['cases']> }
+interface FunctionDeclaration_With_id extends FunctionDeclaration { +id: $NonMaybeType<FunctionDeclaration['id']> }
+interface FunctionDeclaration_With_params extends FunctionDeclaration { +params: $NonMaybeType<FunctionDeclaration['params']> }
+interface FunctionDeclaration_With_body extends FunctionDeclaration { +body: $NonMaybeType<FunctionDeclaration['body']> }
+interface FunctionDeclaration_With_returnType extends FunctionDeclaration { +returnType: $NonMaybeType<FunctionDeclaration['returnType']> }
+interface FunctionDeclaration_With_typeParameters extends FunctionDeclaration { +typeParameters: $NonMaybeType<FunctionDeclaration['typeParameters']> }
+interface FunctionDeclaration_With_async extends FunctionDeclaration { +async: $NonMaybeType<FunctionDeclaration['async']> }
+interface FunctionDeclaration_With_generator extends FunctionDeclaration { +generator: $NonMaybeType<FunctionDeclaration['generator']> }
+interface FunctionDeclaration_With_predicate extends FunctionDeclaration { +predicate: $NonMaybeType<FunctionDeclaration['predicate']> }
+interface FunctionDeclaration_With_expression extends FunctionDeclaration { +expression: $NonMaybeType<FunctionDeclaration['expression']> }
+interface VariableDeclaration_With_declarations extends VariableDeclaration { +declarations: $NonMaybeType<VariableDeclaration['declarations']> }
+interface VariableDeclaration_With_kind extends VariableDeclaration { +kind: $NonMaybeType<VariableDeclaration['kind']> }
+interface VariableDeclarator_With_id extends VariableDeclarator { +id: $NonMaybeType<VariableDeclarator['id']> }
+interface VariableDeclarator_With_init extends VariableDeclarator { +init: $NonMaybeType<VariableDeclarator['init']> }
+interface ClassDeclaration_With_id extends ClassDeclaration { +id: $NonMaybeType<ClassDeclaration['id']> }
+interface ClassDeclaration_With_body extends ClassDeclaration { +body: $NonMaybeType<ClassDeclaration['body']> }
+interface ClassDeclaration_With_typeParameters extends ClassDeclaration { +typeParameters: $NonMaybeType<ClassDeclaration['typeParameters']> }
+interface ClassDeclaration_With_superClass extends ClassDeclaration { +superClass: $NonMaybeType<ClassDeclaration['superClass']> }
+interface ClassDeclaration_With_superTypeArguments extends ClassDeclaration { +superTypeArguments: $NonMaybeType<ClassDeclaration['superTypeArguments']> }
+interface ClassDeclaration_With_implements extends ClassDeclaration { +implements: $NonMaybeType<ClassDeclaration['implements']> }
+interface ClassDeclaration_With_decorators extends ClassDeclaration { +decorators: $NonMaybeType<ClassDeclaration['decorators']> }
+interface ClassDeclaration_With_abstract extends ClassDeclaration { +abstract: $NonMaybeType<ClassDeclaration['abstract']> }
+interface ComponentDeclaration_With_body extends ComponentDeclaration { +body: $NonMaybeType<ComponentDeclaration['body']> }
+interface ComponentDeclaration_With_id extends ComponentDeclaration { +id: $NonMaybeType<ComponentDeclaration['id']> }
+interface ComponentDeclaration_With_implicitDeclare extends ComponentDeclaration { +implicitDeclare: $NonMaybeType<ComponentDeclaration['implicitDeclare']> }
+interface ComponentDeclaration_With_params extends ComponentDeclaration { +params: $NonMaybeType<ComponentDeclaration['params']> }
+interface ComponentDeclaration_With_rendersType extends ComponentDeclaration { +rendersType: $NonMaybeType<ComponentDeclaration['rendersType']> }
+interface ComponentDeclaration_With_typeParameters extends ComponentDeclaration { +typeParameters: $NonMaybeType<ComponentDeclaration['typeParameters']> }
+interface ComponentDeclaration_With_async extends ComponentDeclaration { +async: $NonMaybeType<ComponentDeclaration['async']> }
+interface HookDeclaration_With_id extends HookDeclaration { +id: $NonMaybeType<HookDeclaration['id']> }
+interface HookDeclaration_With_params extends HookDeclaration { +params: $NonMaybeType<HookDeclaration['params']> }
+interface HookDeclaration_With_body extends HookDeclaration { +body: $NonMaybeType<HookDeclaration['body']> }
+interface HookDeclaration_With_returnType extends HookDeclaration { +returnType: $NonMaybeType<HookDeclaration['returnType']> }
+interface HookDeclaration_With_typeParameters extends HookDeclaration { +typeParameters: $NonMaybeType<HookDeclaration['typeParameters']> }
+interface HookDeclaration_With_async extends HookDeclaration { +async: $NonMaybeType<HookDeclaration['async']> }
+interface EnumDeclaration_With_id extends EnumDeclaration { +id: $NonMaybeType<EnumDeclaration['id']> }
+interface EnumDeclaration_With_body extends EnumDeclaration { +body: $NonMaybeType<EnumDeclaration['body']> }
+interface EnumDeclaration_With_const extends EnumDeclaration { +const: $NonMaybeType<EnumDeclaration['const']> }
+interface InterfaceDeclaration_With_id extends InterfaceDeclaration { +id: $NonMaybeType<InterfaceDeclaration['id']> }
+interface InterfaceDeclaration_With_typeParameters extends InterfaceDeclaration { +typeParameters: $NonMaybeType<InterfaceDeclaration['typeParameters']> }
+interface InterfaceDeclaration_With_body extends InterfaceDeclaration { +body: $NonMaybeType<InterfaceDeclaration['body']> }
+interface InterfaceDeclaration_With_extends extends InterfaceDeclaration { +extends: $NonMaybeType<InterfaceDeclaration['extends']> }
+interface TypeAlias_With_id extends TypeAlias { +id: $NonMaybeType<TypeAlias['id']> }
+interface TypeAlias_With_typeParameters extends TypeAlias { +typeParameters: $NonMaybeType<TypeAlias['typeParameters']> }
+interface TypeAlias_With_right extends TypeAlias { +right: $NonMaybeType<TypeAlias['right']> }
+interface RecordDeclaration_With_id extends RecordDeclaration { +id: $NonMaybeType<RecordDeclaration['id']> }
+interface RecordDeclaration_With_typeParameters extends RecordDeclaration { +typeParameters: $NonMaybeType<RecordDeclaration['typeParameters']> }
+interface RecordDeclaration_With_implements extends RecordDeclaration { +implements: $NonMaybeType<RecordDeclaration['implements']> }
+interface RecordDeclaration_With_body extends RecordDeclaration { +body: $NonMaybeType<RecordDeclaration['body']> }
+interface ImportDeclaration_With_specifiers extends ImportDeclaration { +specifiers: $NonMaybeType<ImportDeclaration['specifiers']> }
+interface ImportDeclaration_With_source extends ImportDeclaration { +source: $NonMaybeType<ImportDeclaration['source']> }
+interface ImportDeclaration_With_importKind extends ImportDeclaration { +importKind: $NonMaybeType<ImportDeclaration['importKind']> }
+interface ImportDeclaration_With_attributes extends ImportDeclaration { +attributes: $NonMaybeType<ImportDeclaration['attributes']> }
+interface ImportDefaultSpecifier_With_local extends ImportDefaultSpecifier { +local: $NonMaybeType<ImportDefaultSpecifier['local']> }
+interface ImportNamespaceSpecifier_With_local extends ImportNamespaceSpecifier { +local: $NonMaybeType<ImportNamespaceSpecifier['local']> }
+interface ImportSpecifier_With_imported extends ImportSpecifier { +imported: $NonMaybeType<ImportSpecifier['imported']> }
+interface ImportSpecifier_With_local extends ImportSpecifier { +local: $NonMaybeType<ImportSpecifier['local']> }
+interface ImportSpecifier_With_importKind extends ImportSpecifier { +importKind: $NonMaybeType<ImportSpecifier['importKind']> }
+interface ImportAttribute_With_key extends ImportAttribute { +key: $NonMaybeType<ImportAttribute['key']> }
+interface ImportAttribute_With_value extends ImportAttribute { +value: $NonMaybeType<ImportAttribute['value']> }
+interface ExportNamedDeclaration_With_declaration extends ExportNamedDeclaration { +declaration: $NonMaybeType<ExportNamedDeclaration['declaration']> }
+interface ExportNamedDeclaration_With_specifiers extends ExportNamedDeclaration { +specifiers: $NonMaybeType<ExportNamedDeclaration['specifiers']> }
+interface ExportNamedDeclaration_With_source extends ExportNamedDeclaration { +source: $NonMaybeType<ExportNamedDeclaration['source']> }
+interface ExportNamedDeclaration_With_exportKind extends ExportNamedDeclaration { +exportKind: $NonMaybeType<ExportNamedDeclaration['exportKind']> }
+interface ExportDefaultDeclaration_With_declaration extends ExportDefaultDeclaration { +declaration: $NonMaybeType<ExportDefaultDeclaration['declaration']> }
+interface ExportDefaultDeclaration_With_exportKind extends ExportDefaultDeclaration { +exportKind: $NonMaybeType<ExportDefaultDeclaration['exportKind']> }
+interface ExportAllDeclaration_With_source extends ExportAllDeclaration { +source: $NonMaybeType<ExportAllDeclaration['source']> }
+interface ExportAllDeclaration_With_exported extends ExportAllDeclaration { +exported: $NonMaybeType<ExportAllDeclaration['exported']> }
+interface ExportAllDeclaration_With_exportKind extends ExportAllDeclaration { +exportKind: $NonMaybeType<ExportAllDeclaration['exportKind']> }
+interface ExportSpecifier_With_local extends ExportSpecifier { +local: $NonMaybeType<ExportSpecifier['local']> }
+interface ExportSpecifier_With_exported extends ExportSpecifier { +exported: $NonMaybeType<ExportSpecifier['exported']> }
+interface ExportSpecifier_With_exportKind extends ExportSpecifier { +exportKind: $NonMaybeType<ExportSpecifier['exportKind']> }
+interface ArrayExpression_With_elements extends ArrayExpression { +elements: $NonMaybeType<ArrayExpression['elements']> }
+interface ObjectExpression_With_properties extends ObjectExpression { +properties: $NonMaybeType<ObjectExpression['properties']> }
+interface FunctionExpression_With_id extends FunctionExpression { +id: $NonMaybeType<FunctionExpression['id']> }
+interface FunctionExpression_With_params extends FunctionExpression { +params: $NonMaybeType<FunctionExpression['params']> }
+interface FunctionExpression_With_body extends FunctionExpression { +body: $NonMaybeType<FunctionExpression['body']> }
+interface FunctionExpression_With_async extends FunctionExpression { +async: $NonMaybeType<FunctionExpression['async']> }
+interface FunctionExpression_With_generator extends FunctionExpression { +generator: $NonMaybeType<FunctionExpression['generator']> }
+interface FunctionExpression_With_predicate extends FunctionExpression { +predicate: $NonMaybeType<FunctionExpression['predicate']> }
+interface FunctionExpression_With_expression extends FunctionExpression { +expression: $NonMaybeType<FunctionExpression['expression']> }
+interface FunctionExpression_With_returnType extends FunctionExpression { +returnType: $NonMaybeType<FunctionExpression['returnType']> }
+interface FunctionExpression_With_typeParameters extends FunctionExpression { +typeParameters: $NonMaybeType<FunctionExpression['typeParameters']> }
+interface ArrowFunctionExpression_With_id extends ArrowFunctionExpression { +id: $NonMaybeType<ArrowFunctionExpression['id']> }
+interface ArrowFunctionExpression_With_params extends ArrowFunctionExpression { +params: $NonMaybeType<ArrowFunctionExpression['params']> }
+interface ArrowFunctionExpression_With_body extends ArrowFunctionExpression { +body: $NonMaybeType<ArrowFunctionExpression['body']> }
+interface ArrowFunctionExpression_With_async extends ArrowFunctionExpression { +async: $NonMaybeType<ArrowFunctionExpression['async']> }
+interface ArrowFunctionExpression_With_generator extends ArrowFunctionExpression { +generator: $NonMaybeType<ArrowFunctionExpression['generator']> }
+interface ArrowFunctionExpression_With_predicate extends ArrowFunctionExpression { +predicate: $NonMaybeType<ArrowFunctionExpression['predicate']> }
+interface ArrowFunctionExpression_With_expression extends ArrowFunctionExpression { +expression: $NonMaybeType<ArrowFunctionExpression['expression']> }
+interface ArrowFunctionExpression_With_returnType extends ArrowFunctionExpression { +returnType: $NonMaybeType<ArrowFunctionExpression['returnType']> }
+interface ArrowFunctionExpression_With_typeParameters extends ArrowFunctionExpression { +typeParameters: $NonMaybeType<ArrowFunctionExpression['typeParameters']> }
+interface SequenceExpression_With_expressions extends SequenceExpression { +expressions: $NonMaybeType<SequenceExpression['expressions']> }
+interface UnaryExpression_With_operator extends UnaryExpression { +operator: $NonMaybeType<UnaryExpression['operator']> }
+interface UnaryExpression_With_prefix extends UnaryExpression { +prefix: $NonMaybeType<UnaryExpression['prefix']> }
+interface UnaryExpression_With_argument extends UnaryExpression { +argument: $NonMaybeType<UnaryExpression['argument']> }
+interface BinaryExpression_With_operator extends BinaryExpression { +operator: $NonMaybeType<BinaryExpression['operator']> }
+interface BinaryExpression_With_left extends BinaryExpression { +left: $NonMaybeType<BinaryExpression['left']> }
+interface BinaryExpression_With_right extends BinaryExpression { +right: $NonMaybeType<BinaryExpression['right']> }
+interface LogicalExpression_With_operator extends LogicalExpression { +operator: $NonMaybeType<LogicalExpression['operator']> }
+interface LogicalExpression_With_left extends LogicalExpression { +left: $NonMaybeType<LogicalExpression['left']> }
+interface LogicalExpression_With_right extends LogicalExpression { +right: $NonMaybeType<LogicalExpression['right']> }
+interface ConditionalExpression_With_test extends ConditionalExpression { +test: $NonMaybeType<ConditionalExpression['test']> }
+interface ConditionalExpression_With_consequent extends ConditionalExpression { +consequent: $NonMaybeType<ConditionalExpression['consequent']> }
+interface ConditionalExpression_With_alternate extends ConditionalExpression { +alternate: $NonMaybeType<ConditionalExpression['alternate']> }
+interface UpdateExpression_With_operator extends UpdateExpression { +operator: $NonMaybeType<UpdateExpression['operator']> }
+interface UpdateExpression_With_argument extends UpdateExpression { +argument: $NonMaybeType<UpdateExpression['argument']> }
+interface UpdateExpression_With_prefix extends UpdateExpression { +prefix: $NonMaybeType<UpdateExpression['prefix']> }
+interface AssignmentExpression_With_operator extends AssignmentExpression { +operator: $NonMaybeType<AssignmentExpression['operator']> }
+interface AssignmentExpression_With_left extends AssignmentExpression { +left: $NonMaybeType<AssignmentExpression['left']> }
+interface AssignmentExpression_With_right extends AssignmentExpression { +right: $NonMaybeType<AssignmentExpression['right']> }
+interface MemberExpression_With_object extends MemberExpression { +object: $NonMaybeType<MemberExpression['object']> }
+interface MemberExpression_With_property extends MemberExpression { +property: $NonMaybeType<MemberExpression['property']> }
+interface MemberExpression_With_computed extends MemberExpression { +computed: $NonMaybeType<MemberExpression['computed']> }
+interface CallExpression_With_callee extends CallExpression { +callee: $NonMaybeType<CallExpression['callee']> }
+interface CallExpression_With_typeArguments extends CallExpression { +typeArguments: $NonMaybeType<CallExpression['typeArguments']> }
+interface CallExpression_With_arguments extends CallExpression { +arguments: $NonMaybeType<CallExpression['arguments']> }
+interface NewExpression_With_callee extends NewExpression { +callee: $NonMaybeType<NewExpression['callee']> }
+interface NewExpression_With_typeArguments extends NewExpression { +typeArguments: $NonMaybeType<NewExpression['typeArguments']> }
+interface NewExpression_With_arguments extends NewExpression { +arguments: $NonMaybeType<NewExpression['arguments']> }
+interface YieldExpression_With_argument extends YieldExpression { +argument: $NonMaybeType<YieldExpression['argument']> }
+interface YieldExpression_With_delegate extends YieldExpression { +delegate: $NonMaybeType<YieldExpression['delegate']> }
+interface AwaitExpression_With_argument extends AwaitExpression { +argument: $NonMaybeType<AwaitExpression['argument']> }
+interface ImportExpression_With_source extends ImportExpression { +source: $NonMaybeType<ImportExpression['source']> }
+interface ImportExpression_With_options extends ImportExpression { +options: $NonMaybeType<ImportExpression['options']> }
+interface MetaProperty_With_meta extends MetaProperty { +meta: $NonMaybeType<MetaProperty['meta']> }
+interface MetaProperty_With_property extends MetaProperty { +property: $NonMaybeType<MetaProperty['property']> }
+interface TaggedTemplateExpression_With_tag extends TaggedTemplateExpression { +tag: $NonMaybeType<TaggedTemplateExpression['tag']> }
+interface TaggedTemplateExpression_With_typeArguments extends TaggedTemplateExpression { +typeArguments: $NonMaybeType<TaggedTemplateExpression['typeArguments']> }
+interface TaggedTemplateExpression_With_quasi extends TaggedTemplateExpression { +quasi: $NonMaybeType<TaggedTemplateExpression['quasi']> }
+interface TemplateLiteral_With_quasis extends TemplateLiteral { +quasis: $NonMaybeType<TemplateLiteral['quasis']> }
+interface TemplateLiteral_With_expressions extends TemplateLiteral { +expressions: $NonMaybeType<TemplateLiteral['expressions']> }
+interface TemplateElement_With_tail extends TemplateElement { +tail: $NonMaybeType<TemplateElement['tail']> }
+interface TemplateElement_With_cooked extends TemplateElement { +cooked: $NonMaybeType<TemplateElement['cooked']> }
+interface TemplateElement_With_raw extends TemplateElement { +raw: $NonMaybeType<TemplateElement['raw']> }
+interface TypeCastExpression_With_expression extends TypeCastExpression { +expression: $NonMaybeType<TypeCastExpression['expression']> }
+interface TypeCastExpression_With_typeAnnotation extends TypeCastExpression { +typeAnnotation: $NonMaybeType<TypeCastExpression['typeAnnotation']> }
+interface AsExpression_With_expression extends AsExpression { +expression: $NonMaybeType<AsExpression['expression']> }
+interface AsExpression_With_typeAnnotation extends AsExpression { +typeAnnotation: $NonMaybeType<AsExpression['typeAnnotation']> }
+interface AsConstExpression_With_expression extends AsConstExpression { +expression: $NonMaybeType<AsConstExpression['expression']> }
+interface MatchExpression_With_argument extends MatchExpression { +argument: $NonMaybeType<MatchExpression['argument']> }
+interface MatchExpression_With_cases extends MatchExpression { +cases: $NonMaybeType<MatchExpression['cases']> }
+interface RecordExpression_With_recordConstructor extends RecordExpression { +recordConstructor: $NonMaybeType<RecordExpression['recordConstructor']> }
+interface RecordExpression_With_typeArguments extends RecordExpression { +typeArguments: $NonMaybeType<RecordExpression['typeArguments']> }
+interface RecordExpression_With_properties extends RecordExpression { +properties: $NonMaybeType<RecordExpression['properties']> }
+interface RecordExpressionProperties_With_properties extends RecordExpressionProperties { +properties: $NonMaybeType<RecordExpressionProperties['properties']> }
+interface Identifier_With_name extends Identifier { +name: $NonMaybeType<Identifier['name']> }
+interface Identifier_With_typeAnnotation extends Identifier { +typeAnnotation: $NonMaybeType<Identifier['typeAnnotation']> }
+interface Identifier_With_optional extends Identifier { +optional: $NonMaybeType<Identifier['optional']> }
+interface PrivateIdentifier_With_name extends PrivateIdentifier { +name: $NonMaybeType<PrivateIdentifier['name']> }
+interface PrivateIdentifier_With_typeAnnotation extends PrivateIdentifier { +typeAnnotation: $NonMaybeType<PrivateIdentifier['typeAnnotation']> }
+interface PrivateIdentifier_With_optional extends PrivateIdentifier { +optional: $NonMaybeType<PrivateIdentifier['optional']> }
+interface ObjectPattern_With_properties extends ObjectPattern { +properties: $NonMaybeType<ObjectPattern['properties']> }
+interface ObjectPattern_With_typeAnnotation extends ObjectPattern { +typeAnnotation: $NonMaybeType<ObjectPattern['typeAnnotation']> }
+interface ObjectPattern_With_optional extends ObjectPattern { +optional: $NonMaybeType<ObjectPattern['optional']> }
+interface ArrayPattern_With_elements extends ArrayPattern { +elements: $NonMaybeType<ArrayPattern['elements']> }
+interface ArrayPattern_With_typeAnnotation extends ArrayPattern { +typeAnnotation: $NonMaybeType<ArrayPattern['typeAnnotation']> }
+interface ArrayPattern_With_optional extends ArrayPattern { +optional: $NonMaybeType<ArrayPattern['optional']> }
+interface RestElement_With_argument extends RestElement { +argument: $NonMaybeType<RestElement['argument']> }
+interface AssignmentPattern_With_left extends AssignmentPattern { +left: $NonMaybeType<AssignmentPattern['left']> }
+interface AssignmentPattern_With_right extends AssignmentPattern { +right: $NonMaybeType<AssignmentPattern['right']> }
+interface Property_With_key extends Property { +key: $NonMaybeType<Property['key']> }
+interface Property_With_value extends Property { +value: $NonMaybeType<Property['value']> }
+interface Property_With_kind extends Property { +kind: $NonMaybeType<Property['kind']> }
+interface Property_With_method extends Property { +method: $NonMaybeType<Property['method']> }
+interface Property_With_shorthand extends Property { +shorthand: $NonMaybeType<Property['shorthand']> }
+interface Property_With_computed extends Property { +computed: $NonMaybeType<Property['computed']> }
+interface SpreadElement_With_argument extends SpreadElement { +argument: $NonMaybeType<SpreadElement['argument']> }
+interface ClassExpression_With_id extends ClassExpression { +id: $NonMaybeType<ClassExpression['id']> }
+interface ClassExpression_With_body extends ClassExpression { +body: $NonMaybeType<ClassExpression['body']> }
+interface ClassExpression_With_typeParameters extends ClassExpression { +typeParameters: $NonMaybeType<ClassExpression['typeParameters']> }
+interface ClassExpression_With_superClass extends ClassExpression { +superClass: $NonMaybeType<ClassExpression['superClass']> }
+interface ClassExpression_With_superTypeArguments extends ClassExpression { +superTypeArguments: $NonMaybeType<ClassExpression['superTypeArguments']> }
+interface ClassExpression_With_implements extends ClassExpression { +implements: $NonMaybeType<ClassExpression['implements']> }
+interface ClassExpression_With_decorators extends ClassExpression { +decorators: $NonMaybeType<ClassExpression['decorators']> }
+interface ClassExpression_With_abstract extends ClassExpression { +abstract: $NonMaybeType<ClassExpression['abstract']> }
+interface ClassBody_With_body extends ClassBody { +body: $NonMaybeType<ClassBody['body']> }
+interface ClassImplements_With_id extends ClassImplements { +id: $NonMaybeType<ClassImplements['id']> }
+interface ClassImplements_With_typeParameters extends ClassImplements { +typeParameters: $NonMaybeType<ClassImplements['typeParameters']> }
+interface MethodDefinition_With_key extends MethodDefinition { +key: $NonMaybeType<MethodDefinition['key']> }
+interface MethodDefinition_With_value extends MethodDefinition { +value: $NonMaybeType<MethodDefinition['value']> }
+interface MethodDefinition_With_kind extends MethodDefinition { +kind: $NonMaybeType<MethodDefinition['kind']> }
+interface MethodDefinition_With_static extends MethodDefinition { +static: $NonMaybeType<MethodDefinition['static']> }
+interface MethodDefinition_With_computed extends MethodDefinition { +computed: $NonMaybeType<MethodDefinition['computed']> }
+interface MethodDefinition_With_decorators extends MethodDefinition { +decorators: $NonMaybeType<MethodDefinition['decorators']> }
+interface MethodDefinition_With_override extends MethodDefinition { +override: $NonMaybeType<MethodDefinition['override']> }
+interface MethodDefinition_With_tsAccessibility extends MethodDefinition { +tsAccessibility: $NonMaybeType<MethodDefinition['tsAccessibility']> }
+interface PropertyDefinition_With_key extends PropertyDefinition { +key: $NonMaybeType<PropertyDefinition['key']> }
+interface PropertyDefinition_With_value extends PropertyDefinition { +value: $NonMaybeType<PropertyDefinition['value']> }
+interface PropertyDefinition_With_typeAnnotation extends PropertyDefinition { +typeAnnotation: $NonMaybeType<PropertyDefinition['typeAnnotation']> }
+interface PropertyDefinition_With_computed extends PropertyDefinition { +computed: $NonMaybeType<PropertyDefinition['computed']> }
+interface PropertyDefinition_With_static extends PropertyDefinition { +static: $NonMaybeType<PropertyDefinition['static']> }
+interface PropertyDefinition_With_variance extends PropertyDefinition { +variance: $NonMaybeType<PropertyDefinition['variance']> }
+interface PropertyDefinition_With_tsAccessibility extends PropertyDefinition { +tsAccessibility: $NonMaybeType<PropertyDefinition['tsAccessibility']> }
+interface PropertyDefinition_With_declare extends PropertyDefinition { +declare: $NonMaybeType<PropertyDefinition['declare']> }
+interface PropertyDefinition_With_optional extends PropertyDefinition { +optional: $NonMaybeType<PropertyDefinition['optional']> }
+interface PropertyDefinition_With_override extends PropertyDefinition { +override: $NonMaybeType<PropertyDefinition['override']> }
+interface PropertyDefinition_With_decorators extends PropertyDefinition { +decorators: $NonMaybeType<PropertyDefinition['decorators']> }
+interface StaticBlock_With_body extends StaticBlock { +body: $NonMaybeType<StaticBlock['body']> }
+interface Decorator_With_expression extends Decorator { +expression: $NonMaybeType<Decorator['expression']> }
+interface SwitchCase_With_test extends SwitchCase { +test: $NonMaybeType<SwitchCase['test']> }
+interface SwitchCase_With_consequent extends SwitchCase { +consequent: $NonMaybeType<SwitchCase['consequent']> }
+interface CatchClause_With_param extends CatchClause { +param: $NonMaybeType<CatchClause['param']> }
+interface CatchClause_With_body extends CatchClause { +body: $NonMaybeType<CatchClause['body']> }
+interface ComponentParameter_With_name extends ComponentParameter { +name: $NonMaybeType<ComponentParameter['name']> }
+interface ComponentParameter_With_local extends ComponentParameter { +local: $NonMaybeType<ComponentParameter['local']> }
+interface ComponentParameter_With_shorthand extends ComponentParameter { +shorthand: $NonMaybeType<ComponentParameter['shorthand']> }
+interface DeclareVariable_With_declarations extends DeclareVariable { +declarations: $NonMaybeType<DeclareVariable['declarations']> }
+interface DeclareVariable_With_kind extends DeclareVariable { +kind: $NonMaybeType<DeclareVariable['kind']> }
+interface DeclareFunction_With_id extends DeclareFunction { +id: $NonMaybeType<DeclareFunction['id']> }
+interface DeclareFunction_With_implicitDeclare extends DeclareFunction { +implicitDeclare: $NonMaybeType<DeclareFunction['implicitDeclare']> }
+interface DeclareFunction_With_predicate extends DeclareFunction { +predicate: $NonMaybeType<DeclareFunction['predicate']> }
+interface DeclareFunction_With_typeAnnotation extends DeclareFunction { +typeAnnotation: $NonMaybeType<DeclareFunction['typeAnnotation']> }
+interface DeclareClass_With_id extends DeclareClass { +id: $NonMaybeType<DeclareClass['id']> }
+interface DeclareClass_With_typeParameters extends DeclareClass { +typeParameters: $NonMaybeType<DeclareClass['typeParameters']> }
+interface DeclareClass_With_body extends DeclareClass { +body: $NonMaybeType<DeclareClass['body']> }
+interface DeclareClass_With_extends extends DeclareClass { +extends: $NonMaybeType<DeclareClass['extends']> }
+interface DeclareClass_With_implements extends DeclareClass { +implements: $NonMaybeType<DeclareClass['implements']> }
+interface DeclareClass_With_mixins extends DeclareClass { +mixins: $NonMaybeType<DeclareClass['mixins']> }
+interface DeclareClass_With_abstract extends DeclareClass { +abstract: $NonMaybeType<DeclareClass['abstract']> }
+interface DeclareComponent_With_id extends DeclareComponent { +id: $NonMaybeType<DeclareComponent['id']> }
+interface DeclareComponent_With_params extends DeclareComponent { +params: $NonMaybeType<DeclareComponent['params']> }
+interface DeclareComponent_With_rest extends DeclareComponent { +rest: $NonMaybeType<DeclareComponent['rest']> }
+interface DeclareComponent_With_rendersType extends DeclareComponent { +rendersType: $NonMaybeType<DeclareComponent['rendersType']> }
+interface DeclareComponent_With_typeParameters extends DeclareComponent { +typeParameters: $NonMaybeType<DeclareComponent['typeParameters']> }
+interface DeclareHook_With_id extends DeclareHook { +id: $NonMaybeType<DeclareHook['id']> }
+interface DeclareHook_With_implicitDeclare extends DeclareHook { +implicitDeclare: $NonMaybeType<DeclareHook['implicitDeclare']> }
+interface DeclareHook_With_typeAnnotation extends DeclareHook { +typeAnnotation: $NonMaybeType<DeclareHook['typeAnnotation']> }
+interface DeclareModule_With_id extends DeclareModule { +id: $NonMaybeType<DeclareModule['id']> }
+interface DeclareModule_With_body extends DeclareModule { +body: $NonMaybeType<DeclareModule['body']> }
+interface DeclareModuleExports_With_typeAnnotation extends DeclareModuleExports { +typeAnnotation: $NonMaybeType<DeclareModuleExports['typeAnnotation']> }
+interface DeclareExportDeclaration_With_default extends DeclareExportDeclaration { +default: $NonMaybeType<DeclareExportDeclaration['default']> }
+interface DeclareExportDeclaration_With_declaration extends DeclareExportDeclaration { +declaration: $NonMaybeType<DeclareExportDeclaration['declaration']> }
+interface DeclareExportDeclaration_With_specifiers extends DeclareExportDeclaration { +specifiers: $NonMaybeType<DeclareExportDeclaration['specifiers']> }
+interface DeclareExportDeclaration_With_source extends DeclareExportDeclaration { +source: $NonMaybeType<DeclareExportDeclaration['source']> }
+interface DeclareExportAllDeclaration_With_source extends DeclareExportAllDeclaration { +source: $NonMaybeType<DeclareExportAllDeclaration['source']> }
+interface DeclareNamespace_With_id extends DeclareNamespace { +id: $NonMaybeType<DeclareNamespace['id']> }
+interface DeclareNamespace_With_body extends DeclareNamespace { +body: $NonMaybeType<DeclareNamespace['body']> }
+interface DeclareNamespace_With_implicitDeclare extends DeclareNamespace { +implicitDeclare: $NonMaybeType<DeclareNamespace['implicitDeclare']> }
+interface DeclareNamespace_With_keyword extends DeclareNamespace { +keyword: $NonMaybeType<DeclareNamespace['keyword']> }
+interface DeclareNamespace_With_global extends DeclareNamespace { +global: $NonMaybeType<DeclareNamespace['global']> }
+interface DeclareInterface_With_id extends DeclareInterface { +id: $NonMaybeType<DeclareInterface['id']> }
+interface DeclareInterface_With_typeParameters extends DeclareInterface { +typeParameters: $NonMaybeType<DeclareInterface['typeParameters']> }
+interface DeclareInterface_With_body extends DeclareInterface { +body: $NonMaybeType<DeclareInterface['body']> }
+interface DeclareInterface_With_extends extends DeclareInterface { +extends: $NonMaybeType<DeclareInterface['extends']> }
+interface DeclareTypeAlias_With_id extends DeclareTypeAlias { +id: $NonMaybeType<DeclareTypeAlias['id']> }
+interface DeclareTypeAlias_With_typeParameters extends DeclareTypeAlias { +typeParameters: $NonMaybeType<DeclareTypeAlias['typeParameters']> }
+interface DeclareTypeAlias_With_right extends DeclareTypeAlias { +right: $NonMaybeType<DeclareTypeAlias['right']> }
+interface DeclareEnum_With_id extends DeclareEnum { +id: $NonMaybeType<DeclareEnum['id']> }
+interface DeclareEnum_With_body extends DeclareEnum { +body: $NonMaybeType<DeclareEnum['body']> }
+interface DeclareEnum_With_const extends DeclareEnum { +const: $NonMaybeType<DeclareEnum['const']> }
+interface TypeAnnotation_With_typeAnnotation extends TypeAnnotation { +typeAnnotation: $NonMaybeType<TypeAnnotation['typeAnnotation']> }
+interface Variance_With_kind extends Variance { +kind: $NonMaybeType<Variance['kind']> }
+interface NullableTypeAnnotation_With_typeAnnotation extends NullableTypeAnnotation { +typeAnnotation: $NonMaybeType<NullableTypeAnnotation['typeAnnotation']> }
+interface ArrayTypeAnnotation_With_elementType extends ArrayTypeAnnotation { +elementType: $NonMaybeType<ArrayTypeAnnotation['elementType']> }
+interface IndexedAccessType_With_objectType extends IndexedAccessType { +objectType: $NonMaybeType<IndexedAccessType['objectType']> }
+interface IndexedAccessType_With_indexType extends IndexedAccessType { +indexType: $NonMaybeType<IndexedAccessType['indexType']> }
+interface OptionalIndexedAccessType_With_objectType extends OptionalIndexedAccessType { +objectType: $NonMaybeType<OptionalIndexedAccessType['objectType']> }
+interface OptionalIndexedAccessType_With_indexType extends OptionalIndexedAccessType { +indexType: $NonMaybeType<OptionalIndexedAccessType['indexType']> }
+interface OptionalIndexedAccessType_With_optional extends OptionalIndexedAccessType { +optional: $NonMaybeType<OptionalIndexedAccessType['optional']> }
+interface UnionTypeAnnotation_With_types extends UnionTypeAnnotation { +types: $NonMaybeType<UnionTypeAnnotation['types']> }
+interface IntersectionTypeAnnotation_With_types extends IntersectionTypeAnnotation { +types: $NonMaybeType<IntersectionTypeAnnotation['types']> }
+interface KeyofTypeAnnotation_With_argument extends KeyofTypeAnnotation { +argument: $NonMaybeType<KeyofTypeAnnotation['argument']> }
+interface TypeOperator_With_operator extends TypeOperator { +operator: $NonMaybeType<TypeOperator['operator']> }
+interface TypeOperator_With_typeAnnotation extends TypeOperator { +typeAnnotation: $NonMaybeType<TypeOperator['typeAnnotation']> }
+interface StringLiteralTypeAnnotation_With_value extends StringLiteralTypeAnnotation { +value: $NonMaybeType<StringLiteralTypeAnnotation['value']> }
+interface StringLiteralTypeAnnotation_With_raw extends StringLiteralTypeAnnotation { +raw: $NonMaybeType<StringLiteralTypeAnnotation['raw']> }
+interface NumberLiteralTypeAnnotation_With_value extends NumberLiteralTypeAnnotation { +value: $NonMaybeType<NumberLiteralTypeAnnotation['value']> }
+interface NumberLiteralTypeAnnotation_With_raw extends NumberLiteralTypeAnnotation { +raw: $NonMaybeType<NumberLiteralTypeAnnotation['raw']> }
+interface BigIntLiteralTypeAnnotation_With_value extends BigIntLiteralTypeAnnotation { +value: $NonMaybeType<BigIntLiteralTypeAnnotation['value']> }
+interface BigIntLiteralTypeAnnotation_With_raw extends BigIntLiteralTypeAnnotation { +raw: $NonMaybeType<BigIntLiteralTypeAnnotation['raw']> }
+interface BooleanLiteralTypeAnnotation_With_value extends BooleanLiteralTypeAnnotation { +value: $NonMaybeType<BooleanLiteralTypeAnnotation['value']> }
+interface BooleanLiteralTypeAnnotation_With_raw extends BooleanLiteralTypeAnnotation { +raw: $NonMaybeType<BooleanLiteralTypeAnnotation['raw']> }
+interface GenericTypeAnnotation_With_id extends GenericTypeAnnotation { +id: $NonMaybeType<GenericTypeAnnotation['id']> }
+interface GenericTypeAnnotation_With_typeParameters extends GenericTypeAnnotation { +typeParameters: $NonMaybeType<GenericTypeAnnotation['typeParameters']> }
+interface QualifiedTypeIdentifier_With_qualification extends QualifiedTypeIdentifier { +qualification: $NonMaybeType<QualifiedTypeIdentifier['qualification']> }
+interface QualifiedTypeIdentifier_With_id extends QualifiedTypeIdentifier { +id: $NonMaybeType<QualifiedTypeIdentifier['id']> }
+interface QualifiedTypeofIdentifier_With_qualification extends QualifiedTypeofIdentifier { +qualification: $NonMaybeType<QualifiedTypeofIdentifier['qualification']> }
+interface QualifiedTypeofIdentifier_With_id extends QualifiedTypeofIdentifier { +id: $NonMaybeType<QualifiedTypeofIdentifier['id']> }
+interface TypeofTypeAnnotation_With_argument extends TypeofTypeAnnotation { +argument: $NonMaybeType<TypeofTypeAnnotation['argument']> }
+interface TypeofTypeAnnotation_With_typeArguments extends TypeofTypeAnnotation { +typeArguments: $NonMaybeType<TypeofTypeAnnotation['typeArguments']> }
+interface TupleTypeAnnotation_With_elementTypes extends TupleTypeAnnotation { +elementTypes: $NonMaybeType<TupleTypeAnnotation['elementTypes']> }
+interface TupleTypeAnnotation_With_inexact extends TupleTypeAnnotation { +inexact: $NonMaybeType<TupleTypeAnnotation['inexact']> }
+interface TupleTypeLabeledElement_With_label extends TupleTypeLabeledElement { +label: $NonMaybeType<TupleTypeLabeledElement['label']> }
+interface TupleTypeLabeledElement_With_elementType extends TupleTypeLabeledElement { +elementType: $NonMaybeType<TupleTypeLabeledElement['elementType']> }
+interface TupleTypeLabeledElement_With_variance extends TupleTypeLabeledElement { +variance: $NonMaybeType<TupleTypeLabeledElement['variance']> }
+interface TupleTypeLabeledElement_With_optional extends TupleTypeLabeledElement { +optional: $NonMaybeType<TupleTypeLabeledElement['optional']> }
+interface TupleTypeSpreadElement_With_label extends TupleTypeSpreadElement { +label: $NonMaybeType<TupleTypeSpreadElement['label']> }
+interface TupleTypeSpreadElement_With_typeAnnotation extends TupleTypeSpreadElement { +typeAnnotation: $NonMaybeType<TupleTypeSpreadElement['typeAnnotation']> }
+interface ObjectTypeAnnotation_With_inexact extends ObjectTypeAnnotation { +inexact: $NonMaybeType<ObjectTypeAnnotation['inexact']> }
+interface ObjectTypeAnnotation_With_exact extends ObjectTypeAnnotation { +exact: $NonMaybeType<ObjectTypeAnnotation['exact']> }
+interface ObjectTypeAnnotation_With_properties extends ObjectTypeAnnotation { +properties: $NonMaybeType<ObjectTypeAnnotation['properties']> }
+interface ObjectTypeAnnotation_With_indexers extends ObjectTypeAnnotation { +indexers: $NonMaybeType<ObjectTypeAnnotation['indexers']> }
+interface ObjectTypeAnnotation_With_callProperties extends ObjectTypeAnnotation { +callProperties: $NonMaybeType<ObjectTypeAnnotation['callProperties']> }
+interface ObjectTypeAnnotation_With_internalSlots extends ObjectTypeAnnotation { +internalSlots: $NonMaybeType<ObjectTypeAnnotation['internalSlots']> }
+interface ObjectTypeProperty_With_key extends ObjectTypeProperty { +key: $NonMaybeType<ObjectTypeProperty['key']> }
+interface ObjectTypeProperty_With_value extends ObjectTypeProperty { +value: $NonMaybeType<ObjectTypeProperty['value']> }
+interface ObjectTypeProperty_With_method extends ObjectTypeProperty { +method: $NonMaybeType<ObjectTypeProperty['method']> }
+interface ObjectTypeProperty_With_optional extends ObjectTypeProperty { +optional: $NonMaybeType<ObjectTypeProperty['optional']> }
+interface ObjectTypeProperty_With_static extends ObjectTypeProperty { +static: $NonMaybeType<ObjectTypeProperty['static']> }
+interface ObjectTypeProperty_With_proto extends ObjectTypeProperty { +proto: $NonMaybeType<ObjectTypeProperty['proto']> }
+interface ObjectTypeProperty_With_abstract extends ObjectTypeProperty { +abstract: $NonMaybeType<ObjectTypeProperty['abstract']> }
+interface ObjectTypeProperty_With_variance extends ObjectTypeProperty { +variance: $NonMaybeType<ObjectTypeProperty['variance']> }
+interface ObjectTypeProperty_With_kind extends ObjectTypeProperty { +kind: $NonMaybeType<ObjectTypeProperty['kind']> }
+interface ObjectTypeProperty_With_init extends ObjectTypeProperty { +init: $NonMaybeType<ObjectTypeProperty['init']> }
+interface ObjectTypeProperty_With_computed extends ObjectTypeProperty { +computed: $NonMaybeType<ObjectTypeProperty['computed']> }
+interface ObjectTypeProperty_With_override extends ObjectTypeProperty { +override: $NonMaybeType<ObjectTypeProperty['override']> }
+interface ObjectTypeProperty_With_tsAccessibility extends ObjectTypeProperty { +tsAccessibility: $NonMaybeType<ObjectTypeProperty['tsAccessibility']> }
+interface ObjectTypeSpreadProperty_With_argument extends ObjectTypeSpreadProperty { +argument: $NonMaybeType<ObjectTypeSpreadProperty['argument']> }
+interface ObjectTypeIndexer_With_id extends ObjectTypeIndexer { +id: $NonMaybeType<ObjectTypeIndexer['id']> }
+interface ObjectTypeIndexer_With_key extends ObjectTypeIndexer { +key: $NonMaybeType<ObjectTypeIndexer['key']> }
+interface ObjectTypeIndexer_With_value extends ObjectTypeIndexer { +value: $NonMaybeType<ObjectTypeIndexer['value']> }
+interface ObjectTypeIndexer_With_static extends ObjectTypeIndexer { +static: $NonMaybeType<ObjectTypeIndexer['static']> }
+interface ObjectTypeIndexer_With_variance extends ObjectTypeIndexer { +variance: $NonMaybeType<ObjectTypeIndexer['variance']> }
+interface ObjectTypeIndexer_With_optional extends ObjectTypeIndexer { +optional: $NonMaybeType<ObjectTypeIndexer['optional']> }
+interface ObjectTypeCallProperty_With_value extends ObjectTypeCallProperty { +value: $NonMaybeType<ObjectTypeCallProperty['value']> }
+interface ObjectTypeCallProperty_With_static extends ObjectTypeCallProperty { +static: $NonMaybeType<ObjectTypeCallProperty['static']> }
+interface ObjectTypeMappedTypeProperty_With_keyTparam extends ObjectTypeMappedTypeProperty { +keyTparam: $NonMaybeType<ObjectTypeMappedTypeProperty['keyTparam']> }
+interface ObjectTypeMappedTypeProperty_With_propType extends ObjectTypeMappedTypeProperty { +propType: $NonMaybeType<ObjectTypeMappedTypeProperty['propType']> }
+interface ObjectTypeMappedTypeProperty_With_sourceType extends ObjectTypeMappedTypeProperty { +sourceType: $NonMaybeType<ObjectTypeMappedTypeProperty['sourceType']> }
+interface ObjectTypeMappedTypeProperty_With_nameType extends ObjectTypeMappedTypeProperty { +nameType: $NonMaybeType<ObjectTypeMappedTypeProperty['nameType']> }
+interface ObjectTypeMappedTypeProperty_With_variance extends ObjectTypeMappedTypeProperty { +variance: $NonMaybeType<ObjectTypeMappedTypeProperty['variance']> }
+interface ObjectTypeMappedTypeProperty_With_varianceOp extends ObjectTypeMappedTypeProperty { +varianceOp: $NonMaybeType<ObjectTypeMappedTypeProperty['varianceOp']> }
+interface ObjectTypeMappedTypeProperty_With_optional extends ObjectTypeMappedTypeProperty { +optional: $NonMaybeType<ObjectTypeMappedTypeProperty['optional']> }
+interface ObjectTypeInternalSlot_With_id extends ObjectTypeInternalSlot { +id: $NonMaybeType<ObjectTypeInternalSlot['id']> }
+interface ObjectTypeInternalSlot_With_optional extends ObjectTypeInternalSlot { +optional: $NonMaybeType<ObjectTypeInternalSlot['optional']> }
+interface ObjectTypeInternalSlot_With_static extends ObjectTypeInternalSlot { +static: $NonMaybeType<ObjectTypeInternalSlot['static']> }
+interface ObjectTypeInternalSlot_With_method extends ObjectTypeInternalSlot { +method: $NonMaybeType<ObjectTypeInternalSlot['method']> }
+interface ObjectTypeInternalSlot_With_value extends ObjectTypeInternalSlot { +value: $NonMaybeType<ObjectTypeInternalSlot['value']> }
+interface FunctionTypeParam_With_name extends FunctionTypeParam { +name: $NonMaybeType<FunctionTypeParam['name']> }
+interface FunctionTypeParam_With_typeAnnotation extends FunctionTypeParam { +typeAnnotation: $NonMaybeType<FunctionTypeParam['typeAnnotation']> }
+interface FunctionTypeParam_With_optional extends FunctionTypeParam { +optional: $NonMaybeType<FunctionTypeParam['optional']> }
+interface TypePredicate_With_parameterName extends TypePredicate { +parameterName: $NonMaybeType<TypePredicate['parameterName']> }
+interface TypePredicate_With_typeAnnotation extends TypePredicate { +typeAnnotation: $NonMaybeType<TypePredicate['typeAnnotation']> }
+interface TypePredicate_With_kind extends TypePredicate { +kind: $NonMaybeType<TypePredicate['kind']> }
+interface ConditionalTypeAnnotation_With_checkType extends ConditionalTypeAnnotation { +checkType: $NonMaybeType<ConditionalTypeAnnotation['checkType']> }
+interface ConditionalTypeAnnotation_With_extendsType extends ConditionalTypeAnnotation { +extendsType: $NonMaybeType<ConditionalTypeAnnotation['extendsType']> }
+interface ConditionalTypeAnnotation_With_trueType extends ConditionalTypeAnnotation { +trueType: $NonMaybeType<ConditionalTypeAnnotation['trueType']> }
+interface ConditionalTypeAnnotation_With_falseType extends ConditionalTypeAnnotation { +falseType: $NonMaybeType<ConditionalTypeAnnotation['falseType']> }
+interface InferTypeAnnotation_With_typeParameter extends InferTypeAnnotation { +typeParameter: $NonMaybeType<InferTypeAnnotation['typeParameter']> }
+interface InterfaceExtends_With_id extends InterfaceExtends { +id: $NonMaybeType<InterfaceExtends['id']> }
+interface InterfaceExtends_With_typeParameters extends InterfaceExtends { +typeParameters: $NonMaybeType<InterfaceExtends['typeParameters']> }
+interface InterfaceTypeAnnotation_With_extends extends InterfaceTypeAnnotation { +extends: $NonMaybeType<InterfaceTypeAnnotation['extends']> }
+interface InterfaceTypeAnnotation_With_body extends InterfaceTypeAnnotation { +body: $NonMaybeType<InterfaceTypeAnnotation['body']> }
+interface TypeParameterDeclaration_With_params extends TypeParameterDeclaration { +params: $NonMaybeType<TypeParameterDeclaration['params']> }
+interface TypeParameter_With_name extends TypeParameter { +name: $NonMaybeType<TypeParameter['name']> }
+interface TypeParameter_With_bound extends TypeParameter { +bound: $NonMaybeType<TypeParameter['bound']> }
+interface TypeParameter_With_const extends TypeParameter { +const: $NonMaybeType<TypeParameter['const']> }
+interface TypeParameter_With_variance extends TypeParameter { +variance: $NonMaybeType<TypeParameter['variance']> }
+interface TypeParameter_With_default extends TypeParameter { +default: $NonMaybeType<TypeParameter['default']> }
+interface TypeParameter_With_usesExtendsBound extends TypeParameter { +usesExtendsBound: $NonMaybeType<TypeParameter['usesExtendsBound']> }
+interface TypeParameterInstantiation_With_params extends TypeParameterInstantiation { +params: $NonMaybeType<TypeParameterInstantiation['params']> }
+interface ComponentTypeAnnotation_With_params extends ComponentTypeAnnotation { +params: $NonMaybeType<ComponentTypeAnnotation['params']> }
+interface ComponentTypeAnnotation_With_rest extends ComponentTypeAnnotation { +rest: $NonMaybeType<ComponentTypeAnnotation['rest']> }
+interface ComponentTypeAnnotation_With_rendersType extends ComponentTypeAnnotation { +rendersType: $NonMaybeType<ComponentTypeAnnotation['rendersType']> }
+interface ComponentTypeAnnotation_With_typeParameters extends ComponentTypeAnnotation { +typeParameters: $NonMaybeType<ComponentTypeAnnotation['typeParameters']> }
+interface ComponentTypeParameter_With_name extends ComponentTypeParameter { +name: $NonMaybeType<ComponentTypeParameter['name']> }
+interface ComponentTypeParameter_With_typeAnnotation extends ComponentTypeParameter { +typeAnnotation: $NonMaybeType<ComponentTypeParameter['typeAnnotation']> }
+interface ComponentTypeParameter_With_optional extends ComponentTypeParameter { +optional: $NonMaybeType<ComponentTypeParameter['optional']> }
+interface DeclaredPredicate_With_value extends DeclaredPredicate { +value: $NonMaybeType<DeclaredPredicate['value']> }
+interface JSXElement_With_openingElement extends JSXElement { +openingElement: $NonMaybeType<JSXElement['openingElement']> }
+interface JSXElement_With_closingElement extends JSXElement { +closingElement: $NonMaybeType<JSXElement['closingElement']> }
+interface JSXElement_With_children extends JSXElement { +children: $NonMaybeType<JSXElement['children']> }
+interface JSXFragment_With_openingFragment extends JSXFragment { +openingFragment: $NonMaybeType<JSXFragment['openingFragment']> }
+interface JSXFragment_With_children extends JSXFragment { +children: $NonMaybeType<JSXFragment['children']> }
+interface JSXFragment_With_closingFragment extends JSXFragment { +closingFragment: $NonMaybeType<JSXFragment['closingFragment']> }
+interface JSXOpeningElement_With_name extends JSXOpeningElement { +name: $NonMaybeType<JSXOpeningElement['name']> }
+interface JSXOpeningElement_With_attributes extends JSXOpeningElement { +attributes: $NonMaybeType<JSXOpeningElement['attributes']> }
+interface JSXOpeningElement_With_selfClosing extends JSXOpeningElement { +selfClosing: $NonMaybeType<JSXOpeningElement['selfClosing']> }
+interface JSXOpeningElement_With_typeArguments extends JSXOpeningElement { +typeArguments: $NonMaybeType<JSXOpeningElement['typeArguments']> }
+interface JSXClosingElement_With_name extends JSXClosingElement { +name: $NonMaybeType<JSXClosingElement['name']> }
+interface JSXAttribute_With_name extends JSXAttribute { +name: $NonMaybeType<JSXAttribute['name']> }
+interface JSXAttribute_With_value extends JSXAttribute { +value: $NonMaybeType<JSXAttribute['value']> }
+interface JSXSpreadAttribute_With_argument extends JSXSpreadAttribute { +argument: $NonMaybeType<JSXSpreadAttribute['argument']> }
+interface JSXExpressionContainer_With_expression extends JSXExpressionContainer { +expression: $NonMaybeType<JSXExpressionContainer['expression']> }
+interface JSXSpreadChild_With_expression extends JSXSpreadChild { +expression: $NonMaybeType<JSXSpreadChild['expression']> }
+interface JSXText_With_value extends JSXText { +value: $NonMaybeType<JSXText['value']> }
+interface JSXText_With_raw extends JSXText { +raw: $NonMaybeType<JSXText['raw']> }
+interface JSXMemberExpression_With_object extends JSXMemberExpression { +object: $NonMaybeType<JSXMemberExpression['object']> }
+interface JSXMemberExpression_With_property extends JSXMemberExpression { +property: $NonMaybeType<JSXMemberExpression['property']> }
+interface JSXNamespacedName_With_namespace extends JSXNamespacedName { +namespace: $NonMaybeType<JSXNamespacedName['namespace']> }
+interface JSXNamespacedName_With_name extends JSXNamespacedName { +name: $NonMaybeType<JSXNamespacedName['name']> }
+interface JSXIdentifier_With_name extends JSXIdentifier { +name: $NonMaybeType<JSXIdentifier['name']> }
+interface EnumBooleanBody_With_members extends EnumBooleanBody { +members: $NonMaybeType<EnumBooleanBody['members']> }
+interface EnumBooleanBody_With_explicitType extends EnumBooleanBody { +explicitType: $NonMaybeType<EnumBooleanBody['explicitType']> }
+interface EnumBooleanBody_With_hasUnknownMembers extends EnumBooleanBody { +hasUnknownMembers: $NonMaybeType<EnumBooleanBody['hasUnknownMembers']> }
+interface EnumBooleanMember_With_id extends EnumBooleanMember { +id: $NonMaybeType<EnumBooleanMember['id']> }
+interface EnumBooleanMember_With_init extends EnumBooleanMember { +init: $NonMaybeType<EnumBooleanMember['init']> }
+interface EnumNumberBody_With_members extends EnumNumberBody { +members: $NonMaybeType<EnumNumberBody['members']> }
+interface EnumNumberBody_With_explicitType extends EnumNumberBody { +explicitType: $NonMaybeType<EnumNumberBody['explicitType']> }
+interface EnumNumberBody_With_hasUnknownMembers extends EnumNumberBody { +hasUnknownMembers: $NonMaybeType<EnumNumberBody['hasUnknownMembers']> }
+interface EnumNumberMember_With_id extends EnumNumberMember { +id: $NonMaybeType<EnumNumberMember['id']> }
+interface EnumNumberMember_With_init extends EnumNumberMember { +init: $NonMaybeType<EnumNumberMember['init']> }
+interface EnumStringBody_With_members extends EnumStringBody { +members: $NonMaybeType<EnumStringBody['members']> }
+interface EnumStringBody_With_explicitType extends EnumStringBody { +explicitType: $NonMaybeType<EnumStringBody['explicitType']> }
+interface EnumStringBody_With_hasUnknownMembers extends EnumStringBody { +hasUnknownMembers: $NonMaybeType<EnumStringBody['hasUnknownMembers']> }
+interface EnumStringMember_With_id extends EnumStringMember { +id: $NonMaybeType<EnumStringMember['id']> }
+interface EnumStringMember_With_init extends EnumStringMember { +init: $NonMaybeType<EnumStringMember['init']> }
+interface EnumSymbolBody_With_members extends EnumSymbolBody { +members: $NonMaybeType<EnumSymbolBody['members']> }
+interface EnumSymbolBody_With_hasUnknownMembers extends EnumSymbolBody { +hasUnknownMembers: $NonMaybeType<EnumSymbolBody['hasUnknownMembers']> }
+interface EnumDefaultedMember_With_id extends EnumDefaultedMember { +id: $NonMaybeType<EnumDefaultedMember['id']> }
+interface EnumBigIntBody_With_members extends EnumBigIntBody { +members: $NonMaybeType<EnumBigIntBody['members']> }
+interface EnumBigIntBody_With_explicitType extends EnumBigIntBody { +explicitType: $NonMaybeType<EnumBigIntBody['explicitType']> }
+interface EnumBigIntBody_With_hasUnknownMembers extends EnumBigIntBody { +hasUnknownMembers: $NonMaybeType<EnumBigIntBody['hasUnknownMembers']> }
+interface EnumBigIntMember_With_id extends EnumBigIntMember { +id: $NonMaybeType<EnumBigIntMember['id']> }
+interface EnumBigIntMember_With_init extends EnumBigIntMember { +init: $NonMaybeType<EnumBigIntMember['init']> }
+interface RecordDeclarationBody_With_elements extends RecordDeclarationBody { +elements: $NonMaybeType<RecordDeclarationBody['elements']> }
+interface RecordDeclarationProperty_With_key extends RecordDeclarationProperty { +key: $NonMaybeType<RecordDeclarationProperty['key']> }
+interface RecordDeclarationProperty_With_typeAnnotation extends RecordDeclarationProperty { +typeAnnotation: $NonMaybeType<RecordDeclarationProperty['typeAnnotation']> }
+interface RecordDeclarationProperty_With_defaultValue extends RecordDeclarationProperty { +defaultValue: $NonMaybeType<RecordDeclarationProperty['defaultValue']> }
+interface RecordDeclarationStaticProperty_With_key extends RecordDeclarationStaticProperty { +key: $NonMaybeType<RecordDeclarationStaticProperty['key']> }
+interface RecordDeclarationStaticProperty_With_typeAnnotation extends RecordDeclarationStaticProperty { +typeAnnotation: $NonMaybeType<RecordDeclarationStaticProperty['typeAnnotation']> }
+interface RecordDeclarationStaticProperty_With_value extends RecordDeclarationStaticProperty { +value: $NonMaybeType<RecordDeclarationStaticProperty['value']> }
+interface RecordDeclarationImplements_With_id extends RecordDeclarationImplements { +id: $NonMaybeType<RecordDeclarationImplements['id']> }
+interface RecordDeclarationImplements_With_typeArguments extends RecordDeclarationImplements { +typeArguments: $NonMaybeType<RecordDeclarationImplements['typeArguments']> }
+interface MatchExpressionCase_With_pattern extends MatchExpressionCase { +pattern: $NonMaybeType<MatchExpressionCase['pattern']> }
+interface MatchExpressionCase_With_body extends MatchExpressionCase { +body: $NonMaybeType<MatchExpressionCase['body']> }
+interface MatchExpressionCase_With_guard extends MatchExpressionCase { +guard: $NonMaybeType<MatchExpressionCase['guard']> }
+interface MatchStatementCase_With_pattern extends MatchStatementCase { +pattern: $NonMaybeType<MatchStatementCase['pattern']> }
+interface MatchStatementCase_With_body extends MatchStatementCase { +body: $NonMaybeType<MatchStatementCase['body']> }
+interface MatchStatementCase_With_guard extends MatchStatementCase { +guard: $NonMaybeType<MatchStatementCase['guard']> }
+interface MatchLiteralPattern_With_literal extends MatchLiteralPattern { +literal: $NonMaybeType<MatchLiteralPattern['literal']> }
+interface MatchUnaryPattern_With_operator extends MatchUnaryPattern { +operator: $NonMaybeType<MatchUnaryPattern['operator']> }
+interface MatchUnaryPattern_With_argument extends MatchUnaryPattern { +argument: $NonMaybeType<MatchUnaryPattern['argument']> }
+interface MatchObjectPattern_With_properties extends MatchObjectPattern { +properties: $NonMaybeType<MatchObjectPattern['properties']> }
+interface MatchObjectPattern_With_rest extends MatchObjectPattern { +rest: $NonMaybeType<MatchObjectPattern['rest']> }
+interface MatchInstancePattern_With_targetConstructor extends MatchInstancePattern { +targetConstructor: $NonMaybeType<MatchInstancePattern['targetConstructor']> }
+interface MatchInstancePattern_With_properties extends MatchInstancePattern { +properties: $NonMaybeType<MatchInstancePattern['properties']> }
+interface MatchInstanceObjectPattern_With_properties extends MatchInstanceObjectPattern { +properties: $NonMaybeType<MatchInstanceObjectPattern['properties']> }
+interface MatchInstanceObjectPattern_With_rest extends MatchInstanceObjectPattern { +rest: $NonMaybeType<MatchInstanceObjectPattern['rest']> }
+interface MatchOrPattern_With_patterns extends MatchOrPattern { +patterns: $NonMaybeType<MatchOrPattern['patterns']> }
+interface MatchAsPattern_With_pattern extends MatchAsPattern { +pattern: $NonMaybeType<MatchAsPattern['pattern']> }
+interface MatchAsPattern_With_target extends MatchAsPattern { +target: $NonMaybeType<MatchAsPattern['target']> }
+interface MatchIdentifierPattern_With_id extends MatchIdentifierPattern { +id: $NonMaybeType<MatchIdentifierPattern['id']> }
+interface MatchMemberPattern_With_base extends MatchMemberPattern { +base: $NonMaybeType<MatchMemberPattern['base']> }
+interface MatchMemberPattern_With_property extends MatchMemberPattern { +property: $NonMaybeType<MatchMemberPattern['property']> }
+interface MatchBindingPattern_With_id extends MatchBindingPattern { +id: $NonMaybeType<MatchBindingPattern['id']> }
+interface MatchBindingPattern_With_kind extends MatchBindingPattern { +kind: $NonMaybeType<MatchBindingPattern['kind']> }
+interface MatchArrayPattern_With_elements extends MatchArrayPattern { +elements: $NonMaybeType<MatchArrayPattern['elements']> }
+interface MatchArrayPattern_With_rest extends MatchArrayPattern { +rest: $NonMaybeType<MatchArrayPattern['rest']> }
+interface MatchObjectPatternProperty_With_key extends MatchObjectPatternProperty { +key: $NonMaybeType<MatchObjectPatternProperty['key']> }
+interface MatchObjectPatternProperty_With_pattern extends MatchObjectPatternProperty { +pattern: $NonMaybeType<MatchObjectPatternProperty['pattern']> }
+interface MatchObjectPatternProperty_With_shorthand extends MatchObjectPatternProperty { +shorthand: $NonMaybeType<MatchObjectPatternProperty['shorthand']> }
+interface MatchRestPattern_With_argument extends MatchRestPattern { +argument: $NonMaybeType<MatchRestPattern['argument']> }
+interface Program_With_body extends Program { +body: $NonMaybeType<Program['body']> }
+interface FunctionTypeAnnotation_With_params extends FunctionTypeAnnotation { +params: $NonMaybeType<FunctionTypeAnnotation['params']> }
+interface FunctionTypeAnnotation_With_returnType extends FunctionTypeAnnotation { +returnType: $NonMaybeType<FunctionTypeAnnotation['returnType']> }
+interface FunctionTypeAnnotation_With_rest extends FunctionTypeAnnotation { +rest: $NonMaybeType<FunctionTypeAnnotation['rest']> }
+interface FunctionTypeAnnotation_With_typeParameters extends FunctionTypeAnnotation { +typeParameters: $NonMaybeType<FunctionTypeAnnotation['typeParameters']> }
+interface FunctionTypeAnnotation_With_this extends FunctionTypeAnnotation { +this: $NonMaybeType<FunctionTypeAnnotation['this']> }
+interface OpaqueType_With_id extends OpaqueType { +id: $NonMaybeType<OpaqueType['id']> }
+interface OpaqueType_With_typeParameters extends OpaqueType { +typeParameters: $NonMaybeType<OpaqueType['typeParameters']> }
+interface OpaqueType_With_impltype extends OpaqueType { +impltype: $NonMaybeType<OpaqueType['impltype']> }
+interface OpaqueType_With_lowerBound extends OpaqueType { +lowerBound: $NonMaybeType<OpaqueType['lowerBound']> }
+interface OpaqueType_With_upperBound extends OpaqueType { +upperBound: $NonMaybeType<OpaqueType['upperBound']> }
+interface OpaqueType_With_supertype extends OpaqueType { +supertype: $NonMaybeType<OpaqueType['supertype']> }
+interface DeclareOpaqueType_With_id extends DeclareOpaqueType { +id: $NonMaybeType<DeclareOpaqueType['id']> }
+interface DeclareOpaqueType_With_typeParameters extends DeclareOpaqueType { +typeParameters: $NonMaybeType<DeclareOpaqueType['typeParameters']> }
+interface DeclareOpaqueType_With_impltype extends DeclareOpaqueType { +impltype: $NonMaybeType<DeclareOpaqueType['impltype']> }
+interface DeclareOpaqueType_With_lowerBound extends DeclareOpaqueType { +lowerBound: $NonMaybeType<DeclareOpaqueType['lowerBound']> }
+interface DeclareOpaqueType_With_upperBound extends DeclareOpaqueType { +upperBound: $NonMaybeType<DeclareOpaqueType['upperBound']> }
+interface DeclareOpaqueType_With_supertype extends DeclareOpaqueType { +supertype: $NonMaybeType<DeclareOpaqueType['supertype']> }
+interface HookTypeAnnotation_With_params extends HookTypeAnnotation { +params: $NonMaybeType<HookTypeAnnotation['params']> }
+interface HookTypeAnnotation_With_returnType extends HookTypeAnnotation { +returnType: $NonMaybeType<HookTypeAnnotation['returnType']> }
+interface HookTypeAnnotation_With_rest extends HookTypeAnnotation { +rest: $NonMaybeType<HookTypeAnnotation['rest']> }
+interface HookTypeAnnotation_With_typeParameters extends HookTypeAnnotation { +typeParameters: $NonMaybeType<HookTypeAnnotation['typeParameters']> }
+interface ChainExpression_With_expression extends ChainExpression { +expression: $NonMaybeType<ChainExpression['expression']> }
+type StarSpecialSelector = ESNode
+type StatementSpecialSelector = EmptyStatement | ExpressionStatement | BlockStatement | IfStatement | LabeledStatement | BreakStatement | ContinueStatement | WithStatement | SwitchStatement | ReturnStatement | ThrowStatement | TryStatement | WhileStatement | DoWhileStatement | ForStatement | ForInStatement | ForOfStatement | DebuggerStatement | MatchStatement
+type DeclarationSpecialSelector = FunctionDeclaration | VariableDeclaration | ClassDeclaration | ComponentDeclaration | HookDeclaration | EnumDeclaration | InterfaceDeclaration | RecordDeclaration | ImportDeclaration | ExportNamedDeclaration | ExportDefaultDeclaration | ExportAllDeclaration | DeclareExportDeclaration | DeclareExportAllDeclaration | TypeParameterDeclaration
+type PatternSpecialSelector = ObjectPattern | ArrayPattern | AssignmentPattern | MatchWildcardPattern | MatchLiteralPattern | MatchUnaryPattern | MatchObjectPattern | MatchInstancePattern | MatchInstanceObjectPattern | MatchOrPattern | MatchAsPattern | MatchIdentifierPattern | MatchMemberPattern | MatchBindingPattern | MatchArrayPattern | MatchRestPattern
+type ExpressionSpecialSelector = Identifier | MetaProperty | ThisExpression | ArrayExpression | ObjectExpression | FunctionExpression | ArrowFunctionExpression | SequenceExpression | UnaryExpression | BinaryExpression | LogicalExpression | ConditionalExpression | UpdateExpression | AssignmentExpression | MemberExpression | CallExpression | NewExpression | YieldExpression | AwaitExpression | ImportExpression | TaggedTemplateExpression | TypeCastExpression | AsExpression | AsConstExpression | MatchExpression | RecordExpression | ClassExpression | JSXEmptyExpression | JSXMemberExpression | ChainExpression | TemplateLiteral | Literal
+type FunctionSpecialSelector = FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
+
+export type ESQueryNodeSelectorsWithoutFallback = {
++'EmptyStatement'?: (node: EmptyStatement) => void,
++'ExpressionStatement'?: (node: ExpressionStatement) => void,
++'ExpressionStatement[expression]'?: (node: ExpressionStatement_With_expression) => void,
++'ExpressionStatement[directive]'?: (node: ExpressionStatement_With_directive) => void,
++'BlockStatement'?: (node: BlockStatement) => void,
++'BlockStatement[body]'?: (node: BlockStatement_With_body) => void,
++'IfStatement'?: (node: IfStatement) => void,
++'IfStatement[test]'?: (node: IfStatement_With_test) => void,
++'IfStatement[consequent]'?: (node: IfStatement_With_consequent) => void,
++'IfStatement[alternate]'?: (node: IfStatement_With_alternate) => void,
++'LabeledStatement'?: (node: LabeledStatement) => void,
++'LabeledStatement[label]'?: (node: LabeledStatement_With_label) => void,
++'LabeledStatement[body]'?: (node: LabeledStatement_With_body) => void,
++'BreakStatement'?: (node: BreakStatement) => void,
++'BreakStatement[label]'?: (node: BreakStatement_With_label) => void,
++'ContinueStatement'?: (node: ContinueStatement) => void,
++'ContinueStatement[label]'?: (node: ContinueStatement_With_label) => void,
++'WithStatement'?: (node: WithStatement) => void,
++'WithStatement[object]'?: (node: WithStatement_With_object) => void,
++'WithStatement[body]'?: (node: WithStatement_With_body) => void,
++'SwitchStatement'?: (node: SwitchStatement) => void,
++'SwitchStatement[discriminant]'?: (node: SwitchStatement_With_discriminant) => void,
++'SwitchStatement[cases]'?: (node: SwitchStatement_With_cases) => void,
++'ReturnStatement'?: (node: ReturnStatement) => void,
++'ReturnStatement[argument]'?: (node: ReturnStatement_With_argument) => void,
++'ThrowStatement'?: (node: ThrowStatement) => void,
++'ThrowStatement[argument]'?: (node: ThrowStatement_With_argument) => void,
++'TryStatement'?: (node: TryStatement) => void,
++'TryStatement[block]'?: (node: TryStatement_With_block) => void,
++'TryStatement[handler]'?: (node: TryStatement_With_handler) => void,
++'TryStatement[finalizer]'?: (node: TryStatement_With_finalizer) => void,
++'WhileStatement'?: (node: WhileStatement) => void,
++'WhileStatement[test]'?: (node: WhileStatement_With_test) => void,
++'WhileStatement[body]'?: (node: WhileStatement_With_body) => void,
++'DoWhileStatement'?: (node: DoWhileStatement) => void,
++'DoWhileStatement[body]'?: (node: DoWhileStatement_With_body) => void,
++'DoWhileStatement[test]'?: (node: DoWhileStatement_With_test) => void,
++'ForStatement'?: (node: ForStatement) => void,
++'ForStatement[init]'?: (node: ForStatement_With_init) => void,
++'ForStatement[test]'?: (node: ForStatement_With_test) => void,
++'ForStatement[update]'?: (node: ForStatement_With_update) => void,
++'ForStatement[body]'?: (node: ForStatement_With_body) => void,
++'ForInStatement'?: (node: ForInStatement) => void,
++'ForInStatement[left]'?: (node: ForInStatement_With_left) => void,
++'ForInStatement[right]'?: (node: ForInStatement_With_right) => void,
++'ForInStatement[body]'?: (node: ForInStatement_With_body) => void,
++'ForInStatement[each]'?: (node: ForInStatement_With_each) => void,
++'ForOfStatement'?: (node: ForOfStatement) => void,
++'ForOfStatement[left]'?: (node: ForOfStatement_With_left) => void,
++'ForOfStatement[right]'?: (node: ForOfStatement_With_right) => void,
++'ForOfStatement[body]'?: (node: ForOfStatement_With_body) => void,
++'ForOfStatement[await]'?: (node: ForOfStatement_With_await) => void,
++'DebuggerStatement'?: (node: DebuggerStatement) => void,
++'MatchStatement'?: (node: MatchStatement) => void,
++'MatchStatement[argument]'?: (node: MatchStatement_With_argument) => void,
++'MatchStatement[cases]'?: (node: MatchStatement_With_cases) => void,
++'FunctionDeclaration'?: (node: FunctionDeclaration) => void,
++'FunctionDeclaration[id]'?: (node: FunctionDeclaration_With_id) => void,
++'FunctionDeclaration[params]'?: (node: FunctionDeclaration_With_params) => void,
++'FunctionDeclaration[body]'?: (node: FunctionDeclaration_With_body) => void,
++'FunctionDeclaration[returnType]'?: (node: FunctionDeclaration_With_returnType) => void,
++'FunctionDeclaration[typeParameters]'?: (node: FunctionDeclaration_With_typeParameters) => void,
++'FunctionDeclaration[async]'?: (node: FunctionDeclaration_With_async) => void,
++'FunctionDeclaration[generator]'?: (node: FunctionDeclaration_With_generator) => void,
++'FunctionDeclaration[predicate]'?: (node: FunctionDeclaration_With_predicate) => void,
++'FunctionDeclaration[expression]'?: (node: FunctionDeclaration_With_expression) => void,
++'VariableDeclaration'?: (node: VariableDeclaration) => void,
++'VariableDeclaration[declarations]'?: (node: VariableDeclaration_With_declarations) => void,
++'VariableDeclaration[kind]'?: (node: VariableDeclaration_With_kind) => void,
++'VariableDeclarator'?: (node: VariableDeclarator) => void,
++'VariableDeclarator[id]'?: (node: VariableDeclarator_With_id) => void,
++'VariableDeclarator[init]'?: (node: VariableDeclarator_With_init) => void,
++'ClassDeclaration'?: (node: ClassDeclaration) => void,
++'ClassDeclaration[id]'?: (node: ClassDeclaration_With_id) => void,
++'ClassDeclaration[body]'?: (node: ClassDeclaration_With_body) => void,
++'ClassDeclaration[typeParameters]'?: (node: ClassDeclaration_With_typeParameters) => void,
++'ClassDeclaration[superClass]'?: (node: ClassDeclaration_With_superClass) => void,
++'ClassDeclaration[superTypeArguments]'?: (node: ClassDeclaration_With_superTypeArguments) => void,
++'ClassDeclaration[implements]'?: (node: ClassDeclaration_With_implements) => void,
++'ClassDeclaration[decorators]'?: (node: ClassDeclaration_With_decorators) => void,
++'ClassDeclaration[abstract]'?: (node: ClassDeclaration_With_abstract) => void,
++'ComponentDeclaration'?: (node: ComponentDeclaration) => void,
++'ComponentDeclaration[body]'?: (node: ComponentDeclaration_With_body) => void,
++'ComponentDeclaration[id]'?: (node: ComponentDeclaration_With_id) => void,
++'ComponentDeclaration[implicitDeclare]'?: (node: ComponentDeclaration_With_implicitDeclare) => void,
++'ComponentDeclaration[params]'?: (node: ComponentDeclaration_With_params) => void,
++'ComponentDeclaration[rendersType]'?: (node: ComponentDeclaration_With_rendersType) => void,
++'ComponentDeclaration[typeParameters]'?: (node: ComponentDeclaration_With_typeParameters) => void,
++'ComponentDeclaration[async]'?: (node: ComponentDeclaration_With_async) => void,
++'HookDeclaration'?: (node: HookDeclaration) => void,
++'HookDeclaration[id]'?: (node: HookDeclaration_With_id) => void,
++'HookDeclaration[params]'?: (node: HookDeclaration_With_params) => void,
++'HookDeclaration[body]'?: (node: HookDeclaration_With_body) => void,
++'HookDeclaration[returnType]'?: (node: HookDeclaration_With_returnType) => void,
++'HookDeclaration[typeParameters]'?: (node: HookDeclaration_With_typeParameters) => void,
++'HookDeclaration[async]'?: (node: HookDeclaration_With_async) => void,
++'EnumDeclaration'?: (node: EnumDeclaration) => void,
++'EnumDeclaration[id]'?: (node: EnumDeclaration_With_id) => void,
++'EnumDeclaration[body]'?: (node: EnumDeclaration_With_body) => void,
++'EnumDeclaration[const]'?: (node: EnumDeclaration_With_const) => void,
++'InterfaceDeclaration'?: (node: InterfaceDeclaration) => void,
++'InterfaceDeclaration[id]'?: (node: InterfaceDeclaration_With_id) => void,
++'InterfaceDeclaration[typeParameters]'?: (node: InterfaceDeclaration_With_typeParameters) => void,
++'InterfaceDeclaration[body]'?: (node: InterfaceDeclaration_With_body) => void,
++'InterfaceDeclaration[extends]'?: (node: InterfaceDeclaration_With_extends) => void,
++'TypeAlias'?: (node: TypeAlias) => void,
++'TypeAlias[id]'?: (node: TypeAlias_With_id) => void,
++'TypeAlias[typeParameters]'?: (node: TypeAlias_With_typeParameters) => void,
++'TypeAlias[right]'?: (node: TypeAlias_With_right) => void,
++'RecordDeclaration'?: (node: RecordDeclaration) => void,
++'RecordDeclaration[id]'?: (node: RecordDeclaration_With_id) => void,
++'RecordDeclaration[typeParameters]'?: (node: RecordDeclaration_With_typeParameters) => void,
++'RecordDeclaration[implements]'?: (node: RecordDeclaration_With_implements) => void,
++'RecordDeclaration[body]'?: (node: RecordDeclaration_With_body) => void,
++'ImportDeclaration'?: (node: ImportDeclaration) => void,
++'ImportDeclaration[specifiers]'?: (node: ImportDeclaration_With_specifiers) => void,
++'ImportDeclaration[source]'?: (node: ImportDeclaration_With_source) => void,
++'ImportDeclaration[importKind]'?: (node: ImportDeclaration_With_importKind) => void,
++'ImportDeclaration[attributes]'?: (node: ImportDeclaration_With_attributes) => void,
++'ImportDefaultSpecifier'?: (node: ImportDefaultSpecifier) => void,
++'ImportDefaultSpecifier[local]'?: (node: ImportDefaultSpecifier_With_local) => void,
++'ImportNamespaceSpecifier'?: (node: ImportNamespaceSpecifier) => void,
++'ImportNamespaceSpecifier[local]'?: (node: ImportNamespaceSpecifier_With_local) => void,
++'ImportSpecifier'?: (node: ImportSpecifier) => void,
++'ImportSpecifier[imported]'?: (node: ImportSpecifier_With_imported) => void,
++'ImportSpecifier[local]'?: (node: ImportSpecifier_With_local) => void,
++'ImportSpecifier[importKind]'?: (node: ImportSpecifier_With_importKind) => void,
++'ImportAttribute'?: (node: ImportAttribute) => void,
++'ImportAttribute[key]'?: (node: ImportAttribute_With_key) => void,
++'ImportAttribute[value]'?: (node: ImportAttribute_With_value) => void,
++'ExportNamedDeclaration'?: (node: ExportNamedDeclaration) => void,
++'ExportNamedDeclaration[declaration]'?: (node: ExportNamedDeclaration_With_declaration) => void,
++'ExportNamedDeclaration[specifiers]'?: (node: ExportNamedDeclaration_With_specifiers) => void,
++'ExportNamedDeclaration[source]'?: (node: ExportNamedDeclaration_With_source) => void,
++'ExportNamedDeclaration[exportKind]'?: (node: ExportNamedDeclaration_With_exportKind) => void,
++'ExportDefaultDeclaration'?: (node: ExportDefaultDeclaration) => void,
++'ExportDefaultDeclaration[declaration]'?: (node: ExportDefaultDeclaration_With_declaration) => void,
++'ExportDefaultDeclaration[exportKind]'?: (node: ExportDefaultDeclaration_With_exportKind) => void,
++'ExportAllDeclaration'?: (node: ExportAllDeclaration) => void,
++'ExportAllDeclaration[source]'?: (node: ExportAllDeclaration_With_source) => void,
++'ExportAllDeclaration[exported]'?: (node: ExportAllDeclaration_With_exported) => void,
++'ExportAllDeclaration[exportKind]'?: (node: ExportAllDeclaration_With_exportKind) => void,
++'ExportSpecifier'?: (node: ExportSpecifier) => void,
++'ExportSpecifier[local]'?: (node: ExportSpecifier_With_local) => void,
++'ExportSpecifier[exported]'?: (node: ExportSpecifier_With_exported) => void,
++'ExportSpecifier[exportKind]'?: (node: ExportSpecifier_With_exportKind) => void,
++'ThisExpression'?: (node: ThisExpression) => void,
++'Super'?: (node: Super) => void,
++'ArrayExpression'?: (node: ArrayExpression) => void,
++'ArrayExpression[elements]'?: (node: ArrayExpression_With_elements) => void,
++'ObjectExpression'?: (node: ObjectExpression) => void,
++'ObjectExpression[properties]'?: (node: ObjectExpression_With_properties) => void,
++'FunctionExpression'?: (node: FunctionExpression) => void,
++'FunctionExpression[id]'?: (node: FunctionExpression_With_id) => void,
++'FunctionExpression[params]'?: (node: FunctionExpression_With_params) => void,
++'FunctionExpression[body]'?: (node: FunctionExpression_With_body) => void,
++'FunctionExpression[async]'?: (node: FunctionExpression_With_async) => void,
++'FunctionExpression[generator]'?: (node: FunctionExpression_With_generator) => void,
++'FunctionExpression[predicate]'?: (node: FunctionExpression_With_predicate) => void,
++'FunctionExpression[expression]'?: (node: FunctionExpression_With_expression) => void,
++'FunctionExpression[returnType]'?: (node: FunctionExpression_With_returnType) => void,
++'FunctionExpression[typeParameters]'?: (node: FunctionExpression_With_typeParameters) => void,
++'ArrowFunctionExpression'?: (node: ArrowFunctionExpression) => void,
++'ArrowFunctionExpression[id]'?: (node: ArrowFunctionExpression_With_id) => void,
++'ArrowFunctionExpression[params]'?: (node: ArrowFunctionExpression_With_params) => void,
++'ArrowFunctionExpression[body]'?: (node: ArrowFunctionExpression_With_body) => void,
++'ArrowFunctionExpression[async]'?: (node: ArrowFunctionExpression_With_async) => void,
++'ArrowFunctionExpression[generator]'?: (node: ArrowFunctionExpression_With_generator) => void,
++'ArrowFunctionExpression[predicate]'?: (node: ArrowFunctionExpression_With_predicate) => void,
++'ArrowFunctionExpression[expression]'?: (node: ArrowFunctionExpression_With_expression) => void,
++'ArrowFunctionExpression[returnType]'?: (node: ArrowFunctionExpression_With_returnType) => void,
++'ArrowFunctionExpression[typeParameters]'?: (node: ArrowFunctionExpression_With_typeParameters) => void,
++'SequenceExpression'?: (node: SequenceExpression) => void,
++'SequenceExpression[expressions]'?: (node: SequenceExpression_With_expressions) => void,
++'UnaryExpression'?: (node: UnaryExpression) => void,
++'UnaryExpression[operator]'?: (node: UnaryExpression_With_operator) => void,
++'UnaryExpression[prefix]'?: (node: UnaryExpression_With_prefix) => void,
++'UnaryExpression[argument]'?: (node: UnaryExpression_With_argument) => void,
++'BinaryExpression'?: (node: BinaryExpression) => void,
++'BinaryExpression[operator]'?: (node: BinaryExpression_With_operator) => void,
++'BinaryExpression[left]'?: (node: BinaryExpression_With_left) => void,
++'BinaryExpression[right]'?: (node: BinaryExpression_With_right) => void,
++'LogicalExpression'?: (node: LogicalExpression) => void,
++'LogicalExpression[operator]'?: (node: LogicalExpression_With_operator) => void,
++'LogicalExpression[left]'?: (node: LogicalExpression_With_left) => void,
++'LogicalExpression[right]'?: (node: LogicalExpression_With_right) => void,
++'ConditionalExpression'?: (node: ConditionalExpression) => void,
++'ConditionalExpression[test]'?: (node: ConditionalExpression_With_test) => void,
++'ConditionalExpression[consequent]'?: (node: ConditionalExpression_With_consequent) => void,
++'ConditionalExpression[alternate]'?: (node: ConditionalExpression_With_alternate) => void,
++'UpdateExpression'?: (node: UpdateExpression) => void,
++'UpdateExpression[operator]'?: (node: UpdateExpression_With_operator) => void,
++'UpdateExpression[argument]'?: (node: UpdateExpression_With_argument) => void,
++'UpdateExpression[prefix]'?: (node: UpdateExpression_With_prefix) => void,
++'AssignmentExpression'?: (node: AssignmentExpression) => void,
++'AssignmentExpression[operator]'?: (node: AssignmentExpression_With_operator) => void,
++'AssignmentExpression[left]'?: (node: AssignmentExpression_With_left) => void,
++'AssignmentExpression[right]'?: (node: AssignmentExpression_With_right) => void,
++'MemberExpression'?: (node: MemberExpression) => void,
++'MemberExpression[object]'?: (node: MemberExpression_With_object) => void,
++'MemberExpression[property]'?: (node: MemberExpression_With_property) => void,
++'MemberExpression[computed]'?: (node: MemberExpression_With_computed) => void,
++'CallExpression'?: (node: CallExpression) => void,
++'CallExpression[callee]'?: (node: CallExpression_With_callee) => void,
++'CallExpression[typeArguments]'?: (node: CallExpression_With_typeArguments) => void,
++'CallExpression[arguments]'?: (node: CallExpression_With_arguments) => void,
++'NewExpression'?: (node: NewExpression) => void,
++'NewExpression[callee]'?: (node: NewExpression_With_callee) => void,
++'NewExpression[typeArguments]'?: (node: NewExpression_With_typeArguments) => void,
++'NewExpression[arguments]'?: (node: NewExpression_With_arguments) => void,
++'YieldExpression'?: (node: YieldExpression) => void,
++'YieldExpression[argument]'?: (node: YieldExpression_With_argument) => void,
++'YieldExpression[delegate]'?: (node: YieldExpression_With_delegate) => void,
++'AwaitExpression'?: (node: AwaitExpression) => void,
++'AwaitExpression[argument]'?: (node: AwaitExpression_With_argument) => void,
++'ImportExpression'?: (node: ImportExpression) => void,
++'ImportExpression[source]'?: (node: ImportExpression_With_source) => void,
++'ImportExpression[options]'?: (node: ImportExpression_With_options) => void,
++'MetaProperty'?: (node: MetaProperty) => void,
++'MetaProperty[meta]'?: (node: MetaProperty_With_meta) => void,
++'MetaProperty[property]'?: (node: MetaProperty_With_property) => void,
++'TaggedTemplateExpression'?: (node: TaggedTemplateExpression) => void,
++'TaggedTemplateExpression[tag]'?: (node: TaggedTemplateExpression_With_tag) => void,
++'TaggedTemplateExpression[typeArguments]'?: (node: TaggedTemplateExpression_With_typeArguments) => void,
++'TaggedTemplateExpression[quasi]'?: (node: TaggedTemplateExpression_With_quasi) => void,
++'TemplateLiteral'?: (node: TemplateLiteral) => void,
++'TemplateLiteral[quasis]'?: (node: TemplateLiteral_With_quasis) => void,
++'TemplateLiteral[expressions]'?: (node: TemplateLiteral_With_expressions) => void,
++'TemplateElement'?: (node: TemplateElement) => void,
++'TemplateElement[tail]'?: (node: TemplateElement_With_tail) => void,
++'TemplateElement[cooked]'?: (node: TemplateElement_With_cooked) => void,
++'TemplateElement[raw]'?: (node: TemplateElement_With_raw) => void,
++'TypeCastExpression'?: (node: TypeCastExpression) => void,
++'TypeCastExpression[expression]'?: (node: TypeCastExpression_With_expression) => void,
++'TypeCastExpression[typeAnnotation]'?: (node: TypeCastExpression_With_typeAnnotation) => void,
++'AsExpression'?: (node: AsExpression) => void,
++'AsExpression[expression]'?: (node: AsExpression_With_expression) => void,
++'AsExpression[typeAnnotation]'?: (node: AsExpression_With_typeAnnotation) => void,
++'AsConstExpression'?: (node: AsConstExpression) => void,
++'AsConstExpression[expression]'?: (node: AsConstExpression_With_expression) => void,
++'MatchExpression'?: (node: MatchExpression) => void,
++'MatchExpression[argument]'?: (node: MatchExpression_With_argument) => void,
++'MatchExpression[cases]'?: (node: MatchExpression_With_cases) => void,
++'RecordExpression'?: (node: RecordExpression) => void,
++'RecordExpression[recordConstructor]'?: (node: RecordExpression_With_recordConstructor) => void,
++'RecordExpression[typeArguments]'?: (node: RecordExpression_With_typeArguments) => void,
++'RecordExpression[properties]'?: (node: RecordExpression_With_properties) => void,
++'RecordExpressionProperties'?: (node: RecordExpressionProperties) => void,
++'RecordExpressionProperties[properties]'?: (node: RecordExpressionProperties_With_properties) => void,
++'Identifier'?: (node: Identifier) => void,
++'Identifier[name]'?: (node: Identifier_With_name) => void,
++'Identifier[typeAnnotation]'?: (node: Identifier_With_typeAnnotation) => void,
++'Identifier[optional]'?: (node: Identifier_With_optional) => void,
++'PrivateIdentifier'?: (node: PrivateIdentifier) => void,
++'PrivateIdentifier[name]'?: (node: PrivateIdentifier_With_name) => void,
++'PrivateIdentifier[typeAnnotation]'?: (node: PrivateIdentifier_With_typeAnnotation) => void,
++'PrivateIdentifier[optional]'?: (node: PrivateIdentifier_With_optional) => void,
++'ObjectPattern'?: (node: ObjectPattern) => void,
++'ObjectPattern[properties]'?: (node: ObjectPattern_With_properties) => void,
++'ObjectPattern[typeAnnotation]'?: (node: ObjectPattern_With_typeAnnotation) => void,
++'ObjectPattern[optional]'?: (node: ObjectPattern_With_optional) => void,
++'ArrayPattern'?: (node: ArrayPattern) => void,
++'ArrayPattern[elements]'?: (node: ArrayPattern_With_elements) => void,
++'ArrayPattern[typeAnnotation]'?: (node: ArrayPattern_With_typeAnnotation) => void,
++'ArrayPattern[optional]'?: (node: ArrayPattern_With_optional) => void,
++'RestElement'?: (node: RestElement) => void,
++'RestElement[argument]'?: (node: RestElement_With_argument) => void,
++'AssignmentPattern'?: (node: AssignmentPattern) => void,
++'AssignmentPattern[left]'?: (node: AssignmentPattern_With_left) => void,
++'AssignmentPattern[right]'?: (node: AssignmentPattern_With_right) => void,
++'Property'?: (node: Property) => void,
++'Property[key]'?: (node: Property_With_key) => void,
++'Property[value]'?: (node: Property_With_value) => void,
++'Property[kind]'?: (node: Property_With_kind) => void,
++'Property[method]'?: (node: Property_With_method) => void,
++'Property[shorthand]'?: (node: Property_With_shorthand) => void,
++'Property[computed]'?: (node: Property_With_computed) => void,
++'SpreadElement'?: (node: SpreadElement) => void,
++'SpreadElement[argument]'?: (node: SpreadElement_With_argument) => void,
++'ClassExpression'?: (node: ClassExpression) => void,
++'ClassExpression[id]'?: (node: ClassExpression_With_id) => void,
++'ClassExpression[body]'?: (node: ClassExpression_With_body) => void,
++'ClassExpression[typeParameters]'?: (node: ClassExpression_With_typeParameters) => void,
++'ClassExpression[superClass]'?: (node: ClassExpression_With_superClass) => void,
++'ClassExpression[superTypeArguments]'?: (node: ClassExpression_With_superTypeArguments) => void,
++'ClassExpression[implements]'?: (node: ClassExpression_With_implements) => void,
++'ClassExpression[decorators]'?: (node: ClassExpression_With_decorators) => void,
++'ClassExpression[abstract]'?: (node: ClassExpression_With_abstract) => void,
++'ClassBody'?: (node: ClassBody) => void,
++'ClassBody[body]'?: (node: ClassBody_With_body) => void,
++'ClassImplements'?: (node: ClassImplements) => void,
++'ClassImplements[id]'?: (node: ClassImplements_With_id) => void,
++'ClassImplements[typeParameters]'?: (node: ClassImplements_With_typeParameters) => void,
++'MethodDefinition'?: (node: MethodDefinition) => void,
++'MethodDefinition[key]'?: (node: MethodDefinition_With_key) => void,
++'MethodDefinition[value]'?: (node: MethodDefinition_With_value) => void,
++'MethodDefinition[kind]'?: (node: MethodDefinition_With_kind) => void,
++'MethodDefinition[static]'?: (node: MethodDefinition_With_static) => void,
++'MethodDefinition[computed]'?: (node: MethodDefinition_With_computed) => void,
++'MethodDefinition[decorators]'?: (node: MethodDefinition_With_decorators) => void,
++'MethodDefinition[override]'?: (node: MethodDefinition_With_override) => void,
++'MethodDefinition[tsAccessibility]'?: (node: MethodDefinition_With_tsAccessibility) => void,
++'PropertyDefinition'?: (node: PropertyDefinition) => void,
++'PropertyDefinition[key]'?: (node: PropertyDefinition_With_key) => void,
++'PropertyDefinition[value]'?: (node: PropertyDefinition_With_value) => void,
++'PropertyDefinition[typeAnnotation]'?: (node: PropertyDefinition_With_typeAnnotation) => void,
++'PropertyDefinition[computed]'?: (node: PropertyDefinition_With_computed) => void,
++'PropertyDefinition[static]'?: (node: PropertyDefinition_With_static) => void,
++'PropertyDefinition[variance]'?: (node: PropertyDefinition_With_variance) => void,
++'PropertyDefinition[tsAccessibility]'?: (node: PropertyDefinition_With_tsAccessibility) => void,
++'PropertyDefinition[declare]'?: (node: PropertyDefinition_With_declare) => void,
++'PropertyDefinition[optional]'?: (node: PropertyDefinition_With_optional) => void,
++'PropertyDefinition[override]'?: (node: PropertyDefinition_With_override) => void,
++'PropertyDefinition[decorators]'?: (node: PropertyDefinition_With_decorators) => void,
++'StaticBlock'?: (node: StaticBlock) => void,
++'StaticBlock[body]'?: (node: StaticBlock_With_body) => void,
++'Decorator'?: (node: Decorator) => void,
++'Decorator[expression]'?: (node: Decorator_With_expression) => void,
++'SwitchCase'?: (node: SwitchCase) => void,
++'SwitchCase[test]'?: (node: SwitchCase_With_test) => void,
++'SwitchCase[consequent]'?: (node: SwitchCase_With_consequent) => void,
++'CatchClause'?: (node: CatchClause) => void,
++'CatchClause[param]'?: (node: CatchClause_With_param) => void,
++'CatchClause[body]'?: (node: CatchClause_With_body) => void,
++'ComponentParameter'?: (node: ComponentParameter) => void,
++'ComponentParameter[name]'?: (node: ComponentParameter_With_name) => void,
++'ComponentParameter[local]'?: (node: ComponentParameter_With_local) => void,
++'ComponentParameter[shorthand]'?: (node: ComponentParameter_With_shorthand) => void,
++'DeclareVariable'?: (node: DeclareVariable) => void,
++'DeclareVariable[declarations]'?: (node: DeclareVariable_With_declarations) => void,
++'DeclareVariable[kind]'?: (node: DeclareVariable_With_kind) => void,
++'DeclareFunction'?: (node: DeclareFunction) => void,
++'DeclareFunction[id]'?: (node: DeclareFunction_With_id) => void,
++'DeclareFunction[implicitDeclare]'?: (node: DeclareFunction_With_implicitDeclare) => void,
++'DeclareFunction[predicate]'?: (node: DeclareFunction_With_predicate) => void,
++'DeclareFunction[typeAnnotation]'?: (node: DeclareFunction_With_typeAnnotation) => void,
++'DeclareClass'?: (node: DeclareClass) => void,
++'DeclareClass[id]'?: (node: DeclareClass_With_id) => void,
++'DeclareClass[typeParameters]'?: (node: DeclareClass_With_typeParameters) => void,
++'DeclareClass[body]'?: (node: DeclareClass_With_body) => void,
++'DeclareClass[extends]'?: (node: DeclareClass_With_extends) => void,
++'DeclareClass[implements]'?: (node: DeclareClass_With_implements) => void,
++'DeclareClass[mixins]'?: (node: DeclareClass_With_mixins) => void,
++'DeclareClass[abstract]'?: (node: DeclareClass_With_abstract) => void,
++'DeclareComponent'?: (node: DeclareComponent) => void,
++'DeclareComponent[id]'?: (node: DeclareComponent_With_id) => void,
++'DeclareComponent[params]'?: (node: DeclareComponent_With_params) => void,
++'DeclareComponent[rest]'?: (node: DeclareComponent_With_rest) => void,
++'DeclareComponent[rendersType]'?: (node: DeclareComponent_With_rendersType) => void,
++'DeclareComponent[typeParameters]'?: (node: DeclareComponent_With_typeParameters) => void,
++'DeclareHook'?: (node: DeclareHook) => void,
++'DeclareHook[id]'?: (node: DeclareHook_With_id) => void,
++'DeclareHook[implicitDeclare]'?: (node: DeclareHook_With_implicitDeclare) => void,
++'DeclareHook[typeAnnotation]'?: (node: DeclareHook_With_typeAnnotation) => void,
++'DeclareModule'?: (node: DeclareModule) => void,
++'DeclareModule[id]'?: (node: DeclareModule_With_id) => void,
++'DeclareModule[body]'?: (node: DeclareModule_With_body) => void,
++'DeclareModuleExports'?: (node: DeclareModuleExports) => void,
++'DeclareModuleExports[typeAnnotation]'?: (node: DeclareModuleExports_With_typeAnnotation) => void,
++'DeclareExportDeclaration'?: (node: DeclareExportDeclaration) => void,
++'DeclareExportDeclaration[default]'?: (node: DeclareExportDeclaration_With_default) => void,
++'DeclareExportDeclaration[declaration]'?: (node: DeclareExportDeclaration_With_declaration) => void,
++'DeclareExportDeclaration[specifiers]'?: (node: DeclareExportDeclaration_With_specifiers) => void,
++'DeclareExportDeclaration[source]'?: (node: DeclareExportDeclaration_With_source) => void,
++'DeclareExportAllDeclaration'?: (node: DeclareExportAllDeclaration) => void,
++'DeclareExportAllDeclaration[source]'?: (node: DeclareExportAllDeclaration_With_source) => void,
++'DeclareNamespace'?: (node: DeclareNamespace) => void,
++'DeclareNamespace[id]'?: (node: DeclareNamespace_With_id) => void,
++'DeclareNamespace[body]'?: (node: DeclareNamespace_With_body) => void,
++'DeclareNamespace[implicitDeclare]'?: (node: DeclareNamespace_With_implicitDeclare) => void,
++'DeclareNamespace[keyword]'?: (node: DeclareNamespace_With_keyword) => void,
++'DeclareNamespace[global]'?: (node: DeclareNamespace_With_global) => void,
++'DeclareInterface'?: (node: DeclareInterface) => void,
++'DeclareInterface[id]'?: (node: DeclareInterface_With_id) => void,
++'DeclareInterface[typeParameters]'?: (node: DeclareInterface_With_typeParameters) => void,
++'DeclareInterface[body]'?: (node: DeclareInterface_With_body) => void,
++'DeclareInterface[extends]'?: (node: DeclareInterface_With_extends) => void,
++'DeclareTypeAlias'?: (node: DeclareTypeAlias) => void,
++'DeclareTypeAlias[id]'?: (node: DeclareTypeAlias_With_id) => void,
++'DeclareTypeAlias[typeParameters]'?: (node: DeclareTypeAlias_With_typeParameters) => void,
++'DeclareTypeAlias[right]'?: (node: DeclareTypeAlias_With_right) => void,
++'DeclareEnum'?: (node: DeclareEnum) => void,
++'DeclareEnum[id]'?: (node: DeclareEnum_With_id) => void,
++'DeclareEnum[body]'?: (node: DeclareEnum_With_body) => void,
++'DeclareEnum[const]'?: (node: DeclareEnum_With_const) => void,
++'TypeAnnotation'?: (node: TypeAnnotation) => void,
++'TypeAnnotation[typeAnnotation]'?: (node: TypeAnnotation_With_typeAnnotation) => void,
++'Variance'?: (node: Variance) => void,
++'Variance[kind]'?: (node: Variance_With_kind) => void,
++'AnyTypeAnnotation'?: (node: AnyTypeAnnotation) => void,
++'MixedTypeAnnotation'?: (node: MixedTypeAnnotation) => void,
++'EmptyTypeAnnotation'?: (node: EmptyTypeAnnotation) => void,
++'VoidTypeAnnotation'?: (node: VoidTypeAnnotation) => void,
++'NullLiteralTypeAnnotation'?: (node: NullLiteralTypeAnnotation) => void,
++'SymbolTypeAnnotation'?: (node: SymbolTypeAnnotation) => void,
++'NumberTypeAnnotation'?: (node: NumberTypeAnnotation) => void,
++'BigIntTypeAnnotation'?: (node: BigIntTypeAnnotation) => void,
++'StringTypeAnnotation'?: (node: StringTypeAnnotation) => void,
++'BooleanTypeAnnotation'?: (node: BooleanTypeAnnotation) => void,
++'NullableTypeAnnotation'?: (node: NullableTypeAnnotation) => void,
++'NullableTypeAnnotation[typeAnnotation]'?: (node: NullableTypeAnnotation_With_typeAnnotation) => void,
++'ArrayTypeAnnotation'?: (node: ArrayTypeAnnotation) => void,
++'ArrayTypeAnnotation[elementType]'?: (node: ArrayTypeAnnotation_With_elementType) => void,
++'IndexedAccessType'?: (node: IndexedAccessType) => void,
++'IndexedAccessType[objectType]'?: (node: IndexedAccessType_With_objectType) => void,
++'IndexedAccessType[indexType]'?: (node: IndexedAccessType_With_indexType) => void,
++'OptionalIndexedAccessType'?: (node: OptionalIndexedAccessType) => void,
++'OptionalIndexedAccessType[objectType]'?: (node: OptionalIndexedAccessType_With_objectType) => void,
++'OptionalIndexedAccessType[indexType]'?: (node: OptionalIndexedAccessType_With_indexType) => void,
++'OptionalIndexedAccessType[optional]'?: (node: OptionalIndexedAccessType_With_optional) => void,
++'UnionTypeAnnotation'?: (node: UnionTypeAnnotation) => void,
++'UnionTypeAnnotation[types]'?: (node: UnionTypeAnnotation_With_types) => void,
++'IntersectionTypeAnnotation'?: (node: IntersectionTypeAnnotation) => void,
++'IntersectionTypeAnnotation[types]'?: (node: IntersectionTypeAnnotation_With_types) => void,
++'KeyofTypeAnnotation'?: (node: KeyofTypeAnnotation) => void,
++'KeyofTypeAnnotation[argument]'?: (node: KeyofTypeAnnotation_With_argument) => void,
++'TypeOperator'?: (node: TypeOperator) => void,
++'TypeOperator[operator]'?: (node: TypeOperator_With_operator) => void,
++'TypeOperator[typeAnnotation]'?: (node: TypeOperator_With_typeAnnotation) => void,
++'StringLiteralTypeAnnotation'?: (node: StringLiteralTypeAnnotation) => void,
++'StringLiteralTypeAnnotation[value]'?: (node: StringLiteralTypeAnnotation_With_value) => void,
++'StringLiteralTypeAnnotation[raw]'?: (node: StringLiteralTypeAnnotation_With_raw) => void,
++'NumberLiteralTypeAnnotation'?: (node: NumberLiteralTypeAnnotation) => void,
++'NumberLiteralTypeAnnotation[value]'?: (node: NumberLiteralTypeAnnotation_With_value) => void,
++'NumberLiteralTypeAnnotation[raw]'?: (node: NumberLiteralTypeAnnotation_With_raw) => void,
++'BigIntLiteralTypeAnnotation'?: (node: BigIntLiteralTypeAnnotation) => void,
++'BigIntLiteralTypeAnnotation[value]'?: (node: BigIntLiteralTypeAnnotation_With_value) => void,
++'BigIntLiteralTypeAnnotation[raw]'?: (node: BigIntLiteralTypeAnnotation_With_raw) => void,
++'BooleanLiteralTypeAnnotation'?: (node: BooleanLiteralTypeAnnotation) => void,
++'BooleanLiteralTypeAnnotation[value]'?: (node: BooleanLiteralTypeAnnotation_With_value) => void,
++'BooleanLiteralTypeAnnotation[raw]'?: (node: BooleanLiteralTypeAnnotation_With_raw) => void,
++'ExistsTypeAnnotation'?: (node: ExistsTypeAnnotation) => void,
++'UnknownTypeAnnotation'?: (node: UnknownTypeAnnotation) => void,
++'NeverTypeAnnotation'?: (node: NeverTypeAnnotation) => void,
++'UndefinedTypeAnnotation'?: (node: UndefinedTypeAnnotation) => void,
++'GenericTypeAnnotation'?: (node: GenericTypeAnnotation) => void,
++'GenericTypeAnnotation[id]'?: (node: GenericTypeAnnotation_With_id) => void,
++'GenericTypeAnnotation[typeParameters]'?: (node: GenericTypeAnnotation_With_typeParameters) => void,
++'QualifiedTypeIdentifier'?: (node: QualifiedTypeIdentifier) => void,
++'QualifiedTypeIdentifier[qualification]'?: (node: QualifiedTypeIdentifier_With_qualification) => void,
++'QualifiedTypeIdentifier[id]'?: (node: QualifiedTypeIdentifier_With_id) => void,
++'QualifiedTypeofIdentifier'?: (node: QualifiedTypeofIdentifier) => void,
++'QualifiedTypeofIdentifier[qualification]'?: (node: QualifiedTypeofIdentifier_With_qualification) => void,
++'QualifiedTypeofIdentifier[id]'?: (node: QualifiedTypeofIdentifier_With_id) => void,
++'TypeofTypeAnnotation'?: (node: TypeofTypeAnnotation) => void,
++'TypeofTypeAnnotation[argument]'?: (node: TypeofTypeAnnotation_With_argument) => void,
++'TypeofTypeAnnotation[typeArguments]'?: (node: TypeofTypeAnnotation_With_typeArguments) => void,
++'TupleTypeAnnotation'?: (node: TupleTypeAnnotation) => void,
++'TupleTypeAnnotation[elementTypes]'?: (node: TupleTypeAnnotation_With_elementTypes) => void,
++'TupleTypeAnnotation[inexact]'?: (node: TupleTypeAnnotation_With_inexact) => void,
++'TupleTypeLabeledElement'?: (node: TupleTypeLabeledElement) => void,
++'TupleTypeLabeledElement[label]'?: (node: TupleTypeLabeledElement_With_label) => void,
++'TupleTypeLabeledElement[elementType]'?: (node: TupleTypeLabeledElement_With_elementType) => void,
++'TupleTypeLabeledElement[variance]'?: (node: TupleTypeLabeledElement_With_variance) => void,
++'TupleTypeLabeledElement[optional]'?: (node: TupleTypeLabeledElement_With_optional) => void,
++'TupleTypeSpreadElement'?: (node: TupleTypeSpreadElement) => void,
++'TupleTypeSpreadElement[label]'?: (node: TupleTypeSpreadElement_With_label) => void,
++'TupleTypeSpreadElement[typeAnnotation]'?: (node: TupleTypeSpreadElement_With_typeAnnotation) => void,
++'ObjectTypeAnnotation'?: (node: ObjectTypeAnnotation) => void,
++'ObjectTypeAnnotation[inexact]'?: (node: ObjectTypeAnnotation_With_inexact) => void,
++'ObjectTypeAnnotation[exact]'?: (node: ObjectTypeAnnotation_With_exact) => void,
++'ObjectTypeAnnotation[properties]'?: (node: ObjectTypeAnnotation_With_properties) => void,
++'ObjectTypeAnnotation[indexers]'?: (node: ObjectTypeAnnotation_With_indexers) => void,
++'ObjectTypeAnnotation[callProperties]'?: (node: ObjectTypeAnnotation_With_callProperties) => void,
++'ObjectTypeAnnotation[internalSlots]'?: (node: ObjectTypeAnnotation_With_internalSlots) => void,
++'ObjectTypeProperty'?: (node: ObjectTypeProperty) => void,
++'ObjectTypeProperty[key]'?: (node: ObjectTypeProperty_With_key) => void,
++'ObjectTypeProperty[value]'?: (node: ObjectTypeProperty_With_value) => void,
++'ObjectTypeProperty[method]'?: (node: ObjectTypeProperty_With_method) => void,
++'ObjectTypeProperty[optional]'?: (node: ObjectTypeProperty_With_optional) => void,
++'ObjectTypeProperty[static]'?: (node: ObjectTypeProperty_With_static) => void,
++'ObjectTypeProperty[proto]'?: (node: ObjectTypeProperty_With_proto) => void,
++'ObjectTypeProperty[abstract]'?: (node: ObjectTypeProperty_With_abstract) => void,
++'ObjectTypeProperty[variance]'?: (node: ObjectTypeProperty_With_variance) => void,
++'ObjectTypeProperty[kind]'?: (node: ObjectTypeProperty_With_kind) => void,
++'ObjectTypeProperty[init]'?: (node: ObjectTypeProperty_With_init) => void,
++'ObjectTypeProperty[computed]'?: (node: ObjectTypeProperty_With_computed) => void,
++'ObjectTypeProperty[override]'?: (node: ObjectTypeProperty_With_override) => void,
++'ObjectTypeProperty[tsAccessibility]'?: (node: ObjectTypeProperty_With_tsAccessibility) => void,
++'ObjectTypeSpreadProperty'?: (node: ObjectTypeSpreadProperty) => void,
++'ObjectTypeSpreadProperty[argument]'?: (node: ObjectTypeSpreadProperty_With_argument) => void,
++'ObjectTypeIndexer'?: (node: ObjectTypeIndexer) => void,
++'ObjectTypeIndexer[id]'?: (node: ObjectTypeIndexer_With_id) => void,
++'ObjectTypeIndexer[key]'?: (node: ObjectTypeIndexer_With_key) => void,
++'ObjectTypeIndexer[value]'?: (node: ObjectTypeIndexer_With_value) => void,
++'ObjectTypeIndexer[static]'?: (node: ObjectTypeIndexer_With_static) => void,
++'ObjectTypeIndexer[variance]'?: (node: ObjectTypeIndexer_With_variance) => void,
++'ObjectTypeIndexer[optional]'?: (node: ObjectTypeIndexer_With_optional) => void,
++'ObjectTypeCallProperty'?: (node: ObjectTypeCallProperty) => void,
++'ObjectTypeCallProperty[value]'?: (node: ObjectTypeCallProperty_With_value) => void,
++'ObjectTypeCallProperty[static]'?: (node: ObjectTypeCallProperty_With_static) => void,
++'ObjectTypeMappedTypeProperty'?: (node: ObjectTypeMappedTypeProperty) => void,
++'ObjectTypeMappedTypeProperty[keyTparam]'?: (node: ObjectTypeMappedTypeProperty_With_keyTparam) => void,
++'ObjectTypeMappedTypeProperty[propType]'?: (node: ObjectTypeMappedTypeProperty_With_propType) => void,
++'ObjectTypeMappedTypeProperty[sourceType]'?: (node: ObjectTypeMappedTypeProperty_With_sourceType) => void,
++'ObjectTypeMappedTypeProperty[nameType]'?: (node: ObjectTypeMappedTypeProperty_With_nameType) => void,
++'ObjectTypeMappedTypeProperty[variance]'?: (node: ObjectTypeMappedTypeProperty_With_variance) => void,
++'ObjectTypeMappedTypeProperty[varianceOp]'?: (node: ObjectTypeMappedTypeProperty_With_varianceOp) => void,
++'ObjectTypeMappedTypeProperty[optional]'?: (node: ObjectTypeMappedTypeProperty_With_optional) => void,
++'ObjectTypeInternalSlot'?: (node: ObjectTypeInternalSlot) => void,
++'ObjectTypeInternalSlot[id]'?: (node: ObjectTypeInternalSlot_With_id) => void,
++'ObjectTypeInternalSlot[optional]'?: (node: ObjectTypeInternalSlot_With_optional) => void,
++'ObjectTypeInternalSlot[static]'?: (node: ObjectTypeInternalSlot_With_static) => void,
++'ObjectTypeInternalSlot[method]'?: (node: ObjectTypeInternalSlot_With_method) => void,
++'ObjectTypeInternalSlot[value]'?: (node: ObjectTypeInternalSlot_With_value) => void,
++'FunctionTypeParam'?: (node: FunctionTypeParam) => void,
++'FunctionTypeParam[name]'?: (node: FunctionTypeParam_With_name) => void,
++'FunctionTypeParam[typeAnnotation]'?: (node: FunctionTypeParam_With_typeAnnotation) => void,
++'FunctionTypeParam[optional]'?: (node: FunctionTypeParam_With_optional) => void,
++'TypePredicate'?: (node: TypePredicate) => void,
++'TypePredicate[parameterName]'?: (node: TypePredicate_With_parameterName) => void,
++'TypePredicate[typeAnnotation]'?: (node: TypePredicate_With_typeAnnotation) => void,
++'TypePredicate[kind]'?: (node: TypePredicate_With_kind) => void,
++'ConditionalTypeAnnotation'?: (node: ConditionalTypeAnnotation) => void,
++'ConditionalTypeAnnotation[checkType]'?: (node: ConditionalTypeAnnotation_With_checkType) => void,
++'ConditionalTypeAnnotation[extendsType]'?: (node: ConditionalTypeAnnotation_With_extendsType) => void,
++'ConditionalTypeAnnotation[trueType]'?: (node: ConditionalTypeAnnotation_With_trueType) => void,
++'ConditionalTypeAnnotation[falseType]'?: (node: ConditionalTypeAnnotation_With_falseType) => void,
++'InferTypeAnnotation'?: (node: InferTypeAnnotation) => void,
++'InferTypeAnnotation[typeParameter]'?: (node: InferTypeAnnotation_With_typeParameter) => void,
++'InterfaceExtends'?: (node: InterfaceExtends) => void,
++'InterfaceExtends[id]'?: (node: InterfaceExtends_With_id) => void,
++'InterfaceExtends[typeParameters]'?: (node: InterfaceExtends_With_typeParameters) => void,
++'InterfaceTypeAnnotation'?: (node: InterfaceTypeAnnotation) => void,
++'InterfaceTypeAnnotation[extends]'?: (node: InterfaceTypeAnnotation_With_extends) => void,
++'InterfaceTypeAnnotation[body]'?: (node: InterfaceTypeAnnotation_With_body) => void,
++'TypeParameterDeclaration'?: (node: TypeParameterDeclaration) => void,
++'TypeParameterDeclaration[params]'?: (node: TypeParameterDeclaration_With_params) => void,
++'TypeParameter'?: (node: TypeParameter) => void,
++'TypeParameter[name]'?: (node: TypeParameter_With_name) => void,
++'TypeParameter[bound]'?: (node: TypeParameter_With_bound) => void,
++'TypeParameter[const]'?: (node: TypeParameter_With_const) => void,
++'TypeParameter[variance]'?: (node: TypeParameter_With_variance) => void,
++'TypeParameter[default]'?: (node: TypeParameter_With_default) => void,
++'TypeParameter[usesExtendsBound]'?: (node: TypeParameter_With_usesExtendsBound) => void,
++'TypeParameterInstantiation'?: (node: TypeParameterInstantiation) => void,
++'TypeParameterInstantiation[params]'?: (node: TypeParameterInstantiation_With_params) => void,
++'ComponentTypeAnnotation'?: (node: ComponentTypeAnnotation) => void,
++'ComponentTypeAnnotation[params]'?: (node: ComponentTypeAnnotation_With_params) => void,
++'ComponentTypeAnnotation[rest]'?: (node: ComponentTypeAnnotation_With_rest) => void,
++'ComponentTypeAnnotation[rendersType]'?: (node: ComponentTypeAnnotation_With_rendersType) => void,
++'ComponentTypeAnnotation[typeParameters]'?: (node: ComponentTypeAnnotation_With_typeParameters) => void,
++'ComponentTypeParameter'?: (node: ComponentTypeParameter) => void,
++'ComponentTypeParameter[name]'?: (node: ComponentTypeParameter_With_name) => void,
++'ComponentTypeParameter[typeAnnotation]'?: (node: ComponentTypeParameter_With_typeAnnotation) => void,
++'ComponentTypeParameter[optional]'?: (node: ComponentTypeParameter_With_optional) => void,
++'DeclaredPredicate'?: (node: DeclaredPredicate) => void,
++'DeclaredPredicate[value]'?: (node: DeclaredPredicate_With_value) => void,
++'InferredPredicate'?: (node: InferredPredicate) => void,
++'JSXElement'?: (node: JSXElement) => void,
++'JSXElement[openingElement]'?: (node: JSXElement_With_openingElement) => void,
++'JSXElement[closingElement]'?: (node: JSXElement_With_closingElement) => void,
++'JSXElement[children]'?: (node: JSXElement_With_children) => void,
++'JSXFragment'?: (node: JSXFragment) => void,
++'JSXFragment[openingFragment]'?: (node: JSXFragment_With_openingFragment) => void,
++'JSXFragment[children]'?: (node: JSXFragment_With_children) => void,
++'JSXFragment[closingFragment]'?: (node: JSXFragment_With_closingFragment) => void,
++'JSXOpeningElement'?: (node: JSXOpeningElement) => void,
++'JSXOpeningElement[name]'?: (node: JSXOpeningElement_With_name) => void,
++'JSXOpeningElement[attributes]'?: (node: JSXOpeningElement_With_attributes) => void,
++'JSXOpeningElement[selfClosing]'?: (node: JSXOpeningElement_With_selfClosing) => void,
++'JSXOpeningElement[typeArguments]'?: (node: JSXOpeningElement_With_typeArguments) => void,
++'JSXOpeningFragment'?: (node: JSXOpeningFragment) => void,
++'JSXClosingElement'?: (node: JSXClosingElement) => void,
++'JSXClosingElement[name]'?: (node: JSXClosingElement_With_name) => void,
++'JSXClosingFragment'?: (node: JSXClosingFragment) => void,
++'JSXAttribute'?: (node: JSXAttribute) => void,
++'JSXAttribute[name]'?: (node: JSXAttribute_With_name) => void,
++'JSXAttribute[value]'?: (node: JSXAttribute_With_value) => void,
++'JSXSpreadAttribute'?: (node: JSXSpreadAttribute) => void,
++'JSXSpreadAttribute[argument]'?: (node: JSXSpreadAttribute_With_argument) => void,
++'JSXEmptyExpression'?: (node: JSXEmptyExpression) => void,
++'JSXExpressionContainer'?: (node: JSXExpressionContainer) => void,
++'JSXExpressionContainer[expression]'?: (node: JSXExpressionContainer_With_expression) => void,
++'JSXSpreadChild'?: (node: JSXSpreadChild) => void,
++'JSXSpreadChild[expression]'?: (node: JSXSpreadChild_With_expression) => void,
++'JSXText'?: (node: JSXText) => void,
++'JSXText[value]'?: (node: JSXText_With_value) => void,
++'JSXText[raw]'?: (node: JSXText_With_raw) => void,
++'JSXMemberExpression'?: (node: JSXMemberExpression) => void,
++'JSXMemberExpression[object]'?: (node: JSXMemberExpression_With_object) => void,
++'JSXMemberExpression[property]'?: (node: JSXMemberExpression_With_property) => void,
++'JSXNamespacedName'?: (node: JSXNamespacedName) => void,
++'JSXNamespacedName[namespace]'?: (node: JSXNamespacedName_With_namespace) => void,
++'JSXNamespacedName[name]'?: (node: JSXNamespacedName_With_name) => void,
++'JSXIdentifier'?: (node: JSXIdentifier) => void,
++'JSXIdentifier[name]'?: (node: JSXIdentifier_With_name) => void,
++'EnumBooleanBody'?: (node: EnumBooleanBody) => void,
++'EnumBooleanBody[members]'?: (node: EnumBooleanBody_With_members) => void,
++'EnumBooleanBody[explicitType]'?: (node: EnumBooleanBody_With_explicitType) => void,
++'EnumBooleanBody[hasUnknownMembers]'?: (node: EnumBooleanBody_With_hasUnknownMembers) => void,
++'EnumBooleanMember'?: (node: EnumBooleanMember) => void,
++'EnumBooleanMember[id]'?: (node: EnumBooleanMember_With_id) => void,
++'EnumBooleanMember[init]'?: (node: EnumBooleanMember_With_init) => void,
++'EnumNumberBody'?: (node: EnumNumberBody) => void,
++'EnumNumberBody[members]'?: (node: EnumNumberBody_With_members) => void,
++'EnumNumberBody[explicitType]'?: (node: EnumNumberBody_With_explicitType) => void,
++'EnumNumberBody[hasUnknownMembers]'?: (node: EnumNumberBody_With_hasUnknownMembers) => void,
++'EnumNumberMember'?: (node: EnumNumberMember) => void,
++'EnumNumberMember[id]'?: (node: EnumNumberMember_With_id) => void,
++'EnumNumberMember[init]'?: (node: EnumNumberMember_With_init) => void,
++'EnumStringBody'?: (node: EnumStringBody) => void,
++'EnumStringBody[members]'?: (node: EnumStringBody_With_members) => void,
++'EnumStringBody[explicitType]'?: (node: EnumStringBody_With_explicitType) => void,
++'EnumStringBody[hasUnknownMembers]'?: (node: EnumStringBody_With_hasUnknownMembers) => void,
++'EnumStringMember'?: (node: EnumStringMember) => void,
++'EnumStringMember[id]'?: (node: EnumStringMember_With_id) => void,
++'EnumStringMember[init]'?: (node: EnumStringMember_With_init) => void,
++'EnumSymbolBody'?: (node: EnumSymbolBody) => void,
++'EnumSymbolBody[members]'?: (node: EnumSymbolBody_With_members) => void,
++'EnumSymbolBody[hasUnknownMembers]'?: (node: EnumSymbolBody_With_hasUnknownMembers) => void,
++'EnumDefaultedMember'?: (node: EnumDefaultedMember) => void,
++'EnumDefaultedMember[id]'?: (node: EnumDefaultedMember_With_id) => void,
++'EnumBigIntBody'?: (node: EnumBigIntBody) => void,
++'EnumBigIntBody[members]'?: (node: EnumBigIntBody_With_members) => void,
++'EnumBigIntBody[explicitType]'?: (node: EnumBigIntBody_With_explicitType) => void,
++'EnumBigIntBody[hasUnknownMembers]'?: (node: EnumBigIntBody_With_hasUnknownMembers) => void,
++'EnumBigIntMember'?: (node: EnumBigIntMember) => void,
++'EnumBigIntMember[id]'?: (node: EnumBigIntMember_With_id) => void,
++'EnumBigIntMember[init]'?: (node: EnumBigIntMember_With_init) => void,
++'RecordDeclarationBody'?: (node: RecordDeclarationBody) => void,
++'RecordDeclarationBody[elements]'?: (node: RecordDeclarationBody_With_elements) => void,
++'RecordDeclarationProperty'?: (node: RecordDeclarationProperty) => void,
++'RecordDeclarationProperty[key]'?: (node: RecordDeclarationProperty_With_key) => void,
++'RecordDeclarationProperty[typeAnnotation]'?: (node: RecordDeclarationProperty_With_typeAnnotation) => void,
++'RecordDeclarationProperty[defaultValue]'?: (node: RecordDeclarationProperty_With_defaultValue) => void,
++'RecordDeclarationStaticProperty'?: (node: RecordDeclarationStaticProperty) => void,
++'RecordDeclarationStaticProperty[key]'?: (node: RecordDeclarationStaticProperty_With_key) => void,
++'RecordDeclarationStaticProperty[typeAnnotation]'?: (node: RecordDeclarationStaticProperty_With_typeAnnotation) => void,
++'RecordDeclarationStaticProperty[value]'?: (node: RecordDeclarationStaticProperty_With_value) => void,
++'RecordDeclarationImplements'?: (node: RecordDeclarationImplements) => void,
++'RecordDeclarationImplements[id]'?: (node: RecordDeclarationImplements_With_id) => void,
++'RecordDeclarationImplements[typeArguments]'?: (node: RecordDeclarationImplements_With_typeArguments) => void,
++'MatchExpressionCase'?: (node: MatchExpressionCase) => void,
++'MatchExpressionCase[pattern]'?: (node: MatchExpressionCase_With_pattern) => void,
++'MatchExpressionCase[body]'?: (node: MatchExpressionCase_With_body) => void,
++'MatchExpressionCase[guard]'?: (node: MatchExpressionCase_With_guard) => void,
++'MatchStatementCase'?: (node: MatchStatementCase) => void,
++'MatchStatementCase[pattern]'?: (node: MatchStatementCase_With_pattern) => void,
++'MatchStatementCase[body]'?: (node: MatchStatementCase_With_body) => void,
++'MatchStatementCase[guard]'?: (node: MatchStatementCase_With_guard) => void,
++'MatchWildcardPattern'?: (node: MatchWildcardPattern) => void,
++'MatchLiteralPattern'?: (node: MatchLiteralPattern) => void,
++'MatchLiteralPattern[literal]'?: (node: MatchLiteralPattern_With_literal) => void,
++'MatchUnaryPattern'?: (node: MatchUnaryPattern) => void,
++'MatchUnaryPattern[operator]'?: (node: MatchUnaryPattern_With_operator) => void,
++'MatchUnaryPattern[argument]'?: (node: MatchUnaryPattern_With_argument) => void,
++'MatchObjectPattern'?: (node: MatchObjectPattern) => void,
++'MatchObjectPattern[properties]'?: (node: MatchObjectPattern_With_properties) => void,
++'MatchObjectPattern[rest]'?: (node: MatchObjectPattern_With_rest) => void,
++'MatchInstancePattern'?: (node: MatchInstancePattern) => void,
++'MatchInstancePattern[targetConstructor]'?: (node: MatchInstancePattern_With_targetConstructor) => void,
++'MatchInstancePattern[properties]'?: (node: MatchInstancePattern_With_properties) => void,
++'MatchInstanceObjectPattern'?: (node: MatchInstanceObjectPattern) => void,
++'MatchInstanceObjectPattern[properties]'?: (node: MatchInstanceObjectPattern_With_properties) => void,
++'MatchInstanceObjectPattern[rest]'?: (node: MatchInstanceObjectPattern_With_rest) => void,
++'MatchOrPattern'?: (node: MatchOrPattern) => void,
++'MatchOrPattern[patterns]'?: (node: MatchOrPattern_With_patterns) => void,
++'MatchAsPattern'?: (node: MatchAsPattern) => void,
++'MatchAsPattern[pattern]'?: (node: MatchAsPattern_With_pattern) => void,
++'MatchAsPattern[target]'?: (node: MatchAsPattern_With_target) => void,
++'MatchIdentifierPattern'?: (node: MatchIdentifierPattern) => void,
++'MatchIdentifierPattern[id]'?: (node: MatchIdentifierPattern_With_id) => void,
++'MatchMemberPattern'?: (node: MatchMemberPattern) => void,
++'MatchMemberPattern[base]'?: (node: MatchMemberPattern_With_base) => void,
++'MatchMemberPattern[property]'?: (node: MatchMemberPattern_With_property) => void,
++'MatchBindingPattern'?: (node: MatchBindingPattern) => void,
++'MatchBindingPattern[id]'?: (node: MatchBindingPattern_With_id) => void,
++'MatchBindingPattern[kind]'?: (node: MatchBindingPattern_With_kind) => void,
++'MatchArrayPattern'?: (node: MatchArrayPattern) => void,
++'MatchArrayPattern[elements]'?: (node: MatchArrayPattern_With_elements) => void,
++'MatchArrayPattern[rest]'?: (node: MatchArrayPattern_With_rest) => void,
++'MatchObjectPatternProperty'?: (node: MatchObjectPatternProperty) => void,
++'MatchObjectPatternProperty[key]'?: (node: MatchObjectPatternProperty_With_key) => void,
++'MatchObjectPatternProperty[pattern]'?: (node: MatchObjectPatternProperty_With_pattern) => void,
++'MatchObjectPatternProperty[shorthand]'?: (node: MatchObjectPatternProperty_With_shorthand) => void,
++'MatchRestPattern'?: (node: MatchRestPattern) => void,
++'MatchRestPattern[argument]'?: (node: MatchRestPattern_With_argument) => void,
++'Program'?: (node: Program) => void,
++'Program[body]'?: (node: Program_With_body) => void,
++'FunctionTypeAnnotation'?: (node: FunctionTypeAnnotation) => void,
++'FunctionTypeAnnotation[params]'?: (node: FunctionTypeAnnotation_With_params) => void,
++'FunctionTypeAnnotation[returnType]'?: (node: FunctionTypeAnnotation_With_returnType) => void,
++'FunctionTypeAnnotation[rest]'?: (node: FunctionTypeAnnotation_With_rest) => void,
++'FunctionTypeAnnotation[typeParameters]'?: (node: FunctionTypeAnnotation_With_typeParameters) => void,
++'FunctionTypeAnnotation[this]'?: (node: FunctionTypeAnnotation_With_this) => void,
++'OpaqueType'?: (node: OpaqueType) => void,
++'OpaqueType[id]'?: (node: OpaqueType_With_id) => void,
++'OpaqueType[typeParameters]'?: (node: OpaqueType_With_typeParameters) => void,
++'OpaqueType[impltype]'?: (node: OpaqueType_With_impltype) => void,
++'OpaqueType[lowerBound]'?: (node: OpaqueType_With_lowerBound) => void,
++'OpaqueType[upperBound]'?: (node: OpaqueType_With_upperBound) => void,
++'OpaqueType[supertype]'?: (node: OpaqueType_With_supertype) => void,
++'DeclareOpaqueType'?: (node: DeclareOpaqueType) => void,
++'DeclareOpaqueType[id]'?: (node: DeclareOpaqueType_With_id) => void,
++'DeclareOpaqueType[typeParameters]'?: (node: DeclareOpaqueType_With_typeParameters) => void,
++'DeclareOpaqueType[impltype]'?: (node: DeclareOpaqueType_With_impltype) => void,
++'DeclareOpaqueType[lowerBound]'?: (node: DeclareOpaqueType_With_lowerBound) => void,
++'DeclareOpaqueType[upperBound]'?: (node: DeclareOpaqueType_With_upperBound) => void,
++'DeclareOpaqueType[supertype]'?: (node: DeclareOpaqueType_With_supertype) => void,
++'HookTypeAnnotation'?: (node: HookTypeAnnotation) => void,
++'HookTypeAnnotation[params]'?: (node: HookTypeAnnotation_With_params) => void,
++'HookTypeAnnotation[returnType]'?: (node: HookTypeAnnotation_With_returnType) => void,
++'HookTypeAnnotation[rest]'?: (node: HookTypeAnnotation_With_rest) => void,
++'HookTypeAnnotation[typeParameters]'?: (node: HookTypeAnnotation_With_typeParameters) => void,
++'ThisTypeAnnotation'?: (node: ThisTypeAnnotation) => void,
++'Literal'?: (node: Literal) => void,
++'ChainExpression'?: (node: ChainExpression) => void,
++'ChainExpression[expression]'?: (node: ChainExpression_With_expression) => void,
++'*'?: (node: StarSpecialSelector) => void,
++':statement'?: (node: StatementSpecialSelector) => void,
++':declaration'?: (node: DeclarationSpecialSelector) => void,
++':pattern'?: (node: PatternSpecialSelector) => void,
++':expression'?: (node: ExpressionSpecialSelector) => void,
++':function'?: (node: FunctionSpecialSelector) => void,
++'EmptyStatement:exit'?: (node: EmptyStatement) => void,
++'ExpressionStatement:exit'?: (node: ExpressionStatement) => void,
++'ExpressionStatement[expression]:exit'?: (node: ExpressionStatement_With_expression) => void,
++'ExpressionStatement[directive]:exit'?: (node: ExpressionStatement_With_directive) => void,
++'BlockStatement:exit'?: (node: BlockStatement) => void,
++'BlockStatement[body]:exit'?: (node: BlockStatement_With_body) => void,
++'IfStatement:exit'?: (node: IfStatement) => void,
++'IfStatement[test]:exit'?: (node: IfStatement_With_test) => void,
++'IfStatement[consequent]:exit'?: (node: IfStatement_With_consequent) => void,
++'IfStatement[alternate]:exit'?: (node: IfStatement_With_alternate) => void,
++'LabeledStatement:exit'?: (node: LabeledStatement) => void,
++'LabeledStatement[label]:exit'?: (node: LabeledStatement_With_label) => void,
++'LabeledStatement[body]:exit'?: (node: LabeledStatement_With_body) => void,
++'BreakStatement:exit'?: (node: BreakStatement) => void,
++'BreakStatement[label]:exit'?: (node: BreakStatement_With_label) => void,
++'ContinueStatement:exit'?: (node: ContinueStatement) => void,
++'ContinueStatement[label]:exit'?: (node: ContinueStatement_With_label) => void,
++'WithStatement:exit'?: (node: WithStatement) => void,
++'WithStatement[object]:exit'?: (node: WithStatement_With_object) => void,
++'WithStatement[body]:exit'?: (node: WithStatement_With_body) => void,
++'SwitchStatement:exit'?: (node: SwitchStatement) => void,
++'SwitchStatement[discriminant]:exit'?: (node: SwitchStatement_With_discriminant) => void,
++'SwitchStatement[cases]:exit'?: (node: SwitchStatement_With_cases) => void,
++'ReturnStatement:exit'?: (node: ReturnStatement) => void,
++'ReturnStatement[argument]:exit'?: (node: ReturnStatement_With_argument) => void,
++'ThrowStatement:exit'?: (node: ThrowStatement) => void,
++'ThrowStatement[argument]:exit'?: (node: ThrowStatement_With_argument) => void,
++'TryStatement:exit'?: (node: TryStatement) => void,
++'TryStatement[block]:exit'?: (node: TryStatement_With_block) => void,
++'TryStatement[handler]:exit'?: (node: TryStatement_With_handler) => void,
++'TryStatement[finalizer]:exit'?: (node: TryStatement_With_finalizer) => void,
++'WhileStatement:exit'?: (node: WhileStatement) => void,
++'WhileStatement[test]:exit'?: (node: WhileStatement_With_test) => void,
++'WhileStatement[body]:exit'?: (node: WhileStatement_With_body) => void,
++'DoWhileStatement:exit'?: (node: DoWhileStatement) => void,
++'DoWhileStatement[body]:exit'?: (node: DoWhileStatement_With_body) => void,
++'DoWhileStatement[test]:exit'?: (node: DoWhileStatement_With_test) => void,
++'ForStatement:exit'?: (node: ForStatement) => void,
++'ForStatement[init]:exit'?: (node: ForStatement_With_init) => void,
++'ForStatement[test]:exit'?: (node: ForStatement_With_test) => void,
++'ForStatement[update]:exit'?: (node: ForStatement_With_update) => void,
++'ForStatement[body]:exit'?: (node: ForStatement_With_body) => void,
++'ForInStatement:exit'?: (node: ForInStatement) => void,
++'ForInStatement[left]:exit'?: (node: ForInStatement_With_left) => void,
++'ForInStatement[right]:exit'?: (node: ForInStatement_With_right) => void,
++'ForInStatement[body]:exit'?: (node: ForInStatement_With_body) => void,
++'ForInStatement[each]:exit'?: (node: ForInStatement_With_each) => void,
++'ForOfStatement:exit'?: (node: ForOfStatement) => void,
++'ForOfStatement[left]:exit'?: (node: ForOfStatement_With_left) => void,
++'ForOfStatement[right]:exit'?: (node: ForOfStatement_With_right) => void,
++'ForOfStatement[body]:exit'?: (node: ForOfStatement_With_body) => void,
++'ForOfStatement[await]:exit'?: (node: ForOfStatement_With_await) => void,
++'DebuggerStatement:exit'?: (node: DebuggerStatement) => void,
++'MatchStatement:exit'?: (node: MatchStatement) => void,
++'MatchStatement[argument]:exit'?: (node: MatchStatement_With_argument) => void,
++'MatchStatement[cases]:exit'?: (node: MatchStatement_With_cases) => void,
++'FunctionDeclaration:exit'?: (node: FunctionDeclaration) => void,
++'FunctionDeclaration[id]:exit'?: (node: FunctionDeclaration_With_id) => void,
++'FunctionDeclaration[params]:exit'?: (node: FunctionDeclaration_With_params) => void,
++'FunctionDeclaration[body]:exit'?: (node: FunctionDeclaration_With_body) => void,
++'FunctionDeclaration[returnType]:exit'?: (node: FunctionDeclaration_With_returnType) => void,
++'FunctionDeclaration[typeParameters]:exit'?: (node: FunctionDeclaration_With_typeParameters) => void,
++'FunctionDeclaration[async]:exit'?: (node: FunctionDeclaration_With_async) => void,
++'FunctionDeclaration[generator]:exit'?: (node: FunctionDeclaration_With_generator) => void,
++'FunctionDeclaration[predicate]:exit'?: (node: FunctionDeclaration_With_predicate) => void,
++'FunctionDeclaration[expression]:exit'?: (node: FunctionDeclaration_With_expression) => void,
++'VariableDeclaration:exit'?: (node: VariableDeclaration) => void,
++'VariableDeclaration[declarations]:exit'?: (node: VariableDeclaration_With_declarations) => void,
++'VariableDeclaration[kind]:exit'?: (node: VariableDeclaration_With_kind) => void,
++'VariableDeclarator:exit'?: (node: VariableDeclarator) => void,
++'VariableDeclarator[id]:exit'?: (node: VariableDeclarator_With_id) => void,
++'VariableDeclarator[init]:exit'?: (node: VariableDeclarator_With_init) => void,
++'ClassDeclaration:exit'?: (node: ClassDeclaration) => void,
++'ClassDeclaration[id]:exit'?: (node: ClassDeclaration_With_id) => void,
++'ClassDeclaration[body]:exit'?: (node: ClassDeclaration_With_body) => void,
++'ClassDeclaration[typeParameters]:exit'?: (node: ClassDeclaration_With_typeParameters) => void,
++'ClassDeclaration[superClass]:exit'?: (node: ClassDeclaration_With_superClass) => void,
++'ClassDeclaration[superTypeArguments]:exit'?: (node: ClassDeclaration_With_superTypeArguments) => void,
++'ClassDeclaration[implements]:exit'?: (node: ClassDeclaration_With_implements) => void,
++'ClassDeclaration[decorators]:exit'?: (node: ClassDeclaration_With_decorators) => void,
++'ClassDeclaration[abstract]:exit'?: (node: ClassDeclaration_With_abstract) => void,
++'ComponentDeclaration:exit'?: (node: ComponentDeclaration) => void,
++'ComponentDeclaration[body]:exit'?: (node: ComponentDeclaration_With_body) => void,
++'ComponentDeclaration[id]:exit'?: (node: ComponentDeclaration_With_id) => void,
++'ComponentDeclaration[implicitDeclare]:exit'?: (node: ComponentDeclaration_With_implicitDeclare) => void,
++'ComponentDeclaration[params]:exit'?: (node: ComponentDeclaration_With_params) => void,
++'ComponentDeclaration[rendersType]:exit'?: (node: ComponentDeclaration_With_rendersType) => void,
++'ComponentDeclaration[typeParameters]:exit'?: (node: ComponentDeclaration_With_typeParameters) => void,
++'ComponentDeclaration[async]:exit'?: (node: ComponentDeclaration_With_async) => void,
++'HookDeclaration:exit'?: (node: HookDeclaration) => void,
++'HookDeclaration[id]:exit'?: (node: HookDeclaration_With_id) => void,
++'HookDeclaration[params]:exit'?: (node: HookDeclaration_With_params) => void,
++'HookDeclaration[body]:exit'?: (node: HookDeclaration_With_body) => void,
++'HookDeclaration[returnType]:exit'?: (node: HookDeclaration_With_returnType) => void,
++'HookDeclaration[typeParameters]:exit'?: (node: HookDeclaration_With_typeParameters) => void,
++'HookDeclaration[async]:exit'?: (node: HookDeclaration_With_async) => void,
++'EnumDeclaration:exit'?: (node: EnumDeclaration) => void,
++'EnumDeclaration[id]:exit'?: (node: EnumDeclaration_With_id) => void,
++'EnumDeclaration[body]:exit'?: (node: EnumDeclaration_With_body) => void,
++'EnumDeclaration[const]:exit'?: (node: EnumDeclaration_With_const) => void,
++'InterfaceDeclaration:exit'?: (node: InterfaceDeclaration) => void,
++'InterfaceDeclaration[id]:exit'?: (node: InterfaceDeclaration_With_id) => void,
++'InterfaceDeclaration[typeParameters]:exit'?: (node: InterfaceDeclaration_With_typeParameters) => void,
++'InterfaceDeclaration[body]:exit'?: (node: InterfaceDeclaration_With_body) => void,
++'InterfaceDeclaration[extends]:exit'?: (node: InterfaceDeclaration_With_extends) => void,
++'TypeAlias:exit'?: (node: TypeAlias) => void,
++'TypeAlias[id]:exit'?: (node: TypeAlias_With_id) => void,
++'TypeAlias[typeParameters]:exit'?: (node: TypeAlias_With_typeParameters) => void,
++'TypeAlias[right]:exit'?: (node: TypeAlias_With_right) => void,
++'RecordDeclaration:exit'?: (node: RecordDeclaration) => void,
++'RecordDeclaration[id]:exit'?: (node: RecordDeclaration_With_id) => void,
++'RecordDeclaration[typeParameters]:exit'?: (node: RecordDeclaration_With_typeParameters) => void,
++'RecordDeclaration[implements]:exit'?: (node: RecordDeclaration_With_implements) => void,
++'RecordDeclaration[body]:exit'?: (node: RecordDeclaration_With_body) => void,
++'ImportDeclaration:exit'?: (node: ImportDeclaration) => void,
++'ImportDeclaration[specifiers]:exit'?: (node: ImportDeclaration_With_specifiers) => void,
++'ImportDeclaration[source]:exit'?: (node: ImportDeclaration_With_source) => void,
++'ImportDeclaration[importKind]:exit'?: (node: ImportDeclaration_With_importKind) => void,
++'ImportDeclaration[attributes]:exit'?: (node: ImportDeclaration_With_attributes) => void,
++'ImportDefaultSpecifier:exit'?: (node: ImportDefaultSpecifier) => void,
++'ImportDefaultSpecifier[local]:exit'?: (node: ImportDefaultSpecifier_With_local) => void,
++'ImportNamespaceSpecifier:exit'?: (node: ImportNamespaceSpecifier) => void,
++'ImportNamespaceSpecifier[local]:exit'?: (node: ImportNamespaceSpecifier_With_local) => void,
++'ImportSpecifier:exit'?: (node: ImportSpecifier) => void,
++'ImportSpecifier[imported]:exit'?: (node: ImportSpecifier_With_imported) => void,
++'ImportSpecifier[local]:exit'?: (node: ImportSpecifier_With_local) => void,
++'ImportSpecifier[importKind]:exit'?: (node: ImportSpecifier_With_importKind) => void,
++'ImportAttribute:exit'?: (node: ImportAttribute) => void,
++'ImportAttribute[key]:exit'?: (node: ImportAttribute_With_key) => void,
++'ImportAttribute[value]:exit'?: (node: ImportAttribute_With_value) => void,
++'ExportNamedDeclaration:exit'?: (node: ExportNamedDeclaration) => void,
++'ExportNamedDeclaration[declaration]:exit'?: (node: ExportNamedDeclaration_With_declaration) => void,
++'ExportNamedDeclaration[specifiers]:exit'?: (node: ExportNamedDeclaration_With_specifiers) => void,
++'ExportNamedDeclaration[source]:exit'?: (node: ExportNamedDeclaration_With_source) => void,
++'ExportNamedDeclaration[exportKind]:exit'?: (node: ExportNamedDeclaration_With_exportKind) => void,
++'ExportDefaultDeclaration:exit'?: (node: ExportDefaultDeclaration) => void,
++'ExportDefaultDeclaration[declaration]:exit'?: (node: ExportDefaultDeclaration_With_declaration) => void,
++'ExportDefaultDeclaration[exportKind]:exit'?: (node: ExportDefaultDeclaration_With_exportKind) => void,
++'ExportAllDeclaration:exit'?: (node: ExportAllDeclaration) => void,
++'ExportAllDeclaration[source]:exit'?: (node: ExportAllDeclaration_With_source) => void,
++'ExportAllDeclaration[exported]:exit'?: (node: ExportAllDeclaration_With_exported) => void,
++'ExportAllDeclaration[exportKind]:exit'?: (node: ExportAllDeclaration_With_exportKind) => void,
++'ExportSpecifier:exit'?: (node: ExportSpecifier) => void,
++'ExportSpecifier[local]:exit'?: (node: ExportSpecifier_With_local) => void,
++'ExportSpecifier[exported]:exit'?: (node: ExportSpecifier_With_exported) => void,
++'ExportSpecifier[exportKind]:exit'?: (node: ExportSpecifier_With_exportKind) => void,
++'ThisExpression:exit'?: (node: ThisExpression) => void,
++'Super:exit'?: (node: Super) => void,
++'ArrayExpression:exit'?: (node: ArrayExpression) => void,
++'ArrayExpression[elements]:exit'?: (node: ArrayExpression_With_elements) => void,
++'ObjectExpression:exit'?: (node: ObjectExpression) => void,
++'ObjectExpression[properties]:exit'?: (node: ObjectExpression_With_properties) => void,
++'FunctionExpression:exit'?: (node: FunctionExpression) => void,
++'FunctionExpression[id]:exit'?: (node: FunctionExpression_With_id) => void,
++'FunctionExpression[params]:exit'?: (node: FunctionExpression_With_params) => void,
++'FunctionExpression[body]:exit'?: (node: FunctionExpression_With_body) => void,
++'FunctionExpression[async]:exit'?: (node: FunctionExpression_With_async) => void,
++'FunctionExpression[generator]:exit'?: (node: FunctionExpression_With_generator) => void,
++'FunctionExpression[predicate]:exit'?: (node: FunctionExpression_With_predicate) => void,
++'FunctionExpression[expression]:exit'?: (node: FunctionExpression_With_expression) => void,
++'FunctionExpression[returnType]:exit'?: (node: FunctionExpression_With_returnType) => void,
++'FunctionExpression[typeParameters]:exit'?: (node: FunctionExpression_With_typeParameters) => void,
++'ArrowFunctionExpression:exit'?: (node: ArrowFunctionExpression) => void,
++'ArrowFunctionExpression[id]:exit'?: (node: ArrowFunctionExpression_With_id) => void,
++'ArrowFunctionExpression[params]:exit'?: (node: ArrowFunctionExpression_With_params) => void,
++'ArrowFunctionExpression[body]:exit'?: (node: ArrowFunctionExpression_With_body) => void,
++'ArrowFunctionExpression[async]:exit'?: (node: ArrowFunctionExpression_With_async) => void,
++'ArrowFunctionExpression[generator]:exit'?: (node: ArrowFunctionExpression_With_generator) => void,
++'ArrowFunctionExpression[predicate]:exit'?: (node: ArrowFunctionExpression_With_predicate) => void,
++'ArrowFunctionExpression[expression]:exit'?: (node: ArrowFunctionExpression_With_expression) => void,
++'ArrowFunctionExpression[returnType]:exit'?: (node: ArrowFunctionExpression_With_returnType) => void,
++'ArrowFunctionExpression[typeParameters]:exit'?: (node: ArrowFunctionExpression_With_typeParameters) => void,
++'SequenceExpression:exit'?: (node: SequenceExpression) => void,
++'SequenceExpression[expressions]:exit'?: (node: SequenceExpression_With_expressions) => void,
++'UnaryExpression:exit'?: (node: UnaryExpression) => void,
++'UnaryExpression[operator]:exit'?: (node: UnaryExpression_With_operator) => void,
++'UnaryExpression[prefix]:exit'?: (node: UnaryExpression_With_prefix) => void,
++'UnaryExpression[argument]:exit'?: (node: UnaryExpression_With_argument) => void,
++'BinaryExpression:exit'?: (node: BinaryExpression) => void,
++'BinaryExpression[operator]:exit'?: (node: BinaryExpression_With_operator) => void,
++'BinaryExpression[left]:exit'?: (node: BinaryExpression_With_left) => void,
++'BinaryExpression[right]:exit'?: (node: BinaryExpression_With_right) => void,
++'LogicalExpression:exit'?: (node: LogicalExpression) => void,
++'LogicalExpression[operator]:exit'?: (node: LogicalExpression_With_operator) => void,
++'LogicalExpression[left]:exit'?: (node: LogicalExpression_With_left) => void,
++'LogicalExpression[right]:exit'?: (node: LogicalExpression_With_right) => void,
++'ConditionalExpression:exit'?: (node: ConditionalExpression) => void,
++'ConditionalExpression[test]:exit'?: (node: ConditionalExpression_With_test) => void,
++'ConditionalExpression[consequent]:exit'?: (node: ConditionalExpression_With_consequent) => void,
++'ConditionalExpression[alternate]:exit'?: (node: ConditionalExpression_With_alternate) => void,
++'UpdateExpression:exit'?: (node: UpdateExpression) => void,
++'UpdateExpression[operator]:exit'?: (node: UpdateExpression_With_operator) => void,
++'UpdateExpression[argument]:exit'?: (node: UpdateExpression_With_argument) => void,
++'UpdateExpression[prefix]:exit'?: (node: UpdateExpression_With_prefix) => void,
++'AssignmentExpression:exit'?: (node: AssignmentExpression) => void,
++'AssignmentExpression[operator]:exit'?: (node: AssignmentExpression_With_operator) => void,
++'AssignmentExpression[left]:exit'?: (node: AssignmentExpression_With_left) => void,
++'AssignmentExpression[right]:exit'?: (node: AssignmentExpression_With_right) => void,
++'MemberExpression:exit'?: (node: MemberExpression) => void,
++'MemberExpression[object]:exit'?: (node: MemberExpression_With_object) => void,
++'MemberExpression[property]:exit'?: (node: MemberExpression_With_property) => void,
++'MemberExpression[computed]:exit'?: (node: MemberExpression_With_computed) => void,
++'CallExpression:exit'?: (node: CallExpression) => void,
++'CallExpression[callee]:exit'?: (node: CallExpression_With_callee) => void,
++'CallExpression[typeArguments]:exit'?: (node: CallExpression_With_typeArguments) => void,
++'CallExpression[arguments]:exit'?: (node: CallExpression_With_arguments) => void,
++'NewExpression:exit'?: (node: NewExpression) => void,
++'NewExpression[callee]:exit'?: (node: NewExpression_With_callee) => void,
++'NewExpression[typeArguments]:exit'?: (node: NewExpression_With_typeArguments) => void,
++'NewExpression[arguments]:exit'?: (node: NewExpression_With_arguments) => void,
++'YieldExpression:exit'?: (node: YieldExpression) => void,
++'YieldExpression[argument]:exit'?: (node: YieldExpression_With_argument) => void,
++'YieldExpression[delegate]:exit'?: (node: YieldExpression_With_delegate) => void,
++'AwaitExpression:exit'?: (node: AwaitExpression) => void,
++'AwaitExpression[argument]:exit'?: (node: AwaitExpression_With_argument) => void,
++'ImportExpression:exit'?: (node: ImportExpression) => void,
++'ImportExpression[source]:exit'?: (node: ImportExpression_With_source) => void,
++'ImportExpression[options]:exit'?: (node: ImportExpression_With_options) => void,
++'MetaProperty:exit'?: (node: MetaProperty) => void,
++'MetaProperty[meta]:exit'?: (node: MetaProperty_With_meta) => void,
++'MetaProperty[property]:exit'?: (node: MetaProperty_With_property) => void,
++'TaggedTemplateExpression:exit'?: (node: TaggedTemplateExpression) => void,
++'TaggedTemplateExpression[tag]:exit'?: (node: TaggedTemplateExpression_With_tag) => void,
++'TaggedTemplateExpression[typeArguments]:exit'?: (node: TaggedTemplateExpression_With_typeArguments) => void,
++'TaggedTemplateExpression[quasi]:exit'?: (node: TaggedTemplateExpression_With_quasi) => void,
++'TemplateLiteral:exit'?: (node: TemplateLiteral) => void,
++'TemplateLiteral[quasis]:exit'?: (node: TemplateLiteral_With_quasis) => void,
++'TemplateLiteral[expressions]:exit'?: (node: TemplateLiteral_With_expressions) => void,
++'TemplateElement:exit'?: (node: TemplateElement) => void,
++'TemplateElement[tail]:exit'?: (node: TemplateElement_With_tail) => void,
++'TemplateElement[cooked]:exit'?: (node: TemplateElement_With_cooked) => void,
++'TemplateElement[raw]:exit'?: (node: TemplateElement_With_raw) => void,
++'TypeCastExpression:exit'?: (node: TypeCastExpression) => void,
++'TypeCastExpression[expression]:exit'?: (node: TypeCastExpression_With_expression) => void,
++'TypeCastExpression[typeAnnotation]:exit'?: (node: TypeCastExpression_With_typeAnnotation) => void,
++'AsExpression:exit'?: (node: AsExpression) => void,
++'AsExpression[expression]:exit'?: (node: AsExpression_With_expression) => void,
++'AsExpression[typeAnnotation]:exit'?: (node: AsExpression_With_typeAnnotation) => void,
++'AsConstExpression:exit'?: (node: AsConstExpression) => void,
++'AsConstExpression[expression]:exit'?: (node: AsConstExpression_With_expression) => void,
++'MatchExpression:exit'?: (node: MatchExpression) => void,
++'MatchExpression[argument]:exit'?: (node: MatchExpression_With_argument) => void,
++'MatchExpression[cases]:exit'?: (node: MatchExpression_With_cases) => void,
++'RecordExpression:exit'?: (node: RecordExpression) => void,
++'RecordExpression[recordConstructor]:exit'?: (node: RecordExpression_With_recordConstructor) => void,
++'RecordExpression[typeArguments]:exit'?: (node: RecordExpression_With_typeArguments) => void,
++'RecordExpression[properties]:exit'?: (node: RecordExpression_With_properties) => void,
++'RecordExpressionProperties:exit'?: (node: RecordExpressionProperties) => void,
++'RecordExpressionProperties[properties]:exit'?: (node: RecordExpressionProperties_With_properties) => void,
++'Identifier:exit'?: (node: Identifier) => void,
++'Identifier[name]:exit'?: (node: Identifier_With_name) => void,
++'Identifier[typeAnnotation]:exit'?: (node: Identifier_With_typeAnnotation) => void,
++'Identifier[optional]:exit'?: (node: Identifier_With_optional) => void,
++'PrivateIdentifier:exit'?: (node: PrivateIdentifier) => void,
++'PrivateIdentifier[name]:exit'?: (node: PrivateIdentifier_With_name) => void,
++'PrivateIdentifier[typeAnnotation]:exit'?: (node: PrivateIdentifier_With_typeAnnotation) => void,
++'PrivateIdentifier[optional]:exit'?: (node: PrivateIdentifier_With_optional) => void,
++'ObjectPattern:exit'?: (node: ObjectPattern) => void,
++'ObjectPattern[properties]:exit'?: (node: ObjectPattern_With_properties) => void,
++'ObjectPattern[typeAnnotation]:exit'?: (node: ObjectPattern_With_typeAnnotation) => void,
++'ObjectPattern[optional]:exit'?: (node: ObjectPattern_With_optional) => void,
++'ArrayPattern:exit'?: (node: ArrayPattern) => void,
++'ArrayPattern[elements]:exit'?: (node: ArrayPattern_With_elements) => void,
++'ArrayPattern[typeAnnotation]:exit'?: (node: ArrayPattern_With_typeAnnotation) => void,
++'ArrayPattern[optional]:exit'?: (node: ArrayPattern_With_optional) => void,
++'RestElement:exit'?: (node: RestElement) => void,
++'RestElement[argument]:exit'?: (node: RestElement_With_argument) => void,
++'AssignmentPattern:exit'?: (node: AssignmentPattern) => void,
++'AssignmentPattern[left]:exit'?: (node: AssignmentPattern_With_left) => void,
++'AssignmentPattern[right]:exit'?: (node: AssignmentPattern_With_right) => void,
++'Property:exit'?: (node: Property) => void,
++'Property[key]:exit'?: (node: Property_With_key) => void,
++'Property[value]:exit'?: (node: Property_With_value) => void,
++'Property[kind]:exit'?: (node: Property_With_kind) => void,
++'Property[method]:exit'?: (node: Property_With_method) => void,
++'Property[shorthand]:exit'?: (node: Property_With_shorthand) => void,
++'Property[computed]:exit'?: (node: Property_With_computed) => void,
++'SpreadElement:exit'?: (node: SpreadElement) => void,
++'SpreadElement[argument]:exit'?: (node: SpreadElement_With_argument) => void,
++'ClassExpression:exit'?: (node: ClassExpression) => void,
++'ClassExpression[id]:exit'?: (node: ClassExpression_With_id) => void,
++'ClassExpression[body]:exit'?: (node: ClassExpression_With_body) => void,
++'ClassExpression[typeParameters]:exit'?: (node: ClassExpression_With_typeParameters) => void,
++'ClassExpression[superClass]:exit'?: (node: ClassExpression_With_superClass) => void,
++'ClassExpression[superTypeArguments]:exit'?: (node: ClassExpression_With_superTypeArguments) => void,
++'ClassExpression[implements]:exit'?: (node: ClassExpression_With_implements) => void,
++'ClassExpression[decorators]:exit'?: (node: ClassExpression_With_decorators) => void,
++'ClassExpression[abstract]:exit'?: (node: ClassExpression_With_abstract) => void,
++'ClassBody:exit'?: (node: ClassBody) => void,
++'ClassBody[body]:exit'?: (node: ClassBody_With_body) => void,
++'ClassImplements:exit'?: (node: ClassImplements) => void,
++'ClassImplements[id]:exit'?: (node: ClassImplements_With_id) => void,
++'ClassImplements[typeParameters]:exit'?: (node: ClassImplements_With_typeParameters) => void,
++'MethodDefinition:exit'?: (node: MethodDefinition) => void,
++'MethodDefinition[key]:exit'?: (node: MethodDefinition_With_key) => void,
++'MethodDefinition[value]:exit'?: (node: MethodDefinition_With_value) => void,
++'MethodDefinition[kind]:exit'?: (node: MethodDefinition_With_kind) => void,
++'MethodDefinition[static]:exit'?: (node: MethodDefinition_With_static) => void,
++'MethodDefinition[computed]:exit'?: (node: MethodDefinition_With_computed) => void,
++'MethodDefinition[decorators]:exit'?: (node: MethodDefinition_With_decorators) => void,
++'MethodDefinition[override]:exit'?: (node: MethodDefinition_With_override) => void,
++'MethodDefinition[tsAccessibility]:exit'?: (node: MethodDefinition_With_tsAccessibility) => void,
++'PropertyDefinition:exit'?: (node: PropertyDefinition) => void,
++'PropertyDefinition[key]:exit'?: (node: PropertyDefinition_With_key) => void,
++'PropertyDefinition[value]:exit'?: (node: PropertyDefinition_With_value) => void,
++'PropertyDefinition[typeAnnotation]:exit'?: (node: PropertyDefinition_With_typeAnnotation) => void,
++'PropertyDefinition[computed]:exit'?: (node: PropertyDefinition_With_computed) => void,
++'PropertyDefinition[static]:exit'?: (node: PropertyDefinition_With_static) => void,
++'PropertyDefinition[variance]:exit'?: (node: PropertyDefinition_With_variance) => void,
++'PropertyDefinition[tsAccessibility]:exit'?: (node: PropertyDefinition_With_tsAccessibility) => void,
++'PropertyDefinition[declare]:exit'?: (node: PropertyDefinition_With_declare) => void,
++'PropertyDefinition[optional]:exit'?: (node: PropertyDefinition_With_optional) => void,
++'PropertyDefinition[override]:exit'?: (node: PropertyDefinition_With_override) => void,
++'PropertyDefinition[decorators]:exit'?: (node: PropertyDefinition_With_decorators) => void,
++'StaticBlock:exit'?: (node: StaticBlock) => void,
++'StaticBlock[body]:exit'?: (node: StaticBlock_With_body) => void,
++'Decorator:exit'?: (node: Decorator) => void,
++'Decorator[expression]:exit'?: (node: Decorator_With_expression) => void,
++'SwitchCase:exit'?: (node: SwitchCase) => void,
++'SwitchCase[test]:exit'?: (node: SwitchCase_With_test) => void,
++'SwitchCase[consequent]:exit'?: (node: SwitchCase_With_consequent) => void,
++'CatchClause:exit'?: (node: CatchClause) => void,
++'CatchClause[param]:exit'?: (node: CatchClause_With_param) => void,
++'CatchClause[body]:exit'?: (node: CatchClause_With_body) => void,
++'ComponentParameter:exit'?: (node: ComponentParameter) => void,
++'ComponentParameter[name]:exit'?: (node: ComponentParameter_With_name) => void,
++'ComponentParameter[local]:exit'?: (node: ComponentParameter_With_local) => void,
++'ComponentParameter[shorthand]:exit'?: (node: ComponentParameter_With_shorthand) => void,
++'DeclareVariable:exit'?: (node: DeclareVariable) => void,
++'DeclareVariable[declarations]:exit'?: (node: DeclareVariable_With_declarations) => void,
++'DeclareVariable[kind]:exit'?: (node: DeclareVariable_With_kind) => void,
++'DeclareFunction:exit'?: (node: DeclareFunction) => void,
++'DeclareFunction[id]:exit'?: (node: DeclareFunction_With_id) => void,
++'DeclareFunction[implicitDeclare]:exit'?: (node: DeclareFunction_With_implicitDeclare) => void,
++'DeclareFunction[predicate]:exit'?: (node: DeclareFunction_With_predicate) => void,
++'DeclareFunction[typeAnnotation]:exit'?: (node: DeclareFunction_With_typeAnnotation) => void,
++'DeclareClass:exit'?: (node: DeclareClass) => void,
++'DeclareClass[id]:exit'?: (node: DeclareClass_With_id) => void,
++'DeclareClass[typeParameters]:exit'?: (node: DeclareClass_With_typeParameters) => void,
++'DeclareClass[body]:exit'?: (node: DeclareClass_With_body) => void,
++'DeclareClass[extends]:exit'?: (node: DeclareClass_With_extends) => void,
++'DeclareClass[implements]:exit'?: (node: DeclareClass_With_implements) => void,
++'DeclareClass[mixins]:exit'?: (node: DeclareClass_With_mixins) => void,
++'DeclareClass[abstract]:exit'?: (node: DeclareClass_With_abstract) => void,
++'DeclareComponent:exit'?: (node: DeclareComponent) => void,
++'DeclareComponent[id]:exit'?: (node: DeclareComponent_With_id) => void,
++'DeclareComponent[params]:exit'?: (node: DeclareComponent_With_params) => void,
++'DeclareComponent[rest]:exit'?: (node: DeclareComponent_With_rest) => void,
++'DeclareComponent[rendersType]:exit'?: (node: DeclareComponent_With_rendersType) => void,
++'DeclareComponent[typeParameters]:exit'?: (node: DeclareComponent_With_typeParameters) => void,
++'DeclareHook:exit'?: (node: DeclareHook) => void,
++'DeclareHook[id]:exit'?: (node: DeclareHook_With_id) => void,
++'DeclareHook[implicitDeclare]:exit'?: (node: DeclareHook_With_implicitDeclare) => void,
++'DeclareHook[typeAnnotation]:exit'?: (node: DeclareHook_With_typeAnnotation) => void,
++'DeclareModule:exit'?: (node: DeclareModule) => void,
++'DeclareModule[id]:exit'?: (node: DeclareModule_With_id) => void,
++'DeclareModule[body]:exit'?: (node: DeclareModule_With_body) => void,
++'DeclareModuleExports:exit'?: (node: DeclareModuleExports) => void,
++'DeclareModuleExports[typeAnnotation]:exit'?: (node: DeclareModuleExports_With_typeAnnotation) => void,
++'DeclareExportDeclaration:exit'?: (node: DeclareExportDeclaration) => void,
++'DeclareExportDeclaration[default]:exit'?: (node: DeclareExportDeclaration_With_default) => void,
++'DeclareExportDeclaration[declaration]:exit'?: (node: DeclareExportDeclaration_With_declaration) => void,
++'DeclareExportDeclaration[specifiers]:exit'?: (node: DeclareExportDeclaration_With_specifiers) => void,
++'DeclareExportDeclaration[source]:exit'?: (node: DeclareExportDeclaration_With_source) => void,
++'DeclareExportAllDeclaration:exit'?: (node: DeclareExportAllDeclaration) => void,
++'DeclareExportAllDeclaration[source]:exit'?: (node: DeclareExportAllDeclaration_With_source) => void,
++'DeclareNamespace:exit'?: (node: DeclareNamespace) => void,
++'DeclareNamespace[id]:exit'?: (node: DeclareNamespace_With_id) => void,
++'DeclareNamespace[body]:exit'?: (node: DeclareNamespace_With_body) => void,
++'DeclareNamespace[implicitDeclare]:exit'?: (node: DeclareNamespace_With_implicitDeclare) => void,
++'DeclareNamespace[keyword]:exit'?: (node: DeclareNamespace_With_keyword) => void,
++'DeclareNamespace[global]:exit'?: (node: DeclareNamespace_With_global) => void,
++'DeclareInterface:exit'?: (node: DeclareInterface) => void,
++'DeclareInterface[id]:exit'?: (node: DeclareInterface_With_id) => void,
++'DeclareInterface[typeParameters]:exit'?: (node: DeclareInterface_With_typeParameters) => void,
++'DeclareInterface[body]:exit'?: (node: DeclareInterface_With_body) => void,
++'DeclareInterface[extends]:exit'?: (node: DeclareInterface_With_extends) => void,
++'DeclareTypeAlias:exit'?: (node: DeclareTypeAlias) => void,
++'DeclareTypeAlias[id]:exit'?: (node: DeclareTypeAlias_With_id) => void,
++'DeclareTypeAlias[typeParameters]:exit'?: (node: DeclareTypeAlias_With_typeParameters) => void,
++'DeclareTypeAlias[right]:exit'?: (node: DeclareTypeAlias_With_right) => void,
++'DeclareEnum:exit'?: (node: DeclareEnum) => void,
++'DeclareEnum[id]:exit'?: (node: DeclareEnum_With_id) => void,
++'DeclareEnum[body]:exit'?: (node: DeclareEnum_With_body) => void,
++'DeclareEnum[const]:exit'?: (node: DeclareEnum_With_const) => void,
++'TypeAnnotation:exit'?: (node: TypeAnnotation) => void,
++'TypeAnnotation[typeAnnotation]:exit'?: (node: TypeAnnotation_With_typeAnnotation) => void,
++'Variance:exit'?: (node: Variance) => void,
++'Variance[kind]:exit'?: (node: Variance_With_kind) => void,
++'AnyTypeAnnotation:exit'?: (node: AnyTypeAnnotation) => void,
++'MixedTypeAnnotation:exit'?: (node: MixedTypeAnnotation) => void,
++'EmptyTypeAnnotation:exit'?: (node: EmptyTypeAnnotation) => void,
++'VoidTypeAnnotation:exit'?: (node: VoidTypeAnnotation) => void,
++'NullLiteralTypeAnnotation:exit'?: (node: NullLiteralTypeAnnotation) => void,
++'SymbolTypeAnnotation:exit'?: (node: SymbolTypeAnnotation) => void,
++'NumberTypeAnnotation:exit'?: (node: NumberTypeAnnotation) => void,
++'BigIntTypeAnnotation:exit'?: (node: BigIntTypeAnnotation) => void,
++'StringTypeAnnotation:exit'?: (node: StringTypeAnnotation) => void,
++'BooleanTypeAnnotation:exit'?: (node: BooleanTypeAnnotation) => void,
++'NullableTypeAnnotation:exit'?: (node: NullableTypeAnnotation) => void,
++'NullableTypeAnnotation[typeAnnotation]:exit'?: (node: NullableTypeAnnotation_With_typeAnnotation) => void,
++'ArrayTypeAnnotation:exit'?: (node: ArrayTypeAnnotation) => void,
++'ArrayTypeAnnotation[elementType]:exit'?: (node: ArrayTypeAnnotation_With_elementType) => void,
++'IndexedAccessType:exit'?: (node: IndexedAccessType) => void,
++'IndexedAccessType[objectType]:exit'?: (node: IndexedAccessType_With_objectType) => void,
++'IndexedAccessType[indexType]:exit'?: (node: IndexedAccessType_With_indexType) => void,
++'OptionalIndexedAccessType:exit'?: (node: OptionalIndexedAccessType) => void,
++'OptionalIndexedAccessType[objectType]:exit'?: (node: OptionalIndexedAccessType_With_objectType) => void,
++'OptionalIndexedAccessType[indexType]:exit'?: (node: OptionalIndexedAccessType_With_indexType) => void,
++'OptionalIndexedAccessType[optional]:exit'?: (node: OptionalIndexedAccessType_With_optional) => void,
++'UnionTypeAnnotation:exit'?: (node: UnionTypeAnnotation) => void,
++'UnionTypeAnnotation[types]:exit'?: (node: UnionTypeAnnotation_With_types) => void,
++'IntersectionTypeAnnotation:exit'?: (node: IntersectionTypeAnnotation) => void,
++'IntersectionTypeAnnotation[types]:exit'?: (node: IntersectionTypeAnnotation_With_types) => void,
++'KeyofTypeAnnotation:exit'?: (node: KeyofTypeAnnotation) => void,
++'KeyofTypeAnnotation[argument]:exit'?: (node: KeyofTypeAnnotation_With_argument) => void,
++'TypeOperator:exit'?: (node: TypeOperator) => void,
++'TypeOperator[operator]:exit'?: (node: TypeOperator_With_operator) => void,
++'TypeOperator[typeAnnotation]:exit'?: (node: TypeOperator_With_typeAnnotation) => void,
++'StringLiteralTypeAnnotation:exit'?: (node: StringLiteralTypeAnnotation) => void,
++'StringLiteralTypeAnnotation[value]:exit'?: (node: StringLiteralTypeAnnotation_With_value) => void,
++'StringLiteralTypeAnnotation[raw]:exit'?: (node: StringLiteralTypeAnnotation_With_raw) => void,
++'NumberLiteralTypeAnnotation:exit'?: (node: NumberLiteralTypeAnnotation) => void,
++'NumberLiteralTypeAnnotation[value]:exit'?: (node: NumberLiteralTypeAnnotation_With_value) => void,
++'NumberLiteralTypeAnnotation[raw]:exit'?: (node: NumberLiteralTypeAnnotation_With_raw) => void,
++'BigIntLiteralTypeAnnotation:exit'?: (node: BigIntLiteralTypeAnnotation) => void,
++'BigIntLiteralTypeAnnotation[value]:exit'?: (node: BigIntLiteralTypeAnnotation_With_value) => void,
++'BigIntLiteralTypeAnnotation[raw]:exit'?: (node: BigIntLiteralTypeAnnotation_With_raw) => void,
++'BooleanLiteralTypeAnnotation:exit'?: (node: BooleanLiteralTypeAnnotation) => void,
++'BooleanLiteralTypeAnnotation[value]:exit'?: (node: BooleanLiteralTypeAnnotation_With_value) => void,
++'BooleanLiteralTypeAnnotation[raw]:exit'?: (node: BooleanLiteralTypeAnnotation_With_raw) => void,
++'ExistsTypeAnnotation:exit'?: (node: ExistsTypeAnnotation) => void,
++'UnknownTypeAnnotation:exit'?: (node: UnknownTypeAnnotation) => void,
++'NeverTypeAnnotation:exit'?: (node: NeverTypeAnnotation) => void,
++'UndefinedTypeAnnotation:exit'?: (node: UndefinedTypeAnnotation) => void,
++'GenericTypeAnnotation:exit'?: (node: GenericTypeAnnotation) => void,
++'GenericTypeAnnotation[id]:exit'?: (node: GenericTypeAnnotation_With_id) => void,
++'GenericTypeAnnotation[typeParameters]:exit'?: (node: GenericTypeAnnotation_With_typeParameters) => void,
++'QualifiedTypeIdentifier:exit'?: (node: QualifiedTypeIdentifier) => void,
++'QualifiedTypeIdentifier[qualification]:exit'?: (node: QualifiedTypeIdentifier_With_qualification) => void,
++'QualifiedTypeIdentifier[id]:exit'?: (node: QualifiedTypeIdentifier_With_id) => void,
++'QualifiedTypeofIdentifier:exit'?: (node: QualifiedTypeofIdentifier) => void,
++'QualifiedTypeofIdentifier[qualification]:exit'?: (node: QualifiedTypeofIdentifier_With_qualification) => void,
++'QualifiedTypeofIdentifier[id]:exit'?: (node: QualifiedTypeofIdentifier_With_id) => void,
++'TypeofTypeAnnotation:exit'?: (node: TypeofTypeAnnotation) => void,
++'TypeofTypeAnnotation[argument]:exit'?: (node: TypeofTypeAnnotation_With_argument) => void,
++'TypeofTypeAnnotation[typeArguments]:exit'?: (node: TypeofTypeAnnotation_With_typeArguments) => void,
++'TupleTypeAnnotation:exit'?: (node: TupleTypeAnnotation) => void,
++'TupleTypeAnnotation[elementTypes]:exit'?: (node: TupleTypeAnnotation_With_elementTypes) => void,
++'TupleTypeAnnotation[inexact]:exit'?: (node: TupleTypeAnnotation_With_inexact) => void,
++'TupleTypeLabeledElement:exit'?: (node: TupleTypeLabeledElement) => void,
++'TupleTypeLabeledElement[label]:exit'?: (node: TupleTypeLabeledElement_With_label) => void,
++'TupleTypeLabeledElement[elementType]:exit'?: (node: TupleTypeLabeledElement_With_elementType) => void,
++'TupleTypeLabeledElement[variance]:exit'?: (node: TupleTypeLabeledElement_With_variance) => void,
++'TupleTypeLabeledElement[optional]:exit'?: (node: TupleTypeLabeledElement_With_optional) => void,
++'TupleTypeSpreadElement:exit'?: (node: TupleTypeSpreadElement) => void,
++'TupleTypeSpreadElement[label]:exit'?: (node: TupleTypeSpreadElement_With_label) => void,
++'TupleTypeSpreadElement[typeAnnotation]:exit'?: (node: TupleTypeSpreadElement_With_typeAnnotation) => void,
++'ObjectTypeAnnotation:exit'?: (node: ObjectTypeAnnotation) => void,
++'ObjectTypeAnnotation[inexact]:exit'?: (node: ObjectTypeAnnotation_With_inexact) => void,
++'ObjectTypeAnnotation[exact]:exit'?: (node: ObjectTypeAnnotation_With_exact) => void,
++'ObjectTypeAnnotation[properties]:exit'?: (node: ObjectTypeAnnotation_With_properties) => void,
++'ObjectTypeAnnotation[indexers]:exit'?: (node: ObjectTypeAnnotation_With_indexers) => void,
++'ObjectTypeAnnotation[callProperties]:exit'?: (node: ObjectTypeAnnotation_With_callProperties) => void,
++'ObjectTypeAnnotation[internalSlots]:exit'?: (node: ObjectTypeAnnotation_With_internalSlots) => void,
++'ObjectTypeProperty:exit'?: (node: ObjectTypeProperty) => void,
++'ObjectTypeProperty[key]:exit'?: (node: ObjectTypeProperty_With_key) => void,
++'ObjectTypeProperty[value]:exit'?: (node: ObjectTypeProperty_With_value) => void,
++'ObjectTypeProperty[method]:exit'?: (node: ObjectTypeProperty_With_method) => void,
++'ObjectTypeProperty[optional]:exit'?: (node: ObjectTypeProperty_With_optional) => void,
++'ObjectTypeProperty[static]:exit'?: (node: ObjectTypeProperty_With_static) => void,
++'ObjectTypeProperty[proto]:exit'?: (node: ObjectTypeProperty_With_proto) => void,
++'ObjectTypeProperty[abstract]:exit'?: (node: ObjectTypeProperty_With_abstract) => void,
++'ObjectTypeProperty[variance]:exit'?: (node: ObjectTypeProperty_With_variance) => void,
++'ObjectTypeProperty[kind]:exit'?: (node: ObjectTypeProperty_With_kind) => void,
++'ObjectTypeProperty[init]:exit'?: (node: ObjectTypeProperty_With_init) => void,
++'ObjectTypeProperty[computed]:exit'?: (node: ObjectTypeProperty_With_computed) => void,
++'ObjectTypeProperty[override]:exit'?: (node: ObjectTypeProperty_With_override) => void,
++'ObjectTypeProperty[tsAccessibility]:exit'?: (node: ObjectTypeProperty_With_tsAccessibility) => void,
++'ObjectTypeSpreadProperty:exit'?: (node: ObjectTypeSpreadProperty) => void,
++'ObjectTypeSpreadProperty[argument]:exit'?: (node: ObjectTypeSpreadProperty_With_argument) => void,
++'ObjectTypeIndexer:exit'?: (node: ObjectTypeIndexer) => void,
++'ObjectTypeIndexer[id]:exit'?: (node: ObjectTypeIndexer_With_id) => void,
++'ObjectTypeIndexer[key]:exit'?: (node: ObjectTypeIndexer_With_key) => void,
++'ObjectTypeIndexer[value]:exit'?: (node: ObjectTypeIndexer_With_value) => void,
++'ObjectTypeIndexer[static]:exit'?: (node: ObjectTypeIndexer_With_static) => void,
++'ObjectTypeIndexer[variance]:exit'?: (node: ObjectTypeIndexer_With_variance) => void,
++'ObjectTypeIndexer[optional]:exit'?: (node: ObjectTypeIndexer_With_optional) => void,
++'ObjectTypeCallProperty:exit'?: (node: ObjectTypeCallProperty) => void,
++'ObjectTypeCallProperty[value]:exit'?: (node: ObjectTypeCallProperty_With_value) => void,
++'ObjectTypeCallProperty[static]:exit'?: (node: ObjectTypeCallProperty_With_static) => void,
++'ObjectTypeMappedTypeProperty:exit'?: (node: ObjectTypeMappedTypeProperty) => void,
++'ObjectTypeMappedTypeProperty[keyTparam]:exit'?: (node: ObjectTypeMappedTypeProperty_With_keyTparam) => void,
++'ObjectTypeMappedTypeProperty[propType]:exit'?: (node: ObjectTypeMappedTypeProperty_With_propType) => void,
++'ObjectTypeMappedTypeProperty[sourceType]:exit'?: (node: ObjectTypeMappedTypeProperty_With_sourceType) => void,
++'ObjectTypeMappedTypeProperty[nameType]:exit'?: (node: ObjectTypeMappedTypeProperty_With_nameType) => void,
++'ObjectTypeMappedTypeProperty[variance]:exit'?: (node: ObjectTypeMappedTypeProperty_With_variance) => void,
++'ObjectTypeMappedTypeProperty[varianceOp]:exit'?: (node: ObjectTypeMappedTypeProperty_With_varianceOp) => void,
++'ObjectTypeMappedTypeProperty[optional]:exit'?: (node: ObjectTypeMappedTypeProperty_With_optional) => void,
++'ObjectTypeInternalSlot:exit'?: (node: ObjectTypeInternalSlot) => void,
++'ObjectTypeInternalSlot[id]:exit'?: (node: ObjectTypeInternalSlot_With_id) => void,
++'ObjectTypeInternalSlot[optional]:exit'?: (node: ObjectTypeInternalSlot_With_optional) => void,
++'ObjectTypeInternalSlot[static]:exit'?: (node: ObjectTypeInternalSlot_With_static) => void,
++'ObjectTypeInternalSlot[method]:exit'?: (node: ObjectTypeInternalSlot_With_method) => void,
++'ObjectTypeInternalSlot[value]:exit'?: (node: ObjectTypeInternalSlot_With_value) => void,
++'FunctionTypeParam:exit'?: (node: FunctionTypeParam) => void,
++'FunctionTypeParam[name]:exit'?: (node: FunctionTypeParam_With_name) => void,
++'FunctionTypeParam[typeAnnotation]:exit'?: (node: FunctionTypeParam_With_typeAnnotation) => void,
++'FunctionTypeParam[optional]:exit'?: (node: FunctionTypeParam_With_optional) => void,
++'TypePredicate:exit'?: (node: TypePredicate) => void,
++'TypePredicate[parameterName]:exit'?: (node: TypePredicate_With_parameterName) => void,
++'TypePredicate[typeAnnotation]:exit'?: (node: TypePredicate_With_typeAnnotation) => void,
++'TypePredicate[kind]:exit'?: (node: TypePredicate_With_kind) => void,
++'ConditionalTypeAnnotation:exit'?: (node: ConditionalTypeAnnotation) => void,
++'ConditionalTypeAnnotation[checkType]:exit'?: (node: ConditionalTypeAnnotation_With_checkType) => void,
++'ConditionalTypeAnnotation[extendsType]:exit'?: (node: ConditionalTypeAnnotation_With_extendsType) => void,
++'ConditionalTypeAnnotation[trueType]:exit'?: (node: ConditionalTypeAnnotation_With_trueType) => void,
++'ConditionalTypeAnnotation[falseType]:exit'?: (node: ConditionalTypeAnnotation_With_falseType) => void,
++'InferTypeAnnotation:exit'?: (node: InferTypeAnnotation) => void,
++'InferTypeAnnotation[typeParameter]:exit'?: (node: InferTypeAnnotation_With_typeParameter) => void,
++'InterfaceExtends:exit'?: (node: InterfaceExtends) => void,
++'InterfaceExtends[id]:exit'?: (node: InterfaceExtends_With_id) => void,
++'InterfaceExtends[typeParameters]:exit'?: (node: InterfaceExtends_With_typeParameters) => void,
++'InterfaceTypeAnnotation:exit'?: (node: InterfaceTypeAnnotation) => void,
++'InterfaceTypeAnnotation[extends]:exit'?: (node: InterfaceTypeAnnotation_With_extends) => void,
++'InterfaceTypeAnnotation[body]:exit'?: (node: InterfaceTypeAnnotation_With_body) => void,
++'TypeParameterDeclaration:exit'?: (node: TypeParameterDeclaration) => void,
++'TypeParameterDeclaration[params]:exit'?: (node: TypeParameterDeclaration_With_params) => void,
++'TypeParameter:exit'?: (node: TypeParameter) => void,
++'TypeParameter[name]:exit'?: (node: TypeParameter_With_name) => void,
++'TypeParameter[bound]:exit'?: (node: TypeParameter_With_bound) => void,
++'TypeParameter[const]:exit'?: (node: TypeParameter_With_const) => void,
++'TypeParameter[variance]:exit'?: (node: TypeParameter_With_variance) => void,
++'TypeParameter[default]:exit'?: (node: TypeParameter_With_default) => void,
++'TypeParameter[usesExtendsBound]:exit'?: (node: TypeParameter_With_usesExtendsBound) => void,
++'TypeParameterInstantiation:exit'?: (node: TypeParameterInstantiation) => void,
++'TypeParameterInstantiation[params]:exit'?: (node: TypeParameterInstantiation_With_params) => void,
++'ComponentTypeAnnotation:exit'?: (node: ComponentTypeAnnotation) => void,
++'ComponentTypeAnnotation[params]:exit'?: (node: ComponentTypeAnnotation_With_params) => void,
++'ComponentTypeAnnotation[rest]:exit'?: (node: ComponentTypeAnnotation_With_rest) => void,
++'ComponentTypeAnnotation[rendersType]:exit'?: (node: ComponentTypeAnnotation_With_rendersType) => void,
++'ComponentTypeAnnotation[typeParameters]:exit'?: (node: ComponentTypeAnnotation_With_typeParameters) => void,
++'ComponentTypeParameter:exit'?: (node: ComponentTypeParameter) => void,
++'ComponentTypeParameter[name]:exit'?: (node: ComponentTypeParameter_With_name) => void,
++'ComponentTypeParameter[typeAnnotation]:exit'?: (node: ComponentTypeParameter_With_typeAnnotation) => void,
++'ComponentTypeParameter[optional]:exit'?: (node: ComponentTypeParameter_With_optional) => void,
++'DeclaredPredicate:exit'?: (node: DeclaredPredicate) => void,
++'DeclaredPredicate[value]:exit'?: (node: DeclaredPredicate_With_value) => void,
++'InferredPredicate:exit'?: (node: InferredPredicate) => void,
++'JSXElement:exit'?: (node: JSXElement) => void,
++'JSXElement[openingElement]:exit'?: (node: JSXElement_With_openingElement) => void,
++'JSXElement[closingElement]:exit'?: (node: JSXElement_With_closingElement) => void,
++'JSXElement[children]:exit'?: (node: JSXElement_With_children) => void,
++'JSXFragment:exit'?: (node: JSXFragment) => void,
++'JSXFragment[openingFragment]:exit'?: (node: JSXFragment_With_openingFragment) => void,
++'JSXFragment[children]:exit'?: (node: JSXFragment_With_children) => void,
++'JSXFragment[closingFragment]:exit'?: (node: JSXFragment_With_closingFragment) => void,
++'JSXOpeningElement:exit'?: (node: JSXOpeningElement) => void,
++'JSXOpeningElement[name]:exit'?: (node: JSXOpeningElement_With_name) => void,
++'JSXOpeningElement[attributes]:exit'?: (node: JSXOpeningElement_With_attributes) => void,
++'JSXOpeningElement[selfClosing]:exit'?: (node: JSXOpeningElement_With_selfClosing) => void,
++'JSXOpeningElement[typeArguments]:exit'?: (node: JSXOpeningElement_With_typeArguments) => void,
++'JSXOpeningFragment:exit'?: (node: JSXOpeningFragment) => void,
++'JSXClosingElement:exit'?: (node: JSXClosingElement) => void,
++'JSXClosingElement[name]:exit'?: (node: JSXClosingElement_With_name) => void,
++'JSXClosingFragment:exit'?: (node: JSXClosingFragment) => void,
++'JSXAttribute:exit'?: (node: JSXAttribute) => void,
++'JSXAttribute[name]:exit'?: (node: JSXAttribute_With_name) => void,
++'JSXAttribute[value]:exit'?: (node: JSXAttribute_With_value) => void,
++'JSXSpreadAttribute:exit'?: (node: JSXSpreadAttribute) => void,
++'JSXSpreadAttribute[argument]:exit'?: (node: JSXSpreadAttribute_With_argument) => void,
++'JSXEmptyExpression:exit'?: (node: JSXEmptyExpression) => void,
++'JSXExpressionContainer:exit'?: (node: JSXExpressionContainer) => void,
++'JSXExpressionContainer[expression]:exit'?: (node: JSXExpressionContainer_With_expression) => void,
++'JSXSpreadChild:exit'?: (node: JSXSpreadChild) => void,
++'JSXSpreadChild[expression]:exit'?: (node: JSXSpreadChild_With_expression) => void,
++'JSXText:exit'?: (node: JSXText) => void,
++'JSXText[value]:exit'?: (node: JSXText_With_value) => void,
++'JSXText[raw]:exit'?: (node: JSXText_With_raw) => void,
++'JSXMemberExpression:exit'?: (node: JSXMemberExpression) => void,
++'JSXMemberExpression[object]:exit'?: (node: JSXMemberExpression_With_object) => void,
++'JSXMemberExpression[property]:exit'?: (node: JSXMemberExpression_With_property) => void,
++'JSXNamespacedName:exit'?: (node: JSXNamespacedName) => void,
++'JSXNamespacedName[namespace]:exit'?: (node: JSXNamespacedName_With_namespace) => void,
++'JSXNamespacedName[name]:exit'?: (node: JSXNamespacedName_With_name) => void,
++'JSXIdentifier:exit'?: (node: JSXIdentifier) => void,
++'JSXIdentifier[name]:exit'?: (node: JSXIdentifier_With_name) => void,
++'EnumBooleanBody:exit'?: (node: EnumBooleanBody) => void,
++'EnumBooleanBody[members]:exit'?: (node: EnumBooleanBody_With_members) => void,
++'EnumBooleanBody[explicitType]:exit'?: (node: EnumBooleanBody_With_explicitType) => void,
++'EnumBooleanBody[hasUnknownMembers]:exit'?: (node: EnumBooleanBody_With_hasUnknownMembers) => void,
++'EnumBooleanMember:exit'?: (node: EnumBooleanMember) => void,
++'EnumBooleanMember[id]:exit'?: (node: EnumBooleanMember_With_id) => void,
++'EnumBooleanMember[init]:exit'?: (node: EnumBooleanMember_With_init) => void,
++'EnumNumberBody:exit'?: (node: EnumNumberBody) => void,
++'EnumNumberBody[members]:exit'?: (node: EnumNumberBody_With_members) => void,
++'EnumNumberBody[explicitType]:exit'?: (node: EnumNumberBody_With_explicitType) => void,
++'EnumNumberBody[hasUnknownMembers]:exit'?: (node: EnumNumberBody_With_hasUnknownMembers) => void,
++'EnumNumberMember:exit'?: (node: EnumNumberMember) => void,
++'EnumNumberMember[id]:exit'?: (node: EnumNumberMember_With_id) => void,
++'EnumNumberMember[init]:exit'?: (node: EnumNumberMember_With_init) => void,
++'EnumStringBody:exit'?: (node: EnumStringBody) => void,
++'EnumStringBody[members]:exit'?: (node: EnumStringBody_With_members) => void,
++'EnumStringBody[explicitType]:exit'?: (node: EnumStringBody_With_explicitType) => void,
++'EnumStringBody[hasUnknownMembers]:exit'?: (node: EnumStringBody_With_hasUnknownMembers) => void,
++'EnumStringMember:exit'?: (node: EnumStringMember) => void,
++'EnumStringMember[id]:exit'?: (node: EnumStringMember_With_id) => void,
++'EnumStringMember[init]:exit'?: (node: EnumStringMember_With_init) => void,
++'EnumSymbolBody:exit'?: (node: EnumSymbolBody) => void,
++'EnumSymbolBody[members]:exit'?: (node: EnumSymbolBody_With_members) => void,
++'EnumSymbolBody[hasUnknownMembers]:exit'?: (node: EnumSymbolBody_With_hasUnknownMembers) => void,
++'EnumDefaultedMember:exit'?: (node: EnumDefaultedMember) => void,
++'EnumDefaultedMember[id]:exit'?: (node: EnumDefaultedMember_With_id) => void,
++'EnumBigIntBody:exit'?: (node: EnumBigIntBody) => void,
++'EnumBigIntBody[members]:exit'?: (node: EnumBigIntBody_With_members) => void,
++'EnumBigIntBody[explicitType]:exit'?: (node: EnumBigIntBody_With_explicitType) => void,
++'EnumBigIntBody[hasUnknownMembers]:exit'?: (node: EnumBigIntBody_With_hasUnknownMembers) => void,
++'EnumBigIntMember:exit'?: (node: EnumBigIntMember) => void,
++'EnumBigIntMember[id]:exit'?: (node: EnumBigIntMember_With_id) => void,
++'EnumBigIntMember[init]:exit'?: (node: EnumBigIntMember_With_init) => void,
++'RecordDeclarationBody:exit'?: (node: RecordDeclarationBody) => void,
++'RecordDeclarationBody[elements]:exit'?: (node: RecordDeclarationBody_With_elements) => void,
++'RecordDeclarationProperty:exit'?: (node: RecordDeclarationProperty) => void,
++'RecordDeclarationProperty[key]:exit'?: (node: RecordDeclarationProperty_With_key) => void,
++'RecordDeclarationProperty[typeAnnotation]:exit'?: (node: RecordDeclarationProperty_With_typeAnnotation) => void,
++'RecordDeclarationProperty[defaultValue]:exit'?: (node: RecordDeclarationProperty_With_defaultValue) => void,
++'RecordDeclarationStaticProperty:exit'?: (node: RecordDeclarationStaticProperty) => void,
++'RecordDeclarationStaticProperty[key]:exit'?: (node: RecordDeclarationStaticProperty_With_key) => void,
++'RecordDeclarationStaticProperty[typeAnnotation]:exit'?: (node: RecordDeclarationStaticProperty_With_typeAnnotation) => void,
++'RecordDeclarationStaticProperty[value]:exit'?: (node: RecordDeclarationStaticProperty_With_value) => void,
++'RecordDeclarationImplements:exit'?: (node: RecordDeclarationImplements) => void,
++'RecordDeclarationImplements[id]:exit'?: (node: RecordDeclarationImplements_With_id) => void,
++'RecordDeclarationImplements[typeArguments]:exit'?: (node: RecordDeclarationImplements_With_typeArguments) => void,
++'MatchExpressionCase:exit'?: (node: MatchExpressionCase) => void,
++'MatchExpressionCase[pattern]:exit'?: (node: MatchExpressionCase_With_pattern) => void,
++'MatchExpressionCase[body]:exit'?: (node: MatchExpressionCase_With_body) => void,
++'MatchExpressionCase[guard]:exit'?: (node: MatchExpressionCase_With_guard) => void,
++'MatchStatementCase:exit'?: (node: MatchStatementCase) => void,
++'MatchStatementCase[pattern]:exit'?: (node: MatchStatementCase_With_pattern) => void,
++'MatchStatementCase[body]:exit'?: (node: MatchStatementCase_With_body) => void,
++'MatchStatementCase[guard]:exit'?: (node: MatchStatementCase_With_guard) => void,
++'MatchWildcardPattern:exit'?: (node: MatchWildcardPattern) => void,
++'MatchLiteralPattern:exit'?: (node: MatchLiteralPattern) => void,
++'MatchLiteralPattern[literal]:exit'?: (node: MatchLiteralPattern_With_literal) => void,
++'MatchUnaryPattern:exit'?: (node: MatchUnaryPattern) => void,
++'MatchUnaryPattern[operator]:exit'?: (node: MatchUnaryPattern_With_operator) => void,
++'MatchUnaryPattern[argument]:exit'?: (node: MatchUnaryPattern_With_argument) => void,
++'MatchObjectPattern:exit'?: (node: MatchObjectPattern) => void,
++'MatchObjectPattern[properties]:exit'?: (node: MatchObjectPattern_With_properties) => void,
++'MatchObjectPattern[rest]:exit'?: (node: MatchObjectPattern_With_rest) => void,
++'MatchInstancePattern:exit'?: (node: MatchInstancePattern) => void,
++'MatchInstancePattern[targetConstructor]:exit'?: (node: MatchInstancePattern_With_targetConstructor) => void,
++'MatchInstancePattern[properties]:exit'?: (node: MatchInstancePattern_With_properties) => void,
++'MatchInstanceObjectPattern:exit'?: (node: MatchInstanceObjectPattern) => void,
++'MatchInstanceObjectPattern[properties]:exit'?: (node: MatchInstanceObjectPattern_With_properties) => void,
++'MatchInstanceObjectPattern[rest]:exit'?: (node: MatchInstanceObjectPattern_With_rest) => void,
++'MatchOrPattern:exit'?: (node: MatchOrPattern) => void,
++'MatchOrPattern[patterns]:exit'?: (node: MatchOrPattern_With_patterns) => void,
++'MatchAsPattern:exit'?: (node: MatchAsPattern) => void,
++'MatchAsPattern[pattern]:exit'?: (node: MatchAsPattern_With_pattern) => void,
++'MatchAsPattern[target]:exit'?: (node: MatchAsPattern_With_target) => void,
++'MatchIdentifierPattern:exit'?: (node: MatchIdentifierPattern) => void,
++'MatchIdentifierPattern[id]:exit'?: (node: MatchIdentifierPattern_With_id) => void,
++'MatchMemberPattern:exit'?: (node: MatchMemberPattern) => void,
++'MatchMemberPattern[base]:exit'?: (node: MatchMemberPattern_With_base) => void,
++'MatchMemberPattern[property]:exit'?: (node: MatchMemberPattern_With_property) => void,
++'MatchBindingPattern:exit'?: (node: MatchBindingPattern) => void,
++'MatchBindingPattern[id]:exit'?: (node: MatchBindingPattern_With_id) => void,
++'MatchBindingPattern[kind]:exit'?: (node: MatchBindingPattern_With_kind) => void,
++'MatchArrayPattern:exit'?: (node: MatchArrayPattern) => void,
++'MatchArrayPattern[elements]:exit'?: (node: MatchArrayPattern_With_elements) => void,
++'MatchArrayPattern[rest]:exit'?: (node: MatchArrayPattern_With_rest) => void,
++'MatchObjectPatternProperty:exit'?: (node: MatchObjectPatternProperty) => void,
++'MatchObjectPatternProperty[key]:exit'?: (node: MatchObjectPatternProperty_With_key) => void,
++'MatchObjectPatternProperty[pattern]:exit'?: (node: MatchObjectPatternProperty_With_pattern) => void,
++'MatchObjectPatternProperty[shorthand]:exit'?: (node: MatchObjectPatternProperty_With_shorthand) => void,
++'MatchRestPattern:exit'?: (node: MatchRestPattern) => void,
++'MatchRestPattern[argument]:exit'?: (node: MatchRestPattern_With_argument) => void,
++'Program:exit'?: (node: Program) => void,
++'Program[body]:exit'?: (node: Program_With_body) => void,
++'FunctionTypeAnnotation:exit'?: (node: FunctionTypeAnnotation) => void,
++'FunctionTypeAnnotation[params]:exit'?: (node: FunctionTypeAnnotation_With_params) => void,
++'FunctionTypeAnnotation[returnType]:exit'?: (node: FunctionTypeAnnotation_With_returnType) => void,
++'FunctionTypeAnnotation[rest]:exit'?: (node: FunctionTypeAnnotation_With_rest) => void,
++'FunctionTypeAnnotation[typeParameters]:exit'?: (node: FunctionTypeAnnotation_With_typeParameters) => void,
++'FunctionTypeAnnotation[this]:exit'?: (node: FunctionTypeAnnotation_With_this) => void,
++'OpaqueType:exit'?: (node: OpaqueType) => void,
++'OpaqueType[id]:exit'?: (node: OpaqueType_With_id) => void,
++'OpaqueType[typeParameters]:exit'?: (node: OpaqueType_With_typeParameters) => void,
++'OpaqueType[impltype]:exit'?: (node: OpaqueType_With_impltype) => void,
++'OpaqueType[lowerBound]:exit'?: (node: OpaqueType_With_lowerBound) => void,
++'OpaqueType[upperBound]:exit'?: (node: OpaqueType_With_upperBound) => void,
++'OpaqueType[supertype]:exit'?: (node: OpaqueType_With_supertype) => void,
++'DeclareOpaqueType:exit'?: (node: DeclareOpaqueType) => void,
++'DeclareOpaqueType[id]:exit'?: (node: DeclareOpaqueType_With_id) => void,
++'DeclareOpaqueType[typeParameters]:exit'?: (node: DeclareOpaqueType_With_typeParameters) => void,
++'DeclareOpaqueType[impltype]:exit'?: (node: DeclareOpaqueType_With_impltype) => void,
++'DeclareOpaqueType[lowerBound]:exit'?: (node: DeclareOpaqueType_With_lowerBound) => void,
++'DeclareOpaqueType[upperBound]:exit'?: (node: DeclareOpaqueType_With_upperBound) => void,
++'DeclareOpaqueType[supertype]:exit'?: (node: DeclareOpaqueType_With_supertype) => void,
++'HookTypeAnnotation:exit'?: (node: HookTypeAnnotation) => void,
++'HookTypeAnnotation[params]:exit'?: (node: HookTypeAnnotation_With_params) => void,
++'HookTypeAnnotation[returnType]:exit'?: (node: HookTypeAnnotation_With_returnType) => void,
++'HookTypeAnnotation[rest]:exit'?: (node: HookTypeAnnotation_With_rest) => void,
++'HookTypeAnnotation[typeParameters]:exit'?: (node: HookTypeAnnotation_With_typeParameters) => void,
++'ThisTypeAnnotation:exit'?: (node: ThisTypeAnnotation) => void,
++'Literal:exit'?: (node: Literal) => void,
++'ChainExpression:exit'?: (node: ChainExpression) => void,
++'ChainExpression[expression]:exit'?: (node: ChainExpression_With_expression) => void,
++'*:exit'?: (node: StarSpecialSelector) => void,
++':statement:exit'?: (node: StatementSpecialSelector) => void,
++':declaration:exit'?: (node: DeclarationSpecialSelector) => void,
++':pattern:exit'?: (node: PatternSpecialSelector) => void,
++':expression:exit'?: (node: ExpressionSpecialSelector) => void,
++':function:exit'?: (node: FunctionSpecialSelector) => void,
+};

@@ -1,0 +1,215 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConditionalTypeAnnotation Basic Babel 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "ReturnType",
+        "type": "Identifier",
+      },
+      "right": {
+        "type": "AnyTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": {
+        "params": [
+          {
+            "bound": null,
+            "const": false,
+            "default": null,
+            "name": "TKey",
+            "type": "TypeParameter",
+            "usesExtendsBound": false,
+            "variance": null,
+          },
+        ],
+        "type": "TypeParameterDeclaration",
+      },
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ConditionalTypeAnnotation Basic ESTree 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "ReturnType",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": null,
+      },
+      "right": {
+        "checkType": {
+          "id": {
+            "name": "TKey",
+            "optional": false,
+            "type": "Identifier",
+            "typeAnnotation": null,
+          },
+          "type": "GenericTypeAnnotation",
+          "typeParameters": null,
+        },
+        "extendsType": {
+          "type": "UnionTypeAnnotation",
+          "types": [
+            {
+              "type": "NullLiteralTypeAnnotation",
+            },
+            {
+              "type": "VoidTypeAnnotation",
+            },
+          ],
+        },
+        "falseType": {
+          "id": {
+            "name": "$NonMaybeType",
+            "optional": false,
+            "type": "Identifier",
+            "typeAnnotation": null,
+          },
+          "type": "GenericTypeAnnotation",
+          "typeParameters": {
+            "params": [
+              {
+                "indexType": {
+                  "raw": "'$data'",
+                  "type": "StringLiteralTypeAnnotation",
+                  "value": "$data",
+                },
+                "objectType": {
+                  "id": {
+                    "name": "TKey",
+                    "optional": false,
+                    "type": "Identifier",
+                    "typeAnnotation": null,
+                  },
+                  "type": "GenericTypeAnnotation",
+                  "typeParameters": null,
+                },
+                "optional": true,
+                "type": "OptionalIndexedAccessType",
+              },
+            ],
+            "type": "TypeParameterInstantiation",
+          },
+        },
+        "trueType": {
+          "type": "UnionTypeAnnotation",
+          "types": [
+            {
+              "type": "NullLiteralTypeAnnotation",
+            },
+            {
+              "type": "VoidTypeAnnotation",
+            },
+          ],
+        },
+        "type": "ConditionalTypeAnnotation",
+      },
+      "type": "TypeAlias",
+      "typeParameters": {
+        "params": [
+          {
+            "bound": null,
+            "const": false,
+            "default": null,
+            "name": "TKey",
+            "type": "TypeParameter",
+            "usesExtendsBound": false,
+            "variance": null,
+          },
+        ],
+        "type": "TypeParameterDeclaration",
+      },
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ConditionalTypeAnnotation InferType Babel 1`] = `
+{
+  "body": [
+    {
+      "declarations": [
+        {
+          "id": {
+            "name": "x",
+            "type": "Identifier",
+            "typeAnnotation": {
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "type": "AnyTypeAnnotation",
+              },
+            },
+          },
+          "init": null,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "kind": "let",
+      "type": "VariableDeclaration",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`ConditionalTypeAnnotation InferType ESTree 1`] = `
+{
+  "body": [
+    {
+      "declarations": [
+        {
+          "id": {
+            "name": "x",
+            "optional": false,
+            "type": "Identifier",
+            "typeAnnotation": {
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "checkType": {
+                  "type": "NumberTypeAnnotation",
+                },
+                "extendsType": {
+                  "type": "InferTypeAnnotation",
+                  "typeParameter": {
+                    "bound": {
+                      "type": "TypeAnnotation",
+                      "typeAnnotation": {
+                        "type": "NumberTypeAnnotation",
+                      },
+                    },
+                    "const": false,
+                    "default": null,
+                    "name": "T",
+                    "type": "TypeParameter",
+                    "usesExtendsBound": true,
+                    "variance": null,
+                  },
+                },
+                "falseType": {
+                  "type": "NumberTypeAnnotation",
+                },
+                "trueType": {
+                  "type": "StringTypeAnnotation",
+                },
+                "type": "ConditionalTypeAnnotation",
+              },
+            },
+          },
+          "init": null,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "kind": "let",
+      "type": "VariableDeclaration",
+    },
+  ],
+  "type": "Program",
+}
+`;

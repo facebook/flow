@@ -9,7 +9,8 @@ set -e -o pipefail
 FBCODE_DIR=${1:?"missing FBCODE_DIR arg"}
 FIXTURE_REL=${2:?"missing FIXTURE_REL arg"}
 
-PKG_SRC="$FBCODE_DIR/flow/packages/flow-parser-oxidized/src"
+PKG_DIR="$FBCODE_DIR/flow/packages/flow-parser-oxidized"
+PKG_SRC="$PKG_DIR/src"
 WASM_OUT="$PKG_SRC/FlowParserWASM.js"
 
 # Build the wasm under emcc. --isolation-dir is required because we are nested
@@ -26,9 +27,27 @@ if [ -z "$WASM_PATH" ] || [ ! -f "$WASM_PATH" ]; then
     exit 1
 fi
 
+# PID-counted cleanup — `runContractTests.sh` and this script both write to the
+# same `$WASM_OUT` (the JS test harness `require()`s a hard-coded
+# `./FlowParserWASM` path so we can't trivially split the artifacts). When buck
+# schedules both targets in parallel, a naive `trap rm -f` from one would
+# delete the file mid-run for the other. Instead, each script registers its
+# PID under a shared lock dir; on exit each removes its own PID and only the
+# last one out (`rmdir` succeeds == dir is empty) deletes `$WASM_OUT`.
 # Install the cleanup trap BEFORE writing $WASM_OUT so the file is removed
 # even if the cat below fails or the script is interrupted.
-trap 'rm -f "$WASM_OUT"' EXIT
+WASM_LOCK_DIR="${WASM_OUT}.lock.d"
+mkdir -p "$WASM_LOCK_DIR"
+WASM_MARKER="$WASM_LOCK_DIR/$$"
+mkdir "$WASM_MARKER"
+trap '
+    DRIVER_EXIT_CODE=$?
+    rmdir "$WASM_MARKER" 2>/dev/null || true
+    if rmdir "$WASM_LOCK_DIR" 2>/dev/null; then
+        rm -f "$WASM_OUT" || true
+    fi
+    exit "$DRIVER_EXIT_CODE"
+' EXIT
 
 {
     # The license header below is the contents of the GENERATED
@@ -46,6 +65,14 @@ trap 'rm -f "$WASM_OUT"' EXIT
     cat "$WASM_PATH"
 } > "$WASM_OUT"
 
+# NOTE on the build step: the fixture runner intentionally bypasses the
+# public `flow-parser-oxidized` entry (which goes through `dist/index.js`
+# after Phase C5 / #11) — the JS driver requires `../src/FlowParser` directly
+# so the fixture suite sees the raw OCaml-shape AST that the `.tree.json`
+# expectations were captured against. That's why we don't need to run
+# `yarn install` / `yarn build` here. Contract tests (runContractTests.sh)
+# do need a built `dist/` because they go through the public entry.
+#
 # Run the full fixture suite in a single node process. Earlier revisions
 # sharded across one process per section directory because the wasm parser
 # leaked ~10MB of heap per fixture and a single process OOMed at 8GB; the
