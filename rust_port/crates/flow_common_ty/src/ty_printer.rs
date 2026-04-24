@@ -9,13 +9,16 @@ use std::fmt::Write;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser_utils_output::layout;
 use flow_parser_utils_output::layout::LayoutNode;
+use flow_parser_utils_output::pretty_printer;
 
 use crate::ty::*;
 use crate::ty_symbol::*;
+use crate::ty_utils;
 
 /***********
  * Utils   *
@@ -316,12 +319,14 @@ fn type_impl<L: Dupe>(
             extends_type,
             true_type,
             false_type,
-        } => layout::group(vec![layout::fuse(vec![
-            type_with_parens(opts, depth, check_type.as_ref(), size),
-            layout::space(),
-            LayoutNode::atom("extends".to_string()),
-            layout::space(),
-            type_with_parens(opts, depth, extends_type.as_ref(), size),
+        } => layout::group(vec![
+            layout::fuse(vec![
+                type_with_parens(opts, depth, check_type.as_ref(), size),
+                layout::space(),
+                LayoutNode::atom("extends".to_string()),
+                layout::space(),
+                type_with_parens(opts, depth, extends_type.as_ref(), size),
+            ]),
             LayoutNode::indent(layout::fuse(vec![
                 layout::pretty_line(),
                 LayoutNode::atom("?".to_string()),
@@ -332,7 +337,7 @@ fn type_impl<L: Dupe>(
                 layout::pretty_space(),
                 type_impl(opts, depth, false_type.as_ref(), size),
             ])),
-        ])]),
+        ]),
 
         Ty::Infer(data) => {
             let (symbol, bound) = data.as_ref();
@@ -1148,7 +1153,7 @@ fn type_args<L: Dupe>(
             LayoutNode::atom(">".to_string()),
         )), // wrap
         Some(LayoutNode::atom(",".to_string())), // sep
-        false, // trailing
+        true, // trailing
         None, // inline
         None, // indent
         elements,
@@ -1553,7 +1558,7 @@ impl Default for PrinterOptions {
 
 pub fn string_of_elt<L: Dupe>(elt: &Elt<L>, opts: &PrinterOptions) -> String {
     let layout = layout_of_elt(opts, elt);
-    layout::print_pretty(&layout)
+    pretty_printer::print(true, &layout).contents()
 }
 
 pub fn string_of_t<L: Dupe>(t: &Ty<L>, opts: &PrinterOptions) -> String {
@@ -1591,28 +1596,30 @@ pub fn string_of_symbol_set<L: Clone + Ord>(
         .collect()
 }
 
-pub fn string_of_type_at_pos_result<L: Dupe + PartialEq, R: Clone + Ord>(
-    unevaluated: &Elt<L>,
-    evaluated: &Option<Elt<L>>,
+pub fn string_of_type_at_pos_result<R: Clone + Ord>(
+    unevaluated: &Elt<ALoc>,
+    evaluated: &Option<Elt<ALoc>>,
     refs: &Option<std::collections::BTreeSet<Symbol<R>>>,
     opts: &PrinterOptions,
 ) -> (String, Option<Vec<(String, R)>>) {
     let layout = layout_of_type_at_pos_types(opts, unevaluated, evaluated);
-    let type_str = layout::print_pretty(&layout);
+    let type_str = pretty_printer::print(true, &layout).contents();
     let refs = refs.as_ref().map(|r| string_of_symbol_set(r));
     (type_str, refs)
 }
 
-fn layout_of_type_at_pos_types<L: Dupe + PartialEq>(
+fn layout_of_type_at_pos_types(
     opts: &PrinterOptions,
-    unevaluated: &Elt<L>,
-    evaluated: &Option<Elt<L>>,
+    unevaluated: &Elt<ALoc>,
+    evaluated: &Option<Elt<ALoc>>,
 ) -> LayoutNode {
     let layout_unevaluated = layout_of_elt(opts, unevaluated);
 
     match (unevaluated, evaluated) {
         (_, None) => layout_unevaluated,
-        (unevaluated_elt, Some(evaluated_elt)) if elt_equal(unevaluated_elt, evaluated_elt) => {
+        (unevaluated_elt, Some(evaluated_elt))
+            if ty_utils::elt_equal(unevaluated_elt, evaluated_elt) =>
+        {
             layout_unevaluated
         }
         (_, Some(evaluated_elt)) => {
@@ -1636,8 +1643,4 @@ fn layout_of_type_at_pos_types<L: Dupe + PartialEq>(
             ])
         }
     }
-}
-
-fn elt_equal<L: PartialEq>(e1: &Elt<L>, e2: &Elt<L>) -> bool {
-    e1 == e2
 }

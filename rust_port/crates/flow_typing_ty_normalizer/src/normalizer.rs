@@ -1176,6 +1176,13 @@ mod type_converter {
                         // is also A, then we are still at the top-level of the type-alias, so we
                         // proceed by expanding one level preserving the same environment.
                         let symbol = symbol_from_loc(env, loc.clone(), Name::new(name.dupe()));
+                        // Optionally collect the body type for ref expansion
+                        if let Some(tbl) = &env.genv.ref_type_bodies {
+                            let mut tbl = tbl.borrow_mut();
+                            let key = name.to_string();
+                            tbl.entry(key).or_insert_with(|| t.dupe());
+                        }
+                        // return (generic_talias symbol None)
                         Ok(generic_talias(symbol, None))
                     }
                     // We are now beyond the point of the one-off expansion. Reset the environment
@@ -1356,8 +1363,17 @@ mod type_converter {
                         CanonicalRendersForm::IntrinsicRenders(n) => {
                             Ok(Arc::new(ty::Ty::StrLit(Name::new(n.as_str()))))
                         }
-                        CanonicalRendersForm::NominalRenders { renders_name, .. } => {
-                            let symbol = reason_utils::component_symbol(env, renders_name, reason);
+                        CanonicalRendersForm::NominalRenders {
+                            renders_id,
+                            renders_name,
+                            ..
+                        } => {
+                            let renders_reason = flow_common::reason::mk_reason(
+                                ReasonDesc::RComponent(Name::new(renders_name.dupe())),
+                                renders_id.0.dupe(),
+                            );
+                            let symbol =
+                                reason_utils::component_symbol(env, renders_name, &renders_reason);
                             Ok(Arc::new(ty::Ty::Generic(Box::new((
                                 symbol,
                                 ty::GenKind::ComponentKind,
@@ -2693,7 +2709,7 @@ mod type_converter {
             slice: &spread::OperandSlice,
         ) -> Result<ALocTy, Error> {
             let mut obj_props = Vec::new();
-            for (name, prop) in slice.prop_map.iter() {
+            for (name, prop) in slice.prop_map.iter().rev() {
                 let props = obj_prop_t::<I>(env, state, name, prop, false, ty::PropSource::Other)?;
                 obj_props.extend(props);
             }
@@ -2739,9 +2755,11 @@ mod type_converter {
             .iter()
             .map(|op| spread_operand::<I>(env, state, op))
             .collect::<Result<_, _>>()?;
-        let prefix_tys = tys.into_iter().fold(Vec::new(), |mut acc, t| {
-            acc.extend(spread_of_ty(&t));
-            acc
+        let prefix_tys = tys.into_iter().fold(Vec::new(), |acc, t| {
+            let mut spread = spread_of_ty(&t);
+            spread.reverse();
+            spread.extend(acc);
+            spread
         });
         mk_spread(&ty, target, prefix_tys, &head_slice_ty)
     }
@@ -2751,7 +2769,7 @@ mod type_converter {
         state: &mut State,
         ty: ALocTy,
         inexact: bool,
-        resolved_rev: &[flow_typing_type::type_::ResolvedParam],
+        resolved: &[flow_typing_type::type_::ResolvedParam],
         unresolved: &[flow_typing_type::type_::UnresolvedParam],
     ) -> Result<ALocTy, Error> {
         use flow_typing_type::type_::ArrType;
@@ -2759,7 +2777,7 @@ mod type_converter {
         use flow_typing_type::type_::UnresolvedParam;
 
         let mut head: Vec<ty::TupleElement<ALoc>> = Vec::new();
-        for resolved in resolved_rev.iter().rev() {
+        for resolved in resolved.iter() {
             match resolved {
                 ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) => {
                     let t = type__::<I>(env, state, None, &elem.t)?;
@@ -5201,6 +5219,8 @@ impl<I: NormalizerInput> Normalizer<I> {
             file_sig,
             imported_names,
             options,
+            // ref_type_bodies = None;
+            ref_type_bodies: None,
         };
 
         let mut state = State::empty();

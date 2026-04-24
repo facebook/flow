@@ -154,38 +154,73 @@ fn handle_response(
         documentation,
     } = response;
     match tys {
-        // | ServerProt.Response.InferType.JSON json ->
         server_prot::response::infer_type::Payload::Json(types) => {
-            // The server pre-serializes the JSON value into a string because
-            // bincode (the wire encoder) cannot encode `serde_json::Value`.
-            // Parse it back here before we re-embed it into the response.
-            let types: serde_json::Value =
-                serde_json::from_str(&types).expect("server-produced JSON must be valid");
-            // let offset_table =
-            //   Base.Option.map file_contents ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
+            // Wrap the server's pre-serialized "types" JSON as a `RawValue` so the
+            // duplicate keys produced by `ty_debug::json_of_utility` survive the
+            // round-trip — `serde_json::Map` would deduplicate them.
+            let types_raw = serde_json::value::RawValue::from_string(types)
+                .expect("type-at-pos: server payload is valid JSON");
             let offset_table = file_contents
                 .as_deref()
                 .map(flow_parser::offset_utils::OffsetTable::make);
-            // let json_assoc =
-            //   ("types", json)
-            //   :: ("reasons", JSON_Array [])
-            //   :: ("loc", json_of_loc ~strip_root ~offset_table loc)
-            //   :: Flow_errors_utils.deprecated_json_props_of_loc ~strip_root loc
-            let mut json = serde_json::Map::new();
-            json.insert("types".to_string(), types);
-            json.insert("reasons".to_string(), serde_json::Value::Array(vec![]));
-            json.insert(
-                "loc".to_string(),
-                flow_common::reason::json_of_loc(strip_root, false, offset_table.as_ref(), &loc),
-            );
-            json.extend(error_utils::deprecated_json_props_of_loc(strip_root, &loc));
-            if let Some(documentation) = documentation {
-                json.insert(
-                    "documentation".to_string(),
-                    serde_json::Value::String(documentation),
-                );
+            let loc_json =
+                flow_common::reason::json_of_loc(strip_root, false, offset_table.as_ref(), &loc);
+            let deprecated = error_utils::deprecated_json_props_of_loc(strip_root, &loc);
+            // Fields are declared in alphabetical order so the serde-derived
+            // serializer emits them in the same order OCaml's `Hh_json`
+            // (`sort_keys=true`) does.
+            #[derive(serde::Serialize)]
+            struct OuterResponse<'a> {
+                #[serde(skip_serializing_if = "Option::is_none")]
+                documentation: Option<&'a str>,
+                end: &'a serde_json::Value,
+                endline: &'a serde_json::Value,
+                line: &'a serde_json::Value,
+                loc: &'a serde_json::Value,
+                path: &'a serde_json::Value,
+                reasons: &'a [serde_json::Value],
+                start: &'a serde_json::Value,
+                types: &'a serde_json::value::RawValue,
             }
-            flow_hh_json::print_json_endline(pretty, &serde_json::Value::Object(json));
+            // `deprecated_json_props_of_loc` returns a fixed key order:
+            // path, line, endline, start, end. Bind them by name.
+            let null = serde_json::Value::Null;
+            let mut path = &null;
+            let mut line = &null;
+            let mut endline = &null;
+            let mut start = &null;
+            let mut end = &null;
+            for (k, v) in &deprecated {
+                match k.as_str() {
+                    "path" => path = v,
+                    "line" => line = v,
+                    "endline" => endline = v,
+                    "start" => start = v,
+                    "end" => end = v,
+                    _ => {}
+                }
+            }
+            let reasons: [serde_json::Value; 0] = [];
+            let outer = OuterResponse {
+                documentation: documentation.as_deref(),
+                end,
+                endline,
+                line,
+                loc: &loc_json,
+                path,
+                reasons: &reasons,
+                start,
+                types: &types_raw,
+            };
+            let compact = serde_json::to_string(&outer).expect("type-at-pos: serialize outer");
+            if pretty {
+                println!(
+                    "{}",
+                    flow_hh_json::pretty_print_compact_at_indent(&compact, "")
+                );
+            } else {
+                println!("{compact}");
+            }
         }
         server_prot::response::infer_type::Payload::Friendly(tys) => {
             handle_friendly_result(

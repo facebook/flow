@@ -284,7 +284,16 @@ pub mod simplify {
     }
 
     /* All fail_* and on_obj_t use trait defaults — inherits from comparator_ty */
-    impl TyIter2Ty<ALoc, ()> for ComparatorBase {}
+    impl TyIter2Ty<ALoc, ()> for ComparatorBase {
+        fn on_bound_locs(
+            &mut self,
+            env: &(),
+            l1: &ALoc,
+            l2: &ALoc,
+        ) -> Result<(), StructuralMismatch> {
+            self.on_aloc(env, l1, l2)
+        }
+    }
 
     pub struct ComparatorMerge;
 
@@ -330,6 +339,15 @@ pub mod simplify {
             _ak2: &AnyKind<ALoc>,
         ) -> Result<(), StructuralMismatch> {
             Ok(())
+        }
+
+        fn on_bound_locs(
+            &mut self,
+            env: &(),
+            l1: &ALoc,
+            l2: &ALoc,
+        ) -> Result<(), StructuralMismatch> {
+            self.on_aloc(env, l1, l2)
         }
     }
 

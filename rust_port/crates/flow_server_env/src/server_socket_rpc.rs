@@ -1153,7 +1153,8 @@ pub mod infer_type {
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub enum Payload {
         Friendly(Option<FriendlyResponse>),
-        // Carries pre-serialized JSON; see `server_prot::response::infer_type::Payload`.
+        // Carries the JSON payload pre-serialized as a string; see
+        // `server_prot::response::infer_type::Payload`.
         Json(String),
     }
 

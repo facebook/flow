@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -41,9 +42,9 @@ use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypecheckArtifacts;
 use flow_typing::ty_members;
+use flow_typing::ty_normalizer_flow;
 use flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode;
 use flow_typing_ty_normalizer::env::Genv;
-use flow_typing_ty_normalizer::no_flow;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_util;
@@ -302,6 +303,8 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
         &|r| r.replace_desc(VirtualReasonDesc::RCustom("ref_expansion".into())),
         body_type,
     );
+    // Use compact options: disable ref body collection to avoid recursion,
+    // use shallow depth
     let mut compact_options = genv.options.dupe();
     compact_options.max_depth = Some(3);
     let compact_genv = Genv {
@@ -310,8 +313,9 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
         file_sig: genv.file_sig.dupe(),
         imported_names: genv.imported_names.dupe(),
         options: compact_options,
+        ref_type_bodies: None,
     };
-    match no_flow::from_type(&compact_genv, &stripped) {
+    match ty_normalizer_flow::from_type(&compact_genv, &stripped) {
         Err(_) => None,
         Ok(ty_elt) => summarize_ty_elt(&ty_elt),
     }
@@ -320,13 +324,13 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
 // Augment refs with type summaries from collected ref type bodies
 fn augment_refs_with_summaries(
     genv: &Genv<'_, '_>,
-    ref_type_bodies_tbl: &BTreeMap<String, Type>,
+    ref_type_bodies_tbl: &Rc<RefCell<BTreeMap<String, Type>>>,
     refs: &Option<Vec<(String, Loc)>>,
 ) -> Option<Vec<(String, Loc, Option<String>)>> {
     refs.as_ref().map(|refs| {
         refs.iter()
             .map(|(name, loc)| {
-                let summary = match ref_type_bodies_tbl.get(name) {
+                let summary = match ref_type_bodies_tbl.borrow().get(name) {
                     Some(body_type) => compute_ref_summary(genv, body_type),
                     None => None,
                 };
@@ -339,7 +343,7 @@ fn augment_refs_with_summaries(
 fn mk_normalizer_genv<'a, 'cx: 'a>(
     expand_component_props: bool,
     check_result: &'a FileArtifacts<'cx>,
-) -> (Genv<'a, 'cx>, BTreeMap<String, Type>) {
+) -> (Genv<'a, 'cx>, Rc<RefCell<BTreeMap<String, Type>>>) {
     let (ParseArtifacts { file_sig, .. }, TypecheckArtifacts { cx, typed_ast, .. }) = check_result;
     let options = flow_typing_ty_normalizer::env::Options {
         expand_internal_types: false,
@@ -357,15 +361,19 @@ fn mk_normalizer_genv<'a, 'cx: 'a>(
         max_depth: Some(10),
         toplevel_is_type_identifier_reference: false,
     };
-    let ref_type_bodies_tbl = BTreeMap::new();
-    let genv = no_flow::mk_genv(options, cx, Some(typed_ast), file_sig.dupe());
+    let ref_type_bodies_tbl = Rc::new(RefCell::new(BTreeMap::new()));
+    let base_genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig.dupe());
+    let genv = Genv {
+        ref_type_bodies: Some(ref_type_bodies_tbl.dupe()),
+        ..base_genv
+    };
     (genv, ref_type_bodies_tbl)
 }
 
 fn format_ty_elt_response(
     reader: &SharedMem,
     genv: &Genv<'_, '_>,
-    ref_type_bodies_tbl: &BTreeMap<String, Type>,
+    ref_type_bodies_tbl: &Rc<RefCell<BTreeMap<String, Type>>>,
     loc: Loc,
     documentation: Option<String>,
     ast: &ast::Program<Loc, Loc>,
@@ -419,7 +427,7 @@ fn type_of_name_from_artifacts<'a, 'cx: 'a>(
         doc_at_loc(reader, check_result, ast, cx.file(), line, column)
     };
     let (genv, ref_type_bodies_tbl) = mk_normalizer_genv(expand_component_props, check_result);
-    match no_flow::from_type(&genv, type_) {
+    match ty_normalizer_flow::from_type(&genv, type_) {
         Ok(ty_elt) => Ok(format_ty_elt_response(
             reader,
             &genv,
@@ -471,7 +479,7 @@ fn type_of_name_member<'a, 'cx: 'a>(
     let (ParseArtifacts { file_sig, ast, .. }, TypecheckArtifacts { cx, typed_ast, .. }) =
         check_result;
     let (genv, ref_type_bodies_tbl) = mk_normalizer_genv(true, check_result);
-    match no_flow::from_type(&genv, type_) {
+    match ty_normalizer_flow::from_type(&genv, type_) {
         Err(e) => Err(format!("normalizer error {}", e)),
         Ok(ty_elt) => {
             let format_member_ty = |member_ty: Arc<Ty<ALoc>>,
@@ -618,7 +626,7 @@ fn resolve_name_from_index(
                 export_index::Kind::NamedType => format!("type {{{}}}", actual_name),
                 export_index::Kind::Namespace => actual_name.to_string(),
             };
-            Ok(format!("import {} from '{}';", thing, s.as_str()))
+            Ok(format!("import {} from '{}';", thing, s.to_absolute()))
         }
         (export_index::Source::Global, export_index::Kind::DefaultType)
         | (export_index::Source::Global, export_index::Kind::NamedType) => {

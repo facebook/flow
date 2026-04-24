@@ -603,6 +603,24 @@ pub mod type_at_pos {
                 _ => ast_visitor::match_object_pattern_property_default(self, prop),
             }
         }
+
+        fn call_type_arg(
+            &mut self,
+            t: &'ast ast::expression::CallTypeArg<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            use ast::expression::CallTypeArg;
+            match t {
+                CallTypeArg::Implicit(implicit) => {
+                    let (loc, ty) = &implicit.loc;
+                    if self.covers_target(loc) {
+                        self.find_loc(loc, ty, false)
+                    } else {
+                        ast_visitor::call_type_arg_default(self, t)
+                    }
+                }
+                _ => ast_visitor::call_type_arg_default(self, t),
+            }
+        }
     }
 
     pub fn find(

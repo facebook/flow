@@ -165,7 +165,7 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
             .into_iter()
             .map(|(k, v)| (k, map_member_info(|ty| vec![ty], v)))
             .collect();
-        for ts_member in ts_members.into_iter() {
+        for ts_member in ts_members.into_iter().rev() {
             let old_result = std::mem::take(&mut result);
             for (key, tys_info) in old_result {
                 if let Some(ty_info) = ts_member.get(&key) {
@@ -173,8 +173,9 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                     // - as inherited if all of its constituent members are.
                     // - as from a nullable object if any of its constituent members are.
                     // - as defined at the definition locations of any of its constituent members.
-                    let mut new_tys = tys_info.ty;
-                    new_tys.push(ty_info.ty.clone());
+                    // OCaml: ty = Nel.cons ty tys (prepend ty_opt's ty to tys_opt's tys)
+                    let mut new_tys = vec![ty_info.ty.clone()];
+                    new_tys.extend(tys_info.ty);
                     let mut new_def_locs = tys_info.def_locs;
                     new_def_locs.extend(ty_info.def_locs.clone());
                     result.insert(
@@ -203,7 +204,7 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
             .into_iter()
             .map(|(k, v)| (k, map_member_info(|ty| vec![ty], v)))
             .collect();
-        for ts_member in ts_members.into_iter() {
+        for ts_member in ts_members.into_iter().rev() {
             let old_result = std::mem::take(&mut result);
             let mut all_keys: std::collections::BTreeSet<Name> =
                 old_result.keys().duped().collect();
@@ -217,8 +218,8 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                         // - as inherited if all of its constituent members are.
                         // - as from a nullable object only if all its constituent members are.
                         // - as defined at the definition locations of any of its constituent members.
-                        let mut new_tys = tys_info.ty.clone();
-                        new_tys.push(ty_info.ty.clone());
+                        let mut new_tys = vec![ty_info.ty.clone()];
+                        new_tys.extend(tys_info.ty.clone());
                         let mut new_def_locs = ty_info.def_locs.clone();
                         new_def_locs.extend(tys_info.def_locs.clone());
                         result.insert(

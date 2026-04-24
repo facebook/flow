@@ -192,16 +192,22 @@ fn idle_logging_loop(
 
     let should_print_summary = _options.profile;
     while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
-        let (_profiling, ()) = with_profiling("Idle", should_print_summary, |profiling| {
-            let iterations = idle_period_in_seconds as u64;
-            for _ in 0..iterations {
-                if stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
-                    break;
+        let (_profiling, completed_idle_period) =
+            with_profiling("Idle", should_print_summary, |profiling| {
+                let iterations = idle_period_in_seconds as u64;
+                for _ in 0..iterations {
+                    if stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                        return false;
+                    }
+                    sample(profiling);
+                    std::thread::park_timeout(std::time::Duration::from_secs(1));
                 }
-                sample(profiling);
-                std::thread::sleep(std::time::Duration::from_secs(1));
-            }
-        });
+                true
+            });
+
+        if !completed_idle_period {
+            break;
+        }
 
         let idle_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -271,6 +277,7 @@ fn serve(
         );
 
         stop_flag.store(true, std::sync::atomic::Ordering::Relaxed);
+        idle_handle.thread().unpark();
         let _ = idle_handle.join();
         let _ = gc_handle.join();
 

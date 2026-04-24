@@ -70,6 +70,18 @@ fn json_with_type(type_name: &str, mut fields: Vec<(&str, Json)>) -> Json {
     Json::Object(result.into_iter().collect())
 }
 
+fn json_number_from_string(s: &str) -> Json {
+    if let Ok(i) = s.parse::<i64>() {
+        Json::Number(serde_json::Number::from(i))
+    } else if let Ok(d) = s.parse::<f64>() {
+        serde_json::Number::from_f64(d)
+            .map(Json::Number)
+            .unwrap_or(Json::Null)
+    } else {
+        Json::String(s.to_string())
+    }
+}
+
 // Convert type_t_kind to JSON
 fn json_of_type_t_kind(kind: &TypeTKind) -> Json {
     match kind {
@@ -599,12 +611,7 @@ fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
         DefTInner::NumericStrKeyT(num_lit) => json_with_type(
             "NumericStrKey",
             vec![
-                (
-                    "number",
-                    serde_json::Number::from_f64(num_lit.0)
-                        .map(Json::Number)
-                        .unwrap_or(Json::Null),
-                ),
+                ("number", json_number_from_string(&num_lit.1)),
                 ("string", Json::String(num_lit.1.to_string())),
             ],
         ),
@@ -614,12 +621,7 @@ fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
                 "SingletonNum",
                 vec![
                     ("from_annot", Json::Bool(*from_annot)),
-                    (
-                        "number",
-                        serde_json::Number::from_f64(value.0)
-                            .map(Json::Number)
-                            .unwrap_or(Json::Null),
-                    ),
+                    ("number", json_number_from_string(s)),
                     ("string", Json::String(s.to_string())),
                 ],
             )

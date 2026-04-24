@@ -151,8 +151,6 @@ use flow_services_get_def::get_def_types::Purpose;
 
 const DOCBLOCK_MAX_TOKENS: usize = 10;
 
-type ALocToLocConverter = flow_common_ty::ty_debug::DebugLocConverter;
-
 pub type EphemeralParallelizableResult = (server_prot::response::Response, Option<lsp_prot::Json>);
 
 pub type EphemeralNonparallelizableResult =
@@ -1537,47 +1535,59 @@ fn infer_type_to_response(
     )>,
     documentation: Option<String>,
     tys: Option<flow_common_ty::ty::TypeAtPosResult>,
-    _loc_of_aloc: &dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc,
+    loc_of_aloc: &dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc,
 ) -> server_prot::response::infer_type::T {
+    let converter = flow_common_ty::ty_debug::AlocToLocFn::new(loc_of_aloc);
     let tys = if json {
         let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
             exact_by_default,
             ts_syntax,
             ..Default::default()
         };
-        let json = match &tys {
+        // The "expanded" field carries `Hh_json` output that may contain duplicate
+        // keys (`json_of_utility` adds a second `"kind"` to the outer wrapper).
+        // `serde_json::Map` deduplicates, so we use `Box<RawValue>` for that field
+        // and `ty_debug::json_of_elt_raw` to keep the duplicates intact.
+        #[derive(serde::Serialize)]
+        struct InnerType {
+            #[serde(skip_serializing_if = "Option::is_none")]
+            expanded: Option<Box<serde_json::value::RawValue>>,
+            #[serde(rename = "type")]
+            type_: String,
+        }
+        #[derive(serde::Serialize)]
+        struct TypesPayload {
+            evaluated: Option<InnerType>,
+            unevaluated: InnerType,
+        }
+        let json_string: String = match &tys {
             Some(result) => {
-                let type_json = |elt: &flow_common_ty::ty::ALocElt| -> serde_json::Value {
-                    let type_str =
-                        flow_common_ty::ty_printer::string_of_elt_single_line(elt, &printer_opts);
-                    let mut json_obj = serde_json::Map::new();
-                    json_obj.insert("type".to_string(), serde_json::Value::String(type_str));
-                    if expanded {
-                        let debug_json = flow_common_ty::ty_debug::json_of_elt::<
-                            flow_aloc::ALoc,
-                            ALocToLocConverter,
-                        >(elt, strip_root);
-                        json_obj.insert("expanded".to_string(), debug_json);
+                let type_json = |elt: &flow_common_ty::ty::ALocElt| -> InnerType {
+                    InnerType {
+                        expanded: if expanded {
+                            Some(
+                                flow_common_ty::ty_debug::json_of_elt_raw::<flow_aloc::ALoc>(
+                                    &converter, elt, strip_root,
+                                ),
+                            )
+                        } else {
+                            None
+                        },
+                        type_: flow_common_ty::ty_printer::string_of_elt_single_line(
+                            elt,
+                            &printer_opts,
+                        ),
                     }
-                    serde_json::Value::Object(json_obj)
                 };
-                let evaluated = match &result.evaluated {
-                    Some(e) => type_json(e),
-                    None => serde_json::Value::Null,
+                let payload = TypesPayload {
+                    evaluated: result.evaluated.as_ref().map(&type_json),
+                    unevaluated: type_json(&result.unevaluated),
                 };
-                serde_json::json!({
-                    "unevaluated": type_json(&result.unevaluated),
-                    "evaluated": evaluated
-                })
+                serde_json::to_string(&payload).expect("infer_type: serialize TypesPayload")
             }
-            None => serde_json::Value::Null,
+            None => "null".to_string(),
         };
-        // Bincode cannot encode `serde_json::Value` (uses `deserialize_any`),
-        // so we pre-serialize it to a string for the wire. The OCaml original
-        // shipped `Hh_json.json` directly because `Marshal` is self-describing.
-        let json =
-            serde_json::to_string(&json).expect("serde_json::to_string never fails on Value");
-        server_prot::response::infer_type::Payload::Json(json)
+        server_prot::response::infer_type::Payload::Json(json_string)
     } else {
         let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
             exact_by_default,

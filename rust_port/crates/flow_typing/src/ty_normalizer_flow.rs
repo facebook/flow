@@ -277,6 +277,7 @@ pub fn mk_genv<'a, 'cx>(
         typed_ast_opt,
         file_sig,
         imported_names,
+        ref_type_bodies: None,
     }
 }
 

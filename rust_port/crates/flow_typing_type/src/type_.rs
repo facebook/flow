@@ -6369,7 +6369,7 @@ pub mod properties {
             Rc::make_mut(&mut self.0).remove(name)
         }
 
-        pub fn iter(&self) -> impl Iterator<Item = (&Name, &Property)> {
+        pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&Name, &Property)> {
             self.0.iter()
         }
 
@@ -6582,8 +6582,8 @@ pub mod nominal {
     impl std::fmt::Display for Id {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                Id::UserDefinedOpaqueTypeId(box UserDefinedOpaqueTypeIdData(aloc_id, name)) => {
-                    write!(f, "user-defined {} ({})", name, aloc_id)
+                Id::UserDefinedOpaqueTypeId(box UserDefinedOpaqueTypeIdData(_aloc_id, name)) => {
+                    write!(f, "user-defined {} (<opaque>)", name)
                 }
                 Id::InternalEnforceUnionOptimized => write!(f, "InternalEnforceUnionOptimized"),
                 Id::StuckEval(kind) => match kind {

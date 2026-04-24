@@ -767,39 +767,90 @@ fn dump_elt<L: Debug + Clone + Dupe>(depth: i32, elt: &Elt<L>) -> String {
 use std::path::Path;
 
 use serde_json::Value as Json;
-use serde_json::json;
 
 pub trait ALocToLoc<L> {
-    fn loc_to_string(loc: &L, strip_root: Option<&Path>) -> String;
+    fn loc_to_string(&self, loc: &L, strip_root: Option<&Path>) -> String;
 }
 
-pub struct DebugLocConverter;
+pub struct AlocToLocFn<'a, F>
+where
+    F: Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc + 'a,
+{
+    pub f: F,
+    _marker: std::marker::PhantomData<&'a ()>,
+}
 
-impl<L: Debug> ALocToLoc<L> for DebugLocConverter {
-    fn loc_to_string(loc: &L, _strip_root: Option<&Path>) -> String {
-        format!("{:?}", loc)
+impl<'a, F> AlocToLocFn<'a, F>
+where
+    F: Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc + 'a,
+{
+    pub fn new(f: F) -> Self {
+        Self {
+            f,
+            _marker: std::marker::PhantomData,
+        }
     }
 }
 
-fn json_of_provenance<L, C: ALocToLoc<L>>(
+impl<'a, F> ALocToLoc<flow_aloc::ALoc> for AlocToLocFn<'a, F>
+where
+    F: Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc + 'a,
+{
+    fn loc_to_string(&self, loc: &flow_aloc::ALoc, strip_root: Option<&Path>) -> String {
+        let strip_root_str = strip_root.and_then(|p| p.to_str());
+        let concrete = (self.f)(loc);
+        flow_common::reason::string_of_loc(strip_root_str, &concrete)
+    }
+}
+
+/// Formats an ALoc directly (its keyed-or-concrete representation) without concretizing.
+/// OCaml: `Ty_debug.Make (struct let aloc_to_loc = None end)` (ty_debug.ml:87-95).
+pub struct AlocOnlyConverter;
+
+impl ALocToLoc<flow_aloc::ALoc> for AlocOnlyConverter {
+    fn loc_to_string(&self, loc: &flow_aloc::ALoc, strip_root: Option<&Path>) -> String {
+        let strip_root_str = strip_root.and_then(|p| p.to_str());
+        flow_common::reason::string_of_aloc(strip_root_str, loc)
+    }
+}
+
+fn json_of_provenance<L>(
+    converter: &dyn ALocToLoc<L>,
     loc: &L,
     p: &Provenance<L>,
     strip_root: Option<&Path>,
 ) -> Json {
-    json!({
-        "kind": ctor_of_provenance(p),
-        "loc": C::loc_to_string(loc, strip_root)
-    })
+    Json::Object(serde_json::Map::from_iter(vec![
+        (
+            "kind".to_string(),
+            Json::String(ctor_of_provenance(p).to_string()),
+        ),
+        (
+            "loc".to_string(),
+            Json::String(converter.loc_to_string(loc, strip_root)),
+        ),
+    ]))
 }
 
-fn json_of_symbol<L, C: ALocToLoc<L>>(sym: &Symbol<L>, strip_root: Option<&Path>) -> Json {
-    json!({
-        "provenance": json_of_provenance::<L, C>(&sym.sym_def_loc, &sym.sym_provenance, strip_root),
-        "name": sym.sym_name.as_str()
-    })
+fn json_of_symbol<L>(
+    converter: &dyn ALocToLoc<L>,
+    sym: &Symbol<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    Json::Object(serde_json::Map::from_iter(vec![
+        (
+            "provenance".to_string(),
+            json_of_provenance(converter, &sym.sym_def_loc, &sym.sym_provenance, strip_root),
+        ),
+        (
+            "name".to_string(),
+            Json::String(sym.sym_name.as_str().to_string()),
+        ),
+    ]))
 }
 
-fn json_of_builtin_value<L, C: ALocToLoc<L>>(
+fn json_of_builtin_value<L>(
+    converter: &dyn ALocToLoc<L>,
     v: &BuiltinOrSymbol<L>,
     strip_root: Option<&Path>,
 ) -> Json {
@@ -807,7 +858,7 @@ fn json_of_builtin_value<L, C: ALocToLoc<L>>(
         BuiltinOrSymbol::FunProto => Json::String("Function.prototype".to_string()),
         BuiltinOrSymbol::ObjProto => Json::String("Object.prototype".to_string()),
         BuiltinOrSymbol::FunProtoBind => Json::String("Function.prototype.bind".to_string()),
-        BuiltinOrSymbol::TSymbol(s) => json_of_symbol::<L, C>(s, strip_root),
+        BuiltinOrSymbol::TSymbol(s) => json_of_symbol(converter, s, strip_root),
     }
 }
 
@@ -825,7 +876,8 @@ fn json_of_mapped_type_variance(v: MappedTypeVariance) -> Json {
     }
 }
 
-fn json_of_targs<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_targs<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     targs_opt: Option<&[Arc<Ty<L>>]>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
@@ -833,7 +885,7 @@ fn json_of_targs<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Some(targs) => {
             let arr: Vec<Json> = targs
                 .iter()
-                .map(|t| json_of_t::<L, C>(t, strip_root))
+                .map(|t| json_of_t(converter, t, strip_root))
                 .collect();
             vec![("typeArgs".to_string(), Json::Array(arr))]
         }
@@ -841,7 +893,8 @@ fn json_of_targs<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     }
 }
 
-fn json_of_typeparam<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_typeparam<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     tp: &TypeParam<L>,
     strip_root: Option<&Path>,
 ) -> Json {
@@ -851,7 +904,7 @@ fn json_of_typeparam<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             "bound".to_string(),
             tp.tp_bound
                 .as_ref()
-                .map(|b| json_of_t::<L, C>(b.as_ref(), strip_root))
+                .map(|b| json_of_t(converter, b.as_ref(), strip_root))
                 .unwrap_or(Json::Null),
         ),
         ("polarity".to_string(), json_of_polarity(tp.tp_polarity)),
@@ -860,13 +913,14 @@ fn json_of_typeparam<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     if let Some(default) = &tp.tp_default {
         obj.push((
             "default".to_string(),
-            json_of_t::<L, C>(default.as_ref(), strip_root),
+            json_of_t(converter, default.as_ref(), strip_root),
         ));
     }
-    Json::Object(obj.into_iter().collect())
+    Json::Object(serde_json::Map::from_iter(obj))
 }
 
-fn json_of_type_params<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_type_params<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     ps: Option<&[TypeParam<L>]>,
     strip_root: Option<&Path>,
 ) -> Json {
@@ -875,41 +929,43 @@ fn json_of_type_params<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Some(tparams) => {
             let arr: Vec<Json> = tparams
                 .iter()
-                .map(|tp| json_of_typeparam::<L, C>(tp, strip_root))
+                .map(|tp| json_of_typeparam(converter, tp, strip_root))
                 .collect();
             Json::Array(arr)
         }
     }
 }
 
-fn json_of_return_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_return_t<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     ret: &ReturnT<L>,
     strip_root: Option<&Path>,
 ) -> Json {
     match ret {
-        ReturnT::ReturnType(t) => {
-            json!({ "type_": json_of_t::<L, C>(t, strip_root) })
-        }
-        ReturnT::TypeGuard(impl_, x, t) => {
-            json!({
-                "type_guard": {
-                    "implies": *impl_,
-                    "type_parameter": x,
-                    "type_": json_of_t::<L, C>(t, strip_root)
-                }
-            })
-        }
+        ReturnT::ReturnType(t) => Json::Object(serde_json::Map::from_iter(vec![(
+            "type_".to_string(),
+            json_of_t(converter, t, strip_root),
+        )])),
+        ReturnT::TypeGuard(impl_, x, t) => Json::Object(serde_json::Map::from_iter(vec![(
+            "type_guard".to_string(),
+            Json::Object(serde_json::Map::from_iter(vec![
+                ("implies".to_string(), Json::Bool(*impl_)),
+                ("type_parameter".to_string(), Json::String(x.to_string())),
+                ("type_".to_string(), json_of_t(converter, t, strip_root)),
+            ])),
+        )])),
     }
 }
 
-fn json_of_fun_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_fun_t<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     f: &FunT<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     let param_types: Vec<Json> = f
         .fun_params
         .iter()
-        .map(|(_, t, _)| json_of_t::<L, C>(t, strip_root))
+        .map(|(_, t, _)| json_of_t(converter, t, strip_root))
         .collect();
     let param_names: Vec<Json> = f
         .fun_params
@@ -925,29 +981,29 @@ fn json_of_fun_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Some((name, t)) => {
             let mut obj = vec![(
                 "restParamType".to_string(),
-                json_of_t::<L, C>(t.as_ref(), strip_root),
+                json_of_t(converter, t.as_ref(), strip_root),
             )];
             if let Some(n) = name {
                 obj.push(("restParamName".to_string(), Json::String(n.to_string())));
             }
-            Json::Object(obj.into_iter().collect())
+            Json::Object(serde_json::Map::from_iter(obj))
         }
     };
     vec![
         (
             "typeParams".to_string(),
-            json_of_type_params::<L, C>(f.fun_type_params.as_deref(), strip_root),
+            json_of_type_params(converter, f.fun_type_params.as_deref(), strip_root),
         ),
         ("paramTypes".to_string(), Json::Array(param_types)),
         ("paramNames".to_string(), Json::Array(param_names)),
         ("restParam".to_string(), rest_param),
         (
             "returnType".to_string(),
-            json_of_return_t::<L, C>(&f.fun_return, strip_root),
+            json_of_return_t(converter, &f.fun_return, strip_root),
         ),
         (
             "staticType".to_string(),
-            json_of_t::<L, C>(&f.fun_static, strip_root),
+            json_of_t(converter, &f.fun_static, strip_root),
         ),
         (
             "functionHook".to_string(),
@@ -956,19 +1012,30 @@ fn json_of_fun_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     ]
 }
 
-fn json_of_dict<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_dict<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     d: &Dict<L>,
     strip_root: Option<&Path>,
 ) -> Json {
-    json!({
-        "polarity": json_of_polarity(d.dict_polarity),
-        "name": d.dict_name.as_deref().unwrap_or("_"),
-        "key": json_of_t::<L, C>(&d.dict_key, strip_root),
-        "value": json_of_t::<L, C>(&d.dict_value, strip_root)
-    })
+    Json::Object(serde_json::Map::from_iter(vec![
+        ("polarity".to_string(), json_of_polarity(d.dict_polarity)),
+        (
+            "name".to_string(),
+            Json::String(d.dict_name.as_deref().unwrap_or("_").to_string()),
+        ),
+        (
+            "key".to_string(),
+            json_of_t(converter, &d.dict_key, strip_root),
+        ),
+        (
+            "value".to_string(),
+            json_of_t(converter, &d.dict_value, strip_root),
+        ),
+    ]))
 }
 
-fn json_of_named_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_named_prop<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     p: &NamedProp<L>,
     strip_root: Option<&Path>,
 ) -> Json {
@@ -977,38 +1044,34 @@ fn json_of_named_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             t,
             polarity,
             optional,
-        } => {
-            json!({
-                "kind": "Field",
-                "type": json_of_t::<L, C>(t, strip_root),
-                "polarity": json_of_polarity(*polarity),
-                "optional": *optional
-            })
-        }
-        NamedProp::Method(f) => {
-            let fun_obj: serde_json::Map<String, Json> =
-                json_of_fun_t::<L, C>(f, strip_root).into_iter().collect();
-            json!({
-                "kind": "Method",
-                "funtype": Json::Object(fun_obj)
-            })
-        }
-        NamedProp::Get(t) => {
-            json!({
-                "kind": "Get",
-                "type": json_of_t::<L, C>(t, strip_root)
-            })
-        }
-        NamedProp::Set(t) => {
-            json!({
-                "kind": "Set",
-                "type": json_of_t::<L, C>(t, strip_root)
-            })
-        }
+        } => Json::Object(serde_json::Map::from_iter(vec![
+            ("kind".to_string(), Json::String("Field".to_string())),
+            ("type".to_string(), json_of_t(converter, t, strip_root)),
+            ("polarity".to_string(), json_of_polarity(*polarity)),
+            ("optional".to_string(), Json::Bool(*optional)),
+        ])),
+        NamedProp::Method(f) => Json::Object(serde_json::Map::from_iter(vec![
+            ("kind".to_string(), Json::String("Method".to_string())),
+            (
+                "funtype".to_string(),
+                Json::Object(serde_json::Map::from_iter(json_of_fun_t(
+                    converter, f, strip_root,
+                ))),
+            ),
+        ])),
+        NamedProp::Get(t) => Json::Object(serde_json::Map::from_iter(vec![
+            ("kind".to_string(), Json::String("Get".to_string())),
+            ("type".to_string(), json_of_t(converter, t, strip_root)),
+        ])),
+        NamedProp::Set(t) => Json::Object(serde_json::Map::from_iter(vec![
+            ("kind".to_string(), Json::String("Set".to_string())),
+            ("type".to_string(), json_of_t(converter, t, strip_root)),
+        ])),
     }
 }
 
-fn json_of_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_prop<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     prop: &Prop<L>,
     strip_root: Option<&Path>,
 ) -> Json {
@@ -1022,33 +1085,41 @@ fn json_of_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         } => {
             let def_locs_arr: Vec<Json> = def_locs
                 .iter()
-                .map(|loc| Json::String(C::loc_to_string(loc, strip_root)))
+                .map(|loc| Json::String(converter.loc_to_string(loc, strip_root)))
                 .collect();
-            json!({
-                "kind": "NamedProp",
-                "prop": {
-                    "name": name.as_str(),
-                    "prop": json_of_named_prop::<L, C>(prop, strip_root),
-                    "inherited": *inherited,
-                    "source": crate::ty::string_of_prop_source(source),
-                    "def_locs": def_locs_arr
-                }
-            })
+            Json::Object(serde_json::Map::from_iter(vec![
+                ("kind".to_string(), Json::String("NamedProp".to_string())),
+                (
+                    "prop".to_string(),
+                    Json::Object(serde_json::Map::from_iter(vec![
+                        ("name".to_string(), Json::String(name.as_str().to_string())),
+                        (
+                            "prop".to_string(),
+                            json_of_named_prop(converter, prop, strip_root),
+                        ),
+                        ("inherited".to_string(), Json::Bool(*inherited)),
+                        (
+                            "source".to_string(),
+                            Json::String(crate::ty::string_of_prop_source(source).to_string()),
+                        ),
+                        ("def_locs".to_string(), Json::Array(def_locs_arr)),
+                    ])),
+                ),
+            ]))
         }
-        Prop::CallProp(ft) => {
-            let fun_obj: serde_json::Map<String, Json> =
-                json_of_fun_t::<L, C>(ft, strip_root).into_iter().collect();
-            json!({
-                "kind": "CallProp",
-                "prop": Json::Object(fun_obj)
-            })
-        }
-        Prop::SpreadProp(t) => {
-            json!({
-                "kind": "SpreadProp",
-                "prop": json_of_t::<L, C>(t, strip_root)
-            })
-        }
+        Prop::CallProp(ft) => Json::Object(serde_json::Map::from_iter(vec![
+            ("kind".to_string(), Json::String("CallProp".to_string())),
+            (
+                "prop".to_string(),
+                Json::Object(serde_json::Map::from_iter(json_of_fun_t(
+                    converter, ft, strip_root,
+                ))),
+            ),
+        ])),
+        Prop::SpreadProp(t) => Json::Object(serde_json::Map::from_iter(vec![
+            ("kind".to_string(), Json::String("SpreadProp".to_string())),
+            ("prop".to_string(), json_of_t(converter, t, strip_root)),
+        ])),
         Prop::MappedTypeProp {
             key_tparam,
             source,
@@ -1066,44 +1137,69 @@ fn json_of_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 MappedTypeHomomorphicFlag::Unspecialized => "Unspecialized",
                 MappedTypeHomomorphicFlag::SemiHomomorphic(_) => "SemiHomomorphic",
             };
-            json!({
-                "kind": "MappedTypeProp",
-                "prop": {
-                    "key_tparam": key_tparam.tp_name,
-                    "source": json_of_t::<L, C>(source, strip_root),
-                    "homomorphic": homomorphic_str,
-                    "prop": json_of_t::<L, C>(prop, strip_root),
-                    "flags": {
-                        "variance": json_of_mapped_type_variance(flags.variance),
-                        "optional": optional_str
-                    }
-                }
-            })
+            Json::Object(serde_json::Map::from_iter(vec![
+                (
+                    "kind".to_string(),
+                    Json::String("MappedTypeProp".to_string()),
+                ),
+                (
+                    "prop".to_string(),
+                    Json::Object(serde_json::Map::from_iter(vec![
+                        (
+                            "key_tparam".to_string(),
+                            Json::String(key_tparam.tp_name.to_string()),
+                        ),
+                        (
+                            "source".to_string(),
+                            json_of_t(converter, source, strip_root),
+                        ),
+                        (
+                            "homomorphic".to_string(),
+                            Json::String(homomorphic_str.to_string()),
+                        ),
+                        ("prop".to_string(), json_of_t(converter, prop, strip_root)),
+                        (
+                            "flags".to_string(),
+                            Json::Object(serde_json::Map::from_iter(vec![
+                                (
+                                    "variance".to_string(),
+                                    json_of_mapped_type_variance(flags.variance),
+                                ),
+                                (
+                                    "optional".to_string(),
+                                    Json::String(optional_str.to_string()),
+                                ),
+                            ])),
+                        ),
+                    ])),
+                ),
+            ]))
         }
     }
 }
 
-fn json_of_obj_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_obj_t<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     o: &ObjT<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     let obj_kind = match &o.obj_kind {
         ObjKind::ExactObj => Json::String("Exact".to_string()),
         ObjKind::InexactObj => Json::String("Inexact".to_string()),
-        ObjKind::IndexedObj(d) => json_of_dict::<L, C>(d, strip_root),
+        ObjKind::IndexedObj(d) => json_of_dict(converter, d, strip_root),
         ObjKind::MappedTypeObj => Json::String("MappedType".to_string()),
     };
     let props: Vec<Json> = o
         .obj_props
         .iter()
-        .map(|p| json_of_prop::<L, C>(p, strip_root))
+        .map(|p| json_of_prop(converter, p, strip_root))
         .collect();
     vec![
         (
             "def_loc".to_string(),
             o.obj_def_loc
                 .as_ref()
-                .map(|loc| Json::String(C::loc_to_string(loc, strip_root)))
+                .map(|loc| Json::String(converter.loc_to_string(loc, strip_root)))
                 .unwrap_or(Json::Null),
         ),
         ("obj_kind".to_string(), obj_kind),
@@ -1111,13 +1207,14 @@ fn json_of_obj_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     ]
 }
 
-fn json_of_generic<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_generic<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     g: &GenericT<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     let (s, k, targs_opt) = g;
-    let mut result = json_of_targs::<L, C>(targs_opt.as_deref(), strip_root);
-    result.push(("type".to_string(), json_of_symbol::<L, C>(s, strip_root)));
+    let mut result = json_of_targs(converter, targs_opt.as_deref(), strip_root);
+    result.push(("type".to_string(), json_of_symbol(converter, s, strip_root)));
     result.push((
         "generic_kind".to_string(),
         Json::String(debug_string_of_generic_kind(*k).to_string()),
@@ -1125,17 +1222,18 @@ fn json_of_generic<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     result
 }
 
-fn json_of_component<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_component<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     regular_props: &ComponentProps<L>,
     renders: &Option<Arc<Ty<L>>>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     let props = match regular_props {
         ComponentProps::UnflattenedComponentProps(t) => {
-            json!({
-                "kind": "unflattened",
-                "type": json_of_t::<L, C>(t, strip_root)
-            })
+            Json::Object(serde_json::Map::from_iter(vec![
+                ("kind".to_string(), Json::String("unflattened".to_string())),
+                ("type".to_string(), json_of_t(converter, t, strip_root)),
+            ]))
         }
         ComponentProps::FlattenedComponentProps { props, inexact } => {
             let props_arr: Vec<Json> = props
@@ -1143,20 +1241,18 @@ fn json_of_component<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 .map(|p| match p {
                     FlattenedComponentProp::FlattenedComponentProp {
                         name, optional, t, ..
-                    } => {
-                        json!({
-                            "name": name.as_str(),
-                            "optional": *optional,
-                            "type": json_of_t::<L, C>(t, strip_root)
-                        })
-                    }
+                    } => Json::Object(serde_json::Map::from_iter(vec![
+                        ("name".to_string(), Json::String(name.as_str().to_string())),
+                        ("optional".to_string(), Json::Bool(*optional)),
+                        ("type".to_string(), json_of_t(converter, t, strip_root)),
+                    ])),
                 })
                 .collect();
-            json!({
-                "kind": "flattened",
-                "types": props_arr,
-                "inexact": *inexact
-            })
+            Json::Object(serde_json::Map::from_iter(vec![
+                ("kind".to_string(), Json::String("flattened".to_string())),
+                ("types".to_string(), Json::Array(props_arr)),
+                ("inexact".to_string(), Json::Bool(*inexact)),
+            ]))
         }
     };
     vec![
@@ -1165,13 +1261,14 @@ fn json_of_component<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             "renders".to_string(),
             renders
                 .as_ref()
-                .map(|r| json_of_t::<L, C>(r.as_ref(), strip_root))
+                .map(|r| json_of_t(converter, r.as_ref(), strip_root))
                 .unwrap_or(Json::Null),
         ),
     ]
 }
 
-fn json_of_utility<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_utility<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     u: &crate::ty::Utility<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
@@ -1180,14 +1277,15 @@ fn json_of_utility<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     if let Some(ts) = types_of_utility(u) {
         let targs: Vec<Json> = ts
             .iter()
-            .map(|t| json_of_t::<L, C>(t, strip_root))
+            .map(|t| json_of_t(converter, t, strip_root))
             .collect();
         result.push(("typeArgs".to_string(), Json::Array(targs)));
     }
     result
 }
 
-fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_t_list<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     t: &Ty<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
@@ -1196,7 +1294,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             let (_, name) = data.as_ref();
             vec![("bound".to_string(), Json::String(name.clone()))]
         }
-        Ty::Generic(g) => json_of_generic::<L, C>(g, strip_root),
+        Ty::Generic(g) => json_of_generic(converter, g, strip_root),
         Ty::Any(AnyKind::Annotated(_)) => {
             vec![("any".to_string(), Json::String("explicit".to_string()))]
         }
@@ -1216,14 +1314,14 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Ty::StrLit(s) => vec![("literal".to_string(), Json::String(s.as_str().to_string()))],
         Ty::BoolLit(b) => vec![("literal".to_string(), Json::Bool(*b))],
         Ty::BigIntLit(s) => vec![("literal".to_string(), Json::String(s.clone()))],
-        Ty::Fun(f) => json_of_fun_t::<L, C>(f, strip_root),
-        Ty::Obj(o) => json_of_obj_t::<L, C>(o, strip_root),
+        Ty::Fun(f) => json_of_fun_t(converter, f, strip_root),
+        Ty::Obj(o) => json_of_obj_t(converter, o, strip_root),
         Ty::Arr(arr) => {
             vec![
                 ("readonly".to_string(), Json::Bool(arr.arr_readonly)),
                 (
                     "type".to_string(),
-                    json_of_t::<L, C>(&arr.arr_elt_t, strip_root),
+                    json_of_t(converter, &arr.arr_elt_t, strip_root),
                 ),
             ]
         }
@@ -1236,21 +1334,25 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                         name,
                         polarity,
                         optional,
-                    } => {
-                        json!({
-                            "kind": "TupleElement",
-                            "name": name.as_deref().unwrap_or(""),
-                            "t": json_of_t::<L, C>(t, strip_root),
-                            "optional": *optional,
-                            "polarity": json_of_polarity(*polarity)
-                        })
-                    }
+                    } => Json::Object(serde_json::Map::from_iter(vec![
+                        ("kind".to_string(), Json::String("TupleElement".to_string())),
+                        (
+                            "name".to_string(),
+                            Json::String(name.as_deref().unwrap_or("").to_string()),
+                        ),
+                        ("t".to_string(), json_of_t(converter, t, strip_root)),
+                        ("optional".to_string(), Json::Bool(*optional)),
+                        ("polarity".to_string(), json_of_polarity(*polarity)),
+                    ])),
                     TupleElement::TupleSpread { t, name } => {
-                        json!({
-                            "kind": "TupleSpread",
-                            "name": name.as_deref().unwrap_or(""),
-                            "t": json_of_t::<L, C>(t, strip_root)
-                        })
+                        Json::Object(serde_json::Map::from_iter(vec![
+                            ("kind".to_string(), Json::String("TupleSpread".to_string())),
+                            (
+                                "name".to_string(),
+                                Json::String(name.as_deref().unwrap_or("").to_string()),
+                            ),
+                            ("t".to_string(), json_of_t(converter, t, strip_root)),
+                        ]))
                     }
                 })
                 .collect();
@@ -1264,7 +1366,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             all.extend(rest.iter().map(|t| t.as_ref()));
             let types: Vec<Json> = all
                 .iter()
-                .map(|t| json_of_t::<L, C>(t, strip_root))
+                .map(|t| json_of_t(converter, t, strip_root))
                 .collect();
             vec![("types".to_string(), Json::Array(types))]
         }
@@ -1273,7 +1375,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             all.extend(rest.iter().map(|t| t.as_ref()));
             let types: Vec<Json> = all
                 .iter()
-                .map(|t| json_of_t::<L, C>(t, strip_root))
+                .map(|t| json_of_t(converter, t, strip_root))
                 .collect();
             vec![("types".to_string(), Json::Array(types))]
         }
@@ -1286,14 +1388,14 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             let extends: Vec<Json> = if_extends
                 .iter()
                 .map(|g| {
-                    let obj: serde_json::Map<String, Json> =
-                        json_of_generic::<L, C>(g, strip_root).into_iter().collect();
-                    Json::Object(obj)
+                    Json::Object(serde_json::Map::from_iter(json_of_generic(
+                        converter, g, strip_root,
+                    )))
                 })
                 .collect();
             let props: Vec<Json> = if_props
                 .iter()
-                .map(|p| json_of_prop::<L, C>(p, strip_root))
+                .map(|p| json_of_prop(converter, p, strip_root))
                 .collect();
             vec![
                 ("extends".to_string(), Json::Array(extends)),
@@ -1302,7 +1404,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                     "dict".to_string(),
                     if_dict
                         .as_ref()
-                        .map(|d| json_of_dict::<L, C>(d, strip_root))
+                        .map(|d| json_of_dict(converter, d, strip_root))
                         .unwrap_or(Json::Null),
                 ),
             ]
@@ -1311,20 +1413,23 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             let (b, targs) = data.as_ref();
             let mut result = vec![(
                 "name".to_string(),
-                json_of_builtin_value::<L, C>(b, strip_root),
+                json_of_builtin_value(converter, b, strip_root),
             )];
-            result.extend(json_of_targs::<L, C>(targs.as_deref(), strip_root));
+            result.extend(json_of_targs(converter, targs.as_deref(), strip_root));
             result
         }
-        Ty::Utility(u) => json_of_utility::<L, C>(u, strip_root),
+        Ty::Utility(u) => json_of_utility(converter, u, strip_root),
         Ty::IndexedAccess {
             _object,
             index,
             optional,
         } => {
             vec![
-                ("object".to_string(), json_of_t::<L, C>(_object, strip_root)),
-                ("index".to_string(), json_of_t::<L, C>(index, strip_root)),
+                (
+                    "object".to_string(),
+                    json_of_t(converter, _object, strip_root),
+                ),
+                ("index".to_string(), json_of_t(converter, index, strip_root)),
                 ("optional".to_string(), Json::Bool(*optional)),
             ]
         }
@@ -1337,27 +1442,30 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             vec![
                 (
                     "check".to_string(),
-                    json_of_t::<L, C>(check_type, strip_root),
+                    json_of_t(converter, check_type, strip_root),
                 ),
                 (
                     "extends".to_string(),
-                    json_of_t::<L, C>(extends_type, strip_root),
+                    json_of_t(converter, extends_type, strip_root),
                 ),
-                ("true".to_string(), json_of_t::<L, C>(true_type, strip_root)),
+                (
+                    "true".to_string(),
+                    json_of_t(converter, true_type, strip_root),
+                ),
                 (
                     "false".to_string(),
-                    json_of_t::<L, C>(false_type, strip_root),
+                    json_of_t(converter, false_type, strip_root),
                 ),
             ]
         }
         Ty::Infer(data) => {
             let (s, b) = data.as_ref();
             vec![
-                ("name".to_string(), json_of_symbol::<L, C>(s, strip_root)),
+                ("name".to_string(), json_of_symbol(converter, s, strip_root)),
                 (
                     "bound".to_string(),
                     b.as_ref()
-                        .map(|t| json_of_t::<L, C>(t.as_ref(), strip_root))
+                        .map(|t| json_of_t(converter, t.as_ref(), strip_root))
                         .unwrap_or(Json::Null),
                 ),
             ]
@@ -1365,7 +1473,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Ty::Component {
             regular_props,
             renders,
-        } => json_of_component::<L, C>(regular_props, renders, strip_root),
+        } => json_of_component(converter, regular_props, renders, strip_root),
         Ty::Renders(t, variant) => {
             let variant_str = match variant {
                 crate::ty::RendersKind::RendersNormal => "normal",
@@ -1373,14 +1481,15 @@ fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
                 crate::ty::RendersKind::RendersStar => "star",
             };
             vec![
-                ("argument".to_string(), json_of_t::<L, C>(t, strip_root)),
+                ("argument".to_string(), json_of_t(converter, t, strip_root)),
                 ("variant".to_string(), Json::String(variant_str.to_string())),
             ]
         }
     }
 }
 
-fn json_of_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_t<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     t: &Ty<L>,
     strip_root: Option<&Path>,
 ) -> Json {
@@ -1388,53 +1497,66 @@ fn json_of_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         "kind".to_string(),
         Json::String(string_of_ctor_t(t).to_string()),
     )];
-    obj.extend(json_of_t_list::<L, C>(t, strip_root));
-    Json::Object(obj.into_iter().collect())
+    obj.extend(json_of_t_list(converter, t, strip_root));
+    Json::Object(serde_json::Map::from_iter(obj))
 }
 
-fn json_of_class_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_class_decl<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     vec![
-        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "name".to_string(),
+            json_of_symbol(converter, name, strip_root),
+        ),
         (
             "typeParams".to_string(),
-            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+            json_of_type_params(converter, tparams.as_deref(), strip_root),
         ),
     ]
 }
 
-fn json_of_interface_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_interface_decl<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     vec![
-        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "name".to_string(),
+            json_of_symbol(converter, name, strip_root),
+        ),
         (
             "typeParams".to_string(),
-            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+            json_of_type_params(converter, tparams.as_deref(), strip_root),
         ),
     ]
 }
 
-fn json_of_record_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_record_decl<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     vec![
-        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "name".to_string(),
+            json_of_symbol(converter, name, strip_root),
+        ),
         (
             "typeParams".to_string(),
-            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+            json_of_type_params(converter, tparams.as_deref(), strip_root),
         ),
     ]
 }
 
-fn json_of_nominal_component_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_nominal_component_decl<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     props: &ComponentProps<L>,
@@ -1443,43 +1565,54 @@ fn json_of_nominal_component_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     let mut result = vec![
-        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "name".to_string(),
+            json_of_symbol(converter, name, strip_root),
+        ),
         (
             "typeParams".to_string(),
-            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+            json_of_type_params(converter, tparams.as_deref(), strip_root),
         ),
         ("isType".to_string(), Json::Bool(is_type)),
     ];
     let renders_arc = renders.as_ref().map(|r| Arc::new(r.clone()));
-    result.extend(json_of_component::<L, C>(props, &renders_arc, strip_root));
+    result.extend(json_of_component(
+        converter,
+        props,
+        &renders_arc,
+        strip_root,
+    ));
     result
 }
 
-fn json_of_namespace<L, C: ALocToLoc<L>>(
+fn json_of_namespace<L>(
+    converter: &dyn ALocToLoc<L>,
     name: &Option<Symbol<L>>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     vec![(
         "name".to_string(),
         name.as_ref()
-            .map(|n| json_of_symbol::<L, C>(n, strip_root))
+            .map(|n| json_of_symbol(converter, n, strip_root))
             .unwrap_or(Json::Null),
     )]
 }
 
-fn json_of_module<L, C: ALocToLoc<L>>(
+fn json_of_module<L>(
+    converter: &dyn ALocToLoc<L>,
     name: &Option<Symbol<L>>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     vec![(
         "name".to_string(),
         name.as_ref()
-            .map(|n| json_of_symbol::<L, C>(n, strip_root))
+            .map(|n| json_of_symbol(converter, n, strip_root))
             .unwrap_or(Json::Null),
     )]
 }
 
-fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+fn json_of_decl<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     d: &Decl<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
@@ -1487,7 +1620,7 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Decl::VariableDecl(box (name, t)) => {
             vec![
                 ("name".to_string(), Json::String(name.as_str().to_string())),
-                ("type_".to_string(), json_of_t::<L, C>(t, strip_root)),
+                ("type_".to_string(), json_of_t(converter, t, strip_root)),
             ]
         }
         Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
@@ -1497,30 +1630,36 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             ..
         }) => {
             vec![
-                ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+                (
+                    "name".to_string(),
+                    json_of_symbol(converter, name, strip_root),
+                ),
                 (
                     "typeParams".to_string(),
-                    json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+                    json_of_type_params(converter, tparams.as_deref(), strip_root),
                 ),
                 (
                     "body".to_string(),
                     type_
                         .as_ref()
-                        .map(|t| json_of_t::<L, C>(t, strip_root))
+                        .map(|t| json_of_t(converter, t, strip_root))
                         .unwrap_or(Json::Null),
                 ),
             ]
         }
-        Decl::ClassDecl(box (s, ps)) => json_of_class_decl::<L, C>(s, ps, strip_root),
-        Decl::InterfaceDecl(box (s, ps)) => json_of_interface_decl::<L, C>(s, ps, strip_root),
-        Decl::RecordDecl(box (s, ps)) => json_of_record_decl::<L, C>(s, ps, strip_root),
+        Decl::ClassDecl(box (s, ps)) => json_of_class_decl(converter, s, ps, strip_root),
+        Decl::InterfaceDecl(box (s, ps)) => json_of_interface_decl(converter, s, ps, strip_root),
+        Decl::RecordDecl(box (s, ps)) => json_of_record_decl(converter, s, ps, strip_root),
         Decl::EnumDecl(box DeclEnumDeclData {
             name,
             members,
             has_unknown_members,
             truncated_members_count,
         }) => vec![
-            ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+            (
+                "name".to_string(),
+                json_of_symbol(converter, name, strip_root),
+            ),
             (
                 "members".to_string(),
                 match members {
@@ -1538,7 +1677,7 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             ),
             (
                 "truncated_members_count".to_string(),
-                Json::Number((*truncated_members_count).into()),
+                Json::Number(serde_json::Number::from(*truncated_members_count)),
             ),
         ],
         Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
@@ -1548,25 +1687,26 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
             renders,
             is_type,
             ..
-        }) => json_of_nominal_component_decl::<L, C>(
-            name, tparams, props, renders, *is_type, strip_root,
+        }) => json_of_nominal_component_decl(
+            converter, name, tparams, props, renders, *is_type, strip_root,
         ),
         Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => {
-            json_of_namespace::<L, C>(name, strip_root)
+            json_of_namespace(converter, name, strip_root)
         }
         Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => {
-            json_of_module::<L, C>(name, strip_root)
+            json_of_module(converter, name, strip_root)
         }
     }
 }
 
-pub fn json_of_elt<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+pub fn json_of_elt<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
     elt: &Elt<L>,
     strip_root: Option<&Path>,
 ) -> Json {
     let payload = match elt {
-        Elt::Type(t) => json_of_t_list::<L, C>(t, strip_root),
-        Elt::Decl(d) => json_of_decl::<L, C>(d, strip_root),
+        Elt::Type(t) => json_of_t_list(converter, t, strip_root),
+        Elt::Decl(d) => json_of_decl(converter, d, strip_root),
     };
     let kind = match elt {
         Elt::Type(t) => string_of_ctor_t(t),
@@ -1574,7 +1714,54 @@ pub fn json_of_elt<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
     };
     let mut obj = vec![("kind".to_string(), Json::String(kind.to_string()))];
     obj.extend(payload);
-    Json::Object(obj.into_iter().collect())
+    Json::Object(serde_json::Map::from_iter(obj))
+}
+
+/// Compact JSON for `elt`, returned as a `Box<RawValue>` so callers can embed it
+/// inside a serde-serializable struct without going through `serde_json::Value`
+/// (which would deduplicate the two `"kind"` entries that
+/// `json_of_utility` produces — outer wrapper + inner tag, OCaml `ty_debug.ml`
+/// lines 516 + 831-836).
+pub fn json_of_elt_raw<L: Debug + Clone + Dupe>(
+    converter: &dyn ALocToLoc<L>,
+    elt: &Elt<L>,
+    strip_root: Option<&Path>,
+) -> Box<serde_json::value::RawValue> {
+    if let Elt::Type(t) = elt
+        && let Ty::Utility(u) = t.as_ref()
+    {
+        let ctor = string_of_utility_ctor(u);
+        let type_args_value: Option<Json> = types_of_utility(u).map(|ts| {
+            Json::Array(
+                ts.iter()
+                    .map(|t| json_of_t(converter, t, strip_root))
+                    .collect(),
+            )
+        });
+        let mut buf = Vec::new();
+        {
+            use serde::Serializer;
+            use serde::ser::SerializeMap;
+            let mut serializer = serde_json::Serializer::new(&mut buf);
+            let len = if type_args_value.is_some() { 3 } else { 2 };
+            let mut map = serializer
+                .serialize_map(Some(len))
+                .expect("json_of_elt_raw: serialize_map");
+            map.serialize_entry("kind", "Utility")
+                .expect("json_of_elt_raw: kind=Utility");
+            map.serialize_entry("kind", ctor)
+                .expect("json_of_elt_raw: kind=ctor");
+            if let Some(ref ta) = type_args_value {
+                map.serialize_entry("typeArgs", ta)
+                    .expect("json_of_elt_raw: typeArgs");
+            }
+            SerializeMap::end(map).expect("json_of_elt_raw: end map");
+        }
+        let s = String::from_utf8(buf).expect("json_of_elt_raw: utf-8");
+        return serde_json::value::RawValue::from_string(s).expect("json_of_elt_raw: valid JSON");
+    }
+    let value = json_of_elt(converter, elt, strip_root);
+    serde_json::value::to_raw_value(&value).expect("json_of_elt_raw: to_raw_value")
 }
 
 #[allow(non_snake_case)]

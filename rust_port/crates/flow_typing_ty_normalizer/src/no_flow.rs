@@ -164,6 +164,7 @@ pub fn mk_genv<'a, 'cx: 'a>(
         typed_ast_opt,
         file_sig,
         imported_names,
+        ref_type_bodies: None,
     }
 }
 

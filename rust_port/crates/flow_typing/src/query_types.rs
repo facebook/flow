@@ -146,7 +146,7 @@ pub fn type_at_pos_type<'a>(
                     let (evaluated, _) = from_type(EvaluateTypeDestructorsMode::EvaluateAll);
                     let errors_prime = cx.errors();
                     cx.reset_errors(errors.dupe());
-                    if errors.ptr_eq(&errors_prime) {
+                    if errors == errors_prime {
                         Some(evaluated)
                     } else {
                         None

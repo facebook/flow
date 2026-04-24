@@ -76,7 +76,7 @@ fn normalize_type(
                 ts_syntax: false,
                 ..Default::default()
             };
-            let (type_str, refs) = ty_printer::string_of_type_at_pos_result::<ALoc, Loc>(
+            let (type_str, refs) = ty_printer::string_of_type_at_pos_result::<Loc>(
                 &elt,
                 &None::<Elt<ALoc>>,
                 &refs_some,

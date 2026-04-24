@@ -1589,11 +1589,20 @@ pub trait TyIter2Ty<L, Env>: TyIter2Base<Env, L>
 where
     L: Dupe,
 {
+    fn on_bound_locs(&mut self, _env: &Env, _l1: &L, _l2: &L) -> Result<(), StructuralMismatch> {
+        Ok(())
+    }
+
     fn on_t(&mut self, env: &Env, t1: &Ty<L>, t2: &Ty<L>) -> Result<(), StructuralMismatch> {
+        if std::ptr::eq(t1, t2) {
+            return Ok(());
+        }
+
         match (t1, t2) {
             (Ty::Bound(d1), Ty::Bound(d2)) => {
-                let (_l1, s1) = d1.as_ref();
-                let (_l2, s2) = d2.as_ref();
+                let (l1, s1) = d1.as_ref();
+                let (l2, s2) = d2.as_ref();
+                self.on_bound_locs(env, l1, l2)?;
                 self.on_string(env, s1, s2)?;
                 Ok(())
             }
@@ -1712,7 +1721,7 @@ where
                 if k1 == k2 {
                     Ok(())
                 } else {
-                    Err(StructuralMismatch::Mismatch)
+                    Err(StructuralMismatch::Difference(1))
                 }
             }
             _ => self.fail_t(env, t1, t2),
@@ -1966,7 +1975,7 @@ where
         self.on_option_vec_type_param(env, &f1.fun_type_params, &f2.fun_type_params)?;
         self.on_t(env, &f1.fun_static, &f2.fun_static)?;
         if f1.fun_effect != f2.fun_effect {
-            return Err(StructuralMismatch::Mismatch);
+            return Err(StructuralMismatch::Difference(1));
         }
         Ok(())
     }
@@ -2323,7 +2332,7 @@ where
                     p2,
                 )
             }
-            _ => Err(StructuralMismatch::Mismatch),
+            _ => Err(StructuralMismatch::Difference(1)),
         }
     }
 
@@ -4164,7 +4173,52 @@ pub fn tag_of_mapped_type_variance(mtv: &MappedTypeVariance) -> i32 {
 
 impl<Env> TyIter2Base<Env, ALoc> for ComparatorTy<Env> {}
 
-impl<Env> TyIter2Ty<ALoc, Env> for ComparatorTy<Env> {}
+impl<Env> TyIter2Ty<ALoc, Env> for ComparatorTy<Env> {
+    fn on_any_kind(
+        &mut self,
+        env: &Env,
+        ak1: &AnyKind<ALoc>,
+        ak2: &AnyKind<ALoc>,
+    ) -> Result<(), StructuralMismatch> {
+        match (ak1, ak2) {
+            (AnyKind::Annotated(l1), AnyKind::Annotated(l2)) => {
+                use std::cmp::Ordering;
+                match ALoc::compare(l1, l2) {
+                    Ordering::Equal => Ok(()),
+                    Ordering::Less => Err(StructuralMismatch::Difference(-1)),
+                    Ordering::Greater => Err(StructuralMismatch::Difference(1)),
+                }
+            }
+            (AnyKind::AnyError(e1), AnyKind::AnyError(e2)) => self.on_option(
+                |s, e, ek1, ek2| {
+                    if ek1 != ek2 {
+                        s.fail_any_error_kind(e, ek1, ek2)
+                    } else {
+                        Ok(())
+                    }
+                },
+                env,
+                e1,
+                e2,
+            ),
+            (AnyKind::Recursive, AnyKind::Recursive) => Ok(()),
+            (AnyKind::Unsound(u1), AnyKind::Unsound(u2)) => {
+                if u1 != u2 {
+                    self.fail_unsoundness_kind(env, u1, u2)
+                } else {
+                    Ok(())
+                }
+            }
+            (AnyKind::Untyped, AnyKind::Untyped) => Ok(()),
+            (AnyKind::Placeholder, AnyKind::Placeholder) => Ok(()),
+            _ => self.fail_any_kind(env, ak1, ak2),
+        }
+    }
+
+    fn on_bound_locs(&mut self, env: &Env, l1: &ALoc, l2: &ALoc) -> Result<(), StructuralMismatch> {
+        self.on_aloc(env, l1, l2)
+    }
+}
 
 impl<L: Dupe> AnyKind<L> {
     pub fn map_locs<F, M>(&self, f: &F) -> AnyKind<M>

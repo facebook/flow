@@ -813,6 +813,16 @@ fn expected_concrete_type_of_t(cx: &Context, lb_type: &Type) -> Type {
     }
 }
 
+// let rec literals_of_ty acc ty =
+//   match ty with
+//   | Ty.Union (_, t1, t2, ts) -> Base.List.fold_left (t1 :: t2 :: ts) ~f:literals_of_ty ~init:acc
+//   | Ty.StrLit _
+//   | Ty.NumLit _
+//   | Ty.BoolLit _
+//   | Ty.Null ->
+//     ty :: acc
+//   | Ty.Bool -> Ty.BoolLit true :: Ty.BoolLit false :: acc
+//   | _ -> acc
 fn literals_of_ty(acc: &mut Vec<Arc<Ty<ALoc>>>, ty_: &Arc<Ty<ALoc>>) {
     match ty_.as_ref() {
         Ty::Union(_, t1, t2, ts) => {
@@ -822,10 +832,11 @@ fn literals_of_ty(acc: &mut Vec<Arc<Ty<ALoc>>>, ty_: &Arc<Ty<ALoc>>) {
                 literals_of_ty(acc, t);
             }
         }
-        Ty::StrLit(_) | Ty::NumLit(_) | Ty::BoolLit(_) | Ty::Null => acc.push(ty_.dupe()),
+        Ty::StrLit(_) | Ty::NumLit(_) | Ty::BoolLit(_) | Ty::Null => acc.insert(0, ty_.dupe()),
         Ty::Bool => {
-            acc.push(Arc::new(Ty::BoolLit(true)));
-            acc.push(Arc::new(Ty::BoolLit(false)));
+            // OCaml prepends BoolLit true, then prepends BoolLit false (so acc is [true, false, ...])
+            acc.insert(0, Arc::new(Ty::BoolLit(true)));
+            acc.insert(0, Arc::new(Ty::BoolLit(false)));
         }
         _ => {}
     }
@@ -3200,24 +3211,22 @@ pub fn autocomplete_get_results(
                                 AutocompleteServiceResultGeneric::AcResult(result_id)
                             }
                             AutocompleteServiceResultGeneric::AcResult(result_member) => {
-                                let rev_items = result_member.result.items.into_iter().fold(
-                                    result_id
-                                        .result
-                                        .items
-                                        .iter()
-                                        .rev()
-                                        .cloned()
-                                        .collect::<Vec<_>>(),
-                                    |mut acc, item| {
-                                        let name = format!("this.{}", item.name);
-                                        let mut item = item;
-                                        item.name = name.clone();
-                                        item.text_edit =
-                                            Some(text_edit(Some(&name), &name, &edit_locs));
-                                        acc.push(item);
-                                        acc
-                                    },
-                                );
+                                // OCaml: Base.List.fold ~init:(List.rev result_id.result.items)
+                                //          ~f:(fun acc item -> { item with name; ... } :: acc)
+                                //          result_member.result.items
+                                // The :: prepend means each transformed member item ends up
+                                // at the FRONT of the accumulator (so items appear in reverse
+                                // of their original order in result_member.result.items).
+                                let mut rev_items: Vec<_> =
+                                    result_id.result.items.iter().rev().cloned().collect();
+                                for item in result_member.result.items.into_iter() {
+                                    let name = format!("this.{}", item.name);
+                                    let mut item = item;
+                                    item.name = name.clone();
+                                    item.text_edit =
+                                        Some(text_edit(Some(&name), &name, &edit_locs));
+                                    rev_items.insert(0, item);
+                                }
                                 AutocompleteServiceResultGeneric::AcResult(AcResult {
                                     result: ac_completion::T {
                                         items: filter_by_token_and_sort_rev(

@@ -9,6 +9,8 @@
 //!
 //! Port of `ty_normalizer_env.ml`
 
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -132,6 +134,9 @@ pub struct Genv<'a, 'cx> {
     pub imported_names: Rc<Lazy<ImportedNamesMap, Box<dyn FnOnce() -> ImportedNamesMap + 'a>>>,
     /// Normalization parameters
     pub options: Options,
+    /// When set, the normalizer collects the body Type.t for each type alias it encounters.
+    /// This is keyed by the type alias name string. Used by type-of-name to expand refs.
+    pub ref_type_bodies: Option<Rc<RefCell<BTreeMap<String, Type>>>>,
 }
 
 type ImportedNamesMap = FlowOrdMap<ALoc, ALocImportedIdent>;

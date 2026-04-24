@@ -946,6 +946,41 @@ pub fn lsp_fmt_parse_lsp(
     })
 }
 
+fn print_position(position: &lsp_types::Position) -> serde_json::Value {
+    serde_json::json!({
+        "line": position.line,
+        "character": position.character,
+    })
+}
+
+fn print_range(range: &lsp_types::Range) -> serde_json::Value {
+    serde_json::json!({
+        "start": print_position(&range.start),
+        "end": print_position(&range.end),
+    })
+}
+
+fn text_edit_fmt_to_json(edit: &lsp_types::TextEdit) -> serde_json::Value {
+    let lsp_types::TextEdit { range, new_text } = edit;
+    serde_json::json!({
+        "range": print_range(range),
+        "newText": new_text,
+    })
+}
+
+fn insert_replace_edit_fmt_to_json(edit: &lsp_types::InsertReplaceEdit) -> serde_json::Value {
+    let lsp_types::InsertReplaceEdit {
+        new_text,
+        insert,
+        replace,
+    } = edit;
+    serde_json::json!({
+        "newText": new_text,
+        "insert": print_range(insert),
+        "replace": print_range(replace),
+    })
+}
+
 fn print_command_name(key: &str, name: &str) -> String {
     format!("{}:{}", name, key)
 }
@@ -960,6 +995,171 @@ fn parse_command_name(name: &str) -> String {
 fn key_command(key: &str, mut command: lsp_types::Command) -> lsp_types::Command {
     command.command = print_command_name(key, &command.command);
     command
+}
+
+fn print_command(key: &str, command: &lsp_types::Command) -> serde_json::Value {
+    let name = print_command_name(key, &command.command);
+    serde_json::json!({
+        "title": command.title,
+        "command": name,
+        "arguments": command.arguments.clone().unwrap_or_default(),
+    })
+}
+
+fn completion_item_label_details_fmt_to_json(
+    details: &lsp_types::CompletionItemLabelDetails,
+) -> serde_json::Value {
+    let lsp_types::CompletionItemLabelDetails {
+        description,
+        detail,
+    } = details;
+    object_opt(vec![
+        (
+            "description",
+            description
+                .as_ref()
+                .map(|x| serde_json::Value::String(x.clone())),
+        ),
+        (
+            "detail",
+            detail
+                .as_ref()
+                .map(|x| serde_json::Value::String(x.clone())),
+        ),
+    ])
+}
+
+fn string_of_marked_string(acc: String, marked: &lsp_types::MarkedString) -> String {
+    match marked {
+        lsp_types::MarkedString::LanguageString(ls) => {
+            format!("{}```{}\n{}\n```\n", acc, ls.language, ls.value)
+        }
+        lsp_types::MarkedString::String(s) => format!("{}{}\n", acc, s),
+    }
+}
+
+fn object_opt(entries: Vec<(&str, Option<serde_json::Value>)>) -> serde_json::Value {
+    let mut map = serde_json::Map::new();
+    for (key, value) in entries {
+        if let Some(value) = value {
+            map.insert(key.to_string(), value);
+        }
+    }
+    serde_json::Value::Object(map)
+}
+
+pub fn lsp_fmt_completion_item_fmt_to_json(
+    key: &str,
+    item: &lsp_types::CompletionItem,
+) -> serde_json::Value {
+    object_opt(vec![
+        ("label", Some(serde_json::Value::String(item.label.clone()))),
+        (
+            "labelDetails",
+            item.label_details
+                .as_ref()
+                .map(completion_item_label_details_fmt_to_json),
+        ),
+        (
+            "kind",
+            item.kind.map(|x| {
+                serde_json::to_value(x).expect("CompletionItemKind serializes as i32 — infallible")
+            }),
+        ),
+        (
+            "detail",
+            item.detail
+                .as_ref()
+                .map(|s| serde_json::Value::String(s.clone())),
+        ),
+        (
+            "documentation",
+            item.documentation.as_ref().map(|doc| {
+                let value = match doc {
+                    lsp_types::Documentation::String(s) => string_of_marked_string(
+                        String::new(),
+                        &lsp_types::MarkedString::String(s.clone()),
+                    ),
+                    lsp_types::Documentation::MarkupContent(mc) => string_of_marked_string(
+                        String::new(),
+                        &lsp_types::MarkedString::String(mc.value.clone()),
+                    ),
+                };
+                serde_json::json!({
+                    "kind": "markdown",
+                    "value": value.trim(),
+                })
+            }),
+        ),
+        (
+            "tags",
+            item.tags.as_ref().map(|tags| {
+                serde_json::Value::Array(
+                    tags.iter()
+                        .map(|tag| {
+                            serde_json::to_value(tag)
+                                .expect("CompletionItemTag serializes as i32 — infallible")
+                        })
+                        .collect(),
+                )
+            }),
+        ),
+        (
+            "preselect",
+            if item.preselect.unwrap_or(false) {
+                Some(serde_json::Value::Bool(true))
+            } else {
+                None
+            },
+        ),
+        (
+            "sortText",
+            item.sort_text
+                .as_ref()
+                .map(|s| serde_json::Value::String(s.clone())),
+        ),
+        (
+            "filterText",
+            item.filter_text
+                .as_ref()
+                .map(|s| serde_json::Value::String(s.clone())),
+        ),
+        (
+            "insertText",
+            item.insert_text
+                .as_ref()
+                .map(|s| serde_json::Value::String(s.clone())),
+        ),
+        (
+            "insertTextFormat",
+            item.insert_text_format.map(|x| {
+                serde_json::to_value(x).expect("InsertTextFormat serializes as i32 — infallible")
+            }),
+        ),
+        (
+            "textEdit",
+            item.text_edit.as_ref().map(|te| match te {
+                lsp_types::CompletionTextEdit::Edit(edit) => text_edit_fmt_to_json(edit),
+                lsp_types::CompletionTextEdit::InsertAndReplace(edit) => {
+                    insert_replace_edit_fmt_to_json(edit)
+                }
+            }),
+        ),
+        (
+            "additionalTextEdits",
+            match item.additional_text_edits.as_deref() {
+                None | Some([]) => None,
+                Some(l) => Some(serde_json::Value::Array(
+                    l.iter().map(text_edit_fmt_to_json).collect(),
+                )),
+            },
+        ),
+        (
+            "command",
+            item.command.as_ref().map(|c| print_command(key, c)),
+        ),
+        ("data", item.data.clone()),
+    ])
 }
 
 fn key_code_action_or_command(
