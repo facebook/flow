@@ -21,8 +21,12 @@ fn addline(b: &mut String, prefix: &str, s: &str) {
 
 pub fn string_of_lazy_stats(lazy_stats: &server_prot::response::LazyStats) -> String {
     format!(
-        "lazy_mode={}, checked_files={}, total_files={}",
-        lazy_stats.lazy_mode, lazy_stats.checked_files, lazy_stats.total_files,
+        "lazy_mode={}, checked_files={}, checked_libdef_files={}, total_files={}, total_libdef_files={}",
+        lazy_stats.lazy_mode,
+        lazy_stats.checked_files,
+        lazy_stats.checked_libdef_files,
+        lazy_stats.total_files,
+        lazy_stats.total_libdef_files,
     )
 }
 

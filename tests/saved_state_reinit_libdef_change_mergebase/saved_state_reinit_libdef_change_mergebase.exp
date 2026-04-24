@@ -2,12 +2,12 @@ Scenario 1: upstream libdef change
 Before recheck:
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 2/3 files.
+The Flow server is currently in lazy mode and is only checking 0/1 source files (+ 2/2 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 After recheck:
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 0/3 files.
+The Flow server is currently in lazy mode and is only checking 0/1 source files (+ 0/2 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Used saved-state reinit:
 yes
@@ -18,7 +18,7 @@ Scenario 2: local libdef change
 Before recheck:
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 2/3 files.
+The Flow server is currently in lazy mode and is only checking 0/1 source files (+ 2/2 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 After recheck:
 Error ------------------------------------------------------------------------------------------------------ test.js:2:2
@@ -41,7 +41,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 1/1 source files (+ 2/2 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Tried saved-state reinit:
 yes

@@ -49,13 +49,28 @@ let check_status flowconfig_name (args : status_args) connect_flags =
     match lazy_stats.ServerProt.Response.lazy_mode with
     | false -> None
     | true ->
+      let checked_source =
+        lazy_stats.ServerProt.Response.checked_files
+        - lazy_stats.ServerProt.Response.checked_libdef_files
+      in
+      let total_source =
+        lazy_stats.ServerProt.Response.total_files
+        - lazy_stats.ServerProt.Response.total_libdef_files
+      in
+      let libdef_msg =
+        Printf.sprintf
+          " (+ %d/%d libdefs)"
+          lazy_stats.ServerProt.Response.checked_libdef_files
+          lazy_stats.ServerProt.Response.total_libdef_files
+      in
       Some
         (Printf.sprintf
-           ("The Flow server is currently in lazy mode and is only checking %d/%d files.\n"
+           ("The Flow server is currently in lazy mode and is only checking %d/%d source files%s.\n"
            ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes"
            )
-           lazy_stats.ServerProt.Response.checked_files
-           lazy_stats.ServerProt.Response.total_files
+           checked_source
+           total_source
+           libdef_msg
         )
   in
   match response with

@@ -379,7 +379,9 @@ pub mod response {
     pub struct LazyStats {
         pub lazy_mode: bool,
         pub checked_files: i32,
+        pub checked_libdef_files: i32,
         pub total_files: i32,
+        pub total_libdef_files: i32,
     }
 
     // Details about functions to be added in json output

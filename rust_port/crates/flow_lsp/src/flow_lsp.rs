@@ -3074,11 +3074,15 @@ fn show_connected_status(cenv: &mut ConnectedEnv) {
             _ => {
                 let message = match &cenv.c_lazy_stats {
                     Some(stats) if stats.checked_files < stats.total_files && stats.lazy_mode => {
+                        let checked_source = stats.checked_files - stats.checked_libdef_files;
+                        let total_source = stats.total_files - stats.total_libdef_files;
+                        let libdef_msg = format!(
+                            " + {}/{} libdefs",
+                            stats.checked_libdef_files, stats.total_libdef_files
+                        );
                         format!(
-                            "Flow is ready. (lazy mode let it check only {}/{} files [[more...]({})])",
-                            stats.checked_files,
-                            stats.total_files,
-                            "https://flow.org/en/docs/lang/lazy-modes/"
+                            "Flow is ready. Checking {}/{} source files{} (lazy mode)",
+                            checked_source, total_source, libdef_msg,
                         )
                     }
                     _ => "Flow is ready.".to_string(),

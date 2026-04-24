@@ -883,13 +883,25 @@ let show_connected_status (cenv : connected_env) : connected_env =
       | None ->
         let message =
           match cenv.c_lazy_stats with
-          | Some { ServerProt.Response.lazy_mode; checked_files; total_files }
+          | Some
+              {
+                ServerProt.Response.lazy_mode;
+                checked_files;
+                checked_libdef_files;
+                total_files;
+                total_libdef_files;
+              }
             when checked_files < total_files && lazy_mode ->
+            let checked_source = checked_files - checked_libdef_files in
+            let total_source = total_files - total_libdef_files in
+            let libdef_msg =
+              Printf.sprintf " + %d/%d libdefs" checked_libdef_files total_libdef_files
+            in
             Printf.sprintf
-              "Flow is ready. (lazy mode let it check only %d/%d files [[more...](%s)])"
-              checked_files
-              total_files
-              "https://flow.org/en/docs/lang/lazy-modes/"
+              "Flow is ready. Checking %d/%d source files%s (lazy mode)"
+              checked_source
+              total_source
+              libdef_msg
           | _ -> "Flow is ready."
         in
         let short_message = Some (message_with_prefix "ready") in
@@ -1287,10 +1299,12 @@ module RagePrint = struct
   let string_of_lazy_stats (lazy_stats : ServerProt.Response.lazy_stats) : string =
     ServerProt.(
       Printf.sprintf
-        "lazy_mode=%B, checked_files=%d, total_files=%d"
+        "lazy_mode=%B, checked_files=%d, checked_libdef_files=%d, total_files=%d, total_libdef_files=%d"
         lazy_stats.Response.lazy_mode
         lazy_stats.Response.checked_files
+        lazy_stats.Response.checked_libdef_files
         lazy_stats.Response.total_files
+        lazy_stats.Response.total_libdef_files
     )
 
   let string_of_lazy_mode = function

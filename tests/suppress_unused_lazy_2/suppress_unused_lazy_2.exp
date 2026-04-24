@@ -15,7 +15,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 4/4 files.
+The Flow server is currently in lazy mode and is only checking 3/3 source files (+ 1/1 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========
@@ -38,7 +38,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 4/4 files.
+The Flow server is currently in lazy mode and is only checking 3/3 source files (+ 1/1 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========

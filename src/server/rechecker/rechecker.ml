@@ -84,11 +84,34 @@ let get_lazy_stats ~options env =
   (* Report only focused + dependents as "checked" files. Dependencies are only
      merged (signatures computed) but not type-checked, so they shouldn't count
      toward the user-visible "checking N files" number. *)
-  let checked_files =
-    CheckedSet.focused_cardinal env.checked_files + CheckedSet.dependents_cardinal env.checked_files
+  let (focused_count, checked_libdef_files) =
+    FilenameSet.fold
+      (fun f (total, libs) ->
+        if File_key.is_lib_file f then
+          (total + 1, libs + 1)
+        else
+          (total + 1, libs))
+      (CheckedSet.focused env.checked_files)
+      (0, 0)
   in
-  let total_files = FilenameSet.cardinal env.files in
-  { ServerProt.Response.lazy_mode = Options.lazy_mode options; checked_files; total_files }
+  let checked_files = focused_count + CheckedSet.dependents_cardinal env.checked_files in
+  let (total_files, total_libdef_files) =
+    FilenameSet.fold
+      (fun f (total, libs) ->
+        if File_key.is_lib_file f then
+          (total + 1, libs + 1)
+        else
+          (total + 1, libs))
+      env.files
+      (0, 0)
+  in
+  {
+    ServerProt.Response.lazy_mode = Options.lazy_mode options;
+    checked_files;
+    checked_libdef_files;
+    total_files;
+    total_libdef_files;
+  }
 
 (* Filter a set of updates coming from the file watcher or force-recheck or wherever and return a
  * FilenameSet. Updates may be coming in from the root, or an include path.

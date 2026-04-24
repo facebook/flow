@@ -100,9 +100,15 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
             out.flush().expect("failed to flush json errors");
         };
     let lazy_msg = if lazy_stats.lazy_mode {
+        let checked_source = lazy_stats.checked_files - lazy_stats.checked_libdef_files;
+        let total_source = lazy_stats.total_files - lazy_stats.total_libdef_files;
+        let libdef_msg = format!(
+            " (+ {}/{} libdefs)",
+            lazy_stats.checked_libdef_files, lazy_stats.total_libdef_files
+        );
         Some(format!(
-            "The Flow server is currently in lazy mode and is only checking {}/{} files.\nTo learn more, visit flow.org/en/docs/lang/lazy-modes",
-            lazy_stats.checked_files, lazy_stats.total_files
+            "The Flow server is currently in lazy mode and is only checking {}/{} source files{}.\nTo learn more, visit flow.org/en/docs/lang/lazy-modes",
+            checked_source, total_source, libdef_msg
         ))
     } else {
         None

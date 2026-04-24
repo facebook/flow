@@ -246,7 +246,9 @@ module Response = struct
   type lazy_stats = {
     lazy_mode: bool;
     checked_files: int;
+    checked_libdef_files: int;
     total_files: int;
+    total_libdef_files: int;
   }
 
   (* Details about functions to be added in json output *)
