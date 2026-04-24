@@ -11901,16 +11901,21 @@ pub fn collapse_children<'a>(
     AbnormalControlFlow,
 > {
     let (children_loc, children_list) = children;
-    let mut unres_params: Vec<type_::UnresolvedParam> = Vec::new();
-    let mut children_acc: Vec<ast::jsx::Child<ALoc, (ALoc, Type)>> = Vec::new();
-    for child in children_list {
-        let (unres_param_opt, typed_child) = jsx_body(cx, child)?;
-        if let Some(x) = unres_param_opt {
-            unres_params.push(x);
+    let cache = cx.node_cache();
+    if let Some(result) = cache.get_jsx_children(children_loc) {
+        Ok(result)
+    } else {
+        let mut unres_params: Vec<type_::UnresolvedParam> = Vec::new();
+        let mut children_acc: Vec<ast::jsx::Child<ALoc, (ALoc, Type)>> = Vec::new();
+        for child in children_list {
+            let (unres_param_opt, typed_child) = jsx_body(cx, child)?;
+            if let Some(x) = unres_param_opt {
+                unres_params.push(x);
+            }
+            children_acc.push(typed_child);
         }
-        children_acc.push(typed_child);
+        Ok((unres_params, (children_loc.dupe(), children_acc)))
     }
-    Ok((unres_params, (children_loc.dupe(), children_acc)))
 }
 
 fn should_generalize_jsx<'a>(
