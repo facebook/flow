@@ -188,7 +188,7 @@ following content:
 
 ```json
 {
-  "env": ["node", "dom", "bom", "intl", "cssom", "indexeddb", "serviceworkers", "webassembly", "jsx"]
+  "env": ["node", "geometry", "html", "streams", "web-animations", "dom", "bom", "intl", "cssom", "indexeddb", "serviceworkers", "webassembly", "jsx"]
 }
 ```
 
