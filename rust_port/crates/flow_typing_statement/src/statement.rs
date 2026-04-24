@@ -18838,27 +18838,31 @@ fn perform_enum_exhaustive_check<'cx>(
     default_case_loc: Option<ALoc>,
     incomplete_out: &Type,
 ) -> Result<(), FlowJsException> {
-    let mut checks: Vec<EnumCheck> = checks.to_vec();
-    for (obj_t, check) in possible_checks {
-        let member_name = &check.member_name;
-        let enum_id_discriminant = &enum_info.enum_id;
-        let members = &enum_info.members;
-        let is_valid = enum_case_test_matches_discriminant(
-            cx,
-            enum_id_discriminant,
-            members,
-            member_name,
-            obj_t,
-        );
-        if is_valid {
-            checks.insert(0, check.clone());
-        }
-    }
+    let mut resolved_checks: Vec<EnumCheck> = possible_checks
+        .iter()
+        .filter_map(|(obj_t, check)| {
+            let member_name = &check.member_name;
+            let enum_id_discriminant = &enum_info.enum_id;
+            let members = &enum_info.members;
+            let is_valid = enum_case_test_matches_discriminant(
+                cx,
+                enum_id_discriminant,
+                members,
+                member_name,
+                obj_t,
+            );
+            if is_valid { Some(check.clone()) } else { None }
+        })
+        .collect();
+    // OCaml conses onto the front during the fold and ends up with the original
+    // switch-case order after reversing the reversed possible_checks list once.
+    resolved_checks.reverse();
+    resolved_checks.extend_from_slice(checks);
     let members = &enum_info.members;
     let has_unknown_members = enum_info.has_unknown_members;
     let mut members_remaining: FlowOrdMap<FlowSmolStr, ALoc> = members.dupe();
     let mut seen: FlowOrdMap<FlowSmolStr, ALoc> = FlowOrdMap::new();
-    for check in &checks {
+    for check in &resolved_checks {
         let EnumCheck {
             case_test_loc,
             member_name,
@@ -18928,7 +18932,11 @@ fn enum_exhaustive_check_of_switch_cases(
     cases_ast: &[statement::switch::Case<ALoc, (ALoc, Type)>],
 ) -> EnumPossibleExhaustiveCheckT {
     use std::collections::VecDeque;
-    let mut exhaustive_check = EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(
+    enum EnumPossibleExhaustiveCheckAcc {
+        EnumExhaustiveCheckPossiblyValid(Box<EnumExhaustiveCheckPossiblyValidData>),
+        EnumExhaustiveCheckInvalid(Vec<ALoc>),
+    }
+    let mut exhaustive_check = EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(
         Box::new(EnumExhaustiveCheckPossiblyValidData {
             possible_checks: VecDeque::new(),
             checks: Vec::new().into(),
@@ -18948,8 +18956,10 @@ fn enum_exhaustive_check_of_switch_cases(
                 let (case_test_loc, _) = test_expr.loc();
                 let (_, obj_t) = inner.object.loc();
                 match exhaustive_check {
-                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
-                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(
+                    EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckInvalid(_) => {
+                        exhaustive_check
+                    }
+                    EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(
                         box EnumExhaustiveCheckPossiblyValidData {
                             mut possible_checks,
                             checks,
@@ -18964,7 +18974,7 @@ fn enum_exhaustive_check_of_switch_cases(
                             },
                         );
                         possible_checks.push_front(possible_check);
-                        EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(Box::new(
+                        EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(Box::new(
                             EnumExhaustiveCheckPossiblyValidData {
                                 possible_checks,
                                 checks,
@@ -18979,14 +18989,14 @@ fn enum_exhaustive_check_of_switch_cases(
                 test: None,
                 ..
             } => match exhaustive_check {
-                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
-                EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(
+                EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckInvalid(_) => exhaustive_check,
+                EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(
                     box EnumExhaustiveCheckPossiblyValidData {
                         possible_checks,
                         checks,
                         ..
                     },
-                ) => EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(Box::new(
+                ) => EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(Box::new(
                     EnumExhaustiveCheckPossiblyValidData {
                         possible_checks,
                         checks,
@@ -19000,21 +19010,29 @@ fn enum_exhaustive_check_of_switch_cases(
             } => {
                 let (case_test_loc, _) = test_expr.loc();
                 match exhaustive_check {
-                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(invalid_checks) => {
-                        let mut v: Vec<_> = invalid_checks.iter().duped().collect();
-                        v.push(case_test_loc.dupe());
-                        EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(v.into())
+                    EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckInvalid(
+                        mut invalid_checks,
+                    ) => {
+                        invalid_checks.push(case_test_loc.dupe());
+                        EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckInvalid(invalid_checks)
                     }
-                    EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(..) => {
-                        EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(
-                            vec![case_test_loc.dupe()].into(),
-                        )
+                    EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(..) => {
+                        EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckInvalid(vec![
+                            case_test_loc.dupe(),
+                        ])
                     }
                 }
             }
         };
     }
-    exhaustive_check
+    match exhaustive_check {
+        EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckInvalid(invalid_checks) => {
+            EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(invalid_checks.into())
+        }
+        EnumPossibleExhaustiveCheckAcc::EnumExhaustiveCheckPossiblyValid(data) => {
+            EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckPossiblyValid(data)
+        }
+    }
 }
 
 fn enum_declaration<'a>(
