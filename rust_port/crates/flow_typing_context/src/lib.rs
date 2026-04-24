@@ -12,6 +12,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::rc::Weak;
@@ -441,7 +442,7 @@ pub struct ComponentT<'cx> {
             Type,
         )>,
     >,
-    post_inference_validation_flows: RefCell<Vec<(Type, type_::UseT<Context<'cx>>)>>,
+    post_inference_validation_flows: RefCell<VecDeque<(Type, type_::UseT<Context<'cx>>)>>,
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
         RefCell<Vec<(ALoc, String, Vec<FlowProjects>)>>,
     /// Supports interface declaration merging. When two or more
@@ -776,7 +777,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         delayed_forcing_tvars: RefCell::new(CACHED_ORD_SET.with(|c| c.clone())),
         post_component_tvar_forcing_states: RefCell::new(FlowVector::new()),
         post_inference_polarity_checks: RefCell::new(Vec::new()),
-        post_inference_validation_flows: RefCell::new(Vec::new()),
+        post_inference_validation_flows: RefCell::new(VecDeque::new()),
         post_inference_projects_strict_boundary_import_pattern_opt_outs_validations: RefCell::new(
             Vec::new(),
         ),
@@ -1480,7 +1481,7 @@ impl<'cx> Context<'cx> {
 
     pub fn post_inference_validation_flows(
         &self,
-    ) -> std::cell::Ref<'_, Vec<(Type, type_::UseT<Context<'cx>>)>> {
+    ) -> std::cell::Ref<'_, VecDeque<(Type, type_::UseT<Context<'cx>>)>> {
         self.0.ccx.post_inference_validation_flows.borrow()
     }
 
@@ -1883,7 +1884,7 @@ impl<'cx> Context<'cx> {
             .ccx
             .post_inference_validation_flows
             .borrow_mut()
-            .push((t, use_t));
+            .push_front((t, use_t));
     }
 
     pub fn add_post_inference_subtyping_check(&self, l: Type, use_op: UseOp, u: Type) {

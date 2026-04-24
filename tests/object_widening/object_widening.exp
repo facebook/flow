@@ -65,6 +65,71 @@ References:
                          ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------- let_var_widen_with_spread.js:18:12
+
+Cannot assign `MOCK_UI_STATE` to `newState` because in property `b`: object literal [1] is not exactly the same as
+object literal [2]. [incompatible-type]
+
+All writes to `newState` must be compatible with the type of its initial assignment [3]. Add an annotation to
+`newState` [4] if a different type is desired.
+The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
+- Either make object literal [5] and object literal [6] exactly the same
+- Or make property `b` in object literal [6] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   let_var_widen_with_spread.js:18:12
+   18| newState = MOCK_UI_STATE; // error
+                  ^^^^^^^^^^^^^
+
+References:
+   let_var_widen_with_spread_lib.js:15:6
+            v
+   15|   b: {
+   16|     header: MOCK_HEADER,
+   17|     fetching: false,
+   18|     errMsg: undefined,
+   19|   },
+         ^ [1]
+   let_var_widen_with_spread_lib.js:3:6
+            v
+    3|   b: {
+    4|     header: undefined,
+    5|     fetching: false,
+    6|     errMsg: undefined,
+    7|   },
+         ^ [2]
+   let_var_widen_with_spread.js:7:1
+    7| newState = InitialState;
+       ^^^^^^^^ [3]
+   let_var_widen_with_spread.js:5:5
+    5| let newState;
+           ^^^^^^^^ [4]
+   let_var_widen_with_spread_lib.js:13:30
+                                    v
+   13| export const MOCK_UI_STATE = {
+   14|   a: {} as {...},
+   15|   b: {
+   16|     header: MOCK_HEADER,
+   17|     fetching: false,
+   18|     errMsg: undefined,
+   19|   },
+   20|   c: {} as {...},
+   21| };
+       ^ [5]
+   let_var_widen_with_spread_lib.js:1:29
+                                   v
+    1| export const InitialState = {
+    2|   a: {} as {...},
+    3|   b: {
+    4|     header: undefined,
+    5|     fetching: false,
+    6|     errMsg: undefined,
+    7|   },
+    8|   c: {} as {...},
+    9| };
+       ^ [6]
+
+
 Error -------------------------------------------------------------------------------------------- type_widening.js:32:1
 
 Cannot cast `a.foo` to number because `void` (due to access of non-existent property `foo`) [1] is incompatible with
@@ -724,4 +789,4 @@ References:
 
 
 
-Found 46 errors
+Found 47 errors
