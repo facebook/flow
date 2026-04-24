@@ -506,7 +506,9 @@ fn join_envs<L: LocSig>(env1: Env<L>, env2: Env<L>) -> Env<L> {
         let mut provider_locs = entry1.provider_locs.dupe();
         for (loc, state) in entry2.provider_locs.iter() {
             if let Some(existing) = provider_locs.get(loc) {
-                if existing != state {}
+                if existing != state {
+                    panic!("ImpossibleState: Inconsistent states");
+                }
             } else {
                 provider_locs.insert(loc.dupe(), *state);
             }
