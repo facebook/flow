@@ -719,12 +719,6 @@ and 'loc t' =
       call_loc: 'loc;
     }
   | EHookNaming of 'loc
-  | EIncompatibleReactDeepReadOnly of {
-      use_op: 'loc virtual_use_op;
-      dro_loc: 'loc;
-      lower: 'loc virtual_reason;
-      upper: 'loc virtual_reason;
-    }
   | EObjectThisSuperReference of 'loc * 'loc virtual_reason * This_finder.kind
   | EComponentThisReference of {
       component_loc: 'loc;
@@ -1142,7 +1136,6 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationReactHookIncompatibleWithNormalFunctions ->
     ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly loc -> ExplanationReactHookReturnDeepReadOnly (f loc)
-  | ExplanationIncompatibleReactDeepReadOnly -> ExplanationIncompatibleReactDeepReadOnly
   | ExplanationTypeGuardPositiveConsistency { return; param; guard_type; is_return_false_statement }
     ->
     ExplanationTypeGuardPositiveConsistency
@@ -1800,14 +1793,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EHookUniqueIncompatible { use_op; lower; upper } ->
     EHookUniqueIncompatible
       { use_op = map_use_op use_op; lower = map_reason lower; upper = map_reason upper }
-  | EIncompatibleReactDeepReadOnly { use_op; lower; upper; dro_loc } ->
-    EIncompatibleReactDeepReadOnly
-      {
-        use_op = map_use_op use_op;
-        lower = map_reason lower;
-        upper = map_reason upper;
-        dro_loc = f dro_loc;
-      }
   | EHookRuleViolation { callee_loc; call_loc; hook_rule } ->
     let hook_rule =
       match hook_rule with
@@ -2232,7 +2217,6 @@ let util_use_op_of_msg nope util = function
   | EUnableToSpread { use_op; _ } -> util use_op
   | EInexactMayOverwriteIndexer { use_op; _ } -> util use_op
   | EImplicitInstantiationUnderconstrainedError { use_op; _ } -> util use_op
-  | EIncompatibleReactDeepReadOnly { use_op; _ } -> util use_op
   | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs = _ }
   | EDevOnlyInvalidatedRefinementInfo { read_loc = _; invalidation_info = _ }
   | ETemporaryHardcodedErrorForPrototyping (_, _)
@@ -2711,7 +2695,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatibleSpeculation _
   | EMethodUnbinding _
   | EHookIncompatible _
-  | EIncompatibleReactDeepReadOnly _
   | EHookUniqueIncompatible _
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
@@ -3763,14 +3746,6 @@ let friendly_message_of_msg = function
         use_op;
         explanation = Some ExplanationReactHookIncompatibleWithNormalFunctions;
       }
-  | EIncompatibleReactDeepReadOnly { use_op; lower; upper; dro_loc } ->
-    UseOp
-      {
-        loc = loc_of_reason lower;
-        message = MessageIncompatibleReactDeepReadOnly { lower; upper; dro_loc };
-        use_op;
-        explanation = Some ExplanationIncompatibleReactDeepReadOnly;
-      }
   | EHookUniqueIncompatible { use_op; lower; upper } ->
     UseOp
       {
@@ -4279,7 +4254,6 @@ let error_code_of_message err : error_code option =
   | EHookIncompatible _
   | EHookUniqueIncompatible _ ->
     Some ReactRuleHookIncompatible
-  | EIncompatibleReactDeepReadOnly _ -> Some ReactRuleImmutableIncompatible
   | EHookNaming _ -> Some ReactRuleHookNamingConvention
   | EHookRuleViolation { hook_rule = ConditionalHook; _ } -> Some ReactRuleHookConditional
   | EHookRuleViolation { hook_rule = HookHasIllegalName; _ } -> Some ReactRuleHookNamingConvention

@@ -15,7 +15,6 @@ type error_code =
   | ReactRuleHookNamingConvention
   | ReactRuleHookNonHookSyntax
   | ReactRuleHookIncompatible
-  | ReactRuleImmutableIncompatible
   | ReactRuleHook
   | ReactRuleRef
   | ReactRuleCallComponent
@@ -235,7 +234,6 @@ let string_of_code : error_code -> string = function
   | ReactRuleHookNamingConvention -> "react-rule-hook-naming-convention"
   | ReactRuleHookNonHookSyntax -> "react-rule-hook-non-hook-syntax"
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
-  | ReactRuleImmutableIncompatible -> "react-rule-immutable-incompatible"
   | ReactRuleHook -> "react-rule-hook"
   | ReactRuleRef -> "react-rule-unsafe-ref"
   | ReactRuleCallComponent -> "react-rule-call-component"

@@ -105,7 +105,6 @@ use crate::intermediate_error_types::MessageDuplicateModuleProviderData;
 use crate::intermediate_error_types::MessageEnumDuplicateMemberNameData;
 use crate::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use crate::intermediate_error_types::MessageExponentialSpreadData;
-use crate::intermediate_error_types::MessageIncompatibleReactDeepReadOnlyData;
 use crate::intermediate_error_types::MessageIncompatibleTupleArityData;
 use crate::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use crate::intermediate_error_types::MessageInvalidEnumMemberCheckData;
@@ -2010,24 +2009,6 @@ pub struct EHookRuleViolationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct EIncompatibleReactDeepReadOnlyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub use_op: VirtualUseOp<L>,
-    pub dro_loc: L,
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
 pub struct EComponentThisReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub component_loc: L,
     pub this_loc: L,
@@ -2725,8 +2706,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EHookNaming(L),
 
-    EIncompatibleReactDeepReadOnly(Box<EIncompatibleReactDeepReadOnlyData<L>>),
-
     EObjectThisSuperReference(Box<(L, VirtualReason<L>, ThisFinderKind)>),
 
     EComponentThisReference(Box<EComponentThisReferenceData<L>>),
@@ -3378,9 +3357,6 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
         }
         Explanation::ExplanationReactHookReturnDeepReadOnly(loc) => {
             Explanation::ExplanationReactHookReturnDeepReadOnly(f(&loc))
-        }
-        Explanation::ExplanationIncompatibleReactDeepReadOnly => {
-            Explanation::ExplanationIncompatibleReactDeepReadOnly
         }
         Explanation::ExplanationTypeGuardPositiveConsistency {
             return_,
@@ -4710,18 +4686,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper: map_reason(upper),
             })),
 
-            EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
-                use_op,
-                lower,
-                upper,
-                dro_loc,
-            }) => EIncompatibleReactDeepReadOnly(Box::new(EIncompatibleReactDeepReadOnlyData {
-                use_op: map_use_op(use_op),
-                lower: map_reason(lower),
-                upper: map_reason(upper),
-                dro_loc: f(dro_loc),
-            })),
-
             EHookRuleViolation(box EHookRuleViolationData {
                 callee_loc,
                 call_loc,
@@ -5590,10 +5554,6 @@ where
         ErrorMessage::EImplicitInstantiationUnderconstrainedError(
             box EImplicitInstantiationUnderconstrainedErrorData { use_op, .. },
         ) => util(use_op),
-        ErrorMessage::EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
-            use_op,
-            ..
-        }) => util(use_op),
         _ => nope,
     }
 }
@@ -6076,9 +6036,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EIncompatibleSpeculation(..)
             | Self::EMethodUnbinding(box EMethodUnbindingData { .. })
             | Self::EHookIncompatible(box EHookIncompatibleData { .. })
-            | Self::EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
-                ..
-            })
             | Self::EHookUniqueIncompatible(box EHookUniqueIncompatibleData { .. })
             | Self::EImplicitInstantiationUnderconstrainedError(
                 box EImplicitInstantiationUnderconstrainedErrorData { .. },
@@ -8688,29 +8645,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ErrorMessage::EIncompatibleReactDeepReadOnly(
-                box EIncompatibleReactDeepReadOnlyData {
-                    use_op,
-                    lower,
-                    upper,
-                    dro_loc,
-                },
-            ) => {
-                let loc = lower.loc.dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageIncompatibleReactDeepReadOnly(Box::new(
-                        MessageIncompatibleReactDeepReadOnlyData {
-                            lower,
-                            upper,
-                            dro_loc,
-                        },
-                    )),
-                    use_op,
-                    explanation: Some(Explanation::ExplanationIncompatibleReactDeepReadOnly),
-                }))
-            }
-
             ErrorMessage::EHookUniqueIncompatible(box EHookUniqueIncompatibleData {
                 use_op,
                 lower,
@@ -9597,9 +9531,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | ErrorMessage::EHookUniqueIncompatible(box EHookUniqueIncompatibleData { .. }) => {
                 Some(ReactRuleHookIncompatible)
             }
-            ErrorMessage::EIncompatibleReactDeepReadOnly(
-                box EIncompatibleReactDeepReadOnlyData { .. },
-            ) => Some(ReactRuleImmutableIncompatible),
             ErrorMessage::EHookNaming { .. } => Some(ReactRuleHookNamingConvention),
             ErrorMessage::EHookRuleViolation(box EHookRuleViolationData {
                 hook_rule: HookRule::ConditionalHook,

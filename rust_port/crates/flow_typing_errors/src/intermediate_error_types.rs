@@ -945,7 +945,6 @@ pub enum Explanation<L: Dupe> {
     ExplanationReactHookIncompatibleWithEachOther,
     ExplanationReactHookIncompatibleWithNormalFunctions,
     ExplanationReactHookReturnDeepReadOnly(L),
-    ExplanationIncompatibleReactDeepReadOnly,
     ExplanationTypeGuardPositiveConsistency {
         return_: VirtualReason<L>,
         param: VirtualReason<L>,
@@ -1360,13 +1359,6 @@ pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
     pub upper_loc: L,
     pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
     pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MessageIncompatibleReactDeepReadOnlyData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
-    pub dro_loc: L,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1962,8 +1954,6 @@ pub enum Message<L: Dupe> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
-
-    MessageIncompatibleReactDeepReadOnly(Box<MessageIncompatibleReactDeepReadOnlyData<L>>),
 
     MessageIncompatibleReactHooksDueToUniqueness {
         lower: VirtualReason<L>,

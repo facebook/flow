@@ -99,7 +99,6 @@ use super::intermediate_error_types::MessageExponentialSpreadData;
 use super::intermediate_error_types::MessageIncompatibleDueToInvariantSubtypingData;
 use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use super::intermediate_error_types::MessageIncompatibleImplicitReturnData;
-use super::intermediate_error_types::MessageIncompatibleReactDeepReadOnlyData;
 use super::intermediate_error_types::MessageIncompatibleTupleArityData;
 use super::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use super::intermediate_error_types::MessageInvalidEnumMemberCheckData;
@@ -3832,9 +3831,6 @@ where
                     "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number",
                 ),
             ]),
-            ExplanationIncompatibleReactDeepReadOnly => {
-                friendly::Message(vec![text("Consider using "), code("React.Immutable<>")])
-            }
             ExplanationReactComponentPropsDeepReadOnly(props_loc) => friendly::Message(vec![
                 text("React "),
                 friendly::hardcoded_string_desc_ref("component properties", loc_of_aloc(props_loc)),
@@ -7025,14 +7021,6 @@ where
                 text(", a non-type-guard function, is incompatible with "),
                 ref_(upper),
                 text(", which is a type-guard function"),
-            ]),
-            MessageIncompatibleReactDeepReadOnly(
-                box MessageIncompatibleReactDeepReadOnlyData { lower, upper, .. },
-            ) => friendly::Message(vec![
-                ref_(lower),
-                text(" is managed by the React runtime and cannot be mutated, while "),
-                ref_(upper),
-                text(" may allow mutations (possibly in nested values)"),
             ]),
             MessageIncompatibleReactHooksDueToUniqueness { lower, upper } => {
                 friendly::Message(vec![

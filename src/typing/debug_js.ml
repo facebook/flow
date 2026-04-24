@@ -1993,12 +1993,6 @@ let dump_error_message =
         (string_of_use_op use_op)
         (dump_reason cx lower)
         (dump_reason cx upper)
-    | EIncompatibleReactDeepReadOnly { use_op; lower; upper; _ } ->
-      spf
-        "EIncompatibleReactDeepReadOnly (%s) (%s) (%s)"
-        (string_of_use_op use_op)
-        (dump_reason cx lower)
-        (dump_reason cx upper)
     | EHookUniqueIncompatible { use_op; lower; upper } ->
       spf
         "EHookUniqueIncompatible (%s) (%s) (%s)"

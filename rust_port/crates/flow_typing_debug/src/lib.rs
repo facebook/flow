@@ -56,7 +56,6 @@ use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErr
 use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
-use flow_typing_errors::error_message::EIncompatibleReactDeepReadOnlyData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
@@ -3642,19 +3641,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }) => {
             format!(
                 "EHookIncompatible ({}) ({}) ({})",
-                string_of_use_op(use_op),
-                dump_reason(cx, lower),
-                dump_reason(cx, upper)
-            )
-        }
-        ErrorMessage::EIncompatibleReactDeepReadOnly(box EIncompatibleReactDeepReadOnlyData {
-            use_op,
-            lower,
-            upper,
-            ..
-        }) => {
-            format!(
-                "EIncompatibleReactDeepReadOnly ({}) ({}) ({})",
                 string_of_use_op(use_op),
                 dump_reason(cx, lower),
                 dump_reason(cx, upper)

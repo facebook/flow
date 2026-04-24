@@ -423,7 +423,6 @@ type 'loc explanation =
   | ExplanationReactHookIncompatibleWithEachOther
   | ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly of 'loc
-  | ExplanationIncompatibleReactDeepReadOnly
   | ExplanationTypeGuardPositiveConsistency of {
       return: 'loc virtual_reason;
       param: 'loc virtual_reason;
@@ -951,11 +950,6 @@ type 'loc message =
   | MessageIncompatibleNonTypeGuardToTypeGuard of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
-    }
-  | MessageIncompatibleReactDeepReadOnly of {
-      lower: 'loc virtual_reason;
-      upper: 'loc virtual_reason;
-      dro_loc: 'loc;
     }
   | MessageIncompatibleReactHooksDueToUniqueness of {
       lower: 'loc virtual_reason;
