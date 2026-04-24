@@ -210,9 +210,14 @@ fn inner_as_str(inner: &FileKeyInner) -> &str {
     }
 }
 
+fn normalized_suffix(inner: &FileKeyInner) -> String {
+    normalize_dir_sep_with(std::path::MAIN_SEPARATOR, inner_as_str(inner))
+}
+
 impl PartialEq for FileKeyInner {
     fn eq(&self, other: &Self) -> bool {
-        order_of_inner(self) == order_of_inner(other) && inner_as_str(self) == inner_as_str(other)
+        order_of_inner(self) == order_of_inner(other)
+            && normalized_suffix(self) == normalized_suffix(other)
     }
 }
 
@@ -221,7 +226,7 @@ impl Eq for FileKeyInner {}
 impl Hash for FileKeyInner {
     fn hash<H: Hasher>(&self, state: &mut H) {
         order_of_inner(self).hash(state);
-        inner_as_str(self).hash(state);
+        normalized_suffix(self).hash(state);
     }
 }
 
@@ -263,7 +268,7 @@ impl Ord for FileKey {
         if k != std::cmp::Ordering::Equal {
             k
         } else {
-            self.suffix().cmp(other.suffix())
+            normalized_suffix(self.inner.as_ref()).cmp(&normalized_suffix(other.inner.as_ref()))
         }
     }
 }

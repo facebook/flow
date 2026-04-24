@@ -204,7 +204,7 @@ let compare =
     if k <> 0 then
       k
     else
-      String.compare (suffix a) (suffix b)
+      String.compare (normalize_dir_sep (suffix a)) (normalize_dir_sep (suffix b))
 
 let compare_opt a b =
   match (a, b) with
