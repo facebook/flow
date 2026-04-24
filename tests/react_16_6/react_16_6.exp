@@ -37,14 +37,14 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:578:24
+   <BUILTINS>/react.js:673:24
                                v-------
-   578|       component: () => Promise<
-   579|         $ReadOnly<{
-   580|           default: component(...Config) renders Renders,
-   581|           ...
-   582|         }>,
-   583|       >,
+   673|       component: () => Promise<
+   674|         $ReadOnly<{
+   675|           default: component(...Config) renders Renders,
+   676|           ...
+   677|         }>,
+   678|       >,
               ^ [2]
 
 
@@ -61,14 +61,14 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:578:24
+   <BUILTINS>/react.js:673:24
                                v-------
-   578|       component: () => Promise<
-   579|         $ReadOnly<{
-   580|           default: component(...Config) renders Renders,
-   581|           ...
-   582|         }>,
-   583|       >,
+   673|       component: () => Promise<
+   674|         $ReadOnly<{
+   675|           default: component(...Config) renders Renders,
+   676|           ...
+   677|         }>,
+   678|       >,
               ^ [2]
 
 
@@ -90,12 +90,12 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:579:19
+   <BUILTINS>/react.js:674:19
                            v
-    579|         $ReadOnly<{
-    580|           default: component(...Config) renders Renders,
-    581|           ...
-    582|         }>,
+    674|         $ReadOnly<{
+    675|           default: component(...Config) renders Renders,
+    676|           ...
+    677|         }>,
                  ^ [3]
 
 
@@ -115,12 +115,12 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:579:19
+   <BUILTINS>/react.js:674:19
                            v
-    579|         $ReadOnly<{
-    580|           default: component(...Config) renders Renders,
-    581|           ...
-    582|         }>,
+    674|         $ReadOnly<{
+    675|           default: component(...Config) renders Renders,
+    676|           ...
+    677|         }>,
                  ^ [3]
 
 
@@ -353,8 +353,8 @@ Cannot call `React.forwardRef` with `Demo` bound to `render` because in the seco
                                                  ^^^^
 
 References:
-   <BUILTINS>/react.js:740:36
-   740|       render: (props: Config, ref: React.RefSetter<Instance>) => Renders,
+   <BUILTINS>/react.js:835:36
+   835|       render: (props: Config, ref: React.RefSetter<Instance>) => Renders,
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo_ref.js:7:33
      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {

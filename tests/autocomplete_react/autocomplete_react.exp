@@ -157,14 +157,46 @@ Flags: --pretty
 {
   "result":[
     {
+      "name":"ActionDispatch",
+      "type":"type ActionDispatch<ActionArg: ReadonlyArray<any> = Readonly<[]>> = (...args: ActionArg) => void"
+    },
+    {"name":"Attributes","type":"type Attributes = {key?: React$Key, ...}"},
+    {
       "name":"ChildrenArray",
       "type":"type ChildrenArray<+T> = ReadonlyArray<ChildrenArray<T>> | T"
+    },
+    {"name":"ClassAttributes","type":"type ClassAttributes<T> = RefAttributes<T>"},
+    {
+      "name":"ComponentClass",
+      "type":"type ComponentClass<P: {...} = {...}, S = any> = component(...P)"
+    },
+    {
+      "name":"ComponentProps",
+      "type":"type ComponentProps<T: React$ElementType> = React$ElementConfig<T>"
+    },
+    {
+      "name":"ComponentPropsWithRef",
+      "type":"type ComponentPropsWithRef<T: React$ElementType> = React$ElementConfig<T>"
+    },
+    {
+      "name":"ComponentPropsWithoutRef",
+      "type":"type ComponentPropsWithoutRef<T: React$ElementType> = Omit<React$ElementConfig<T>, \"ref\">"
     },
     {
       "name":"ComponentType",
       "type":"type ComponentType<-P: {...}> = component(...P)"
     },
+    {
+      "name":"Consumer",
+      "type":"type Consumer<T> = component(children: (value: T) => React$Node)"
+    },
     {"name":"Context","type":"type Context<T>"},
+    {"name":"DependencyList","type":"type DependencyList = ReadonlyArray<mixed>"},
+    {"name":"Dispatch","type":"type Dispatch<A> = (A) => void"},
+    {
+      "name":"EffectCallback",
+      "type":"type EffectCallback = () => void | (() => void)"
+    },
     {
       "name":"ElementConfig",
       "type":"type ElementConfig<C> = React$ElementConfig<C>"
@@ -175,13 +207,54 @@ Flags: --pretty
     },
     {"name":"ElementType","type":"type ElementType = React$ElementType"},
     {
+      "name":"ErrorInfo",
+      "type":"type ErrorInfo = {componentStack?: string | null, ...}"
+    },
+    {
+      "name":"ExoticComponent",
+      "type":"type ExoticComponent<P: {...} = {...}> = component(...P)"
+    },
+    {"name":"FC","type":"type FC<P: {...} = {...}> = component(...P)"},
+    {
+      "name":"ForwardRefExoticComponent",
+      "type":"type ForwardRefExoticComponent<P: {...} = {...}> = component(...P)"
+    },
+    {
+      "name":"ForwardRefRenderFunction",
+      "type":"type ForwardRefRenderFunction<T, P = {...}> = (props: P, ref: RefSetter<T>) => React$Node"
+    },
+    {
+      "name":"FunctionComponent",
+      "type":"type FunctionComponent<P: {...} = {...}> = component(...P)"
+    },
+    {
       "name":"Interaction",
       "type":"type Interaction = {name: string, timestamp: number, ...}"
     },
+    {
+      "name":"JSXElementConstructor",
+      "type":"type JSXElementConstructor<P: {...} = {...}> = component(...P)"
+    },
     {"name":"Key","type":"type Key = React$Key"},
+    {
+      "name":"LazyExoticComponent",
+      "type":"type LazyExoticComponent<T: ComponentType<any>> = component(...React$ElementConfig<T>)"
+    },
+    {
+      "name":"MemoExoticComponent",
+      "type":"type MemoExoticComponent<T: ComponentType<any>> = component(...React$ElementConfig<T>)"
+    },
     {
       "name":"MixedElement",
       "type":"type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>"
+    },
+    {
+      "name":"MutableRefObject",
+      "type":"type MutableRefObject<T> = {current: T, ...}"
+    },
+    {
+      "name":"NamedExoticComponent",
+      "type":"type NamedExoticComponent<P: {...} = {...}> = component(...P)"
     },
     {"name":"Node","type":"type Node = React$Node"},
     {"name":"Portal","type":"type Portal = React$Portal"},
@@ -194,9 +267,36 @@ Flags: --pretty
       "type":"type PropsOf<E: string | MixedElement | React$RendersExactly<React$ElementType>> = E extends ExactReactElement_DEPRECATED<infer C> ? ElementConfig<C> : E extends React$RendersExactly<infer C> ? ElementConfig<C> : E extends string ? $JSXIntrinsics[E][\"props\"] : empty"
     },
     {
+      "name":"PropsWithChildren",
+      "type":"type PropsWithChildren<P = {...}> = P & {children?: React$Node, ...}"
+    },
+    {"name":"PropsWithoutRef","type":"type PropsWithoutRef<P> = Omit<P, \"ref\">"},
+    {
+      "name":"Provider",
+      "type":"type Provider<T> = component(children?: React$Node, value: T)"
+    },
+    {
+      "name":"ProviderProps",
+      "type":"type ProviderProps<T> = {children?: React$Node, value: T, ...}"
+    },
+    {
+      "name":"ReactElement",
+      "type":"type ReactElement<P = any, T = any> = ExactReactElement_DEPRECATED<any>"
+    },
+    {"name":"ReactInstance","type":"type ReactInstance = any"},
+    {"name":"ReactNode","type":"type ReactNode = React$Node"},
+    {"name":"ReactPortal","type":"type ReactPortal = React$Portal"},
+    {
       "name":"ReactSetStateFunction",
       "type":"type ReactSetStateFunction<S> = (((S) => S) | S) => void"
     },
+    {"name":"ReactText","type":"type ReactText = string | number"},
+    {"name":"Ref","type":"type Ref<T> = RefSetter<T>"},
+    {
+      "name":"RefAttributes",
+      "type":"type RefAttributes<T> = {ref?: RefSetter<T>, ...}"
+    },
+    {"name":"RefCallback","type":"type RefCallback<T> = (T | null) => mixed"},
     {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
     {
       "name":"RefOf",
@@ -205,6 +305,16 @@ Flags: --pretty
     {
       "name":"RefSetter",
       "type":"type RefSetter<-T> = ?{-current: T | null, ...} | ((T | null) => mixed)"
+    },
+    {"name":"SetStateAction","type":"type SetStateAction<S> = S | ((S) => S)"},
+    {
+      "name":"TransitionStartFunction",
+      "type":"type TransitionStartFunction = (callback: () => void | Promise<void>) => void"
+    },
+    {"name":"ValidationMap","type":"type ValidationMap<T> = {[string]: any}"},
+    {
+      "name":"WeakValidationMap",
+      "type":"type WeakValidationMap<T> = {[string]: any}"
     }
   ]
 }

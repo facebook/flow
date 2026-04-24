@@ -969,8 +969,8 @@ References:
    -:6:30
       6|   declare const maybeString: ?string;
                                       ^^^^^^^ [1]
-   <BUILTINS>/react.js:1046:39
-   1046|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+   <BUILTINS>/react.js:1141:39
+   1141|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
                                                ^^^^^^ [2]
    -:4:34
       4|   const [str, setStr] = useState("");
@@ -2422,11 +2422,11 @@ The return value of a React hook [1] cannot be written to.
                 ^^^
 
 References:
-   <BUILTINS>/react.js:834:26
+   <BUILTINS>/react.js:929:26
                                  v---
-   834|     declare hook useState<S>(
-   835|       initialState: (() => S) | S,
-   836|     ): [S, ReactSetStateFunction<S>];
+   929|     declare hook useState<S>(
+   930|       initialState: (() => S) | S,
+   931|     ): [S, ReactSetStateFunction<S>];
             -------------------------------^ [1]
 
 
