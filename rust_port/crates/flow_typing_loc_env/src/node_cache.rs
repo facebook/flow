@@ -245,8 +245,7 @@ impl<'cx, CX: Clone> NodeCache<'cx, CX> {
 
     pub fn set_tparam(&self, param: (AstTypeParam<ALoc, (ALoc, Type)>, TypeParam, Type)) {
         let (ast_tparam, _, _) = &param;
-        let (loc, _) = &ast_tparam.loc;
-        let loc = loc.clone();
+        let loc = ast_tparam.loc.clone();
         self.0.borrow_mut().tparams.insert(loc, param);
     }
 

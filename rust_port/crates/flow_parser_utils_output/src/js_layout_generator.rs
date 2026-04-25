@@ -5614,7 +5614,7 @@ fn match_rest_pattern(rest: &ast::match_pattern::RestPattern<Loc, Loc>) -> Layou
     }
 }
 
-fn const_layout(const_: Option<&ast::types::type_param::ConstModifier<Loc, Loc>>) -> LayoutNode {
+fn const_layout(const_: Option<&ast::types::type_param::ConstModifier<Loc>>) -> LayoutNode {
     if const_.is_some() {
         fuse(vec![atom("const"), space()])
     } else {

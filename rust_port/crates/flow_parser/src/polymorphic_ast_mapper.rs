@@ -5798,7 +5798,7 @@ pub fn type_params<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         params,
         comments,
     } = tparams;
-    let loc_ = mapper.on_type_annot(loc)?;
+    let loc_ = mapper.on_loc_annot(loc)?;
     let params_ = params
         .iter()
         .map(|tp| type_param(mapper, tp))
@@ -5821,7 +5821,7 @@ pub fn type_args<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         arguments,
         comments,
     } = targs;
-    let loc_ = mapper.on_type_annot(loc)?;
+    let loc_ = mapper.on_loc_annot(loc)?;
     let arguments_ = arguments
         .iter()
         .map(|t| type_(mapper, t))
@@ -5857,7 +5857,7 @@ pub fn type_param<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .map(|c| tparam_const_modifier(mapper, c))
         .transpose()?;
     Ok(ast::types::TypeParam {
-        loc: mapper.on_type_annot(loc)?,
+        loc: mapper.on_loc_annot(loc)?,
         name: name_,
         bound: bound_,
         bound_kind: bound_kind.clone(),
@@ -5887,10 +5887,10 @@ pub fn type_annotation_hint<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 }
 fn tparam_const_modifier<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
-    c: &ast::types::type_param::ConstModifier<M, T>,
-) -> Result<ast::types::type_param::ConstModifier<N, U>, E> {
+    c: &ast::types::type_param::ConstModifier<M>,
+) -> Result<ast::types::type_param::ConstModifier<N>, E> {
     let ast::types::type_param::ConstModifier { loc, comments } = c;
-    let loc_ = mapper.on_type_annot(loc)?;
+    let loc_ = mapper.on_loc_annot(loc)?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::types::type_param::ConstModifier {
         loc: loc_,

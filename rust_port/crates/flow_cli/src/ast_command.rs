@@ -349,7 +349,12 @@ fn main(args: &arg_spec::Values) {
         let mut obj = serde_json::Map::new();
         obj.insert(
             "errors".to_string(),
-            estree_translator::errors(&offset_table, config.include_filename, &errors),
+            estree_translator::errors(
+                &offset_table,
+                config.include_filename,
+                config.offset_style,
+                &errors,
+            ),
         );
         obj.insert("tokens".to_string(), serde_json::Value::Array(tokens));
         serde_json::Value::Object(obj)
@@ -379,8 +384,12 @@ fn main(args: &arg_spec::Values) {
         };
         match translated_ast {
             serde_json::Value::Object(mut params) => {
-                let errors_value =
-                    estree_translator::errors(&offset_table, config.include_filename, &errors);
+                let errors_value = estree_translator::errors(
+                    &offset_table,
+                    config.include_filename,
+                    config.offset_style,
+                    &errors,
+                );
                 let tokens_value = serde_json::Value::Array(tokens);
                 let mut properties = serde_json::Map::new();
                 properties.insert("errors".to_string(), errors_value);

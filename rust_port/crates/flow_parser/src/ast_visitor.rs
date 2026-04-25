@@ -2404,15 +2404,15 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
 
     fn tparam_const_modifier(
         &mut self,
-        c: &'ast ast::types::type_param::ConstModifier<Loc, Type>,
+        c: &'ast ast::types::type_param::ConstModifier<Loc>,
     ) -> Result<(), E> {
         tparam_const_modifier_default(self, c)
     }
 
     fn map_tparam_const_modifier(
         &mut self,
-        c: &'ast ast::types::type_param::ConstModifier<Loc, Loc>,
-    ) -> ast::types::type_param::ConstModifier<Loc, Loc>
+        c: &'ast ast::types::type_param::ConstModifier<Loc>,
+    ) -> ast::types::type_param::ConstModifier<Loc>
     where
         Loc: Dupe,
     {
@@ -11375,7 +11375,7 @@ pub fn map_variance_opt_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 
 pub fn tparam_const_modifier_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    c: &'ast ast::types::type_param::ConstModifier<Loc, Type>,
+    c: &'ast ast::types::type_param::ConstModifier<Loc>,
 ) -> Result<(), E> {
     let ast::types::type_param::ConstModifier { loc: _, comments } = c;
     visitor.syntax_opt(comments.as_ref())?;
@@ -11384,8 +11384,8 @@ pub fn tparam_const_modifier_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 
 pub fn map_tparam_const_modifier_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    c: &'ast ast::types::type_param::ConstModifier<Loc, Loc>,
-) -> ast::types::type_param::ConstModifier<Loc, Loc> {
+    c: &'ast ast::types::type_param::ConstModifier<Loc>,
+) -> ast::types::type_param::ConstModifier<Loc> {
     let ast::types::type_param::ConstModifier { loc, comments } = c;
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::types::type_param::ConstModifier {

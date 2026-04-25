@@ -1,3 +1,2 @@
 shell: test.sh
-skip_rust_port: true
 skip_windows: true

@@ -253,7 +253,7 @@ pub mod types {
         bound_kind: Option<at::type_param::BoundKind>,
         variance: Option<ast::Variance<Loc>>,
         default: Option<at::Type<Loc, Loc>>,
-        const_: Option<at::type_param::ConstModifier<Loc, Loc>>,
+        const_: Option<at::type_param::ConstModifier<Loc>>,
         name: &str,
     ) -> at::TypeParam<Loc, Loc> {
         let loc = loc.unwrap_or_else(Loc::none);

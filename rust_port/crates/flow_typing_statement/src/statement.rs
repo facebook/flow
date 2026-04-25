@@ -48,7 +48,6 @@ use flow_parser::ast::statement;
 use flow_parser::jsdoc;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::polymorphic_ast_mapper;
-use flow_parser::polymorphic_ast_mapper::LocMapper;
 use flow_parser_utils::graphql;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::ECallTypeArityData;
@@ -15092,12 +15091,8 @@ pub fn mk_class_sig<'a>(
                                                 );
                                             (
                                                 (loc.dupe(), c.dupe(), Some(ts)),
-                                                Some(ast::types::TypeArgs {
-                                                    loc: {
-                                                        let Ok(v) = typed_ast_utils::ErrorMapper
-                                                            .on_type_annot(targs_loc);
-                                                        v
-                                                    },
+                                                Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                                                    loc: targs_loc.dupe(),
                                                     arguments: targs_ast_inner.into(),
                                                     comments: type_args.comments.dupe(),
                                                 }),
@@ -16663,13 +16658,11 @@ pub fn mk_record_sig<'a>(
                                                 );
                                                 (
                                                     (loc.dupe(), c.dupe(), Some(ts)),
-                                                    Some(ast::types::TypeArgs {
-                                                        loc: {
-                                                            let Ok(v) =
-                                                                typed_ast_utils::ErrorMapper
-                                                                    .on_type_annot(&targs_loc);
-                                                            v
-                                                        },
+                                                    Some(ast::types::TypeArgs::<
+                                                        ALoc,
+                                                        (ALoc, Type),
+                                                    > {
+                                                        loc: targs_loc,
                                                         arguments: targs_ast.into(),
                                                         comments: targs_comments.clone(),
                                                     }),

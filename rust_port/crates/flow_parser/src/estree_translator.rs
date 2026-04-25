@@ -38,6 +38,7 @@ pub enum OffsetStyle {
 fn loc_and_range(
     offset_table: &OffsetTable,
     include_filename: bool,
+    offset_style: OffsetStyle,
     location: &Loc,
 ) -> (Value, Value) {
     let source = if include_filename {
@@ -71,8 +72,16 @@ fn loc_and_range(
         }
     });
 
-    fn offset(offset_table: &OffsetTable, js_position: Position) -> Value {
-        match offset_table.offset_js(js_position) {
+    fn offset(
+        offset_table: &OffsetTable,
+        offset_style: OffsetStyle,
+        js_position: Position,
+    ) -> Value {
+        let result = match offset_style {
+            OffsetStyle::Utf8Bytes => offset_table.offset_utf8(js_position),
+            OffsetStyle::JsIndices => offset_table.offset_js(js_position),
+        };
+        match result {
             Ok(i) => Value::Number(Number::from_u128(i as u128).unwrap()),
             Err(e) => {
                 // To debug, do
@@ -84,8 +93,8 @@ fn loc_and_range(
     }
 
     let range = Value::Array(vec![
-        offset(offset_table, js_start_pos),
-        offset(offset_table, js_end_pos),
+        offset(offset_table, offset_style, js_start_pos),
+        offset(offset_table, offset_style, js_end_pos),
     ]);
 
     (loc, range)
@@ -120,12 +129,13 @@ fn format_internal_comments(
 pub fn errors(
     offset_table: &OffsetTable,
     include_filename: bool,
+    offset_style: OffsetStyle,
     errors: &[(Loc, ParseError)],
 ) -> Value {
     let error_values: Vec<Value> = errors
         .iter()
         .map(|(location, e)| {
-            let (loc, _) = loc_and_range(offset_table, include_filename, location);
+            let (loc, _) = loc_and_range(offset_table, include_filename, offset_style, location);
             json!({
                 "loc": loc,
                 "message": format!("{e}")
@@ -219,7 +229,12 @@ fn node(
         }
     }
     if config.include_locs {
-        let (loc, range) = loc_and_range(offset_table, config.include_filename, location);
+        let (loc, range) = loc_and_range(
+            offset_table,
+            config.include_filename,
+            config.offset_style,
+            location,
+        );
         obj.insert("range".to_string(), range);
         obj.insert("loc".to_string(), loc);
     }

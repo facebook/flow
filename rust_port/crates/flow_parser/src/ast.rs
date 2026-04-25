@@ -1718,8 +1718,8 @@ pub mod types {
             serde::Serialize,
             serde::Deserialize
         )]
-        pub struct ConstModifier<M: Dupe, T: Dupe> {
-            pub loc: T,
+        pub struct ConstModifier<M: Dupe> {
+            pub loc: M,
             pub comments: Option<Syntax<M, ()>>,
         }
     }
@@ -1736,13 +1736,13 @@ pub mod types {
         serde::Deserialize
     )]
     pub struct TypeParam<M: Dupe, T: Dupe> {
-        pub loc: T,
+        pub loc: M,
         pub name: Identifier<M, T>,
         pub bound: AnnotationOrHint<M, T>,
         pub bound_kind: type_param::BoundKind,
         pub variance: Option<Variance<M>>,
         pub default: Option<Type<M, T>>,
-        pub const_: Option<type_param::ConstModifier<M, T>>,
+        pub const_: Option<type_param::ConstModifier<M>>,
     }
 
     #[derive(
@@ -1757,7 +1757,7 @@ pub mod types {
         serde::Deserialize
     )]
     pub struct TypeParams<M: Dupe, T: Dupe> {
-        pub loc: T,
+        pub loc: M,
         pub params: Arc<[TypeParam<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
@@ -1774,7 +1774,7 @@ pub mod types {
         serde::Deserialize
     )]
     pub struct TypeArgs<M: Dupe, T: Dupe> {
-        pub loc: T,
+        pub loc: M,
         pub arguments: Arc<[Type<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }

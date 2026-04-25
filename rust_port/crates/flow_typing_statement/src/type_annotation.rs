@@ -829,12 +829,8 @@ fn convert_inner<'a>(
                         convert_list_inner(cx, env, &type_args.arguments);
                     (
                         Some(targs_vec),
-                        Some(ast::types::TypeArgs {
-                            loc: {
-                                let Ok(v) =
-                                    typed_ast_utils::ErrorMapper.on_type_annot(&type_args.loc);
-                                v
-                            },
+                        Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                            loc: type_args.loc.dupe(),
                             arguments: Arc::from(targs_ast_vec),
                             comments: type_args.comments.dupe(),
                         }),
@@ -1091,14 +1087,12 @@ fn convert_inner<'a>(
                             .get(&subst_name)
                             .expect("subst_name should exist in additional_true_type_tparams_map")
                             .dupe();
-                        extends_infer_tparams_map
-                            .insert(tparam_tast.loc.0.dupe(), (tparam_tast, t));
+                        extends_infer_tparams_map.insert(tparam_tast.loc.dupe(), (tparam_tast, t));
                     }
                     None => {
                         tparams.push(tparam.dupe());
                         additional_true_type_tparams_map.insert(subst_name.dupe(), t.dupe());
-                        extends_infer_tparams_map
-                            .insert(tparam_tast.loc.0.dupe(), (tparam_tast, t));
+                        extends_infer_tparams_map.insert(tparam_tast.loc.dupe(), (tparam_tast, t));
                         infer_bounds_map.insert(subst_name, tparam.bound.dupe());
                     }
                 }
@@ -1386,12 +1380,8 @@ fn convert_inner<'a>(
                                 convert_list_inner(cx, env, &targs_node.arguments);
                             (
                                 elemts,
-                                Some(ast::types::TypeArgs {
-                                    loc: {
-                                        let Ok(v) = typed_ast_utils::ErrorMapper
-                                            .on_type_annot(&targs_node.loc);
-                                        v
-                                    },
+                                Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                                    loc: targs_node.loc.dupe(),
                                     arguments: Arc::from(targs_ast),
                                     comments: targs_node.comments.dupe(),
                                 }),
@@ -2173,12 +2163,8 @@ fn convert_inner<'a>(
                                     reconstruct_ast(
                                         require_t.dupe(),
                                         None,
-                                        Some(ast::types::TypeArgs {
-                                            loc: {
-                                                let Ok(v) = typed_ast_utils::ErrorMapper
-                                                    .on_type_annot(&targs_node.loc);
-                                                v
-                                            },
+                                        Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                                            loc: targs_node.loc.dupe(),
                                             arguments: Arc::from(vec![str_ast]),
                                             comments: targs_node.comments.dupe(),
                                         }),
@@ -5521,11 +5507,8 @@ fn mk_nominal_type_inner<'a>(
             }
             (
                 t,
-                Some(ast::types::TypeArgs {
-                    loc: {
-                        let Ok(v) = typed_ast_utils::ErrorMapper.on_type_annot(&targs_node.loc);
-                        v
-                    },
+                Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                    loc: targs_node.loc.dupe(),
                     arguments: targs_ast.into(),
                     comments: targs_node.comments.dupe(),
                 }),
@@ -5659,7 +5642,7 @@ fn mk_type_param_inner<'a>(
         comments: id.comments.dupe(),
     });
     let ast = ast::types::TypeParam {
-        loc: (loc.dupe(), t.dupe()),
+        loc: loc.dupe(),
         name: name_ast,
         bound: bound_ast,
         bound_kind: bound_kind.clone(),
@@ -5668,10 +5651,7 @@ fn mk_type_param_inner<'a>(
         const_: const_mod
             .as_ref()
             .map(|cm| ast::types::type_param::ConstModifier {
-                loc: {
-                    let Ok(v) = typed_ast_utils::ErrorMapper.on_type_annot(&cm.loc);
-                    v
-                },
+                loc: cm.loc.dupe(),
                 comments: cm.comments.dupe(),
             }),
     };
@@ -5715,11 +5695,8 @@ fn mk_type_param_declarations_inner<'a>(
                 bounds_map.insert(name, subst_bound);
                 asts.push(ast);
             }
-            let tparams_ast = Some(ast::types::TypeParams {
-                loc: {
-                    let Ok(v) = typed_ast_utils::ErrorMapper.on_type_annot(tparams_loc);
-                    v
-                },
+            let tparams_ast = Some(ast::types::TypeParams::<ALoc, (ALoc, Type)> {
+                loc: tparams_loc.dupe(),
                 params: asts.into(),
                 comments: comments.clone(),
             });
@@ -5767,11 +5744,8 @@ fn mk_interface_super<'a>(
             let (ts, targs_ast) = convert_list_inner(cx, env, &targs_node.arguments);
             (
                 (loc.dupe(), c, Some(ts)),
-                Some(ast::types::TypeArgs {
-                    loc: {
-                        let Ok(v) = typed_ast_utils::ErrorMapper.on_type_annot(&targs_node.loc);
-                        v
-                    },
+                Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                    loc: targs_node.loc.dupe(),
                     arguments: targs_ast.into(),
                     comments: targs_node.comments.dupe(),
                 }),
@@ -7194,10 +7168,7 @@ fn mk_super_inner<'a>(
             (
                 (loc, c, Some(ts)),
                 Some(ast::types::TypeArgs {
-                    loc: {
-                        let Ok(v) = typed_ast_utils::ErrorMapper.on_type_annot(&targs_node.loc);
-                        v
-                    },
+                    loc: targs_node.loc.dupe(),
                     arguments: targs_ast.into(),
                     comments: targs_node.comments.dupe(),
                 }),
@@ -7896,12 +7867,8 @@ pub fn mk_declare_class_sig<'a>(
                                     convert_list_inner(cx, &mut env, &targs.arguments);
                                 (
                                     (iface.loc.dupe(), c.dupe(), Some(ts)),
-                                    Some(ast::types::TypeArgs {
-                                        loc: {
-                                            let Ok(v) = typed_ast_utils::ErrorMapper
-                                                .on_type_annot(&targs.loc);
-                                            v
-                                        },
+                                    Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                                        loc: targs.loc.dupe(),
                                         arguments: targs_ast.into(),
                                         comments: targs.comments.dupe(),
                                     }),
