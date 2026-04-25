@@ -190,5 +190,197 @@ References:
                            ^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- test_keyword.js:2:10
 
-Found 12 errors
+Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:2:10
+   2|   foo(x: Out): Out { return x; }
+               ^^^
+
+References:
+   test_keyword.js:1:17
+   1| class Variance<+Out,-In> {
+                      ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:3:15
+
+Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:3:15
+   3|   bar(y: In): In { return y; }
+                    ^^
+
+References:
+   test_keyword.js:1:22
+   1| class Variance<+Out,-In> {
+                           ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:13:4
+
+Cannot cast `v1` to `Variance` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
+[incompatible-type]
+
+   test_keyword.js:13:4
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+          ^^
+
+References:
+   test_keyword.js:1:17
+    1| class Variance<+Out,-In> {
+                       ^^^ [1]
+   test_keyword.js:10:16
+   10|   v1: Variance<A,B>,
+                      ^ [2]
+   test_keyword.js:13:17
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:13:4
+
+Cannot cast `v1` to `Variance` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
+[incompatible-type]
+
+   test_keyword.js:13:4
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+          ^^
+
+References:
+   test_keyword.js:1:22
+    1| class Variance<+Out,-In> {
+                            ^^ [1]
+   test_keyword.js:10:18
+   10|   v1: Variance<A,B>,
+                        ^ [2]
+   test_keyword.js:13:19
+   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                         ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:18:9
+
+Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:18:9
+   18|   inv1: Out; // error
+               ^^^
+
+References:
+   test_keyword.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:19:9
+
+Cannot use `In` [1] in an input/output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:19:9
+   19|   inv2: In; // error
+               ^^
+
+References:
+   test_keyword.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- test_keyword.js:20:9
+
+Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:20:9
+   20|   -co1: Out; // error
+               ^^^
+
+References:
+   test_keyword.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- test_keyword.js:23:10
+
+Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:23:10
+   23|   +con2: In; // error
+                ^^
+
+References:
+   test_keyword.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- test_keyword.js:25:27
+
+Cannot use `Out` [1] in an input/output position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:25:27
+   25|   inv_dict1: {[k:string]: Out}; // error
+                                 ^^^
+
+References:
+   test_keyword.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- test_keyword.js:26:27
+
+Cannot use `In` [1] in an input/output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:26:27
+   26|   inv_dict2: {[k:string]: In}; // error
+                                 ^^
+
+References:
+   test_keyword.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- test_keyword.js:28:28
+
+Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test_keyword.js:28:28
+   28|   +co_dict2: {+[k:string]: In}; // error
+                                  ^^
+
+References:
+   test_keyword.js:17:26
+   17| class PropVariance<+Out,-In> {
+                                ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- test_keyword.js:29:29
+
+Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test_keyword.js:29:29
+   29|   +con_dict1: {-[k:string]: Out}; // error
+                                   ^^^
+
+References:
+   test_keyword.js:17:21
+   17| class PropVariance<+Out,-In> {
+                           ^^^ [1]
+
+
+
+Found 24 errors
