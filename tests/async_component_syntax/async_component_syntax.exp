@@ -37,8 +37,8 @@ Cannot return `result` because `Promise` [1] is incompatible with string [2]. [i
                   ^^^^^^
 
 References:
-   <BUILTINS>/core.js:2286:15
-   2286| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    test.js:45:28
      45| async hook useAsyncHook(): string {
@@ -54,8 +54,8 @@ Cannot return `await Promise.resolve(...)` because `Promise` [1] is incompatible
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2286:15
-   2286| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    test.js:63:43
      63| export async hook useExportedAsyncHook(): string {

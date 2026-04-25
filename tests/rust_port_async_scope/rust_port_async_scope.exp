@@ -7,8 +7,8 @@ Cannot return `input + 1` because `Promise` [1] is incompatible with number [2].
                   ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2286:15
-   2286| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    test.js:9:41
       9| async hook useAsyncData(input: number): number {
@@ -24,8 +24,8 @@ Cannot return `"hello"` because `Promise` [1] is incompatible with string [2]. [
                   ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2286:15
-   2286| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    test.js:13:26
      13| async hook useChained(): string {
@@ -41,8 +41,8 @@ Cannot return `42` because `Promise` [1] is incompatible with string [2]. [incom
                   ^^
 
 References:
-   <BUILTINS>/core.js:2286:15
-   2286| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    test.js:18:28
      18| async hook useBadReturn(): string {

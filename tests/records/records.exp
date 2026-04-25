@@ -274,8 +274,8 @@ Operation `Pick` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/core.js:3183:47
-   3183| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+   <BUILTINS>/core.js:3182:47
+   3182| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
                                                        ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -289,8 +289,8 @@ Operation `Omit` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/core.js:3188:36
-   3188| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3187:36
+   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
                                             ^^^^^^^^^^^^^^ [1]
 
 

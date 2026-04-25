@@ -39,8 +39,8 @@ Cannot return empty string because in type argument `Return` [1]: string [2] is 
                     ^^ [2]
 
 References:
-   <BUILTINS>/core.js:2021:24
-   2021| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2020:24
+   2020| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                 ^^^^^^ [1]
    class.js:23:39
      23|   *stmt_return_err(): Generator<void, number, void> {
@@ -130,8 +130,8 @@ References:
    class.js:71:31
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
                                        ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:2007:11
-   2007| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2006:11
+   2006| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
    <BUILTINS>/core.js:1880:50
    1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
@@ -379,8 +379,8 @@ Cannot return empty string because in type argument `Return` [1]: string [2] is 
                   ^^ [2]
 
 References:
-   <BUILTINS>/core.js:2021:24
-   2021| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2020:24
+   2020| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                 ^^^^^^ [1]
    generators.js:22:46
      22| function *stmt_return_err(): Generator<void, number, void> {

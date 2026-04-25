@@ -125,8 +125,8 @@ References:
    <BUILTINS>/core.js:1880:30
    1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
-   <BUILTINS>/core.js:2078:28
-   2078|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:2077:28
+   2077|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [4]
    map.js:13:55
      13| function mapTest4(map: Map<number, string>): Iterable<string> {

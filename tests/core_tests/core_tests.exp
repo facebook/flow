@@ -75,8 +75,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                              ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2079:29
-   2079|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+   <BUILTINS>/core.js:2078:29
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1880:30
    1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
@@ -84,8 +84,8 @@ References:
    map.js:28:22
      28|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [4]
-   <BUILTINS>/core.js:2079:38
-   2079|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+   <BUILTINS>/core.js:2078:38
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
                                               ^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -101,8 +101,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                              ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2079:29
-   2079|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+   <BUILTINS>/core.js:2078:29
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1880:30
    1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
@@ -110,8 +110,8 @@ References:
    map.js:28:29
      28|     let x = new Map(['foo', 123]); // error
                                      ^^^ [4]
-   <BUILTINS>/core.js:2079:38
-   2079|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+   <BUILTINS>/core.js:2078:38
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
                                               ^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -127,8 +127,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                                                   ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2079:29
-   2079|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+   <BUILTINS>/core.js:2078:29
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1880:30
    1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
@@ -153,8 +153,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                                                   ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2079:29
-   2079|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+   <BUILTINS>/core.js:2078:29
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1880:30
    1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
@@ -176,8 +176,8 @@ Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with b
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2087:22
-   2087|     get(key: K): V | void;
+   <BUILTINS>/core.js:2086:22
+   2086|     get(key: K): V | void;
                               ^^^^ [1]
    map.js:34:20
      34|     (x.get('foo'): boolean); // error, string | void
@@ -227,11 +227,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -247,11 +247,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -267,11 +267,11 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -287,11 +287,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -307,11 +307,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -327,11 +327,11 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -350,11 +350,11 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:2110:28
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:28
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2110:43
-   2110| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   <BUILTINS>/core.js:2109:43
+   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

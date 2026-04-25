@@ -7,8 +7,8 @@ Cannot call `action` because `Omit` [1] is not a polymorphic type. [incompatible
          ^^^^^^
 
 References:
-   <BUILTINS>/core.js:3188:36
-   3188| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3187:36
+   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
                                             ^^^^^^^^^^^^^^ [1]
 
 
@@ -21,8 +21,8 @@ Cannot call `actionNamespace.tools.action` because `Omit` [1] is not a polymorph
                                ^^^^^^
 
 References:
-   <BUILTINS>/core.js:3188:36
-   3188| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3187:36
+   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
                                             ^^^^^^^^^^^^^^ [1]
 
 
@@ -231,8 +231,8 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3188:36
-   3188| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3187:36
+   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
                                             ^^^^^^^^^^^^^^ [1]
    omit_inference.js:1:33
       1| function projectWithoutA<T: {a: number, b: string}>(): Omit<T, 'a'> {
@@ -251,8 +251,8 @@ Cannot call `actionWithDefaults` because `Omit` [1] is not a polymorphic type. [
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3188:36
-   3188| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3187:36
+   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
                                             ^^^^^^^^^^^^^^ [1]
 
 
@@ -273,8 +273,8 @@ Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with 
           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3183:62
-   3183| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+   <BUILTINS>/core.js:3182:62
+   3182| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
                                                                       ^^^^^^ [1]
    pick.js:9:16
       9| (pickedO1.bar: string); // ERROR bar is optional
