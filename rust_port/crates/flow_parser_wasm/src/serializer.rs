@@ -2885,20 +2885,25 @@ impl<'a> Serializer<'a> {
                     }
                     Declaration::Component { loc, declaration } => {
                         // 101: DeclareComponent — id params rest rendersType
-                        // typeParameters. Same shape as `serialize_declare_component`
-                        // (the standalone `Statement::DeclareComponent` path);
-                        // see that function for why params are
-                        // ComponentTypeParameter and rest is a sibling field.
+                        // typeParameters. Same shape as `serialize_declare_component`.
                         self.write_node_header(NodeKind::DeclareComponent, loc);
                         self.serialize_identifier_node(&declaration.id);
-                        self.buf.push(declaration.params.params.len() as u32);
+                        let rest_count = if declaration.params.rest.is_some() {
+                            1
+                        } else {
+                            0
+                        };
+                        self.buf
+                            .push((declaration.params.params.len() + rest_count) as u32);
                         for param in declaration.params.params.iter() {
-                            self.serialize_declare_component_param(param);
+                            self.serialize_component_declaration_param(param);
                         }
-                        match &declaration.params.rest {
-                            Some(rest) => self.serialize_declare_component_rest(rest),
-                            None => self.write_null_node(),
+                        if let Some(rest) = &declaration.params.rest {
+                            self.write_node_header(NodeKind::RestElement, &rest.loc);
+                            self.serialize_pattern(&rest.argument);
                         }
+                        // rest: always null (rest is in params list above)
+                        self.write_null_node();
                         self.serialize_renders_annotation(&declaration.renders);
                         self.serialize_type_params_opt(&declaration.tparams);
                     }
@@ -3033,22 +3038,22 @@ impl<'a> Serializer<'a> {
         self.serialize_identifier_node(&inner.id);
         // implicitDeclare
         self.write_bool(implicit_declare);
-        // params NodeList. For body=Some (ComponentDeclaration), each
-        // non-rest param is value-position ComponentParameter(97) and the
-        // trailing rest is appended as RestElement(80). For body=None
-        // (DeclareComponentAmbient), match hermes-parser by emitting each
-        // param as type-position ComponentTypeParameter(164) and writing
-        // `rest` as a separate field rather than appending to the list.
+        // params NodeList. Both body=Some (ComponentDeclaration) and body=None
+        // (DeclareComponentAmbient) use value-position ComponentParameter(97)
+        // with rest appended as RestElement(80), matching OCaml parser output.
         if implicit_declare {
-            self.buf.push(inner.params.params.len() as u32);
+            let rest_count = if inner.params.rest.is_some() { 1 } else { 0 };
+            self.buf
+                .push((inner.params.params.len() + rest_count) as u32);
             for param in inner.params.params.iter() {
-                self.serialize_declare_component_param(param);
+                self.serialize_component_declaration_param(param);
             }
-            // rest field: ComponentTypeParameter or null
-            match &inner.params.rest {
-                Some(rest) => self.serialize_declare_component_rest(rest),
-                None => self.write_null_node(),
+            if let Some(rest) = &inner.params.rest {
+                self.write_node_header(NodeKind::RestElement, &rest.loc);
+                self.serialize_pattern(&rest.argument);
             }
+            // rest: always null (rest is in params list above)
+            self.write_null_node();
         } else {
             let rest_count = if inner.params.rest.is_some() { 1 } else { 0 };
             self.buf
@@ -3217,21 +3222,23 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareComponent<Loc, Loc>,
     ) {
         // 101: DeclareComponent — id params rest rendersType typeParameters.
-        // Per hermes-parser, params are type-position ComponentTypeParameter
-        // (not value-position ComponentParameter) and rest is a separate
-        // sibling field, not appended to the params list.
+        // The OCaml parser emits value-position ComponentParameter for declare
+        // component params (same shape as ComponentDeclaration), with rest
+        // appended as RestElement in the params list.
         self.write_node_header(NodeKind::DeclareComponent, loc);
         self.serialize_identifier_node(&inner.id);
-        // params NodeList — type-position ComponentTypeParameter(164) each.
-        self.buf.push(inner.params.params.len() as u32);
+        let rest_count = if inner.params.rest.is_some() { 1 } else { 0 };
+        self.buf
+            .push((inner.params.params.len() + rest_count) as u32);
         for param in inner.params.params.iter() {
-            self.serialize_declare_component_param(param);
+            self.serialize_component_declaration_param(param);
         }
-        // rest: ComponentTypeParameter or null
-        match &inner.params.rest {
-            Some(rest) => self.serialize_declare_component_rest(rest),
-            None => self.write_null_node(),
+        if let Some(rest) = &inner.params.rest {
+            self.write_node_header(NodeKind::RestElement, &rest.loc);
+            self.serialize_pattern(&rest.argument);
         }
+        // rest: always null (rest is in params list above)
+        self.write_null_node();
         // rendersType
         self.serialize_renders_annotation(&inner.renders);
         // typeParameters
